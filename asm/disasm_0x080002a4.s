@@ -248,5 +248,5 @@
 
         thumb_func_start AgbMain
 AgbMain: @ 0x080002a4
-        .incbin "frog_us_baserom.gba", 0x2a4, 0x220
+        .incbin "frog_us_baserom.gba", 0x2a4, 0x18c
         thumb_func_end AgbMain
