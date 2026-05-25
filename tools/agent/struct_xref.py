@@ -83,6 +83,61 @@ def disassemble_elf() -> str:
     return proc.stdout
 
 
+def disassemble_unpeeled_functions() -> str:
+    """Disassemble every `.incbin`-only `asm/disasm_0x*.s` slice directly
+    from the baserom, in Thumb mode.
+
+    The .incbin form intentionally preserves bytes byte-for-byte (matching
+    is free), but it confuses GAS's mapping-symbol logic: the assembler
+    emits `$d` (data) at offset 0 of the function instead of `$t` (Thumb
+    code). Objdump on the linked ELF then reads the function's bytes as
+    32-bit data words instead of Thumb instructions, so struct_xref's
+    elf-scan misses every `ldr`/`str` inside these peels.
+
+    Solution: bypass the ELF entirely for these slices and run objdump on
+    the baserom slice with `-Mforce-thumb`. Prepend a function-header line
+    that matches FUNCTION_HEADER_RE so callers in this script still see
+    each access tagged with the right `current_fn`.
+    """
+    chunks: list[str] = []
+    for path in sorted((ROOT / "asm").glob("disasm_0x*.s")):
+        text = path.read_text(errors="replace")
+        # Only fall back for slices that haven't been refined to mnemonics.
+        if ".incbin" not in text:
+            continue
+        m_fn = re.search(r"thumb_func_start\s+(\S+)", text)
+        m_rng = re.search(
+            r"Range:\s*\[0x([0-9a-fA-F]+),\s*0x([0-9a-fA-F]+)\)", text)
+        if not (m_fn and m_rng):
+            continue
+        name = m_fn.group(1)
+        start = int(m_rng.group(1), 16)
+        end = int(m_rng.group(2), 16)
+        proc = subprocess.run(
+            [
+                "arm-none-eabi-objdump",
+                "-D", "-b", "binary", "-m", "arm7tdmi", "-Mforce-thumb",
+                f"--adjust-vma=0x{ROM_BASE:x}",
+                f"--start-address=0x{start:x}",
+                f"--stop-address=0x{end:x}",
+                str(GBA.parent / "frog_us_baserom.gba"),
+            ],
+            capture_output=True, text=True, check=False,
+        )
+        if proc.returncode != 0:
+            continue
+        # Strip objdump's auto-emitted `<.data+0xNNN>:` section-relative
+        # headers — they'd override our prepended `<sub_NNN>:` header via
+        # FUNCTION_HEADER_RE and the access lines would get tagged with
+        # the misleading section label.
+        cleaned = "\n".join(
+            ln for ln in proc.stdout.splitlines()
+            if not re.match(r"^[0-9a-f]+\s+<\.data[+>]", ln)
+        )
+        chunks.append(f"\n{start:08x} <{name}>:\n{cleaned}\n")
+    return "".join(chunks)
+
+
 def pool_word(addr: int) -> int | None:
     """Read 4 little-endian bytes at ROM address `addr`."""
     file_off = addr - ROM_BASE
@@ -195,7 +250,7 @@ def main() -> int:
 
     target = int(args.base, 0)
 
-    disasm = disassemble_elf()
+    disasm = disassemble_elf() + disassemble_unpeeled_functions()
     disasm_lines = disasm.splitlines()
     line_idx_for_addr: dict[int, int] = {}
     for i, line in enumerate(disasm_lines):
@@ -208,6 +263,10 @@ def main() -> int:
         lambda: {"readers": [], "writers": []})
     total_accesses = 0
 
+    # Same access may be discovered twice when a function has both refined
+    # mnemonics in the ELF AND a still-.incbin tail that we baserom-disassemble
+    # (notably AgbMain). Dedup by (addr, mnemonic, offset).
+    seen: set[tuple[int, str, int]] = set()
     for load_addr, reg, fn in loads:
         idx = line_idx_for_addr.get(load_addr)
         if idx is None:
@@ -216,6 +275,10 @@ def main() -> int:
         for addr, mnemonic, offset, raw in accesses:
             if args.offset is not None and offset != args.offset:
                 continue
+            key = (addr, mnemonic, offset)
+            if key in seen:
+                continue
+            seen.add(key)
             bucket = by_offset[offset]
             kind = "readers" if mnemonic in READERS else "writers"
             bucket[kind].append({

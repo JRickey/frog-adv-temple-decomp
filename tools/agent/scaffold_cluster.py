@@ -114,8 +114,12 @@ def neighbour_in_linker(asm_file: Path, before: bool) -> tuple[int, str, str] | 
 
 def derive_paths(cluster: Cluster, sibling_obj: str) -> tuple[Path, Path]:
     """Decide src/.../<name>.c + include/.../<name>.h from sibling + prefix."""
-    # snake_case the prefix
-    snake = re.sub(r"(?<!^)(?=[A-Z])", "_", cluster.prefix).lower()
+    # `sub_<8 hex digits>` is one token, not CamelCase — don't insert an
+    # underscore inside the hex run (avoids `sub_08020B30` → `sub_08020_b30`).
+    if re.fullmatch(r"sub_[0-9A-Fa-f]+", cluster.prefix):
+        snake = cluster.prefix.lower()
+    else:
+        snake = re.sub(r"(?<!^)(?=[A-Z])", "_", cluster.prefix).lower()
     sibling_dir = Path(sibling_obj).parent.relative_to(Path("src"))
     src_path = SRC_DIR / sibling_dir / f"{snake}.c"
     inc_path = INC_DIR / sibling_dir / f"{snake}.h"
