@@ -108,6 +108,7 @@ LIBS := $(AGBCC_LIB)/libgcc.a $(AGBCC_LIB)/libc.a
 # source file here. See docs/codegen-notes.md.
 src/game/sub_08033910.s: CC = $(OLD_AGBCC_BIN)
 src/system/init.s: CC = $(OLD_AGBCC_BIN)
+src/system/init1.s: CC = $(OLD_AGBCC_BIN)
 
 
 # Enable verbose output

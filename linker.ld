@@ -25,7 +25,23 @@ SECTIONS {
     } >ewram
 
     iwram (NOLOAD) : ALIGN(4) {
-        /* Add iwram globals here. */
+        /* Dot-pinned IWRAM symbols. Each `. = OFFSET; gIwram_XXXX = .;`
+         * declares a real C global whose address is fixed at link time.
+         * This pattern (mirrored from testyourmine/cvaos's gUnk_03002CB0
+         * setup) defeats agbcc 2.x's CSE-fold of adjacent compile-time
+         * constant addresses — the compiler sees opaque undefined symbols
+         * and emits one `ldr =gIwram_XXXX` per unique base. See
+         * docs/codegen-notes.md "Adjacent IWRAM bases".
+         *
+         * Offsets MUST stay in ascending order (ld extends `.` forward,
+         * never backward). The (NOLOAD) attribute keeps these byte-neutral
+         * — no storage is committed; the symbols only carry addresses. */
+        . = 0x00003480; gIwram_3480 = .;
+        . = 0x000034A0; gIwram_34A0 = .;
+        . = 0x000034B0; gIwram_34B0 = .;
+        . = 0x000034B4; gIwram_34B4 = .;
+        . = 0x00003550; gIwram_3550 = .;
+        . = 0x000035E0; gIwram_35E0 = .;
     } >iwram
 
     .text : ALIGN(4) {
@@ -37,7 +53,7 @@ SECTIONS {
         asm/disasm_0x0800012c.o(.text);  /* 0x0800012c - 0x08000240, IntrMain */
         asm/disasm_0x08000240.o(.text);  /* 0x08000240 - 0x080002a4, sub_08000240 */
         asm/disasm_0x080002a4.o(.text);  /* 0x080002a4 - 0x08000430, AgbMain */
-        asm/disasm_0x08000430.o(.text);  /* 0x08000430 - 0x080004c4, sub_08000430 */
+        src/system/init1.o(.text);       /* 0x08000430 - 0x080004c4, sub_08000430 (Init1) */
         asm/text/text_0x080004c4.o(.text);  /* 0x080004c4 - 0x0800072c, raw bytes */
         src/system/init.o(.text);        /* 0x0800072c - 0x08000820, sub_0800072C + sub_08000764 + sub_08000790 */
         src/game/sub_08000820.o(.text);  /* 0x08000820 - 0x0800088c, sub_08000820 + sub_08000884/sub_08000888 stubs */

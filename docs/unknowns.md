@@ -157,15 +157,13 @@ literal pool gets one entry per unique symbol; ld resolves each at
 link time. Pattern verified in `testyourmine/cvaos` for the analogous
 `gUnk_03002CB0` / `gDisplayRegisters` pair.
 
-Not implemented yet — that's the next concrete experiment on Init1.
-Requires (a) adding the six dot-pinned symbols to `linker.ld`'s iwram
-section, (b) declaring extern stubs in a shared header (placeholder
-`struct IwramAt<addr> { u8 _data[N]; }` types until purposes are
-named), (c) rewriting the C body to use the named bases. The four
-peeled callees already resolve, so the moment the symbol-address
-substitution lands, the function should match (or come very close —
-the only remaining variable is register coloring, which permuter can
-crack from a near-matching base).
+**Resolved (2026-05-25)** — landed as `src/system/init1.c` +
+`include/iwram.h` + six dot-pinned symbols in `linker.ld`'s
+`iwram (NOLOAD)` section. First-try match — no permuter needed.
+The linker-symbol substitution alone cracked the CSE fold; agbcc
+emits one `ldr =gIwram_NNNN` per unique base and ld resolves each at
+link time. Function-level `byte_diff: 0` confirmed via
+`compile_and_view_assembly.py sub_08000430 --human`.
 
 ## `sub_0802F4B0` (sound mixer tick)
 
