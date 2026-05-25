@@ -147,15 +147,25 @@ previous agent achieved. Permuter started from a worse base.c — its
 output exposed only minor variations on the same `u8 *p_3480 = (u8 *)
 0x03003480; …` shape that doesn't crack the fold.
 
-Likely conclusion: this needs a **different agbcc build** (the
-"compiler patch" entry below speculates a similar Konami title used
-`-f2003-patch`), or someone needs to find the exact mutation in the
-permuter randomization weights that prevents the `adds rN, #imm`
-fold. The infrastructure is set up — re-running permuter for hours
-from the previous agent's best 22-byte attempt (committed nowhere; in
-docs/unknowns.md above) is the right next experiment. Skipped for now;
-the function is small enough to skip without blocking surrounding
-decomp work.
+**Solution found via Phase D corpus search (2026-05-25):** see
+`docs/codegen-notes.md` "Adjacent IWRAM bases — defeat CSE-fold via
+linker-assigned symbols". The fix is to stop casting absolute
+addresses in C and instead declare each IWRAM base as a real C global
+with a linker-assigned address (`. = 0x00003480; gIwram_3480 = .;` in
+`linker.ld`). agbcc has no compile-time addresses to fold; the
+literal pool gets one entry per unique symbol; ld resolves each at
+link time. Pattern verified in `testyourmine/cvaos` for the analogous
+`gUnk_03002CB0` / `gDisplayRegisters` pair.
+
+Not implemented yet — that's the next concrete experiment on Init1.
+Requires (a) adding the six dot-pinned symbols to `linker.ld`'s iwram
+section, (b) declaring extern stubs in a shared header (placeholder
+`struct IwramAt<addr> { u8 _data[N]; }` types until purposes are
+named), (c) rewriting the C body to use the named bases. The four
+peeled callees already resolve, so the moment the symbol-address
+substitution lands, the function should match (or come very close —
+the only remaining variable is register coloring, which permuter can
+crack from a near-matching base).
 
 ## `sub_0802F4B0` (sound mixer tick)
 

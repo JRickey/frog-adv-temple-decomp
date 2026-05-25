@@ -454,3 +454,64 @@ Workarounds when you suspect this:
 Detector improvement TODO: check that the "next push-lr" isn't itself
 reachable as a `[pc, #N]` literal from an earlier `ldr` site within
 the candidate function body.
+
+## Adjacent IWRAM bases — defeat CSE-fold via linker-assigned symbols
+
+The problem (originally `docs/unknowns.md` "Init1 decomp attempt"):
+when C casts adjacent absolute IWRAM addresses as pointers, agbcc 2.x
+CSE-folds the second base into an `adds rN, #imm` against the first
+(because the addresses differ by a value that fits the Thumb add-imm
+encoding). Manual variations across `register T *p asm("rN")`, volatile
+casts, struct typing, scope splits, and inline `asm("ldr =…")` all
+fail to break the fold — they only shift it.
+
+The idiomatic answer (found in `testyourmine/cvaos` via the Phase D
+corpus tool, see `docs/tooling.md`): **declare each IWRAM base as a
+real C global with a linker-assigned address**, NOT as an absolute
+cast. The `linker.ld` iwram section uses dot-pinned symbols:
+
+```ld
+iwram (NOLOAD) : ALIGN(4) {
+    . = 0x00003480; gIwram_3480 = .;
+    . = 0x000034A0; gIwram_34A0 = .;
+    . = 0x000034B0; gIwram_34B0 = .;
+    . = 0x000034B4; gIwram_34B4 = .;
+    . = 0x000035E0; gIwram_35E0 = .;
+    . = 0x00003550; gIwram_3550 = .;
+} >iwram
+```
+
+The C declares each as `extern <Type> gIwram_NNNN;` and uses them
+normally:
+
+```c
+extern struct IwramAt3480 gIwram_3480;
+extern struct IwramAt34A0 gIwram_34A0;
+/* ... */
+gIwram_3480.x = 0;
+gIwram_34A0.y = 0;
+```
+
+agbcc has no compile-time addresses to fold — the symbols are
+undefined at compile time, so it emits one `ldr =gIwram_NNNN` per
+unique symbol. The literal pool has one entry per base. ld resolves
+each entry at link time to the dot-assigned address. **No CSE fold
+possible.**
+
+Same trick applies to anything else agbcc folds when given absolute
+addresses: ROM data tables, MMIO regions split across small offsets,
+etc. The general principle is: keep load-bearing addresses out of the
+compiler's compile-time-constant view.
+
+Real-world example: CVAOS does this for `gUnk_03002CB0` (a graphics
+display-control struct) — references like
+`gUnk_03002CB0.dispCnt = DCNT_BG0` compile to a clean `ldr =
+gUnk_03002CB0; … strh r0, [r0, #offset]` without folding into adjacent
+bases like `gDisplayRegisters` that live ~80 bytes apart.
+
+Implementation cost for our project: each named IWRAM base needs (1)
+a struct type (we can use `struct IwramAt<addr> { u8 _data[N]; }` as
+a stub until purposes are identified), (2) an `extern` declaration in
+a shared header, (3) a linker.ld dot-pin assignment. The struct types
+can grow with `struct_grow.py` as accesses surface, same as
+`GameStuff` today.
