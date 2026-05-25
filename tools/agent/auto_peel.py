@@ -220,13 +220,60 @@ def detect_end(start: int) -> int:
     return int(report["recommendedEnd"])
 
 
+def detect_arm_end(start: int) -> int:
+    """Boundary-detect for an ARM function.
+
+    The Thumb detect-fn-boundary.ts walker doesn't grok ARM encodings — its
+    "doesn't look like a function entry" warning fires for things like
+    `bx pc` (canonical Thumb→ARM interwork thunk first insn). For ARM peels
+    we use a simpler rule: walk 4 bytes at a time from `start`, stop at the
+    first epilogue (`bx lr`/`mov pc, lr`/`ldmfd sp!, {…, pc}`). Returns the
+    address right after the epilogue.
+
+    Conservative — won't isolate ARM functions whose epilogue is a load to
+    pc with an offset (rare). Falls back to a 1KB cap if no epilogue is
+    seen.
+    """
+    cap = start + 1024
+    proc = run([
+        "arm-none-eabi-objdump",
+        "-D", "-b", "binary", "-m", "arm7tdmi", "-EL",
+        f"--adjust-vma=0x{ROM_BASE:x}",
+        f"--start-address=0x{start:x}",
+        f"--stop-address=0x{cap:x}",
+        str(BASEROM),
+    ])
+    if proc.returncode != 0:
+        raise RuntimeError(f"objdump failed:\n{proc.stderr}")
+    insn_re = re.compile(r"^\s*([0-9a-f]+):\s+[0-9a-f]+\s+(\S+)\s*(.*?)$")
+    for line in proc.stdout.splitlines():
+        m = insn_re.match(line)
+        if not m:
+            continue
+        addr = int(m.group(1), 16)
+        mnemonic = m.group(2).lower()
+        operands = (m.group(3) or "").lower()
+        is_end = (
+            mnemonic == "bx" and re.search(r"\blr\b", operands)
+        ) or (
+            mnemonic in ("mov", "movs") and re.search(r"\bpc\s*,\s*lr\b", operands)
+        ) or (
+            mnemonic.startswith("ldm") and "pc" in operands
+        )
+        if is_end:
+            return addr + 4
+    return cap
+
+
 # --------------------------------------------------------------------------
 # The peel itself
 # --------------------------------------------------------------------------
 
-def build_plan(addr: int, end: int) -> PeelPlan:
-    if addr % 2 != 0:
+def build_plan(addr: int, end: int, mode: str) -> PeelPlan:
+    if mode == "thumb" and addr % 2 != 0:
         raise SystemExit(f"address 0x{addr:08x} is not halfword-aligned (Thumb)")
+    if mode == "arm" and addr % 4 != 0:
+        raise SystemExit(f"address 0x{addr:08x} is not word-aligned (ARM)")
     if end <= addr:
         raise SystemExit(f"end 0x{end:08x} not after start 0x{addr:08x}")
     bucket = find_bucket_for(addr, end)
@@ -270,7 +317,7 @@ def emit_bucket(va_lo: int, va_hi: int, note: str = "") -> str:
     return "\n".join(body)
 
 
-def perform_peel(plan: PeelPlan) -> list[Path]:
+def perform_peel(plan: PeelPlan, mode: str) -> list[Path]:
     """Apply a single peel. Returns list of files touched.
 
     Steps in order:
@@ -285,12 +332,18 @@ def perform_peel(plan: PeelPlan) -> list[Path]:
 
     # 1. peel.py — writes asm/disasm_0xSTART.s
     peel = ROOT / "tools" / "disasm" / "peel.py"
-    proc = run([
+    peel_argv = [
         "python3", str(peel),
         "--start", f"0x{plan.addr:08x}",
         "--end",   f"0x{plan.end:08x}",
-        "--mode", "thumb",
-    ])
+        "--mode", mode,
+    ]
+    if mode == "arm":
+        # detect-fn-boundary.ts is Thumb-only; the boundary used for ARM
+        # peels comes from `detect_arm_end()` upstream, so suppress the
+        # boundary check inside peel.py to avoid false warnings.
+        peel_argv.append("--no-boundary-check")
+    proc = run(peel_argv)
     if proc.returncode != 0:
         raise RuntimeError(
             f"peel.py failed:\n{proc.stderr}\n{proc.stdout}"
@@ -409,22 +462,22 @@ def refresh_address_cache() -> None:
         run(["python3", str(snap)])
 
 
-def peel_address(addr: int, dry_run: bool) -> bool:
+def peel_address(addr: int, dry_run: bool, mode: str) -> bool:
     """Peel one address. Returns True on success."""
     if addr in existing_disasm_starts():
         print(f"  skip: 0x{addr:08x} already peeled")
         return True
 
-    print(f"\n== peel 0x{addr:08x} ==")
+    print(f"\n== peel 0x{addr:08x}  (mode={mode}) ==")
     try:
-        end = detect_end(addr)
+        end = detect_arm_end(addr) if mode == "arm" else detect_end(addr)
     except Exception as e:
         print(f"  boundary detect failed: {e}", file=sys.stderr)
         return False
     print(f"  boundary: [0x{addr:08x}, 0x{end:08x})  ({end - addr} bytes)")
 
     try:
-        plan = build_plan(addr, end)
+        plan = build_plan(addr, end, mode)
     except SystemExit as e:
         print(f"  {e}", file=sys.stderr)
         return False
@@ -438,7 +491,7 @@ def peel_address(addr: int, dry_run: bool) -> bool:
         return True
 
     try:
-        perform_peel(plan)
+        perform_peel(plan, mode)
     except Exception as e:
         print(f"  peel write failed: {e}", file=sys.stderr)
         git_clean_revert()
@@ -464,6 +517,10 @@ def main() -> int:
                         "BL target it makes")
     p.add_argument("--apply", action="store_true",
                    help="actually run the peels (default: dry-run)")
+    p.add_argument("--mode", choices=["thumb", "arm"], default="thumb",
+                   help="instruction set for the peel (default: thumb). "
+                        "Use --mode arm for Thumb-to-ARM interwork thunks and "
+                        "the ARM-section IRQ/crt0 routines.")
     args = p.parse_args()
 
     if not (args.addr or args.callees_of):
@@ -502,7 +559,7 @@ def main() -> int:
 
     failures = 0
     for a in pending:
-        if not peel_address(a, dry_run=not args.apply):
+        if not peel_address(a, dry_run=not args.apply, mode=args.mode):
             failures += 1
             # Don't continue once a peel has broken the build.
             if args.apply:

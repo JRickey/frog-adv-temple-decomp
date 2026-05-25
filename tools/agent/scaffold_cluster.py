@@ -192,8 +192,28 @@ def linker_rodata_insertion(sibling_obj: str) -> tuple[int, str, str] | None:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("prefix", help="function-name prefix, e.g. StatusScreen")
+    ap = argparse.ArgumentParser(
+        description=(
+            "Scaffold a new src/<dir>/<name>.c (plus linker.ld plumbing) for "
+            "a cluster of related functions in an asm/disasm_0x*.s slice. "
+            "The prefix is matched literally against `thumb_func_start NAME` "
+            "lines — pass the actual function name (e.g. `sub_08000430`) or "
+            "the cluster's shared prefix (e.g. `StatusScreen`). The default "
+            "destination .c is derived from the sibling C neighbour's "
+            "directory; override with --dest when no sibling exists."
+        ),
+    )
+    ap.add_argument(
+        "prefix",
+        help=(
+            "function-name prefix matching `thumb_func_start NAME` in --asm. "
+            "Use a full function name (e.g. `sub_08000430`) when you only "
+            "want to scaffold for one function, or a common prefix "
+            "(e.g. `StatusScreen`) for a contiguous cluster. "
+            "NOTE: this is NOT a free-form file label — `init1` won't match "
+            "anything if no function in the asm starts with that text."
+        ),
+    )
     ap.add_argument("--asm", required=True,
                     help="asm/disasm_0x*.s containing the cluster")
     ap.add_argument("--end", action="store_true",
