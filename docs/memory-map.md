@@ -24,15 +24,21 @@ line of context.
 | `0x030035E0` | (TBD) | EWRAM/IWRAM ptr in AgbMain pool | AgbMain literal pool 2 |
 | `0x03007F00` | `_start_svc_stack` (top) | Supervisor-mode SP | `_start` |
 | `0x03007FA0` | `_start_irq_stack` (top) | IRQ-mode SP | `_start` |
-| `0x03007FFC` | BIOS IRQ vector slot | BIOS reads this to dispatch HW IRQ | `_start` installs `IntrMain` here |
+| `0x030058A0` | IWRAM IntrMain copy dest | `sub_08000820` DMAs `IntrMain` (from ROM) here and installs that copy as the BIOS IRQ vector. | `sub_08000820` |
+| `0x03007FFC` | BIOS IRQ vector slot | BIOS reads this to dispatch HW IRQ | `_start` installs `IntrMain` here; later `sub_08000820` retargets it to the IWRAM copy at `0x030058A0` |
 
 ## MMIO (`0x04000000` — `0x04000400`)
 
 | Address | Symbol | Purpose | First reference |
 |---|---|---|---|
-| `0x04000200` | `REG_IE` | IRQ enable mask (low 16 bits of IE_IF word) | `IntrMain` |
-| `0x04000202` | `REG_IF` | IRQ pending mask | `IntrMain` ack store |
+| `0x04000004` | `REG_DISPSTAT` | Display status / IRQ enable bits | `sub_08000820` writes 8 (VBlank-IRQ enable) |
+| `0x04000200` | `REG_IE` | IRQ enable mask (low 16 bits of IE_IF word) | `IntrMain`; `sub_08000820` sets to `0x2011` (VBlank + Timer0 + GamePak) |
+| `0x04000202` | `REG_IF` | IRQ pending mask | `IntrMain` ack store; `sub_08000820` clears at boot |
 | `0x04000204` | (literal) | Used by AgbMain (likely `REG_WAITCNT` or waitcnt-adjacent) | AgbMain literal pool 1 |
+| `0x04000208` | `REG_IME` | Master IRQ enable | `sub_08000820` enables |
+| `0x040000D4` | `REG_DMA3SAD` | DMA3 source (also struct base for `DmaChannel` at +0/+4/+8) | `sub_08000820` |
+| `0x040000D8` | `REG_DMA3DAD` | DMA3 destination | `sub_08000820` |
+| `0x040000DC` | `REG_DMA3CNT` | DMA3 control (count + flags) | `sub_08000820` |
 
 ## ROM (`0x08000000` — `0x08400000`)
 
@@ -53,7 +59,9 @@ line of context.
 | `0x08000430` | `sub_08000430` ("Init1") | Pre-loop boot init; Thumb, 148 bytes. Calls 4 unnamed routines, inits gGameStuff + 6 IWRAM structs, sets `REG_IE=0` and `REG_DISPCNT=0x1F40`. See `subsystems.md`. |
 | `0x080004C4` | (TBD) | Next Thumb function after `sub_08000430` |
 | `0x0800072C` | `sub_0800072C` (TBD) | Called from `sub_08000430` after `sub_08017364`. Likely subsystem init. |
-| `0x08000820` | `sub_08000820` (TBD) | Called from `sub_08000430` just before `REG_DISPCNT` write. Likely render/sprite init. |
+| `0x08000820` | `sub_08000820` | Init1's "install IRQ handler in IWRAM" routine. DMAs `IntrMain` (ROM, `0x0800012C`) to IWRAM at `0x030058A0`, calls `sub_08033910(3, table_at_0x08035DB4)`, retargets BIOS IRQ vector (`0x03007FFC`) to the IWRAM copy, then enables VBlank IRQ (`REG_IE=0x2011`, `REG_IME=1`, `REG_DISPSTAT=8`). Decompiled in `src/game/sub_08000820.c`. |
+| `0x08000884` | `sub_08000884` | Empty stub (`bx lr`). Caller TBD. |
+| `0x08000888` | `sub_08000888` | Empty stub (`bx lr`). Caller TBD. |
 | `0x08017364` | `sub_08017364` (TBD) | Called from `sub_08000430` after IWRAM-struct init. Likely subsystem init. |
 | `0x08020B30` | `sub_08020B30` | Called first thing from `sub_08000430`. Sets bits 0+1 of `(*StructAt3003570)0x03003570`, then writes the byte sequence `0xCD, 0xF5, 0xF5` to bytes 1..3. Decompiled in `src/game/sub_08020_b30.c`. |
 | `0x08001478` | `SetGameMode_03` | Writes 3 to `gGameStuff.pendingMode` (offset 10, NOT the dispatched mode at 9) |

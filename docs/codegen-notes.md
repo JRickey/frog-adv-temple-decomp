@@ -220,6 +220,62 @@ exact local goes in the C comment near the def so a future cleanup
 doesn't elide it. Worked example: `sub_08020B30` (commit landed same
 session as this note).
 
+## MMIO struct pattern forces single-base-register code
+
+When a function touches multiple MMIO registers at adjacent offsets (e.g.
+the DMA channel `SAD/DAD/CNT` at `0x040000D4/D8/DC`), the natural-looking
+`REG_DMA3SAD = X; REG_DMA3DAD = Y; REG_DMA3CNT = Z;` with separate macros
+makes agbcc load the BASE address THREE TIMES — one `ldr` per write.
+The baserom expects a single `ldr r1, =0x040000D4` followed by
+`str r0, [r1, #0]; str r0, [r1, #4]; str r0, [r1, #8]`.
+
+**Fix:** expose the register block as a struct:
+
+```c
+typedef struct {
+    void *src;   /* +0 */
+    void *dst;   /* +4 */
+    vu32 cnt;    /* +8 */
+} DmaChannel;
+#define REG_DMA3 (*(volatile DmaChannel *)0x040000D4)
+
+REG_DMA3.src = ...;
+REG_DMA3.dst = ...;
+REG_DMA3.cnt = ...;
+```
+
+agbcc treats the three writes as offsets through a common base pointer
+and CSEs the `ldr`. Worked example: `sub_08000820`.
+
+## Over-extended peels: trailing stub functions
+
+The auto-peeler at boundary detection time can pull bytes from the next
+function's prologue into the current peel range. `sub_08000820`'s peel
+covered `[0x08000820, 0x0800088c)` but the actual function (including its
+literal pool) ends at `0x08000884` — the trailing 8 bytes are two empty
+stub functions (`bx lr; .hword 0x0000` ×2). The baserom-matching ROM has:
+
+```
+0x08000884: 4770 0000   bx lr; .hword 0  ; sub_08000884
+0x08000888: 4770 0000   bx lr; .hword 0  ; sub_08000888
+```
+
+**Don't** discard them — they're real bytes; without them every later
+file shifts down by 8 bytes and `make check` fails everywhere downstream.
+
+**Don't** use `.align 1, 0` for the 2-byte alignment after `bx lr` — the
+GNU assembler in Thumb mode picks the `c046` (`mov r8, r8`) NOP encoding
+instead of the literal `0x0000` halfword the baserom uses. Use an
+explicit `.hword 0x0000`.
+
+The cleanest split is: rename the over-extended peel to start at the
+real trailing-stub address (`asm/disasm_0x08000884.s` here), give each
+stub its own `thumb_func_start`, and update `linker.ld` so the new
+`src/.../*.o(.text)` slot covers only the real function and the stubs
+file follows.
+
+Worked example: `sub_08000820` (commit landed same session as this note).
+
 ## `t = 1; t |= s->field; t |= 2;` sequences two separate ORs
 
 The naive `s->flags |= 3` produces ONE `orr` with constant 3. The
