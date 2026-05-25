@@ -39,6 +39,10 @@ tools/agent/.progress_sheet.csv
 .scratch/
 nonmatchings/
 
+# tools/agent/build_expected.py output — regenerate any time with:
+#   python3 tools/agent/build_expected.py --clean
+expected/
+
 # IDE / OS
 .vscode
 .DS_Store
