@@ -152,6 +152,18 @@ than the original. Refining a peeled chunk into real Thumb/ARM mnemonics
 (so `compile_and_view_assembly.py` can do per-instruction diffs) is the
 next step after a peel, not part of the peel itself.
 
+**Shortcut for the common case:** when prepping a C decomp, every
+cross-region BL target needs a peel. Use `auto_peel.py` to do all of
+them in one shot instead of running the steps above per callee:
+
+```sh
+python3 tools/agent/auto_peel.py --callees-of <target> --apply
+```
+
+It runs `detect-fn-boundary` + `peel.py` + bucket-split + `linker.ld`
+rewrite + `make check` per callee, reverting any peel whose build
+breaks.
+
 ### Validators (run before assigning struct offsets, after refining BLs)
 
 ```sh
@@ -160,13 +172,18 @@ next step after a peel, not part of the peel itself.
 # Would have caught 059720d (gGameStuff.mode at offset 9, not 10).
 python3 tools/agent/struct_xref.py 0x03005330
 
+# Resolved pool literals for a function — surface the 32-bit value at
+# each `ldr [pc, #N]` site with a human label, instead of mentally
+# byte-swapping objdump's halfword display.
+python3 tools/agent/dump_pool.py sub_08000430
+
 # Re-disassemble every BL in the linked program and verify targets match
 # known symbol addresses. Would have caught fa09acf (PROVIDE() + Thumb BL
 # silently mis-encoded). Re-run after every refine-to-mnemonics step.
 python3 tools/agent/check_relocations.py
 
-# Lint hex literals > 32 bits (GAS/ld truncates them silently).
-# Would have caught the 0x080020bc1 typo in fa09acf.
+# Lint hex literals > 32 bits AND sub_<9-digit> symbol names (both are
+# the same 36-bit / silent-truncation bug). Pre-commit-friendly.
 python3 tools/agent/lint_hex_literals.py
 ```
 
@@ -255,18 +272,56 @@ function looks right:
 tools/agent/bin/objdiff-cli diff -1 expected/src/foo.o -2 src/foo.o SymbolName --format json-pretty
 ```
 
-## Agent workflow — one function at a time
+## Agent workflow — peel-first, then decomp
+
+The bottleneck on this title is **cross-region Thumb BL relocations**:
+any function that calls outside its own slice can't be matched in C
+unless every callee already has a real Thumb-typed symbol. Neither
+`PROVIDE()` nor `.thumb_set` give ld enough info (the latter triggers
+`.text.__stub` veneers — see `docs/codegen-notes.md`). So the only
+order that works is: **peel callees first, decomp last.** The tools
+below mechanize that.
 
 For each decomp target:
 
-1. **Pick a target.** `python3 tools/agent/pick_target.py --max-size 30 --limit 5 --json`.
-   Small first; success rate drops sharply past ~80 instructions and craters
-   past ~1000 (per Chris Lewis's N64 results).
-2. **Read context.** The target asm block, the asm file's surrounding
-   functions, and the C file the function *should* live in. Use `linker.ld`
-   to find which `src/*.c` the asm slice maps to.
-3. **Write C.** Match the existing patterns AND the style section below
-   ("Upstream-acceptable C style"). agbcc 2.x quirks:
+1. **Pick a target.**
+   ```sh
+   python3 tools/agent/pick_target.py --max-size 40 --limit 10
+   ```
+   Small first; success rate drops sharply past ~80 instructions and
+   craters past ~1000 (per Chris Lewis's N64 results).
+
+2. **Brief yourself in one command.**
+   ```sh
+   python3 tools/agent/decomp_brief.py <target>
+   ```
+   Reports range, callees + their peel status, pool labels with
+   resolved addresses (no halfword-flipping mistakes), struct
+   cross-ref per IWRAM/EWRAM base, m2c-emitted seed C, and the
+   linker.ld-adjacent destination hint. Read the **Callees** section
+   first — anything tagged `UNPEELED ✗` blocks the C decomp.
+
+3. **Peel unpeeled callees (recursive).** If the brief reports any
+   `UNPEELED ✗`:
+   ```sh
+   python3 tools/agent/auto_peel.py --callees-of <target> --apply
+   ```
+   This runs `detect-fn-boundary` + `peel.py` + bucket-splitting +
+   `linker.ld` rewrite + `make check` per callee, reverting any peel
+   whose build doesn't match. Commit each peel ("Peel sub_XYZ") or
+   the bundle ("Peel <target>'s callees").
+
+4. **Grow struct headers from observed offsets.** For each unnamed
+   IWRAM/EWRAM base the brief surfaces:
+   ```sh
+   python3 tools/agent/struct_grow.py 0x<addr> --name <Type>
+   # add --apply --header <path> to write the typedef into a header
+   ```
+   Land typed offsets *before* writing the C — keeps the C body from
+   shipping with raw `[r0, #16]` magic numbers.
+
+5. **Write C.** Use the brief's m2c seed as a starting point, then
+   adapt to project style ("C style" below). agbcc 2.x quirks:
    - `/* */` only, no `//` comments (preproc strips them but be consistent with neighbours)
    - No `_Bool` — use `u8` for booleans
    - Aggressive register allocation differs from modern gcc — sometimes a
@@ -276,20 +331,33 @@ For each decomp target:
    - When stuck on register order: `register T x asm("r5");`
    - `NON_MATCHING` ifdef pattern: when you can't match, wrap the readable C
      in `#ifdef NON_MATCHING` and keep the matching but uglier C in `#else`.
-4. **Move the asm.** Delete the `thumb_func_start NAME` block from
-   `asm/disasm_0x*.s`. If the file becomes empty, remove its `linker.ld`
-   entry too.
-5. **Build & measure.**
+
+6. **Move the asm.** Delete the `thumb_func_start <name>` block from
+   `asm/disasm_0x*.s`. If the file becomes empty, remove its
+   `linker.ld` entry too.
+
+7. **Iterate to match.**
    ```sh
-   make -j8 && python3 tools/agent/progress.py --per-function --human
+   # Per-symbol diff (fast — uses expected/.o, no full ROM rebuild)
+   python3 tools/agent/build_expected.py --fn <name>
+   tools/agent/bin/objdiff-cli diff \
+       -1 expected/src/<rel>.o -2 src/<rel>.o <name> --format json-pretty
+
+   # Whole-ROM compile + categorized diff
+   make -j8 && python3 tools/agent/compile_and_view_assembly.py <name> --human
    ```
-6. **Verify.** `make check` must exit 0 for a clean match. If it doesn't, but
-   per-function diff for your target is 0 and total `bytes_diff_rom` is low,
-   the issue is bleed into adjacent functions (alignment, .rodata pool) —
-   investigate that, don't abandon.
-7. **If you can't match**: leave the asm in place. Don't ship a non-matching
-   C that breaks `make check`. The `NON_MATCHING` pattern is acceptable only
-   when wrapped behind the ifdef so the build still uses the asm.
+   Stuck on a fold? Run `vendor/decomp-permuter` for register-allocation
+   search.
+
+8. **Verify.** `make check` must exit 0 for a clean match. If it
+   doesn't but per-function diff for your target is 0 and total
+   `bytes_diff_rom` is low, the issue is bleed into adjacent functions
+   (alignment, .rodata pool) — investigate that, don't abandon.
+
+9. **If you can't match**: leave the asm in place. Don't ship a
+   non-matching C that breaks `make check`. The `NON_MATCHING` pattern
+   is acceptable only when wrapped behind the ifdef so the build still
+   uses the asm.
 
 ### Subagent parallelism
 
