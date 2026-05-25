@@ -87,6 +87,34 @@ tools/agent/bin/objdiff-cli diff -1 expected/src/<rel>.o -2 src/<rel>.o <name> -
 make -j8 && make check
 ```
 
+## Corpus search (Phase D)
+
+When agbcc throws a matching problem at us, it's almost certainly been
+solved in another agbcc decomp already. Phase D caches a curated set of
+those repos locally so we can grep their C and walk their commit
+history. Castlevania: Aria of Sorrow (same publisher + era) and the
+pret pokemon family are the highest-leverage references.
+
+The cache lives at `~/.cache/decomp-corpus/` (override with
+`DECOMP_CORPUS_DIR`). Clones use `--filter=blob:none` so commit history
+is walkable without dragging every binary asset across the network.
+
+| Tool | What it does |
+|---|---|
+| `scripts/corpus-sync.sh` | Clones/fetches the curated repo list and writes `~/.cache/decomp-corpus/.metadata.json` (slug, toolchain, head, status). The list is inline at the top of the script — adding a repo means editing it. Per-repo failures are non-fatal. |
+| `python3 tools/agent/corpus.py sync` | Delegates to `corpus-sync.sh`. |
+| `python3 tools/agent/corpus.py grep PATTERN [--c|--asm] [--repo R]` | `rg` across every cached repo. Default filter: `toolchain=agbcc` (drop with `--any-toolchain`). Output formatted as `repo:path:line:content` for easy paste-back. |
+| `python3 tools/agent/corpus.py decomps [--name X] [--repo R]` | Walks each repo's `git log` for `^Decompile\|^Match\|^Decomp` subjects. Use to find prior art on a similarly-named function. `--stat` adds a files-changed count (slower). |
+| `python3 tools/agent/corpus.py show REPO@COMMIT` | `git show --stat --patch` on a specific commit, truncated to `--max-lines`. |
+| `python3 tools/agent/corpus.py status` | Last sync time, per-repo commit count, total disk. |
+
+Trigger for adding this phase: `docs/unknowns.md`'s "Init1 decomp
+attempt". agbcc CSE-folds adjacent IWRAM base loads (`adds rN, #imm`).
+A direct fix doesn't exist in the local tree — but cvaos and the
+Pokemon family ran into the same compiler the same way, and their
+solutions live in git history. The first thing to try when stuck on
+agbcc codegen is now `corpus.py grep` and `corpus.py decomps`.
+
 ## Existing Python tooling (still primary for the agent loop)
 
 | Tool | What it does |

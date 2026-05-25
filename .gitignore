@@ -67,3 +67,10 @@ tools/agent/ts/**/*.js.map
 vendor/m2c/.venv/
 vendor/decomp-permuter/.venv/
 ~/.cache/mizuchi/
+
+# tools/agent/corpus.py cache (other agbcc-era GBA decomps, never committed).
+# Lives under $HOME/.cache/decomp-corpus by default — this pattern is
+# defensive in case someone points DECOMP_CORPUS_DIR at a path inside the
+# repo.
+.cache/decomp-corpus/
+decomp-corpus/
