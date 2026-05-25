@@ -1,0 +1,9 @@
+-nostdinc
+-Iinclude/
+-target
+arm-none-eabi
+-mthumb
+-mthumb-interwork
+-fhex-asm
+-DREGION_US
+-Wno-everything
