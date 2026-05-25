@@ -36,6 +36,7 @@ SECTIONS {
         asm/text/text_0x08020000.o(.text);  /* 0x08020000 - 0x08030000, raw bytes */
         asm/text/text_0x08030000.o(.text);  /* 0x08030000 - 0x08040000, raw bytes */
         asm/text/text_0x08040000.o(.text);  /* 0x08040000 - 0x08050000, raw bytes */
+        asm/text/text_0x08050000.o(.text);  /* 0x08050000 - 0x08060000, raw bytes */
         asm/rom.o(.text);                /* 0x080000C0 onward, still unparsed */
         /* Disassembled function clusters land here, in baserom address
          * order, as they get peeled off rom.s. */
