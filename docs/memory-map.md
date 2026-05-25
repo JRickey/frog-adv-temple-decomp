@@ -49,6 +49,7 @@ line of context.
 | `0x080002A4` | `AgbMain` | First Thumb fn; 26-entry state-machine dispatcher |
 | `0x080002E4` | (data) | `AgbMain` jump table base (26 × 4 bytes) |
 | `0x080004C4` | (TBD) | Next Thumb function after `AgbMain` (200+ bytes) |
+| `0x08001478` | `SetGameMode_03` | Writes 3 to `gGameStuff.mode` |
 | `0x08002444` | `SetGameMode_06` | Writes 6 to `gGameStuff.mode` |
 | `0x08002760` | `SetGameMode_07` | Writes 7 to `gGameStuff.mode` |
 | `0x080052C0` | `SetGameMode_15` | Writes 15 to `gGameStuff.mode` |
