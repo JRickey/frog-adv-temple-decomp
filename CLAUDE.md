@@ -424,8 +424,40 @@ coordinate conventions need to be discovered as the decomp progresses.
   agbcc's preprocessor output. If you suspect formatting changed the bytes,
   test before and after; you can mark a section `// clang-format off`.
 - Inside a function body, DO put blank lines between logical sections.
-- No `/* */` block comments explaining what the code does. The PR description
-  is the place for that. Comments only when the WHY is genuinely non-obvious.
+
+**Comments — write only when the WHY is non-obvious.** Default: no comment.
+A future reader can read the code; what they can't read is the constraint
+or context that forced the code to be this shape. Specifically:
+
+- ✅ KEEP comments for:
+  - **agbcc matching tricks** ("the local pointer var anchors the
+    base-address load before the constant"; "two `t |= …` lines instead
+    of `s->field |= 3` so agbcc emits two `orr` instructions").
+  - **Layout constraints** ("two empty stubs kept as separate symbols so
+    the surrounding layout stays byte-identical").
+  - **Hardware/MMIO context** that's not in `include/gba/*.h` yet
+    (e.g., "REG_DMA3.cnt = DMA_ENABLE | 0x400 covers IntrMain + sub_08000240
+    + AgbMain — the whole low-ROM dispatcher cluster").
+  - **Calling context** when not obvious from grep ("Called from Init1"
+    on a leaf helper is fine; a one-line `gGameStuff.x = y` setter doesn't
+    need it).
+
+- ❌ STRIP comments that:
+  - Narrate WHAT the code does in prose. The code says it once already.
+    "Copies the handler into IWRAM" next to `memcpy(IWRAM, handler, n)`
+    is filler.
+  - Restate the function name in different words ("This function does X"
+    for `DoX(…)`).
+  - Refer to ephemeral state ("this is the third refactor", "TODO when
+    we figure out subsystems"). PR descriptions and `docs/unknowns.md`
+    are the right homes for those.
+  - Annotate per-line magic numbers when the named constant exists or
+    the value is one self-explanatory operation (`u8 mode = 3` doesn't
+    need `/* set mode to 3 */`).
+
+If a comment would say what the named constant says, use the constant
+(add it to the right `include/gba/*.h` if it doesn't exist yet — see
+"C style — Use named constants").
 
 **Types:**
 - `u8` for booleans where the codebase uses it.
