@@ -1,28 +1,34 @@
-@ Auto-emitted by tools/disasm/peel.py — do not hand-edit this header.
-@ Range:  [0x080000c0, 0x080000fc)  (60 bytes, arm mode)
-@ Re-peel:  python3 tools/disasm/peel.py --start 0x80000c0 --end 0x80000fc --mode arm
+@ ARM crt0 entry. Branched to from the cartridge header at 0x080000A8 on
+@ power-up / soft-reset. Sets up the supervisor- and IRQ-mode stacks,
+@ installs IntrMain (at 0x0800012C) as the BIOS IRQ handler, then calls
+@ the first Thumb function (AgbMain @ 0x080002A4) via the pointer stored
+@ at 0x08000230. If AgbMain returns, infinite-loops back to entry.
+@
+@ Range:  [0x080000c0, 0x080000fc)  (60 bytes, ARM)
+@ Two of the LDRs reach into IntrMain's literal pool at 0x0800022C and
+@ 0x08000230 via raw [pc, #N] offsets — those constants live alongside
+@ IntrMain rather than _start, so they're referenced positionally here.
 
         .include "asm/macros.inc"
         .syntax unified
 
-@ Disassembly preview (the bytes come from the INCBIN below):
-@   0x080000c0: e3a000d2    mov	r0, #210	@ 0xd2
-@   0x080000c4: e129f000    msr	CPSR_fc, r0
-@   0x080000c8: e59fd028    ldr	sp, [pc, #40]	@ 0xf8
-@   0x080000cc: e3a0001f    mov	r0, #31
-@   0x080000d0: e129f000    msr	CPSR_fc, r0
-@   0x080000d4: e59fd018    ldr	sp, [pc, #24]	@ 0xf4
-@   0x080000d8: e59f114c    ldr	r1, [pc, #332]	@ 0x22c
-@   0x080000dc: e28f0048    add	r0, pc, #72	@ 0x48
-@   0x080000e0: e5810000    str	r0, [r1]
-@   0x080000e4: e59f1144    ldr	r1, [pc, #324]	@ 0x230
-@   0x080000e8: e1a0e00f    mov	lr, pc
-@   0x080000ec: e12fff11    bx	r1
-@   0x080000f0: eafffff2    b	0xc0
-@   0x080000f4: 03007f00    tsteq	r0, #0, 30
-@   0x080000f8: 03007fa0    tsteq	r0, #160, 30	@ 0x280
-
         arm_func_start _start
 _start: @ 0x080000c0
-        .incbin "frog_us_baserom.gba", 0xc0, 0x3c
+        mov     r0, #0xd2                @ PSR_IRQ | PSR_I_BIT (IRQ mode, IRQs off)
+        msr     CPSR_fc, r0
+        ldr     sp, _start_irq_stack     @ IRQ-mode SP <- 0x03007FA0
+        mov     r0, #0x1f                @ PSR_SYS
+        msr     CPSR_fc, r0
+        ldr     sp, _start_svc_stack     @ system-mode SP <- 0x03007F00
+        ldr     r1, [pc, #0x14c]         @ -> word at 0x0800022C = 0x03007FFC (BIOS IRQ vector slot)
+        add     r0, pc, #72              @ -> IntrMain at 0x0800012C
+        str     r0, [r1]                 @ install IntrMain as IRQ handler
+        ldr     r1, [pc, #0x144]         @ -> word at 0x08000230 = 0x080002A5 (thumb ptr to AgbMain)
+        mov     lr, pc
+        bx      r1                       @ call AgbMain
+        b       _start                   @ AgbMain shouldn't return; loop forever if it does
+_start_svc_stack:
+        .word   0x03007F00
+_start_irq_stack:
+        .word   0x03007FA0
         arm_func_end _start
