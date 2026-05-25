@@ -40,11 +40,3 @@
         .thumb_func
 \name:
         .endm
-
-        .macro non_word_aligned_thumb_func_start name
-        .global \name
-        .type   \name, function
-        .thumb
-        .thumb_func
-\name:
-        .endm
