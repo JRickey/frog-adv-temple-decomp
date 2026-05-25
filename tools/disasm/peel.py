@@ -17,6 +17,13 @@ different encoding than the original. The trade-off: pick_target.py
 counts zero "instructions" for these functions until they're refined
 into real mnemonics. That's a deliberate next step, not this tool's job.
 
+For thumb peels, before writing the .s file, this script invokes
+`tools/agent/ts/cmds/detect-fn-boundary.ts` to fact-check the proposed
+range. It refuses to peel if the boundary detector flags interior `bl`
+targets (the bug behind commit 0c989b1 — AgbMain peeled too wide,
+swallowing sub_08000430). Pass `--force-boundary` to override after
+manual review.
+
 After running, you still need to:
   1. Shrink the surrounding INCBIN in asm/rom.s so the peeled bytes
      aren't included twice (.incbin "...", new_skip, new_count).
@@ -81,6 +88,86 @@ def disassemble(start: int, end: int, mode: str) -> list[str]:
     return out
 
 
+def _check_boundary(start: int, end: int, *, force: bool) -> bool:
+    """Run detect-fn-boundary on the proposed range. Return True if peel may proceed.
+
+    Refuses (returns False) if the detector reports interior-bl targets or a
+    recommended end different from the proposed end, unless `force` is True.
+    Falls back to permissive behavior if the TS tool isn't runnable (Node not
+    installed yet) — prints a warning but doesn't block.
+    """
+    import json
+    detector = ROOT / "tools/agent/ts/cmds/detect-fn-boundary.ts"
+    if not detector.exists():
+        print("note: detect-fn-boundary.ts not present; skipping pre-peel check.",
+              file=sys.stderr)
+        return True
+    try:
+        proc = subprocess.run(
+            ["npx", "tsx", str(detector),
+             f"0x{start:x}", "--proposed-end", f"0x{end:x}", "--json"],
+            capture_output=True, text=True, check=False, cwd=str(ROOT),
+        )
+    except FileNotFoundError:
+        print("note: npx not on PATH; skipping pre-peel boundary check. "
+              "Install Node 22+ to enable.", file=sys.stderr)
+        return True
+    if proc.returncode not in (0, 2):
+        print(f"WARNING: detect-fn-boundary failed (exit {proc.returncode}); "
+              f"continuing without boundary validation.\n{proc.stderr}",
+              file=sys.stderr)
+        return True
+    try:
+        report = json.loads(proc.stdout)
+    except json.JSONDecodeError:
+        print("WARNING: detect-fn-boundary produced invalid JSON; "
+              "continuing without boundary validation.", file=sys.stderr)
+        return True
+
+    rec_end = report.get("recommendedEnd")
+    warnings = report.get("warnings", [])
+    interior = [c for c in report.get("callTargets", [])
+                if c.get("to", 0) > start and c.get("to", 0) < end]
+
+    print(f"\nBoundary check:", file=sys.stderr)
+    print(f"  proposed     = [0x{start:08x}, 0x{end:08x})  ({end - start} bytes)",
+          file=sys.stderr)
+    print(f"  recommended  = [0x{start:08x}, 0x{rec_end:08x})  "
+          f"({rec_end - start} bytes)", file=sys.stderr)
+
+    blocking = []
+    if rec_end != end:
+        blocking.append(
+            f"proposed end 0x{end:08x} ≠ detected recommended end 0x{rec_end:08x}")
+    if interior:
+        for c in interior:
+            blocking.append(
+                f"interior bl: 0x{c['from']:08x} → 0x{c['to']:08x} "
+                f"(target lies inside proposed range — peeling another function as part of this one)")
+
+    if not blocking:
+        print("  ✓ boundary check passed", file=sys.stderr)
+        return True
+
+    print(f"\n  ✗ boundary check has {len(blocking)} blocking issue(s):", file=sys.stderr)
+    for b in blocking:
+        print(f"    - {b}", file=sys.stderr)
+    if warnings:
+        print(f"\n  Additional detector warnings:", file=sys.stderr)
+        for w in warnings:
+            print(f"    ⚠ {w}", file=sys.stderr)
+
+    if force:
+        print("\n  --force-boundary set: proceeding despite issues.", file=sys.stderr)
+        return True
+    print(
+        "\n  Refusing to peel. To override: re-run with --force-boundary "
+        "(only after you've manually verified the range).",
+        file=sys.stderr,
+    )
+    return False
+
+
 def emit(start: int, end: int, mode: str, name: str, insns: list[str]) -> str:
     size = end - start
     file_off = start - ROM_BASE
@@ -120,6 +207,10 @@ def main() -> int:
                    help="symbol name (default: sub_<addr>)")
     p.add_argument("--out",
                    help="output path (default: asm/disasm_0xADDR.s)")
+    p.add_argument("--force-boundary", action="store_true",
+                   help="skip the detect-fn-boundary pre-peel check (use only after manual review)")
+    p.add_argument("--no-boundary-check", action="store_true",
+                   help="don't even run the boundary detector (legacy/scratch peels only)")
     args = p.parse_args()
 
     if not BASEROM.exists():
@@ -137,6 +228,10 @@ def main() -> int:
 
     name = args.name or f"sub_{args.start:08X}"
     out = Path(args.out) if args.out else ROOT / f"asm/disasm_{args.start:#010x}.s"
+
+    if args.mode == "thumb" and not args.no_boundary_check:
+        if not _check_boundary(args.start, args.end, force=args.force_boundary):
+            return 2
 
     insns = disassemble(args.start, args.end, args.mode)
     if not insns:
