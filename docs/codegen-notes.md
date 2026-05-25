@@ -88,3 +88,52 @@ Refining a peel into mnemonics across such a boundary requires writing
 the load as raw `ldr r1, [pc, #N]` with the original numeric offset —
 you can't use `ldr r1, =SYM` because GAS would emit a new literal pool
 at the end of *this* function.
+
+## `PROVIDE()` in linker.ld is not enough for forward-declared Thumb BL targets
+
+When refining a function to mnemonics, you often need `bl name` syntax
+for callees that aren't peeled yet. The temptation is to declare them in
+`linker.ld`:
+
+```
+PROVIDE(sub_0801793c = 0x0801793c);   /* or | 1 for thumb bit */
+```
+
+This **does not work**. ld writes the right address into the symbol
+table but produces wildly wrong `BL` encodings (BLs end up pointing
+near the ROM tail at 0x3f00xx). The reason: `PROVIDE` only sets the
+symbol value; it doesn't mark the symbol with `STT_FUNC` + Thumb
+attribute. ld's `R_ARM_THM_CALL` relocation falls back to ARM-mode
+rules and the offset is computed incorrectly.
+
+The fix (untested as of this writing — try if needed):
+**create a stub `.s` file** that uses `.thumb_set` to register each
+forward symbol as a proper Thumb function:
+
+```asm
+.include "asm/macros.inc"
+.syntax unified
+
+.thumb_set sub_0801793c, 0x0801793c
+.thumb_set sub_08019500, 0x08019500
+...
+```
+
+Add the stub to the build (the assembler will register the symbols
+with the right type) and don't list it in `linker.ld` as a code
+section. Until that's set up, use raw `.4byte 0xYYYYXXXX` encoding for
+each cross-region BL (where the bytes are `XX YY` first halfword then
+`XX YY` second halfword of the original BL).
+
+This finding cost ~1h during the AgbMain stage-2 refinement attempt.
+See commit 7d4b50c for the partial stage-1 work that preceded it.
+
+## Hex literals must fit in 32 bits
+
+GAS / ld accept hex literals with arbitrary digit counts but truncate
+to 32 bits silently. `0x080020bc1` is *nine* hex characters = 36 bits;
+ld stores it as `0x80020bc1` (bit 31 set = 2GB address). When writing
+ROM addresses by hand, count chars: `0x` + 8 hex digits = 32 bits.
+The ROM region is `0x08000000`-`0x08400000` — anything starting with
+`0x08` plus 6 more digits is a valid 32-bit address; anything with 7
+more digits is a bug.
