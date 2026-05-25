@@ -16,5 +16,5 @@
         .global rom_remainder
         .type   rom_remainder, %function
 rom_remainder:
-        .incbin "frog_us_baserom.gba", 0xC0
+        .incbin "frog_us_baserom.gba", 0x00010000
         .size   rom_remainder, . - rom_remainder
