@@ -1,16 +1,15 @@
-@ Auto-emitted by tools/disasm/bucket.py — do not hand-edit this header.
+@ Auto-emitted by tools/agent/auto_peel.py — do not hand-edit this header.
 @ Address-aligned bucket of unparsed baserom bytes.
-@ Range:  [0x08010000, 0x08020000)  (0x10000 bytes)
+@ Range:  [0x08010000, 0x08017364)  (0x7364 bytes)
+@
+@ Pre-peel chunk before sub_08017364.
 @
 @ This file holds raw bytes only; no instructions are assembled here.
-@ As individual functions are identified and peeled out into
-@ asm/disasm_0xADDR.s slices, they will appear in linker.ld between
-@ this bucket and its neighbours, at their correct baserom addresses.
 
         .section .text, "ax", %progbits
         .align  2
         .global text_08010000
         .type   text_08010000, %object
 text_08010000:
-        .incbin "frog_us_baserom.gba", 0x00010000, 0x00010000
+        .incbin "frog_us_baserom.gba", 0x00010000, 0x00007364
         .size   text_08010000, . - text_08010000
