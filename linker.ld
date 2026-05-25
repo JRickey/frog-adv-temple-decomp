@@ -31,7 +31,12 @@ SECTIONS {
     .text : ALIGN(4) {
         asm/disasm_0x08000000.o(.text);  /* 0x08000000 - 0x08000004, entry branch */
         asm/header.o(.text);             /* 0x08000004 - 0x080000BF, header */
-        asm/text/text_0x080000c0.o(.text);  /* 0x080000c0 - 0x08010000, raw bytes */
+        asm/disasm_0x080000c0.o(.text);  /* 0x080000c0 - 0x080000fc, _start */
+        asm/disasm_0x080000fc.o(.text);  /* 0x080000fc - 0x08000114, IntrEnable */
+        asm/disasm_0x08000114.o(.text);  /* 0x08000114 - 0x0800012c, IntrDisable */
+        asm/disasm_0x0800012c.o(.text);  /* 0x0800012c - 0x08000240, IntrMain */
+        asm/disasm_0x08000240.o(.text);  /* 0x08000240 - 0x080002a4, sub_08000240 */
+        asm/text/text_0x080002a4.o(.text);  /* 0x080002a4 - 0x08010000, raw bytes */
         asm/text/text_0x08010000.o(.text);  /* 0x08010000 - 0x08020000, raw bytes */
         asm/text/text_0x08020000.o(.text);  /* 0x08020000 - 0x08030000, raw bytes */
         asm/text/text_0x08030000.o(.text);  /* 0x08030000 - 0x08040000, raw bytes */
