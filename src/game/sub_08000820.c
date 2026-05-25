@@ -1,5 +1,3 @@
-#include "game/sub_08000820.h"
-
 #include "types.h"
 
 /* GBA hardware register addresses used by this function. Eventually these

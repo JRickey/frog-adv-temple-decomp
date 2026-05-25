@@ -1,5 +1,3 @@
-#include "game/sub_08033910.h"
-
 #include "types.h"
 
 /* IWRAM globals touched by sub_08033910. The function takes a timer index

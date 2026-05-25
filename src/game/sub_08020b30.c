@@ -1,5 +1,3 @@
-#include "game/sub_08020b30.h"
-
 #include "types.h"
 
 /* Struct at 0x03003570 in IWRAM. Touched by sub_08020B30 (called first from
