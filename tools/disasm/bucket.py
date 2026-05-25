@@ -54,10 +54,10 @@ def _hex(addr: int) -> str:
     return f"0x{addr:08x}"
 
 
-def parse_rom_s() -> tuple[int, int | None, str]:
-    """Return (skip, count_or_None, full_text)."""
+def parse_rom_s() -> tuple[int, int | None, str] | None:
+    """Return (skip, count_or_None, full_text), or None if rom.s is gone."""
     if not ROM_S.exists():
-        sys.exit("ERROR: asm/rom.s is already gone — fully drained")
+        return None
     text = ROM_S.read_text()
     m = INCBIN_RE.search(text)
     if not m:
@@ -190,8 +190,16 @@ def main() -> int:
                    help="machine-readable output")
     args = p.parse_args()
 
-    skip, count, rom_text = parse_rom_s()
     rom_size = baserom_size()
+    parsed = parse_rom_s()
+    if parsed is None:
+        out = {"status": "drained", "reason": "asm/rom.s removed (last bucket drained it)"}
+        if args.json:
+            json.dump(out, sys.stdout); sys.stdout.write("\n")
+        else:
+            print("asm/rom.s already removed; nothing to do")
+        return 2
+    skip, count, rom_text = parsed
 
     if skip >= rom_size:
         out = {"status": "drained", "skip": skip, "rom_size": rom_size}
