@@ -140,6 +140,55 @@ TU was built with a slightly different compiler version (different
 `-fno-cse-skip-blocks` or pass ordering). Worth a `decomp-permuter`
 attempt once that pipeline is wired up.
 
+## `sub_0802F4B0` (sound mixer tick)
+
+VBlank-tick of the custom sound engine. 462 Thumb instructions / 960
+bytes. Body still `.incbin`'d in `asm/disasm_0x0802f4b0.s`. Destination
+scaffolded at `src/system/sound_mixer.c`. State struct hypothesis is in
+`subsystems.md` (Audio / sound).
+
+**Decomp blocker (the primary one):**
+
+m2c can't seed pseudo-C from a `.incbin`'d function body — see
+`tools/agent/decomp_brief.py` output, "(m2c can't seed this function —
+its body is still .incbin'd. Refine the asm to mnemonics first...)".
+And 462 instructions of mixer-shaped agbcc Thumb is well past the
+hand-translation budget for a single session, especially without the
+m2c shape to lean on.
+
+**Plan to unblock:**
+
+1. Refine `asm/disasm_0x0802f4b0.s` from `.incbin "...", 0x2f4b0, 0x3c0`
+   to actual Thumb mnemonics (`.short` directives → assembler picks
+   matching encodings if we're careful, OR plain mnemonic source where
+   we trust agbcc's chosen encoding for each pattern). This is mostly
+   a mechanical port from the objdump output (`arm-none-eabi-objdump
+   -D -b binary -m arm7tdmi -Mforce-thumb --start-address=0x2f4b0
+   --stop-address=0x2f870 frog_us_baserom.gba`), with care for:
+   - Pool literals that decode as instructions — keep them as `.4byte`
+     in the pool region after the function body.
+   - Mid-function pool addressing (the function has a pool slab around
+     0x2f6bc-0x2f70c that's reached via a `b.n 0x2f6f4` jump-into-pool
+     followed by code that resumes at 0x2f6d4).
+   - The mode-switch via `bx r0` (interwork epilogue, not `pop {pc}`).
+2. Re-run `tools/agent/decomp_brief.py sub_0802F4B0` to confirm m2c
+   now seeds. Expect rough/ugly C but with the correct branching
+   structure.
+3. Iteratively shape the seed into matching agbcc-style C using
+   `compile_and_view_assembly.py sub_0802F4B0 --human`, applying the
+   register-pin / `vu*` / interwork-thunk tricks from
+   `codegen-notes.md`.
+4. The sound state struct (`SoundSystem *` at `0x030065e0`) needs a
+   proper header before C can reference fields by name — see
+   `subsystems.md` for the field table. Likely lands in
+   `include/system/sound_mixer.h`. Note: 0x030065e0 is the
+   POINTER-slot, not the state itself; the state's actual address is
+   computed at boot.
+
+**Anti-plan:** trying to hand-write 460 instructions of agbcc Thumb-2.x
+mixer code from objdump alone, without m2c, almost certainly produces
+a non-matching result. Don't attempt without (1) above.
+
 ## Compiler patch
 
 The `-f2003-patch` flag in `testyourmine/cvaos` (Castlevania: Aria of

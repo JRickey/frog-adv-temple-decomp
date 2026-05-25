@@ -419,3 +419,38 @@ Worked example: `sub_08000790`'s BG-scroll commit loop, target wants
 6× `ldrh; strh [r1, #0]` with 5 `adds` between them. Non-volatile dst:
 agbcc emits `strh [r1, #2]` for the last iter and combines the dead
 `adds`. Volatile dst: exact match.
+
+## Thumb boundary detector mis-fires on pool words that decode as push-lr
+
+`tools/agent/ts/cmds/detect-fn-boundary.ts` scans forward for a
+`pop {... pc}` / `bx lr` / `bx Rn` epilogue followed by a pool +
+padding gap and a `push {..., lr}` (Thumb encoding `b5xx`) prologue
+to mark the start of the next function. Trouble: pool literals can
+themselves contain bytes that decode as `b5xx` push instructions.
+
+Worked example: `sub_0802F4B0` (called per VBlank). Detector recommended
+end `0x0802f730`. That address is inside a literal pool — the bytes
+`b538 0000` decode as `push {r3,r4,r5,lr}; movs r0, r0` but are
+actually the pool word `0x0000b538` referenced by a `ldr [pc, #...]`
+earlier in the function. The detector also flagged "epilogue at
+0x0802f72c" — a `b.n 0x2f73a`, but `0x2f73a` is itself inside the same
+pool region (reached only via a forward branch through the pool, into
+the real code that resumes at `0x2f734`). The function's actual end is
+`0x0802f870` (proper `bcf0; bc01; 4700` pop-and-bx-r0 trampoline at
+`0x0802f864`).
+
+Workarounds when you suspect this:
+- Manually disassemble past the proposed end. If the "next function"
+  is one instruction wide before another epilogue, it's a false
+  positive — re-peel with `--force-boundary` and the correct end.
+- Cross-check pool literals listed in `decomp_brief.py` output. A
+  `<unrecognized 0xNNNNNNNN>` pool word at the proposed end is a red
+  flag (here: 0x0000b538, 0x0000b818, 0x00004ac8 — all pool entries
+  whose low halfwords look like Thumb push prologues).
+- For VBlank-tick / mixer-style functions with lots of internal branches
+  to `b.n 0x????` that look like they cross a function boundary,
+  disassemble +0x200 past the recommended end to spot the real epilogue.
+
+Detector improvement TODO: check that the "next push-lr" isn't itself
+reachable as a `[pc, #N]` literal from an earlier `ldr` site within
+the candidate function body.

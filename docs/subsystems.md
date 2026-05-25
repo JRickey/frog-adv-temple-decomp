@@ -90,8 +90,63 @@ hasn't been decompiled yet. Likely candidates: AgbMain's case bodies
 
 ## Audio / sound
 
-(Not yet identified. m4a sound engine is typically at a known ROM
-offset; needs investigation.)
+Custom sound engine (not Nintendo's m4a — the layout and entry-point
+shape don't match). Per-VBlank tick lives at `sub_0802F4B0` (called
+from VBlank IRQ handler `sub_08000790` after the OAM/BG-scroll shadow
+flush). 462 Thumb instructions, body still `.incbin`'d — destination
+scaffolded at `src/system/sound_mixer.c`.
+
+State block: pointed to by `*(void**)0x030065e0` (the pointer-slot;
+the actual SoundState block is allocated/initialized elsewhere —
+writer is `sub_0802D558` via CpuFastSet, suggesting a ROM→IWRAM copy
+during boot). The pointer's referent has at minimum these fields,
+inferred from accesses across `sub_0802F4B0` and its callees:
+
+| Offset | Width | Meaning (inferred) |
+|---|---|---|
+| 0x00 | u8 | active-slot count (loop bound across all callees) |
+| 0x10 + i\*4 | u32 | per-channel state flags (i=0..3): bits 0x40 (fade req), 0x80 (volume req), 0x100, 0x200 |
+| 0x90 + i\*8 | u16 | per-channel target halfword (volume request payload) |
+| 0x93 + i\*8 | u8  | per-channel scale byte |
+| 0xb4 + i\*2 | u16 | per-channel pan-table halfword (4 entries) |
+| 0xbb | u8 | critical-section lock counter (0->1 calls sub_08035D8C) |
+| 0xbc | u16 | default-pan halfword |
+| 0xbe | u16 | default-other halfword |
+| 0xc0 | ptr | per-channel PSG/wave reg-mirror table |
+| 0xc4 | ptr | aux mixer buffer |
+| 0xcc | ptr | active-sound slots array (sized by [0x00]) |
+
+Per-active-sound slot struct (referenced through +0xcc table):
+
+| Offset | Width | Meaning (inferred) |
+|---|---|---|
+| 0x00..0x1e | u16 × N | mix accumulator halfwords (summed in `sub_0802F4B0` phase 2) |
+| 0x14 | u16 | mixer output |
+| 0x28 | u16 | pitch numerator (>>8 +1) |
+| 0x2a | u8 | scaled pitch rate output |
+| 0x2b | u8 | base pitch rate |
+| 0x36 | u16 | countdown timer (decremented per frame) |
+| 0x38 | u32 | flags: 0x40 (fade), 0x80 (release), 0x1400, 0x8000, 0x10000 |
+| 0x3c | u8 | pan position (0..127, splits at 0x40) |
+| 0x3f | u8 | per-frame timer decrement amount |
+
+Locking pattern: every mutator of the SoundState block is bracketed
+by `sub_0802E418` (increment refcount at +0xbb; on 0->1 transition
+call ARM trampoline `sub_08035D8C` — presumed disable-IRQ) and
+`sub_0802E3F8` (decrement; on 1->0 re-enable). This is consistent
+with the sound engine's per-VBlank tick running with VBlank-IRQ
+masked to keep the audio DMA from racing the mix.
+
+Callees of `sub_0802F4B0` (all peeled, all `.incbin`):
+`sub_080315D8`, `sub_0802E934`, `sub_0802EA80`, `sub_0802EC7C`,
+`sub_0802ED5C`, `sub_0802EDF0`, `sub_0802F054`, `sub_0802F2FC`
+(8 update routines), then `sub_0802E5D8` (fade emit) and
+`sub_0802E684` (volume emit) inside the per-channel loops.
+
+C decomp is blocked: m2c can't seed from the `.incbin`'d body, and
+462 Thumb instructions of mixer logic is well beyond hand-translation
+budget for one session. See `unknowns.md` "sub_0802F4B0 (sound mixer
+tick)" for the unblocking plan.
 
 ## Render / sprite
 

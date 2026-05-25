@@ -25,6 +25,7 @@ line of context.
 | `0x03007F00` | `_start_svc_stack` (top) | Supervisor-mode SP | `_start` |
 | `0x03007FA0` | `_start_irq_stack` (top) | IRQ-mode SP | `_start` |
 | `0x030058A0` | IWRAM IntrMain copy dest | `sub_08000820` DMAs `IntrMain` (from ROM) here and installs that copy as the BIOS IRQ vector. | `sub_08000820` |
+| `0x030065E0` | `gpSoundSystem` (pointer-slot) | u32 holding pointer to the sound engine's mutable state block. Writer is `sub_0802D558` (CpuFastSet wrapper) — boot copies the state from ROM. Every consumer dereferences `*(void**)0x030065e0` then accesses fields off the loaded base (slot count, channel state, lock counter at +0xbb, pan-curve LUT, active-sound table at +0xcc). See `subsystems.md` Audio / sound. | `sub_0802D558` (writer), `sub_0802F4B0` and all its callees (readers) |
 | `0x03007FFC` | BIOS IRQ vector slot | BIOS reads this to dispatch HW IRQ | `_start` installs `IntrMain` here; later `sub_08000820` retargets it to the IWRAM copy at `0x030058A0` |
 
 ## MMIO (`0x04000000` — `0x04000400`)
@@ -74,3 +75,6 @@ line of context.
 | `0x08035D9C` | `gIntrTable` | IRQ handler dispatch table (indexed by IRQ source × 4) |
 | `0x0802FFD8` | (TBD) | Thumb function called by `sub_08000240` |
 | `0x082F9010` | (TBD) | State flag read by `sub_08000240` |
+| `0x0802F4B0` | `sub_0802F4B0` (TBD; sound mixer VBlank tick) | Called per frame from VBlank IRQ. 462 Thumb instructions across 8 internal updaters + per-channel fade/volume loops + per-active-sound mix loop. State at `*(void**)0x030065E0`. Body still in `asm/disasm_0x0802f4b0.s`; destination C scaffolded at `src/system/sound_mixer.c`. See `subsystems.md` Audio / sound, `unknowns.md` sub_0802F4B0. |
+| `0x0802E418` | `sub_0802E418` (sound critical-section lock) | Increments refcount at `(*gpSoundSystem)+0xbb`; on 0→1 transition calls ARM trampoline `sub_08035D8C` (presumed IRQ-disable). Paired with `sub_0802E3F8` (unlock). |
+| `0x0802D558` | `sub_0802D558` | Thumb BIOS-SWI-12 (CpuFastSet) wrapper. Used as a memcpy/memset primitive throughout boot. The writer for the SoundSystem pointer at `0x030065E0`. |
