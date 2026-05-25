@@ -36,7 +36,8 @@ SECTIONS {
         asm/disasm_0x08000114.o(.text);  /* 0x08000114 - 0x0800012c, IntrDisable */
         asm/disasm_0x0800012c.o(.text);  /* 0x0800012c - 0x08000240, IntrMain */
         asm/disasm_0x08000240.o(.text);  /* 0x08000240 - 0x080002a4, sub_08000240 */
-        asm/text/text_0x080002a4.o(.text);  /* 0x080002a4 - 0x08010000, raw bytes */
+        asm/disasm_0x080002a4.o(.text);  /* 0x080002a4 - 0x080004c4, AgbMain */
+        asm/text/text_0x080004c4.o(.text);  /* 0x080004c4 - 0x08010000, raw bytes */
         asm/text/text_0x08010000.o(.text);  /* 0x08010000 - 0x08020000, raw bytes */
         asm/text/text_0x08020000.o(.text);  /* 0x08020000 - 0x08030000, raw bytes */
         asm/text/text_0x08030000.o(.text);  /* 0x08030000 - 0x08040000, raw bytes */
