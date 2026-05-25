@@ -1,6 +1,5 @@
 #include "game.h"
 #include "gba/intr.h"
-#include "gba/io.h"
 #include "types.h"
 
 /* sub_0802D558 is a thin Thumb wrapper around BIOS SWI 12 (CpuFastSet):
