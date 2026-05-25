@@ -1,0 +1,6 @@
+[submodule "vendor/m2c"]
+	path = vendor/m2c
+	url = https://github.com/matt-kempster/m2c.git
+[submodule "vendor/decomp-permuter"]
+	path = vendor/decomp-permuter
+	url = https://github.com/simonlindholm/decomp-permuter.git

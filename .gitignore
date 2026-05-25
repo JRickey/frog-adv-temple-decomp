@@ -52,3 +52,14 @@ err.log
 tools/agent/__pycache__/
 **/__pycache__/
 *.pyc
+
+# Node / TypeScript agent tooling
+node_modules/
+tools/agent/ts/**/*.js
+tools/agent/ts/**/*.d.ts
+tools/agent/ts/**/*.js.map
+
+# m2c / decomp-permuter installed venvs (vendored sources are git submodules — venvs are local-only)
+vendor/m2c/.venv/
+vendor/decomp-permuter/.venv/
+~/.cache/mizuchi/

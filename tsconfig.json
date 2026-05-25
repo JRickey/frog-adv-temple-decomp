@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES2024",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "sourceMap": true,
+    "lib": ["ES2024"],
+    "types": ["node"],
+    "paths": {
+      "~/*": ["./tools/agent/ts/*"]
+    }
+  },
+  "include": ["tools/agent/ts/**/*"],
+  "exclude": ["node_modules", "vendor", "tools/agbcc-src"]
+}

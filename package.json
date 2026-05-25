@@ -1,0 +1,25 @@
+{
+  "name": "frog-adv-decomp-agent",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Agent tooling for the Frogger's Adventures: Temple of the Frog matching decompilation. TypeScript ports of mizuchi (https://github.com/macabeus/mizuchi) plus project-specific peel/validation tools.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ast-grep/lang-c": "^0.0.5",
+    "@ast-grep/napi": "^0.41.0",
+    "objdiff-wasm": "^3.7.0",
+    "yaml": "^2.8.2",
+    "zod": "^4.3.5"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}
