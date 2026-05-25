@@ -367,3 +367,55 @@ arm-none-eabi-objdump -d tools/agbcc/lib/libgcc.a | less   # find _umodsi3.o etc
 
 and comparing bytewise against the peeled range. Worked example:
 `sub_08000764` (LCG-mod-byte) → `__umodsi3` at `0x08033f5c`.
+
+## Thumb-callable ARM interwork thunks: declare `thumb_func_start`
+
+Some baserom symbols are 8-byte interwork trampolines: 4 bytes of Thumb
+(`bx pc; nop`) followed by 4 bytes of ARM (`b <target>`). The function
+is *called from Thumb* and *labelled as a Thumb function* (low bit set)
+even though half its bytes are ARM-mode. Peel these with
+`thumb_func_start`, not `arm_func_start` — the symbol attribute, not
+the byte content, is what `R_ARM_THM_CALL` relocations key on.
+
+If declared `arm_func_start`, ld treats the Thumb caller's `bl` as a
+mode-switching call and inserts a `__sub_XXX_from_thumb` veneer at the
+end of `.text` (8 bytes) — shifting the entire ROM tail by 8 bytes and
+breaking matching everywhere downstream.
+
+Worked example: `sub_08035D7C` at `0x08035d7c` is a Thumb→ARM thunk that
+ends up at `IntrEnable` (`0x000000fc`). Originally peeled as
+`arm_func_start`; flipped to `thumb_func_start` when matching
+`sub_08000790` (which calls it from Thumb).
+
+## `register T *p asm("rN")` pins agbcc's register choice
+
+Already noted: a plain local pointer var sequences the base-load before
+constants. But sometimes you also need to PIN the register — when the
+function makes multiple BLs and agbcc would otherwise pick r2 or r3 for
+the surviving pointer.
+
+```c
+register GameStuff *g asm("r1");
+g = &gGameStuff;
+```
+
+Forces `ldr r1, =0x03005330` instead of `ldr r2, =...`. Match-or-not
+hinges on this for `sub_08000790` — without the pin agbcc colours r2,
+which propagates into every dependent load/store and shifts the entire
+function past the matching path. Same trick applies to BG-copy loop
+pointers (`dst` on r1, `src` on r2). Worked example: `sub_08000790`.
+
+## `vu16 *dst` prevents agbcc from folding the last store as `strh [r1, #N]`
+
+When a function does an unrolled copy `*dst++ = src[0]; ... *dst = src[5];`
+agbcc may fold the LAST `*dst = src[N]` into `strh r0, [r1, #2]` (indexed
+form) — saving 2 bytes but losing the trailing `strh r0, [r1, #0]` the
+baserom emitted. Marking the destination `volatile` (`vu16 *dst`)
+suppresses the fold: agbcc keeps each store as `strh r0, [r1, #0]` with
+an explicit `adds r1, #2` between iterations (except the last, which is
+dead and gets dropped).
+
+Worked example: `sub_08000790`'s BG-scroll commit loop, target wants
+6× `ldrh; strh [r1, #0]` with 5 `adds` between them. Non-volatile dst:
+agbcc emits `strh [r1, #2]` for the last iter and combines the dead
+`adds`. Volatile dst: exact match.

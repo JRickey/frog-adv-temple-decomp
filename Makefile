@@ -107,6 +107,7 @@ LIBS := $(AGBCC_LIB)/libgcc.a $(AGBCC_LIB)/libc.a
 # When you discover that a function only matches under old_agbcc, add the
 # source file here. See docs/codegen-notes.md.
 src/game/sub_08033910.s: CC = $(OLD_AGBCC_BIN)
+src/system/init.s: CC = $(OLD_AGBCC_BIN)
 
 
 # Enable verbose output
