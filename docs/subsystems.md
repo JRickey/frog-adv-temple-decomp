@@ -19,31 +19,31 @@ bootstrap: stack setup → IRQ vector install → tail-call into `AgbMain`.
 ## Game-state machine
 
 `AgbMain` (`0x080002A4`) is a 26-entry switch dispatched by the byte at
-`gGameStuff.mode` (`0x0300533A`). Flow:
+`gGameStuff.mode` (`0x03005339`, offset 9). Flow:
 
 ```
 AgbMain():
     bl Init1()                           @ 0x430
-    gGameStuff.mode = 4                  @ initial state
+    gGameStuff.mode = 4                  @ initial state (writes to offset 9)
     bl Init2()                           @ 0x20BC0
     loop:
         idx = gGameStuff.mode - 4
         if (idx > 25) return              @ falls through to end
         switch (idx):
             case 0..25:  jump_table[idx]()
-        @ each case sets gGameStuff.mode to the next state, returns to loop
 ```
 
-State-setter pattern: each case body calls a tiny helper like
-`SetGameMode_06` that does just `gGameStuff.mode = N` and returns. These
-are the simplest C decomp targets in the project; there appear to be
-~26 of them, one per state transition.
+**Naming caveat:** the existing `SetGameMode_NN` helpers (0x08001478,
+0x08002444, 0x08002760, 0x08002A5C, 0x08002E04, 0x08004074, 0x080052C0)
+write to `gGameStuff.pendingMode` at offset **10**, NOT to the dispatched
+`mode` at offset 9. They don't set the dispatched mode — they set
+something adjacent whose purpose is TBD (see `unknowns.md`). The
+function names are kept as-is for git-history continuity; the body
+writes `gGameStuff.pendingMode = N` so the field name is honest.
 
-Known setters:
-- `0x08002444` — `SetGameMode_06`  (decomped, `src/game/game_mode.c`)
-- `0x08002760` — sets mode = 7  (pending)
-- `0x080052C0` — sets mode = 15 (pending)
-- … more at addresses with the `ldr r1; mov r0, #N; strb r0, [r1, #10]; bx lr` byte pattern
+Whatever code actually writes the dispatched `mode` byte (offset 9)
+hasn't been decompiled yet. Likely candidates: AgbMain's case bodies
+(visible via mnemonic refinement), or a separate "tick" routine.
 
 ## Audio / sound
 

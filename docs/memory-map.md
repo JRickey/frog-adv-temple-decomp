@@ -17,8 +17,9 @@ line of context.
 | `0x030034B0` | (TBD) | EWRAM/IWRAM ptr in AgbMain pool | AgbMain literal pool 2 |
 | `0x030034B4` | (TBD) | EWRAM/IWRAM ptr in AgbMain pool | AgbMain literal pool 2 |
 | `0x03003550` | (TBD) | EWRAM/IWRAM ptr in AgbMain pool | AgbMain literal pool 2 |
-| `0x03005330` | `gGameStuff` (base) | Game-state struct | `src/game/game_mode.c` |
-| `0x0300533A` | `gGameStuff.mode` | Game-state mode byte (drives AgbMain dispatch) | `SetGameMode_06` |
+| `0x03005330` | `gGameStuff` (base) | Game-state struct (`include/game.h`) | `src/game/game_mode.c` |
+| `0x03005339` | `gGameStuff.mode` | Dispatched by AgbMain switch. Initialized to 4 in AgbMain prologue. | AgbMain @ 0x080002B6 |
+| `0x0300533A` | `gGameStuff.pendingMode` | Written by `SetGameMode_NN` helpers. NOT the dispatched mode; purpose TBD (see unknowns.md). | `SetGameMode_06` |
 | `0x030035E0` | (TBD) | EWRAM/IWRAM ptr in AgbMain pool | AgbMain literal pool 2 |
 | `0x03007F00` | `_start_svc_stack` (top) | Supervisor-mode SP | `_start` |
 | `0x03007FA0` | `_start_irq_stack` (top) | IRQ-mode SP | `_start` |
@@ -49,13 +50,13 @@ line of context.
 | `0x080002A4` | `AgbMain` | First Thumb fn; 26-entry state-machine dispatcher |
 | `0x080002E4` | (data) | `AgbMain` jump table base (26 × 4 bytes) |
 | `0x080004C4` | (TBD) | Next Thumb function after `AgbMain` (200+ bytes) |
-| `0x08001478` | `SetGameMode_03` | Writes 3 to `gGameStuff.mode` |
-| `0x08002444` | `SetGameMode_06` | Writes 6 to `gGameStuff.mode` |
-| `0x08002760` | `SetGameMode_07` | Writes 7 to `gGameStuff.mode` |
-| `0x08002A5C` | `SetGameMode_08` | Writes 8 to `gGameStuff.mode` |
-| `0x08002E04` | `SetGameMode_09` | Writes 9 to `gGameStuff.mode` |
-| `0x08004074` | `SetGameMode_12` | Writes 12 to `gGameStuff.mode` |
-| `0x080052C0` | `SetGameMode_15` | Writes 15 to `gGameStuff.mode` |
+| `0x08001478` | `SetGameMode_03` | Writes 3 to `gGameStuff.pendingMode` (offset 10, NOT the dispatched mode at 9) |
+| `0x08002444` | `SetGameMode_06` | Writes 6 to `gGameStuff.pendingMode` (offset 10, NOT the dispatched mode at 9) |
+| `0x08002760` | `SetGameMode_07` | Writes 7 to `gGameStuff.pendingMode` (offset 10, NOT the dispatched mode at 9) |
+| `0x08002A5C` | `SetGameMode_08` | Writes 8 to `gGameStuff.pendingMode` (offset 10, NOT the dispatched mode at 9) |
+| `0x08002E04` | `SetGameMode_09` | Writes 9 to `gGameStuff.pendingMode` (offset 10, NOT the dispatched mode at 9) |
+| `0x08004074` | `SetGameMode_12` | Writes 12 to `gGameStuff.pendingMode` (offset 10, NOT the dispatched mode at 9) |
+| `0x080052C0` | `SetGameMode_15` | Writes 15 to `gGameStuff.pendingMode` (offset 10, NOT the dispatched mode at 9) |
 | `0x08035D9C` | `gIntrTable` | IRQ handler dispatch table (indexed by IRQ source × 4) |
 | `0x0802FFD8` | (TBD) | Thumb function called by `sub_08000240` |
 | `0x082F9010` | (TBD) | State flag read by `sub_08000240` |

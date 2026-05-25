@@ -32,9 +32,27 @@ once the handler functions get decompiled.
 
 ## `GameStuff` struct layout (`0x03005330`)
 
-Currently a 1-field stub (`mode` at offset 10). Other fields are
-referenced from `AgbMain`'s callees but unmapped. Watch for `ldr r1, =0x03005330`
-followed by `ldrh/ldrb/ldr [r1, #N]` to enumerate fields.
+Known fields:
+- offset 9: `mode` — dispatched by AgbMain's switch. AgbMain init writes 4.
+- offset 10: `pendingMode` — written by the 7 `SetGameMode_NN` helpers
+  with values 3, 6, 7, 8, 9, 12, 15. **Nothing currently decompiled reads
+  this field.** Whatever reads it lives somewhere we haven't peeled yet.
+
+  Hypotheses:
+  - "Pending"/"requested" mode that a separate routine eventually copies
+    into `mode` (offset 9) — would explain why the setters exist but
+    don't directly drive dispatch.
+  - "Last mode" / "previous mode" record — but then we'd expect more than
+    7 distinct values across the call sites.
+  - Secondary state for a parallel subsystem (audio, save, networking).
+
+  To resolve: find the `ldrb [r?, #10]` callers in the ROM and look at
+  what they do with the value. Likely candidates are AgbMain's case
+  bodies and any "tick" routine called from VBlank IRQ.
+
+Other fields referenced from `AgbMain`'s callees but unmapped. Watch
+for `ldr r1, =0x03005330` followed by `ldrh/ldrb/ldr [r1, #N]` to
+enumerate fields.
 
 ## Other EWRAM/IWRAM pointers in `AgbMain`'s literal pool
 
