@@ -24,7 +24,7 @@ decompiled to C. Body in `asm/disasm_0x08000430.s`.
 
 What it does, in order:
 
-1. Calls a still-unnamed routine at `0x080020B30` (likely a secondary
+1. Calls a still-unnamed routine at `0x08020B30` (likely a secondary
    init — see `unknowns.md`).
 2. `REG_IE = 0` — disables all hardware IRQs.
 3. Zeros 9 fields of `gGameStuff` at 0x03005330 and writes `13` to
@@ -39,7 +39,7 @@ What it does, in order:
    - `[0x030034B4 + 0..1]=1`, `[+2..3]=5`
    - `[0x030035E0 + 0]=5`, `[+4]=0`
    - `[0x03003550 + 0..15]=0` (8 halfword zero-fill)
-5. Calls `sub_080017364` (TBD), `sub_0800072C` (TBD), `sub_080000820`
+5. Calls `sub_08017364` (TBD), `sub_0800072C` (TBD), `sub_08000820`
    (TBD). The order — interleaved with the IWRAM zeroing — suggests
    these are subsystem-init routines that consume the IWRAM structs
    just initialized.

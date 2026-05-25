@@ -29,6 +29,14 @@ ROOT = Path(__file__).resolve().parent.parent.parent
 # the report.
 HEX_RE = re.compile(r"\b0x([0-9a-fA-F]{9,})\b")
 
+# Match malformed `sub_<9+ hex>` symbol names — the same 36-bit / 9-digit
+# bug as raw hex literals, but in symbol-name form. Convention is exactly
+# 8 hex digits (the full ROM address); 9 means someone accidentally wrote
+# `sub_080020B30` for what is really `sub_08020B30`. The symbol itself
+# doesn't truncate at link time (it's just a name), but every reader
+# misinterprets the address and propagates the bug downstream.
+SUB_NAME_RE = re.compile(r"\bsub_([0-9a-fA-F]{9,})\b")
+
 # Lines containing these tokens may legitimately have 64-bit hex literals.
 # (We still report them, but they don't fail the lint.)
 ALLOW_DIRECTIVES = (".8byte", ".quad")
@@ -86,6 +94,12 @@ def scan_file(path: Path) -> list[tuple[int, str, str]]:
             if is_allowed(line, lit):
                 continue
             out.append((lineno, line.rstrip(), lit))
+        # Symbol-name form: catches `sub_080020B30` (9 hex digits) which is
+        # a misnamed reference to `sub_08020B30`. Symbol names show up in
+        # both code and comments, so scan the whole line (no @ split).
+        for m in SUB_NAME_RE.finditer(line):
+            lit = "sub_" + m.group(1)
+            out.append((lineno, line.rstrip(), lit))
     return out
 
 
@@ -124,9 +138,14 @@ def main() -> int:
             continue
         rel = path.relative_to(ROOT) if str(path).startswith(str(ROOT)) else path
         for lineno, line, lit in violations:
-            digits = len(lit) - 2
-            print(f"{rel}:{lineno}: hex literal {lit} ({digits} digits, "
-                  f"would silently truncate to {digits * 4}-bit value)")
+            if lit.startswith("sub_"):
+                digits = len(lit) - 4
+                print(f"{rel}:{lineno}: symbol name {lit} ({digits} hex digits — "
+                      f"convention is 8; this is the same 36-bit bug as 0x-literals)")
+            else:
+                digits = len(lit) - 2
+                print(f"{rel}:{lineno}: hex literal {lit} ({digits} digits, "
+                      f"would silently truncate to {digits * 4}-bit value)")
             print(f"  | {line}")
             total += 1
 

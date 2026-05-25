@@ -70,7 +70,7 @@ default-config values (see `subsystems.md`):
   RAM ring buffer or coord array.
 
 These hints aren't enough to name the subsystems yet; revisit once one
-of the `sub_080017364` / `sub_0800072C` / `sub_080000820` callees is
+of the `sub_08017364` / `sub_0800072C` / `sub_08000820` callees is
 decompiled (they consume these IWRAM structs immediately after Init1
 writes them).
 
@@ -79,14 +79,14 @@ writes them).
 Init1 calls four functions whose bodies are still inside the raw
 `text_0x*.o` blobs:
 
-- `sub_080020B30` — called first thing, before any state init. Probably
+- `sub_08020B30` — called first thing, before any state init. Probably
   hardware init (sound, DMA, BIOS-tier setup) given its precedence.
-- `sub_080017364` — called after IWRAM-struct init but before the
+- `sub_08017364` — called after IWRAM-struct init but before the
   halfword zero-fill of 0x03003550. Likely a "subsystem A init" that
   needs the IWRAM bases ready.
-- `sub_0800072C` — called immediately after `sub_080017364`. Possibly a
+- `sub_0800072C` — called immediately after `sub_08017364`. Possibly a
   paired routine ("subsystem B" or a continuation).
-- `sub_080000820` — called after the halfword zero-fill, just before
+- `sub_08000820` — called after the halfword zero-fill, just before
   `REG_DISPCNT = 0x1F40`. Likely the renderer/sprite init that needs
   the zeroed buffer at 0x03003550.
 

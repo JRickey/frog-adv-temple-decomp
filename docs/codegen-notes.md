@@ -113,11 +113,11 @@ The next attempt was a stub file `asm/forward_thumb_stubs.s`:
 
 ```asm
 .syntax unified
-.global sub_080020b30
-.global sub_080017364
+.global sub_08020B30
+.global sub_08017364
 ...
-.thumb_set sub_080020b30, 0x080020b30
-.thumb_set sub_080017364, 0x080017364
+.thumb_set sub_08020B30, 0x08020b30
+.thumb_set sub_08017364, 0x08017364
 ...
 ```
 
@@ -137,7 +137,7 @@ match. `make check` failed with a 16-byte ROM-size increase.
 Encode each cross-region BL as a 32-bit literal in the .s file:
 
 ```asm
-.4byte 0xfb7df020   @ bl sub_080020b30
+.4byte 0xfb7df020   @ bl sub_08020B30
 ```
 
 where the bytes are `XX YY` first halfword then `XX YY` second halfword
@@ -147,7 +147,7 @@ spills:
 
 ```c
 void some_fn(void) {
-    asm volatile (".4byte 0xfb7df020");  /* bl sub_080020b30 */
+    asm volatile (".4byte 0xfb7df020");  /* bl sub_08020B30 */
     /* ... */
 }
 ```

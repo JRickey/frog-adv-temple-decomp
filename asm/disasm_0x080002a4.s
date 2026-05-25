@@ -4,7 +4,7 @@
 @ Range:  [0x080002a4, 0x08000430)  (396 bytes, thumb mode)
 @
 @ Structure:
-@   prologue (0x2A4-0x2D3): one-time init (sub_08000430 + sub_080020bc0),
+@   prologue (0x2A4-0x2D3): one-time init (sub_08000430 + sub_08020BC0),
 @     then a forever-loop reading gGameStuff.mode (offset 9) and dispatching
 @     to one of 26 case bodies via a jump table.
 @   literal pool 1 (0x2D4-0x2E3): 4 words (REG_WAITCNT addr, WAITCNT init
@@ -35,7 +35,7 @@ AgbMain: @ 0x080002a4
         ldr     r1, .LAgbMain_gGameStuff        @ -> 0x03005330
         movs    r0, #4
         strb    r0, [r1, #9]                    @ gGameStuff.mode = 4 (initial state)
-        .4byte  0xfc82f020                      @ bl 0x080020bc0 — TBD, "tick" / "VBlank wait"
+        .4byte  0xfc82f020                      @ bl sub_08020BC0 (TBD, "tick" / "VBlank wait")
 .LAgbMain_loopTop:                               @ 0x080002bc — case bodies branch back here
         ldr     r0, .LAgbMain_gGameStuff
         ldrb    r0, [r0, #9]                    @ r0 = gGameStuff.mode

@@ -6,7 +6,7 @@
 @ (0x04000000) inline via shift-construction at 0x490-0x49A (enable all
 @ BGs + OBJ in 1D char-mapping mode).
 @
-@ Calls: sub_080020B30, sub_080017364, sub_08000072C, sub_080000820.
+@ Calls: sub_08020B30, sub_08017364, sub_0800072C, sub_08000820.
 @ Range:  [0x08000430, 0x080004c4)  (148 bytes, thumb mode).
 @ Name `sub_08000430` until purpose is identified — likely Init1, the
 @ initialization routine called once before the main dispatch loop.
@@ -17,7 +17,7 @@
         thumb_func_start sub_08000430
 sub_08000430: @ 0x08000430
         push    {r4, lr}
-        .4byte  0xfb7df020                      @ bl sub_080020b30 (TBD)
+        .4byte  0xfb7df020                      @ bl sub_08020B30 (TBD)
         ldr     r0, .Lsub_08000430_regIE        @ -> 0x04000200 (REG_IE)
         movs    r2, #0
         strh    r2, [r0, #0]                    @ REG_IE = 0 (disable all IRQs)
@@ -48,8 +48,8 @@ sub_08000430: @ 0x08000430
         strb    r2, [r1, #4]                    @ +4 = 0
         ldr     r0, .Lsub_08000430_iwram34b0    @ -> 0x030034B0
         str     r4, [r0, #0]                    @ *(u32*)0x030034B0 = 0
-        .4byte  0xff77f016                      @ bl sub_080017364 (TBD)
-        .4byte  0xf959f000                      @ bl sub_08000072c (TBD)
+        .4byte  0xff77f016                      @ bl sub_08017364 (TBD)
+        .4byte  0xf959f000                      @ bl sub_0800072C (TBD)
         ldr     r0, .Lsub_08000430_iwram3550    @ -> 0x03003550
         strh    r4, [r0, #0]                    @ 8 halfword zero-fill
         strh    r4, [r0, #2]
@@ -59,7 +59,7 @@ sub_08000430: @ 0x08000430
         strh    r4, [r0, #10]
         strh    r4, [r0, #12]
         strh    r4, [r0, #14]
-        .4byte  0xf9c8f000                      @ bl sub_080000820 (TBD)
+        .4byte  0xf9c8f000                      @ bl sub_08000820 (TBD)
         movs    r1, #128                        @ r1 = 0x80
         lsls    r1, r1, #19                     @ r1 = 0x04000000 = REG_DISPCNT
         movs    r2, #250                        @ r2 = 0xFA
