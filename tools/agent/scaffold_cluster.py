@@ -43,7 +43,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 SRC_DIR = ROOT / "src"
-INC_DIR = ROOT / "include"
 LINKER = ROOT / "linker.ld"
 
 FUNC_START_RE = re.compile(
@@ -112,8 +111,13 @@ def neighbour_in_linker(asm_file: Path, before: bool) -> tuple[int, str, str] | 
     return None
 
 
-def derive_paths(cluster: Cluster, sibling_obj: str) -> tuple[Path, Path]:
-    """Decide src/.../<name>.c + include/.../<name>.h from sibling + prefix."""
+def derive_src_path(cluster: Cluster, sibling_obj: str) -> Path:
+    """Decide src/.../<name>.c from sibling + prefix.
+
+    No companion `.h` is created — per-function headers are dead weight
+    (only ever included by their own .c). Extern declarations live at
+    the call site or in a real subsystem header.
+    """
     # `sub_<8 hex digits>` is one token, not CamelCase — don't insert an
     # underscore inside the hex run (avoids `sub_08020B30` → `sub_08020_b30`).
     if re.fullmatch(r"sub_[0-9A-Fa-f]+", cluster.prefix):
@@ -121,15 +125,15 @@ def derive_paths(cluster: Cluster, sibling_obj: str) -> tuple[Path, Path]:
     else:
         snake = re.sub(r"(?<!^)(?=[A-Z])", "_", cluster.prefix).lower()
     sibling_dir = Path(sibling_obj).parent.relative_to(Path("src"))
-    src_path = SRC_DIR / sibling_dir / f"{snake}.c"
-    inc_path = INC_DIR / sibling_dir / f"{snake}.h"
-    return src_path, inc_path
+    return SRC_DIR / sibling_dir / f"{snake}.c"
 
 
 def scaffold_c_body(prefix: str, header_rel: str, sibling: Path,
                     functions: list[str]) -> str:
     """Build the new .c file body. Copy the #include block from a sibling
-    file so the agent doesn't fight project conventions."""
+    file so the agent doesn't fight project conventions. No per-function
+    header is emitted — extern declarations live at the call site (or in
+    a real subsystem header) until a second caller justifies one."""
     sibling_text = sibling.read_text(errors="replace")
     include_block: list[str] = []
     for line in sibling_text.splitlines():
@@ -140,43 +144,11 @@ def scaffold_c_body(prefix: str, header_rel: str, sibling: Path,
             include_block.append(line)
         elif include_block and not stripped.startswith("#include"):
             break
-    # Ensure our own header is first
-    own = f'#include "{header_rel}"'
-    if own not in include_block:
-        include_block.insert(0, own)
-        include_block.insert(1, "")
+    # Fall back to `#include "types.h"` if the sibling has no include block.
+    if not include_block:
+        include_block = ['#include "types.h"']
 
-    body = "\n".join(include_block).rstrip() + "\n\n"
-    body += (
-        f"/*\n"
-        f" * Scaffold for the {prefix}* cluster.\n"
-        f" * Decompiled functions land here, one at a time, in baserom\n"
-        f" * address order. Each function added must also be removed from\n"
-        f" * the corresponding asm/disasm_*.s and verified with\n"
-        f" * tools/agent/compile_and_view_assembly.py before commit.\n"
-        f" */\n"
-    )
-    return body
-
-
-def scaffold_h_body(prefix: str, functions: list[str]) -> str:
-    guard = f"{prefix.upper()}_H"
-    # snake_case for guard
-    guard = re.sub(r"(?<!^)(?=[A-Z])", "_", prefix).upper() + "_H"
-    decls = "\n".join(f"// extern <return_type> {f}(<params>);" for f in functions)
-    return (
-        f"#ifndef {guard}\n"
-        f"#define {guard}\n"
-        f"\n"
-        f"#include \"types.h\"\n"
-        f"\n"
-        f"// Forward declarations for the {prefix}* cluster.\n"
-        f"// Uncomment and fill in the correct signature as each function is\n"
-        f"// decompiled into the matching .c file.\n"
-        f"{decls}\n"
-        f"\n"
-        f"#endif // {guard}\n"
-    )
+    return "\n".join(include_block).rstrip() + "\n\n"
 
 
 def linker_insertion(asm_file: Path, at_end: bool) -> tuple[int, str]:
@@ -244,9 +216,8 @@ def main() -> int:
         return 1
     sibling_idx, sibling_indent, sibling_obj = sibling
 
-    src_path, inc_path = derive_paths(cluster, sibling_obj)
+    src_path = derive_src_path(cluster, sibling_obj)
     rel_src = src_path.relative_to(ROOT)
-    rel_inc = inc_path.relative_to(ROOT)
 
     sibling_c = ROOT / sibling_obj.replace(".o", ".c")
     if not sibling_c.exists():
@@ -260,15 +231,7 @@ def main() -> int:
     )
     rodata = linker_rodata_insertion(sibling_obj)
 
-    header_rel = (
-        rel_inc.relative_to("include").as_posix()
-        if rel_inc.is_relative_to(INC_DIR.relative_to(ROOT))
-        else rel_inc.as_posix()
-    )
-
-    c_body = scaffold_c_body(cluster.prefix, header_rel, sibling_c,
-                             cluster.functions)
-    h_body = scaffold_h_body(cluster.prefix, cluster.functions)
+    c_body = scaffold_c_body(cluster.prefix, "", sibling_c, cluster.functions)
 
     print(f"Cluster: {cluster.prefix}* ({len(cluster.functions)} functions, "
           f"{'tail' if args.end else 'head'} of {asm.name})")
@@ -278,7 +241,6 @@ def main() -> int:
         print(f"  ... and {len(cluster.functions) - 8} more")
     print()
     print(f"Will create: {rel_src}")
-    print(f"Will create: {rel_inc}")
     print(f"Will insert into linker.ld@{insert_idx + 1}:  {new_obj_line.strip()}")
     if rodata:
         ro_idx, ro_indent, ro_obj = rodata
@@ -302,14 +264,9 @@ def main() -> int:
     if src_path.exists():
         print(f"ERROR: {rel_src} already exists; aborting.", file=sys.stderr)
         return 2
-    if inc_path.exists():
-        print(f"ERROR: {rel_inc} already exists; aborting.", file=sys.stderr)
-        return 2
 
     src_path.parent.mkdir(parents=True, exist_ok=True)
-    inc_path.parent.mkdir(parents=True, exist_ok=True)
     src_path.write_text(c_body)
-    inc_path.write_text(h_body)
 
     lines = LINKER.read_text(errors="replace").splitlines()
     if rodata:
@@ -323,7 +280,6 @@ def main() -> int:
     LINKER.write_text("\n".join(lines) + "\n")
 
     print(f"\n✓ wrote {rel_src}")
-    print(f"✓ wrote {rel_inc}")
     print(f"✓ updated linker.ld")
 
     # Rebuild and verify it still matches (scaffold should add nothing).
