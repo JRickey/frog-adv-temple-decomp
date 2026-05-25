@@ -2,7 +2,6 @@
 #include "gba/intr.h"
 #include "gba/io.h"
 #include "iwram.h"
-#include "types.h"
 
 extern void sub_08020B30(void);
 extern void sub_08017364(void);
