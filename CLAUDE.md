@@ -71,16 +71,60 @@ Requirements:
 
 ## Project status
 
-This decomp is in early setup. Until the baserom has been disassembled and the
-initial `linker.ld` / `asm/disasm_*.s` skeleton lands, most agent scripts will
-either be no-ops or exit with "no targets". That's expected. The pipeline is:
+Phase 1 of a three-phase plan (matching → shiftable → PC port):
 
-1. Stand up the initial disassembly: dump baserom → asm/ → split into
-   `asm/disasm_0xADDR.s` slices → populate `linker.ld` with the slices in
-   ROM-address order → confirm `make check` matches.
-2. Take the first matching baseline snapshot:
-   `python3 tools/agent/snapshot_addresses.py`
-3. Start decomping functions one at a time via the agent loop below.
+1. **Matching decomp** (current). Rebuild byte-identical to the baserom.
+   The bootstrap INCBINs the entire baserom and produces a matching
+   `frog_us.gba`; from there, functions get peeled into labeled chunks
+   one at a time.
+2. **Shiftable**: replace absolute placements in `linker.ld` with named
+   symbols so the ROM can be modified without breaking pointer math.
+3. **PC port**: swap agbcc for modern clang, replace GBA hardware
+   touchpoints with a HAL (SDL or similar). Code written in phase 1
+   that touches GBA registers/DMA/BIOS should go through wrapped
+   helpers so phase 3 is a HAL swap, not a chase through every `.c`.
+
+Current state:
+- INCBIN bootstrap produces matching `frog_us.gba`. `make check` passes.
+- `asm/header.s` (GBA header, 192 bytes minus the entry branch) and
+  `asm/rom.s` (everything from 0x080000C0 onward, still raw) split the
+  baserom into two large blobs.
+- `asm/disasm_0x08000000.s` carries the 4-byte ARM entry branch as a
+  worked example of the peel workflow.
+- No C source yet — `src/` is empty placeholders.
+
+## Disassembly workflow
+
+The ROM is brought into the build incrementally. Each step shrinks the
+opaque INCBIN and adds named labels the agent loop can grab.
+
+```sh
+# 1. Identify a byte range to peel and its mode (arm or thumb).
+#    Use `arm-none-eabi-objdump -D -b binary -m arm7tdmi [-Mforce-thumb]`
+#    to preview before committing to a range.
+python3 tools/disasm/peel.py --start 0x080000c0 --end 0x080000f0 --mode arm
+
+# 2. Shrink the surrounding INCBIN so those bytes aren't included twice.
+#    For asm/rom.s, that means advancing the .incbin skip past the peeled
+#    range. (For asm/header.s, edit the skip/count similarly.)
+
+# 3. Wire the new .o file into linker.ld in baserom address order, between
+#    the file whose range ends at <start> and the file whose range begins
+#    at <end>.
+
+# 4. Confirm the build still matches.
+make -j8 && make check        # exits 0 only on byte-identical match
+
+# 5. Refresh the address cache so layout-drift detection stays accurate.
+python3 tools/agent/snapshot_addresses.py
+```
+
+The peel tool emits each chunk as an `.incbin` of the original bytes plus
+the objdump preview as `@`-comments. The INCBIN-as-body keeps the build
+matching for free — no risk of the assembler picking a different encoding
+than the original. Refining a peeled chunk into real Thumb/ARM mnemonics
+(so `compile_and_view_assembly.py` can do per-instruction diffs) is the
+next step after a peel, not part of the peel itself.
 
 ## Quantifying progress (use these in every loop)
 

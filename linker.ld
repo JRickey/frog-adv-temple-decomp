@@ -1,22 +1,22 @@
 /* Linker script for Frogger's Adventures: Temple of the Frog (USA).
  *
- * This is a SKELETON. A real matching build needs:
- *   - EWRAM/IWRAM symbol layout cribbed from the disassembly
- *   - `.text` filled in with the asm and (eventually) C objects in baserom
- *     address order — each `asm/disasm_0xADDR.o(.text)` slice represents
- *     a contiguous range of un-decompiled functions
- *   - `.rodata` for data tables (when extracted from the baserom)
- *   - `.data` for any initialized RAM data the ROM ships with
+ * Phase 0 (current): one big asm/rom.o(.text) entry that INCBINs the whole
+ * baserom. This gives us a matching-build baseline before any disassembly
+ * has happened.
  *
- * Build it up as the disassembly progresses. See `tools/agent/pick_target.py`
- * for the layout-order invariant — function entries here must match baserom
- * address order or the per-function diff will report layout drift.
+ * Phase 1 (next): as functions are peeled off the front of rom.s into
+ * asm/disasm_0xADDR.s slices, add their `.o(.text)` entries here in
+ * baserom address order. The agent loop (pick_target.py / progress.py)
+ * relies on this address-ordered placement to detect layout drift.
+ *
+ * Phase 2 (later): once C decomp begins, src/...o(.text) entries
+ * interleave with the remaining asm slices.
  */
 
 MEMORY {
     ewram : ORIGIN = 0x02000000 LENGTH = 256K
     iwram : ORIGIN = 0x03000000 LENGTH = 32K
-    rom : ORIGIN = 0x08000000 LENGTH = 32M
+    rom   : ORIGIN = 0x08000000 LENGTH = 32M
 }
 
 SECTIONS {
@@ -29,22 +29,27 @@ SECTIONS {
     } >iwram
 
     .text : ALIGN(4) {
-        /* Crt0 / interrupt handlers go first.
-         * src/crt0.o(.text);
-         *
-         * Then asm slices interleaved with C objects in baserom address
-         * order. As functions get decompiled, asm slices shrink/split.
-         *
-         * asm/disasm_0x08000000.o(.text);
-         * ...
-         */
+        asm/disasm_0x08000000.o(.text);  /* 0x08000000 - 0x08000004, entry branch */
+        asm/header.o(.text);             /* 0x08000004 - 0x080000BF, header */
+        asm/rom.o(.text);                /* 0x080000C0 onward, still unparsed */
+        /* Disassembled function clusters land here, in baserom address
+         * order, as they get peeled off rom.s. */
     } >rom
 
     .rodata : ALIGN(4) {
-        /* Read-only data tables. */
+        /* Read-only data tables — empty until extraction begins. */
     } >rom
 
     .data : ALIGN(2) {
-        /* Initialized RAM data (copied from ROM at boot). */
+        /* Initialized RAM data — empty until extraction begins. */
     } >rom
+
+    /* Discard anything the agbcc libs would pull in by default; with no
+     * C source yet there are no references, but be explicit so a stray
+     * .ARM.attributes section can't sneak into the binary. */
+    /DISCARD/ : {
+        *(.ARM.attributes)
+        *(.comment)
+        *(.note*)
+    }
 }

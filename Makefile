@@ -2,7 +2,9 @@
 .SUFFIXES:
 
 REGION ?= us
-PAD_TO = 0x08800000
+# Frogger's Adventures: Temple of the Frog is a 4MB ROM. PAD_TO is the end
+# address the binary should be padded out to (ROM_BASE + ROM size).
+PAD_TO = 0x08400000
 
 ifeq ($(REGION),us)
 	TARGET = frog_us
