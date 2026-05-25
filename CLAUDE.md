@@ -185,6 +185,14 @@ python3 tools/agent/check_relocations.py
 # Lint hex literals > 32 bits AND sub_<9-digit> symbol names (both are
 # the same 36-bit / silent-truncation bug). Pre-commit-friendly.
 python3 tools/agent/lint_hex_literals.py
+
+# Cross-reference other agbcc decomps when a matching blocker looks
+# idiomatic (CSE folds, register-allocation drift, specific MMIO
+# patterns). Local cache of 7 curated repos — see Agent workflow step
+# 7 below for when to use it, and docs/tooling.md "Phase D" for the
+# full surface.
+python3 tools/agent/corpus.py grep '<regex>' --c
+python3 tools/agent/corpus.py decomps --name <prefix>
 ```
 
 See `docs/tooling.md` for the full tool inventory, including the
@@ -346,8 +354,34 @@ For each decomp target:
    # Whole-ROM compile + categorized diff
    make -j8 && python3 tools/agent/compile_and_view_assembly.py <name> --human
    ```
-   Stuck on a fold? Run `vendor/decomp-permuter` for register-allocation
-   search.
+   **Stuck on a fold? Search the corpus FIRST, permuter LAST.** Other
+   agbcc decomps have almost certainly solved the same idiom — and the
+   asm-as-incbin form usually gets deleted when they match, so the
+   pattern only lives in git history:
+
+   ```sh
+   # Once-per-machine: clone the curated corpus (~5 min, ~350 MB).
+   python3 tools/agent/corpus.py sync
+
+   # Search for prior art on the specific fold/idiom you hit.
+   python3 tools/agent/corpus.py grep '<regex>' --c       # C patterns
+   python3 tools/agent/corpus.py decomps --name <prefix>  # similar fn names
+   python3 tools/agent/corpus.py show REPO@COMMIT         # one commit's diff
+   ```
+
+   Worked example: `sub_08000430` (Init1) was blocked for two sessions
+   on agbcc's adjacent-IWRAM-base CSE-fold. Manual variations got to
+   byte_diff 22; permuter 15 min got 90 (worse). **3 minutes of
+   corpus grep found the idiomatic answer** in `testyourmine/cvaos`
+   — declare each base as a linker-assigned C symbol
+   (`. = 0x00002CB0; gUnk_03002CB0 = .;` in `linker.ld`) instead of
+   casting absolute addresses. First-try byte match on
+   re-implementation. See `docs/codegen-notes.md` "Adjacent IWRAM
+   bases — defeat CSE-fold via linker-assigned symbols".
+
+   Only fall back to `vendor/decomp-permuter` for **register-coloring
+   drift** from a near-matching base. Permuter mutates statement
+   ordering and variable scope; it doesn't invent new idioms.
 
 8. **Verify.** `make check` must exit 0 for a clean match. If it
    doesn't but per-function diff for your target is 0 and total
