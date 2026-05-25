@@ -126,25 +126,43 @@ def parse_asm_file(path: Path) -> list[Target]:
 # ---------- linker.ld neighbour lookup ----------
 
 def _neighbour_c_files(asm_file: str) -> tuple[Path | None, Path | None]:
-    """Return (previous, next) src/*.c surrounding `asm_file` in linker order."""
+    """Return (previous, next) src/*.c that are **immediately adjacent** to
+    `asm_file` in linker.ld — i.e. no other `.o(.text)` line sits between
+    them. Returns None for the side where the adjacent neighbour is itself
+    an asm/text/* bucket or another asm/disasm_*.
+
+    The previous looser form (walk-backward-until-first-src) was a footgun:
+    it would propose `src/game/sub_08020b30.c` as the destination for
+    `sub_08033910` even though ~76 KB of raw text buckets sit between them
+    in baserom — appending there would land the new bytes at the wrong
+    ROM offset. The adjacency check forces the picker to surface a
+    "needs new C file" verdict in that case, matching the layout invariant
+    in CLAUDE.md ("Layout invariant (critical)").
+    """
     asm_obj = Path(asm_file).with_suffix(".o").name
     needle = f"{Path(asm_file).parent.as_posix()}/{asm_obj}(.text)"
     lines = LINKER.read_text(errors="replace").splitlines()
     hit = next((i for i, l in enumerate(lines) if needle in l), None)
     if hit is None:
         return None, None
-    prev: Path | None = None
-    for line in reversed(lines[:hit]):
-        m = LINKER_OBJ_RE.search(line)
-        if m and m.group(1).startswith("src/"):
-            prev = ROOT / m.group(1).replace(".o", ".c")
-            break
-    nxt: Path | None = None
-    for line in lines[hit + 1 :]:
-        m = LINKER_OBJ_RE.search(line)
-        if m and m.group(1).startswith("src/"):
-            nxt = ROOT / m.group(1).replace(".o", ".c")
-            break
+
+    def _adjacent_neighbour(idxs: range) -> Path | None:
+        """Return the first src/*.c we encounter, or None if any non-src .o
+        line interposes first."""
+        for i in idxs:
+            m = LINKER_OBJ_RE.search(lines[i])
+            if not m:
+                continue
+            obj = m.group(1)
+            if obj.startswith("src/"):
+                return ROOT / obj.replace(".o", ".c")
+            # Any other .o (asm/text/*.o, asm/disasm_*.o, asm/forward_thumb_stubs.o)
+            # interposes — the neighbour relationship is broken.
+            return None
+        return None
+
+    prev = _adjacent_neighbour(range(hit - 1, -1, -1))
+    nxt = _adjacent_neighbour(range(hit + 1, len(lines)))
     return prev, nxt
 
 
@@ -289,7 +307,11 @@ def classify(t: Target, min_prefix: int) -> Target:
 
     prev, _ = _neighbour_c_files(t.file)
     if prev is None:
-        t.legality_note = "blocked: no src/*.c neighbour in linker.ld"
+        t.legality_note = (
+            "blocked: no src/*.c is adjacent to this asm in linker.ld "
+            "— a text bucket or another disasm slice interposes. Scaffold "
+            "a new C file at this asm's linker.ld position before decomping."
+        )
         return t
     t.destination = str(prev.relative_to(ROOT))
 

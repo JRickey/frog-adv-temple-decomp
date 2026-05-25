@@ -141,8 +141,27 @@ def m2c_seed(asm_path: Path, fn: str) -> str:
         return "(m2c not installed — run scripts/setup-m2c.sh)\n"
     proc = run([str(m2c), str(script), str(asm_path),
                 "--target", "arm", "--function", fn, "--globals", "none"])
+    # The "function is still .incbin" case: m2c can't parse raw bytes, so
+    # it reports the failure as a /* ... */ comment in stdout. Surface
+    # that explicitly — it's the most common failure mode and a peel-state
+    # issue, not a m2c bug. Check this BEFORE the returncode branch since
+    # m2c may exit 0 or 1 in this case depending on version.
+    if "Skipping .incbin directive" in proc.stdout or \
+       "contains no instructions" in proc.stdout:
+        return (
+            "(m2c can't seed this function — its body is still .incbin'd.\n"
+            " Refine the asm to mnemonics first (see CLAUDE.md \n"
+            " 'Refining a peeled chunk into real Thumb/ARM mnemonics'),\n"
+            " or fall back to writing C against the raw disassembly via\n"
+            " tools/agent/dump_pool.py + objdump -Mforce-thumb.)\n"
+        )
+    # Other failures: m2c writes most errors to stdout (as /* ... */
+    # comments) and may exit 0 or non-zero depending on the error. Fall
+    # back to stdout when stderr is empty.
     if proc.returncode != 0:
-        return f"(m2c failed: {proc.stderr.strip()})\n"
+        msg = (proc.stderr.strip() or proc.stdout.strip()
+               or f"exit code {proc.returncode}, no output")
+        return f"(m2c failed: {msg})\n"
     return proc.stdout
 
 
