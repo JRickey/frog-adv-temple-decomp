@@ -1,6 +1,6 @@
 @ Auto-emitted by tools/disasm/peel.py — do not hand-edit this header.
-@ Range:  [0x0802f4b0, 0x0802f730)  (640 bytes, thumb mode)
-@ Re-peel:  python3 tools/disasm/peel.py --start 0x802f4b0 --end 0x802f730 --mode thumb
+@ Range:  [0x0802f4b0, 0x0802f870)  (960 bytes, thumb mode)
+@ Re-peel:  python3 tools/disasm/peel.py --start 0x802f4b0 --end 0x802f870 --mode thumb
 
         .include "asm/macros.inc"
         .syntax unified
@@ -314,8 +314,162 @@
 @   0x0802f728: 6818        ldr	r0, [r3, #0]
 @   0x0802f72a: 30be        adds	r0, #190	@ 0xbe
 @   0x0802f72c: e005        b.n	0x2f73a
+@   0x0802f72e: 0000        movs	r0, r0
+@   0x0802f730: b538        push	{r3, r4, r5, lr}
+@   0x0802f732: 0000        movs	r0, r0
+@   0x0802f734: 4651        mov	r1, sl
+@   0x0802f736: 6808        ldr	r0, [r1, #0]
+@   0x0802f738: 30bc        adds	r0, #188	@ 0xbc
+@   0x0802f73a: 8800        ldrh	r0, [r0, #0]
+@   0x0802f73c: 1c04        adds	r4, r0, #0
+@   0x0802f73e: 9202        str	r2, [sp, #8]
+@   0x0802f740: f7fe        fe6a 	bl	0x2e418
+@   0x0802f744: 1c38        adds	r0, r7, #0
+@   0x0802f746: 4360        muls	r0, r4
+@   0x0802f748: 1200        asrs	r0, r0, #8
+@   0x0802f74a: 4643        mov	r3, r8
+@   0x0802f74c: 7618        strb	r0, [r3, #24]
+@   0x0802f74e: 1c30        adds	r0, r6, #0
+@   0x0802f750: 4360        muls	r0, r4
+@   0x0802f752: 1200        asrs	r0, r0, #8
+@   0x0802f754: 7658        strb	r0, [r3, #25]
+@   0x0802f756: 9a02        ldr	r2, [sp, #8]
+@   0x0802f758: 769a        strb	r2, [r3, #26]
+@   0x0802f75a: f7fe        fe4d 	bl	0x2e3f8
+@   0x0802f75e: 6ba9        ldr	r1, [r5, #56]	@ 0x38
+@   0x0802f760: 2040        movs	r0, #64	@ 0x40
+@   0x0802f762: 4008        ands	r0, r1
+@   0x0802f764: 2800        cmp	r0, #0
+@   0x0802f766: d022        beq.n	0x2f7ae
+@   0x0802f768: 2041        movs	r0, #65	@ 0x41
+@   0x0802f76a: 4240        negs	r0, r0
+@   0x0802f76c: 4008        ands	r0, r1
+@   0x0802f76e: 63a8        str	r0, [r5, #56]	@ 0x38
+@   0x0802f770: 21a0        movs	r1, #160	@ 0xa0
+@   0x0802f772: 0149        lsls	r1, r1, #5
+@   0x0802f774: 4008        ands	r0, r1
+@   0x0802f776: 2800        cmp	r0, #0
+@   0x0802f778: d019        beq.n	0x2f7ae
+@   0x0802f77a: 4651        mov	r1, sl
+@   0x0802f77c: 6808        ldr	r0, [r1, #0]
+@   0x0802f77e: 30c0        adds	r0, #192	@ 0xc0
+@   0x0802f780: 6804        ldr	r4, [r0, #0]
+@   0x0802f782: 9a00        ldr	r2, [sp, #0]
+@   0x0802f784: 18a4        adds	r4, r4, r2
+@   0x0802f786: 882b        ldrh	r3, [r5, #0]
+@   0x0802f788: 8869        ldrh	r1, [r5, #2]
+@   0x0802f78a: 1858        adds	r0, r3, r1
+@   0x0802f78c: 88aa        ldrh	r2, [r5, #4]
+@   0x0802f78e: 1810        adds	r0, r2, r0
+@   0x0802f790: 89ab        ldrh	r3, [r5, #12]
+@   0x0802f792: 1818        adds	r0, r3, r0
+@   0x0802f794: 8aa9        ldrh	r1, [r5, #20]
+@   0x0802f796: 1808        adds	r0, r1, r0
+@   0x0802f798: 8baa        ldrh	r2, [r5, #28]
+@   0x0802f79a: 1810        adds	r0, r2, r0
+@   0x0802f79c: 0400        lsls	r0, r0, #16
+@   0x0802f79e: 0c02        lsrs	r2, r0, #16
+@   0x0802f7a0: 6820        ldr	r0, [r4, #0]
+@   0x0802f7a2: 0a11        lsrs	r1, r2, #8
+@   0x0802f7a4: 0612        lsls	r2, r2, #24
+@   0x0802f7a6: 0e12        lsrs	r2, r2, #24
+@   0x0802f7a8: f000        fd0c 	bl	0x301c4
+@   0x0802f7ac: 82a0        strh	r0, [r4, #20]
+@   0x0802f7ae: 6ba9        ldr	r1, [r5, #56]	@ 0x38
+@   0x0802f7b0: 2080        movs	r0, #128	@ 0x80
+@   0x0802f7b2: 0200        lsls	r0, r0, #8
+@   0x0802f7b4: 4001        ands	r1, r0
+@   0x0802f7b6: 4e2c        ldr	r6, [pc, #176]	@ (0x2f868)
+@   0x0802f7b8: 2900        cmp	r1, #0
+@   0x0802f7ba: d007        beq.n	0x2f7cc
+@   0x0802f7bc: 4653        mov	r3, sl
+@   0x0802f7be: 6818        ldr	r0, [r3, #0]
+@   0x0802f7c0: 30cc        adds	r0, #204	@ 0xcc
+@   0x0802f7c2: 6800        ldr	r0, [r0, #0]
+@   0x0802f7c4: 9901        ldr	r1, [sp, #4]
+@   0x0802f7c6: 1808        adds	r0, r1, r0
+@   0x0802f7c8: 2100        movs	r1, #0
+@   0x0802f7ca: 6001        str	r1, [r0, #0]
+@   0x0802f7cc: 9a00        ldr	r2, [sp, #0]
+@   0x0802f7ce: 321c        adds	r2, #28
+@   0x0802f7d0: 9200        str	r2, [sp, #0]
+@   0x0802f7d2: 9b01        ldr	r3, [sp, #4]
+@   0x0802f7d4: 3304        adds	r3, #4
+@   0x0802f7d6: 9301        str	r3, [sp, #4]
+@   0x0802f7d8: 2001        movs	r0, #1
+@   0x0802f7da: 4481        add	r9, r0
+@   0x0802f7dc: 1c31        adds	r1, r6, #0
+@   0x0802f7de: 6808        ldr	r0, [r1, #0]
+@   0x0802f7e0: 7800        ldrb	r0, [r0, #0]
+@   0x0802f7e2: 4581        cmp	r9, r0
+@   0x0802f7e4: da00        bge.n	0x2f7e8
+@   0x0802f7e6: e71f        b.n	0x2f628
+@   0x0802f7e8: f7fe        fe16 	bl	0x2e418
+@   0x0802f7ec: 2100        movs	r1, #0
+@   0x0802f7ee: 4689        mov	r9, r1
+@   0x0802f7f0: 491d        ldr	r1, [pc, #116]	@ (0x2f868)
+@   0x0802f7f2: 6808        ldr	r0, [r1, #0]
+@   0x0802f7f4: 7800        ldrb	r0, [r0, #0]
+@   0x0802f7f6: 4581        cmp	r9, r0
+@   0x0802f7f8: da29        bge.n	0x2f84e
+@   0x0802f7fa: 1c0e        adds	r6, r1, #0
+@   0x0802f7fc: 2400        movs	r4, #0
+@   0x0802f7fe: 680a        ldr	r2, [r1, #0]
+@   0x0802f800: 1c10        adds	r0, r2, #0
+@   0x0802f802: 30cc        adds	r0, #204	@ 0xcc
+@   0x0802f804: 6800        ldr	r0, [r0, #0]
+@   0x0802f806: 4649        mov	r1, r9
+@   0x0802f808: 008b        lsls	r3, r1, #2
+@   0x0802f80a: 1818        adds	r0, r3, r0
+@   0x0802f80c: 6805        ldr	r5, [r0, #0]
+@   0x0802f80e: 2d00        cmp	r5, #0
+@   0x0802f810: d015        beq.n	0x2f83e
+@   0x0802f812: 6ba9        ldr	r1, [r5, #56]	@ 0x38
+@   0x0802f814: 2080        movs	r0, #128	@ 0x80
+@   0x0802f816: 0080        lsls	r0, r0, #2
+@   0x0802f818: 4008        ands	r0, r1
+@   0x0802f81a: 2800        cmp	r0, #0
+@   0x0802f81c: d00f        beq.n	0x2f83e
+@   0x0802f81e: 20a0        movs	r0, #160	@ 0xa0
+@   0x0802f820: 0140        lsls	r0, r0, #5
+@   0x0802f822: 4008        ands	r0, r1
+@   0x0802f824: 2800        cmp	r0, #0
+@   0x0802f826: d00a        beq.n	0x2f83e
+@   0x0802f828: 4810        ldr	r0, [pc, #64]	@ (0x2f86c)
+@   0x0802f82a: 4001        ands	r1, r0
+@   0x0802f82c: 63a9        str	r1, [r5, #56]	@ 0x38
+@   0x0802f82e: 1c10        adds	r0, r2, #0
+@   0x0802f830: 30c4        adds	r0, #196	@ 0xc4
+@   0x0802f832: 6801        ldr	r1, [r0, #0]
+@   0x0802f834: 1859        adds	r1, r3, r1
+@   0x0802f836: 3804        subs	r0, #4
+@   0x0802f838: 6800        ldr	r0, [r0, #0]
+@   0x0802f83a: 1900        adds	r0, r0, r4
+@   0x0802f83c: 6008        str	r0, [r1, #0]
+@   0x0802f83e: 341c        adds	r4, #28
+@   0x0802f840: 2201        movs	r2, #1
+@   0x0802f842: 4491        add	r9, r2
+@   0x0802f844: 1c31        adds	r1, r6, #0
+@   0x0802f846: 6808        ldr	r0, [r1, #0]
+@   0x0802f848: 7800        ldrb	r0, [r0, #0]
+@   0x0802f84a: 4581        cmp	r9, r0
+@   0x0802f84c: dbd7        blt.n	0x2f7fe
+@   0x0802f84e: f7fe        fdd3 	bl	0x2e3f8
+@   0x0802f852: f002        fead 	bl	0x325b0
+@   0x0802f856: b003        add	sp, #12
+@   0x0802f858: bc38        pop	{r3, r4, r5}
+@   0x0802f85a: 4698        mov	r8, r3
+@   0x0802f85c: 46a1        mov	r9, r4
+@   0x0802f85e: 46aa        mov	sl, r5
+@   0x0802f860: bcf0        pop	{r4, r5, r6, r7}
+@   0x0802f862: bc01        pop	{r0}
+@   0x0802f864: 4700        bx	r0
+@   0x0802f866: 0000        movs	r0, r0
+@   0x0802f868: 65e0        str	r0, [r4, #92]	@ 0x5c
+@   0x0802f86a: 0300        lsls	r0, r0, #12
+@   0x0802f86c: fdff        ffff 			@ <UNDEFINED> instruction: 0xfdffffff
 
         thumb_func_start sub_0802F4B0
 sub_0802F4B0: @ 0x0802f4b0
-        .incbin "frog_us_baserom.gba", 0x2f4b0, 0x280
+        .incbin "frog_us_baserom.gba", 0x2f4b0, 0x3c0
         thumb_func_end sub_0802F4B0
