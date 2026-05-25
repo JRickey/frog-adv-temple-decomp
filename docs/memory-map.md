@@ -51,7 +51,7 @@ line of context.
 | `0x080004C4` | (TBD) | Next Thumb function after `AgbMain` (200+ bytes) |
 | `0x08002444` | `SetGameMode_06` | Writes 6 to `gGameStuff.mode` |
 | `0x08002760` | `SetGameMode_07` | Writes 7 to `gGameStuff.mode` |
-| `0x080052C0` | `SetGameMode_15` (predicted) | Pattern match: writes 15 — pending peel |
+| `0x080052C0` | `SetGameMode_15` | Writes 15 to `gGameStuff.mode` |
 | `0x08035D9C` | `gIntrTable` | IRQ handler dispatch table (indexed by IRQ source × 4) |
 | `0x0802FFD8` | (TBD) | Thumb function called by `sub_08000240` |
 | `0x082F9010` | (TBD) | State flag read by `sub_08000240` |
