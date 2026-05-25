@@ -34,8 +34,9 @@ byte-identical C source that compiles to the same ROM as the original.
 | `linker.ld` | Section/symbol layout — **edit carefully**, byte placement depends on link order |
 | `database.json` | Map of binary blobs extracted from baserom into `data/` |
 | `tools/preproc/` | Charmap preprocessor for `_("...")` strings |
-| `tools/agent/` | Agent-specific tooling (this directory) |
+| `tools/agent/` | Agent-specific Python tooling + `ts/` (TypeScript ports of mizuchi shared libs + new boundary/validator CLIs) |
 | `tools/agbcc/` | Locally-installed agbcc binaries (gitignored) |
+| `vendor/m2c`, `vendor/decomp-permuter` | Git submodules — initial-decomp seed and last-mile mutation brute-force. `scripts/setup-*.sh` to install venvs. |
 | `frog_us.sha1` | Target SHA1; **do not edit** |
 | `baserom.gba`, `frog_us_baserom.gba` | Symlinked — **never committed** |
 
@@ -116,10 +117,18 @@ The ROM is brought into the build incrementally. Each step shrinks the
 opaque INCBIN and adds named labels the agent loop can grab.
 
 ```sh
+# 0. (Thumb only) Detect the real function end before guessing a range.
+#    Walks Thumb forward from the start address, flags interior bl targets.
+#    Would have prevented commit 0c989b1 (AgbMain peeled too wide).
+npx tsx tools/agent/ts/cmds/detect-fn-boundary.ts 0x080002a4
+
 # 1. Identify a byte range to peel and its mode (arm or thumb).
 #    Use `arm-none-eabi-objdump -D -b binary -m arm7tdmi [-Mforce-thumb]`
 #    to preview before committing to a range.
 python3 tools/disasm/peel.py --start 0x080000c0 --end 0x080000f0 --mode arm
+# (peel.py runs detect-fn-boundary as a pre-check for thumb peels and
+#  refuses to write if the proposed range looks wrong. Override with
+#  --force-boundary after manual review.)
 
 # 2. Shrink the surrounding INCBIN so those bytes aren't included twice.
 #    For asm/rom.s, that means advancing the .incbin skip past the peeled
@@ -142,6 +151,28 @@ matching for free — no risk of the assembler picking a different encoding
 than the original. Refining a peeled chunk into real Thumb/ARM mnemonics
 (so `compile_and_view_assembly.py` can do per-instruction diffs) is the
 next step after a peel, not part of the peel itself.
+
+### Validators (run before assigning struct offsets, after refining BLs)
+
+```sh
+# Cross-reference every load/store through a struct's base address.
+# Reports reader/writer columns grouped by offset.
+# Would have caught 059720d (gGameStuff.mode at offset 9, not 10).
+python3 tools/agent/struct_xref.py 0x03005330
+
+# Re-disassemble every BL in the linked program and verify targets match
+# known symbol addresses. Would have caught fa09acf (PROVIDE() + Thumb BL
+# silently mis-encoded). Re-run after every refine-to-mnemonics step.
+python3 tools/agent/check_relocations.py
+
+# Lint hex literals > 32 bits (GAS/ld truncates them silently).
+# Would have caught the 0x080020bc1 typo in fa09acf.
+python3 tools/agent/lint_hex_literals.py
+```
+
+See `docs/tooling.md` for the full tool inventory, including the
+TypeScript-ported mizuchi shared libs under `tools/agent/ts/shared/`
+and the m2c + decomp-permuter integration under `vendor/`.
 
 ## Quantifying progress (use these in every loop)
 
