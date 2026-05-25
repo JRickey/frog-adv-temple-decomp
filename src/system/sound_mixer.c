@@ -1,5 +1,3 @@
-#include "types.h"
-
 /* Sound-system per-VBlank tick. Owner of `sub_0802F4B0` (still in asm —
  * see asm/disasm_0x0802f4b0.s). Called once per frame from the VBlank
  * IRQ handler (`sub_08000790`), AFTER the OAM/BG-scroll shadow flush.

@@ -140,6 +140,23 @@ TU was built with a slightly different compiler version (different
 `-fno-cse-skip-blocks` or pass ordering). Worth a `decomp-permuter`
 attempt once that pipeline is wired up.
 
+**Permuter result (2026-05-25):** decomp-permuter wired up
+(`scripts/permuter-compile-agbcc.sh`) and run against this function for
+~15 minutes. Best score 90 (byte_diff), worse than the manual 22 the
+previous agent achieved. Permuter started from a worse base.c — its
+output exposed only minor variations on the same `u8 *p_3480 = (u8 *)
+0x03003480; …` shape that doesn't crack the fold.
+
+Likely conclusion: this needs a **different agbcc build** (the
+"compiler patch" entry below speculates a similar Konami title used
+`-f2003-patch`), or someone needs to find the exact mutation in the
+permuter randomization weights that prevents the `adds rN, #imm`
+fold. The infrastructure is set up — re-running permuter for hours
+from the previous agent's best 22-byte attempt (committed nowhere; in
+docs/unknowns.md above) is the right next experiment. Skipped for now;
+the function is small enough to skip without blocking surrounding
+decomp work.
+
 ## `sub_0802F4B0` (sound mixer tick)
 
 VBlank-tick of the custom sound engine. 462 Thumb instructions / 960
