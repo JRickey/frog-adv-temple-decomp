@@ -63,6 +63,41 @@ positives (the bdXX halfword appears commonly in graphics tables).
 
 See commit `2a13dd9` discussion and `tools/agent/scope_survey.py`.
 
+## `old_agbcc` vs `agbcc`: spurious lr save for join-point exits
+
+`tools/agbcc/bin/` ships TWO gcc-2.x snapshots: `agbcc` (newer) and
+`old_agbcc` (earlier). They differ for functions with a control-flow
+join at the exit:
+
+- `agbcc` emits `push {lr}; ...; pop {r1}; bx r1` even though no callee
+  clobbers lr — apparently a defensive epilogue for any function whose
+  multiple exit paths converge through a `b <join>; bx lr` shape.
+- `old_agbcc` emits direct `bx lr` from each return point, matching the
+  baserom for several confirmed functions.
+
+`sub_08033910` is the first function in this decomp where the two
+diverge: with `agbcc` it's nonmatching by ~42 bytes (extra push/pop plus
+the resulting layout shift); with `old_agbcc` it's a clean match.
+
+**Mechanism:** the Makefile sets a per-translation-unit override:
+
+```make
+src/game/sub_08033910.s: CC = $(OLD_AGBCC_BIN)
+```
+
+Add new files to that list as the same pattern shows up. When in doubt,
+diff a function with both compilers via:
+
+```sh
+tools/preproc/preproc src/foo.c charmap.txt | cpp-15 -P -I include \
+    | tools/agbcc/bin/old_agbcc -O2 -mthumb-interwork -fhex-asm
+```
+
+If `old_agbcc` matches and `agbcc` doesn't, add the file to the
+Makefile override list — don't try to defeat the spurious push with
+contortions in C; that path produces ugly code that still mis-matches
+elsewhere.
+
 ## ARM immediate encoding rotation
 
 GAS picks the smallest rotation R (0..15, applied as ROR by 2R) where

@@ -88,15 +88,25 @@ OBJ = $(ASMSRC:.s=.o)
 # Detect if agbcc was installed into the project
 ifneq (,$(wildcard tools/agbcc))
 	AGBCC_BIN := tools/agbcc/bin/agbcc
+	OLD_AGBCC_BIN := tools/agbcc/bin/old_agbcc
 	AGBCC_LIB := tools/agbcc/lib
 	CC = $(AGBCC_BIN)
 else
 	AGBCC_BIN := $(shell which agbcc)
+	OLD_AGBCC_BIN := $(shell which old_agbcc)
 	AGBCC_DIR := $(dir $(AGBCC_BIN))/
 	AGBCC_LIB := $(abspath $(AGBCC_DIR))
 endif
 
 LIBS := $(AGBCC_LIB)/libgcc.a $(AGBCC_LIB)/libc.a
+
+# Per-file compiler overrides. Some translation units in the baserom were
+# built with the older gcc-2.x snapshot bundled by pret as `old_agbcc` —
+# notably, it avoids the redundant `push {lr}; pop {r1}; bx r1` epilogue
+# that the newer `agbcc` emits for any function with a control-flow join.
+# When you discover that a function only matches under old_agbcc, add the
+# source file here. See docs/codegen-notes.md.
+src/game/sub_08033910.s: CC = $(OLD_AGBCC_BIN)
 
 
 # Enable verbose output
