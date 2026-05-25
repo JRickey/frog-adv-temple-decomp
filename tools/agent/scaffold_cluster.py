@@ -199,6 +199,12 @@ def main() -> int:
     ap.add_argument("--end", action="store_true",
                     help="extract from the END of the asm (insert new C file "
                          "AFTER the asm in linker.ld); default is HEAD")
+    ap.add_argument("--dest",
+                    help="explicit destination path (e.g. src/system/init.c). "
+                         "Use when both linker.ld neighbours of the asm are "
+                         "asm/text/* buckets and there's no sibling .c to crib "
+                         "from. The path is taken verbatim; the linker.ld entry "
+                         "still gets inserted at the asm's position.")
     ap.add_argument("--apply", action="store_true",
                     help="actually write changes (default: dry-run)")
     args = ap.parse_args()
@@ -209,29 +215,50 @@ def main() -> int:
         return 1
 
     cluster = find_cluster(asm, args.prefix, args.end)
-    sibling = neighbour_in_linker(asm, before=not args.end)
-    if sibling is None:
-        print(f"no neighbouring src/*.c found in linker.ld near {asm.name}",
-              file=sys.stderr)
-        return 1
-    sibling_idx, sibling_indent, sibling_obj = sibling
 
-    src_path = derive_src_path(cluster, sibling_obj)
-    rel_src = src_path.relative_to(ROOT)
+    sibling_c: Path | None = None
+    if args.dest:
+        # Explicit destination — no sibling.c needed to crib includes.
+        src_path = (ROOT / args.dest).resolve()
+        if not str(src_path).startswith(str(ROOT) + "/src/"):
+            print(f"--dest must point inside src/: got {args.dest}",
+                  file=sys.stderr)
+            return 1
+        rel_src = src_path.relative_to(ROOT)
+    else:
+        sibling = neighbour_in_linker(asm, before=not args.end)
+        if sibling is None:
+            print(
+                f"no adjacent src/*.c found in linker.ld near {asm.name}. "
+                "Pass --dest <path> to scaffold a new file at an explicit "
+                "location (e.g. --dest src/system/init.c).",
+                file=sys.stderr,
+            )
+            return 1
+        sibling_idx, sibling_indent, sibling_obj = sibling
 
-    sibling_c = ROOT / sibling_obj.replace(".o", ".c")
-    if not sibling_c.exists():
-        print(f"sibling .c file {sibling_c} doesn't exist; can't crib includes",
-              file=sys.stderr)
-        return 1
+        src_path = derive_src_path(cluster, sibling_obj)
+        rel_src = src_path.relative_to(ROOT)
+
+        sibling_c = ROOT / sibling_obj.replace(".o", ".c")
+        if not sibling_c.exists():
+            print(f"sibling .c file {sibling_c} doesn't exist; can't crib includes",
+                  file=sys.stderr)
+            return 1
 
     insert_idx, insert_indent = linker_insertion(asm, args.end)
     new_obj_line = (
         f"{insert_indent}{rel_src.with_suffix('.o').as_posix()}(.text);"
     )
-    rodata = linker_rodata_insertion(sibling_obj)
+    # No sibling .o => no sibling .rodata to align next to.
+    rodata = linker_rodata_insertion(sibling_obj) if not args.dest else None
 
-    c_body = scaffold_c_body(cluster.prefix, "", sibling_c, cluster.functions)
+    if sibling_c is not None:
+        c_body = scaffold_c_body(cluster.prefix, "", sibling_c, cluster.functions)
+    else:
+        # Explicit --dest: no sibling to crib from. Start with the minimal
+        # canonical include block.
+        c_body = '#include "types.h"\n\n'
 
     print(f"Cluster: {cluster.prefix}* ({len(cluster.functions)} functions, "
           f"{'tail' if args.end else 'head'} of {asm.name})")

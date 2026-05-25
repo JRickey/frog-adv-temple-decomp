@@ -154,6 +154,21 @@ function isPushLr(insn: DisasmLine): boolean {
   return insn.mnemonic === 'push' && /\blr\b/.test(insn.operands);
 }
 
+/**
+ * Is this the start of a BIOS SWI wrapper? These have no `push {lr}` frame:
+ *
+ *     sub_NNN:
+ *         svc <N>
+ *         bx lr
+ *
+ * Each wrapper is exactly 4 bytes, and ROM tables of them (e.g. 0x0802D558
+ * for CpuFastSet) sit dozens-deep. Treat `svc` as a prologue equivalent so
+ * the boundary detector doesn't lump the whole table into one peel.
+ */
+function isSvcWrapperStart(insn: DisasmLine): boolean {
+  return insn.mnemonic === 'svc' || insn.mnemonic === 'swi';
+}
+
 /** 2-byte alignment padding nop. */
 function isAlignmentPad(insn: DisasmLine): boolean {
   // 0x0000 = movs r0, r0 / lsls r0, r0, #0
@@ -197,10 +212,16 @@ export function detectBoundary(start: number, proposedEnd: number | null = null)
 
   // Verify we start with a plausible prologue. Warn if not.
   const warnings: string[] = [];
-  if (!isPushLr(lines[0]) && lines[0].mnemonic !== 'push' && lines[0].mnemonic !== 'sub' && lines[0].mnemonic !== 'mov') {
+  if (
+    !isPushLr(lines[0]) &&
+    lines[0].mnemonic !== 'push' &&
+    lines[0].mnemonic !== 'sub' &&
+    lines[0].mnemonic !== 'mov' &&
+    !isSvcWrapperStart(lines[0])
+  ) {
     warnings.push(
       `Start address 0x${start.toString(16)} doesn't look like a function entry ` +
-        `(first insn: "${lines[0].mnemonic} ${lines[0].operands}"). Expected push/sub/mov prologue.`,
+        `(first insn: "${lines[0].mnemonic} ${lines[0].operands}"). Expected push/sub/mov/svc prologue.`,
     );
   }
 
@@ -257,6 +278,18 @@ export function detectBoundary(start: number, proposedEnd: number | null = null)
           candidates.push({
             end: probe.addr,
             reason: `epilogue at 0x${epilogueAddr.toString(16)}, pool + padding, then push-lr prologue at 0x${probe.addr.toString(16)}`,
+            epilogueAddr,
+          });
+          break;
+        }
+
+        // BIOS SWI wrapper at the next address? (4-byte `svc N; bx lr`
+        // shims have no push prologue.) Treat the svc as the next
+        // function's entry — this lone wrapper ends right before it.
+        if (isSvcWrapperStart(probe)) {
+          candidates.push({
+            end: probe.addr,
+            reason: `epilogue at 0x${epilogueAddr.toString(16)}, then svc-wrapper start at 0x${probe.addr.toString(16)}`,
             epilogueAddr,
           });
           break;

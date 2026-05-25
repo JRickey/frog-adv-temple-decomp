@@ -227,7 +227,7 @@ def main() -> int:
         return 1
 
     name = args.name or f"sub_{args.start:08X}"
-    out = Path(args.out) if args.out else ROOT / f"asm/disasm_{args.start:#010x}.s"
+    out = Path(args.out).resolve() if args.out else ROOT / f"asm/disasm_{args.start:#010x}.s"
 
     if args.mode == "thumb" and not args.no_boundary_check:
         if not _check_boundary(args.start, args.end, force=args.force_boundary):
@@ -239,7 +239,15 @@ def main() -> int:
 
     body = emit(args.start, args.end, args.mode, name, insns)
     out.write_text(body)
-    print(f"wrote {out.relative_to(ROOT)}  "
+    # Pretty-print the path relative to ROOT when possible; fall back to the
+    # absolute path for outputs outside the repo (covers Python 3.14's
+    # stricter relative_to() that raises instead of returning a "../" form).
+    try:
+        rel = out.relative_to(ROOT)
+        shown = str(rel)
+    except ValueError:
+        shown = str(out)
+    print(f"wrote {shown}  "
           f"({args.end - args.start} bytes, {len(insns)} instrs, name={name})",
           file=sys.stderr)
     return 0
