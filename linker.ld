@@ -39,7 +39,7 @@ SECTIONS {
         asm/disasm_0x080002a4.o(.text);  /* 0x080002a4 - 0x08000430, AgbMain */
         asm/disasm_0x08000430.o(.text);  /* 0x08000430 - 0x080004c4, sub_08000430 */
         asm/text/text_0x080004c4.o(.text);  /* 0x080004c4 - 0x0800072c, raw bytes */
-        asm/disasm_0x0800072c.o(.text);  /* 0x0800072c - 0x08000764, sub_0800072C */
+        src/system/init.o(.text);        /* 0x0800072c - 0x08000764, sub_0800072C */
         asm/disasm_0x08000764.o(.text);  /* 0x08000764 - 0x08000790, sub_08000764 */
         asm/disasm_0x08000790.o(.text);  /* 0x08000790 - 0x08000820, sub_08000790 */
         src/game/sub_08000820.o(.text);  /* 0x08000820 - 0x0800088c, sub_08000820 + sub_08000884/sub_08000888 stubs */
