@@ -61,6 +61,39 @@ enumerate fields.
 `0x030035E0`. Each is presumably a different game-subsystem state
 structure. Names should fall out as each subsystem is decompiled.
 
+Init1 (`sub_08000430`) writes byte patterns into each that look like
+default-config values (see `subsystems.md`):
+- `[0x030034B4+0..1] = 1`, `[+2..3] = 5` — four-byte tuple; possibly a
+  default `{flag, flag, count, count}` or `{x, y, w, h}`.
+- `[0x030035E0] = 5` — single-byte initial state.
+- `[0x03003550] = 16-byte halfword block of zeros` — looks like a small
+  RAM ring buffer or coord array.
+
+These hints aren't enough to name the subsystems yet; revisit once one
+of the `sub_080017364` / `sub_0800072C` / `sub_080000820` callees is
+decompiled (they consume these IWRAM structs immediately after Init1
+writes them).
+
+## `sub_08000430`'s call targets
+
+Init1 calls four functions whose bodies are still inside the raw
+`text_0x*.o` blobs:
+
+- `sub_080020B30` — called first thing, before any state init. Probably
+  hardware init (sound, DMA, BIOS-tier setup) given its precedence.
+- `sub_080017364` — called after IWRAM-struct init but before the
+  halfword zero-fill of 0x03003550. Likely a "subsystem A init" that
+  needs the IWRAM bases ready.
+- `sub_0800072C` — called immediately after `sub_080017364`. Possibly a
+  paired routine ("subsystem B" or a continuation).
+- `sub_080000820` — called after the halfword zero-fill, just before
+  `REG_DISPCNT = 0x1F40`. Likely the renderer/sprite init that needs
+  the zeroed buffer at 0x03003550.
+
+Peeling these in baserom-address order would unblock the C decomp of
+Init1 (see `codegen-notes.md`, "Cross-region Thumb BL targets" for
+why).
+
 ## Compiler patch
 
 The `-f2003-patch` flag in `testyourmine/cvaos` (Castlevania: Aria of

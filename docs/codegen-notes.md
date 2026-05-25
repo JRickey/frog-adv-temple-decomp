@@ -89,44 +89,87 @@ the load as raw `ldr r1, [pc, #N]` with the original numeric offset —
 you can't use `ldr r1, =SYM` because GAS would emit a new literal pool
 at the end of *this* function.
 
-## `PROVIDE()` in linker.ld is not enough for forward-declared Thumb BL targets
+## Cross-region Thumb BL targets — `.thumb_set` generates ld veneers
 
 When refining a function to mnemonics, you often need `bl name` syntax
-for callees that aren't peeled yet. The temptation is to declare them in
-`linker.ld`:
+for callees that aren't peeled yet. Two ways to declare such forward
+symbols have been tried; **neither produces matching bytes**:
+
+### `PROVIDE()` in linker.ld — wildly wrong BL offsets
 
 ```
 PROVIDE(sub_0801793c = 0x0801793c);   /* or | 1 for thumb bit */
 ```
 
-This **does not work**. ld writes the right address into the symbol
-table but produces wildly wrong `BL` encodings (BLs end up pointing
-near the ROM tail at 0x3f00xx). The reason: `PROVIDE` only sets the
-symbol value; it doesn't mark the symbol with `STT_FUNC` + Thumb
-attribute. ld's `R_ARM_THM_CALL` relocation falls back to ARM-mode
-rules and the offset is computed incorrectly.
+ld writes the right address into the symbol table but produces wildly
+wrong `BL` encodings (BLs end up pointing near the ROM tail at
+0x3f00xx). Reason: `PROVIDE` only sets the symbol value; it doesn't
+mark the symbol with `STT_FUNC` + Thumb attribute, so ld's
+`R_ARM_THM_CALL` relocation falls back to ARM-mode rules.
 
-The fix (untested as of this writing — try if needed):
-**create a stub `.s` file** that uses `.thumb_set` to register each
-forward symbol as a proper Thumb function:
+### `.thumb_set` stub in a separate .s file — ld inserts 16-byte veneers
+
+The next attempt was a stub file `asm/forward_thumb_stubs.s`:
 
 ```asm
-.include "asm/macros.inc"
 .syntax unified
-
-.thumb_set sub_0801793c, 0x0801793c
-.thumb_set sub_08019500, 0x08019500
+.global sub_080020b30
+.global sub_080017364
+...
+.thumb_set sub_080020b30, 0x080020b30
+.thumb_set sub_080017364, 0x080017364
 ...
 ```
 
-Add the stub to the build (the assembler will register the symbols
-with the right type) and don't list it in `linker.ld` as a code
-section. Until that's set up, use raw `.4byte 0xYYYYXXXX` encoding for
-each cross-region BL (where the bytes are `XX YY` first halfword then
-`XX YY` second halfword of the original BL).
+Pulled into the link via `INPUT(asm/forward_thumb_stubs.o)` in
+`linker.ld`. `readelf -s` confirms each symbol has the correct
+attributes: `g F` (global function), value with thumb bit set
+(`0x080020b31`, etc.). ld accepts the BL relocation cleanly — but
+because the symbols live in section `*ABS*` (no real `.text`
+placement), ld can't reason about distance and inserts a
+**`.text.__stub`** veneer for each BL. With 4 BLs in `sub_08000430`,
+the veneers added 16 bytes at the tail of `.text` (at `0x083f0000`),
+shifting `asm/text/text_0x083f0000.o` to `0x083f0010` and breaking the
+match. `make check` failed with a 16-byte ROM-size increase.
 
-This finding cost ~1h during the AgbMain stage-2 refinement attempt.
-See commit 7d4b50c for the partial stage-1 work that preceded it.
+### Current workaround (still): raw `.4byte 0xYYYYXXXX`
+
+Encode each cross-region BL as a 32-bit literal in the .s file:
+
+```asm
+.4byte 0xfb7df020   @ bl sub_080020b30
+```
+
+where the bytes are `XX YY` first halfword then `XX YY` second halfword
+of the original BL. agbcc also accepts this verbatim from inline asm
+in C — the assembler emits the bytes with no surrounding clobbers or
+spills:
+
+```c
+void some_fn(void) {
+    asm volatile (".4byte 0xfb7df020");  /* bl sub_080020b30 */
+    /* ... */
+}
+```
+
+Generated .s shows the `.4byte` inserted at the exact offset; no
+prologue/epilogue side effects. (The compiler doesn't know lr is
+clobbered though — combine with explicit `"r0"`-`"r3"`, `"r14"`,
+`"memory"` clobbers if surrounding C should treat the call as a real
+function call.)
+
+### Real fix: peel the target functions
+
+The robust answer is to peel each BL target into its own
+`asm/disasm_0x*.s` with a `thumb_func_start` directive. That gives the
+symbol a real `.text` section with proper Thumb attribute; ld then
+encodes BLs to it directly with no veneer. Until that's done for a
+given target, use the raw-bytes workaround above.
+
+This finding cost ~1h during the AgbMain stage-2 refinement attempt
+plus ~1h during the `sub_08000430` C-decomp attempt. See commits
+7d4b50c, 95128a1, and `docs/unknowns.md` for the 4 unnamed BL targets
+out of `sub_08000430`.
 
 ## Hex literals must fit in 32 bits
 

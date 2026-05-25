@@ -49,7 +49,12 @@ line of context.
 | `0x08000240` | `sub_08000240` | ARM, IRQ-wait-style helper |
 | `0x080002A4` | `AgbMain` | First Thumb fn; 26-entry state-machine dispatcher |
 | `0x080002E4` | (data) | `AgbMain` jump table base (26 × 4 bytes) |
-| `0x080004C4` | (TBD) | Next Thumb function after `AgbMain` (200+ bytes) |
+| `0x08000430` | `sub_08000430` ("Init1") | Pre-loop boot init; Thumb, 148 bytes. Calls 4 unnamed routines, inits gGameStuff + 6 IWRAM structs, sets `REG_IE=0` and `REG_DISPCNT=0x1F40`. See `subsystems.md`. |
+| `0x080004C4` | (TBD) | Next Thumb function after `sub_08000430` |
+| `0x0800072C` | `sub_0800072C` (TBD) | Called from `sub_08000430` after `sub_080017364`. Likely subsystem init. |
+| `0x08000820` | `sub_080000820` (TBD) | Called from `sub_08000430` just before `REG_DISPCNT` write. Likely render/sprite init. |
+| `0x08017364` | `sub_080017364` (TBD) | Called from `sub_08000430` after IWRAM-struct init. Likely subsystem init. |
+| `0x080020B30` | `sub_080020B30` (TBD) | Called first thing from `sub_08000430`. Likely low-level hardware init. |
 | `0x08001478` | `SetGameMode_03` | Writes 3 to `gGameStuff.pendingMode` (offset 10, NOT the dispatched mode at 9) |
 | `0x08002444` | `SetGameMode_06` | Writes 6 to `gGameStuff.pendingMode` (offset 10, NOT the dispatched mode at 9) |
 | `0x08002760` | `SetGameMode_07` | Writes 7 to `gGameStuff.pendingMode` (offset 10, NOT the dispatched mode at 9) |
