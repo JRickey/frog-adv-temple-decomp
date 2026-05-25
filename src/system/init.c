@@ -1,3 +1,4 @@
+#include "game.h"
 #include "types.h"
 
 /* sub_0802D558 is a thin Thumb wrapper around BIOS SWI 12 (CpuFastSet):
@@ -15,4 +16,13 @@ void sub_0800072C(void)
     sub_0802D558(&zero1, (void *)0x06010000, 0x01000008);
     zero2 = 0;
     sub_0802D558(&zero2, (void *)0x030054a0, 0x01000100);
+}
+
+/* Step the LCG seed and return the result modulo `range`.
+ * Multiplier 109 / increment 1021 — small-period generator used for
+ * gameplay randomness (callers TBD; verified via struct_xref on offset 28). */
+u8 sub_08000764(u8 range)
+{
+    gGameStuff.rngSeed = gGameStuff.rngSeed * 109 + 1021;
+    return (u8)(gGameStuff.rngSeed % range);
 }

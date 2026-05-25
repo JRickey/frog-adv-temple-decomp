@@ -102,7 +102,7 @@
 @   0x08034018: 2000        movs	r0, #0
 @   0x0803401a: bd00        pop	{pc}
 
-        thumb_func_start sub_08033F5C
-sub_08033F5C: @ 0x08033f5c
+        thumb_func_start __umodsi3
+__umodsi3: @ 0x08033f5c
         .incbin "frog_us_baserom.gba", 0x33f5c, 0xc0
-        thumb_func_end sub_08033F5C
+        thumb_func_end __umodsi3

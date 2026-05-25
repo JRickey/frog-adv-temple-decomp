@@ -339,3 +339,31 @@ s->flags = t;
 Reads as "set bits 0 and 1 individually". Two `|=` statements
 (`s->flags |= 1; s->flags |= 2;`) would each produce a full
 load-modify-store and not match. Worked example: `sub_08020B30`.
+
+## In-ROM libgcc helpers — rename the peeled symbol, don't extern it
+
+When agbcc lowers `u32 % u32` (or `/`, `<<` on 64-bit, etc.) it emits a
+BL to a libgcc helper like `__umodsi3`. Konami statically linked
+libgcc, so the helper sits in the ROM at a fixed address — and the
+peeled asm at that address is byte-identical to
+`tools/agbcc/lib/libgcc.a:_umodsi3.o`.
+
+Trying to keep the peel's auto-name (`sub_08033F5C`) and just declare
+`extern u32 sub_08033F5C(u32, u32)` in the .c **does not match** — agbcc
+hard-codes the call to the canonical libgcc name. ld then sees
+`__umodsi3` undefined, pulls libgcc's copy, and places it at the end of
+`.text` — wrong address, wrong BL offset.
+
+Fix: rename the peeled `thumb_func_start sub_XXXXXXXX` symbol to the
+libgcc name in both the `.s` file and the `linker.ld` comment. The C
+`%`/`/` etc. then resolves to the in-ROM copy directly. Update the
+peel header's name comment too so future agents see what it really is.
+
+Verify by inspecting libgcc:
+
+```sh
+arm-none-eabi-objdump -d tools/agbcc/lib/libgcc.a | less   # find _umodsi3.o etc.
+```
+
+and comparing bytewise against the peeled range. Worked example:
+`sub_08000764` (LCG-mod-byte) → `__umodsi3` at `0x08033f5c`.
