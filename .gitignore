@@ -44,6 +44,9 @@ nonmatchings/
 .DS_Store
 .idea/
 
+# Claude Code harness state (loop / schedule lock files etc.)
+.claude/
+
 # Logs
 err.log
 tools/agent/__pycache__/
