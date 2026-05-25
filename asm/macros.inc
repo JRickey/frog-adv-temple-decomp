@@ -29,6 +29,18 @@
         .size \name, . - \name
         .endm
 
+        @ For Thumb functions whose entry sits at a non-word-aligned offset
+        @ (e.g. immediately after a halfword instruction at the end of the
+        @ previous function). Same as thumb_func_start but omits the
+        @ .align 2, 0 directive that would insert a padding halfword.
+        .macro non_word_aligned_thumb_func_start name
+        .global \name
+        .type   \name, function
+        .thumb
+        .thumb_func
+\name:
+        .endm
+
         .macro non_word_aligned_thumb_func_start name
         .global \name
         .type   \name, function
