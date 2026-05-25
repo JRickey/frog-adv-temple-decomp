@@ -1,0 +1,132 @@
+/**
+ * m2c Wrapper
+ *
+ * Invokes m2c as a Python subprocess to decompile assembly into C code.
+ * Adapted from mizuchi (https://github.com/macabeus/mizuchi).
+ */
+import { execFile } from 'child_process';
+import fs from 'fs/promises';
+import os from 'os';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export interface M2cOptions {
+  /** Assembly content in GAS format */
+  asmContent: string;
+  /** Name of the function to decompile */
+  functionName: string;
+  /** m2c target architecture */
+  target: 'mips' | 'mipsel' | 'mipsee' | 'ppc' | 'arm' | 'gba';
+  /** Optional path to C context file for type hints */
+  contextPath?: string;
+}
+
+export interface M2cResult {
+  success: boolean;
+  /** Generated C code on success */
+  code?: string;
+  /** Error message on failure */
+  error?: string;
+}
+
+/**
+ * Wrapper class for the m2c decompiler.
+ */
+export class M2c {
+  #m2cDir: string;
+  #pythonPath: string;
+
+  constructor() {
+    // tools/agent/ts/shared/m2c.ts → repo root is four levels up.
+    this.#m2cDir = path.resolve(__dirname, '..', '..', '..', '..', 'vendor', 'm2c');
+    this.#pythonPath = path.join(this.#m2cDir, '.venv', 'bin', 'python');
+  }
+
+  /**
+   * Decompile assembly into C code using m2c.
+   */
+  async decompile(options: M2cOptions): Promise<M2cResult> {
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'm2c-'));
+    const asmFile = path.join(tmpDir, `${options.functionName}.s`);
+
+    try {
+      const asmContent = this.#preprocessAssembly(options.asmContent, options.target);
+      await fs.writeFile(asmFile, asmContent, 'utf-8');
+
+      const args = [
+        path.join(this.#m2cDir, 'm2c.py'),
+        asmFile,
+        '--target',
+        options.target,
+        '--function',
+        options.functionName,
+        '--globals',
+        'none',
+      ];
+
+      if (options.contextPath) {
+        args.push('--context', options.contextPath);
+      }
+
+      const result = await this.#exec(this.#pythonPath, args);
+
+      if (result.exitCode !== 0) {
+        return {
+          success: false,
+          error: result.stderr || result.stdout || `m2c exited with code ${result.exitCode}`,
+        };
+      }
+
+      const code = result.stdout.trim();
+      if (!code) {
+        return {
+          success: false,
+          error: 'm2c produced no output',
+        };
+      }
+
+      return { success: true, code };
+    } finally {
+      await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
+    }
+  }
+
+  /**
+   * Preprocess assembly before passing to m2c.
+   *
+   * For ARM targets, m2c requires `.syntax unified` to correctly parse UAL
+   * Thumb mnemonics (e.g. `movs`, `adds`) inside `thumb_func_start` blocks.
+   * Without it, m2c rejects these instructions as ambiguous pre-UAL syntax.
+   */
+  #preprocessAssembly(asmContent: string, target: M2cOptions['target']): string {
+    const isArmTarget = target === 'arm' || target === 'gba';
+    if (isArmTarget && asmContent.includes('thumb_func_start')) {
+      return `.syntax unified\n${asmContent}`;
+    }
+
+    return asmContent;
+  }
+
+  #exec(command: string, args: string[]): Promise<{ stdout: string; stderr: string; exitCode: number }> {
+    return new Promise((resolve) => {
+      execFile(command, args, { maxBuffer: 10 * 1024 * 1024 }, (error, stdout, stderr) => {
+        if (error && (error as NodeJS.ErrnoException).code === 'ENOENT') {
+          resolve({
+            stdout: '',
+            stderr: `m2c Python venv not found at ${this.#pythonPath}. Run 'bash scripts/setup-m2c.sh' to set up m2c.`,
+            exitCode: 1,
+          });
+          return;
+        }
+        resolve({
+          stdout: stdout || '',
+          stderr: stderr || '',
+          exitCode: error ? ((error as { status?: number }).status ?? 1) : 0,
+        });
+      });
+    });
+  }
+}

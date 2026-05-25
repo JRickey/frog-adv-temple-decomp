@@ -16,6 +16,26 @@ Files adapted (each carries a per-file attribution header):
 - `task_template.md` ← `src/shared/prompt-builder/craft-prompt.ts`
 - `../craft_prompt.py` ← Python port of the same `craft-prompt.ts`
 
+TypeScript ports under `../ts/` (each is a near-verbatim copy of the
+corresponding mizuchi source with import paths rewritten for our tree
+layout):
+
+- `../ts/shared/map-file/map-file.ts` ← `src/shared/map-file/map-file.ts`
+- `../ts/shared/indexer/asm-utils.ts` ← `src/shared/indexer/asm-utils.ts`
+- `../ts/shared/platform-target.ts` ← extracted minimum from `src/shared/config.ts`
+- `../ts/shared/errors.ts` ← `src/shared/errors.ts`
+- `../ts/shared/capped-output.ts` ← `src/shared/capped-output.ts`
+- `../ts/shared/sdk-error-handlers.ts` ← `src/shared/sdk-error-handlers.ts`
+- `../ts/shared/objdiff.ts` ← `src/shared/objdiff.ts`
+- `../ts/shared/c-compiler/c-compiler.ts` ← `src/shared/c-compiler/c-compiler.ts`
+- `../ts/shared/prompt-builder/{prompt-builder,craft-prompt,codebase-context,ast-grep-utils}.ts`
+   ← `src/shared/prompt-builder/*.ts`
+- `../ts/shared/m2c.ts` ← `src/shared/m2c.ts`
+- `../ts/shared/decomp-permuter.ts` ← `src/shared/decomp-permuter.ts`
+- `../../../scripts/setup-m2c.sh` ← `scripts/setup-m2c.sh`
+- `../../../scripts/setup-decomp-permuter.sh` ← `scripts/setup-decomp-permuter.sh`
+- `../../../scripts/compile-agbcc.sh` ← derived from `mizuchi.example.yaml::compilerScript`
+
 Substitutions vs upstream Mizuchi:
 
 - Our agent uses `Read`/`Edit`/`Write` against `src/*.c` directly rather than
