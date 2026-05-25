@@ -180,3 +180,71 @@ ROM addresses by hand, count chars: `0x` + 8 hex digits = 32 bits.
 The ROM region is `0x08000000`-`0x08400000` — anything starting with
 `0x08` plus 6 more digits is a valid 32-bit address; anything with 7
 more digits is a bug.
+
+## Local pointer var sequences the base-address load before constants
+
+When a function touches an MMIO/IWRAM struct AND loads a small constant
+into another register, agbcc's instruction scheduler will reorder them.
+Through `gStructAt3003570.flags`, agbcc emitted:
+
+```
+movs r0, #1            ; constant first
+ldr  r2, =0x03003570   ; pointer load second
+ldrb r1, [r2]
+```
+
+The baserom wanted `ldr` first. Solution: introduce a local pointer
+variable, which anchors the base load to the start of the basic block.
+
+```c
+StructAt3003570 *p = &gStructAt3003570;  /* forces `ldr r2, =BASE` first */
+u8 t;
+t = 1;
+t |= p->flags;
+t |= 2;
+p->flags = t;
+```
+
+Resulting instruction order:
+```
+ldr  r2, =0x03003570
+movs r0, #1
+ldrb r1, [r2]
+orrs r0, r1
+```
+
+CLAUDE.md normally discourages intermediate locals that exist only to
+hold one read — but this is the matching exception explicitly carved
+out in the same section ("Only cache when needed for matching"). The
+exact local goes in the C comment near the def so a future cleanup
+doesn't elide it. Worked example: `sub_08020B30` (commit landed same
+session as this note).
+
+## `t = 1; t |= s->field; t |= 2;` sequences two separate ORs
+
+The naive `s->flags |= 3` produces ONE `orr` with constant 3. The
+baserom for `sub_08020B30` had TWO ORs in sequence:
+
+```
+movs r0, #1
+ldrb r1, [r2]
+orrs r0, r1
+movs r1, #2
+orrs r0, r1
+strb r0, [r2]
+```
+
+That pattern reproduces from C source that ORs the constant FIRST into
+a temporary, then ORs with the field, then ORs the second constant:
+
+```c
+u8 t;
+t = 1;
+t |= s->flags;
+t |= 2;
+s->flags = t;
+```
+
+Reads as "set bits 0 and 1 individually". Two `|=` statements
+(`s->flags |= 1; s->flags |= 2;`) would each produce a full
+load-modify-store and not match. Worked example: `sub_08020B30`.

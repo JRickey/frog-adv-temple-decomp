@@ -17,6 +17,7 @@ line of context.
 | `0x030034B0` | (TBD) | EWRAM/IWRAM ptr in AgbMain pool | AgbMain literal pool 2 |
 | `0x030034B4` | (TBD) | EWRAM/IWRAM ptr in AgbMain pool | AgbMain literal pool 2 |
 | `0x03003550` | (TBD) | EWRAM/IWRAM ptr in AgbMain pool | AgbMain literal pool 2 |
+| `0x03003570` | `gStructAt3003570` (placeholder) | 4-byte struct (or larger); `sub_08020B30` sets bits 0+1 of byte[0] and writes 0xCD/0xF5/0xF5 to bytes 1..3. Likely a hardware-config/state block initialized once during Init1. | `sub_08020B30` |
 | `0x03005330` | `gGameStuff` (base) | Game-state struct (`include/game.h`) | `src/game/game_mode.c` |
 | `0x03005339` | `gGameStuff.mode` | Dispatched by AgbMain switch. Initialized to 4 in AgbMain prologue. | AgbMain @ 0x080002B6 |
 | `0x0300533A` | `gGameStuff.pendingMode` | Written by `SetGameMode_NN` helpers. NOT the dispatched mode; purpose TBD (see unknowns.md). | `SetGameMode_06` |
@@ -54,7 +55,7 @@ line of context.
 | `0x0800072C` | `sub_0800072C` (TBD) | Called from `sub_08000430` after `sub_08017364`. Likely subsystem init. |
 | `0x08000820` | `sub_08000820` (TBD) | Called from `sub_08000430` just before `REG_DISPCNT` write. Likely render/sprite init. |
 | `0x08017364` | `sub_08017364` (TBD) | Called from `sub_08000430` after IWRAM-struct init. Likely subsystem init. |
-| `0x08020B30` | `sub_08020B30` (TBD) | Called first thing from `sub_08000430`. Likely low-level hardware init. |
+| `0x08020B30` | `sub_08020B30` | Called first thing from `sub_08000430`. Sets bits 0+1 of `(*StructAt3003570)0x03003570`, then writes the byte sequence `0xCD, 0xF5, 0xF5` to bytes 1..3. Decompiled in `src/game/sub_08020_b30.c`. |
 | `0x08001478` | `SetGameMode_03` | Writes 3 to `gGameStuff.pendingMode` (offset 10, NOT the dispatched mode at 9) |
 | `0x08002444` | `SetGameMode_06` | Writes 6 to `gGameStuff.pendingMode` (offset 10, NOT the dispatched mode at 9) |
 | `0x08002760` | `SetGameMode_07` | Writes 7 to `gGameStuff.pendingMode` (offset 10, NOT the dispatched mode at 9) |
