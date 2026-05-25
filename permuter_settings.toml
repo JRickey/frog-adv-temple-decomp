@@ -1,0 +1,13 @@
+# decomp-permuter config — used by ~/decomp-permuter/import.py when scaffolding
+# a permuter dir for a function in this project.
+#
+# `tools/permuter_compile.sh` wraps the full preproc | cpp-15 | agbcc | as
+# pipeline into a single .c -> .o invocation. The -D/-I/-nostdinc flags here
+# are NOT consumed by that script (it has them baked in), but import.py scans
+# the compiler_command for those flags and uses them when preprocessing the
+# C file to extract the function.
+
+compiler_type = "gcc"
+compiler_command = "tools/permuter_compile.sh -DREGION_US -nostdinc -Iinclude/"
+assembler_command = "arm-none-eabi-as --defsym REGION_US=1 -mcpu=arm7tdmi"
+asm_prelude_file = "tools/permuter_prelude.inc"

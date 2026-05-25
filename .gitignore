@@ -1,0 +1,51 @@
+# HARD RULE: the baserom must NEVER be committed.
+baserom.gba
+frog_us_baserom.gba
+*_baserom.gba
+
+# Build outputs
+/src/**/*.s
+/data/*
+/sound/direct_sound_samples/*
+
+*.gba
+*.elf
+*.dump
+*.o
+*.map
+*.bin
+*.sav
+
+# Windows/.NET tool detritus
+*.exe
+*.dll
+*.deps.json
+*.runtimeconfig.json
+
+# Generated files
+linker.ld.pp
+include/**/*.s
+tools/*.txt
+# agbcc is treated as a system/local dependency, not vendored.
+# - tools/agbcc-src/ is the local clone of pret/agbcc (build it once per machine)
+# - tools/agbcc/ is the installed bin/include/lib tree the Makefile consumes
+tools/agbcc/
+tools/agbcc-src/
+tools/agent/bin/
+tools/agent/.function_addresses.json
+tools/agent/.progress_sheet.csv
+
+# Scratch / nonmatching exploration
+.scratch/
+nonmatchings/
+
+# IDE / OS
+.vscode
+.DS_Store
+.idea/
+
+# Logs
+err.log
+tools/agent/__pycache__/
+**/__pycache__/
+*.pyc

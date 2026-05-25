@@ -1,0 +1,56 @@
+MIT License
+
+Copyright (c) 2026 JRickey
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+Third-party components retain their own licenses:
+
+- Build infrastructure adapted from the Metroid Fusion decompilation
+  (https://github.com/metroidret/mf), MIT, Copyright (c) 2025 YohannDR.
+  Files derived from upstream mf (some verbatim, some adapted):
+    Makefile, make_tools.mk, check_roms.sh, permuter_settings.toml,
+    tools/extractor.py, tools/permuter_compile.sh, tools/permuter_prelude.inc,
+    CONTRIBUTING.md (template), and the overall project skeleton.
+  The upstream MIT notice applies to those portions; see
+  https://github.com/metroidret/mf/blob/main/LICENSE for the full text.
+
+- tools/preproc/ — pret charmap preprocessor, MIT. Full license in
+  tools/preproc/LICENSE. One local patch for Apple-clang's
+  -Werror=sometimes-uninitialized.
+
+- tools/gbafix/ — pret/gba-tools gbafix utility, GPL. Full license in
+  tools/gbafix/COPYING. Used as a standalone runtime tool (not linked
+  into project code).
+
+- tools/agent/bin/objdiff-cli — prebuilt binary from
+  https://github.com/encounter/objdiff, Apache License 2.0,
+  Copyright 2022 Luke Street.
+
+- tools/agent/prompts/ and the related craft_prompt.py /
+  compile_and_view_assembly.py — adapted from Mizuchi
+  (https://github.com/macabeus/mizuchi), MIT, Copyright (c) 2025
+  macabeus. Per-file attribution headers and full notice in
+  tools/agent/prompts/ATTRIBUTION.md.
+
+- agbcc — a local dependency (clone of pret/agbcc), not vendored in
+  this repo. See its repository for licensing (mixed; mostly GPL —
+  gcc-derived).

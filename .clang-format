@@ -1,0 +1,74 @@
+# clang-format config for the Frogger's Adventures decomp.
+#
+# Goal: predictable, low-surprise formatting that does NOT shuffle includes
+# or rewrite #defines / macros — preprocessor output drives agbcc codegen,
+# so reordering includes or splitting a macro call across lines can change
+# the bytes the compiler emits. Anywhere clang-format would change codegen,
+# bracket the section with `// clang-format off` / `// clang-format on`.
+#
+# Run manually: `clang-format -i path/to/file.c`
+# The pre-commit hook (scripts/pre-commit) runs it on staged .c/.h files.
+
+BasedOnStyle: LLVM
+Language: Cpp
+
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ColumnLimit: 120
+
+# Braces on same line, except for function definitions (which open on the
+# next line — matches the pret/decomp norm).
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterFunction: true
+  AfterEnum: false
+  AfterStruct: false
+  AfterUnion: false
+  AfterControlStatement: Never
+  AfterCaseLabel: false
+  BeforeElse: false
+  IndentBraces: false
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+
+AllowShortBlocksOnASingleLine: Never
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None
+
+# Pointer alignment matches the pret/decomp norm: `Foo *bar`.
+PointerAlignment: Right
+DerivePointerAlignment: false
+
+# Keep `case` labels at the same column as their `switch`.
+IndentCaseLabels: false
+
+# Don't sort or reflow includes — changing include order can change agbcc's
+# preprocessor output, which can change emitted bytes.
+SortIncludes: Never
+
+# Don't reflow comments — they often line up with adjacent fields/code by
+# hand for readability.
+ReflowComments: false
+
+SpaceBeforeParens: ControlStatements
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+SpaceAfterCStyleCast: false
+
+AlignTrailingComments: true
+AlignAfterOpenBracket: Align
+AlignConsecutiveAssignments: None
+AlignConsecutiveDeclarations: None
+AlignConsecutiveMacros: AcrossEmptyLines
+
+# Macro hygiene — these tokens should not pull in extra spacing.
+StatementMacros:
+  - INCBIN_U8
+  - INCBIN_U16
+  - INCBIN_U32
+  - INCBIN_S8
+  - INCBIN_S16
+  - INCBIN_S32

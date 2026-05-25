@@ -1,0 +1,73 @@
+#!/bin/bash
+# Pre-commit hook for the Frogger's Adventures decomp.
+#
+# Install with:
+#   ln -sf ../../scripts/pre-commit .git/hooks/pre-commit
+#   chmod +x scripts/pre-commit
+#
+# What it enforces:
+#   1. The baserom (and any *_baserom.gba) MUST NEVER be committed.
+#   2. Run clang-format on staged .c/.h files; if formatting would change
+#      the file, abort and tell the user to re-stage.
+#
+# Bypass (use sparingly, document in commit message): git commit --no-verify
+
+set -e
+
+# --- 1. Baserom guard ----------------------------------------------------
+
+# Get the list of paths staged for this commit (added, copied, modified).
+staged() {
+    git diff --cached --name-only --diff-filter=ACM
+}
+
+forbidden=$(staged | grep -E '(^|/)baserom\.gba$|(^|/)[A-Za-z_0-9]*_baserom\.gba$' || true)
+if [ -n "$forbidden" ]; then
+    echo "ERROR: refusing to commit baserom file(s):" >&2
+    echo "$forbidden" | sed 's/^/  /' >&2
+    echo >&2
+    echo "The baserom must NEVER be committed. Remove it from the index:" >&2
+    echo "  git rm --cached <path>" >&2
+    echo "(it's already in .gitignore but a stray 'git add -f' can bypass that)" >&2
+    exit 1
+fi
+
+# --- 2. clang-format -----------------------------------------------------
+
+if ! command -v clang-format >/dev/null 2>&1; then
+    echo "WARN: clang-format not on PATH; skipping format check." >&2
+    echo "      brew install clang-format    # macOS" >&2
+    echo "      apt-get install clang-format  # Linux" >&2
+    exit 0
+fi
+
+unformatted=""
+while IFS= read -r f; do
+    [ -z "$f" ] && continue
+    case "$f" in
+        # Our project C/C++ lives in src/ and include/. tools/ is vendored
+        # upstream (preproc, gbafix) — don't impose our style on it.
+        tools/*) continue ;;
+        *.c|*.h) ;;
+        *) continue ;;
+    esac
+    [ -f "$f" ] || continue
+    # `clang-format --dry-run -Werror` exits non-zero if the file would change.
+    if ! clang-format --dry-run -Werror "$f" >/dev/null 2>&1; then
+        unformatted+="$f"$'\n'
+    fi
+done < <(staged)
+
+if [ -n "$unformatted" ]; then
+    echo "ERROR: the following staged files are not clang-formatted:" >&2
+    echo -n "$unformatted" | sed 's/^/  /' >&2
+    echo >&2
+    echo "Format with:" >&2
+    echo "  clang-format -i \\" >&2
+    echo -n "$unformatted" | sed 's/^/    /; $!s/$/ \\/' >&2
+    echo >&2
+    echo "Then re-stage and re-commit." >&2
+    exit 2
+fi
+
+exit 0
