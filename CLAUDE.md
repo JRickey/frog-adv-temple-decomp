@@ -39,6 +39,23 @@ byte-identical C source that compiles to the same ROM as the original.
 | `frog_us.sha1` | Target SHA1; **do not edit** |
 | `baserom.gba`, `frog_us_baserom.gba` | Symlinked — **never committed** |
 
+## Agent notes — `docs/`
+
+Topic-specific learnings live in `docs/` so CLAUDE.md stays loadable in
+every context. When you discover something a future agent should know,
+append to the right file rather than expanding CLAUDE.md. Read
+`docs/README.md` once for the conventions.
+
+| File | When to add |
+|---|---|
+| [`docs/codegen-notes.md`](docs/codegen-notes.md) | New agbcc quirk, fold-prevention pattern, encoding gotcha, flag finding |
+| [`docs/memory-map.md`](docs/memory-map.md) | Address gets a semantic name (EWRAM/IWRAM/MMIO/ROM-data), struct layout discovered |
+| [`docs/subsystems.md`](docs/subsystems.md) | Engine subsystem identified, call cluster mapped, dispatcher pattern named |
+| [`docs/unknowns.md`](docs/unknowns.md) | Hypothesis about an unnamed function/value, suspicious pattern, deferred question |
+
+Bar for writing: would a future agent benefit from this without
+re-deriving it? Otherwise leave it in the commit message.
+
 ## Build / verify
 
 ```sh
