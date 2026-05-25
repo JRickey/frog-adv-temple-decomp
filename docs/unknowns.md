@@ -94,6 +94,52 @@ Peeling these in baserom-address order would unblock the C decomp of
 Init1 (see `codegen-notes.md`, "Cross-region Thumb BL targets" for
 why).
 
+### Init1 decomp attempt — open blocker: agbcc CSE-folds adjacent IWRAM bases
+
+All four BL targets are now peeled (commit `b8415d7` + earlier), so the
+Thumb BL relocations resolve cleanly. The remaining matching blocker is
+register-coloring / literal-pool ordering:
+
+The baserom emits a SEPARATE `ldr` for each IWRAM base address. e.g.
+0x03003480 then 0x030034a0 are loaded with two distinct `ldr rN, [pc, ...]`
+instructions. But agbcc CSE-folds the second base via `adds rN, #32`
+because 0x030034a0 - 0x03003480 = 32 (small Thumb immediate). Same
+trap for 0x030034b4 (= +0x14 from 0x030034a0) and 0x030034b0 (= -0x4
+from 0x030034b4).
+
+Approaches tried (none produced a match):
+
+1. Two C scopes with separate `u8 *p_3480 = ...; u8 *p_34a0 = ...;` locals
+   — agbcc CSE'd across the block boundary.
+2. Scopes separated by `asm volatile ("" : : : "memory")` — same fold.
+3. `vu8 *p_34a0` (volatile-qualified target) — same fold.
+4. Register-pinned p_34a0 (`register u8 *p_34a0 asm("r0")`) — same fold.
+5. Struct-typed pointers (`struct s_3480` vs `struct s_34a0`) — fold
+   shifted to the next pair (0x030034a0 → 0x030034b4 via `adds r1, #20`).
+6. Pure `*(volatile u8 *)0x030034a1 = 0` style with offsetted absolute
+   addresses — agbcc emits one `ldr` per write, totally wrong shape.
+7. Inline `asm ("ldr %0, =0x030034a0" : "=r"(p_34a0))` — forces a fresh
+   literal but gas places it OUTSIDE agbcc's own literal pool, growing
+   the function by 4 bytes (148 not 144).
+
+Best diff so far: 13 instruction-level mismatches, 22 byte_diff. The
+core issue: agbcc 2.x's `loop_optimize` / `combine` passes CSE constant
+addresses that differ by ≤256 bytes. Until we find a way to defeat that
+specifically, Init1 stays in asm.
+
+Hypothesis to try next: structurally rearrange the source so all writes
+to a given base happen contiguously WITHOUT a base re-load in between
+(maybe a single struct typedef covering 0x03003480..0x030035e0 — but the
+holes between bases are big enough that the resulting struct would be
+512+ bytes, and field-offsets > 124 don't fit in Thumb immediate offset
+encoding so agbcc would emit `ldr rN, =&struct+offset` per write anyway,
+defeating the purpose).
+
+A second hypothesis: this might be one of those cases where the original
+TU was built with a slightly different compiler version (different
+`-fno-cse-skip-blocks` or pass ordering). Worth a `decomp-permuter`
+attempt once that pipeline is wired up.
+
 ## Compiler patch
 
 The `-f2003-patch` flag in `testyourmine/cvaos` (Castlevania: Aria of
