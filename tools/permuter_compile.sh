@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+#
+# Adapted from the Metroid Fusion decompilation
+# (https://github.com/metroidret/mf). MIT, Copyright (c) 2025 YohannDR.
+# See LICENSE for full attribution.
+#
 # Wrapper for decomp-permuter: takes a .c file and produces a .o file using
 # the project's actual compile pipeline (preproc | cpp-15 | agbcc | as).
 #

@@ -1,4 +1,8 @@
 #!/bin/bash
+#
+# Adapted from the Metroid Fusion decompilation
+# (https://github.com/metroidret/mf). MIT, Copyright (c) 2025 YohannDR.
+# See LICENSE for full attribution.
 
 set -e
 set -o pipefail

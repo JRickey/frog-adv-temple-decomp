@@ -1,3 +1,9 @@
+"""Extract binary data blobs from the baserom per database.json.
+
+Adapted from the Metroid Fusion decompilation
+(https://github.com/metroidret/mf). MIT, Copyright (c) 2025 YohannDR.
+See LICENSE for full attribution.
+"""
 import argparse
 from io import BufferedReader
 import json

@@ -1,3 +1,9 @@
+<!--
+  Template adapted from the Metroid Fusion decompilation
+  (https://github.com/metroidret/mf). MIT, Copyright (c) 2025 YohannDR.
+  See LICENSE for full attribution.
+-->
+
 # AI Policy
 
 AI/Agents are welcome. I strongly encourage those using AI tools to work with the provided *CLAUDE.MD* and *AGENTS.MD* to avoid common agentic issues and to ensure quality PR's.
