@@ -48,3 +48,16 @@ void sub_08000820(void)
     REG_IE = 0x2011;
     REG_DISPSTAT = 8;
 }
+
+/* Two empty stub functions sitting in the gap between sub_08000820's literal
+ * pool and the raw .text blob at 0x0800088c. Their callers are not yet
+ * identified — kept as separate symbols so the surrounding layout stays
+ * byte-identical. The compiler emits `bx lr` (2 bytes) per function; the
+ * Makefile's trailing `.align 2, 0` produces the `0x0000` halfword pad the
+ * baserom has between them. See docs/codegen-notes.md.
+ */
+void sub_08000884(void)
+{}
+
+void sub_08000888(void)
+{}
