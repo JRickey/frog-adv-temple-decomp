@@ -1,4 +1,4 @@
-#include "game/sub_08020_b30.h"
+#include "game/sub_08020b30.h"
 
 #include "types.h"
 
