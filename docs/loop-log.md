@@ -715,3 +715,27 @@ The agent infrastructure grew organically with each iter — each new friction d
 **Trajectory:** 16 iters post-resume (11-26). Functions 41→73 (+32). Raw INCBIN 98.1%→93.7% (-4.4pp). db 117→220 (+103). src C 75→164 KiB (+89 KiB). Data deblob 1.0%→6.3% (+5.3pp). **Crossed 14% function decomp**. The loop now consistently lands 2-3 fns + data + architectural understanding per iter. Tool-quality fixes (this iter's brief fix) reduce per-iter friction.
 
 ---
+
+## Iter 27 — 2026-05-26
+
+**Before:** 73 / ~513 fns (14.2%), 80 asm-fn-remaining, 220 db, 164.2 KiB src C, 93.7% raw
+
+**Targets:** Decomp sub_08009A58 (110 instr, contiguous append, first iter using fixed brief). Data: 0x080f7xxx 5-anchor tight cluster.
+
+**Outcomes:**
+- Decomp: **sub_08009A58 NAKED** (4-high-register pin: sl/r9/r8/ip — canonical "High registers" unmatchable class). 110 instr / 328 B, single iteration. Contiguous-appended to sub_08009984.c. 2 callee peels (sub_0800D028, sub_0800696C). **Brief-fix from iter 26 working as intended**: agent didn't waste effort on UNPEELED false-positives.
+- Data: **5/5 anchors, 52.5 KiB** (biggest single-iter data haul since iter 18's 48 KiB). **4th screen-install cluster** discovered — the dual-BG variant. Consumer at 0x0800f014 also enables BG2; sibling block expected elsewhere.
+
+**Commit:** iter-27 hash (single combined: 1 decomp + 2 peels + 5 data tables).
+
+**After:** 75 / ~513 fns (**14.6%** +0.4pp), 80 asm-fn-remaining (unchanged — peels offset), 225 db (+5), **217.1 KiB src C** (+52.9 KiB, mostly the data INCBIN files), **92.4% raw (-1.3pp)**, **7.6% data deblob (+1.3pp)**.
+
+**Architectural duties:**
+- **4 NEW IWRAM bases identified** in sub_08009A58: 0x030060a0, 0x03006110 (extended — already in iwram.h via iter 26), 0x03006140, 0x03006160. Field maps documented in iter-27 commit body for future C decomps. The 0x03006110 mode-config struct hypothesis from iter 26 is reinforced by this iter's u8 count/sub-count + u32 zeroed fields.
+- **4 screen-install clusters** total now (iter-18 + iter-22 + iter-23 + iter-27). Subsystem pattern firmly established. Variants observed: single-tilemap-only, char+palette+1-tilemap, char+palette+2-tilemaps (sb28+sb29), and dual-BG (BG0+BG1 each with own char+tilemap).
+
+**Decisions:** none material.
+
+**Trajectory:** 17 iters post-resume (11-27). Functions 41→75 (+34). Raw INCBIN 98.1%→92.4% (**-5.7pp**). db 117→225 (+108). src C 75→217 KiB (+142 KiB). Data deblob 1.0%→7.6% (+6.6pp). **src C threshold 200 KiB crossed** (data INCBIN files count toward src C). Brief-fix from iter 26 confirmed working — no false-positive friction this iter. Loop continuing strong.
+
+---
