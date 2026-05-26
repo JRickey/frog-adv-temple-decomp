@@ -591,3 +591,27 @@ The agent infrastructure grew organically with each iter — each new friction d
 **Trajectory:** 11 iters post-resume (11-21). Functions 41→58 (+17). Raw INCBIN 98.1%→95.6% (-2.5pp). db 117→207 (+90). src C 75→156 KiB (+81 KiB). **The "decomp surface depletion" worry from iter 20 is resolved**: scaffold_cluster.py works, and the picker shows 20+ small tractable functions immediately tractable once scaffolded. Iter 20 was a one-time infra iter, not the start of a no-op streak.
 
 ---
+
+## Iter 22 — 2026-05-26
+
+**Before:** 58 / ~513 fns (11.3%), 63 peeled-asm, 207 db, 156.1 KiB src C, 95.6% raw
+
+**Targets:** Decomp scaffold+decomp sub_08000918 (estimated 286-line / ~140-instr medium target). Data: 0x0819c312 + 0x0819cfde pair anchors (fresh region).
+
+**Outcomes:**
+- Decomp: **infra-only**. Target was 2× larger than estimated (596 B / ~298 instr, 14-case PC-table-dispatch state machine, NAKED-required). Per playbook "abandon if oversized" guidance, agent landed scaffold + 8 callee peels (sub_08000C98, sub_08000CEC, sub_08000D2C, sub_08000D50, sub_08000FD50, sub_08006948, sub_0800E600, sub_08009BA0 [hidden inside over-wide peel of disasm_0x08009a58.s — 3rd instance of iter-18 pattern]). Iter 23 lands the C body. asm_funcs_remaining: 78 → 86 (peeled-from-opaque count increase, not new work).
+- Data: **2 tables, 6.5 KiB** (sBgTilemapVariantA + sBgTilemapVariantB). Required new alignment protocol for halfword-aligned-only anchors. Bonus: 3 additional anchors discovered in [0x08188edc..0x081a5b6a] for future iters.
+
+**Commit:** iter-22 hash (single combined: scaffold + peels + data + 2 codegen-notes additions).
+
+**After:** 58 / ~513 fns (11.3%, unchanged), **86 asm_funcs_remaining** (+8 from peels, not new debt), 209 db (+2), **156.1 KiB src C** (unchanged), 95.4% raw (-0.2pp), **4.6% data deblob** (+0.2pp).
+
+**Architectural duties:**
+- docs/codegen-notes.md **"Non-u32-aligned .rodata data anchors"** — new section. 3-step protocol: asm/data/*.s hand-assembled form + lower upstream/downstream bucket alignment to .balign 1. Applies to halfword-aligned BG tilemaps, halfword animation tables, font glyph data.
+- docs/codegen-notes.md **"decomp_brief.py UNPEELED false-positives"** — new section. Brief only checks for asm/disasm_0x<addr>.s filename; misses C-lifted callees, paired peels, over-wide peels. 4/11 of sub_08000918's "UNPEELED" callees this iter were false positives. TODO: harden the brief.
+
+**Decisions:** none material. Mixed iter (infra + data) is fine per stop-condition rules — counts as productive work since 8 callee peels + 2 data tables landed.
+
+**Trajectory:** 12 iters post-resume (11-22). Functions 41→58 (+17). Raw INCBIN 98.1%→95.4% (-2.7pp). db 117→209 (+92). src C 75→156 KiB (+81 KiB). **The "asm_funcs_remaining went UP" is misleading**: it's not new debt, it's previously-opaque blob bytes promoted to named-asm-function status. The actual surface remaining is roughly unchanged.
+
+---
