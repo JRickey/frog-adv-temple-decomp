@@ -344,12 +344,28 @@
     "size": 12
   },
   {
+    "path": "ui/frog_sprite_palettes_e3774.bin",
+    "addr": {
+      "us": "0xE3774"
+    },
+    "count": "0x50",
+    "size": 2
+  },
+  {
     "path": "ui/status_bar_tile_data.bin",
     "addr": {
       "us": "0xE3A30"
     },
     "count": "0x42",
     "size": 2
+  },
+  {
+    "path": "sprite/frog_tile_pixels_e3ab6.bin",
+    "addr": {
+      "us": "0xE3AB6"
+    },
+    "count": "0x4000",
+    "size": 1
   },
   {
     "path": "level/layout_316f24.bin",

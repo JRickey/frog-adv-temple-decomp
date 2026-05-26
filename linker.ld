@@ -67,10 +67,10 @@ SECTIONS {
         src/system/sub_08000918.o(.text);
         asm/disasm_0x08000918.o(.text);  /* 0x08000918 - 0x08000b6c, sub_08000918 (auto-peeled) */
         asm/text/text_0x08000b6c.o(.text);  /* 0x08000b6c - 0x08000c98, raw bytes */
-        asm/disasm_0x08000c98.o(.text);  /* 0x08000c98 - 0x08000cb0, sub_08000C98 (auto-peeled) */
+        src/system/sub_08000c98.o(.text);  /* 0x08000c98 - 0x08000cb0, sub_08000C98 */
         asm/text/text_0x08000cb0.o(.text);  /* 0x08000cb0 - 0x08000cec, raw bytes */
         asm/disasm_0x08000cec.o(.text);  /* 0x08000cec - 0x08000d2c, sub_08000CEC (auto-peeled) */
-        asm/disasm_0x08000d2c.o(.text);  /* 0x08000d2c - 0x08000d50, sub_08000D2C (auto-peeled) */
+        src/system/sub_08000d2c.o(.text);  /* 0x08000d2c - 0x08000d50, sub_08000D2C */
         src/system/sub_08000d50.o(.text);  /* 0x08000d50 - 0x08000d5c, sub_08000D50 */
         asm/text/text_0x08000d5c.o(.text);  /* 0x08000d5c - 0x08000eb8, raw bytes */
         asm/disasm_0x08000eb8.o(.text);  /* 0x08000eb8 - 0x08001128, sub_08000EB8 (auto-peeled) */
@@ -141,7 +141,9 @@ SECTIONS {
         asm/text/text_0x0800a3d0.o(.text);  /* 0x0800a3d0 - 0x0800a4d0, raw bytes */
         asm/disasm_0x0800a4d0.o(.text);  /* 0x0800a4d0 - 0x0800a520, sub_0800A4D0 (auto-peeled) */
         src/game/sub_0800a520.o(.text);  /* 0x0800a520 - 0x0800a540, sub_0800A520 */
-        asm/text/text_0x0800a540.o(.text);  /* 0x0800a540 - 0x0800de80, raw bytes */
+        asm/text/text_0x0800a540.o(.text);  /* 0x0800a540 - 0x0800b7b0, raw bytes */
+        asm/disasm_0x0800b7b0.o(.text);  /* 0x0800b7b0 - 0x0800b8a8, sub_0800B7B0 (auto-peeled) */
+        asm/text/text_0x0800b8a8.o(.text);  /* 0x0800b8a8 - 0x0800de80, raw bytes */
         asm/disasm_0x0800de80.o(.text);  /* 0x0800de80 - 0x0800df7c, sub_0800DE80 (auto-peeled) */
         asm/text/text_0x0800df7c.o(.text);  /* 0x0800df7c - 0x0800e060, raw bytes */
         asm/disasm_0x0800e060.o(.text);  /* 0x0800e060 - 0x0800e174, sub_0800E060 (auto-peeled) */
@@ -236,9 +238,13 @@ SECTIONS {
         src/data/character_sprite_frames.o(.rodata);  /* 0x080e3190 - 0x080e34c0, sCharacterSpriteFrames (51 records x 16 B) */
         asm/text/text_0x080e34c0.o(.text);  /* 0x080e34c0 - 0x080e3550, raw bytes (intra-cluster zero padding) */
         src/data/ui_status_bar.o(.rodata);  /* 0x080e3550 - 0x080e3754, sUiAssetSlots + sFrogStatusBarFrames */
-        asm/text/text_0x080e3754.o(.text);  /* 0x080e3754 - 0x080e3a30, raw bytes (intra-cluster gap) */
+        asm/text/text_0x080e3754.o(.text);  /* 0x080e3754 - 0x080e3774, raw bytes (intra-cluster gap head) */
+        src/data/frog_sprite_palettes.o(.rodata);  /* 0x080e3774 - 0x080e3814, sFrogSpritePalettes_E3774 (5 x 16 colors) */
+        asm/text/text_0x080e3814.o(.text);  /* 0x080e3814 - 0x080e3a30, raw bytes (sprite-frame region pointed at by sSpriteFrameDescriptors[0..4]) */
         src/data/ui_status_bar_tiles.o(.rodata);  /* 0x080e3a30 - 0x080e3ab4, sFrogStatusBarTileData */
-        asm/text/text_0x080e3ab4.o(.text);  /* 0x080e3ab4 - 0x080f0000, raw bytes (tail after ui-status-bar cluster) */
+        asm/text/text_0x080e3ab4.o(.text);  /* 0x080e3ab4 - 0x080e3ab6, halfword pad (.balign 1) */
+        asm/data/frog_tile_pixels_e3ab6.o(.rodata);  /* 0x080e3ab6 - 0x080e7ab6, sFrogTilePixels_E3AB6 (0x4000 B 4bpp OBJ tile data) */
+        asm/text/text_0x080e7ab6.o(.text);  /* 0x080e7ab6 - 0x080f0000, raw bytes (tail; contains 0x080e7ab6 sibling tile block) */
         asm/text/text_0x080f0000.o(.text);  /* 0x080f0000 - 0x08100000, raw bytes */
         asm/text/text_0x08100000.o(.text);  /* 0x08100000 - 0x08110000, raw bytes */
         asm/text/text_0x08110000.o(.text);  /* 0x08110000 - 0x08120000, raw bytes */
