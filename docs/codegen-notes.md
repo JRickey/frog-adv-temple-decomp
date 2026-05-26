@@ -1333,3 +1333,87 @@ Worked examples (cumulative as of iter 17):
 
 Use when extracting any small ptr-array that points into a
 larger typed data block AT or near the same ROM region.
+
+## Pre-existing peel range may hide a second function
+
+When a `disasm_0xADDR.s` was peeled earlier (iter 4-7 wide peels are
+the usual culprit) and the peel boundary was a few words too wide,
+the asm slice can carry a second `push {…}` prologue past the
+target's real epilogue. The picker still reports `instr_count`
+(it's counting the .s `.incbin` line count, NOT decoded
+instructions) as "2", so it looks like a trivial peel — but the
+underlying ROM bytes hold the target *plus* a trailing helper that
+shares the slice.
+
+Symptom: if you delete the asm slice to land the C decomp without
+re-peeling the trailing helper, the deleted bytes vanish from the
+ROM and every downstream symbol shifts by however many bytes the
+trailing helper was (typically 30-50 bytes → 0x1974+ cascading
+shift in `bytes_diff_rom`).
+
+Resolution (caught iter 18 on `sub_0800A328`/`sub_0800A3A4`):
+1. Before deleting the asm slice, `objdump -D -b binary -mthumb`
+   the slice and look for a second `push {…, lr}` past the first
+   `pop {…, pc}`. If present, that's a hidden function.
+2. Peel it into its own `disasm_0xHIDDEN.s` *before* shrinking the
+   parent slice. Wire it into linker.ld between the parent slot
+   and the text bucket on the other side.
+3. detect-fn-boundary should be able to catch this — file a
+   TODO to teach it to flag "second push-lr prologue inside peel
+   range = hidden function".
+
+Tactical check: when `decomp_brief.py` reports the range, count
+the `push {` directives in the .s. >1 = hidden function risk.
+
+## Stale `.o` cache after `auto_peel.py`
+
+`auto_peel.py` modifies bucket `.s` files in-place when peeling
+callees, but Make's dependency tracker doesn't always detect the
+in-place edit (timestamps within the same second confuse it).
+Symptom: a parallel build picks up the old `.o` size, layout drifts
+by however many bytes the peeled callee was.
+
+Workaround: after `auto_peel.py --callees-of`, run
+`touch asm/text/text_0x*.s && make -j8`, or just `make tidy`. The
+~30s rebuild cost is cheap.
+
+(Possible fix: `auto_peel.py` could `touch` modified bucket files
+explicitly. Worth doing if this bites a third time.)
+
+## DMA-cnt vs. table-real-size
+
+When extracting ROM-resident graphics resources fed to DMA3 (palette
+copy, charblock copy, tilemap install), the DMA's `cnt` register
+tells you how many bytes the runtime copies — but the underlying
+ROM table can be LARGER than that. Reasons: a single resource gets
+DMA'd in multiple chunks at different times, or the runtime only
+needs the first N bytes for the current screen.
+
+Caught iter 18 on `sScreenCharTilesDAD98`: DMA cnt was 0x8000 but the
+actual table extends to 0x9680 (next anchor at 0x081e4418).
+Initial extraction sized at 0x8000 left a 0x1680-byte ghost in the
+trailing INCBIN — `make check` failed downstream.
+
+Resolution: derive table size from the gap to the *next* pool-load
+anchor (or known-extracted symbol), not from the DMA cnt. If the
+gap is suspicious (huge round number with no obvious purpose),
+check whether there's a second DMA somewhere that reads the
+remainder.
+
+## Apostrophe-trap substitution cheatsheet
+
+`tools/preproc` treats `'` as a string delimiter even inside `/* */`
+comments — see "Apostrophes in C comments" above. When writing
+comment prose for an INCBIN-using C file:
+
+| Don't write   | Do write       |
+|---------------|----------------|
+| `'d` (e.g. `DMA'd`) | `ed` (`DMAed`)  |
+| `don't`       | `does not`     |
+| `can't`       | `cannot`       |
+| `it's`        | `it is`        |
+| `we'll`       | `we will`      |
+
+`lint_incbin_apostrophes.py` catches these at pre-commit, but the
+trap also fires at *compile* time (silent INCBIN swallowing), so
+catching it during drafting saves a build round-trip.

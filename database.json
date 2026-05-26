@@ -1518,5 +1518,45 @@
     },
     "count": "0x1B",
     "size": 4
+  },
+  {
+    "path": "sprite/screen_d8b98/tilemap_screenblock29.bin",
+    "addr": {
+      "us": "0x1D8B98"
+    },
+    "count": "0x400",
+    "size": 2
+  },
+  {
+    "path": "sprite/screen_d8b98/aux_d9398.bin",
+    "addr": {
+      "us": "0x1D9398"
+    },
+    "count": "0x1800",
+    "size": 1
+  },
+  {
+    "path": "sprite/screen_d8b98/palette.bin",
+    "addr": {
+      "us": "0x1DAB98"
+    },
+    "count": "0x100",
+    "size": 2
+  },
+  {
+    "path": "sprite/screen_d8b98/char_tiles.bin",
+    "addr": {
+      "us": "0x1DAD98"
+    },
+    "count": "0x9680",
+    "size": 1
+  },
+  {
+    "path": "sprite/screen_d8b98/tilemap_screenblock28.bin",
+    "addr": {
+      "us": "0x1E4418"
+    },
+    "count": "0x400",
+    "size": 2
   }
 ]
