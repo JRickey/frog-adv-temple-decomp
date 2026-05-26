@@ -393,3 +393,24 @@ Open work:
 ## Input
 
 (Not yet identified.)
+
+### Level-layout walker functions
+
+Iter-15 data agent identified the two entry-point functions for the
+entire level-layout dispatch hierarchy (both still asm, both
+candidates for future decomp):
+
+- **sub_08021140** — sub-table walker: reads `byte[0]` as record count,
+  iterates records starting at offset 8 with stride 8. Consumers
+  call `sub_08021140(ptr_to_subtable, ...)` after indexing through
+  one of the level-layout pointer arrays.
+- **sub_080219bc** — twin walker (documented earlier; same shape,
+  different consumer family).
+
+Once one of these decomps, the entire level-layout `{count, _, X, _,
+u32 _}` header convention becomes a typed `struct LevelLayoutSubTable
+{ u8 count; u8 _; u8 X; u8 _; u32 _data; }` instead of `u32[]`
+placeholder. Suggests these two should be high-priority decomp
+targets — they unlock semantic renames across ALL `sLevelLayout*`
+extractions.
+

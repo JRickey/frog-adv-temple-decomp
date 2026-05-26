@@ -1215,3 +1215,25 @@ Worked example: `sIconAnimFrames` at 0x081736f8 (5 records × 192 B
 This is distinct from the iter-2 UI/HUD descriptor format
 (`{x,y,w,h,*ptr}`) — that one targeted BG tilemap blitters; this
 one targets DMA-driven palette+tile slot loads.
+
+## Pointer-array slot size != byte[0]*stride+header
+
+Important convention discovered iter 15 in level-layout cluster G
+at 0x08311a50: a sub-table's BYTE BOUNDARY is determined by the
+**enclosing pointer-array's stride**, NOT by its internal
+`{u8 count, u8 _, u8 X, u8 _, u32 _}` header's count field.
+
+Some sub-tables are PADDED out to their slot's full size — byte[0]
+count drives consumer iteration (`for i in 0..count`), but the
+slot may contain extra trailing bytes that the consumer never reads.
+
+Recognition: when extracting a sub-table backing store, derive the
+slot boundary from `ptrs[i+1] - ptrs[i]` (the dispatcher's stride),
+not from `header.count * stride + header_size`. If they disagree,
+the dispatcher wins.
+
+This complements the iter-12 "embedded mini pointer-array" variant
+and the iter-13 "non-monotonic tail" subform. Together: any
+extraction in the level-layout subsystem should be PTR-ARRAY-DRIVEN,
+not header-driven.
+

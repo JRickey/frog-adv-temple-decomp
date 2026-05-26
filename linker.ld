@@ -80,7 +80,7 @@ SECTIONS {
         asm/disasm_0x08002524.o(.text);  /* 0x08002524 - 0x08002760, sub_08002524 (auto-peeled) */
         src/game/set_game_mode_07.o(.text);  /* 0x08002760 - 0x0800276c, SetGameMode_07 */
         asm/text/text_0x0800276c.o(.text);  /* 0x0800276c - 0x08002844, raw bytes */
-        asm/disasm_0x08002844.o(.text);  /* 0x08002844 - 0x08002a5c, sub_08002844 (auto-peeled) */
+        src/game/mode_15.o(.text);       /* 0x08002844 - 0x08002a5c, sub_08002844 (mode-15 handler) */
         src/game/set_game_mode_08.o(.text);  /* 0x08002a5c - 0x08002a68, SetGameMode_08 */
         asm/text/text_0x08002a68.o(.text);  /* 0x08002a68 - 0x08002b58, raw bytes */
         asm/disasm_0x08002b58.o(.text);  /* 0x08002b58 - 0x08002e04, sub_08002B58 (auto-peeled) */
@@ -101,8 +101,33 @@ SECTIONS {
         src/game/set_game_mode_15.o(.text);  /* 0x080052c0 - 0x080052cc, SetGameMode_15 */
         asm/text/text_0x080052cc.o(.text);  /* 0x080052cc - 0x080054a8, raw bytes */
         asm/disasm_0x080054a8.o(.text);  /* 0x080054a8 - 0x0800586c, sub_080054A8 (auto-peeled) */
-        asm/text/text_0x0800586c.o(.text);  /* 0x0800586c - 0x08010000, raw bytes */
-        asm/text/text_0x08010000.o(.text);  /* 0x08010000 - 0x08017364, raw bytes */
+        asm/text/text_0x0800586c.o(.text);  /* 0x0800586c - 0x080094f8, raw bytes */
+        asm/disasm_0x080094f8.o(.text);  /* 0x080094f8 - 0x080097fc, sub_080094F8 (auto-peeled) */
+        asm/text/text_0x080097fc.o(.text);  /* 0x080097fc - 0x08009984, raw bytes */
+        asm/disasm_0x08009984.o(.text);  /* 0x08009984 - 0x08009a58, sub_08009984 (auto-peeled) */
+        asm/text/text_0x08009a58.o(.text);  /* 0x08009a58 - 0x08009c14, raw bytes */
+        asm/disasm_0x08009c14.o(.text);  /* 0x08009c14 - 0x08009cbc, sub_08009C14 (auto-peeled) */
+        asm/text/text_0x08009cbc.o(.text);  /* 0x08009cbc - 0x08009d9c, raw bytes */
+        asm/disasm_0x08009d9c.o(.text);  /* 0x08009d9c - 0x08009eec, sub_08009D9C (auto-peeled) */
+        asm/text/text_0x08009eec.o(.text);  /* 0x08009eec - 0x0800a104, raw bytes */
+        asm/disasm_0x0800a104.o(.text);  /* 0x0800a104 - 0x0800a158, sub_0800A104 (auto-peeled) */
+        asm/text/text_0x0800a158.o(.text);  /* 0x0800a158 - 0x0800a1c8, raw bytes */
+        asm/disasm_0x0800a1c8.o(.text);  /* 0x0800a1c8 - 0x0800a214, sub_0800A1C8 (auto-peeled) */
+        asm/text/text_0x0800a214.o(.text);  /* 0x0800a214 - 0x0800a2d8, raw bytes */
+        asm/disasm_0x0800a2d8.o(.text);  /* 0x0800a2d8 - 0x0800a328, sub_0800A2D8 (auto-peeled) */
+        asm/disasm_0x0800a328.o(.text);  /* 0x0800a328 - 0x0800a3d0, sub_0800A328 (auto-peeled) */
+        asm/text/text_0x0800a3d0.o(.text);  /* 0x0800a3d0 - 0x0800de80, raw bytes */
+        asm/disasm_0x0800de80.o(.text);  /* 0x0800de80 - 0x0800df7c, sub_0800DE80 (auto-peeled) */
+        asm/text/text_0x0800df7c.o(.text);  /* 0x0800df7c - 0x0800e060, raw bytes */
+        asm/disasm_0x0800e060.o(.text);  /* 0x0800e060 - 0x0800e174, sub_0800E060 (auto-peeled) */
+        asm/text/text_0x0800e174.o(.text);  /* 0x0800e174 - 0x0800e6a8, raw bytes */
+        asm/disasm_0x0800e6a8.o(.text);  /* 0x0800e6a8 - 0x0800e85c, sub_0800E6A8 (auto-peeled) */
+        asm/text/text_0x0800e85c.o(.text);  /* 0x0800e85c - 0x0800ef90, raw bytes */
+        asm/disasm_0x0800ef90.o(.text);  /* 0x0800ef90 - 0x0800eff4, sub_0800EF90 (auto-peeled) */
+        asm/text/text_0x0800eff4.o(.text);  /* 0x0800eff4 - 0x08010000, raw bytes */
+        asm/text/text_0x08010000.o(.text);  /* 0x08010000 - 0x08010694, raw bytes */
+        asm/disasm_0x08010694.o(.text);  /* 0x08010694 - 0x08010740, sub_08010694 (auto-peeled) */
+        asm/text/text_0x08010740.o(.text);  /* 0x08010740 - 0x08017364, raw bytes */
         asm/disasm_0x08017364.o(.text);  /* 0x08017364 - 0x080177a0, sub_08017364 (auto-peeled) */
         asm/text/text_0x080177a0.o(.text);  /* 0x080177a0 - 0x0801793c, raw bytes */
         asm/disasm_0x0801793c.o(.text);  /* 0x0801793c - 0x080179b8, sub_0801793C (auto-peeled) */
@@ -238,7 +263,7 @@ SECTIONS {
         asm/text/text_0x08310000.o(.text);  /* 0x08310000 - 0x08310eb4, raw bytes */
         src/data/level_layout_310eb4.o(.rodata);  /* 0x08310eb4 - 0x083112a8, sLevelLayoutData_310EB4 + sLevelLayoutPtrs_311074 + sLevelLayoutData_3110AC + sLevelLayoutPtrs_31118C + sLevelLayoutData_3111A8 */
         src/data/level_layout_dispatch_3112a8.o(.rodata);  /* 0x083112a8 - 0x083112c8, sLevelLayoutDispatch_3112A8 */
-        asm/text/text_0x083112c8.o(.text);  /* 0x083112c8 - 0x08312c20, raw bytes */
+        src/data/level_layout_3112c8.o(.rodata);  /* 0x083112c8 - 0x08312c20, sLevelLayoutData_3112C8 + 27 more tables (6.5 KB cluster) */
         src/data/level_layout_312c20.o(.rodata);  /* 0x08312c20 - 0x08312d60, sLevelLayout_312C20 + sLevelLayoutPtrs_312C98 + sLevelLayout_312CAC + sLevelLayoutPtrs_312D4C */
         src/data/level_layout_ptrs_312d60.o(.rodata);  /* 0x08312d60 - 0x08312e94, sLevelLayoutPtrs_312D60 + _312D80 + _312DA8 + _312DD4 + _312E6C + sLevelLayoutSentinel_312E84 */
         src/data/level_layout_312e94.o(.rodata);  /* 0x08312e94 - 0x08314a68, sLevelLayoutData_312E94 + sLevelLayoutPtrs_31332C + sLevelLayoutData_313360 + sLevelLayoutPtrs_313F78 + sLevelLayoutData_314068 */
