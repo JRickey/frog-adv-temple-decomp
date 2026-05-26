@@ -6,6 +6,10 @@
 extern void IntrMain(void);
 extern u32 sub_08033910(u8, void *);
 
+/* IRQ handler vector table — src/data/irq_handler_table.c. The Timer3
+ * slot is patched at runtime by sub_08033910(3, &sIrqHandlerTable[6]). */
+extern const u32 sIrqHandlerTable[13];
+
 /* Called from Init1. Copies the ARM `IntrMain` dispatcher into IWRAM via
  * DMA3 (the IRQ path runs from there, not ROM), points the BIOS IRQ
  * vector at the copy, then enables VBlank IRQs.
@@ -19,7 +23,7 @@ void sub_08000820(void)
     REG_DMA3.dst = (void *)0x030058A0;
     REG_DMA3.cnt = DMA_ENABLE | 0x400;
     (void)REG_DMA3.cnt;
-    sub_08033910(3, (void *)0x08035DB4);
+    sub_08033910(3, (void *)&sIrqHandlerTable[6]);
     INTR_VECTOR = (IntrFunc)0x030058A0;
     REG_IME = 1;
     REG_IF = 0;

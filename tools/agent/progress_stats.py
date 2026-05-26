@@ -80,7 +80,7 @@ def parse_linker_ranges() -> tuple[int, int, int]:
     """Sum the byte counts of asm/text/, asm/disasm_*, and src/ entries in linker.ld."""
     raw = asm = src = 0
     range_re = re.compile(
-        r"^\s*(?P<kind>asm/text/text_0x[0-9a-f]+|asm/disasm_0x[0-9a-f]+|src/[^.]+)\.o\(\.text\);"
+        r"^\s*(?P<kind>asm/text/text_0x[0-9a-f]+|asm/disasm_0x[0-9a-f]+|src/[^.]+)\.o\(\.(?:text|rodata)\);"
         r"\s*/\*\s*0x(?P<lo>[0-9a-f]+)\s*-\s*0x(?P<hi>[0-9a-f]+)"
     )
     with LINKER.open() as f:

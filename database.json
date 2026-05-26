@@ -1,13 +1,81 @@
 [
   {
+    "path": "irq/irq_handler_table.bin",
+    "addr": {
+      "us": "0x35D9C"
+    },
+    "count": "0xD",
+    "size": 4
+  },
+  {
+    "path": "game/sprite_asset_table.bin",
+    "addr": {
+      "us": "0x2F8AD8"
+    },
+    "count": "0xC2",
+    "size": 4
+  },
+  {
+    "path": "sound/lut_82f8de0.bin",
+    "addr": {
+      "us": "0x2F8DE0"
+    },
+    "count": "0x25",
+    "size": 2
+  },
+  {
+    "path": "sound/lut_82f8e2a.bin",
+    "addr": {
+      "us": "0x2F8E2A"
+    },
+    "count": "0x31",
+    "size": 2
+  },
+  {
+    "path": "eeprom_id.bin",
+    "addr": {
+      "us": "0x2F8E8C"
+    },
+    "count": "0xC",
+    "size": 1
+  },
+  {
     "path": "sound/wave_vol_lut.bin",
-    "addr": { "us": "0x3DDA3C" },
+    "addr": {
+      "us": "0x3DDA3C"
+    },
     "count": "0x10",
     "size": 1
   },
   {
+    "path": "sound/default_square_wave_pcm.bin",
+    "addr": {
+      "us": "0x3DDA5C"
+    },
+    "count": "0x80",
+    "size": 1
+  },
+  {
+    "path": "sound/note_ratio_table.bin",
+    "addr": {
+      "us": "0x3DDADC"
+    },
+    "count": "0x80",
+    "size": 2
+  },
+  {
+    "path": "sound/inverse_pitch_table.bin",
+    "addr": {
+      "us": "0x3DDBDC"
+    },
+    "count": "0x80",
+    "size": 2
+  },
+  {
     "path": "sound/sound_opcode_handlers.bin",
-    "addr": { "us": "0x3DDCDC" },
+    "addr": {
+      "us": "0x3DDCDC"
+    },
     "count": "0x36",
     "size": 4
   }

@@ -611,3 +611,45 @@ pin source structures both failed; corpus search confirmed no agbcc
 decomp matches a high-reg-pinned function in C. See
 `docs/unknowns.md` "sub_0802EDF0 — Corpus search (Phase D) — verdict:
 NOVEL" for the full search log.
+
+## Apostrophes in C comments break `tools/preproc`
+
+`tools/preproc` walks the C source byte-by-byte looking for INCBIN /
+INCTEXT identifiers. It tracks a tiny string-state to suppress matching
+*inside* string literals — and that state machine treats **both `"` and
+`'`** as string delimiters. There is no comment-aware skipping: a lone
+apostrophe in a `/* … */` block puts preproc into single-quote string
+state and the next INCBIN encountered (whether inside the comment or
+ten lines below it) gets emitted verbatim instead of expanded into
+`{0u,1u,…}`. agbcc then sees `const u8 sFoo[N] = INCBIN_U8("…")` with no
+initializer, treats it as a tentative definition, and emits
+`.comm sFoo, N` — placing the symbol in `BSS`/COMMON instead of
+`.rodata`. The linker fits it wherever, the matching slice is wrong,
+and the build fails SHA1 with the symptom "pool literal points at the
+wrong ROM address".
+
+**Symptoms.** `frog_us.map` shows the affected symbol in `COMMON` at an
+EWRAM/ROM address far past the intended slot; per-symbol diff reveals
+shifted pool literals in adjacent functions; `progress.py --human`
+reports `bytes_diff_rom` in the millions despite a small change.
+
+**Fix.** No apostrophes — straight or curly — anywhere in `src/data/*.c`
+comments. Reword: `agbcc 2.x's` → `agbcc 2.x` or `the agbcc behavior`;
+`don't` → `do not`; `it's` → `it is` / `(no-op…)`; `INCBIN'd` →
+`INCBIN-loaded`. Backticks ARE fine; only `'` triggers the bug.
+
+The full string-state machine lives in `tools/preproc/c_file.cpp`
+`CFile::Preproc()` — `else if (c == '\'') stringChar = '\'';`. A
+proper fix is to teach `Preproc()` to skip `/* … */` and `// …`
+regions before the string/identifier work, but until that lands the
+no-apostrophe convention is the workaround.
+
+Worked example: data-extraction pass 2 (this commit). Added
+`src/data/sound_instruments.c` and `src/data/irq_handler_table.c`
+with normal English prose in their header comments ("INCBIN'd PCM
+payload", "it's a no-op"). Preproc skipped past the apostrophes and
+emitted the trailing `sDefaultSquareWavePcm[128] = INCBIN_U8(...)` and
+`sIrqHandlerTable[13] = INCBIN_U32(...)` as raw text; agbcc emitted
+them as `.comm`; the .rodata pull from `linker.ld` saw only the 16-byte
+header struct from each file; the matching slice shifted 0x60 bytes
+earlier and every adjacent pool literal mis-resolved.

@@ -104,7 +104,9 @@ SECTIONS {
         asm/disasm_0x08033f5c.o(.text);  /* 0x08033f5c - 0x0803401c, __umodsi3 (libgcc; auto-peeled) */
         asm/text/text_0x0803401c.o(.text);  /* 0x0803401c - 0x08035d7c, raw bytes */
         asm/disasm_0x08035d7c.o(.text);  /* 0x08035d7c - 0x08035d84, sub_08035D7C (auto-peeled) */
-        asm/text/text_0x08035d84.o(.text);  /* 0x08035d84 - 0x08040000, raw bytes */
+        asm/text/text_0x08035d84.o(.text);  /* 0x08035d84 - 0x08035d9c, three Thumb-to-ARM veneers */
+        src/data/irq_handler_table.o(.rodata);  /* 0x08035d9c - 0x08035dd0, sIrqHandlerTable */
+        asm/text/text_0x08035dd0.o(.text);  /* 0x08035dd0 - 0x08040000, raw bytes */
         asm/text/text_0x08040000.o(.text);  /* 0x08040000 - 0x08050000, raw bytes */
         asm/text/text_0x08050000.o(.text);  /* 0x08050000 - 0x08060000, raw bytes */
         asm/text/text_0x08060000.o(.text);  /* 0x08060000 - 0x08070000, raw bytes */
@@ -148,7 +150,12 @@ SECTIONS {
         asm/text/text_0x082c0000.o(.text);  /* 0x082c0000 - 0x082d0000, raw bytes */
         asm/text/text_0x082d0000.o(.text);  /* 0x082d0000 - 0x082e0000, raw bytes */
         asm/text/text_0x082e0000.o(.text);  /* 0x082e0000 - 0x082f0000, raw bytes */
-        asm/text/text_0x082f0000.o(.text);  /* 0x082f0000 - 0x08300000, raw bytes */
+        asm/text/text_0x082f0000.o(.text);  /* 0x082f0000 - 0x082f8ad8, raw bytes */
+        src/data/sprite_asset_table.o(.rodata);  /* 0x082f8ad8 - 0x082f8de0, sSpriteAssetTable */
+        src/data/sound_pitch_luts.o(.rodata);  /* 0x082f8de0 - 0x082f8e8c, sUnknownSoundLut_82F8DE0 + _82F8E2A */
+        src/data/eeprom_id.o(.rodata);  /* 0x082f8e8c - 0x082f8e98, gEepromIdString */
+        src/data/sound_dma_records.o(.rodata);  /* 0x082f8e98 - 0x082f8ec4, sSoundDmaBufCfg + sSoundDmaMaster */
+        asm/text/text_0x082f8ec4.o(.text);  /* 0x082f8ec4 - 0x08300000, raw bytes */
         asm/text/text_0x08300000.o(.text);  /* 0x08300000 - 0x08310000, raw bytes */
         asm/text/text_0x08310000.o(.text);  /* 0x08310000 - 0x08320000, raw bytes */
         asm/text/text_0x08320000.o(.text);  /* 0x08320000 - 0x08330000, raw bytes */
@@ -162,9 +169,10 @@ SECTIONS {
         asm/text/text_0x083a0000.o(.text);  /* 0x083a0000 - 0x083b0000, raw bytes */
         asm/text/text_0x083b0000.o(.text);  /* 0x083b0000 - 0x083c0000, raw bytes */
         asm/text/text_0x083c0000.o(.text);  /* 0x083c0000 - 0x083d0000, raw bytes */
-        asm/text/text_0x083d0000.o(.text);  /* 0x083d0000 - 0x083dda2c, raw bytes */
-        src/data/sound_tables.o(.rodata);  /* 0x083dda2c - 0x083dda4c, sChannelRegTable + sWaveVolLut */
-        asm/text/text_0x083dda4c.o(.text);  /* 0x083dda4c - 0x083ddcdc, raw bytes */
+        asm/text/text_0x083d0000.o(.text);  /* 0x083d0000 - 0x083dda1c, raw bytes */
+        src/data/sound_tables.o(.rodata);  /* 0x083dda1c - 0x083dda4c, sChannelFreqRegTable + sChannelRegTable + sWaveVolLut */
+        src/data/sound_instruments.o(.rodata);  /* 0x083dda4c - 0x083ddadc, sDefaultSquareWaveInstr + sDefaultSquareWavePcm */
+        src/data/sound_pitch.o(.rodata);  /* 0x083ddadc - 0x083ddcdc, sNoteRatioTable + sInversePitchTable */
         src/data/sound_opcode_handlers.o(.rodata);  /* 0x083ddcdc - 0x083dddb4, sSoundOpcodeHandlers */
         asm/text/text_0x083dddb4.o(.text);  /* 0x083dddb4 - 0x083e0000, raw bytes (all 0xff padding) */
         asm/text/text_0x083e0000.o(.text);  /* 0x083e0000 - 0x083f0000, raw bytes */
