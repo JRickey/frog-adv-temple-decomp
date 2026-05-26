@@ -176,6 +176,70 @@
     "size": 4
   },
   {
+    "path": "sprite/dma_load_dispatch2.bin",
+    "addr": {
+      "us": "0x30B064"
+    },
+    "count": "0x27",
+    "size": 4
+  },
+  {
+    "path": "sprite/scene2_dma_cluster_b100.bin",
+    "addr": {
+      "us": "0x30B100"
+    },
+    "count": "0x275",
+    "size": 4
+  },
+  {
+    "path": "sprite/scene2_dma_cluster_bad4.bin",
+    "addr": {
+      "us": "0x30BAD4"
+    },
+    "count": "0x840",
+    "size": 4
+  },
+  {
+    "path": "sprite/scene2_dma_cluster_dbd4.bin",
+    "addr": {
+      "us": "0x30DBD4"
+    },
+    "count": "0x140",
+    "size": 4
+  },
+  {
+    "path": "sprite/scene2_dma_cluster_e0d4.bin",
+    "addr": {
+      "us": "0x30E0D4"
+    },
+    "count": "0x4F0",
+    "size": 4
+  },
+  {
+    "path": "sprite/scene2_dma_cluster_f494.bin",
+    "addr": {
+      "us": "0x30F494"
+    },
+    "count": "0x2DB",
+    "size": 4
+  },
+  {
+    "path": "level/layout_316f24.bin",
+    "addr": {
+      "us": "0x316F24"
+    },
+    "count": "0x8",
+    "size": 4
+  },
+  {
+    "path": "level/layout_316f44.bin",
+    "addr": {
+      "us": "0x316F44"
+    },
+    "count": "0x8",
+    "size": 4
+  },
+  {
     "path": "sound/wave_vol_lut.bin",
     "addr": {
       "us": "0x3DDA3C"

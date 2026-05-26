@@ -158,9 +158,10 @@ SECTIONS {
         asm/text/text_0x08300000.o(.text);  /* 0x08300000 - 0x08306444, raw bytes */
         src/data/sprite_dispatch.o(.rodata);  /* 0x08306444 - 0x08306814, sSpriteAssetIndexTable + sSpriteGridLayout + sSpriteGridSubtable */
         src/data/sprite_anim_block.o(.rodata);  /* 0x08306814 - 0x08308100, anim / OAM-DMA descriptor cluster (9 named symbols) */
-        src/data/sprite_dma_records.o(.rodata);  /* 0x08308100 - 0x0830b064, OAM-DMA cfg + sprite frame ptrs + VRAM tile ptrs + DMA load records + dispatch table */
-        asm/text/text_0x0830b064.o(.text);  /* 0x0830b064 - 0x08310000, raw bytes */
-        asm/text/text_0x08310000.o(.text);  /* 0x08310000 - 0x08320000, raw bytes */
+        src/data/sprite_dma_records.o(.rodata);  /* 0x08308100 - 0x08310000, OAM-DMA cfg + sprite frame ptrs + VRAM tile ptrs + DMA load records + dispatch tables + Scene 2 DMA cluster */
+        asm/text/text_0x08310000.o(.text);  /* 0x08310000 - 0x08316f24, raw bytes */
+        src/data/level_layout.o(.rodata);  /* 0x08316f24 - 0x08316f64, sLevelLayout_316F24 + sLevelLayout_316F44 */
+        asm/text/text_0x08316f64.o(.text);  /* 0x08316f64 - 0x08320000, raw bytes */
         asm/text/text_0x08320000.o(.text);  /* 0x08320000 - 0x08330000, raw bytes */
         asm/text/text_0x08330000.o(.text);  /* 0x08330000 - 0x08340000, raw bytes */
         asm/text/text_0x08340000.o(.text);  /* 0x08340000 - 0x08350000, raw bytes */

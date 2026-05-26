@@ -56,3 +56,46 @@ const u32 sDmaLoadRecords[476 * 4] = INCBIN_U32("data/sprite/palette_load_record
  * 0x0003NNNN where 0x0003 looks like a fixed "DMA channel 3" or
  * "type" tag and NNNN is the record count. */
 const u32 sDmaLoadDispatchTable[62 * 3] = INCBIN_U32("data/sprite/dma_load_dispatch.bin");
+
+/* Dispatch-table continuation at 0x0830b064 -- 13 records of 12 B each,
+ * same shape as sDmaLoadDispatchTable above. First entry is the all-zero
+ * slot at 0x0830b064 (count=0 sentinel); 12 live entries follow. Several
+ * loadRecords pointers reach back into sDmaLoadRecords; one (0x0830b100)
+ * points forward into sScene2DmaCluster_B100 below. */
+const u32 sDmaLoadDispatchTable2[13 * 3] = INCBIN_U32("data/sprite/dma_load_dispatch2.bin");
+
+/* Second instance of the dispatch-and-records system, spanning the entire
+ * [0x0830b100, 0x08310000) range. Structurally identical to the
+ * sDmaLoadRecords + sDmaLoadDispatchTable pair above: 16-byte records
+ * { u32 zero, void *src, u32 count, u32 magic } interleaved with mini
+ * 12-byte dispatch tables { records*, src*, packedCount } that index
+ * back into the records on either side.
+ *
+ * Observed magics extend the set seen in sDmaLoadRecords:
+ *   0x28280000  -- "scene 2" tile/sprite DMA
+ *   0x0a0a000a  -- ditto, different OAM/VRAM destination
+ *   0x060a0014  -- short-burst variant
+ *   0x0e0f000f / 0x0f0f000f -- per-quadrant load
+ *   0x10180008 / 0x051a0000 -- VRAM-sub-region loaders
+ * The src pointers cover 0x0827xxxx-0x082fxxxx (the sprite/tileset ROM
+ * region) and 0x080axxxx-0x080dxxxx (likely raw tile data).
+ *
+ * Split into 5 adjacent symbols on the largest >=24-byte zero-pad
+ * boundaries so future passes can rename sub-clusters once their
+ * consumers are decompiled, without re-cutting the whole region:
+ *
+ *   0x0830b100 - 0x0830bad4  ( 2516 B)  sScene2DmaCluster_B100
+ *   0x0830bad4 - 0x0830dbd4  ( 8448 B)  sScene2DmaCluster_BAD4
+ *   0x0830dbd4 - 0x0830e0d4  ( 1280 B)  sScene2DmaCluster_DBD4
+ *   0x0830e0d4 - 0x0830f494  ( 5056 B)  sScene2DmaCluster_E0D4
+ *   0x0830f494 - 0x08310000  ( 2924 B)  sScene2DmaCluster_F494
+ *
+ * Each cluster is itself a mix of records and small dispatch tables;
+ * the structure cannot be cleanly partitioned further by static
+ * analysis alone -- it needs a decompiled consumer to label each
+ * sub-block with the scene/screen it loads. */
+const u32 sScene2DmaCluster_B100[629] = INCBIN_U32("data/sprite/scene2_dma_cluster_b100.bin");
+const u32 sScene2DmaCluster_BAD4[2112] = INCBIN_U32("data/sprite/scene2_dma_cluster_bad4.bin");
+const u32 sScene2DmaCluster_DBD4[320] = INCBIN_U32("data/sprite/scene2_dma_cluster_dbd4.bin");
+const u32 sScene2DmaCluster_E0D4[1264] = INCBIN_U32("data/sprite/scene2_dma_cluster_e0d4.bin");
+const u32 sScene2DmaCluster_F494[731] = INCBIN_U32("data/sprite/scene2_dma_cluster_f494.bin");
