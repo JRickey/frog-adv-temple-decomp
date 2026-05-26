@@ -400,6 +400,182 @@
     "size": 4
   },
   {
+    "path": "level/layout_310000.bin",
+    "addr": {
+      "us": "0x310000"
+    },
+    "count": "0xBC",
+    "size": 4
+  },
+  {
+    "path": "level/layout_dispatch_3102f0.bin",
+    "addr": {
+      "us": "0x3102F0"
+    },
+    "count": "0x24",
+    "size": 4
+  },
+  {
+    "path": "level/layout_310380.bin",
+    "addr": {
+      "us": "0x310380"
+    },
+    "count": "0xA0",
+    "size": 4
+  },
+  {
+    "path": "level/layout_dispatch_310600.bin",
+    "addr": {
+      "us": "0x310600"
+    },
+    "count": "0xC",
+    "size": 4
+  },
+  {
+    "path": "level/layout_310630.bin",
+    "addr": {
+      "us": "0x310630"
+    },
+    "count": "0x28",
+    "size": 4
+  },
+  {
+    "path": "level/layout_dispatch_3106d0.bin",
+    "addr": {
+      "us": "0x3106D0"
+    },
+    "count": "0x12",
+    "size": 4
+  },
+  {
+    "path": "level/layout_310718.bin",
+    "addr": {
+      "us": "0x310718"
+    },
+    "count": "0x8A",
+    "size": 4
+  },
+  {
+    "path": "level/layout_dispatch_310940.bin",
+    "addr": {
+      "us": "0x310940"
+    },
+    "count": "0x9",
+    "size": 4
+  },
+  {
+    "path": "level/layout_310964.bin",
+    "addr": {
+      "us": "0x310964"
+    },
+    "count": "0x70",
+    "size": 4
+  },
+  {
+    "path": "level/layout_dispatch_310b24.bin",
+    "addr": {
+      "us": "0x310B24"
+    },
+    "count": "0xC",
+    "size": 4
+  },
+  {
+    "path": "level/layout_310b54.bin",
+    "addr": {
+      "us": "0x310B54"
+    },
+    "count": "0x4",
+    "size": 4
+  },
+  {
+    "path": "level/layout_310b64.bin",
+    "addr": {
+      "us": "0x310B64"
+    },
+    "count": "0x8",
+    "size": 4
+  },
+  {
+    "path": "level/layout_310b84.bin",
+    "addr": {
+      "us": "0x310B84"
+    },
+    "count": "0x2A",
+    "size": 4
+  },
+  {
+    "path": "level/layout_310c2c.bin",
+    "addr": {
+      "us": "0x310C2C"
+    },
+    "count": "0x6",
+    "size": 4
+  },
+  {
+    "path": "level/layout_310c44.bin",
+    "addr": {
+      "us": "0x310C44"
+    },
+    "count": "0xC",
+    "size": 4
+  },
+  {
+    "path": "level/layout_310c74.bin",
+    "addr": {
+      "us": "0x310C74"
+    },
+    "count": "0x58",
+    "size": 4
+  },
+  {
+    "path": "level/layout_dispatch_310dd4.bin",
+    "addr": {
+      "us": "0x310DD4"
+    },
+    "count": "0x8",
+    "size": 4
+  },
+  {
+    "path": "level/layout_310df4.bin",
+    "addr": {
+      "us": "0x310DF4"
+    },
+    "count": "0x8",
+    "size": 4
+  },
+  {
+    "path": "level/layout_310e14.bin",
+    "addr": {
+      "us": "0x310E14"
+    },
+    "count": "0xC",
+    "size": 4
+  },
+  {
+    "path": "level/layout_310e44.bin",
+    "addr": {
+      "us": "0x310E44"
+    },
+    "count": "0xC",
+    "size": 4
+  },
+  {
+    "path": "level/layout_310e74.bin",
+    "addr": {
+      "us": "0x310E74"
+    },
+    "count": "0x8",
+    "size": 4
+  },
+  {
+    "path": "level/layout_310e94.bin",
+    "addr": {
+      "us": "0x310E94"
+    },
+    "count": "0x8",
+    "size": 4
+  },
+  {
     "path": "level/layout_310eb4.bin",
     "addr": {
       "us": "0x310EB4"

@@ -1237,3 +1237,41 @@ and the iter-13 "non-monotonic tail" subform. Together: any
 extraction in the level-layout subsystem should be PTR-ARRAY-DRIVEN,
 not header-driven.
 
+
+## Fifth unmatchable class candidate: repeated table-dispatch chain coloring
+
+Iter-16 candidate for a fifth corpus-classifiable unmatchable shape:
+
+Function pattern — same expression `sTable[gStruct.field]()` repeated
+3+ times in straight-line code (no CSE possible across calls because
+each call may mutate gStruct):
+
+```c
+sEntityProcB[gGameStuff.pendingMode]();
+sEntityProcD[gGameStuff.pendingMode]();
+sEntitySubtypeLut[gGameStuff.pendingMode]; /* or another use */
+```
+
+agbcc 2.x ALWAYS chains the index through r0 across all three table
+loads, while baserom uses distinct scratch registers (r2, r1, r4)
+with destructive last-use of the cached struct base. Permuter (1575
+iter on iter 16's sub_0800A2D8) couldn't break the pattern — pure-C
+plateau at byte_diff 7 (single-register coloring drift).
+
+This is **not** a fold or a CSE issue; it's a register-allocator
+preference that no source-level mutation flips. Same class as the
+already-documented "Two-stage loops" and "Opcode-dispatch iterator"
+unmatchable shapes.
+
+Detection heuristic: function body is dominated by 3+ calls of the
+form `table[gStruct.someField]()` (or `extern fnptr_table[N]` calls
+indexed by an outer-state byte). If you see byte_diff 4-10 with all
+diffs concentrated around register-letter changes (r0 ↔ r2/r1/r4)
+in the load instructions, this class applies. Ship NAKED +
+#ifdef NON_MATCHING.
+
+Worked example: `sub_0800A2D8` (24-instr game-mode dispatcher
+helper, iter 16). The baserom's r2/r1/r4 chain looks pessimal
+relative to agbcc's r0 chain — but it's what the original C
+source's allocator preference produces, and we can't reproduce it.
+

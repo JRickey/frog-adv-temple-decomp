@@ -414,3 +414,31 @@ placeholder. Suggests these two should be high-priority decomp
 targets — they unlock semantic renames across ALL `sLevelLayout*`
 extractions.
 
+
+### sSpriteAssetTable → level-layout dispatcher bridge
+
+Iter-16 data agent surfaced the first concrete cross-system link
+between the sprite-asset dispatcher (iter 3 — `sSpriteAssetTable`
+at 0x082F8AD8) and the level-layout walker subsystem:
+
+Four interior pointer arrays in the level-layout 0x08310xxx
+cluster (`sLevelLayoutDispatch_3102F0`, `_310600`, `_3106D0`,
+`_310B24`) are stored as the `ptr` field of entries in
+`sSpriteAssetTable` at offsets `+0x82F8B54`, `+0x82F8B64`,
+`+0x82F8D34`, `+0x82F8BD4`.
+
+So the per-frame anim driver (`[0x08022206..0x08022A7C]`, still
+asm) reads `sSpriteAssetTable[asset_id].dispatcher_ptr` (12-byte
+record structure), follows the dispatcher to one of the inner
+level-layout sub-tables, and walks records via `sub_08021140`
+(the iter-15-identified walker).
+
+Architectural implication: once a consumer in `[0x08022206..
+0x08022A7C]` lands in C, the entire dispatcher record format can
+be promoted to a typed `struct SpriteAssetEntry { void *dispatcher;
+const u32 *gfx_ptr; u32 count_word; }` and the level-layout
+extractions can carry typed pointer fields instead of `u32`. This
+would propagate semantic naming across iter-3 (entity_dispatch),
+iter-15 (level_layout_3112c8), iter-16 (level_layout_310000), and
+the iter-10 sLevelLayoutPtrs_* cluster.
+
