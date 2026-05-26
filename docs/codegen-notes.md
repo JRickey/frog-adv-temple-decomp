@@ -255,6 +255,120 @@ exact local goes in the C comment near the def so a future cleanup
 doesn't elide it. Worked example: `sub_08020B30` (commit landed same
 session as this note).
 
+## Mask-before-field-load on a single-use struct base
+
+Sibling of the "local pointer var sequences the base-address load
+before constants" pattern above. When a function tests
+`if (g->u16_field & MASK)` once and `g` is otherwise unreferenced,
+the baserom shape is mask-first, field-second, with the base register
+**reused** for the field load:
+
+```
+ldr  r1, =gBase        ; base into r1
+movs r0, #4            ; mask second (allocator picked r0 for AND result)
+ldrh r1, [r1, #0x34]   ; field load OVERWRITES base r1 (dead after this)
+ands r0, r1            ; AND result in r0 — directly testable via cmp
+cmp  r0, #0
+beq  …
+```
+
+The default ordering — when the C is a raw cast like
+`if (((SomeType *)0x03003570)->flags & 4)` — is field-first, mask-second
+(load goes into the same low register the cast was going to use, so the
+mask materialization happens after):
+
+```
+ldr  r0, =gBase
+ldrh r1, [r0, #0x34]   ; load
+movs r0, #4            ; mask (overwrites the now-dead base)
+ands r0, r1
+```
+
+Both shapes are 6 bytes; they differ in instruction order, so the bytes
+mismatch the baserom even though the function logic matches.
+
+**Fix:** introduce a local pointer var (same trick as above), and let
+agbcc detect that the base is dead after the AND:
+
+```c
+SomeType *p = &gIwramBase;
+if (p->flags_at_0x34 & 4) {
+    /* taken branch */
+}
+```
+
+Corpus distribution (across all 23 agbcc decomps in the cache):
+- 3243 hits of `ldrh rX, [⋯]; movs rY, #N; ands rY, rX` (load-first,
+  natural cast form)
+- 633 hits of `movs rX, #N; ldrh rY, [⋯]; ands rX, rY` (mask-first,
+  baserom shape — overwhelmingly from FE6J/FE7J asm where the function
+  is "pointer-typed via arg or local cache" — see
+  `MokhaLeee/FireEmblem7J@93c2ca706c:asm/eventcallfx.s` line 2079,
+  `sub_807E2F0`)
+
+Worked-target candidate: `sub_080011A4` (peeled, in
+`asm/disasm_0x080011a4.s`).
+
+## Sequential reads of the same field reuse the base register
+
+A complementary allocator behavior, very common (891 corpus hits across
+12 repos): when C does two separate-`if` reads of the same
+struct-pointer-to-byte field in sequence, agbcc emits:
+
+```
+ldrb r0, [r5, #5]      ; first read — fresh scratch r0 (r5 is base, callee-saved)
+cmp  r0, #K1
+bne  _skip1
+…bl …                  ; block 1 body
+_skip1:
+ldrb r5, [r5, #5]      ; second read — base r5 is dead afterwards, gets reused
+cmp  r5, #K2
+bne  _skip2
+…bl …                  ; block 2 body
+_skip2:
+```
+
+The reuse happens only when the C source uses **two separate `if`
+statements**, not `||`, not a switch, not a ternary. The compiler
+needs to see that after the second test, the base pointer is
+unreferenced — only then will the allocator alias the loaded byte
+onto the dying base register instead of spilling a fresh r0.
+
+```c
+GameState *g = &gGameState;     /* pinned to a callee-saved low reg (r4-r7) */
+
+…earlier bl…;
+
+if (g->state == 2) {            /* first read → r0 */
+    Foo();
+    Bar();
+}
+if (g->state == 3) {            /* second read → reuses now-dead g's reg */
+    Baz();
+    Qux();
+}
+```
+
+**Caveat:** subtle interaction with the previous fix. If the local
+pointer var is anchored AS A LOCAL (per the "local pointer var
+sequences" pattern), the allocator gets two strong constraints (base
+in r5 + reuse on death) and the natural C variant works. If you write
+the cast inline at every use (`((GameState *)0xADDR)->state`), agbcc
+re-derives the base each time and the reuse trick doesn't fire.
+
+Corpus evidence — same-shape asm in matched repos:
+- `MokhaLeee/FireEmblem7J@93c2ca706c:asm/eventcallfx.s:191` — exact
+  scaffold (`ldr r4, =gPlaySt; ldrb r0, [r4, #0x1b]; cmp r0, #2; …;
+  ldrb r4, [r4, #0x1b]; cmp r4, #3`).
+- `arthurtilly/rhythmtengoku@d0f9cc:src/scenes/studio_songs.c:161`
+  (`studio_song_list_on_scroll`) — matched C with two-sequential-`if`
+  pattern on a global pointer.
+
+Worked-target candidate: `sub_08001D94` (peeled, in
+`asm/disasm_0x08001d94.s`). The baserom does `ldrb r5, [r5, #5]; cmp
+r5, #3` at 0x1dee — exact dead-base-reuse — preceded by `ldrb r0,
+[r5, #5]; cmp r0, #2` at 0x1dd2.
+
 ## MMIO struct pattern forces single-base-register code
 
 When a function touches multiple MMIO registers at adjacent offsets (e.g.
