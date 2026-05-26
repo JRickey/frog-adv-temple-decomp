@@ -14,15 +14,13 @@
  * function touches. Promote to include/sound.h once a second sound-
  * system file lands and the offsets stabilize.
  *
- * NON_MATCHING: this body reaches byte_diff 4 vs baserom (just a
- * 2-instruction order swap in the loop prologue between `mov ip, r2`
- * and `movs r7, #0`). agbcc 2.x's instruction scheduler picks the
- * opposite order than the original source produced, and structural
- * tweaks here didn't dislodge it. Worth a permuter pass. Until then,
- * the asm slice at asm/disasm_0x0802ed5c.s carries the matching bytes
- * and this file isn't wired into linker.ld.
+ * Matching note: an explicit `&gpSoundSystem` cache (`gpsp`) inside
+ * the count guard is what gets agbcc to emit `mov ip, r2` before
+ * `movs r7, #0` in the loop prologue — without it, agbcc lazily caches
+ * the address only when emitting the loop body, and the resulting
+ * scheduler pick swaps those two instructions vs the baserom. Found by
+ * decomp-permuter.
  */
-#ifdef NON_MATCHING
 
 typedef struct SlotEnvelope {
     s16 acc;     /* slot+0x2c */
@@ -64,6 +62,7 @@ void sub_0802ED5C(void)
     slotPtr = gpSoundSystem->slotPtrTable;
     i = 0;
     if (i < gpSoundSystem->count) {
+        SoundSystem **gpsp = &gpSoundSystem;
         byteOffset = 0;
         do {
             SoundSlot *slot = *slotPtr;
@@ -92,7 +91,7 @@ void sub_0802ED5C(void)
                 }
             apply:
                 env->acc = acc;
-                entry = (SoundMixEntry *)((u8 *)gpSoundSystem->mixTable + byteOffset);
+                entry = (SoundMixEntry *)((u8 *)(*gpsp)->mixTable + byteOffset);
                 acc = (s32)((u32)acc >> 8);
                 acc += 16;
                 entry->outSample = entry->base + acc;
@@ -100,7 +99,6 @@ void sub_0802ED5C(void)
             byteOffset += 28;
             i++;
             slotPtr++;
-        } while (i < gpSoundSystem->count);
+        } while (i < (*gpsp)->count);
     }
 }
-#endif /* NON_MATCHING */
