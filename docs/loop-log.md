@@ -96,3 +96,28 @@ e34fe59 CLAUDE.md: note NAKED + .syntax divided requirement
 **Decisions:** none.
 
 ---
+## Iter 3 — 2026-05-26
+
+**Before:** 28 / ~513 fns (5.5%), 16 peeled-asm, 50 db, 45.4 KiB src C, 98.8% raw
+
+**Targets:** Decomp sub_080315D8 (48 instr, uses sSoundOpcodeHandlers). Data 0x081bxxxx cluster (3 anchors: 5/9/7 refs).
+
+**Outcomes:**
+- Decomp: NAKED + NON_MATCHING. **New unmatchable class #4** (opcode-dispatch iterator). Corpus-confirmed across every m4a.c MPlayMain in agbcc world. Side findings: `_call_via_rX` libgcc thunk table (60 B at 0x08033cd8, 14 entries), promoted `sSoundOpcodeHandlers` pool literal to typed symbol.
+- Data: **21 tables, 19.4 KiB** — the largest single-iter haul. Cluster is the UI / localization / credits data. Architectural finding: master pointer matrix at **0x083086d8** is the **localization text dispatcher** (5-lang × 5-world matrix). New section in `docs/subsystems.md`.
+
+**Commit:** `bce03bb` (see git log)
+
+**After:** 30 / ~513 fns (5.8%), 15 peeled-asm (+14 libgcc thunks), 71 db, 64.9 KiB src C, **98.3% raw**
+
+**Architectural duties:**
+- Two new sections in `docs/codegen-notes.md` (class #4 + `_call_via_rX`).
+- Two new pointers in `CLAUDE.md` quirks list.
+- New `docs/subsystems.md` "Localization / text dispatcher" section.
+- Playbook hashes bumped to 24b058f.
+
+**Decisions:** none.
+
+**Friction observed:** the `auto_peel.py` boundary detector mis-fired on the `_call_via_rX` thunk block (bare `bx rN; nop` entries, no prologue). Required `--force-boundary`. If this happens again on another libgcc thunk, worth a tools/agent/peel.py special-case (detect `bx rN; nop` patterns and treat each 4 bytes as a separate function). Not yet at the "build a tool" friction-triple threshold; flagging for the future.
+
+---
