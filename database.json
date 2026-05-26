@@ -1520,6 +1520,14 @@
     "size": 4
   },
   {
+    "path": "sprite/screen_d8398/tilemap_screenblock30.bin",
+    "addr": {
+      "us": "0x1D8398"
+    },
+    "count": "0x400",
+    "size": 2
+  },
+  {
     "path": "sprite/screen_d8b98/tilemap_screenblock29.bin",
     "addr": {
       "us": "0x1D8B98"

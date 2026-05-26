@@ -124,8 +124,7 @@ SECTIONS {
         asm/text/text_0x0800a158.o(.text);  /* 0x0800a158 - 0x0800a1c8, raw bytes */
         asm/disasm_0x0800a1c8.o(.text);  /* 0x0800a1c8 - 0x0800a214, sub_0800A1C8 (auto-peeled) */
         asm/text/text_0x0800a214.o(.text);  /* 0x0800a214 - 0x0800a2d8, raw bytes */
-        src/game/dispatch_helpers.o(.text);  /* 0x0800a2d8 - 0x0800a3a4, sub_0800A2D8, sub_0800A328 */
-        asm/disasm_0x0800a3a4.o(.text);  /* 0x0800a3a4 - 0x0800a3d0, sub_0800A3A4 (auto-peeled) */
+        src/game/dispatch_helpers.o(.text);  /* 0x0800a2d8 - 0x0800a3d0, sub_0800A2D8, sub_0800A328, sub_0800A3A4 */
         asm/text/text_0x0800a3d0.o(.text);  /* 0x0800a3d0 - 0x0800a4d0, raw bytes */
         asm/disasm_0x0800a4d0.o(.text);  /* 0x0800a4d0 - 0x0800a520, sub_0800A4D0 (auto-peeled) */
         src/game/sub_0800a520.o(.text);  /* 0x0800a520 - 0x0800a540, sub_0800A520 */
@@ -249,7 +248,8 @@ SECTIONS {
         src/data/world_tile_map.o(.rodata);  /* 0x081be810 - 0x081bee64, sWorldTileTypeMap */
         src/data/credits_tilemap.o(.rodata);  /* 0x081bee64 - 0x081c2684, sCreditsTilemapEng + sSaveDialogStrings */
         asm/text/text_0x081c2684.o(.text);  /* 0x081c2684 - 0x081d0000, raw bytes (tail) */
-        asm/text/text_0x081d0000.o(.text);  /* 0x081d0000 - 0x081d8b98, raw bytes (shrunk for screen_d8b98 cluster) */
+        asm/text/text_0x081d0000.o(.text);  /* 0x081d0000 - 0x081d8398, raw bytes (shrunk for screen_d8398 + screen_d8b98 clusters) */
+        src/data/screen_d8398.o(.rodata);   /* 0x081d8398 - 0x081d8b98, sScreenTilemapD8398 (screenblock-30 source tilemap) */
         src/data/screen_d8b98.o(.rodata);   /* 0x081d8b98 - 0x081e4c18, screen tilemap + palette + char tiles + tilemap (spans across former 0x081e0000 blob) */
         asm/text/text_0x081e4c18.o(.text);  /* 0x081e4c18 - 0x081f0000, raw bytes (tail after screen_d8b98 cluster) */
         asm/text/text_0x081f0000.o(.text);  /* 0x081f0000 - 0x08200000, raw bytes */

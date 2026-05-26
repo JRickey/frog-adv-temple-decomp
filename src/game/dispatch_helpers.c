@@ -190,3 +190,36 @@ NAKED void sub_0800A328(void)
         ".syntax divided\n");
 }
 #endif
+
+/* Descending-sort comparator over a pair of 8-byte records.
+ *
+ * Compares the upper 16 bits of word 0 (i.e. the halfword at offset 2)
+ * — returns +1 when a < b, -1 when a > b, 0 when equal. The function
+ * is referenced from data still inside text_0x0800a3d0.bin so its
+ * caller is not yet known; the address embedding has not surfaced
+ * in any currently-decoded code or pool literal.
+ *
+ * The asm shape reads the full 8 bytes of each record via two ldr's
+ * (offsets 0 and 4) even though only offset 2 is compared. This is
+ * the agbcc 2.x output for whole-struct copy into locals — the
+ * `aa = *a` / `bb = *b` form forces both words to be loaded before
+ * the comparisons execute. The first comparison loads the halfword
+ * directly via `ldrh [r0,#2]`; the fall-through path reuses the
+ * already-loaded word 0 via `lsrs r1, r2, #16`. */
+typedef struct {
+    u32 word0;
+    u32 word1;
+} CmpPair;
+
+int sub_0800A3A4(const CmpPair *a, const CmpPair *b)
+{
+    CmpPair aa = *a;
+    CmpPair bb = *b;
+    if (((const u16 *)a)[1] < ((const u16 *)b)[1])
+        return 1;
+    if ((aa.word0 >> 16) > (bb.word0 >> 16))
+        return -1;
+    (void)aa.word1;
+    (void)bb.word1;
+    return 0;
+}

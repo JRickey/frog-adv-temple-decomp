@@ -442,3 +442,36 @@ would propagate semantic naming across iter-3 (entity_dispatch),
 iter-15 (level_layout_3112c8), iter-16 (level_layout_310000), and
 the iter-10 sLevelLayoutPtrs_* cluster.
 
+
+## Tile-blit helper at `0x000196ec`
+
+A reusable VRAM-blit subroutine discovered iter 19 while characterizing
+`sScreenTilemapD8398`. Three consumer call sites at 0x0801f270 /
+0x0801f714 / 0x0801f948 (still in asm), all in `sub_0801F1E0`-family.
+
+Signature (inferred):
+```c
+void TileBlit(struct { u8 x; u8 y; u8 w; u8 h; } *coords,
+              const u16 *src,
+              u8 dst_mode);
+```
+
+Behaviour: DMA3-copies `w` halfwords per row from `src`, repeating for
+`h` rows, with source row stride 0x40 bytes (32-tile-wide source map).
+Destination is one of four VRAM regions selected by `dst_mode` (r2):
+
+| `dst_mode` | Destination          | Address      |
+|------------|----------------------|--------------|
+| 0          | Charblock 0          | `0x06000000` |
+| 1          | Screenblock 29       | `0x0600e800` |
+| 2          | Screenblock 30       | `0x0600f000` |
+| 3          | Screenblock 31       | `0x0600f800` |
+
+The iter-18 screen-install cluster (palette + char tiles + tilemap
+screenblocks 28+29) ships via direct DMA3 from `sub_0801fdb0`-family,
+while iter-19's HUD/menu overlays into screenblock 30 ship via this
+helper. Different call patterns serving the same hardware family.
+
+Decomp this when `sub_0801F1E0` lands in C — it's a leaf utility and
+should be tractable. The typed signature unlocks renames across all
+the tilemap consumers.
