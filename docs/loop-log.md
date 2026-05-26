@@ -665,3 +665,28 @@ The agent infrastructure grew organically with each iter — each new friction d
 **Trajectory:** 14 iters post-resume (11-24). Functions 41→65 (+24). Raw INCBIN 98.1%→94.9% (-3.2pp). db 117→214 (+97). src C 75→161 KiB (+86 KiB). Data deblob 1.0%→5.1% (+4.1pp). **Two major milestones crossed this iter** (5% data deblob, sub-95% raw INCBIN). Pace continues to accelerate as semantic-cluster extraction patterns mature.
 
 ---
+
+## Iter 25 — 2026-05-26
+
+**Before:** 65 / ~513 fns (12.7%), 83 asm-fn-remaining, 214 db, 160.9 KiB src C, 94.9% raw
+
+**Targets:** Decomp batch sub_08006B88 + sub_08000CEC + sub_08009BA0. Data: 4 known-but-deferred sibling anchors (0x080e7ab6, 0x081a3b6a, 0x081a5b6a, 0x08188edc).
+
+**Outcomes:**
+- Decomp: **3 fns landed!** 2 pure-C (sub_08006B88 + sub_08000CEC, both first-try) + 1 NAKED (sub_08009BA0, **6th unmatchable instance — `ip` (r12) added to High Registers class**). +3 callee peels (sub_08000B6C, sub_08016404, sub_08020C78). asm_funcs_remaining: 83 → 80.
+- Data: **4 of 4 anchors, 42.8 KiB extracted** (data deblob 5.1% → 6.2%, **+1.1pp single-iter jump**). sFrogTilePixels_E7AB6 (34 KiB) + sScreenTilemap_188EDC (2 KiB) + paired sScreenCharTiles_1A3B6A / sScreenTilemap_1A5B6A (8 + 2 KiB).
+
+**Commit:** iter-25 hash (single combined: 3 decomps + 3 peels + 4 data + codegen-notes ip-register extension).
+
+**After:** 68 / ~513 fns (**13.3%** +0.6pp), 80 asm-fn-remaining (-3), 218 db (+4), **163.1 KiB src C** (+2.2 KiB), **93.8% raw (-1.1pp — under 94%)**, **6.2% data deblob (+1.1pp)**.
+
+**Architectural duties:**
+- docs/codegen-notes.md "High registers" class — `ip` (r12) added. 6th NAKED-required register-pin instance. Corpus grep evidence in commit body.
+- **decomp_brief.py UNPEELED false-positive — 3rd documented occurrence**. Brief reports callees as needing peel when they already live in src/*.c. Iter 23 + 25 both wasted some agent effort on this. **Bumping infra-build threshold from "triplicate" to "if it fires next iter, build a tool"**. The fix: tighten the brief to also grep src/**/*.c for `thumb_func_start <name>` equivalents.
+- **Refcount-driven data discovery exhausted at ≥2 refs**. The data side has cleared all anchor-driven targets. Future data passes should: (a) drop to single-ref anchors; (b) extract documented-but-deferred sibling anchors; (c) extract known-large deferred payloads (93 KiB at 0x083184dc, 70 KiB at 0x0820d778) once consumer decomps land.
+
+**Decisions:** none material.
+
+**Trajectory:** 15 iters post-resume (11-25). Functions 41→68 (+27). Raw INCBIN 98.1%→93.8% (-4.3pp). db 117→218 (+101). src C 75→163 KiB (+88 KiB). Data deblob 1.0%→6.2% (+5.2pp). **Five-pp deblob threshold crossed**. Iter pace continues to mature: this iter landed +3 fns + 42.8 KiB data + 6th unmatchable instance documented + 3 callee peels in one go. Loop is genuinely accelerating.
+
+---
