@@ -113,7 +113,8 @@ SECTIONS {
         asm/disasm_0x08005fc8.o(.text);  /* 0x08005fc8 - 0x08006600, sub_08005FC8 (auto-peeled) */
         asm/text/text_0x08006600.o(.text);  /* 0x08006600 - 0x08006948, raw bytes */
         src/game/sub_08006948.o(.text);  /* 0x08006948 - 0x0800696c, sub_08006948 + sub_08006958 */
-        asm/text/text_0x0800696c.o(.text);  /* 0x0800696c - 0x08006adc, raw bytes */
+        asm/disasm_0x0800696c.o(.text);  /* 0x0800696c - 0x080069bc, sub_0800696C (auto-peeled) */
+        asm/text/text_0x080069bc.o(.text);  /* 0x080069bc - 0x08006adc, raw bytes */
         asm/disasm_0x08006adc.o(.text);  /* 0x08006adc - 0x08006afc, sub_08006ADC (auto-peeled) */
         asm/text/text_0x08006afc.o(.text);  /* 0x08006afc - 0x08006b88, raw bytes */
         src/game/sub_08006b88.o(.text);  /* 0x08006b88 - 0x08006b94, sub_08006B88 */
@@ -132,8 +133,7 @@ SECTIONS {
         asm/disasm_0x080094f8.o(.text);  /* 0x080094f8 - 0x080097fc, sub_080094F8 (auto-peeled) */
         asm/text/text_0x080097fc.o(.text);  /* 0x080097fc - 0x08009884, raw bytes */
         asm/disasm_0x08009884.o(.text);  /* 0x08009884 - 0x08009984, sub_08009884 (auto-peeled) */
-        src/game/sub_08009984.o(.text);  /* 0x08009984 - 0x08009a58, sub_08009984 */
-        asm/disasm_0x08009a58.o(.text);  /* 0x08009a58 - 0x08009ba0, sub_08009A58 (peel narrowed iter-22) */
+        src/game/sub_08009984.o(.text);  /* 0x08009984 - 0x08009ba0, sub_08009984 + sub_08009A58 */
         src/game/sub_08009ba0.o(.text);  /* 0x08009ba0 - 0x08009cbc, sub_08009BA0 + sub_08009C14 */
         asm/text/text_0x08009cbc.o(.text);  /* 0x08009cbc - 0x08009d9c, raw bytes */
         asm/disasm_0x08009d9c.o(.text);  /* 0x08009d9c - 0x08009eec, sub_08009D9C (auto-peeled) */
@@ -153,7 +153,9 @@ SECTIONS {
         asm/disasm_0x0800cd88.o(.text);  /* 0x0800cd88 - 0x0800ce10, sub_0800CD88 (manual split) */
         asm/disasm_0x0800ce10.o(.text);  /* 0x0800ce10 - 0x0800ce54, sub_0800CE10 (manual split) */
         asm/disasm_0x0800ce54.o(.text);  /* 0x0800ce54 - 0x0800ce98, sub_0800CE54 (manual split) */
-        asm/text/text_0x0800ce98.o(.text);  /* 0x0800ce98 - 0x0800de80, raw bytes */
+        asm/text/text_0x0800ce98.o(.text);  /* 0x0800ce98 - 0x0800d028, raw bytes */
+        asm/disasm_0x0800d028.o(.text);  /* 0x0800d028 - 0x0800d070, sub_0800D028 (auto-peeled) */
+        asm/text/text_0x0800d070.o(.text);  /* 0x0800d070 - 0x0800de80, raw bytes */
         asm/disasm_0x0800de80.o(.text);  /* 0x0800de80 - 0x0800df7c, sub_0800DE80 (auto-peeled) */
         asm/text/text_0x0800df7c.o(.text);  /* 0x0800df7c - 0x0800e060, raw bytes */
         asm/disasm_0x0800e060.o(.text);  /* 0x0800e060 - 0x0800e174, sub_0800E060 (auto-peeled) */
@@ -265,8 +267,11 @@ SECTIONS {
         asm/text/text_0x080e3ab4.o(.text);  /* 0x080e3ab4 - 0x080e3ab6, halfword pad (.balign 1) */
         asm/data/frog_tile_pixels_e3ab6.o(.rodata);  /* 0x080e3ab6 - 0x080e7ab6, sFrogTilePixels_E3AB6 (0x4000 B 4bpp OBJ tile data) */
         asm/data/frog_tile_pixels_e7ab6.o(.rodata);  /* 0x080e7ab6 - 0x080f0000, sFrogTilePixels_E7AB6 (0x854a B 4bpp OBJ tile data, sibling of E3AB6) */
-        asm/text/text_0x080f0000.o(.text);  /* 0x080f0000 - 0x08100000, raw bytes */
-        asm/text/text_0x08100000.o(.text);  /* 0x08100000 - 0x08110000, raw bytes */
+        asm/text/text_0x080f0000.o(.text);  /* 0x080f0000 - 0x080f72c4, raw bytes (shrunk for screen_0800f014 cluster) */
+        src/data/screen_0800f014.o(.rodata);  /* 0x080f72c4 - 0x081004c4, sScreenPalette_F72C4 + Bg0 tilemap + Bg0 char tiles + Bg1 tilemap (37312 B) */
+        asm/text/text_0x081004c4.o(.text);  /* 0x081004c4 - 0x08100cc4, intra-cluster gap (0x800 B zero pad) */
+        src/data/screen_08100cc4.o(.rodata);  /* 0x08100cc4 - 0x08104cc4, sScreenCharTilesBg1_100CC4 (16384 B) */
+        asm/text/text_0x08104cc4.o(.text);  /* 0x08104cc4 - 0x08110000, raw bytes (tail after screen_0800f014 cluster) */
         asm/text/text_0x08110000.o(.text);  /* 0x08110000 - 0x08120000, raw bytes */
         asm/text/text_0x08120000.o(.text);  /* 0x08120000 - 0x08130000, raw bytes */
         asm/text/text_0x08130000.o(.text);  /* 0x08130000 - 0x08140000, raw bytes */
