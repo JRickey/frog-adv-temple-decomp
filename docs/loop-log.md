@@ -143,3 +143,25 @@ e34fe59 CLAUDE.md: note NAKED + .syntax divided requirement
 - `docs/decisions.md` "Linker-blob boundary lint — deferred tool build (iter 4)": friction-triple threshold reached; tool is well-sketched but deferred from this iter to keep loop forward momentum. Pick up in a future idle window.
 
 ---
+## Iter 5 — 2026-05-26
+
+**Before:** 32 / ~513 fns (6.2%), 14 peeled-asm, 75 db, 65.5 KiB src C, 98.3% raw
+
+**Targets:** Decomp sub_0802F054 (170 instr, sound envelope-C slide). Data 0x083 region (continuation + secondary 4-ref anchors).
+
+**Outcomes:**
+- Decomp: NAKED + NON_MATCHING (4 high regs). New `EnvelopeCBlock`/`EnvelopeCConfig` types with mode-dispatch.
+- Data: 5 tables (3.3 KiB). **Architectural finding**: the level-layout subsystem is a **four-tier dispatch system** — three secondary dispatcher pointer arrays plus the primary `sLevelLayoutPtrs`, all backed by `sLevelLayoutData`. Documented in subsystems.md.
+
+**Commit:** `git log -1` (iter-5 commit hash)
+
+**After:** 35 / ~513 fns (6.8%), 14 peeled-asm, 80 db, 69.3 KiB src C, 98.2% raw
+
+**Architectural duties:**
+- Two new sections in docs/codegen-notes.md (apostrophe-at-compile-time + .incbin FILE OFFSET caveat).
+- New "Level layout / room data" section in docs/subsystems.md (four-tier dispatch).
+- No playbook hash bump (changes are additive in docs).
+
+**Decisions:** none new (blob-boundary lint still deferred from iter 4).
+
+---
