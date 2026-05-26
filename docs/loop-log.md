@@ -121,3 +121,25 @@ e34fe59 CLAUDE.md: note NAKED + .syntax divided requirement
 **Friction observed:** the `auto_peel.py` boundary detector mis-fired on the `_call_via_rX` thunk block (bare `bx rN; nop` entries, no prologue). Required `--force-boundary`. If this happens again on another libgcc thunk, worth a tools/agent/peel.py special-case (detect `bx rN; nop` patterns and treat each 4 bytes as a separate function). Not yet at the "build a tool" friction-triple threshold; flagging for the future.
 
 ---
+## Iter 4 — 2026-05-26
+
+**Before:** 30 / ~513 fns (5.8%), 15 peeled-asm, 71 db, 64.9 KiB src C, 98.3% raw
+
+**Targets:** Decomp sub_0802E934 (124 instr leaf, sound). Data 0x081dxxxx cluster (5 anchors, brief required graphics-vs-dispatch screening).
+
+**Outcomes:**
+- Decomp: NAKED + NON_MATCHING. Most-high-reg-pinned function yet — 4 concurrent (sl, r9, r8, ip). New `DualSubEnv` envelope class (+0x4 and +0x12 within channel block).
+- Data: charter primary (0x081dxxxx) correctly screened out as uncompressed graphics (direct DMA3-to-VRAM, no decoder BL). Picked up 4 level-layout sub-tables as fallback (368 B). Charter floor met.
+
+**Commit:** `843b857`
+
+**After:** 32 / ~513 fns (6.2%), 14 peeled-asm, 75 db, 65.5 KiB src C, 98.3% raw
+
+**Architectural duties:**
+- No new codegen-notes entries (both agents reapplied existing patterns).
+- `docs/decisions.md` entry logging the deferred blob-boundary lint (friction-triple threshold reached; sketched but not yet built).
+
+**Decisions:**
+- `docs/decisions.md` "Linker-blob boundary lint — deferred tool build (iter 4)": friction-triple threshold reached; tool is well-sketched but deferred from this iter to keep loop forward momentum. Pick up in a future idle window.
+
+---
