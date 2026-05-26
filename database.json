@@ -1894,5 +1894,37 @@
     },
     "count": "0x4000",
     "size": 1
+  },
+  {
+    "path": "sprite/tilemap_e6c18/tilemap_screenblock29.bin",
+    "addr": {
+      "us": "0x1E6C18"
+    },
+    "count": "0x400",
+    "size": 2
+  },
+  {
+    "path": "sprite/obj_assets_ecc18/palette0.bin",
+    "addr": {
+      "us": "0x1ECC18"
+    },
+    "count": "0x10",
+    "size": 2
+  },
+  {
+    "path": "sprite/obj_assets_ecc18/char_tiles.bin",
+    "addr": {
+      "us": "0x1ECC38"
+    },
+    "count": "0x200",
+    "size": 1
+  },
+  {
+    "path": "sprite/obj_assets_ecc18/palette1.bin",
+    "addr": {
+      "us": "0x1ECE38"
+    },
+    "count": "0x10",
+    "size": 2
   }
 ]
