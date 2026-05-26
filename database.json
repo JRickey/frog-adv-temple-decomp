@@ -1654,5 +1654,21 @@
     },
     "count": "0x400",
     "size": 2
+  },
+  {
+    "path": "sprite/bg_tilemap_19c312/variant_a.bin",
+    "addr": {
+      "us": "0x19C312"
+    },
+    "count": "0x666",
+    "size": 2
+  },
+  {
+    "path": "sprite/bg_tilemap_19c312/variant_b.bin",
+    "addr": {
+      "us": "0x19CFDE"
+    },
+    "count": "0x666",
+    "size": 2
   }
 ]

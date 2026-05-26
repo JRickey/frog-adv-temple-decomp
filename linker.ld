@@ -64,8 +64,15 @@ SECTIONS {
         asm/text/text_0x0800088c.o(.text);  /* 0x0800088c - 0x080008dc, raw bytes */
         src/system/vblank.o(.text);      /* 0x080008dc - 0x0800090c, sub_080008DC + sub_08000900 */
         asm/text/text_0x0800090c.o(.text);  /* 0x0800090c - 0x08000918, raw bytes */
+        src/system/sub_08000918.o(.text);
         asm/disasm_0x08000918.o(.text);  /* 0x08000918 - 0x08000b6c, sub_08000918 (auto-peeled) */
-        asm/text/text_0x08000b6c.o(.text);  /* 0x08000b6c - 0x08000eb8, raw bytes */
+        asm/text/text_0x08000b6c.o(.text);  /* 0x08000b6c - 0x08000c98, raw bytes */
+        asm/disasm_0x08000c98.o(.text);  /* 0x08000c98 - 0x08000cb0, sub_08000C98 (auto-peeled) */
+        asm/text/text_0x08000cb0.o(.text);  /* 0x08000cb0 - 0x08000cec, raw bytes */
+        asm/disasm_0x08000cec.o(.text);  /* 0x08000cec - 0x08000d2c, sub_08000CEC (auto-peeled) */
+        asm/disasm_0x08000d2c.o(.text);  /* 0x08000d2c - 0x08000d50, sub_08000D2C (auto-peeled) */
+        asm/disasm_0x08000d50.o(.text);  /* 0x08000d50 - 0x08000d5c, sub_08000D50 (auto-peeled) */
+        asm/text/text_0x08000d5c.o(.text);  /* 0x08000d5c - 0x08000eb8, raw bytes */
         asm/disasm_0x08000eb8.o(.text);  /* 0x08000eb8 - 0x08001128, sub_08000EB8 (auto-peeled) */
         asm/text/text_0x08001128.o(.text);  /* 0x08001128 - 0x08001214, raw bytes */
         asm/disasm_0x08001214.o(.text);  /* 0x08001214 - 0x08001478, sub_08001214 (auto-peeled) */
@@ -104,7 +111,9 @@ SECTIONS {
         asm/disasm_0x080054a8.o(.text);  /* 0x080054a8 - 0x0800586c, sub_080054A8 (auto-peeled) */
         asm/text/text_0x0800586c.o(.text);  /* 0x0800586c - 0x08005fc8, raw bytes */
         asm/disasm_0x08005fc8.o(.text);  /* 0x08005fc8 - 0x08006600, sub_08005FC8 (auto-peeled) */
-        asm/text/text_0x08006600.o(.text);  /* 0x08006600 - 0x08006b88, raw bytes */
+        asm/text/text_0x08006600.o(.text);  /* 0x08006600 - 0x08006948, raw bytes */
+        asm/disasm_0x08006948.o(.text);  /* 0x08006948 - 0x0800696c, sub_08006948 (auto-peeled) */
+        asm/text/text_0x0800696c.o(.text);  /* 0x0800696c - 0x08006b88, raw bytes */
         asm/disasm_0x08006b88.o(.text);  /* 0x08006b88 - 0x08006b94, sub_08006B88 (auto-peeled) */
         asm/text/text_0x08006b94.o(.text);  /* 0x08006b94 - 0x0800793c, raw bytes */
         asm/disasm_0x0800793c.o(.text);  /* 0x0800793c - 0x08007dd0, sub_0800793C (auto-peeled) */
@@ -118,7 +127,8 @@ SECTIONS {
         asm/disasm_0x080094f8.o(.text);  /* 0x080094f8 - 0x080097fc, sub_080094F8 (auto-peeled) */
         asm/text/text_0x080097fc.o(.text);  /* 0x080097fc - 0x08009984, raw bytes */
         asm/disasm_0x08009984.o(.text);  /* 0x08009984 - 0x08009a58, sub_08009984 (auto-peeled) */
-        asm/disasm_0x08009a58.o(.text);  /* 0x08009a58 - 0x08009c14, sub_08009A58 (auto-peeled) */
+        asm/disasm_0x08009a58.o(.text);  /* 0x08009a58 - 0x08009ba0, sub_08009A58 (peel narrowed iter-22) */
+        asm/disasm_0x08009ba0.o(.text);  /* 0x08009ba0 - 0x08009c14, sub_08009BA0 (split from disasm_0x08009a58 iter-22) */
         asm/disasm_0x08009c14.o(.text);  /* 0x08009c14 - 0x08009cbc, sub_08009C14 (auto-peeled) */
         asm/text/text_0x08009cbc.o(.text);  /* 0x08009cbc - 0x08009d9c, raw bytes */
         asm/disasm_0x08009d9c.o(.text);  /* 0x08009d9c - 0x08009eec, sub_08009D9C (auto-peeled) */
@@ -135,7 +145,8 @@ SECTIONS {
         asm/disasm_0x0800de80.o(.text);  /* 0x0800de80 - 0x0800df7c, sub_0800DE80 (auto-peeled) */
         asm/text/text_0x0800df7c.o(.text);  /* 0x0800df7c - 0x0800e060, raw bytes */
         asm/disasm_0x0800e060.o(.text);  /* 0x0800e060 - 0x0800e174, sub_0800E060 (auto-peeled) */
-        asm/text/text_0x0800e174.o(.text);  /* 0x0800e174 - 0x0800e6a8, raw bytes */
+        asm/text/text_0x0800e174.o(.text);  /* 0x0800e174 - 0x0800e600, raw bytes */
+        asm/disasm_0x0800e600.o(.text);  /* 0x0800e600 - 0x0800e6a8, sub_0800E600 (auto-peeled) */
         asm/disasm_0x0800e6a8.o(.text);  /* 0x0800e6a8 - 0x0800e85c, sub_0800E6A8 (auto-peeled) */
         asm/text/text_0x0800e85c.o(.text);  /* 0x0800e85c - 0x0800ef90, raw bytes */
         asm/disasm_0x0800ef90.o(.text);  /* 0x0800ef90 - 0x0800eff4, sub_0800EF90 (auto-peeled) */
@@ -143,7 +154,8 @@ SECTIONS {
         asm/disasm_0x0800f24c.o(.text);  /* 0x0800f24c - 0x0800f2f8, sub_0800F24C (auto-peeled) */
         asm/text/text_0x0800f2f8.o(.text);  /* 0x0800f2f8 - 0x0800fcc8, raw bytes */
         asm/disasm_0x0800fcc8.o(.text);  /* 0x0800fcc8 - 0x0800fd50, sub_0800FCC8 (auto-peeled) */
-        asm/text/text_0x0800fd50.o(.text);  /* 0x0800fd50 - 0x08010000, raw bytes */
+        asm/disasm_0x0800fd50.o(.text);  /* 0x0800fd50 - 0x0800fdf4, sub_0800FD50 (auto-peeled) */
+        asm/text/text_0x0800fdf4.o(.text);  /* 0x0800fdf4 - 0x08010000, raw bytes */
         asm/text/text_0x08010000.o(.text);  /* 0x08010000 - 0x08010694, raw bytes */
         asm/disasm_0x08010694.o(.text);  /* 0x08010694 - 0x08010740, sub_08010694 (auto-peeled) */
         asm/text/text_0x08010740.o(.text);  /* 0x08010740 - 0x08017364, raw bytes */
@@ -239,7 +251,9 @@ SECTIONS {
         src/data/icon_anim_frames.o(.rodata);  /* 0x08173000 - 0x08173ab8, sIconTilesHeader_173000 + sIconPalette_173038 + sIconUnrefAnimData_173058 + sIconAnimFrames */
         asm/text/text_0x08173ab8.o(.text);  /* 0x08173ab8 - 0x08180000, raw bytes (tail after icon-anim cluster) */
         asm/text/text_0x08180000.o(.text);  /* 0x08180000 - 0x08190000, raw bytes */
-        asm/text/text_0x08190000.o(.text);  /* 0x08190000 - 0x081a0000, raw bytes */
+        asm/text/text_0x08190000.o(.text);  /* 0x08190000 - 0x0819c312, raw bytes (shrunk for bg_tilemap_19c312 cluster) */
+        asm/data/bg_tilemap_19c312.o(.rodata);  /* 0x0819c312 - 0x0819dcaa, sBgTilemapVariantA_19C312 + sBgTilemapVariantB_19CFDE */
+        asm/text/text_0x0819dcaa.o(.text);  /* 0x0819dcaa - 0x081a0000, raw bytes (tail after bg_tilemap_19c312 cluster) */
         asm/text/text_0x081a0000.o(.text);  /* 0x081a0000 - 0x081b0000, raw bytes */
         asm/text/text_0x081b0000.o(.text);  /* 0x081b0000 - 0x081bd8cc, raw bytes (shrunk for ui-text cluster) */
         src/data/eeprom_signature.o(.rodata);  /* 0x081bd8cc - 0x081bd90c, sEepromSignatureBlock */
