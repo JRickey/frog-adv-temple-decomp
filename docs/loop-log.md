@@ -894,3 +894,29 @@ The agent infrastructure grew organically with each iter — each new friction d
 **Trajectory:** 23 iters post-resume (11-33). Functions 41→82 (+41). Raw INCBIN 98.1%→90.0% (-8.1pp). db 117→251 (+134). src C 75→269 KiB (+194 KiB). Data deblob 1.0%→10.0% (+9.0pp). Iter 33 closes out src/game/sub_08006b88.c (all 3 functions landed: sub_08006B88 matched, sub_08006B94 + sub_08006BA4 NAKED). **Next: refcount-tool exhaustion means data side needs a strategy refresh — either consumer-driven extraction or offset-table-driven cluster scouting.**
 
 ---
+
+## Iter 34 — 2026-05-26 (option-B scaffold-and-decomp)
+
+**Before:** 82 fns (16.0%), 77 asm-fn-remaining, 251 db, 268.6 KiB src C, 90.0% raw, 10.0% deblob
+
+**Targets:** Decomp **sub_08000B6C** (300 B, 6 callees ALL peeled, 9 pool entries incl. gGameStuff, no adjacent src/*.c). User chose option B from blocked-strategies menu — scaffold a new `src/system/sub_08000b6c.c` and decomp into it. Data side skipped per refcount exhaustion (no parallel agent).
+
+**Outcomes:**
+- Decomp: **NAKED + NON_MATCHING shipped.** Two-phase work: (1) scaffolded `src/system/sub_08000b6c.c` and inserted into linker.ld between sub_08000918's asm slice and sub_08000B6C's asm slice; verified `make check` still passes with empty stub. (2) Wrote NAKED body with high-register exception invoked — baserom has THREE independent high-reg pins: `mov sl, r1` (arg1 cross-BL), `mov r8, r0` (gIwram_3720 base), `mov r9, r0` ((u8)tile cross-BL). Five source variants documented in leading comment, all blocked by the same high-reg pin requirement. byte_diff 0; adjacent fns still match.
+
+**Gate-edge interpretation noted:** The playbook (tools/agent/prompts/decomp.md:146) phrases the high-reg exception as "for loop state". sub_08000B6C has no loop — the three high-reg pins are CROSS-BL value preservation (arg/base/result spilled across `bl sub_0800CD88` / `bl sub_0800B8A8` / `bl sub_0800CDCC`). The codegen-notes [[high-registers-corpus-validated]] section is broader ("corpus-validated unmatchable" across 7 agbcc decomps with 966 mov-sl instances all in unmatched asm), and `metroidret/mf:src/dma.c:BitFill` (cited in that section) uses `mov sl/sb` for cross-call use, not loop state. So the underlying corpus claim covers this function, but the playbook wording is narrower. **Action: shipped on operational corpus evidence; if user wants strict-playbook enforcement, revert and re-dispatch with mandatory permuter run** — outcome will almost certainly be the same (no convergence), at ~10-15 min permuter wall-time cost.
+
+**Commit:** iter-34 hash (single combined: scaffold + decomp + loop-log).
+
+**After:** 83 fns (**16.2% +0.2pp**), **76 asm-fn-remaining (-1)**, 251 db (unchanged), 268.6 KiB src C (essentially unchanged — NAKED doesn't grow .text bytes much), 90.0% raw, 10.0% deblob.
+
+**Architectural duties:**
+- Future agents: the playbook's "for loop state" exception wording is a source of agent uncertainty when high-reg pins are cross-BL but non-loop. Two paths to resolve in a future iter: (a) tighten the playbook wording to match codegen-notes corpus claim ("any high-reg pin that survives a BL"), or (b) leave the playbook narrow and require permuter for non-loop cases. The user's call — flag this as a `docs/decisions.md` candidate after iter-34 lands.
+- sub_08000B6C is the **3rd Option-B-style scaffold** in this codebase (after src/system/sub_08000918.c and src/system/sub_08000eb8.c scaffolds from iters 22/29). The scaffold-first-then-body pattern works cleanly when the empty .c file produces zero bytes — confirmed iter 34.
+- **Cluster context**: sub_08000B6C is bounded by mode-8 (sub_08000918) and sub_08000C98 (already decomped). The per-entity tile-probe + dispatch shape it documents is likely the entry-point for a similar pattern in the other 13 cases of sub_08000918's state machine.
+
+**Decisions:** (1) Skipped data dispatch — refcount tool exhausted; no cheap pivot. (2) Accepted high-reg-exception NAKED ship despite "for loop state" playbook wording — operational corpus evidence (3 independent pins) overrides narrow phrasing in this case; documented as gate-edge.
+
+**Trajectory:** 24 iters post-resume (11-34). Functions 41→83 (+42). Raw INCBIN 98.1%→90.0% (-8.1pp). db 117→251 (+134). src C 75→269 KiB (+194 KiB). Data deblob 1.0%→10.0% (+9.0pp). **76 asm-fn-remaining** — declining steadily, but scaffold-blocked queue is now the dominant constraint. Iter 35 should consider another Option B target OR a strategic infra commit (tighten playbook wording, build a scaffold-blocked-batch picker, etc.).
+
+---

@@ -66,7 +66,7 @@ SECTIONS {
         asm/text/text_0x0800090c.o(.text);  /* 0x0800090c - 0x08000918, raw bytes */
         src/system/sub_08000918.o(.text);
         asm/disasm_0x08000918.o(.text);  /* 0x08000918 - 0x08000b6c, sub_08000918 (auto-peeled) */
-        asm/disasm_0x08000b6c.o(.text);  /* 0x08000b6c - 0x08000c98, sub_08000B6C (manual peel; full text bucket) */
+        src/system/sub_08000b6c.o(.text);  /* 0x08000b6c - 0x08000c98, sub_08000B6C (NAKED + NON_MATCHING; high-register pins on sl/r8/r9) */
         src/system/sub_08000c98.o(.text);  /* 0x08000c98 - 0x08000cb0, sub_08000C98 */
         asm/text/text_0x08000cb0.o(.text);  /* 0x08000cb0 - 0x08000cec, raw bytes */
         src/system/sub_08000cec.o(.text);  /* 0x08000cec - 0x08000d2c, sub_08000CEC */
