@@ -346,3 +346,29 @@ The agent infrastructure grew organically with each iter — each new friction d
 **Decisions:** none new.
 
 ---
+## Iter 12 — 2026-05-26
+
+**Before:** 43 / ~513 fns (8.4%), 16 peeled-asm, 128 db, 82.2 KiB src C, 97.9% raw
+
+**Targets:** Decomp AgbMain (master game loop, ambitious — 198 instr + 29 callees + 26-case jump table). Data text_0x08314b30 cluster (3864 B).
+
+**Outcomes:**
+- Decomp: **AgbMain landed NAKED + NON_MATCHING + 28 callees auto-peeled.** Master game-state-machine dispatcher now in C with the per-frame loop documented in the NON_MATCHING reference body. New architectural findings (Init2 every frame, mode 28 shared finalize, mode 29 arg-passing) in docs/subsystems.md. 28 new asm/disasm slices = future decomp targets.
+- Data: 4 tables, 3864 B — entire blob consumed. **New "embedded mini pointer-array inside backing-store" variant** identified and documented in codegen-notes.
+
+**Commit:** iter-12 hash
+
+**After:** 45 / ~513 fns (8.8%), 43 peeled-asm (+27 from AgbMain's callees), 132 db, 86.3 KiB src C, **97.5% raw** (second full decimal-point drop in two iters)
+
+**Architectural duties:**
+- docs/subsystems.md "Game-state machine" section rewritten by decomp agent.
+- docs/codegen-notes.md "Variant: embedded mini pointer-array inside a single backing-store" section added.
+- Two new IWRAM bases (0x03003540, 0x03005398) inline-declared in agb_main.c; promote to include/iwram.h when consumers land.
+
+**Validation of mandatory clean-rebuild:** verified clean. Both pre-commit lints fired correctly.
+
+**Decisions:** none new.
+
+**Suggested iter-13 candidates (from decomp agent's report):** sub_080202A8, sub_080201A8, sub_080201C8, sub_080201E8, sub_08019540, sub_08019560 (all ≤80 B handlers), or sub_08020BC0 (Init2, 48 B). The decomp pipeline is now flush with small leaf candidates — the cheap-data-anchor exhaustion problem is offset by abundant cheap-decomp candidates.
+
+---
