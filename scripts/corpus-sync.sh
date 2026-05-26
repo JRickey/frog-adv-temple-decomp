@@ -21,9 +21,30 @@ METADATA="$CACHE_DIR/.metadata.json"
 # Curated list, highest-leverage first. Konami GBA + agbcc Pokemon decomps.
 # Format: "owner/repo<TAB>one-line note"
 REPOS=(
+    # Konami GBA (publisher match — highest leverage)
     "testyourmine/cvaos|Castlevania: Aria of Sorrow — Konami GBA, 2003 (same publisher + era as us)"
+    "akatsuki105/boktai2|Boktai 2 (Zoktai, JP v1.1) — Konami GBA, 2004 (publisher match)"
+
+    # Other agbcc GBA decomps that share toolchain/idioms
     "metroidret/mf|Metroid Fusion — agbcc GBA, 2002"
     "metroidret/mzm|Metroid Zero Mission — agbcc GBA, 2004"
+    "arthurtilly/rhythmtengoku|Rhythm Tengoku — agbcc GBA, 2006 (~50 MB src, C-language repo)"
+    "Kurausukun/mother3|MOTHER 3 — agbcc GBA, 2006 (uses old_agbcc + agbcp/C++)"
+    "mmzret/rmz3|Mega Man Zero 3 (JP) — agbcc GBA, 2004"
+    "jiangzhengwenjz/katam|Kirby & The Amazing Mirror (USA) — agbcc GBA, 2004"
+    "jiangzhengwenjz/totkol|Tactics Ogre: The Knight of Lodis (USA) — agbcc GBA, 2001"
+    "jiangzhengwenjz/csm3|Summon Night: Craft Sword Monogatari Hajimari no Ishi — agbcc GBA"
+    "FireEmblemUniverse/fireemblem8u|Fire Emblem: The Sacred Stones — agbcc GBA, 2004"
+    "FireEmblemUniverse/fireemblem6j|Fire Emblem: The Binding Blade (JP) — agbcc GBA, 2002"
+    "MokhaLeee/FireEmblem7J|Fire Emblem: Rekka no Ken (JP) — agbcc GBA, 2003"
+    "not-alons/hmfomt|Harvest Moon: Friends of Mineral Town — agbcc GBA, 2003"
+    "ketsuban/advancewars|Advance Wars — agbcc GBA, 2001"
+    "zeldaret/tmc|The Legend of Zelda: The Minish Cap — agbcc GBA, 2004"
+    "XOlifreX/mksc-decompilation|Mario Kart Super Circuit — pret-style GBA, 2001"
+    "XOlifreX/hhg-decompilation|Hamtaro: Ham-Ham Games — pret-style GBA, 2003"
+    "jellees/mksc|Mario Kart Super Circuit (alt) — old_agbcc + thumb-elf cc1"
+
+    # Pokémon (pret) — idiom-dense, large bodies of matched C
     "pret/pokeruby|Pokemon Ruby — pret agbcc, idiom-dense"
     "pret/pokeemerald|Pokemon Emerald — pret agbcc"
     "pret/pokefirered|Pokemon FireRed — pret agbcc"
@@ -31,7 +52,15 @@ REPOS=(
 )
 # NOTE on omissions: jiangzhengwenjz/{cvaos,cvhod} (both 404) and a public
 # Castlevania: Harmony of Dissonance decomp do not exist on GitHub as of
-# 2026-05-25. testyourmine/cvaos is the only public Konami-GBA decomp.
+# 2026-05-26. testyourmine/cvaos and akatsuki105/boktai2 are the only
+# public Konami-GBA decomps.
+#
+# agbcc forks investigated (2026-05-26): pret/agbcc has ~40 forks but
+# nearly all are zero-diff mirrors or trivial maintenance branches.
+# Notable: SAT-R/agbcc (3 stars, gcc14/15 fix); jiangzhengwenjz/agbcc
+# (default branch new_newlib_pret — possibly meaningful for non-pret
+# decomps but tracks upstream master). Not pulling forks into corpus
+# unless a specific matching blocker points at a compiler bug.
 
 mkdir -p "$CACHE_DIR"
 

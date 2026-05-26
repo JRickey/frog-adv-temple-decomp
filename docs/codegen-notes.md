@@ -1693,6 +1693,80 @@ the case index with sequential cases. The LSB-even finding above
 is still valid as a workflow note for reading the .word table, but
 the dispatch shape itself is NOT an automatic NAKED trigger.
 
+### Iter-38 research interlude: triangulating WHY the cluster ships NAKED
+
+Three parallel experiments (worktrees: `os-flag`, `dispatch-macro`,
+`corpus-expand`) on the same day pinned down why the mode-X cluster
+(sub_08000918, sub_08000EB8, sub_08001508, sub_08002844, AgbMain) ships
+NAKED despite the dispatcher idiom itself being agbcc's natural lowering:
+
+**1. NOT an optimization-flag issue.** The `-Os` agent ran a 14-row trial
+matrix across `-O0`/`-O1`/`-O2`/`-O3`/`-Os` × `-fno-cse-follow-jumps`,
+`-fno-omit-frame-pointer`, `-fcaller-saves`, `-funroll-loops`, etc. ALL
+non-`-O0` variants produced byte-IDENTICAL `.s` output to baseline
+`-O2` (verified with `diff -q`). `-Os` and `-O2` are aliases inside
+agbcc 2.x's optimizer pipeline — there's no size-vs-speed branch.
+Same for `old_agbcc`. **No flag combination is the escape hatch.**
+
+**2. NOT a "different compiler" issue.** The corpus-expansion agent
+grew the local cache from 7 → 23 repos (added `mmzret/rmz3` heavy
+mov-pc-rN user, `akatsuki105/boktai2` 2nd Konami GBA, FE 6/7/8,
+katam, mksc, tmc, rhythmtengoku, mother3, etc.). Cross-corpus search
+of all 17+ agbcc-targeted decomps spanning 2001-2006:
+- 58 `mov pc, rN` hits in C files across 5 repos.
+- **100%** are inside `NAKED` functions with `asm(".syntax unified\n…")`.
+- **ZERO** matched as a real pure-C `switch` compiling to mov-pc-rN.
+
+That's strong empirical proof the pattern is unreachable in agbcc
+2.x's emitter from C source. Not specific to our title.
+
+**3. NOT a shared dispatch-macro issue.** The dispatch-macro agent
+verified all 5 cluster dispatcher CORES are byte-identical 10-byte
+sequences (lsls + ldr + adds + ldr + mov pc), tested 4 macro/source
+hypotheses including pure-C `switch(u8){case 0..N-1;}`, `&&label`
+label-as-value, and DISPATCH9 macro forms. Pure-C switch DID
+reproduce the dispatcher core almost byte-for-byte (byte_diff dropped
+from ~452 to 276 — diff is in surrounding context, not the dispatcher).
+But no source form gets to 0 because of three downstream
+structural choices:
+
+- **Prologue register pinning**: baserom pushes `{r4, r5, lr}` and
+  pre-loads `&spByte` into r5, kept across the entire loop. agbcc
+  allocates only `{r4, lr}` and reloads via `sp+offset`. Pinning
+  via `register T x asm("r5")` doesn't reach because r5 lives across
+  function calls (not just inside a single statement). Forbidden
+  hand-asm pattern.
+- **Pool-literal placement**: agbcc decides per-context where to
+  flush ldr literals; baserom interleaves them in a specific order
+  that depends on whole-function layout. Not directly controllable
+  from C.
+- **Pre-loop case-0 fallthrough**: baserom enters the dispatch loop
+  via fallthrough INTO case 0 (so the first iteration's case-0 body
+  runs without going through the dispatcher); agbcc emits a separate
+  entry path that goes through the dispatcher even on iteration 0.
+  Restructuring source to coax fallthrough produced other diffs.
+
+**Verdict** — the mode-X cluster is unmatchable in pure C for the
+combination of those THREE downstream choices, not because of the
+dispatcher itself. NAKED+NON_MATCHING is the corpus-validated
+correct ship. The dispatcher idiom itself can be matched (as
+demonstrated in many corpus repos for simpler dense u8 switches),
+but anywhere the surrounding context has cross-call-register pins
+or asymmetric loop entry, the function falls into this class.
+
+**Cleanup-pass implications**: when someone re-attempts these
+functions later, the entry points to try are (a) restructure as a
+function pointer table indexed without a switch (different codegen
+path), (b) restructure the loop entry to genuinely match
+fallthrough-into-case-0 (might need `goto` chaining), (c) try
+combinations of `register` pins on r4/r5 + struct layout tricks.
+Permuter is unlikely to find any of these mechanically — they're
+source-shape rewrites, not statement-ordering perturbations.
+
+The `register asm("r8/r9/sl/sb")` HIGH-register exception (separate
+class) does NOT apply to mode-X — these are all low-register
+issues.
+
 ## Case-number ≠ source-block-order trap in `switch` dispatchers
 
 When a `switch`-like state machine has a "fallthrough drop block"

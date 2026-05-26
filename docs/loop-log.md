@@ -999,3 +999,42 @@ The agent infrastructure grew organically with each iter — each new friction d
 **Trajectory:** 27 iters post-resume (11-37). Functions 41→86 (+45). Raw INCBIN 98.1%→88.8% (**-9.3pp**). db 117→265 (+148). src C 75→299 KiB (+224 KiB). Data deblob 1.0%→11.10% (+10.10pp — past 11%). **73 asm-fn-remaining.** Mode-X cluster nearly exhausted of clean targets; the next data-strategy decision is upcoming.
 
 ---
+
+## Iter 38 — 2026-05-26 (research interlude — three parallel experiments)
+
+**Before:** 86 fns (16.6%), 73 asm-fn-remaining, 265 db, 88.8% raw, 11.10% deblob
+
+**Targets:** No decomp or data ship this iter — three parallel research experiments on independent worktrees, triggered by user question "why is the mov-pc-rN pattern uncompilable with agbcc? could it be a different compiler / library?":
+1. `experiment/os-flag-mode-x` — test `-Os` (vs `-O2`) on sub_08002844
+2. `experiment/dispatch-macro` — reverse-engineer a candidate DISPATCH_MODE macro
+3. `experiment/corpus-expand` — find more agbcc GBA decomps + search them for matched-in-C mov-pc-rN
+
+**Outcomes:**
+
+- **-Os experiment**: NEGATIVE. agbcc 2.x and old_agbcc both treat -Os as alias for -O2 (byte-identical `.s` output across a 14-row trial matrix incl. -O0/-O1/-O3 + `-fno-cse-follow-jumps`, `-fno-omit-frame-pointer`, `-fcaller-saves`, `-funroll-loops`, etc.). No flag is the escape hatch.
+
+- **Corpus expansion**: BIG WIN + DEFINITIVE EVIDENCE. Grew 7 → 23 repos (added boktai2, mmzret/rmz3, FE 6/7/8, katam, mksc, tmc, rhythmtengoku, mother3, totkol, csm3, hmfomt, ketsuban/advancewars, hhg, etc.). Cross-corpus mov-pc-rN search across 17+ agbcc decomps spanning 2001-2006: **58 hits in C, 100% inside NAKED inline-asm functions, ZERO matched as pure-C switch**. Empirical proof the pattern is unmatchable in agbcc 2.x from C source.
+
+- **Dispatch-macro experiment**: NEGATIVE. All 5 cluster dispatcher cores are byte-identical 10-byte sequences. Pure-C `switch(u8){case 0..N}` reproduced the dispatcher core almost byte-for-byte (byte_diff 276 vs naive-pure-C 452+). Remaining diff is downstream structural: prologue {r4,r5,lr} register pinning, pool placement, pre-loop case-0 fallthrough. None forced from C source. Tested 4 hypotheses incl. inline-asm + C-labels (won't compile in agbcc), &&label (won't link), DISPATCH9 macro (refactor only, still NAKED).
+
+**Triangulated verdict — the user's "different compiler" hypothesis is empirically wrong**:
+- NOT optimization-flag (14-row matrix confirms)
+- NOT a different compiler (17+ corpus decomps span same era, all NAKED for this pattern)
+- NOT a missing macro (all source variations attempted produce different prologues)
+
+The class IS unmatchable, but specifically because of THREE downstream structural choices in the baserom: (1) cross-BL register pinning on r4/r5, (2) context-specific pool placement, (3) loop-entry fallthrough-into-case-0. None reachable from C source in agbcc 2.x. The dispatcher itself can be matched in pure C; the surrounding context cannot.
+
+**Commit:** `db31261` (pre-experiment) + iter-38 hash (scripts/corpus-sync.sh expansion + docs/codegen-notes.md research-interlude section + loop-log).
+
+**After:** Scoreboard unchanged (no decomp/data ship this iter). Worktrees removed; experiment branches deleted. Corpus cache 7 → 23 repos at `~/.cache/decomp-corpus/` (~786 MB on disk).
+
+**Architectural duties:**
+- docs/codegen-notes.md "mov pc, rN jump tables" section gets a sub-section "Iter-38 research interlude" documenting all three experiments + the triangulated verdict. Future agents looking at the mode-X cluster have the why-NAKED reasoning available.
+- scripts/corpus-sync.sh expanded with 16 new repos. `python3 tools/agent/corpus.py grep ...` now covers a much larger evidence base.
+- **Cleanup-pass implications**: when re-attempting these functions later, the entry points to try are (a) restructure as a function-pointer table indexed without a switch (different codegen path), (b) match the loop-entry fallthrough via goto chains, (c) try `register asm("r4"/"r5")` pins on cross-call locals + struct layout tricks. Permuter is unlikely to find these — they're source-shape rewrites, not statement-ordering perturbations.
+
+**Decisions:** (1) Pulled corpus-sync.sh expansion into main as a real infra win. (2) Discarded -Os + dispatch-macro experimental changes — they produced no ship but the FINDINGS are kept in docs. (3) No regular iter dispatch this turn — research-only.
+
+**Trajectory:** 28 iters post-resume (11-38). Functions unchanged 86. Raw INCBIN unchanged 88.8%. **Strategic clarity gained — the mode-X cluster's NAKED status is now corpus-validated and structurally explained.** Resume regular decomp + data dispatch next iter.
+
+---
