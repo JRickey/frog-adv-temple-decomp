@@ -1,6 +1,6 @@
 @ Auto-emitted by tools/disasm/peel.py — do not hand-edit this header.
-@ Range:  [0x080008dc, 0x0800090c)  (48 bytes, thumb mode)
-@ Re-peel:  python3 tools/disasm/peel.py --start 0x80008dc --end 0x800090c --mode thumb
+@ Range:  [0x080008dc, 0x08000900)  (36 bytes, thumb mode)
+@ Re-peel:  python3 tools/disasm/peel.py --start 0x80008dc --end 0x8000900 --mode thumb
 
         .include "asm/macros.inc"
         .syntax unified
@@ -20,17 +20,11 @@
 @   0x080008f2: d0fa        beq.n	0x8ea
 @   0x080008f4: 4770        bx	lr
 @   0x080008f6: 0000        movs	r0, r0
-@   0x080008f8: 6148        str	r0, [r1, #20]
+@   0x080008f8: 6148        str	r0, [r1, #20]    @ pool: 0x03006148
 @   0x080008fa: 0300        lsls	r0, r0, #12
-@   0x080008fc: fffe        0000 	vaddl.u<illegal width 64>	q8, d14, d0
-@   0x08000900: 4801        ldr	r0, [pc, #4]	@ (0x908)
-@   0x08000902: 6800        ldr	r0, [r0, #0]
-@   0x08000904: 4770        bx	lr
-@   0x08000906: 0000        movs	r0, r0
-@   0x08000908: 5330        strh	r0, [r6, r4]
-@   0x0800090a: 0300        lsls	r0, r0, #12
+@   0x080008fc: fffe        0000             @ pool: 0x0000fffe
 
         thumb_func_start sub_080008DC
 sub_080008DC: @ 0x080008dc
-        .incbin "frog_us_baserom.gba", 0x8dc, 0x30
+        .incbin "frog_us_baserom.gba", 0x8dc, 0x24
         thumb_func_end sub_080008DC

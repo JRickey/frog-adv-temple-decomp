@@ -1075,3 +1075,49 @@ backing-store-then-array structure.
 
 The (backing + tail-ptr-array) pattern remains the common case;
 this is the exception.
+
+## Shadow-copy of a live value to defeat pre-spill of a long-lived local
+
+When a function holds a single local across many uses AND one late
+use is destructive (Thumb `and rN, rN, mask` rather than non-
+destructive `and rDST, rSRC, mask`), agbcc 2.x will pre-spill the
+local to a callee-save register UPFRONT (in the prologue) so that the
+destruction is safe. This insertion shifts every subsequent
+instruction by 2 bytes, causing branch-offset cascades and downstream
+register-coloring drift even when the function's logic is otherwise
+identical to the baserom.
+
+Detection signature: per-symbol diff reports ONE `INSERTION` early in
+the function (`adds r4, r3, #0` or similar near the prologue) and
+every later `beq.n`/`b.n` is off by +2 bytes from target.
+
+**Fix** (permuter-discovered, worked example `sub_080004C4`): make a
+shadow copy of the live local right before the long bit-test / use-
+sequence:
+
+```c
+u16 jpKeys;
+u16 jpKeysShadow;
+/* ... jpKeys = computed value ... */
+jpKeysShadow = jpKeys;     /* break the live-range here */
+if (jpKeysShadow & MASK_A) mapped |= BIT_A;
+if (jpKeysShadow & MASK_B) mapped |= BIT_B;
+/* ... etc, all bit tests on the shadow ... */
+```
+
+The shadow tells agbcc that `jpKeys` and the bit-tested value are
+distinct live ranges; the bit-test loop is free to destroy
+`jpKeysShadow`'s register at the late destructive AND because
+`jpKeys` is no longer needed past the copy. No pre-spill emitted;
+branches re-align with target.
+
+Pair with a `register T *p asm("rN")` pin at the post-loop logic if
+the matching also needs to anchor a specific pointer load (in
+`sub_080004C4`, `register GameStuff *gs asm("r0")` pins the gs
+pointer load into r0 so the mode comparison uses r1 — matching
+target's choice of r1 for the mode byte and r0 for the gs base).
+
+The `register ... asm("rN")` pin only works for arg-style locals
+(passed in or assigned a base value before any spills). On
+multi-clause locals it tends to break worse than it helps; if so,
+back off and try a different shadow placement instead.

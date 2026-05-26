@@ -8,6 +8,9 @@ extern void sub_08017364(void);
 extern void sub_0800072C(void);
 extern void sub_08000820(void);
 
+extern u32 sub_08000900(void);
+extern u32 sub_080179B8(void);
+
 /* Init1: one-time setup called from AgbMain's prologue.
  *
  * Disables all hardware IRQs (REG_IE = 0), zeros the cross-subsystem
@@ -55,4 +58,86 @@ void sub_08000430(void)
     gIwram_3550._data[7] = 0;
     sub_08000820();
     REG_DISPCNT = DISPCNT_OBJ_1D | DISPCNT_BG0_ON | DISPCNT_BG1_ON | DISPCNT_BG2_ON | DISPCNT_BG3_ON | DISPCNT_OBJ_ON;
+}
+
+/* Per-frame input poll + attract-mode advancer. Called inside AgbMain's
+ * mode 4 case body; its u16 return value is stored at gIwram_5398.
+ *
+ * Reads REG_KEYINPUT (active-low), inverts to an active-high pressed
+ * mask, computes the just-pressed mask vs the previous frame's mask in
+ * gIwram_3710, then walks a fixed remap that swaps GBA keys to the
+ * game's internal layout (START<->UP, UP<->A, DOWN<->B, LEFT<->SELECT,
+ * RIGHT<->START, A<->RIGHT, B<->LEFT, SELECT<->DOWN, L<->R, R<->L).
+ *
+ * The mode==24 branch handles the attract-loop case: if the player
+ * presses any remapped key, force mode 4 (return to title); otherwise
+ * advance the attract step every (now - lastTick) > 10 ticks. The
+ * function lives in init1.c because it shares iwram-base discovery
+ * with Init1.
+ *
+ * Matching trick (permuter-found): the second `jpKeysShadow = jpKeys`
+ * copy splits the bit-test sequence onto a separate value, defeating
+ * agbcc 2.x's preemptive spill of jpKeys to r4 (which otherwise
+ * cascades into a +2 byte branch-offset drift across the whole
+ * function). The `register GameStuff *gs asm("r0")` pin pairs with it
+ * to anchor the gGameStuff load in the right register at the post-
+ * remap mode check. */
+u32 sub_080004C4(void)
+{
+    u16 raw;
+    u16 mapped;
+    u32 now;
+    struct IwramAt5358 *jp;
+    struct IwramAt3710 *prev;
+    u16 jpKeys;
+    u16 jpKeysShadow;
+
+    raw = ~REG_KEYINPUT;
+    jp = &gIwram_5358;
+    prev = &gIwram_3710;
+    jpKeys = raw & ~prev->prevKeys;
+    jp->justPressed = jpKeys;
+    prev->prevKeys = raw;
+
+    jpKeysShadow = jpKeys;
+    mapped = ((u16)(jpKeysShadow & KEY_START)) ? KEY_UP : 0;
+    if (jpKeysShadow & KEY_UP)
+        mapped |= KEY_A;
+    if (jpKeysShadow & KEY_DOWN)
+        mapped |= KEY_B;
+    if (jpKeysShadow & KEY_LEFT)
+        mapped |= KEY_SELECT;
+    if (jpKeysShadow & KEY_RIGHT)
+        mapped |= KEY_START;
+    if (jpKeysShadow & KEY_A)
+        mapped |= KEY_RIGHT;
+    if (jpKeysShadow & KEY_B)
+        mapped |= KEY_LEFT;
+    if (jpKeysShadow & KEY_SELECT)
+        mapped |= KEY_DOWN;
+    if (jpKeysShadow & KEY_L)
+        mapped |= KEY_R;
+    if (jpKeysShadow & KEY_R)
+        mapped |= KEY_L;
+
+    {
+        register GameStuff *gs asm("r0");
+        gs = &gGameStuff;
+        if (gs->mode != 24) {
+            return mapped;
+        }
+
+        if (mapped != 0) {
+            gs->mode = 4;
+            gIwram_3480._data[0] = 4;
+            return 0;
+        }
+    }
+
+    now = sub_08000900();
+    if (now - gIwram_34C0.lastTick <= 10) {
+        return 0;
+    }
+    gIwram_34C0.lastTick = sub_08000900();
+    return (u16)sub_080179B8();
 }

@@ -39,11 +39,30 @@ struct IwramAt35E0 {
     u8 _data[5]; /* writes at +0 and +4 */
 };
 
+struct IwramAt34C0 {
+    /* Subsystem TBD. sub_080004C4 reads a u32 at +8 (used as a tick
+     * timestamp for the mode-24 attract advance). sub_0801A268 writes
+     * a u8 at +1. */
+    u8 _pad0[8];
+    u32 lastTick; /* +8: timestamp at last attract step */
+};
+
+struct IwramAt3710 {
+    u16 prevKeys; /* +0: previous-frame raw key bitmask (active-high) */
+};
+
+struct IwramAt5358 {
+    u16 justPressed; /* +0: just-pressed raw key bitmask (active-high) */
+};
+
 extern struct IwramAt3480 gIwram_3480;
 extern struct IwramAt34A0 gIwram_34A0;
 extern struct IwramAt34B0 gIwram_34B0;
 extern struct IwramAt34B4 gIwram_34B4;
+extern struct IwramAt34C0 gIwram_34C0;
 extern struct IwramAt3550 gIwram_3550;
 extern struct IwramAt35E0 gIwram_35E0;
+extern struct IwramAt3710 gIwram_3710;
+extern struct IwramAt5358 gIwram_5358;
 
 #endif /* GUARD_IWRAM_H */
