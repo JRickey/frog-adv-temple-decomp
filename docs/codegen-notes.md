@@ -653,3 +653,36 @@ emitted the trailing `sDefaultSquareWavePcm[128] = INCBIN_U8(...)` and
 them as `.comm`; the .rodata pull from `linker.ld` saw only the 16-byte
 header struct from each file; the matching slice shifted 0x60 bytes
 earlier and every adjacent pool literal mis-resolved.
+
+## `.syntax unified` in NAKED inline asm bleeds into the rest of the .o
+
+When you ship a function as NAKED with inline asm (the corpus-validated
+pattern for high-register-pinned loop state — see "High registers" above),
+the `.syntax unified` directive at the top of the asm block persists past
+the closing `;` and applies to every subsequent function agbcc emits in
+the same translation unit.
+
+This is fine when the NAKED function is the LAST one in its .c file
+(`sub_0802EDF0` in `sound_channel.c` originally). Add a NAKED function
+ahead of regular C functions in the same .o, though, and the next
+agbcc-emitted Thumb-1 instructions blow up: `add r0, r1, #0` becomes
+"cannot honor width suffix" (unified syntax expects `adds` for flag-
+setting Thumb-1 forms), `mov r6, #0x0` rejects without an `s`, etc.
+
+**Fix**: end every NAKED inline-asm block with an explicit
+`"    .syntax divided\n"` to revert the assembler. Convention in
+`sound_channel.c`:
+
+```c
+NAKED static void sub_0802EC7C(void) {
+    asm(".syntax unified\n"
+        "thumb_func_start sub_0802EC7C\n"
+        // ... function body ...
+        "    .balign 4, 0\n"
+        "    .syntax divided\n");
+}
+```
+
+Caught when `sub_0802EC7C` got prepended to `sound_channel.c` and broke
+`sub_0802ED5C`'s compilation 200 lines downstream — symptom looks
+unrelated to the new function.

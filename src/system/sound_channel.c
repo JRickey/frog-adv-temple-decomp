@@ -66,7 +66,243 @@ typedef struct SoundSystem {
     SoundSlot **slotPtrTable; /* +0xcc */
 } SoundSystem;
 
+/* SoundSlot also has an "envelope A" block at +0x1c (acc/step/limit s16s)
+ * that sub_0802EC7C ticks — the per-slot envelope at +0x2c above is the
+ * "envelope B" block ticked by sub_0802ED5C. Both share the same
+ * triangular-bounce shape and differ only in which mix channel they
+ * modulate. The +0x1c block is only touched inside the NAKED body for
+ * sub_0802EC7C, so no typedef is needed yet.
+ *
+ * sub_0802EC7C also touches three inline channel envelopes embedded in
+ * SoundSystem itself at ss+0x20..ss+0x83 (stride 36, envelope at +0x1c
+ * inside each), plus a parallel u32 flag array at ss+0x10. Same — only
+ * needed inside the NAKED body, so left as raw offsets. */
+
 #define gpSoundSystem (*(SoundSystem **)0x030065e0)
+
+/* sub_0802EC7C — per-frame envelope-A tick + per-channel dirty flagging.
+ *
+ * Two stages run per call, both with the same triangular-bounce shape:
+ *   Stage 1 (3 iterations, fixed): three inline channels embedded in
+ *     SoundSystem itself (ss->channels[0..2]). Their envelope-A blocks
+ *     are advanced; if a bounce is consumed (acc reaches ±limit, step is
+ *     non-zero), the envelope step is zeroed and ss->chFlags[i] gets a
+ *     0x40 dirty bit ORd in.
+ *   Stage 2 (ss->count iterations): per-slot envelope-A bank, walked via
+ *     ss->slotPtrTable[i]. Same bounce; on each tick the slot flags get
+ *     0x40 ORd in unconditionally (whenever the slot is present and
+ *     step is non-zero).
+ *
+ * Companion to sub_0802ED5C, which runs the same shape over the per-slot
+ * envelope-B bank (offset +0x2c). The envelope-A and envelope-B blocks
+ * coexist on every slot.
+ *
+ * Shipped as NAKED inline asm + NON_MATCHING reference C. The baserom
+ * pins &gpSoundSystem into r8 (and ip) for stage 1 and reloads it via r8
+ * for stage 2; agbcc 2.x will not promote a value to a Thumb high register
+ * for loop state, so the C never matches. See docs/codegen-notes.md
+ * "High registers (sl/r10, sb/r9, r8) — corpus-validated unmatchable".
+ */
+#ifdef NON_MATCHING
+void sub_0802EC7C(void)
+{
+    register SoundSystem **gpsp asm("r8");
+    SoundSystem *ss;
+    s32 i;
+    s32 offset;
+    SoundSlot *slot;
+    u8 *env; /* points at acc field of an envelope-A block */
+    s16 step;
+    u16 acc;
+    s16 limit;
+
+    gpsp = &gpSoundSystem;
+
+    /* Stage 1: three inline channel envelopes embedded in SoundSystem
+     * at ss+0x20..ss+0x83, stride 36, envelope at +0x1c inside each. */
+    offset = 32;
+    for (i = 0; i <= 2; i++) {
+        ss = *gpsp;
+        env = (u8 *)ss + offset + 28;
+        step = *(s16 *)(env + 2);
+        if (step != 0) {
+            acc = (u16)(*(s16 *)env + step);
+            *(u16 *)env = acc;
+            if (step > 0) {
+                limit = *(s16 *)(env + 4);
+                if ((s32)((s32)(s16)acc << 16) > ((s32)limit << 16)) {
+                    *(s16 *)env = limit;
+                    *(s16 *)(env + 2) = 0;
+                }
+            } else {
+                limit = *(s16 *)(env + 4);
+                if ((s32)((s32)(s16)acc << 16) < ((s32)limit << 16)) {
+                    *(s16 *)env = limit;
+                    *(s16 *)(env + 2) = 0;
+                }
+            }
+            *(u32 *)((u8 *)(*gpsp) + 0x10 + i * 4) |= 0x40;
+        }
+        offset += 36;
+    }
+
+    /* Stage 2: per-slot envelope-A bank, walked via slotPtrTable. */
+    for (i = 0; i < (*gpsp)->count; i++) {
+        slot = (*gpsp)->slotPtrTable[i];
+        if (slot == NULL)
+            continue;
+        env = (u8 *)slot + 0x1c;
+        step = *(s16 *)(env + 2);
+        if (step == 0)
+            continue;
+        slot->flags |= 0x40;
+        acc = (u16)(*(s16 *)env + step);
+        *(u16 *)env = acc;
+        if (step > 0) {
+            limit = *(s16 *)(env + 4);
+            if ((s32)((s32)(s16)acc << 16) > ((s32)limit << 16))
+                continue;
+            *(s16 *)env = limit;
+            *(s16 *)(env + 2) = 0;
+        } else {
+            limit = *(s16 *)(env + 4);
+            if ((s32)((s32)(s16)acc << 16) < ((s32)limit << 16))
+                continue;
+            *(s16 *)env = limit;
+            *(s16 *)(env + 2) = 0;
+        }
+    }
+}
+#else
+NAKED
+void sub_0802EC7C(void)
+{
+    asm(".syntax unified\n"
+        "    push    {r4, r5, r6, r7, lr}\n"
+        "    mov     r7, r9\n"
+        "    mov     r6, r8\n"
+        "    push    {r6, r7}\n"
+        "    movs    r5, #0\n"
+        "    ldr     r0, _0802ECC4            @ =gpSoundSystem (0x030065e0)\n"
+        "    mov     r8, r0\n"
+        "    mov     ip, r8\n"
+        "    movs    r7, #0x20\n"
+        "_0802EC8E:\n"
+        "    mov     r1, ip\n"
+        "    ldr     r0, [r1, #0]\n"
+        "    adds    r3, r0, r7\n"
+        "    adds    r2, r3, #0\n"
+        "    adds    r2, #0x1c\n"
+        "    ldrh    r1, [r2, #2]\n"
+        "    movs    r4, #2\n"
+        "    ldrsh   r0, [r2, r4]\n"
+        "    cmp     r0, #0\n"
+        "    beq     _0802ECE8\n"
+        "    ldrh    r0, [r3, #0x1c]\n"
+        "    adds    r1, r1, r0\n"
+        "    movs    r6, #0\n"
+        "    strh    r1, [r3, #0x1c]\n"
+        "    movs    r4, #2\n"
+        "    ldrsh   r0, [r2, r4]\n"
+        "    cmp     r0, #0\n"
+        "    ble     _0802ECC8\n"
+        "    lsls    r1, r1, #0x10\n"
+        "    ldrh    r0, [r2, #4]\n"
+        "    mov     r9, r0\n"
+        "    lsls    r0, r0, #0x10\n"
+        "    cmp     r1, r0\n"
+        "    ble     _0802ECD6\n"
+        "    mov     r1, r9\n"
+        "    strh    r1, [r3, #0x1c]\n"
+        "    b       _0802ECD4\n"
+        "    .align  2, 0\n"
+        "_0802ECC4: .4byte 0x030065e0\n"
+        "_0802ECC8:\n"
+        "    lsls    r1, r1, #0x10\n"
+        "    ldrh    r4, [r2, #4]\n"
+        "    lsls    r0, r4, #0x10\n"
+        "    cmp     r1, r0\n"
+        "    bge     _0802ECD6\n"
+        "    strh    r4, [r3, #0x1c]\n"
+        "_0802ECD4:\n"
+        "    strh    r6, [r2, #2]\n"
+        "_0802ECD6:\n"
+        "    mov     r0, ip\n"
+        "    ldr     r2, [r0, #0]\n"
+        "    lsls    r0, r5, #2\n"
+        "    adds    r2, #0x10\n"
+        "    adds    r2, r2, r0\n"
+        "    ldr     r0, [r2, #0]\n"
+        "    movs    r1, #0x40\n"
+        "    orrs    r0, r1\n"
+        "    str     r0, [r2, #0]\n"
+        "_0802ECE8:\n"
+        "    adds    r7, #0x24\n"
+        "    adds    r5, #1\n"
+        "    cmp     r5, #2\n"
+        "    ble     _0802EC8E\n"
+        "    movs    r5, #0\n"
+        "    b       _0802ED46\n"
+        "_0802ECF4:\n"
+        "    ldr     r0, [r1, #0]\n"
+        "    adds    r0, #0xcc\n"
+        "    ldr     r1, [r0, #0]\n"
+        "    lsls    r0, r5, #2\n"
+        "    adds    r0, r0, r1\n"
+        "    ldr     r3, [r0, #0]\n"
+        "    cmp     r3, #0\n"
+        "    beq     _0802ED44\n"
+        "    adds    r2, r3, #0\n"
+        "    adds    r2, #0x1c\n"
+        "    movs    r1, #2\n"
+        "    ldrsh   r0, [r2, r1]\n"
+        "    cmp     r0, #0\n"
+        "    beq     _0802ED44\n"
+        "    ldr     r0, [r3, #0x38]\n"
+        "    movs    r1, #0x40\n"
+        "    orrs    r0, r1\n"
+        "    str     r0, [r3, #0x38]\n"
+        "    ldrh    r4, [r3, #0x1c]\n"
+        "    ldrh    r7, [r2, #2]\n"
+        "    adds    r1, r4, r7\n"
+        "    movs    r6, #0\n"
+        "    strh    r1, [r3, #0x1c]\n"
+        "    movs    r4, #2\n"
+        "    ldrsh   r0, [r2, r4]\n"
+        "    cmp     r0, #0\n"
+        "    ble     _0802ED36\n"
+        "    lsls    r1, r1, #0x10\n"
+        "    ldrh    r4, [r2, #4]\n"
+        "    lsls    r0, r4, #0x10\n"
+        "    cmp     r1, r0\n"
+        "    ble     _0802ED44\n"
+        "    b       _0802ED40\n"
+        "_0802ED36:\n"
+        "    lsls    r1, r1, #0x10\n"
+        "    ldrh    r4, [r2, #4]\n"
+        "    lsls    r0, r4, #0x10\n"
+        "    cmp     r1, r0\n"
+        "    bge     _0802ED44\n"
+        "_0802ED40:\n"
+        "    strh    r4, [r3, #0x1c]\n"
+        "    strh    r6, [r2, #2]\n"
+        "_0802ED44:\n"
+        "    adds    r5, #1\n"
+        "_0802ED46:\n"
+        "    mov     r1, r8\n"
+        "    ldr     r0, [r1, #0]\n"
+        "    ldrb    r0, [r0, #0]\n"
+        "    cmp     r5, r0\n"
+        "    blt     _0802ECF4\n"
+        "    pop     {r3, r4}\n"
+        "    mov     r8, r3\n"
+        "    mov     r9, r4\n"
+        "    pop     {r4, r5, r6, r7}\n"
+        "    pop     {r0}\n"
+        "    bx      r0\n"
+        "    .syntax divided\n");
+}
+#endif
 
 void sub_0802ED5C(void)
 {
