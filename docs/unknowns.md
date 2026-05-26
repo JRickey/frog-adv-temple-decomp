@@ -214,6 +214,52 @@ m2c shape to lean on.
 mixer code from objdump alone, without m2c, almost certainly produces
 a non-matching result. Don't attempt without (1) above.
 
+## ARM-mode DSP mixer routines in `[0x08032f68, 0x08033910)`
+
+Eight unpeeled ARM-mode candidates inside the audio-mixer cluster
+already named by `sound_mixer_tail.c`'s header comment (line 47:
+`[0x08032894, 0x08033910)` is "the ARM-interwork mixer cluster";
+Thumb dispatchers live at `[0x08032894, 0x08032f68)`, ARM inner DSP
+routines at `[0x08032f68, 0x08033910)`):
+
+| Addr | Refs | First bytes (LE) | Shape |
+|---|---|---|---|
+| `0x08032f68` | 4 | `f3 43 2d e9` | `push {r0,r1,r4-r9,lr}`; ldrsh four signed-16 samples from `[r0..r0+6]`; clamp to ±0x7f; sample-pack to r8 via `lsr #8` / `orr ..lsl #24`. Stereo PCM-to-DirectSound pack-and-clamp |
+| `0x08033000` | 4 | `fe 5f 2d e9` | `push {r1-r9,sl,fp,ip,lr}` (mixer mega-save); reads channel struct at `[r0,#4/#8/#20-26]`; pitched-channel mixer, signed accumulator |
+| `0x080331e0` | 4 | `fe 5f 2d e9` | Same prologue + first 80 bytes as 0x08033000 — sibling mixer (likely loop-mode variant: forward/loop/pingpong) |
+| `0x0803336c` | 7 | `fe 5f 2d e9` | Same prologue; reads same channel struct; `(L+R+2)/2` pan average — mono-downmix mixer variant |
+| `0x08033520` | 9 | `fe 5f 2d e9` | Sibling of 0x0803336c (different loop mode, same downmix path) |
+| `0x080336ac` | 6 | `fe 5f 2d e9` | `push {r1-r9,sl,fp,ip,lr}`; reads 3-channel struct at `[r0+0/12/8/20/22/24]`; `mul ip, r7, ip` per-sample — 3-tap (triangle/noise/wave?) mixer with `r8=#0x100` step |
+| `0x08033750` | 4 | `fe 5f 2d e9` | Same as 0x080336ac except `r8=#0x80` step — half-rate mixer variant |
+| `0x08033800` | 4 | `fe 5f 2d e9` | Same as 0x08033750 — third mixer variant in the same family |
+
+**Byte-match against `tools/agbcc/lib/libgcc.a` (all 30 members):**
+zero matches for any candidate. All eight start with the
+`e92d5ffe`/`e92d43f3` mega-save prologue, which libgcc helpers never
+emit (libgcc's largest, `__divdi3` / `_udivmoddi4`, uses simpler
+`stmfd sp!, {r4-r9, lr}` patterns and the smaller helpers use Thumb).
+
+**Conclusion:** these are custom title-specific audio-DSP routines,
+NOT libgcc helpers. Do not surface them via the libgcc-rename
+shortcut; they need real decomp passes (or NAKED+NON_MATCHING) as
+part of the audio subsystem.
+
+**Naming hypotheses** (worth confirming once one is decomped):
+- 0x08032f68 looks like the stereo `MixerOutput` / `DirectSound`
+  buffer-write tail (clamp + pack to 16-bit PCM half-word).
+- The 0x08033000 / 0x080331e0 pair are likely `MixerRamFunc_*` per
+  loop-mode (no-loop vs forward-loop), since they share the prologue
+  byte-for-byte.
+- The 0x0803336c / 0x08033520 pair are the same with pan averaging
+  collapsed (mono-downmix path).
+- The 0x080336ac / 0x08033750 / 0x08033800 trio are 3-operand mixers,
+  possibly the CGB-channel (PSG square+wave+noise) synth path —
+  `r8=0x100` vs `0x80` is consistent with CGB volume scaling
+  granularity.
+
+Refusing to peel these as libgcc would put incorrect symbols into
+`LIBGCC_SYMBOLS` and silence the picker for real decomp targets.
+
 ## Compiler patch
 
 The `-f2003-patch` flag in `testyourmine/cvaos` (Castlevania: Aria of
