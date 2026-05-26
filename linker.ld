@@ -97,7 +97,7 @@ SECTIONS {
         src/system/sound_mixer.o(.text);  /* 0x0802f4b0 - 0x0802f870, sub_0802F4B0 (NAKED+NON_MATCHING) */
         asm/text/text_0x0802f870.o(.text);  /* 0x0802f870 - 0x08030000, raw bytes */
         asm/text/text_0x08030000.o(.text);  /* 0x08030000 - 0x080301c4, raw bytes */
-        asm/disasm_0x080301c4.o(.text);  /* 0x080301c4 - 0x08030264, sub_080301C4 (auto-peeled) */
+        src/system/sound_period.o(.text);  /* 0x080301c4 - 0x08030264, sub_080301C4 */
         asm/text/text_0x08030264.o(.text);  /* 0x08030264 - 0x080315d8, raw bytes */
         src/system/sound_opcode_dispatch.o(.text);  /* 0x080315d8 - 0x08031638, sub_080315D8 */
         asm/text/text_0x08031638.o(.text);  /* 0x08031638 - 0x080325b0, raw bytes */
@@ -107,7 +107,8 @@ SECTIONS {
         asm/text/text_0x08033948.o(.text);  /* 0x08033948 - 0x08033cd8, raw bytes */
         asm/disasm_0x08033cd8.o(.text);  /* 0x08033cd8 - 0x08033d14, _call_via_rX libgcc helper table (auto-peeled) */
         asm/disasm_0x08033d14.o(.text);  /* 0x08033d14 - 0x08033da8, __divsi3 (libgcc; auto-peeled) */
-        asm/text/text_0x08033da8.o(.text);  /* 0x08033da8 - 0x08033f5c, raw bytes */
+        asm/text/text_0x08033da8.o(.text);  /* 0x08033da8 - 0x08033ee4, raw bytes */
+        asm/disasm_0x08033ee4.o(.text);  /* 0x08033ee4 - 0x08033f5c, __udivsi3 (libgcc; auto-peeled) */
         asm/disasm_0x08033f5c.o(.text);  /* 0x08033f5c - 0x0803401c, __umodsi3 (libgcc; auto-peeled) */
         asm/text/text_0x0803401c.o(.text);  /* 0x0803401c - 0x08035d7c, raw bytes */
         asm/disasm_0x08035d7c.o(.text);  /* 0x08035d7c - 0x08035d84, sub_08035D7C (auto-peeled) */
@@ -185,7 +186,8 @@ SECTIONS {
         src/data/sprite_dispatch.o(.rodata);  /* 0x08306444 - 0x08306814, sSpriteAssetIndexTable + sSpriteGridLayout + sSpriteGridSubtable */
         src/data/sprite_anim_block.o(.rodata);  /* 0x08306814 - 0x08308100, anim / OAM-DMA descriptor cluster (9 named symbols) */
         src/data/sprite_dma_records.o(.rodata);  /* 0x08308100 - 0x08310000, OAM-DMA cfg + sprite frame ptrs + VRAM tile ptrs + DMA load records + dispatch tables + Scene 2 DMA cluster */
-        asm/text/text_0x08310000.o(.text);  /* 0x08310000 - 0x083112a8, raw bytes */
+        asm/text/text_0x08310000.o(.text);  /* 0x08310000 - 0x08310eb4, raw bytes */
+        src/data/level_layout_310eb4.o(.rodata);  /* 0x08310eb4 - 0x083112a8, sLevelLayoutData_310EB4 + sLevelLayoutPtrs_311074 + sLevelLayoutData_3110AC + sLevelLayoutPtrs_31118C + sLevelLayoutData_3111A8 */
         src/data/level_layout_dispatch_3112a8.o(.rodata);  /* 0x083112a8 - 0x083112c8, sLevelLayoutDispatch_3112A8 */
         asm/text/text_0x083112c8.o(.text);  /* 0x083112c8 - 0x08312c20, raw bytes */
         src/data/level_layout_312c20.o(.rodata);  /* 0x08312c20 - 0x08312d60, sLevelLayout_312C20 + sLevelLayoutPtrs_312C98 + sLevelLayout_312CAC + sLevelLayoutPtrs_312D4C */

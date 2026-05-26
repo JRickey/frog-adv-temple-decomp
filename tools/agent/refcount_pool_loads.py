@@ -256,6 +256,7 @@ def render_human(
     target_hi: int,
     threshold: int,
     pending_only: bool,
+    data_only: bool,
     limit: int,
     scan_lo: int,
     scan_hi: int,
@@ -276,6 +277,14 @@ def render_human(
         if pending_only and status != "pending":
             continue
         region = region_for(target, code_end)
+        if data_only and not region.startswith("data"):
+            # `--data-only` filters out code-thumb / code-arm anchors.
+            # Discovered iter 8 + 9: high pool-load refcounts on code-region
+            # addresses are NOT function-pointer-table entries — they're
+            # individual functions (Thumb or ARM) loaded as single pool
+            # literals at scattered call sites. The data side has no
+            # extraction work for them.
+            continue
         sites = sorted(h.site for h in by_target[target])
         rows.append((target, count, region, status, label, sites))
         if len(rows) >= limit:
@@ -330,6 +339,7 @@ def render_json(
     target_hi: int,
     threshold: int,
     pending_only: bool,
+    data_only: bool,
     scan_lo: int,
     scan_hi: int,
 ) -> str:
@@ -346,10 +356,13 @@ def render_json(
         status, label = status_for(target, db, syms)
         if pending_only and status != "pending":
             continue
+        region = region_for(target, code_end)
+        if data_only and not region.startswith("data"):
+            continue
         entries.append({
             "target": f"0x{target:08x}",
             "refs": len(hs),
-            "region": region_for(target, code_end),
+            "region": region,
             "status": status,
             "label": label,
             "sites": [f"0x{h.site:08x}" for h in sorted(hs, key=lambda x: x.site)],
@@ -379,6 +392,10 @@ def main() -> int:
                     help="print full methodology docstring and exit")
     ap.add_argument("--threshold", type=int, default=1,
                     help="only show targets referenced ≥ N times (default 1)")
+    ap.add_argument("--data-only", action="store_true",
+                    help="exclude code-thumb/code-arm anchors (single-pool-"
+                         "literal loads of function addresses; NOT data tables — "
+                         "see docs/codegen-notes.md \"ARM-mode interwork mixer cluster\")")
     ap.add_argument("--pending-only", action="store_true",
                     help="filter out EXTRACTED + NAMED targets")
     ap.add_argument("--limit", type=int, default=50,
@@ -410,6 +427,7 @@ def main() -> int:
             target_lo=target_lo, target_hi=target_hi,
             threshold=args.threshold,
             pending_only=args.pending_only,
+            data_only=args.data_only,
             scan_lo=scan_lo, scan_hi=scan_hi,
         ))
     else:
@@ -419,6 +437,7 @@ def main() -> int:
             target_lo=target_lo, target_hi=target_hi,
             threshold=args.threshold,
             pending_only=args.pending_only,
+            data_only=args.data_only,
             limit=args.limit,
             scan_lo=scan_lo, scan_hi=scan_hi,
         ))
