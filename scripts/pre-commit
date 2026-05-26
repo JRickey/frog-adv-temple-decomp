@@ -12,6 +12,9 @@
 #   3. Reject apostrophes inside C comments in INCBIN-using files — they
 #      silently break tools/preproc. See docs/codegen-notes.md
 #      "Apostrophes in C comments".
+#   4. Verify every asm/text/text_0x*.s blob's .incbin range matches the
+#      linker.ld comment for that entry. See docs/codegen-notes.md
+#      "`.incbin` second arg is FILE OFFSET".
 #
 # Bypass (use sparingly, document in commit message): git commit --no-verify
 
@@ -83,6 +86,16 @@ if command -v python3 >/dev/null 2>&1; then
     repo_root=$(git rev-parse --show-toplevel)
     if ! python3 "$repo_root/tools/agent/lint_incbin_apostrophes.py"; then
         exit 3
+    fi
+
+    # --- 4. asm/text blob-boundary lint ---------------------------------
+    #
+    # Catches off-by-N in .incbin "frog_us_baserom.gba", <skip>, <count>
+    # against linker.ld's address range comments. Sketched in
+    # docs/decisions.md (iter 4), landed iter 8 after the fourth occurrence
+    # of this class of friction.
+    if ! python3 "$repo_root/tools/agent/lint_blob_boundaries.py"; then
+        exit 4
     fi
 fi
 
