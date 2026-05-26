@@ -113,9 +113,14 @@ SECTIONS {
         asm/disasm_0x08005fc8.o(.text);  /* 0x08005fc8 - 0x08006600, sub_08005FC8 (auto-peeled) */
         asm/text/text_0x08006600.o(.text);  /* 0x08006600 - 0x08006948, raw bytes */
         src/game/sub_08006948.o(.text);  /* 0x08006948 - 0x0800696c, sub_08006948 + sub_08006958 */
-        asm/text/text_0x0800696c.o(.text);  /* 0x0800696c - 0x08006b88, raw bytes */
+        asm/text/text_0x0800696c.o(.text);  /* 0x0800696c - 0x08006adc, raw bytes */
+        asm/disasm_0x08006adc.o(.text);  /* 0x08006adc - 0x08006afc, sub_08006ADC (auto-peeled) */
+        asm/text/text_0x08006afc.o(.text);  /* 0x08006afc - 0x08006b88, raw bytes */
         src/game/sub_08006b88.o(.text);  /* 0x08006b88 - 0x08006b94, sub_08006B88 */
-        asm/text/text_0x08006b94.o(.text);  /* 0x08006b94 - 0x0800793c, raw bytes */
+        asm/text/text_0x08006b94.o(.text);  /* 0x08006b94 - 0x08006ba4, raw bytes */
+        asm/disasm_0x08006ba4.o(.text);  /* 0x08006ba4 - 0x08006bb4, sub_08006BA4 (auto-peeled) */
+        asm/text/text_0x08006bb4.o(.text);  /* 0x08006bb4 - 0x08007874, raw bytes */
+        asm/disasm_0x08007874.o(.text);  /* 0x08007874 - 0x0800793c, sub_08007874 (auto-peeled) */
         asm/disasm_0x0800793c.o(.text);  /* 0x0800793c - 0x08007dd0, sub_0800793C (auto-peeled) */
         asm/disasm_0x08007dd0.o(.text);  /* 0x08007dd0 - 0x08007f88, sub_08007DD0 (auto-peeled) */
         asm/text/text_0x08007f88.o(.text);  /* 0x08007f88 - 0x08008174, raw bytes */
@@ -125,14 +130,15 @@ SECTIONS {
         asm/text/text_0x080090fc.o(.text);  /* 0x080090fc - 0x08009188, raw bytes */
         asm/disasm_0x08009188.o(.text);  /* 0x08009188 - 0x080094f8, sub_08009188 (auto-peeled) */
         asm/disasm_0x080094f8.o(.text);  /* 0x080094f8 - 0x080097fc, sub_080094F8 (auto-peeled) */
-        asm/text/text_0x080097fc.o(.text);  /* 0x080097fc - 0x08009984, raw bytes */
-        asm/disasm_0x08009984.o(.text);  /* 0x08009984 - 0x08009a58, sub_08009984 (auto-peeled) */
+        asm/text/text_0x080097fc.o(.text);  /* 0x080097fc - 0x08009884, raw bytes */
+        asm/disasm_0x08009884.o(.text);  /* 0x08009884 - 0x08009984, sub_08009884 (auto-peeled) */
+        src/game/sub_08009984.o(.text);  /* 0x08009984 - 0x08009a58, sub_08009984 */
         asm/disasm_0x08009a58.o(.text);  /* 0x08009a58 - 0x08009ba0, sub_08009A58 (peel narrowed iter-22) */
-        src/game/sub_08009ba0.o(.text);  /* 0x08009ba0 - 0x08009c14, sub_08009BA0 */
-        asm/disasm_0x08009c14.o(.text);  /* 0x08009c14 - 0x08009cbc, sub_08009C14 (auto-peeled) */
+        src/game/sub_08009ba0.o(.text);  /* 0x08009ba0 - 0x08009cbc, sub_08009BA0 + sub_08009C14 */
         asm/text/text_0x08009cbc.o(.text);  /* 0x08009cbc - 0x08009d9c, raw bytes */
         asm/disasm_0x08009d9c.o(.text);  /* 0x08009d9c - 0x08009eec, sub_08009D9C (auto-peeled) */
-        asm/text/text_0x08009eec.o(.text);  /* 0x08009eec - 0x0800a104, raw bytes */
+        asm/text/text_0x08009eec.o(.text);  /* 0x08009eec - 0x0800a05c, raw bytes */
+        asm/disasm_0x0800a05c.o(.text);  /* 0x0800a05c - 0x0800a104, sub_0800A05C (auto-peeled) */
         asm/disasm_0x0800a104.o(.text);  /* 0x0800a104 - 0x0800a158, sub_0800A104 (auto-peeled) */
         asm/text/text_0x0800a158.o(.text);  /* 0x0800a158 - 0x0800a1c8, raw bytes */
         asm/disasm_0x0800a1c8.o(.text);  /* 0x0800a1c8 - 0x0800a214, sub_0800A1C8 (auto-peeled) */
@@ -143,7 +149,11 @@ SECTIONS {
         src/game/sub_0800a520.o(.text);  /* 0x0800a520 - 0x0800a540, sub_0800A520 */
         asm/text/text_0x0800a540.o(.text);  /* 0x0800a540 - 0x0800b7b0, raw bytes */
         asm/disasm_0x0800b7b0.o(.text);  /* 0x0800b7b0 - 0x0800b8a8, sub_0800B7B0 (auto-peeled) */
-        asm/text/text_0x0800b8a8.o(.text);  /* 0x0800b8a8 - 0x0800de80, raw bytes */
+        asm/text/text_0x0800b8a8.o(.text);  /* 0x0800b8a8 - 0x0800cd88, raw bytes */
+        asm/disasm_0x0800cd88.o(.text);  /* 0x0800cd88 - 0x0800ce10, sub_0800CD88 (manual split) */
+        asm/disasm_0x0800ce10.o(.text);  /* 0x0800ce10 - 0x0800ce54, sub_0800CE10 (manual split) */
+        asm/disasm_0x0800ce54.o(.text);  /* 0x0800ce54 - 0x0800ce98, sub_0800CE54 (manual split) */
+        asm/text/text_0x0800ce98.o(.text);  /* 0x0800ce98 - 0x0800de80, raw bytes */
         asm/disasm_0x0800de80.o(.text);  /* 0x0800de80 - 0x0800df7c, sub_0800DE80 (auto-peeled) */
         asm/text/text_0x0800df7c.o(.text);  /* 0x0800df7c - 0x0800e060, raw bytes */
         asm/disasm_0x0800e060.o(.text);  /* 0x0800e060 - 0x0800e174, sub_0800E060 (auto-peeled) */
@@ -173,14 +183,18 @@ SECTIONS {
         asm/disasm_0x08019560.o(.text);  /* 0x08019560 - 0x08019580, sub_08019560 (auto-peeled) */
         asm/text/text_0x08019580.o(.text);  /* 0x08019580 - 0x0801a268, raw bytes */
         asm/disasm_0x0801a268.o(.text);  /* 0x0801a268 - 0x0801a614, sub_0801A268 (auto-peeled) */
-        asm/text/text_0x0801a614.o(.text);  /* 0x0801a614 - 0x08020000, raw bytes */
+        asm/text/text_0x0801a614.o(.text);  /* 0x0801a614 - 0x0801e28c, raw bytes */
+        asm/disasm_0x0801e28c.o(.text);  /* 0x0801e28c - 0x0801ea08, sub_0801E28C (auto-peeled) */
+        asm/text/text_0x0801ea08.o(.text);  /* 0x0801ea08 - 0x08020000, raw bytes */
         asm/text/text_0x08020000.o(.text);  /* 0x08020000 - 0x080201a8, raw bytes */
         asm/disasm_0x080201a8.o(.text);  /* 0x080201a8 - 0x080201c8, sub_080201A8 (auto-peeled) */
         asm/disasm_0x080201c8.o(.text);  /* 0x080201c8 - 0x080201e8, sub_080201C8 (auto-peeled) */
         asm/disasm_0x080201e8.o(.text);  /* 0x080201e8 - 0x08020270, sub_080201E8 (auto-peeled) */
         asm/text/text_0x08020270.o(.text);  /* 0x08020270 - 0x080202a8, raw bytes */
         asm/disasm_0x080202a8.o(.text);  /* 0x080202a8 - 0x080202f8, sub_080202A8 (auto-peeled) */
-        asm/text/text_0x080202f8.o(.text);  /* 0x080202f8 - 0x08020b30, raw bytes */
+        asm/text/text_0x080202f8.o(.text);  /* 0x080202f8 - 0x080204a4, raw bytes */
+        asm/disasm_0x080204a4.o(.text);  /* 0x080204a4 - 0x080205d8, sub_080204A4 (auto-peeled) */
+        asm/text/text_0x080205d8.o(.text);  /* 0x080205d8 - 0x08020b30, raw bytes */
         src/game/sub_08020b30.o(.text);  /* 0x08020b30 - 0x08020b50, sub_08020B30 */
         asm/text/text_0x08020b50.o(.text);  /* 0x08020b50 - 0x08020bc0, raw bytes */
         asm/disasm_0x08020bc0.o(.text);  /* 0x08020bc0 - 0x08020bf0, sub_08020BC0 (auto-peeled) */
@@ -188,7 +202,9 @@ SECTIONS {
         asm/disasm_0x08020c78.o(.text);  /* 0x08020c78 - 0x08020ca4, sub_08020C78 (auto-peeled) */
         asm/text/text_0x08020ca4.o(.text);  /* 0x08020ca4 - 0x0802d558, raw bytes */
         asm/disasm_0x0802d558.o(.text);  /* 0x0802d558 - 0x0802d890, sub_0802D558 (auto-peeled) */
-        asm/text/text_0x0802d890.o(.text);  /* 0x0802d890 - 0x0802e3f8, raw bytes */
+        asm/text/text_0x0802d890.o(.text);  /* 0x0802d890 - 0x0802d8f8, raw bytes */
+        asm/disasm_0x0802d8f8.o(.text);  /* 0x0802d8f8 - 0x0802d9ec, sub_0802D8F8 (auto-peeled) */
+        asm/text/text_0x0802d9ec.o(.text);  /* 0x0802d9ec - 0x0802e3f8, raw bytes */
         src/system/sound_lock.o(.text);  /* 0x0802e3f8 - 0x0802e43c, sub_0802E3F8 + sub_0802E418 */
         asm/text/text_0x0802e43c.o(.text);  /* 0x0802e43c - 0x0802e5d8, raw bytes */
         src/system/sound_pitch.o(.text);  /* 0x0802e5d8 - 0x0802e684, sub_0802E5D8 */
@@ -308,7 +324,9 @@ SECTIONS {
         src/data/sound_dma_records.o(.rodata);  /* 0x082f8e98 - 0x082f8ec4, sSoundDmaBufCfg + sSoundDmaMaster */
         asm/text/text_0x082f8ec4.o(.text);  /* 0x082f8ec4 - 0x082f9920, raw bytes */
         src/data/unk_dispatch_2f9920.o(.rodata);  /* 0x082f9920 - 0x082f9994, sUnkDispatchData_82F9920 + sUnkPtrPair_82F998C */
-        asm/text/text_0x082f9994.o(.text);  /* 0x082f9994 - 0x08300000, raw bytes */
+        asm/text/text_0x082f9994.o(.text);  /* 0x082f9994 - 0x082f99e8, raw bytes (7-record stride-12 block, back-pointer target of sModeConfigTables_2F99E8[0]) */
+        src/data/mode_config_2f99e8.o(.rodata);  /* 0x082f99e8 - 0x082f9d08, sModeConfigTables_2F99E8 + sModeLookupTable_2F9CF4 (per-mode config cluster backing the sub_08000918 14-case dispatcher) */
+        asm/text/text_0x082f9d08.o(.text);  /* 0x082f9d08 - 0x08300000, raw bytes */
         asm/text/text_0x08300000.o(.text);  /* 0x08300000 - 0x08306444, raw bytes */
         src/data/sprite_dispatch.o(.rodata);  /* 0x08306444 - 0x08306814, sSpriteAssetIndexTable + sSpriteGridLayout + sSpriteGridSubtable */
         src/data/sprite_anim_block.o(.rodata);  /* 0x08306814 - 0x08308100, anim / OAM-DMA descriptor cluster (9 named symbols) */

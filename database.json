@@ -1742,5 +1742,21 @@
     },
     "count": "0x400",
     "size": 2
+  },
+  {
+    "path": "game/mode_config_2f99e8.bin",
+    "addr": {
+      "us": "0x2F99E8"
+    },
+    "count": "0xC3",
+    "size": 4
+  },
+  {
+    "path": "game/mode_lookup_2f9cf4.bin",
+    "addr": {
+      "us": "0x2F9CF4"
+    },
+    "count": "0xA",
+    "size": 2
   }
 ]

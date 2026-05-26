@@ -37,17 +37,31 @@ struct IwramAt3550 {
 
 struct IwramAt35E0 {
     u8 _data[5]; /* writes at +0 and +4 */
-    u8 _pad05[3];
-    u16 _field_8; /* +8: cached tile-X coord (from gIwram_3720.field_2 / 24) */
-    u16 _field_A; /* +A: cached tile-Y coord (from gIwram_3720.field_4 / 24) */
-    u8 _pad0C[4];
+    s8 _field_5; /* +5: signed byte; read by entity-dispatch + passed to sub_08007874 */
+    u8 _pad06[2];
+    s16 _field_8; /* +8: cached tile-X coord (signed read; from gIwram_3720.field_2 / 24) */
+    s16 _field_A; /* +A: cached tile-Y coord (signed read; from gIwram_3720.field_4 / 24) */
+    u8 _field_C;  /* +C: flag byte (low bits queried); written by sub_08009188 cluster */
+    u8 _field_D;
+    u8 _field_E;
+    u8 _pad0F;
     u16 _field_10; /* +10: flags; bit 0x40 raised when tile coords change */
+    u16 _field_12;
+    u8 _pad14[4];
+    u8 _field_18; /* +18: entity coord (X tile) */
+    u8 _field_19; /* +19: entity coord (Y tile) */
 };
 
 struct IwramAt3720 {
     u8 _pad00[2];
-    s16 _field_2; /* +2: signed sub-coord (X?), divided by 24 to get tile X */
-    s16 _field_4; /* +4: signed sub-coord (Y?), divided by 24 to get tile Y */
+    s16 _field_2;    /* +2: signed sub-coord (X?), divided by 24 to get tile X */
+    s16 _field_4;    /* +4: signed sub-coord (Y?), divided by 24 to get tile Y */
+    u8 _pad06[0x11]; /* +6..+0x16 */
+    u8 _field_17;    /* +0x17: u8 written by sub_08009984 (tile-class result) */
+    u8 _pad18[2];    /* +0x18..+0x19 */
+    u8 _field_1A;    /* +0x1A: dispatch state read often */
+    u8 _pad1B[0x19]; /* +0x1B..+0x33 */
+    u16 _field_34;   /* +0x34: halfword written zero before entity-dispatch */
 };
 
 struct IwramAt34C0 {
