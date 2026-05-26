@@ -690,3 +690,28 @@ The agent infrastructure grew organically with each iter — each new friction d
 **Trajectory:** 15 iters post-resume (11-25). Functions 41→68 (+27). Raw INCBIN 98.1%→93.8% (-4.3pp). db 117→218 (+101). src C 75→163 KiB (+88 KiB). Data deblob 1.0%→6.2% (+5.2pp). **Five-pp deblob threshold crossed**. Iter pace continues to mature: this iter landed +3 fns + 42.8 KiB data + 6th unmatchable instance documented + 3 callee peels in one go. Loop is genuinely accelerating.
 
 ---
+
+## Iter 26 — 2026-05-26
+
+**Before:** 68 / ~513 fns (13.3%), 80 asm-fn-remaining, 218 db, 163.1 KiB src C, 93.8% raw
+
+**Targets:** Decomp sub_08009C14 (contiguous append) + sub_08009984 (scaffold). Data: 16-anchor 0x082f9xxx cluster (per-mode config for sub_08000918).
+
+**Outcomes:**
+- Decomp: **2 NAKED fns landed** (both 5th unmatchable class — register-coloring drift, byte_diff 6 and 13 in pure C respectively). sub_08009C14 contiguous-appended to sub_08009ba0.c (2nd validation of iter-17 pattern). sub_08009984 needed scaffold. **~10 callee peels** including ANOTHER hidden-fn case (sub_0800CD88 split into 3 functions). include/iwram.h grew with 6 new struct fields supporting typed offsets for both bodies.
+- Data: **2 tables, 800 B** but huge architectural milestone — sModeConfigTables_2F99E8 confirmed as the per-mode config backing sub_08000918's 14-case state machine. Install pattern matches iter-17's sUnkPtrPair_82F998C (same helper at 0x0800658c writes ptr to gGameStuff[0x34]). IWRAM struct at 0x03006110 = mode-config control block.
+
+**Commits:** iter-26 hash + `9dd2e9c` (decomp_brief.py UNPEELED false-positive fix, standalone infra).
+
+**After:** 73 / ~513 fns (**14.2%** +0.9pp), 80 asm-fn-remaining (unchanged — peels offset new C bodies), 220 db (+2), **164.2 KiB src C** (+1.1 KiB), 93.7% raw (-0.1pp), **6.3% data deblob**.
+
+**Architectural duties:**
+- docs/codegen-notes.md "5th unmatchable class" — extended to 7 instances now (sub_08009C14 + sub_08009984 added).
+- **tools/agent/decomp_brief.py FIXED**: UNPEELED false-positive eliminated. peeled_starts() now scans (1) disasm filenames, (2) all thumb_func_start labels across all .s files, (3) sub_<HEX>( definitions across src/**/*.c. Verified on sub_08000918's 19 callees — all now correctly report ✓ peeled. **4-iter friction streak ended**.
+- **TODO future tool**: detect-fn-boundary missed 3/9 peels this iter (skips past short-prologue functions following pool data). Worth a follow-up infra commit if it bites again next iter.
+
+**Decisions:** none material.
+
+**Trajectory:** 16 iters post-resume (11-26). Functions 41→73 (+32). Raw INCBIN 98.1%→93.7% (-4.4pp). db 117→220 (+103). src C 75→164 KiB (+89 KiB). Data deblob 1.0%→6.3% (+5.3pp). **Crossed 14% function decomp**. The loop now consistently lands 2-3 fns + data + architectural understanding per iter. Tool-quality fixes (this iter's brief fix) reduce per-iter friction.
+
+---
