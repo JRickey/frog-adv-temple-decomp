@@ -96,10 +96,11 @@ SECTIONS {
         asm/disasm_0x0802f4b0.o(.text);  /* 0x0802f4b0 - 0x0802f870, sub_0802F4B0 (auto-peeled, --force-boundary) */
         asm/text/text_0x0802f870.o(.text);  /* 0x0802f870 - 0x08030000, raw bytes */
         asm/text/text_0x08030000.o(.text);  /* 0x08030000 - 0x080315d8, raw bytes */
-        asm/disasm_0x080315d8.o(.text);  /* 0x080315d8 - 0x08031638, sub_080315D8 (auto-peeled) */
+        src/system/sound_opcode_dispatch.o(.text);  /* 0x080315d8 - 0x08031638, sub_080315D8 */
         asm/text/text_0x08031638.o(.text);  /* 0x08031638 - 0x08033910, raw bytes */
         src/game/sub_08033910.o(.text);  /* 0x08033910 - 0x08033948, sub_08033910 */
-        asm/text/text_0x08033948.o(.text);  /* 0x08033948 - 0x08033d14, raw bytes */
+        asm/text/text_0x08033948.o(.text);  /* 0x08033948 - 0x08033cd8, raw bytes */
+        asm/disasm_0x08033cd8.o(.text);  /* 0x08033cd8 - 0x08033d14, _call_via_rX libgcc helper table (auto-peeled) */
         asm/disasm_0x08033d14.o(.text);  /* 0x08033d14 - 0x08033da8, __divsi3 (libgcc; auto-peeled) */
         asm/text/text_0x08033da8.o(.text);  /* 0x08033da8 - 0x08033f5c, raw bytes */
         asm/disasm_0x08033f5c.o(.text);  /* 0x08033f5c - 0x0803401c, __umodsi3 (libgcc; auto-peeled) */
@@ -137,8 +138,16 @@ SECTIONS {
         asm/text/text_0x08180000.o(.text);  /* 0x08180000 - 0x08190000, raw bytes */
         asm/text/text_0x08190000.o(.text);  /* 0x08190000 - 0x081a0000, raw bytes */
         asm/text/text_0x081a0000.o(.text);  /* 0x081a0000 - 0x081b0000, raw bytes */
-        asm/text/text_0x081b0000.o(.text);  /* 0x081b0000 - 0x081c0000, raw bytes */
-        asm/text/text_0x081c0000.o(.text);  /* 0x081c0000 - 0x081d0000, raw bytes */
+        asm/text/text_0x081b0000.o(.text);  /* 0x081b0000 - 0x081bd8cc, raw bytes (shrunk for ui-text cluster) */
+        src/data/eeprom_signature.o(.rodata);  /* 0x081bd8cc - 0x081bd90c, sEepromSignatureBlock */
+        asm/text/text_0x081bd90c.o(.text);  /* 0x081bd90c - 0x081bd910, 4 B pad */
+        src/data/win_pose_oam.o(.rodata);  /* 0x081bd910 - 0x081bda44, win-pose OAM + tile-stream */
+        src/data/level_name_strings.o(.rodata);  /* 0x081bda44 - 0x081bdf70, sLevelNameStrings */
+        src/data/ui_text_tables.o(.rodata);  /* 0x081bdf70 - 0x081be0b4, window border + level-cleared + win/lose + glyphs + world letters */
+        src/data/credits_text.o(.rodata);  /* 0x081be0b4 - 0x081be810, credits text + ON/OFF labels + misc */
+        src/data/world_tile_map.o(.rodata);  /* 0x081be810 - 0x081bee64, sWorldTileTypeMap */
+        src/data/credits_tilemap.o(.rodata);  /* 0x081bee64 - 0x081c2684, sCreditsTilemapEng + sSaveDialogStrings */
+        asm/text/text_0x081c2684.o(.text);  /* 0x081c2684 - 0x081d0000, raw bytes (tail) */
         asm/text/text_0x081d0000.o(.text);  /* 0x081d0000 - 0x081e0000, raw bytes */
         asm/text/text_0x081e0000.o(.text);  /* 0x081e0000 - 0x081f0000, raw bytes */
         asm/text/text_0x081f0000.o(.text);  /* 0x081f0000 - 0x08200000, raw bytes */

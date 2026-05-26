@@ -398,5 +398,173 @@
     },
     "count": "0x36",
     "size": 4
+  },
+  {
+    "path": "save/eeprom_signature.bin",
+    "addr": {
+      "us": "0x1BD8CC"
+    },
+    "count": "0x40",
+    "size": 1
+  },
+  {
+    "path": "ui/win_pose_header.bin",
+    "addr": {
+      "us": "0x1BD910"
+    },
+    "count": "0x4",
+    "size": 2
+  },
+  {
+    "path": "ui/win_pose_sprite_coords.bin",
+    "addr": {
+      "us": "0x1BD918"
+    },
+    "count": "0x10",
+    "size": 2
+  },
+  {
+    "path": "ui/win_pose_anim_delta_seq.bin",
+    "addr": {
+      "us": "0x1BD938"
+    },
+    "count": "0x8",
+    "size": 1
+  },
+  {
+    "path": "ui/win_pose_screen_coords.bin",
+    "addr": {
+      "us": "0x1BD940"
+    },
+    "count": "0x11",
+    "size": 4
+  },
+  {
+    "path": "ui/win_pose_tile_stream.bin",
+    "addr": {
+      "us": "0x1BD984"
+    },
+    "count": "0xC0",
+    "size": 1
+  },
+  {
+    "path": "ui/level_name_strings.bin",
+    "addr": {
+      "us": "0x1BDA44"
+    },
+    "count": "0x52C",
+    "size": 1
+  },
+  {
+    "path": "ui/window_border_tiles.bin",
+    "addr": {
+      "us": "0x1BDF70"
+    },
+    "count": "0x9",
+    "size": 2
+  },
+  {
+    "path": "ui/window_border_pad.bin",
+    "addr": {
+      "us": "0x1BDF82"
+    },
+    "count": "0x1",
+    "size": 2
+  },
+  {
+    "path": "ui/level_cleared_strings.bin",
+    "addr": {
+      "us": "0x1BDF84"
+    },
+    "count": "0x7C",
+    "size": 1
+  },
+  {
+    "path": "ui/level_cleared_extra_ptrs.bin",
+    "addr": {
+      "us": "0x1BE000"
+    },
+    "count": "0x2",
+    "size": 4
+  },
+  {
+    "path": "ui/win_lose_strings.bin",
+    "addr": {
+      "us": "0x1BE008"
+    },
+    "count": "0x4C",
+    "size": 1
+  },
+  {
+    "path": "ui/glyph_codepoints.bin",
+    "addr": {
+      "us": "0x1BE054"
+    },
+    "count": "0x1E",
+    "size": 2
+  },
+  {
+    "path": "ui/world_letter_ids.bin",
+    "addr": {
+      "us": "0x1BE090"
+    },
+    "count": "0x9",
+    "size": 4
+  },
+  {
+    "path": "ui/credits_text_strings.bin",
+    "addr": {
+      "us": "0x1BE0B4"
+    },
+    "count": "0x6F4",
+    "size": 1
+  },
+  {
+    "path": "ui/on_off_labels.bin",
+    "addr": {
+      "us": "0x1BE7A8"
+    },
+    "count": "0x28",
+    "size": 1
+  },
+  {
+    "path": "ui/on_off_ptrs.bin",
+    "addr": {
+      "us": "0x1BE7D0"
+    },
+    "count": "0xA",
+    "size": 4
+  },
+  {
+    "path": "ui/credits_misc.bin",
+    "addr": {
+      "us": "0x1BE7F8"
+    },
+    "count": "0x18",
+    "size": 1
+  },
+  {
+    "path": "ui/world_tile_type_map.bin",
+    "addr": {
+      "us": "0x1BE810"
+    },
+    "count": "0x654",
+    "size": 1
+  },
+  {
+    "path": "ui/credits_tilemap_eng.bin",
+    "addr": {
+      "us": "0x1BEE64"
+    },
+    "count": "0x375C",
+    "size": 1
+  },
+  {
+    "path": "ui/save_dialog_strings.bin",
+    "addr": {
+      "us": "0x1C25C0"
+    },
+    "count": "0xC4",
+    "size": 1
   }
 ]

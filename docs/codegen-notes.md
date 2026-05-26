@@ -820,3 +820,96 @@ agbcc `.s` output is the smoking gun:**
 If `.rodata` is empty AND your data file has `.comm`-style declarations
 in its .s output, the apostrophe trap fired. First-thing-to-check for
 new data files that "look like they should work but don't".
+
+## Fourth unmatchable class: opcode-dispatch iterator
+
+A function shaped like a tight bytecode interpreter — iterate over a
+table, read each entry as an opcode byte, look up a handler in a
+function-pointer table, BL the handler — can't be matched in pure C
+when the baserom keeps the handler-table base in a Thumb callee-save
+low register (r4-r7) across the inner BL.
+
+Concretely:
+
+```c
+for (i = 0; i < ss->channelCount; i++) {
+    SoundChannelSeq *ch = &ss->channels[i];
+    while ((handler = sSoundOpcodeHandlers[*ch->opPtr]) != NULL) {
+        handler(ch);    /* inner BL */
+    }
+}
+```
+
+agbcc 2.x will either:
+- Drop the cache (reload `sSoundOpcodeHandlers` from the literal pool
+  on every inner-iter, missing the r7 push and inflating the loop
+  body), or
+- Promote to a high register (r8/r9/sl) — the previously-documented
+  "high register — corpus-validated unmatchable" class.
+
+Corpus evidence across every `m4a.c` decomp surveyed
+(pret/{pokefirered,pokeemerald,pokeruby,pokepinballrs},
+testyourmine/cvaos, metroidret/mf): `MPlayMain` / `MP2KPlayerMain`
+(the same shape) ships as hand-written asm in **every** one. No
+agbcc-era project has matched this shape in C.
+
+Detection heuristic: refined asm shows
+- A `for (i; i < count; i++)` outer loop AND
+- An inner `while`-shaped block (`b` back-edge) that BLs a function
+  pointer loaded from a fixed-base + variable-index AND
+- The fixed-base is loaded ONCE in the prologue (typically into r4-r7)
+  AND
+- The function-pointer-table address is NOT loaded inside the inner
+  loop.
+
+Both present → NAKED + `#ifdef NON_MATCHING` from the first attempt.
+
+Worked example: `sub_080315D8` (sound opcode-script dispatcher).
+Best pure-C plateau: byte_diff 58 across 4 source variants. NAKED
+ships byte-perfect.
+
+Joins the established list:
+1. High registers (sl/r10, sb/r9, r8)
+2. Two-stage loops with shared `*gpGlobal` cache
+3. `push {r4-r7, lr}` + libgcc helper BL
+4. This entry (opcode-dispatch iterator).
+
+## `_call_via_rX` libgcc thunk table
+
+A second in-ROM libgcc artefact beyond `__divsi3` / `__umodsi3`. The
+agbcc-shipped libgcc archive includes `_call_via_rX.o`, a 60-byte
+block of 14 sub-entries — `_call_via_r0`, `_call_via_r1`, …,
+`_call_via_lr` — at 4-byte strides. Each entry is just
+`bx rN; nop` (`mov pc, rN; nop` in ARM mode would be the ARM
+equivalent). agbcc emits `bl _call_via_rN` whenever a function-
+pointer call would otherwise need `mov lr, pc; bx rN`.
+
+Detected in this ROM at `0x08033cd8` (block runs to `0x08033d14`,
+i.e. the next libgcc artefact — `__divsi3`). The whole 60-byte
+block is a single archive member, so peel as one unit:
+
+```sh
+python3 tools/disasm/peel.py --start 0x08033cd8 --end 0x08033d14 \
+        --mode thumb --force-boundary
+```
+
+`--force-boundary` is required because `auto_peel.py`'s boundary
+detector mis-fires on bare `bx rN; nop` pairs (no prologue) and
+sees the 14 sub-entries as one 60-byte function.
+
+Inside the resulting `asm/disasm_0x08033cd8.s`, declare each
+`_call_via_rN` as its own `thumb_func_start` symbol so ld resolves
+the canonical libgcc name to the in-ROM location. Bytewise verify
+against `tools/agbcc/lib/libgcc.a:_call_via_rX.o`:
+
+```sh
+ar -p tools/agbcc/lib/libgcc.a _call_via_rX.o > /tmp/lib_call_via.bin
+diff /tmp/lib_call_via.bin <(python3 -c "
+import sys
+with open('frog_us_baserom.gba','rb') as f:
+    f.seek(0x33cd8); sys.stdout.buffer.write(f.read(0x3c))
+")
+```
+
+Joins `__umodsi3` (0x08033f5c) and `__divsi3` (0x08033d14) in the
+ROM's libgcc cluster `[0x08033cd8, 0x0803401c)`.

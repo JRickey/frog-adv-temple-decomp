@@ -220,6 +220,54 @@ in a header (probably `include/sprite.h`) and convert both extracted
 tables to that type. Will retire the iter-1 entity-dispatch `a/b/c/d`
 placeholder naming in the same pass.
 
+## Localization / text dispatcher
+
+Identified iter-3 of the autonomous loop. A master pointer matrix at
+**0x083086d8** (currently inside `sprite_anim_block.o(.rodata)`'s
+extracted range, but logically distinct — it's a 5-language ×
+5-world matrix of `const u8 *` into the level-name and level-cleared
+suffix strings in the `0x081bxxxx` cluster).
+
+Localization data extracted in iter-3 (under `src/data/`):
+
+- `level_name_strings.c` — `sLevelNameStrings` (1324 B):
+  EN/FR/DE/ES/IT world names + "cleared" variants. The master matrix
+  at 0x083086d8 points into this string pool.
+- `ui_text_tables.c` — multi-language UI labels:
+  - `sLevelClearedLabels` ("ROUND", "LEVEL CLEARED")
+  - `sLevelClearedExtraPtrs` (ES/IT extras)
+  - `sWinLoseLabels` ("YOU WIN", "YOU LOSE", "TIME", "Yes/No")
+  - `sUiWindowBorderTiles` (3×3 window border)
+  - `sUiGlyphCodepoints` (decorative ribbon tile codes)
+  - `sUiWorldLetterIds` (per-world rating-region letter codes)
+- `credits_text.c` — `sCreditsTextStrings` (1.78 KB ASCII roll) +
+  `sUiOnOffLabels` / `sUiOnOffLabelPtrs` (options-menu lookup) +
+  `sCreditsMisc` (char-range bounds, leftover debug tokens).
+- `credits_tilemap.c` — `sCreditsTilemapEng` (14.17 KB pre-rasterized
+  English credits tilemap) + `sSaveDialogStrings` (save-slot dialog).
+- `world_tile_map.c` — `sWorldTileTypeMap` (1620 B overworld
+  tile-class grid; consumer at 0x08020384, NOT a localization table
+  but co-located in the cluster).
+- `win_pose_oam.c` — `sWinPoseHeader` + sprite coords + anim deltas +
+  tile stream (OAM data for the "you win" pose, also co-located).
+- `eeprom_signature.c` — `sEepromSignatureBlock` (64 B; 4× "EEPROM.IS.HERE.4"
+  marker). Distinct from `gEepromIdString` at 0x082f8e8c.
+
+Renderer / dispatcher (still asm):
+- The master matrix's address shows up as a pool literal in
+  `sub_0801cd4e` and adjacent — those functions read
+  `0x083086d8 + (lang << 2) + (world << ...)` to pick a string. Once
+  one of them decomps, define a typed `const char *gLocalizedNames[5][5]`
+  in `include/localization.h` and rename the placeholder address.
+
+Open question: the master matrix at 0x083086d8 currently lives inside
+`sprite_anim_block.o`'s extracted range. It's logically a separate
+table; on a future cleanup pass, carve it out into its own
+`src/data/localization_strings.c` and adjust the sprite_anim_block.c
+boundaries. Not urgent — bytes are correct and database.json doesn't
+need to perfectly mirror logical groupings; what matters is that the
+typed symbol exists.
+
 ## Render / sprite
 
 (Not yet identified.)

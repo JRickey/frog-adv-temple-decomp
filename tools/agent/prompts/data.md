@@ -9,7 +9,7 @@
   agent-facing — passed to subagents in dispatch briefs, not invoked by
   the user.
 
-  Last verified: commit 0e1d8eb. Update the "last verified" line in every
+  Last verified: commit 24b058f. Update the "last verified" line in every
   PR that materially changes the playbook.
 -->
 

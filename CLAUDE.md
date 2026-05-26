@@ -360,11 +360,17 @@ For each decomp target:
      libgcc helpers don't clobber r4-r7 and emits a smaller prologue;
      baserom keeps the full save. NAKED + NON_MATCHING. See
      `docs/codegen-notes.md` "Third unmatchable class".
+   - Opcode-dispatch iterator (handler-table base kept callee-saved
+     across an inner function-pointer BL) — fourth unmatchable class.
+     Every m4a.c MPlayMain/MP2KPlayerMain in the corpus ships as
+     hand-asm. NAKED + NON_MATCHING. See `docs/codegen-notes.md`
+     "Fourth unmatchable class: opcode-dispatch iterator".
    - In-ROM libgcc helpers (`__divsi3` at 0x08033D14, `__umodsi3` at
-     0x08033F5C, etc.). When a small peeled function is `stmfd … bl …
-     ldmfd`, check `tools/agbcc/lib/libgcc.a` for a byte-match and
-     rename accordingly. See `docs/codegen-notes.md` "In-ROM libgcc
-     helpers".
+     0x08033F5C, `_call_via_rX` block at 0x08033CD8, …). When a small
+     peeled function is `stmfd … bl … ldmfd` (or bare `bx rN; nop`
+     for `_call_via_rN`), check `tools/agbcc/lib/libgcc.a` for a
+     byte-match and rename. See `docs/codegen-notes.md` "In-ROM libgcc
+     helpers" and "`_call_via_rX` libgcc thunk table".
    - Every NAKED inline-asm block MUST end with `"    .syntax divided\n"` —
      the `.syntax unified` directive at the top of the block bleeds into the
      rest of the .o and breaks subsequent agbcc-emitted Thumb-1 instructions.
