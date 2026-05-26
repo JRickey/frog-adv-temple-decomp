@@ -1653,9 +1653,13 @@ table where every target ends in an even nibble. The dispatcher's
 load + `mov pc, r0` lands at the right Thumb instruction without
 the LSB bit set.
 
-agbcc 2.x **has no codegen path** for `mov pc, rN` jump tables — it
-lowers every `switch` statement to a compare-and-branch chain. So
-any function with this dispatch shape is automatically NAKED-class.
+**agbcc 2.x DOES emit `mov pc, rN` jump tables** from sequential
+`switch` over `case 0..N-1` (the `casesi` insn pattern). The iter-30
+attempt at sub_08000918 incorrectly claimed otherwise and shipped
+NAKED; the function should be retried as a literal `switch` over
+the case index with sequential cases. The LSB-even finding above
+is still valid as a workflow note for reading the .word table, but
+the dispatch shape itself is NOT an automatic NAKED trigger.
 
 ## Case-number ≠ source-block-order trap in `switch` dispatchers
 
