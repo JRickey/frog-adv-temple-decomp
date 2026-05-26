@@ -266,3 +266,58 @@ e34fe59 CLAUDE.md: note NAKED + .syntax divided requirement
 **Decisions:** none.
 
 ---
+## Iter 10 — 2026-05-26 (LOOP HALT)
+
+**Before:** 40 / ~513 fns (7.8%), 14 peeled-asm, 117 db, 74.2 KiB src C, 98.1% raw
+
+**Targets:** Decomp sub_080325B0 (740 B sound mixer helper). Data 0x082f998c (single fresh anchor) + level-layout fill-ins.
+
+**Outcomes:**
+- Decomp agent FLAGGED that iter-9's sub_080301C4 pure-C decomp DOES NOT MATCH on clean rebuild (byte_diff 136). The loop's pre-flight verification at iter-9 commit time was a false positive — likely caching of frog_us.gba from the in-flight agent's intermediate state.
+- Orchestrator verified the regression, reverted sub_080301C4 → asm, committed iter-10 work on the fixed base, halted the loop with comprehensive `docs/decisions.md` note.
+- Decomp this iter: **sub_080325B0** NAKED + NON_MATCHING (3 concurrent high regs). 740 B. Lives in `src/system/sound_mixer_tail.c`.
+- Data this iter: 6 level-layout pointer arrays (308 B) in `src/data/level_layout_ptrs_312d60.c`. `0x082f998c` deferred (needs broader characterization of the surrounding stride-16 struct array).
+
+**Commit:** consolidated iter-10 commit (decomp + data + revert).
+
+**After:** 41 / ~513 fns (8.0%), 17 peeled-asm (+3 from revert), 123 db, 75.1 KiB src C, 98.1% raw
+
+**Loop halt reasons:**
+1. False-positive verification gap (iter 9) means more silent regressions possible. Tooling fix needed (`make tidy && make -j8 && make check` in per-iter verify step) before resuming.
+2. Cheap-data-anchor exhaustion confirmed across iters 8-10. Strategic redirect needed (graphics workflow / typed-promotion / decomp-only).
+
+**Decisions documented:** `docs/decisions.md` "Iter-9 false-positive verification → loop halt (iter 10)". Includes root-cause analysis, recommended tooling fix, recommended next-steps for the user.
+
+**Recommended resumption:** user updates the orchestrator's pre-flight to include `make tidy`, decides data strategy, optionally one focused retry of sub_080301C4 with libgcc-helper-aware C source structure. Then re-run `/loop ...`.
+
+---
+
+**Loop summary (iters 1-10, ~6-7 hours wall clock):**
+
+- 41 functions decompiled to C (vs 24 at loop start) — **+17 functions** (5.1% → 8.0%)
+- 17 asm slices remaining (vs 17 at loop start) — net zero, but composition shifted (3 sound-cluster decomps offset by 3 mixer-callee peels + libgcc helper peels)
+- 123 database.json entries (vs 35 at loop start) — **+88 entries**
+- 75.1 KiB src C .text (vs 49.7 KiB) — **+25 KiB typed data**
+- 98.1% raw INCBIN (vs 98.8%) — **-0.7pp**
+- Data deblob: 1.9% (vs 1.21%) — **+0.7pp**
+
+**Major architectural findings during the loop:**
+- Entity-dispatch vtable system (iter 1)
+- UI/HUD shared SpriteFrame descriptor (iter 2)
+- Localization/text dispatcher at 0x083086d8 (iter 3)
+- Multi-tier level-layout dispatch architecture (iter 5-7, 9-10)
+- ARM-mode interwork mixer cluster (iter 8)
+- Sound mixer keystone landed; entire sound mixer subsystem now in C (iter 6)
+
+**New tools landed during the loop:**
+- `tools/agent/refcount_pool_loads.py` (pre-loop, but enhanced iter 8 with code-arm/code-thumb classification and iter 9 with `--data-only` flag)
+- `tools/agent/lint_blob_boundaries.py` (iter 8)
+- `tools/agent/prompts/{decomp,data,README}.md` agent playbooks (pre-loop)
+
+**New docs/codegen-notes.md sections added during the loop:**
+- 4 new unmatchable classes documented (joining the original "high registers")
+- 4 friction-mitigation sections (apostrophe-trap detection, linker.ld.pp dep bug, .incbin file-offset caveat, ARM-mode interwork)
+- 2 new pattern-recognition entries (sine LUT 256+64, `_call_via_rX` thunk table)
+
+The agent infrastructure grew organically with each iter — each new friction discovered yielded either a tool, a playbook update, a new codegen-notes section, or a refined dispatch brief. The loop's runbook + decisions.md captures the meta-learnings.
+
