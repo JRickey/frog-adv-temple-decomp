@@ -80,7 +80,7 @@ SECTIONS {
         asm/text/text_0x08020b50.o(.text);  /* 0x08020b50 - 0x0802d558, raw bytes */
         asm/disasm_0x0802d558.o(.text);  /* 0x0802d558 - 0x0802d890, sub_0802D558 (auto-peeled) */
         asm/text/text_0x0802d890.o(.text);  /* 0x0802d890 - 0x0802e3f8, raw bytes */
-        asm/disasm_0x0802e3f8.o(.text);  /* 0x0802e3f8 - 0x0802e418, sub_0802E3F8 (auto-peeled) */
+        src/system/sound_lock.o(.text);  /* 0x0802e3f8 - 0x0802e418, sub_0802E3F8 */
         asm/disasm_0x0802e418.o(.text);  /* 0x0802e418 - 0x0802e43c, sub_0802E418 (auto-peeled) */
         asm/text/text_0x0802e43c.o(.text);  /* 0x0802e43c - 0x0802e5d8, raw bytes */
         src/system/sound_pitch.o(.text);  /* 0x0802e5d8 - 0x0802e684, sub_0802E5D8 */
@@ -112,7 +112,8 @@ SECTIONS {
         asm/disasm_0x08033f5c.o(.text);  /* 0x08033f5c - 0x0803401c, __umodsi3 (libgcc; auto-peeled) */
         asm/text/text_0x0803401c.o(.text);  /* 0x0803401c - 0x08035d7c, raw bytes */
         asm/disasm_0x08035d7c.o(.text);  /* 0x08035d7c - 0x08035d84, sub_08035D7C (auto-peeled) */
-        asm/text/text_0x08035d84.o(.text);  /* 0x08035d84 - 0x08035d9c, three Thumb-to-ARM veneers */
+        asm/text/text_0x08035d84.o(.text);  /* 0x08035d84 - 0x08035d94, two Thumb-to-ARM veneers */
+        asm/disasm_0x08035d94.o(.text);  /* 0x08035d94 - 0x08035d9c, sub_08035D94 (Thumb-to-ARM veneer, sound-IRQ enable) */
         src/data/irq_handler_table.o(.rodata);  /* 0x08035d9c - 0x08035dd0, sIrqHandlerTable */
         asm/text/text_0x08035dd0.o(.text);  /* 0x08035dd0 - 0x08040000, raw bytes */
         asm/text/text_0x08040000.o(.text);  /* 0x08040000 - 0x08050000, raw bytes */
@@ -184,11 +185,15 @@ SECTIONS {
         src/data/sprite_dma_records.o(.rodata);  /* 0x08308100 - 0x08310000, OAM-DMA cfg + sprite frame ptrs + VRAM tile ptrs + DMA load records + dispatch tables + Scene 2 DMA cluster */
         asm/text/text_0x08310000.o(.text);  /* 0x08310000 - 0x083112a8, raw bytes */
         src/data/level_layout_dispatch_3112a8.o(.rodata);  /* 0x083112a8 - 0x083112c8, sLevelLayoutDispatch_3112A8 */
-        asm/text/text_0x083112c8.o(.text);  /* 0x083112c8 - 0x08315a48, raw bytes */
+        asm/text/text_0x083112c8.o(.text);  /* 0x083112c8 - 0x08312c20, raw bytes */
+        src/data/level_layout_312c20.o(.rodata);  /* 0x08312c20 - 0x08312d60, sLevelLayout_312C20 + sLevelLayoutPtrs_312C98 + sLevelLayout_312CAC + sLevelLayoutPtrs_312D4C */
+        asm/text/text_0x08312d60.o(.text);  /* 0x08312d60 - 0x08314a68, raw bytes */
+        src/data/level_layout_ptrs_314a68.o(.rodata);  /* 0x08314a68 - 0x08314b30, sLevelLayoutPtrs_314A68 (46 ptrs + 4 sentinels) */
+        asm/text/text_0x08314b30.o(.text);  /* 0x08314b30 - 0x08315a48, raw bytes */
         src/data/level_layout_dispatch_315a48.o(.rodata);  /* 0x08315a48 - 0x08315bb0, sLevelLayoutDispatch_315A48 */
         asm/text/text_0x08315bb0.o(.text);  /* 0x08315bb0 - 0x08316dc8, raw bytes */
         src/data/level_layout_dispatch_316dc8.o(.rodata);  /* 0x08316dc8 - 0x08316e5c, sLevelLayoutDispatch_316DC8 */
-        asm/text/text_0x08316e5c.o(.text);  /* 0x08316e5c - 0x08316f24, raw bytes */
+        src/data/level_layout_316e5c.o(.rodata);  /* 0x08316e5c - 0x08316f24, sLevelLayout_316E5C + sLevelLayout_316EB4 + sLevelLayout_316EC4 */
         src/data/level_layout.o(.rodata);  /* 0x08316f24 - 0x08318020, sLevelLayout_316F24..._317FFC + sLevelLayoutData + sLevelLayoutPtrs + 23 continuation tables */
         asm/text/text_0x08318020.o(.text);  /* 0x08318020 - 0x08320000, raw bytes */
         asm/text/text_0x08320000.o(.text);  /* 0x08320000 - 0x08330000, raw bytes */
