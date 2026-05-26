@@ -9,6 +9,9 @@
 #   1. The baserom (and any *_baserom.gba) MUST NEVER be committed.
 #   2. Run clang-format on staged .c/.h files; if formatting would change
 #      the file, abort and tell the user to re-stage.
+#   3. Reject apostrophes inside C comments in INCBIN-using files — they
+#      silently break tools/preproc. See docs/codegen-notes.md
+#      "Apostrophes in C comments".
 #
 # Bypass (use sparingly, document in commit message): git commit --no-verify
 
@@ -68,6 +71,19 @@ if [ -n "$unformatted" ]; then
     echo >&2
     echo "Then re-stage and re-commit." >&2
     exit 2
+fi
+
+# --- 3. INCBIN apostrophe guard ------------------------------------------
+#
+# preproc treats a single `'` as a string delimiter, but doesn't skip comments,
+# so a lone apostrophe inside /* ... */ swallows every INCBIN_* downstream
+# until the next `'`. Caught in a data pass; documented in codegen-notes.md.
+
+if command -v python3 >/dev/null 2>&1; then
+    repo_root=$(git rev-parse --show-toplevel)
+    if ! python3 "$repo_root/tools/agent/lint_incbin_apostrophes.py"; then
+        exit 3
+    fi
 fi
 
 exit 0
