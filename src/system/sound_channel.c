@@ -1,4 +1,5 @@
 #include "types.h"
+#include "macros.h"
 
 /* Per-frame pitch/pan envelope tick for the sound subsystem.
  *
@@ -23,16 +24,18 @@
  */
 
 typedef struct SlotEnvelope {
-    s16 acc;     /* slot+0x2c */
-    s16 step;    /* slot+0x2e */
-    s8 negLimit; /* slot+0x30 */
-    s8 posLimit; /* slot+0x31 */
+    s16 acc;           /* slot+0x2c */
+    s16 step;          /* slot+0x2e */
+    s8 negLimit;       /* slot+0x30 */
+    s8 posLimit;       /* slot+0x31 */
+    u8 frameReload;    /* slot+0x32 — sub_0802EDF0 only */
+    u8 frameCountdown; /* slot+0x33 — sub_0802EDF0 only */
 } SlotEnvelope;
 
 typedef struct SoundSlot {
     u8 _pad00[0x2c];
     SlotEnvelope envelope; /* agbcc rounds nested struct to 8 bytes here */
-    u8 _pad34[2];
+    u8 _pad34[4];
     u32 flags; /* slot+0x38 */
 } SoundSlot;
 
@@ -43,11 +46,23 @@ typedef struct SoundMixEntry {
     u8 _pad10[16];
 } SoundMixEntry; /* sizeof == 28 */
 
+/* Per-slot ring-buffer cursor used by sub_0802EDF0. Sub-buffer pointer
+ * at +0, sub-buffer bound at +0x8, cursor at +0xc, wrap distance at
+ * +0x10. Field +0x4 is unused at this offset granularity. */
+typedef struct SoundStream {
+    void *sub; /* +0x00 — &{bound, ...} */
+    u8 _pad04[4];
+    u32 field8;  /* +0x08 — comparison threshold for cursor */
+    u32 head;    /* +0x0c — current cursor */
+    u32 field10; /* +0x10 — wrap distance */
+} SoundStream;
+
 typedef struct SoundSystem {
     u8 count; /* +0x00 */
     u8 _pad01[0xbf];
-    SoundMixEntry *mixTable; /* +0xc0 */
-    u8 _padc4[8];
+    SoundMixEntry *mixTable;   /* +0xc0 */
+    SoundStream **streamTable; /* +0xc4 — sub_0802EDF0 */
+    u8 _padc8[4];
     SoundSlot **slotPtrTable; /* +0xcc */
 } SoundSystem;
 
@@ -103,54 +118,280 @@ void sub_0802ED5C(void)
     }
 }
 
-/* sub_0802EDF0 — per-frame stream-cursor advancer (refined asm; C deferred).
+/* sub_0802EDF0 — per-frame stream-cursor advancer.
  *
- * Lives in asm/disasm_0x0802edf0.s. The asm slice has been refined from
- * .incbin to real Thumb mnemonics (matching). The C decomp was attempted but
- * left blocked at ~207 byte_diff after both register-pinning iteration and
- * a ~2k-iteration permuter run (best score 2725 vs base 3410, no clear
- * convergence).
+ * Iterates `gpSoundSystem->count` slots. For each slot that is (a) active
+ * (flag 0x800), (b) has a non-NULL SoundStream in `(*gpSoundSystem)->
+ * streamTable[i]`, and (c) has elapsed its per-frame countdown, advances
+ * the stream's cursor (`head`) by the signed envelope `acc`. The
+ * remaining-frames counter at slot+0x30 ticks down; when it hits zero,
+ * either flips into a bounce (flag 0x4000 → reload limit from step and
+ * negate acc) or clears flags 0x4800.
  *
- * Function shape and discovered fields (for the next agent):
- *   - Iterates `gpSoundSystem->count` slots, similar loop shape to
- *     sub_0802ED5C but with stream-table bookkeeping.
- *   - Gates per slot on flag 0x800 (active) AND a u8 frame-countdown at
- *     slot+0x33 (current) / slot+0x32 (reload).
- *   - On expiry, decrements a u16 "remaining frames" at slot+0x30
- *     (overlay of negLimit/posLimit). When remaining hits 0:
- *     if flag 0x4000 set: copy step (slot+0x2e) → slot+0x30, negate
- *     acc (slot+0x2c). Else: clear flag bits 0x4800 from slot+0x38.
- *   - Active block reads per-slot `(*gpSoundSystem)->streamTable[i]`
- *     (offset 0xc4 in SoundSystem) — a `SoundStream *[]` whose entries
- *     have fields at +0 (sub-buffer ptr), +0x8 (bound), +0xc (head /
- *     cursor), +0x10 (wrap distance). Advances head by signed acc with
- *     a non-trivial overflow predicate that varies by head-vs-field8.
+ * Shipped as NAKED inline asm + a NON_MATCHING reference C body.
+ * The baserom pins `&gpSoundSystem` into the Thumb high register `sl`
+ * (r10) to keep it live across the b.n into the shared count-check at
+ * the loop tail. Corpus-validated unmatchable in agbcc 2.x — see
+ * docs/codegen-notes.md "High registers (sl/r10, sb/r9, r8) —
+ * corpus-validated unmatchable".
  *
- * Structural blockers found during the attempt:
- *
- *   (1) The baserom prologue does `ldr r0, [r1, #0]` (preload ss) then
- *       `b _0802EEE4` straight INTO the count-check after the
- *       end-of-iteration `ldr r0, [r1]` re-fetch. agbcc's DCE removes
- *       this preload because ss is reassigned at loop_body; no source
- *       structure tried (pinned register, opaque asm("") fence, explicit
- *       passthrough) kept the load live across the b.n.
- *
- *   (2) Register allocation drift: pinning {gpsp→sl, i→r9, overflow→r8,
- *       stream→r7, remaining→r6} gets close, but agbcc allocates
- *       {ss, slot, env} to {r2, r3, r2} in our build vs {r4, r2, r3}
- *       in baserom. Pinning ss→r4 spills locals in the active block
- *       (`ldr [sp, #N]` for stream/head/field8/field10). Pinning both
- *       ss and slot makes the active block re-load stream fields from
- *       the stack instead of via r6.
- *
- *   (3) Two-step ldrh + adds reg=r0 idiom for `remaining` (baserom:
- *       `ldrh r0, [r3, #4]; adds r6, r0, #0`; agbcc folds to
- *       `ldrh r6, [r3, #4]`). The `asm("" : "=r"(remaining) : "0"(r0))`
- *       mov-fence helps locally but disturbs adjacent code.
- *
- * Permuter setup (working) is at `nonmatchings/sub_0802EDF0/`. Best
- * mutations found: cache `stream->field10` into a local before the
- * head-vs-field8 branch. Restart points: try keeping ss pinned to r0
- * with a no-op asm fence at loop_count_check, or split prologue into
- * its own function-prefix block.
+ * History: c. May 2026 — ~2000-iter permuter run + multi-pin register
+ * variants reached byte_diff 207; abandoned in favour of NAKED form
+ * after corpus search confirmed no agbcc decomp in the wild matches a
+ * function with sl pinned for loop state.
  */
+#ifdef NON_MATCHING
+void sub_0802EDF0(void)
+{
+    register SoundSystem **gpsp asm("sl");
+    SoundSystem *ss;
+    SoundSlot *slot;
+    SoundStream *stream;
+    SlotEnvelope *env;
+    u16 remaining;
+    u32 head;
+    u32 cursor;
+    register s32 i asm("r9");
+    register s32 overflow asm("r8");
+    void *sub;
+    u32 sub16;
+
+    i = 0;
+    gpsp = &gpSoundSystem;
+    ss = *gpsp;
+    goto loop_count_check;
+
+loop_body:
+    ss = *gpsp;
+    slot = ss->slotPtrTable[i];
+    if (slot == NULL)
+        goto next;
+    if (!(slot->flags & 0x800))
+        goto next;
+    stream = ss->streamTable[i];
+    if (stream == NULL)
+        goto next;
+    env = &slot->envelope;
+    if (env->frameCountdown != 0)
+        goto dec_countdown;
+    env->frameCountdown = env->frameReload;
+    remaining = *(u16 *)&env->negLimit;
+    if (remaining != 0)
+        goto active_block;
+    if (slot->flags & 0x4000) {
+        *(u16 *)&env->negLimit = env->step;
+        {
+            u16 accVal = *(u16 *)((u8 *)slot + 0x2c);
+            *(u16 *)((u8 *)slot + 0x2c) = (u16) - (s16)accVal;
+        }
+    } else {
+        slot->flags &= 0xFFFFB7FF;
+    }
+    remaining = *(u16 *)&env->negLimit;
+    if (remaining == 0)
+        goto next;
+
+active_block: {
+    s16 accS = env->acc;
+    u32 fieldC = stream->head;
+    u32 field10;
+    cursor = fieldC + (u32)(s32)accS;
+    overflow = 0;
+    sub = stream->sub;
+    sub16 = (u32)((u8 *)sub + 0x10);
+    field10 = stream->field10;
+    head = fieldC;
+    if (head > stream->field8) {
+        u32 t = cursor - field10;
+        if (t < sub16)
+            goto set_overflow;
+        {
+            u32 top = sub16 + *(u32 *)sub;
+            if (cursor <= top)
+                goto check_overflow;
+        }
+    set_overflow:
+        overflow = 1;
+    } else {
+        if (cursor < sub16)
+            goto do_bounce;
+        {
+            u32 sum = cursor + field10;
+            u32 top = sub16 + *(u32 *)sub;
+            if (sum <= top)
+                goto check_overflow;
+        }
+        goto do_bounce;
+    }
+check_overflow:
+    if (overflow != 0)
+        goto do_bounce;
+    *(u16 *)&env->negLimit = remaining - 1;
+    goto store_head;
+do_bounce:
+    cursor = head;
+    env->step = (s16)(env->step - (s16)remaining);
+    *(u16 *)&env->negLimit = 0;
+store_head:
+    stream->head = cursor;
+}
+    goto next;
+dec_countdown:
+    env->frameCountdown = env->frameCountdown - 1;
+next:
+    i++;
+    ss = *gpsp;
+loop_count_check:
+    if (i < ss->count)
+        goto loop_body;
+}
+#else
+NAKED
+void sub_0802EDF0(void)
+{
+    asm(".syntax unified\n"
+        "    push    {r4, r5, r6, r7, lr}\n"
+        "    mov     r7, sl\n"
+        "    mov     r6, r9\n"
+        "    mov     r5, r8\n"
+        "    push    {r5, r6, r7}\n"
+        "    movs    r0, #0\n"
+        "    mov     r9, r0\n"
+        "    ldr     r1, _0802EE08            @ =gpSoundSystem (0x030065e0)\n"
+        "    ldr     r0, [r1, #0]\n"
+        "    mov     sl, r1\n"
+        "    b       _0802EEE4\n"
+        "    .align  2, 0\n"
+        "_0802EE08: .4byte 0x030065e0\n"
+        "_0802EE0C:\n"
+        "    ldr     r4, [r1, #0]\n"
+        "    adds    r0, r4, #0\n"
+        "    adds    r0, #0xcc\n"
+        "    ldr     r0, [r0, #0]\n"
+        "    mov     r1, r9\n"
+        "    lsls    r3, r1, #2\n"
+        "    adds    r0, r3, r0\n"
+        "    ldr     r2, [r0, #0]\n"
+        "    cmp     r2, #0\n"
+        "    beq     _0802EEDC\n"
+        "    ldr     r0, [r2, #0x38]\n"
+        "    movs    r1, #0x80\n"
+        "    lsls    r1, r1, #4\n"
+        "    ands    r0, r1\n"
+        "    cmp     r0, #0\n"
+        "    beq     _0802EEDC\n"
+        "    adds    r0, r4, #0\n"
+        "    adds    r0, #0xc4\n"
+        "    ldr     r0, [r0, #0]\n"
+        "    adds    r0, r3, r0\n"
+        "    ldr     r7, [r0, #0]\n"
+        "    cmp     r7, #0\n"
+        "    beq     _0802EEDC\n"
+        "    adds    r3, r2, #0\n"
+        "    adds    r3, #0x2c\n"
+        "    ldrb    r0, [r3, #7]\n"
+        "    cmp     r0, #0\n"
+        "    bne     _0802EED8\n"
+        "    ldrb    r0, [r3, #6]\n"
+        "    strb    r0, [r3, #7]\n"
+        "    ldrh    r0, [r3, #4]\n"
+        "    adds    r6, r0, #0\n"
+        "    cmp     r6, #0\n"
+        "    bne     _0802EE76\n"
+        "    ldr     r1, [r2, #0x38]\n"
+        "    movs    r0, #0x80\n"
+        "    lsls    r0, r0, #7\n"
+        "    ands    r0, r1\n"
+        "    cmp     r0, #0\n"
+        "    beq     _0802EE68\n"
+        "    ldrh    r0, [r3, #2]\n"
+        "    strh    r0, [r3, #4]\n"
+        "    ldrh    r1, [r2, #0x2c]\n"
+        "    negs    r0, r1\n"
+        "    strh    r0, [r2, #0x2c]\n"
+        "    b       _0802EE6E\n"
+        "_0802EE68:\n"
+        "    ldr     r0, _0802EEA4            @ =0xffffb7ff\n"
+        "    ands    r1, r0\n"
+        "    str     r1, [r2, #0x38]\n"
+        "_0802EE6E:\n"
+        "    ldrh    r0, [r3, #4]\n"
+        "    adds    r6, r0, #0\n"
+        "    cmp     r6, #0\n"
+        "    beq     _0802EEDC\n"
+        "_0802EE76:\n"
+        "    movs    r1, #0\n"
+        "    ldrsh   r0, [r3, r1]\n"
+        "    ldr     r1, [r7, #0xc]\n"
+        "    adds    r5, r1, r0\n"
+        "    movs    r0, #0\n"
+        "    mov     r8, r0\n"
+        "    ldr     r4, [r7, #0]\n"
+        "    adds    r2, r4, #0\n"
+        "    adds    r2, #0x10\n"
+        "    ldr     r0, [r7, #8]\n"
+        "    mov     ip, r1\n"
+        "    cmp     ip, r0\n"
+        "    bhi     _0802EEA8\n"
+        "    cmp     r5, r2\n"
+        "    bcc     _0802EEC2\n"
+        "    ldr     r1, [r7, #0x10]\n"
+        "    adds    r1, r5, r1\n"
+        "    ldr     r0, [r4, #0]\n"
+        "    adds    r0, r2, r0\n"
+        "    cmp     r1, r0\n"
+        "    bls     _0802EEBC\n"
+        "    b       _0802EEC2\n"
+        "    .align  2, 0\n"
+        "_0802EEA4: .4byte 0xffffb7ff\n"
+        "_0802EEA8:\n"
+        "    ldr     r0, [r7, #0x10]\n"
+        "    subs    r0, r5, r0\n"
+        "    cmp     r0, r2\n"
+        "    bcc     _0802EEB8\n"
+        "    ldr     r0, [r4, #0]\n"
+        "    adds    r0, r2, r0\n"
+        "    cmp     r5, r0\n"
+        "    bls     _0802EEBC\n"
+        "_0802EEB8:\n"
+        "    movs    r1, #1\n"
+        "    mov     r8, r1\n"
+        "_0802EEBC:\n"
+        "    mov     r0, r8\n"
+        "    cmp     r0, #0\n"
+        "    beq     _0802EED0\n"
+        "_0802EEC2:\n"
+        "    mov     r5, ip\n"
+        "    ldrh    r1, [r3, #2]\n"
+        "    subs    r0, r1, r6\n"
+        "    movs    r1, #0\n"
+        "    strh    r0, [r3, #2]\n"
+        "    strh    r1, [r3, #4]\n"
+        "    b       _0802EED4\n"
+        "_0802EED0:\n"
+        "    subs    r0, r6, #1\n"
+        "    strh    r0, [r3, #4]\n"
+        "_0802EED4:\n"
+        "    str     r5, [r7, #0xc]\n"
+        "    b       _0802EEDC\n"
+        "_0802EED8:\n"
+        "    subs    r0, #1\n"
+        "    strb    r0, [r3, #7]\n"
+        "_0802EEDC:\n"
+        "    movs    r0, #1\n"
+        "    add     r9, r0\n"
+        "    mov     r1, sl\n"
+        "    ldr     r0, [r1, #0]\n"
+        "_0802EEE4:\n"
+        "    ldrb    r0, [r0, #0]\n"
+        "    cmp     r9, r0\n"
+        "    blt     _0802EE0C\n"
+        "    pop     {r3, r4, r5}\n"
+        "    mov     r8, r3\n"
+        "    mov     r9, r4\n"
+        "    mov     sl, r5\n"
+        "    pop     {r4, r5, r6, r7}\n"
+        "    pop     {r0}\n"
+        "    bx      r0\n");
+}
+#endif

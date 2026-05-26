@@ -13,6 +13,15 @@
 
 #define CHECK_ALL_FLAGS(value, flags) (((value) & (flags)) == (flags))
 
+/* Function attribute: emit no prologue/epilogue. Body must be a single
+ * inline asm("…") block that preserves the AAPCS contract by hand.
+ * Used for functions whose baserom assembly uses high registers
+ * (sl/r10, sb/r9, r8) for loop state — agbcc 2.x's register allocator
+ * won't produce that shape from any plausible C input. See
+ * docs/codegen-notes.md "High registers — corpus-validated unmatchable".
+ */
+#define NAKED __attribute__((naked))
+
 /* INCBIN macros are recognized by tools/preproc and expanded into typed
  * arrays at compile time. Use the typed variants so the compiler knows the
  * element width. */
