@@ -165,3 +165,28 @@ e34fe59 CLAUDE.md: note NAKED + .syntax divided requirement
 **Decisions:** none new (blob-boundary lint still deferred from iter 4).
 
 ---
+## Iter 6 — 2026-05-26
+
+**Before:** 35 / ~513 fns (6.8%), 14 peeled-asm, 80 db, 69.3 KiB src C, 98.2% raw
+
+**Targets:** Decomp sub_0802F4B0 (462 instr, THE sound mixer). Data level-layout continuation [0x08317b54, 0x08318020).
+
+**Outcomes:**
+- Decomp: NAKED + NON_MATCHING. Largest function yet. Auto-peel uncovered 4 new callees (sub_0802E3F8/E418 lock-pair, sub_080301C4/325B0 helpers). **Entire sound-mixer subsystem now in C.**
+- Data: 23 tables, 1228 B. Three structural shapes documented. Five new sub-dispatchers — multi-tier architecture confirmed continuing.
+
+**Commit:** iter-6 hash (`git log -1`)
+
+**After:** 37 / ~513 fns (7.2%), 17 peeled-asm (-1 mixer +4 callees = +3), 103 db, 71.5 KiB src C, 98.2% raw
+
+**Architectural duties:**
+- Two new docs/codegen-notes entries (linker.ld.pp dep bug + apostrophe-lag in parallel loops).
+- Data playbook updated inline: run `lint_incbin_apostrophes.py` after every C file edit, not wait for pre-commit.
+- Playbook hashes bumped to e68028c.
+
+**Friction observed:**
+- Apostrophe trap caught by PARALLEL decomp agent, not pre-commit (and not by data agent self-check). Friction quintuple now (apostrophe trap has bitten across iter 2/3/5/6 — this is the FOURTH time across loop iters). Data playbook now mitigates; if it happens again, escalate to Makefile pre-build hook.
+
+**Decisions:** none new. Blob-boundary lint still deferred from iter 4.
+
+---
