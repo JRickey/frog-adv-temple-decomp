@@ -77,3 +77,22 @@ e34fe59 CLAUDE.md: note NAKED + .syntax divided requirement
 **Decisions:** none warranting `docs/decisions.md` (mechanical iteration; both agents fell into well-documented patterns).
 
 ---
+## Iter 2 — 2026-05-26
+
+**Before:** 26 / ~513 fns (5.1%), 17 peeled-asm, 47 db, 44.6 KiB src C, 98.7% raw
+
+**Targets:** Decomp sub_0802F2FC (76 instr, sound). Data 0x080e3xxx cluster (25-ref top + adjacent 6-ref).
+
+**Outcomes:**
+- Decomp: NAKED + NON_MATCHING (r8 high register, established class). New `pan envelope` SoundSlot fields (+0x0a..+0x3c). Clean ship, no new agbcc findings.
+- Data: 3 tables = UI status-bar / HUD cluster (`sUiAssetSlots`, `sFrogStatusBarFrames`, `sFrogStatusBarTileData`). **Architectural finding**: 12-byte `{x,y,w,h,*ptr}` descriptor shape is shared between HUD and entity-dispatch — common "tile-block-blit" primitive across subsystems.
+
+**Commit:** `9b1c7e0` (`398405e`)
+
+**After:** 28 / ~513 fns (5.5%), 16 peeled-asm, 50 db, 45.4 KiB src C, 98.8% raw
+
+**Architectural duties:** docs/subsystems.md "UI status-bar / HUD renderer" added. Plans recorded for `struct SpriteFrame` promotion once a blitter consumer decomps.
+
+**Decisions:** none.
+
+---
