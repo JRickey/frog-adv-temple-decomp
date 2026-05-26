@@ -1670,5 +1670,29 @@
     },
     "count": "0x666",
     "size": 2
+  },
+  {
+    "path": "sprite/screen_c578/aux_tiles.bin",
+    "addr": {
+      "us": "0x20C578"
+    },
+    "count": "0x800",
+    "size": 1
+  },
+  {
+    "path": "sprite/screen_c578/palette.bin",
+    "addr": {
+      "us": "0x20CD78"
+    },
+    "count": "0x100",
+    "size": 2
+  },
+  {
+    "path": "sprite/screen_c578/tilemap_screenblock28.bin",
+    "addr": {
+      "us": "0x20CF78"
+    },
+    "count": "0x400",
+    "size": 2
   }
 ]

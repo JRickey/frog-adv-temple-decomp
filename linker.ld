@@ -71,7 +71,7 @@ SECTIONS {
         asm/text/text_0x08000cb0.o(.text);  /* 0x08000cb0 - 0x08000cec, raw bytes */
         asm/disasm_0x08000cec.o(.text);  /* 0x08000cec - 0x08000d2c, sub_08000CEC (auto-peeled) */
         asm/disasm_0x08000d2c.o(.text);  /* 0x08000d2c - 0x08000d50, sub_08000D2C (auto-peeled) */
-        asm/disasm_0x08000d50.o(.text);  /* 0x08000d50 - 0x08000d5c, sub_08000D50 (auto-peeled) */
+        src/system/sub_08000d50.o(.text);  /* 0x08000d50 - 0x08000d5c, sub_08000D50 */
         asm/text/text_0x08000d5c.o(.text);  /* 0x08000d5c - 0x08000eb8, raw bytes */
         asm/disasm_0x08000eb8.o(.text);  /* 0x08000eb8 - 0x08001128, sub_08000EB8 (auto-peeled) */
         asm/text/text_0x08001128.o(.text);  /* 0x08001128 - 0x08001214, raw bytes */
@@ -112,7 +112,7 @@ SECTIONS {
         asm/text/text_0x0800586c.o(.text);  /* 0x0800586c - 0x08005fc8, raw bytes */
         asm/disasm_0x08005fc8.o(.text);  /* 0x08005fc8 - 0x08006600, sub_08005FC8 (auto-peeled) */
         asm/text/text_0x08006600.o(.text);  /* 0x08006600 - 0x08006948, raw bytes */
-        asm/disasm_0x08006948.o(.text);  /* 0x08006948 - 0x0800696c, sub_08006948 (auto-peeled) */
+        src/game/sub_08006948.o(.text);  /* 0x08006948 - 0x0800696c, sub_08006948 + sub_08006958 */
         asm/text/text_0x0800696c.o(.text);  /* 0x0800696c - 0x08006b88, raw bytes */
         asm/disasm_0x08006b88.o(.text);  /* 0x08006b88 - 0x08006b94, sub_08006B88 (auto-peeled) */
         asm/text/text_0x08006b94.o(.text);  /* 0x08006b94 - 0x0800793c, raw bytes */
@@ -270,7 +270,9 @@ SECTIONS {
         src/data/screen_d8b98.o(.rodata);   /* 0x081d8b98 - 0x081e4c18, screen tilemap + palette + char tiles + tilemap (spans across former 0x081e0000 blob) */
         asm/text/text_0x081e4c18.o(.text);  /* 0x081e4c18 - 0x081f0000, raw bytes (tail after screen_d8b98 cluster) */
         asm/text/text_0x081f0000.o(.text);  /* 0x081f0000 - 0x08200000, raw bytes */
-        asm/text/text_0x08200000.o(.text);  /* 0x08200000 - 0x08210000, raw bytes */
+        asm/text/text_0x08200000.o(.text);  /* 0x08200000 - 0x0820c578, raw bytes (shrunk for screen_c578 cluster) */
+        src/data/screen_c578.o(.rodata);    /* 0x0820c578 - 0x0820d778, sScreenAuxTilesC578 + sScreenPaletteCD78 + sScreenTilemapCF78 (screenblock-28 source tilemap) */
+        asm/text/text_0x0820d778.o(.text);  /* 0x0820d778 - 0x08210000, raw bytes (tail after screen_c578 cluster) */
         asm/text/text_0x08210000.o(.text);  /* 0x08210000 - 0x08220000, raw bytes */
         asm/text/text_0x08220000.o(.text);  /* 0x08220000 - 0x08230000, raw bytes */
         asm/text/text_0x08230000.o(.text);  /* 0x08230000 - 0x08240000, raw bytes */

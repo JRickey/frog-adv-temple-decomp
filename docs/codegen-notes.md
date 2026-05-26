@@ -1250,6 +1250,13 @@ Confirmed instances:
 - `sub_080090B0` (iter 21, ~22 instr, byte_diff 6) — post-`__divsi3`
   return-value coloring (`lsrs rN, r0, #16` vs leaving in r0 across
   subsequent loads).
+- `sub_08006948` (iter 23, 8 instr, byte_diff 4) — `*(u16 *)p &= ~mask`
+  emits `strh rM` (folded) instead of baserom's `adds rN, rM, #0;
+  strh rN` (kept-in-parameter-register through a separate move).
+- `sub_08006958` (iter 23, 10 instr, byte_diff 17) — bool-return
+  `(field & mask) != 0` emits `ands r0, r1` + push/pop + folded-zero-
+  return; baserom uses `ands r1, r0` + no-frame + explicit
+  `movs r0, #{0,1}`.
 
 The unifying shape: agbcc 2.x makes a register-allocator choice that
 differs from baserom in a way no source-level mutation flips. The
