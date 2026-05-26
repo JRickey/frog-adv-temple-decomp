@@ -725,3 +725,98 @@ Detection heuristic before you start writing pure C: in the refined asm,
 look for `mov rX, ip; ldr rY, [rX, #0]` pairs at multiple loop tops AND
 a `mov ip, rZ` cache somewhere in the prologue or stage transition.
 If both present, this rule applies.
+
+## Third unmatchable class: `push {r4-r7, lr}` + libgcc helper call
+
+A function whose target prologue is `push {r4-r7, lr}` AND whose body calls
+a libgcc helper (`__divsi3`, `__umodsi3`, `__umulsi3`, etc.) can't be
+matched in pure C. agbcc 2.x knows libgcc helpers in
+`tools/agbcc/lib/libgcc.a` don't actually clobber r4-r7, so it emits only
+the registers it itself uses (typically `push {r4, lr}` or `push {r4, r5,
+lr}`) and lazy-loads pool literals after the BL.
+
+Target ROMs written against a different agbcc cut consistently push the
+full r4-r7 set anyway. There's no source-level lever to force the extra
+register save: even `register T x asm("r7")` pinning a local that lives
+across the BL fails to influence the prologue.
+
+Detection heuristic: in the refined asm, look for `push {r4, r5, r6,
+r7, lr}` (encoding `b5f0`) at the function entry AND any `bl 0x080339xx /
+0x080340xx / 0x080341xx` to a libgcc helper. Both present → NAKED +
+NON_MATCHING on first attempt.
+
+Worked example: `sub_0802E5D8` (PSG pitch interpolation). Best pure-C
+attempt with the playbook's full pin/fence/permuter battery converged at
+byte_diff 109/172 (63% mismatch). NAKED+NON_MATCHING ships byte-perfect.
+
+This joins:
+1. "High registers (sl/r10, sb/r9, r8) — corpus-validated unmatchable"
+2. "Two-stage loop functions with shared `*gpGlobal` cache — also unmatchable"
+3. This entry.
+
+Pattern across all three: agbcc 2.x's register allocator makes a choice
+that no source-level shape coerces. The right call is NAKED+NON_MATCHING
++ codegen-notes documentation, not a 60-minute permuter run.
+
+## In-ROM libgcc helpers (`__divsi3`, `__umodsi3`, `__umulsi3`)
+
+The agbcc 2.x toolchain ships its libgcc helpers into the ROM rather than
+through dynamic linking. When you peel a small Thumb function that's just
+`stmfd sp!, …` + `bl <something>` + `ldmfd sp!, …`, check
+`tools/agbcc/lib/libgcc.a` for a byte-identical match: it's often a
+libgcc helper that the linker inlined into the source ROM. Rename the
+peeled symbol accordingly in `asm/disasm_*.s` + `linker.ld`.
+
+Detected examples so far:
+- `__umodsi3` at 0x08033F5C (found in pass 2 / bootstrap)
+- `__divsi3` at 0x08033D14 (found in iter-1, alongside `sub_0802E5D8`)
+
+A regular code-region peel that's actually a libgcc helper will:
+- Be small (~200 bytes).
+- Have no `bl` to other project code.
+- Show up at addresses clustered near each other (the libgcc segment
+  in this ROM is roughly `[0x08033d14, 0x0803401c)`).
+
+Compare bytes via:
+```sh
+arm-none-eabi-objdump -dz tools/agbcc/lib/libgcc.a 2>&1 | grep -A20 '<__divsi3>'
+```
+
+Naming the symbol after libgcc form preserves call-site readability —
+calls to `__divsi3` make immediate semantic sense; calls to `sub_08033D14`
+require chasing back to the asm.
+
+## Sine LUT shape: 256+64 = 320 entries
+
+When you see a 320-entry s16 table, it's almost certainly the project's
+`sin` LUT. The shape: 256 entries of `sin(angle * 2π/256) * 256`
+(amplitude 256) followed by 64 entries that REPEAT the first 64 entries
+of the sin table. Purpose: `cos(angle) = sin(angle + π/2) = lut[(angle
++ 64) & 0x1FF]` — the +64 extension lets a single LUT serve both `sin`
+AND `cos` without a modulo at every access.
+
+Detected example: `sSineTable` at 0x080c0ea8 (found in iter-1's entity
+dispatch cluster).
+
+Recognition heuristic: the values rise smoothly from 0 to ~256, fall to
+~-256, rise back through 0, and the table-end values match the table-
+start values bit-for-bit (the wraparound copy). Total size 640 B.
+
+## Apostrophe trap: detection via empty `.rodata` / `.comm` declarations
+
+The existing "Apostrophes in C comments break `tools/preproc`" section
+documents the cause; the pre-commit guard committed in e3bf8d5 catches
+it. But the trap still bites occasionally on unstaged work or when
+preproc fails silently on a new file. **The visible signature in the
+agbcc `.s` output is the smoking gun:**
+
+- Normal compile: `src/data/foo.s` shows `.word 0xVALUE` (or `.byte`,
+  `.short`) lines for every byte of the INCBIN, hundreds to thousands of
+  them.
+- Trap fired: `src/data/foo.s` shows `.comm sFoo, NNN` declarations
+  instead, and the file has ~12 `.comm` lines total (one per declared
+  symbol) without any `.word`/`.byte` content.
+
+If `.rodata` is empty AND your data file has `.comm`-style declarations
+in its .s output, the apostrophe trap fired. First-thing-to-check for
+new data files that "look like they should work but don't".

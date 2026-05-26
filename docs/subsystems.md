@@ -148,6 +148,44 @@ C decomp is blocked: m2c can't seed from the `.incbin`'d body, and
 budget for one session. See `unknowns.md` "sub_0802F4B0 (sound mixer
 tick)" for the unblocking plan.
 
+## Entity dispatch
+
+Identified iter-1 of the autonomous loop. Cluster at
+[0x080c0ab0, 0x080c1254) is a vtable-style entity-dispatch system —
+five parallel 17-entry Thumb function-pointer tables
+(`sEntityProcA..sEntityProcE` at 0x080c0c74, 0x080c0cb8, 0x080c0cfc,
+0x080c0d40, 0x080c0ddc), each indexed by the same entity-type byte
+read from `[entity, #10]`. Sibling tables in the cluster:
+
+- `sEntityScriptIndex` (0x080c0ab0, 7×8B) and
+  `sEntityScriptIndexExt` (0x080c0ae8, 2×12B) — script descriptors per
+  entity type.
+- `sEntityHitboxTable` (0x080c0b00, 31×12B records of
+  `{u32 count, const s16 *xy_points, u32 flags}`) — 33-callsite master
+  collision/hit-point lookup.
+- `sEntityParamTable` (0x080c0d98, 17 entries) — small-int parameters
+  parallel to the proc tables.
+- `sEntitySubtypeLut` (0x080c0d84, 20 u8 entries) — type→subtype remap.
+- `sEntityInitTable` (0x080c0e20, 17×8B `{u8 spawn_count, u8 max_index,
+  u8 _, u8 _, const T *data}`) — entity spawn descriptors.
+- `sSineTable` (0x080c0ea8, 320 s16) — 256+64 shared sin/cos LUT.
+  Used by entity motion; co-located but not strictly entity-only.
+- `sSpriteFrameDescriptors` (0x080c1128, 25×12B in 5×5 pose-state
+  shape) — entity pose-state matrix.
+
+Implication for future C decomps: any 0x0800[a-d]xxx function that
+reads `[r0, #10]` (or any pointer + 10) and uses it as an index into
+a function-pointer table is almost certainly an entity-dispatch
+handler. Shape parallels pret-family decomps
+(`gEntityVT[type].init/update/...`).
+
+Once any entity-handler function lands in C, define a shared
+`struct EntityProc { void (*init)(); void (*update)(); ... }` in
+`include/entity.h` and convert the five parallel u32 tables to a
+single typed `EntityProc gEntityVT[17]` with the 5 fields per record.
+Current `sEntityProcA..sEntityProcE` naming is deliberately low-
+commitment placeholder until then.
+
 ## Render / sprite
 
 (Not yet identified.)

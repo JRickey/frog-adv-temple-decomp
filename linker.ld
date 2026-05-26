@@ -80,7 +80,7 @@ SECTIONS {
         asm/text/text_0x08020b50.o(.text);  /* 0x08020b50 - 0x0802d558, raw bytes */
         asm/disasm_0x0802d558.o(.text);  /* 0x0802d558 - 0x0802d890, sub_0802D558 (auto-peeled) */
         asm/text/text_0x0802d890.o(.text);  /* 0x0802d890 - 0x0802e5d8, raw bytes */
-        asm/disasm_0x0802e5d8.o(.text);  /* 0x0802e5d8 - 0x0802e684, sub_0802E5D8 (auto-peeled) */
+        src/system/sound_pitch.o(.text);  /* 0x0802e5d8 - 0x0802e684, sub_0802E5D8 */
         src/system/sound_volume.o(.text);  /* 0x0802e684 - 0x0802e724, sub_0802E684 */
         asm/text/text_0x0802e724.o(.text);  /* 0x0802e724 - 0x0802e934, raw bytes */
         asm/disasm_0x0802e934.o(.text);  /* 0x0802e934 - 0x0802ea2c, sub_0802E934 (auto-peeled) */
@@ -99,7 +99,9 @@ SECTIONS {
         asm/disasm_0x080315d8.o(.text);  /* 0x080315d8 - 0x08031638, sub_080315D8 (auto-peeled) */
         asm/text/text_0x08031638.o(.text);  /* 0x08031638 - 0x08033910, raw bytes */
         src/game/sub_08033910.o(.text);  /* 0x08033910 - 0x08033948, sub_08033910 */
-        asm/text/text_0x08033948.o(.text);  /* 0x08033948 - 0x08033f5c, raw bytes */
+        asm/text/text_0x08033948.o(.text);  /* 0x08033948 - 0x08033d14, raw bytes */
+        asm/disasm_0x08033d14.o(.text);  /* 0x08033d14 - 0x08033da8, __divsi3 (libgcc; auto-peeled) */
+        asm/text/text_0x08033da8.o(.text);  /* 0x08033da8 - 0x08033f5c, raw bytes */
         asm/disasm_0x08033f5c.o(.text);  /* 0x08033f5c - 0x0803401c, __umodsi3 (libgcc; auto-peeled) */
         asm/text/text_0x0803401c.o(.text);  /* 0x0803401c - 0x08035d7c, raw bytes */
         asm/disasm_0x08035d7c.o(.text);  /* 0x08035d7c - 0x08035d84, sub_08035D7C (auto-peeled) */
@@ -114,7 +116,9 @@ SECTIONS {
         asm/text/text_0x08090000.o(.text);  /* 0x08090000 - 0x080a0000, raw bytes */
         asm/text/text_0x080a0000.o(.text);  /* 0x080a0000 - 0x080b0000, raw bytes */
         asm/text/text_0x080b0000.o(.text);  /* 0x080b0000 - 0x080c0000, raw bytes */
-        asm/text/text_0x080c0000.o(.text);  /* 0x080c0000 - 0x080d0000, raw bytes */
+        asm/text/text_0x080c0000.o(.text);  /* 0x080c0000 - 0x080c0ab0, raw bytes (shrunk for entity-dispatch cluster) */
+        src/data/entity_dispatch.o(.rodata);  /* 0x080c0ab0 - 0x080c1254, entity dispatch + sine table (13 named tables) */
+        asm/text/text_0x080c1254.o(.text);  /* 0x080c1254 - 0x080d0000, raw bytes (tail after entity-dispatch cluster) */
         asm/text/text_0x080d0000.o(.text);  /* 0x080d0000 - 0x080e0000, raw bytes */
         asm/text/text_0x080e0000.o(.text);  /* 0x080e0000 - 0x080f0000, raw bytes */
         asm/text/text_0x080f0000.o(.text);  /* 0x080f0000 - 0x08100000, raw bytes */

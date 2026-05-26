@@ -8,6 +8,110 @@
     "size": 4
   },
   {
+    "path": "entity/script_descriptors.bin",
+    "addr": {
+      "us": "0xC0AB0"
+    },
+    "count": "0x7",
+    "size": 8
+  },
+  {
+    "path": "entity/script_descriptors_ext.bin",
+    "addr": {
+      "us": "0xC0AE8"
+    },
+    "count": "0x2",
+    "size": 12
+  },
+  {
+    "path": "entity/hitbox_table.bin",
+    "addr": {
+      "us": "0xC0B00"
+    },
+    "count": "0x1F",
+    "size": 12
+  },
+  {
+    "path": "entity/proc_a_handlers.bin",
+    "addr": {
+      "us": "0xC0C74"
+    },
+    "count": "0x11",
+    "size": 4
+  },
+  {
+    "path": "entity/proc_b_handlers.bin",
+    "addr": {
+      "us": "0xC0CB8"
+    },
+    "count": "0x11",
+    "size": 4
+  },
+  {
+    "path": "entity/proc_c_handlers.bin",
+    "addr": {
+      "us": "0xC0CFC"
+    },
+    "count": "0x11",
+    "size": 4
+  },
+  {
+    "path": "entity/proc_d_handlers.bin",
+    "addr": {
+      "us": "0xC0D40"
+    },
+    "count": "0x11",
+    "size": 4
+  },
+  {
+    "path": "entity/subtype_lut.bin",
+    "addr": {
+      "us": "0xC0D84"
+    },
+    "count": "0x14",
+    "size": 1
+  },
+  {
+    "path": "entity/param_table.bin",
+    "addr": {
+      "us": "0xC0D98"
+    },
+    "count": "0x11",
+    "size": 4
+  },
+  {
+    "path": "entity/proc_e_handlers.bin",
+    "addr": {
+      "us": "0xC0DDC"
+    },
+    "count": "0x11",
+    "size": 4
+  },
+  {
+    "path": "entity/init_table.bin",
+    "addr": {
+      "us": "0xC0E20"
+    },
+    "count": "0x11",
+    "size": 8
+  },
+  {
+    "path": "math/sine_table.bin",
+    "addr": {
+      "us": "0xC0EA8"
+    },
+    "count": "0x140",
+    "size": 2
+  },
+  {
+    "path": "entity/sprite_frame_descriptors.bin",
+    "addr": {
+      "us": "0xC1128"
+    },
+    "count": "0x19",
+    "size": 12
+  },
+  {
     "path": "game/sprite_asset_table.bin",
     "addr": {
       "us": "0x2F8AD8"
@@ -16,19 +120,11 @@
     "size": 4
   },
   {
-    "path": "sound/lut_82f8de0.bin",
+    "path": "sound/psg_pitch_lut.bin",
     "addr": {
       "us": "0x2F8DE0"
     },
-    "count": "0x25",
-    "size": 2
-  },
-  {
-    "path": "sound/lut_82f8e2a.bin",
-    "addr": {
-      "us": "0x2F8E2A"
-    },
-    "count": "0x31",
+    "count": "0x56",
     "size": 2
   },
   {

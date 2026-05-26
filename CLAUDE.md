@@ -355,6 +355,16 @@ For each decomp target:
      register) — also unmatchable. Same NAKED + NON_MATCHING fallback.
      See `docs/codegen-notes.md` "Two-stage loop functions with shared
      `*gpGlobal` cache".
+   - `push {r4-r7, lr}` prologue + libgcc helper BL (`__divsi3`,
+     `__umodsi3`, etc.) — third unmatchable class. agbcc 2.x knows
+     libgcc helpers don't clobber r4-r7 and emits a smaller prologue;
+     baserom keeps the full save. NAKED + NON_MATCHING. See
+     `docs/codegen-notes.md` "Third unmatchable class".
+   - In-ROM libgcc helpers (`__divsi3` at 0x08033D14, `__umodsi3` at
+     0x08033F5C, etc.). When a small peeled function is `stmfd … bl …
+     ldmfd`, check `tools/agbcc/lib/libgcc.a` for a byte-match and
+     rename accordingly. See `docs/codegen-notes.md` "In-ROM libgcc
+     helpers".
    - Every NAKED inline-asm block MUST end with `"    .syntax divided\n"` —
      the `.syntax unified` directive at the top of the block bleeds into the
      rest of the .o and breaks subsequent agbcc-emitted Thumb-1 instructions.

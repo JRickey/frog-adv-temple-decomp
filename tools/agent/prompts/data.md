@@ -9,7 +9,7 @@
   agent-facing — passed to subagents in dispatch briefs, not invoked by
   the user.
 
-  Last verified: commit de99d1d. Update the "last verified" line in every
+  Last verified: commit 0e1d8eb. Update the "last verified" line in every
   PR that materially changes the playbook.
 -->
 
@@ -179,9 +179,13 @@ collapses.
   `src/data/foo.o(.rodata)` in linker.ld, not `(.text)`.
 - **Apostrophes in `/* */` comments** in INCBIN-using C files break
   `tools/preproc` silently — single `'s`/`don't` swallows every
-  subsequent INCBIN in the file. Pre-commit guard catches it; avoid
-  in the first place by using `’` (U+2019, typographic) or
-  rephrasing the comment.
+  subsequent INCBIN in the file. Pre-commit guard catches it on
+  commit; avoid in the first place by using `’` (U+2019, typographic)
+  or rephrasing. **Detection signature** (when you suspect this but
+  haven't tried to commit): the agbcc `.s` output for your new
+  file has `.comm` declarations instead of `.word`/`.byte` content,
+  and `.rodata` ends up empty. See `docs/codegen-notes.md`
+  "Apostrophe trap: detection via empty `.rodata` / `.comm`".
 - **Outer-`const` on volatile pointer arrays** breaks compilation.
   `vu16 *const sChannelRegTable[4]` is correct (array of vu16*const,
   the data behind each pointer is MMIO and volatile). `const vu16
