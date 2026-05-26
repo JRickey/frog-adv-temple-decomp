@@ -309,7 +309,7 @@ SECTIONS {
         src/system/sound_opcode_dispatch.o(.text);  /* 0x080315d8 - 0x08031638, sub_080315D8 */
         asm/text/text_0x08031638.o(.text);  /* 0x08031638 - 0x080325b0, raw bytes */
         src/system/sound_mixer_tail.o(.text);  /* 0x080325b0 - 0x08032894, sub_080325B0 (NAKED+NON_MATCHING) */
-        asm/disasm_0x08032894.o(.text);  /* 0x08032894 - 0x08032904, sub_08032894 (auto-peeled) */
+        src/system/sub_08032894.o(.text);  /* 0x08032894 - 0x08032904, sub_08032894 */
         asm/disasm_0x08032904.o(.text);  /* 0x08032904 - 0x0803299c, sub_08032904 (auto-peeled) */
         asm/disasm_0x0803299c.o(.text);  /* 0x0803299c - 0x08032aa0, sub_0803299C (auto-peeled) */
         asm/text/text_0x08032aa0.o(.text);  /* 0x08032aa0 - 0x08032b18, raw bytes */

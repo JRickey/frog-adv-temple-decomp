@@ -111,6 +111,7 @@ src/system/init.s: CC = $(OLD_AGBCC_BIN)
 src/system/init1.s: CC = $(OLD_AGBCC_BIN)
 src/system/vblank.s: CC = $(OLD_AGBCC_BIN)
 src/engine/sub_0800a710.s: CC = $(OLD_AGBCC_BIN)
+src/system/sub_08032894.s: CC = $(OLD_AGBCC_BIN)
 
 
 # Enable verbose output
