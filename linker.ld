@@ -313,9 +313,8 @@ SECTIONS {
         src/data/screen_d8b98.o(.rodata);   /* 0x081d8b98 - 0x081e4c18, screen tilemap + palette + char tiles + tilemap (spans across former 0x081e0000 blob) */
         asm/text/text_0x081e4c18.o(.text);  /* 0x081e4c18 - 0x081e6c18, raw bytes (shrunk for tilemap_e6c18 + obj_assets_ecc18 clusters) */
         src/data/tilemap_e6c18.o(.rodata);  /* 0x081e6c18 - 0x081e7418, sBgTilemap_E6C18 (screenblock-29 source tilemap, 2 KiB) */
-        asm/text/text_0x081e7418.o(.text);  /* 0x081e7418 - 0x081e9c18, raw bytes (shrunk for screen_tilemaps_e9c18 pair cluster) */
-        src/data/screen_tilemaps_e9c18.o(.rodata);  /* 0x081e9c18 - 0x081eac18, sScreenTilemap_E9C18 + sScreenTilemap_EA418 (2 x 2 KiB screenblock-29 tilemap variants) */
-        asm/text/text_0x081eac18.o(.text);  /* 0x081eac18 - 0x081ecc18, raw bytes (tail after screen_tilemaps_e9c18 cluster) */
+        asm/text/text_0x081e7418.o(.text);  /* 0x081e7418 - 0x081e9418, raw bytes (shrunk for screen_tilemaps_e9418 family) */
+        src/data/screen_tilemaps_e9418.o(.rodata);  /* 0x081e9418 - 0x081ecc18, sScreenTilemap_E9418 + E9C18 + EA418 + EAC18 + EB418 + EBC18 + EC418 (7 x 2 KiB screenblock-29 tilemap variants) */
         src/data/obj_assets_ecc18.o(.rodata);  /* 0x081ecc18 - 0x081ece58, sObjPalette_ECC18 + sObjCharTiles_ECC38 + sObjPalette_ECE38 (576 B) */
         asm/text/text_0x081ece58.o(.text);  /* 0x081ece58 - 0x081f0000, raw bytes (tail after obj_assets_ecc18 cluster) */
         asm/text/text_0x081f0000.o(.text);  /* 0x081f0000 - 0x081fbd58, raw bytes (shrunk for screen_bd58 cluster) */

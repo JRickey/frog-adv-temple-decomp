@@ -1264,6 +1264,14 @@ Confirmed instances:
   `(field & mask) != 0` emits `ands r0, r1` + push/pop + folded-zero-
   return; baserom uses `ands r1, r0` + no-frame + explicit
   `movs r0, #{0,1}`.
+- `sub_08006B94` (iter 31, 8 instr) — same bool-return shape; shipped
+  NAKED+NON_MATCHING after gate-satisfying permuter run (1761 iter,
+  plateaued at base score, 11 distinct source variants).
+- `sub_08006BA4` (iter 32, 8 instr) — same bool-return shape as
+  sub_08006958/B94; 10 source variants tried, body bytes match exactly
+  but agbcc emits spurious `push {lr} / pop {r1}; bx r1` frame around
+  `bx lr`-only baserom. Deferred — per-function permuter run not done
+  in iter 32; next dispatch must include it to satisfy the NAKED gate.
 
 The unifying shape: agbcc 2.x makes a register-allocator choice that
 differs from baserom in a way no source-level mutation flips. The

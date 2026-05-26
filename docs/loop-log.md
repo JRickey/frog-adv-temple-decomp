@@ -844,3 +844,28 @@ The agent infrastructure grew organically with each iter — each new friction d
 **Trajectory:** 21 iters post-resume (11-31). Functions 41→81 (+40). Raw INCBIN 98.1%→90.2% (**-7.9pp**). db 117→246 (+129). src C 75→259 KiB (+184 KiB). Data deblob 1.0%→9.8% (+8.8pp). **Next milestones**: 10% data deblob (need +0.2pp), and **>5 deferred sibling tilemaps in the same window worth ~14 KiB** = potentially crosses 10% next iter.
 
 ---
+
+## Iter 32 — 2026-05-26 (10% data deblob crossed)
+
+**Before:** 81 fns (15.8%), 78 asm-fn-remaining, 246 db, 258.6 KiB src C, 90.2% raw, 9.8% deblob
+
+**Targets:** Decomp sub_08006BA4 (8-instr bitmask leaf, contiguous append). Data: deferred sibling-tilemap pool from iter-31 (offset table at 0x08308f84 + 5 × 2 KiB tilemaps in 0x081e9418..0x081ec418).
+
+**Outcomes:**
+- Decomp: **DEFERRED.** Agent ran 10 pure-C variants; in all cases the body bytes match exactly but agbcc emits a spurious `push {lr} / pop {r1}; bx r1` frame around the baserom's bare `bx lr`. Structurally identical to sibs sub_08006958 (iter 23) and sub_08006B94 (iter 31), both already in the [[codegen-notes:Fifth unmatchable class]] register-coloring-drift list. Per the prompt's "don't NAKED an 8-instr leaf without satisfying the full gate," agent restored asm/linker.ld. Permuter run was NOT executed — next dispatch must include it. Logged as a new bullet in the fifth-class instances list.
+- Data: **7 tilemaps consolidated into one family file** (`src/data/screen_tilemaps_e9418.c`, 14 KiB total — 5 new + 2 relocated from iter-31's screen_tilemaps_e9c18.c). Region 0x081e9418..0x081ecc18 now fully deblobbed. The offset table at 0x08308f84 was disassembled and confirmed (5 0x081exxxx entries + 9 0x0821xxxx entries with different geometry + 0x00000000 sentinel at 0x308fbc); the table itself is NOT yet extracted (overlaps a larger pointer structure that needs separate consumer analysis — deferred).
+
+**Commit:** iter-32 hash (single combined: data extraction + codegen-notes fifth-class instance bullet + loop-log).
+
+**After:** 81 fns (unchanged), 78 asm-fn-remaining (unchanged), 251 db (+5), 268.6 KiB src C (+10 KiB), **90.0% raw (-0.2pp, hits 90% floor)**, **10.0% data deblob (+0.2pp — milestone crossed!)**.
+
+**Architectural duties:**
+- docs/codegen-notes.md fifth-class instances list — appended sub_08006B94 (iter 31 ship with gate satisfaction) and sub_08006BA4 (iter 32 defer). Three consecutive functions in src/game/sub_08006b88.c are all the same class; future picks from that file should expect NAKED+permuter as the default path.
+- **Milestone**: 10% data deblob crossed (+8.9pp since loop resume at iter 11). 22 iters of cumulative work.
+- **Iter-31 trajectory hypothesis confirmed**: the deferred sibling tilemap pool was indeed the next-iter unlock, exactly as projected.
+
+**Decisions:** Deferred decomp despite a "tractable" pick because the gate would require a permuter run that wasn't in the dispatch brief. Lighter-than-ideal iter, but the data side carried the work. Next iter should re-attempt sub_08006BA4 (or sib batch) with explicit "run permuter ≥1000 iter" in the brief.
+
+**Trajectory:** 22 iters post-resume (11-32). Functions 41→81 (+40, no change). Raw INCBIN 98.1%→90.0% (**-8.1pp**). db 117→251 (+134). src C 75→269 KiB (+194 KiB). Data deblob 1.0%→10.0% (+9.0pp). **10% deblob hit.** Next data target unclear — refcount tool returns no remaining ≥2-ref data anchors (all extracted or named). Pivoting to either: (a) low-refcount cluster scouting via offset tables (e.g., extract 0x08308f84 once consumer is mapped), or (b) decomp-only iters until data tools resurface candidates.
+
+---

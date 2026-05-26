@@ -1928,7 +1928,15 @@
     "size": 2
   },
   {
-    "path": "sprite/screen_tilemaps_e9c18/tilemap_default.bin",
+    "path": "sprite/screen_tilemaps_e9418/tilemap_table0.bin",
+    "addr": {
+      "us": "0x1E9418"
+    },
+    "count": "0x400",
+    "size": 2
+  },
+  {
+    "path": "sprite/screen_tilemaps_e9418/tilemap_default.bin",
     "addr": {
       "us": "0x1E9C18"
     },
@@ -1936,9 +1944,41 @@
     "size": 2
   },
   {
-    "path": "sprite/screen_tilemaps_e9c18/tilemap_mode3.bin",
+    "path": "sprite/screen_tilemaps_e9418/tilemap_mode3.bin",
     "addr": {
       "us": "0x1EA418"
+    },
+    "count": "0x400",
+    "size": 2
+  },
+  {
+    "path": "sprite/screen_tilemaps_e9418/tilemap_table1.bin",
+    "addr": {
+      "us": "0x1EAC18"
+    },
+    "count": "0x400",
+    "size": 2
+  },
+  {
+    "path": "sprite/screen_tilemaps_e9418/tilemap_table2.bin",
+    "addr": {
+      "us": "0x1EB418"
+    },
+    "count": "0x400",
+    "size": 2
+  },
+  {
+    "path": "sprite/screen_tilemaps_e9418/tilemap_table4.bin",
+    "addr": {
+      "us": "0x1EBC18"
+    },
+    "count": "0x400",
+    "size": 2
+  },
+  {
+    "path": "sprite/screen_tilemaps_e9418/tilemap_table3.bin",
+    "addr": {
+      "us": "0x1EC418"
     },
     "count": "0x400",
     "size": 2
