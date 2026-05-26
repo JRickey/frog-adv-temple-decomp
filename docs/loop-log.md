@@ -1038,3 +1038,36 @@ The class IS unmatchable, but specifically because of THREE downstream structura
 **Trajectory:** 28 iters post-resume (11-38). Functions unchanged 86. Raw INCBIN unchanged 88.8%. **Strategic clarity gained — the mode-X cluster's NAKED status is now corpus-validated and structurally explained.** Resume regular decomp + data dispatch next iter.
 
 ---
+
+## Iter 39 — 2026-05-26 (decomp + peel-scout pass)
+
+**Before:** 86 fns (16.6%), 73 asm-fn-remaining, 265 db, 88.8% raw, 11.10% deblob
+
+**Targets:** Decomp **sub_08006ADC** (32 B leaf, 1 unpeeled callee). Data side INTENTIONALLY skipped — refcount tool exhausted at all thresholds; pivoted to a **peel-scout** of text_0x08001128 (236 B raw bucket between mode-X functions) to expand the picker candidate set.
+
+**Outcomes:**
+
+- **Decomp**: PURE-C MATCH, byte_diff 0. First non-NAKED ship since iter 32 (sub_08006B94's NON_MATCHING-only side back in iter 31 was the last pure-C body). Decrement-and-call timer leaf shape; key trick was `v = 0; *p = v; return v;` (shared local forces agbcc to reuse the materialised 0 between strb and return value — natural `*p = 0; return 0;` form added a spurious `movs r0, #0` at the tail). 4 variants documented in the .c file's leading comment.
+
+- **Peel-scout**: 5 new functions identified in text_0x08001128 + peeled into individual asm slices. Each detect-fn-boundary-confirmed. Ranked tractability for future iters:
+  1. sub_08001198 (12 B, 4 instr — trivial `void f() { return Other(); }` thunk)
+  2. sub_08001128 (24 B, 11 instr — sets one gGameStuff byte + 1 call)
+  3. sub_08001174 (36 B, 16 instr — small conditional + tail call)
+  4. sub_08001140 (52 B, 20 instr — 5 sequential `bl`s, init-chain shape)
+  5. sub_080011A4 (112 B, 52 instr — input-state checks, conditional paths)
+
+**Commits:** `1c89aaf` (Phase-0 peel of sub_08016A40, standalone) + iter-39 hash (decomp ship + 5-fn peel-scout + linker.ld + loop-log + README).
+
+**After:** 87 fns (+1, 16.7%), **72 asm-fn-remaining (-1 net — minus sub_08006ADC, plus 5 new peeled asm slices means picker gains 5 candidates while the asm-line count goes UP)**, 265 db unchanged (no data ship), ~300 KiB src C (+1 KiB), 88.8% raw, 11.10% deblob.
+
+**Wait** — net asm count: iter 38 had 73; iter 39 removes sub_08006ADC's asm slice (-1) and removes the text_0x08001128 raw bucket but adds 5 new disasm_*.s files (+5 peelable fn slices). Picker count metric: it counts thumb_func_start lines, so 73 + 5 (new peels) - 1 (sub_08006ADC removed from asm) = **77 asm-fn-remaining**. This is fine — peel-scout is INFRA that exposes more candidates, even though the visible count goes up.
+
+**Architectural duties:**
+- **Peel-scout pattern established as a valid iter shape.** When the data side is exhausted (refcount tool returns nothing), one productive pivot is to peel-scout a text_* bucket. Each new thumb_func_start is a future decomp candidate. This iter exposed 5; future iters can dispatch single decomps against each.
+- **Pure-C wins are rare but real.** First pure-C match since iter 32. The `v = 0; *p = v; return v;` shared-local trick is worth adding to docs/codegen-notes.md as a small-leaf-match pattern.
+
+**Decisions:** (1) Skipped data dispatch — refcount tool empty, no cheap pivot; peel-scout was the better use of the parallel agent slot. (2) Net asm-fn-remaining went UP from 73 to 77 because peel-scout exposes more candidates than it removes — that's the intended trade-off (more decomp targets = more future progress).
+
+**Trajectory:** 29 iters post-resume (11-39). Functions 41→87 (+46). Raw INCBIN 98.1%→88.8%. db 117→265. src C 75→300 KiB. Data deblob 1.0%→11.10%. **Decomp-pivot strategy working when data side is dry.** Next iter: pick from the 5 newly-peeled candidates (start with sub_08001198 thunk for warm-up).
+
+---

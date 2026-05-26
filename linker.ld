@@ -75,7 +75,11 @@ SECTIONS {
         asm/text/text_0x08000d5c.o(.text);  /* 0x08000d5c - 0x08000e0c, raw bytes */
         src/system/sub_08000e0c.o(.text);  /* 0x08000e0c - 0x08000eb8, sub_08000E0C */
         src/system/sub_08000eb8.o(.text);  /* 0x08000eb8 - 0x08001128, sub_08000EB8 (NAKED + NON_MATCHING; mode-9 dispatch — `mov pc, rN` jump table, sibling of sub_08002844) */
-        asm/text/text_0x08001128.o(.text);  /* 0x08001128 - 0x08001214, raw bytes */
+        asm/disasm_0x08001128.o(.text);  /* 0x08001128 - 0x08001140, sub_08001128 (auto-peeled) */
+        asm/disasm_0x08001140.o(.text);  /* 0x08001140 - 0x08001174, sub_08001140 (auto-peeled) */
+        asm/disasm_0x08001174.o(.text);  /* 0x08001174 - 0x08001198, sub_08001174 (auto-peeled) */
+        asm/disasm_0x08001198.o(.text);  /* 0x08001198 - 0x080011a4, sub_08001198 (auto-peeled) */
+        asm/disasm_0x080011a4.o(.text);  /* 0x080011a4 - 0x08001214, sub_080011A4 (auto-peeled) */
         asm/disasm_0x08001214.o(.text);  /* 0x08001214 - 0x08001478, sub_08001214 (auto-peeled) */
         src/game/set_game_mode_03.o(.text);  /* 0x08001478 - 0x08001484, SetGameMode_03 */
         asm/text/text_0x08001484.o(.text);  /* 0x08001484 - 0x08001508, raw bytes */
@@ -117,7 +121,7 @@ SECTIONS {
         asm/text/text_0x08006600.o(.text);  /* 0x08006600 - 0x08006948, raw bytes */
         src/game/sub_08006948.o(.text);  /* 0x08006948 - 0x080069bc, sub_08006948 + sub_08006958 + sub_0800696C */
         asm/text/text_0x080069bc.o(.text);  /* 0x080069bc - 0x08006adc, raw bytes */
-        asm/disasm_0x08006adc.o(.text);  /* 0x08006adc - 0x08006afc, sub_08006ADC (auto-peeled) */
+        src/game/sub_08006adc.o(.text);  /* 0x08006adc - 0x08006afc, sub_08006ADC */
         asm/text/text_0x08006afc.o(.text);  /* 0x08006afc - 0x08006b88, raw bytes */
         src/game/sub_08006b88.o(.text);  /* 0x08006b88 - 0x08006bb4, sub_08006B88 + sub_08006B94 + sub_08006BA4 */
         asm/text/text_0x08006bb4.o(.text);  /* 0x08006bb4 - 0x08007874, raw bytes */
