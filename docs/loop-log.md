@@ -566,3 +566,28 @@ The agent infrastructure grew organically with each iter — each new friction d
 **Trajectory:** 10 iters post-resume (11-20). Functions 41→56 (+15). Raw INCBIN 98.1%→95.6% (-2.5pp). db 117→204 (+87). src C 75→155 KiB (+80 KiB). **Iter 20 is the first "infra-shaped" iter since iter 9** — no new decomp, but landed picker hardening + major architectural understanding (walker family + 4-way parallel arrays). Counts as ONE infra iter for the no-op stop condition; if iter 21 also produces no decomp, that's two — at three I halt with note.
 
 ---
+
+## Iter 21 — 2026-05-26
+
+**Before:** 56 / ~513 fns (10.9%), 62 peeled-asm, 204 db, 155.3 KiB src C, 95.6% raw
+
+**Targets:** Decomp scaffold-and-decomp sub_080090B0 via scaffold_cluster.py (first major exercise of the tool post-iter-17 contiguous-append patterns). Data: dispatcher + offset table at 0x083181bc, iter-20 follow-up.
+
+**Outcomes:**
+- Decomp: **scaffold_cluster.py worked FIRST-TRY, no manual fixup**. Major infra validation. sub_080090B0 lands NAKED + NON_MATCHING (~22 instr, byte_diff 6, permuter 2100+ iter didn't beat baseline). Function does sub-pixel-to-tile coord conversion via `__divsi3` and invalidates a cached coord pair. Auto-peel surfaced callee sub_08006B88 (12 B leaf). include/iwram.h gained `struct IwramAt3720` + grew `struct IwramAt35E0`. **Fifth unmatchable class confirmed**: register-coloring drift after libgcc/table-dispatch calls (third concrete instance — promoted from "candidate" to confirmed in codegen-notes).
+- Data: 3 tables, 800 B from 0x083181bc cluster. Dispatcher (`{ptr=&sLevelLayout_31813C, count=0x20}`) + section-pointer header (7 u32 byte offsets) + monotonic offset table (191 u32 into first payload section). Consumer at 0x0802039a looks like a streaming-load manager (0x2000 DMA-control word + IWRAM 0x03000008 storage). 93 KiB variable-length payload at [0x083184dc..0x0832f980) characterized but deferred.
+
+**Commit:** iter-21 hash (single combined: scaffold + decomp + data + codegen-notes + include/iwram.h).
+
+**After:** 58 / ~513 fns (**11.3%** +0.4pp), 63 peeled-asm, 207 db (+3), **156.1 KiB src C** (+0.8 KiB), 95.6% raw, 4.4% data deblob. asm_funcs_remaining: 79 → 78.
+
+**Architectural duties:**
+- docs/codegen-notes.md "Fifth unmatchable class" — promoted from "candidate" to confirmed with three instances (sub_0800A2D8 / sub_0800A328 / sub_080090B0). Unified trigger: agbcc register-allocator choice that no source-level mutation flips. Detection heuristic + worked examples.
+- include/iwram.h — two new IWRAM struct typedefs (IwramAt3720 sub-pixel coords; IwramAt35E0 grown).
+- **scaffold_cluster.py validated end-to-end** — the picker's 20+ "scaffold C file"-blocked candidates are now all tractable.
+
+**Decisions:** none material.
+
+**Trajectory:** 11 iters post-resume (11-21). Functions 41→58 (+17). Raw INCBIN 98.1%→95.6% (-2.5pp). db 117→207 (+90). src C 75→156 KiB (+81 KiB). **The "decomp surface depletion" worry from iter 20 is resolved**: scaffold_cluster.py works, and the picker shows 20+ small tractable functions immediately tractable once scaffolded. Iter 20 was a one-time infra iter, not the start of a no-op streak.
+
+---
