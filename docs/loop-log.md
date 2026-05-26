@@ -49,3 +49,31 @@ e34fe59 CLAUDE.md: note NAKED + .syntax divided requirement
 ```
 
 ---
+## Iter 1 — 2026-05-26
+
+**Before:**
+- 24 / ~513 functions (4.7%), 17 peeled-asm, 35 db entries, 49.7 KiB src C, 98.8% raw
+
+**Targets:**
+- Decomp: `sub_0802E5D8` (PSG pitch interpolation, 172 B, sound cluster). Picked to resolve the two pass-2 `sUnknownSoundLut_*` placeholders.
+- Data: 0x080c0xxx cluster (top refcount: 33-ref anchor at `0x080c0b00`, six adjacent refs in top-20). Picked as the highest-yield pending anchor.
+
+**Outcomes:**
+- Decomp: NAKED + `#ifdef NON_MATCHING`. **New unmatchable class #3** discovered (`push {r4-r7, lr}` + libgcc helper BL). Documented + CLAUDE.md pointer. Side benefit: consolidated two `_Unknown` LUTs → `sPsgPitchLut`, identified peeled callee as `__divsi3`.
+- Data: 13 named tables, identified the cluster as the **entity-dispatch vtable system**. New section in `docs/subsystems.md`. Sine LUT 256+64 shape + apostrophe-trap detection-signature folded into codegen-notes.
+
+**Commit:** `1b1d710`
+
+**After:**
+- 26 / ~513 functions (5.1%), 17 peeled-asm, 47 db entries, 44.6 KiB src C, 98.7% raw
+
+**Architectural duties done:**
+- 4 new sections in `docs/codegen-notes.md`
+- CLAUDE.md quirks list gained 2 new pointers
+- `docs/subsystems.md` Entity-Dispatch section added
+- Playbook hashes bumped to 0e1d8eb (pre-iter HEAD)
+- `data.md` inline addition: apostrophe-trap detection signature
+
+**Decisions:** none warranting `docs/decisions.md` (mechanical iteration; both agents fell into well-documented patterns).
+
+---
