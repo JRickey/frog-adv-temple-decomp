@@ -818,3 +818,29 @@ The agent infrastructure grew organically with each iter — each new friction d
 **Trajectory:** 20 iters post-resume (11-30). Functions 41→78 (+37). Raw INCBIN 98.1%→90.4% (-7.7pp). db 117→244 (+127). src C 75→255 KiB (+180 KiB). Data deblob 1.0%→9.6% (+8.6pp). **MODE-X FAMILY DECOMPABLE NOW**. Pace through the post-resume run: 37 fns / 20 iters = ~1.85 fns/iter, growing with each cluster-unlock.
 
 ---
+
+## Iter 31 (post-audit resume) — 2026-05-26
+
+**Before:** 80 fns, 246 db (data agent's iter-30 update), 90.4% raw
+
+**Context**: First iter after the NAKED audit (~commits 3ce7961, e6d13fd, a403325). The playbook now mandates permuter evidence + 5 source variations + per-function class justification for any NAKED ship.
+
+**Targets:** Decomp sub_08006B94 (tiny contig append). Data: 0x081e9c18 + 0x081ea418 tilemap pair.
+
+**Outcomes:**
+- Decomp: **sub_08006B94 NAKED, GATE SATISFIED.** Agent ran 1761 permuter iter (plateaued at 205 with zero improvements), documented 11 distinct source variants, cited per-function evidence, included NON_MATCHING ref body. First clean NAKED ship under the new rules.
+- Data: 2 tables / 4 KiB (sScreenTilemap_E9C18 + sScreenTilemap_EA418, two screenblock-29 variants). Consumer uses IWRAM mode word at 0x030034b0 to choose.
+
+**Commit:** iter-31 hash (single combined: decomp + data + codegen-notes incremental-build finding).
+
+**After:** 81 fns (15.8%), 246 db (+0 from data — agent counted pre-existing entries), **258.6 KiB src C** (+38 KiB from the data files), **90.2% raw (-0.2pp, sub-90.5%)**, **9.8% data deblob (+0.2pp, approaching 10%)**.
+
+**Architectural duties:**
+- docs/codegen-notes.md "Stale incremental build after asm/text slice split" — new entry. After splitting a .s bucket, always use `make tidy && make -j8 && make check`. Incremental builds may produce stale ROMs that mask clean matches.
+- **First NAKED under new gate** — agent execution demonstrates the rules work. Permuter convergence to no-improvement at base score IS the evidence.
+
+**Decisions:** none material — the playbook rules executed correctly.
+
+**Trajectory:** 21 iters post-resume (11-31). Functions 41→81 (+40). Raw INCBIN 98.1%→90.2% (**-7.9pp**). db 117→246 (+129). src C 75→259 KiB (+184 KiB). Data deblob 1.0%→9.8% (+8.8pp). **Next milestones**: 10% data deblob (need +0.2pp), and **>5 deferred sibling tilemaps in the same window worth ~14 KiB** = potentially crosses 10% next iter.
+
+---
