@@ -215,6 +215,16 @@ def _filename_affinity(target_name: str, c_file: Path) -> int:
     that and `target_name`, or 0 if the file's name has no obvious mapping.
     """
     stem = c_file.stem  # `status_screen`
+    # `sub_<hex>` files are address-named scaffolds; the file stem is
+    # lowercase by convention (sub_080011a4.c) while the target name keeps
+    # the original case (sub_080011A4). Compare case-insensitively so the
+    # scaffold ↔ target match isn't lost to the case bump.
+    if re.fullmatch(r"sub_[0-9A-Fa-f]+", stem):
+        n = 0
+        while (n < len(stem) and n < len(target_name)
+               and stem[n].lower() == target_name[n].lower()):
+            n += 1
+        return n
     parts = stem.split("_")
     pascal = "".join(p[:1].upper() + p[1:] for p in parts)
     n = 0
