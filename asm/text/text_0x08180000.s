@@ -1,6 +1,6 @@
 @ Auto-emitted by tools/disasm/bucket.py — do not hand-edit this header.
 @ Address-aligned bucket of unparsed baserom bytes.
-@ Range:  [0x08180000, 0x08190000)  (0x10000 bytes)
+@ Range:  [0x08180000, 0x08188edc)  (shrunk for src/data/screen_188edc.c)
 @
 @ This file holds raw bytes only; no instructions are assembled here.
 @ As individual functions are identified and peeled out into
@@ -12,5 +12,5 @@
         .global text_08180000
         .type   text_08180000, %object
 text_08180000:
-        .incbin "frog_us_baserom.gba", 0x00180000, 0x00010000
+        .incbin "frog_us_baserom.gba", 0x00180000, 0x00008edc
         .size   text_08180000, . - text_08180000

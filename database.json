@@ -1710,5 +1710,37 @@
     },
     "count": "0x400",
     "size": 2
+  },
+  {
+    "path": "sprite/frog_tile_pixels_e7ab6.bin",
+    "addr": {
+      "us": "0xE7AB6"
+    },
+    "count": "0x854A",
+    "size": 1
+  },
+  {
+    "path": "sprite/screen_188edc/tilemap.bin",
+    "addr": {
+      "us": "0x188EDC"
+    },
+    "count": "0x400",
+    "size": 2
+  },
+  {
+    "path": "sprite/screen_1a3b6a/char_tiles.bin",
+    "addr": {
+      "us": "0x1A3B6A"
+    },
+    "count": "0x2000",
+    "size": 1
+  },
+  {
+    "path": "sprite/screen_1a3b6a/tilemap.bin",
+    "addr": {
+      "us": "0x1A5B6A"
+    },
+    "count": "0x400",
+    "size": 2
   }
 ]

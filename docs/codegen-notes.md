@@ -558,12 +558,19 @@ Permuter doesn't include this idiom in its mutation set (as of 2024).
 Apply it manually when `compile_and_view_assembly.py` reports a fold
 that no source rearrangement breaks.
 
-## High registers (sl/r10, sb/r9, r8) — corpus-validated unmatchable
+## High registers (sl/r10, sb/r9, r8, ip/r12) — corpus-validated unmatchable
 
-If your baserom uses `mov sl, rN` (or `mov sb, ...` / `mov r8, ...`)
-to spill a value into a Thumb high register, **stop trying to match
-it in C and use NAKED asm + `#ifdef NON_MATCHING` instead.** This is
-the established pattern in every agbcc decomp we've surveyed.
+If your baserom uses `mov sl, rN` (or `mov sb, …` / `mov r8, …` /
+`mov ip, …`) to spill a value into a Thumb high register, **stop
+trying to match it in C and use NAKED asm + `#ifdef NON_MATCHING`
+instead.** This is the established pattern in every agbcc decomp
+we've surveyed.
+
+**`ip` (r12) added to the list iter 25** after a third corpus-confirmed
+instance (sub_08009BA0 — uses `mov ip, r3` to cache a ROM table base,
+then `mov r7, ip` inside the loop body). Same rule applies:
+`tools/agent/corpus.py grep 'mov\s+ip,\s+r[0-9]+' --c` shows every
+hit is inside a NAKED inline-asm block; no matched C produces it.
 
 **Corpus evidence (Phase D search, May 2026):**
 - 966 instances of `mov sl, rN` across 3 corpus repos (cvaos, mf, mzm)

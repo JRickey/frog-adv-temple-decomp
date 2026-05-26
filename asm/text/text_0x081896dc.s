@@ -1,6 +1,6 @@
 @ Auto-emitted by tools/disasm/bucket.py — do not hand-edit this header.
-@ Address-aligned bucket of unparsed baserom bytes.
-@ Range:  [0x081a0000, 0x081a3b6a)  (shrunk for asm/data/screen_1a3b6a.s)
+@ Tail bucket after src/data/screen_188edc.c cluster.
+@ Range:  [0x081896dc, 0x08190000)  (0x6924 bytes)
 @
 @ This file holds raw bytes only; no instructions are assembled here.
 @ As individual functions are identified and peeled out into
@@ -8,9 +8,9 @@
 @ this bucket and its neighbours, at their correct baserom addresses.
 
         .section .text, "ax", %progbits
-        .balign 1
-        .global text_081a0000
-        .type   text_081a0000, %object
-text_081a0000:
-        .incbin "frog_us_baserom.gba", 0x001a0000, 0x00003b6a
-        .size   text_081a0000, . - text_081a0000
+        .align  2
+        .global text_081896dc
+        .type   text_081896dc, %object
+text_081896dc:
+        .incbin "frog_us_baserom.gba", 0x001896dc, 0x00006924
+        .size   text_081896dc, . - text_081896dc
