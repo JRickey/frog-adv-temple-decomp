@@ -1272,6 +1272,25 @@ return-value reuse), but the symptom is identical: byte_diff plateaus
 at 1-10, permuter doesn't help, and the diffs concentrate on
 register-letter changes in arithmetic/load instructions.
 
+### Permuter convergence audit (post-iter-30 retrospective)
+
+After iter-30, three NAKED ships from this class were re-tested with
+permuter to validate the unmatchability claim (the original ships had
+shipped NAKED without running permuter, which the new playbook now
+forbids). Permuter ran 12K-49K iterations per function and these
+were the empirical outcomes:
+
+| Function | Iters | Score base | Best | Δ | Verdict |
+|----------|-------|-----------|------|---|---------|
+| sub_08000918 | 49,534 | 11285 | 11110 | -1.5% | Genuine ceiling. Many simultaneous register-coloring choices. |
+| sub_08006948 | 34,919 | 205 | 205 | **0%** | Strongest validation: permuter could not produce ANY improvement. The 4-byte `adds r1, r2, #0; strh r1, ...` shape vs `strh r2, ...` fold is unreachable from C. |
+| sub_08009D9C | 11,952 | 9205 | 8705 | -5.4% | Found split-write trick + `do{}while(0)` block scope. Useful documentation for future re-attempts but still far from 0. |
+
+**Process lesson**: permuter convergence on near-zero improvement after
+~10K+ iters IS the evidence the playbook now requires. Always run
+permuter before NAKED; cite the iter count + final best score in the
+commit.
+
 
 
 Function pattern — same expression `sTable[gStruct.field]()` repeated

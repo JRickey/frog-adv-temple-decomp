@@ -212,7 +212,20 @@ NAKED u32 sub_08009D9C(u8 *arg)
 #ifdef NON_MATCHING
 /* Reference body for the phase-3 PC port. The shape mirrors the asm:
  * an init-or-advance branch on *arg, a fixed handler dispatch via two
- * ROM tables, a sprite/OAM transfer, and a late-tick state check. */
+ * ROM tables, a sprite/OAM transfer, and a late-tick state check.
+ *
+ * Audit (post-iter-30): permuter ran 12K iterations and improved the
+ * score by 5.4% (9205 → 8705). Two mutations from the best candidate
+ * are preserved below as documented improvements:
+ *   - The `|= 2; &= 0x7fff;` split write (vs the combined
+ *     `= (... | 2) & 0x7fff;`) — permuter found this lands closer to
+ *     baserom's two-instruction `orrs + ands` than the combined form.
+ *   - Wrapping the post-tail in a `do { ... } while (0)` block — a
+ *     permuter trick to force a different basic-block boundary that
+ *     emits slightly different epilogue code.
+ * The function still does NOT match in pure C — too many simultaneous
+ * register-coloring choices. NAKED below is the source-of-truth.
+ */
 u32 sub_08009D9C(u8 *arg)
 {
     u8 *r7;
@@ -229,7 +242,9 @@ u32 sub_08009D9C(u8 *arg)
     } else {
         r7 = (u8 *)0x03003720;
         if ((*(u16 *)(r7 + 0x34) & 0x8000) != 0) {
-            *(u16 *)(r7 + 0x34) = (*(u16 *)(r7 + 0x34) | 2) & 0x7fff;
+            /* Split-write form (per permuter audit, +5% score). */
+            *(u16 *)(r7 + 0x34) |= 2;
+            *(u16 *)(r7 + 0x34) &= 0x7fff;
             *arg += 1;
         }
     }
