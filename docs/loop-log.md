@@ -240,3 +240,29 @@ e34fe59 CLAUDE.md: note NAKED + .syntax divided requirement
 **Decisions:** none. The recovery from a wrong charter is exactly the playbook's intent ("skip and report"); not a judgment-call worth logging.
 
 ---
+## Iter 9 — 2026-05-26
+
+**Before:** 39 / ~513 fns (7.6%), 15 peeled-asm, 112 db, 73.0 KiB src C, 98.1% raw
+
+**Targets:** Decomp sub_080301C4 (80-instr sound mixer helper). Data 0x0800a26d Thumb fn-ptr table hunt.
+
+**Outcomes:**
+- Decomp: **pure C, third consecutive**. Promoted 4 pool literals to typed symbols (sNoteRatioTable, sInversePitchTable, gpSoundSystem, __udivsi3). Side-peel: __udivsi3 libgcc helper (3rd in cluster). Function semantics decoded.
+- Data: hunt premise wrong AGAIN (same as iter 8 but Thumb). Fallback: 5 level-layout fill-ins in [0x08310EB4..0x083112A8), 1012 B.
+
+**Tool enhancement (architectural duty):** `refcount_pool_loads.py --data-only` flag added. Filters out code-thumb/code-arm anchors. Default behavior unchanged. Recommend future data agents always use `--pending-only --data-only` together.
+
+**Commit:** iter-9 hash
+
+**After:** 40 / ~513 fns (7.8%), 14 peeled-asm, 117 db, 74.2 KiB src C, 98.1% raw
+
+**Architectural duties:**
+- `tools/agent/refcount_pool_loads.py --data-only` flag added.
+- No new codegen-notes entry needed (the underlying pattern is already documented from iter 8).
+- No new subsystems.md update.
+
+**Friction observed:** none new. The 2nd-in-a-row wrong-table-premise charter generated a clean tool response (the --data-only flag) so future iters don't repeat this mistake.
+
+**Decisions:** none.
+
+---
