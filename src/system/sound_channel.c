@@ -102,3 +102,55 @@ void sub_0802ED5C(void)
         } while (i < (*gpsp)->count);
     }
 }
+
+/* sub_0802EDF0 — per-frame stream-cursor advancer (refined asm; C deferred).
+ *
+ * Lives in asm/disasm_0x0802edf0.s. The asm slice has been refined from
+ * .incbin to real Thumb mnemonics (matching). The C decomp was attempted but
+ * left blocked at ~207 byte_diff after both register-pinning iteration and
+ * a ~2k-iteration permuter run (best score 2725 vs base 3410, no clear
+ * convergence).
+ *
+ * Function shape and discovered fields (for the next agent):
+ *   - Iterates `gpSoundSystem->count` slots, similar loop shape to
+ *     sub_0802ED5C but with stream-table bookkeeping.
+ *   - Gates per slot on flag 0x800 (active) AND a u8 frame-countdown at
+ *     slot+0x33 (current) / slot+0x32 (reload).
+ *   - On expiry, decrements a u16 "remaining frames" at slot+0x30
+ *     (overlay of negLimit/posLimit). When remaining hits 0:
+ *     if flag 0x4000 set: copy step (slot+0x2e) → slot+0x30, negate
+ *     acc (slot+0x2c). Else: clear flag bits 0x4800 from slot+0x38.
+ *   - Active block reads per-slot `(*gpSoundSystem)->streamTable[i]`
+ *     (offset 0xc4 in SoundSystem) — a `SoundStream *[]` whose entries
+ *     have fields at +0 (sub-buffer ptr), +0x8 (bound), +0xc (head /
+ *     cursor), +0x10 (wrap distance). Advances head by signed acc with
+ *     a non-trivial overflow predicate that varies by head-vs-field8.
+ *
+ * Structural blockers found during the attempt:
+ *
+ *   (1) The baserom prologue does `ldr r0, [r1, #0]` (preload ss) then
+ *       `b _0802EEE4` straight INTO the count-check after the
+ *       end-of-iteration `ldr r0, [r1]` re-fetch. agbcc's DCE removes
+ *       this preload because ss is reassigned at loop_body; no source
+ *       structure tried (pinned register, opaque asm("") fence, explicit
+ *       passthrough) kept the load live across the b.n.
+ *
+ *   (2) Register allocation drift: pinning {gpsp→sl, i→r9, overflow→r8,
+ *       stream→r7, remaining→r6} gets close, but agbcc allocates
+ *       {ss, slot, env} to {r2, r3, r2} in our build vs {r4, r2, r3}
+ *       in baserom. Pinning ss→r4 spills locals in the active block
+ *       (`ldr [sp, #N]` for stream/head/field8/field10). Pinning both
+ *       ss and slot makes the active block re-load stream fields from
+ *       the stack instead of via r6.
+ *
+ *   (3) Two-step ldrh + adds reg=r0 idiom for `remaining` (baserom:
+ *       `ldrh r0, [r3, #4]; adds r6, r0, #0`; agbcc folds to
+ *       `ldrh r6, [r3, #4]`). The `asm("" : "=r"(remaining) : "0"(r0))`
+ *       mov-fence helps locally but disturbs adjacent code.
+ *
+ * Permuter setup (working) is at `nonmatchings/sub_0802EDF0/`. Best
+ * mutations found: cache `stream->field10` into a local before the
+ * head-vs-field8 branch. Restart points: try keeping ss pinned to r0
+ * with a no-op asm fence at loop_count_check, or split prologue into
+ * its own function-prefix block.
+ */

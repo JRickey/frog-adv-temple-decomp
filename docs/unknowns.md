@@ -227,3 +227,43 @@ looks right, try applying that patch.
 shipped in multiple regions but no other baserom is checked in. Worth
 verifying region differences are small (the engine should be identical;
 only text/audio/data should change) before deep work.
+
+## sub_0802EDF0 — stream-cursor advancer, blocked at ~207 byte_diff
+
+132-instruction sound-system per-frame leaf. Asm slice refined to real
+Thumb mnemonics (matching) but C decomp stuck on two structural issues
+agbcc 2.x doesn't seem to express cleanly:
+
+1. **Prologue gpSS preload + count-check entry**: Baserom has
+   `ldr r0, [r1]; mov sl, r1; b _0802EEE4` where `_0802EEE4` is INSIDE
+   the loop-end count-check (after a paired `mov r1, sl; ldr r0, [r1]`
+   on the iteration-end path). The b skips those re-loads on the first
+   iteration. No C source structure tried (pinned register variable,
+   opaque asm("") fence on ss, explicit ss-as-arg passthrough) kept
+   the preload live across the b.n — agbcc's DCE removes it because
+   `ss` is reassigned at the body's `ss = *gpsp` line.
+
+2. **Register allocation drift in the active block**: Pinning the
+   "outer" variables {gpsp→sl, i→r9, overflow→r8, stream→r7,
+   remaining→r6} gets us close (function size 256 vs target 264) but
+   agbcc allocates {ss, slot, env} to {r2, r3, r2} where baserom uses
+   {r4, r2, r3}. Pinning ss→r4 spills locals in the active block;
+   pinning both ss and slot makes the active block reload
+   stream/head/field8/field10 from the stack.
+
+**Permuter run** (4 threads, ~2000 iterations): best score 2725 vs
+base 3410 — no breakthrough mutation. Best mutation found was caching
+`stream->field10` into a local; applied to the in-tree C, it shifts
+byte_diff slightly without breakthrough. The permuter setup is at
+`nonmatchings/sub_0802EDF0/` for next-agent reuse.
+
+**Status:** asm slice kept matching, C function not landed, comment
+added in `src/system/sound_channel.c` documenting the blockers for
+the next agent. Suggested next attempts:
+- Try `old_agbcc` instead of `agbcc` (per the existing per-TU override
+  pattern for sub_08033910).
+- Permuter run from a base that explicitly uses ss→r4 pinning,
+  accepting the spills, to see if permuter can rearrange them away.
+- Look in the corpus for an agbcc 2.x function that mixes the "prologue
+  load + shared count-check" pattern; if it exists, copy the source
+  shape.
