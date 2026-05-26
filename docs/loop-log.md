@@ -190,3 +190,27 @@ e34fe59 CLAUDE.md: note NAKED + .syntax divided requirement
 **Decisions:** none new. Blob-boundary lint still deferred from iter 4.
 
 ---
+## Iter 7 — 2026-05-26
+
+**Before:** 37 / ~513 fns (7.2%), 17 peeled-asm, 103 db, 71.5 KiB src C, 98.2% raw
+
+**Targets:** Decomp sub_0802E3F8 (16-instr lock-decrement). Data 0x0831 fill-ins (4 anchors).
+
+**Outcomes:**
+- Decomp: **PURE C** match (first since c636032)! 16 instr, two register pins, `(u8)v == 0` to drop zero-extend. Side-peel of sub_08035D94 (8-byte interwork veneer).
+- Data: 8 tables, 712 B. All 4 charter anchors claimed.
+
+**Commit:** iter-7 hash
+
+**After:** 38 / ~513 fns (7.4%), 16 peeled-asm, 111 db, 72.2 KiB src C, 98.1% raw
+
+**Architectural duties:**
+- No new codegen-notes (both ran patterns smoothly).
+- Multi-tier dispatcher pattern docs deferred (subsystems.md already covers it).
+
+**Friction observed:**
+- Data agent caught .incbin boundary off-by-0x1000 themselves. **FOURTH** occurrence of .incbin-related friction. Blob-boundary lint (sketched in docs/decisions.md iter 4) is no longer deferrable. **Landing as iter-8 pre-flight infra.**
+
+**Decisions:** Blob-boundary lint will be built before iter 8's agent dispatch.
+
+---
