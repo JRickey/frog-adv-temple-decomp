@@ -10,9 +10,19 @@ and dispatch background agents to do the actual work.
 
 ```sh
 git status               # MUST be clean (no uncommitted changes from prior iter)
+make tidy                # CRITICAL: forces clean rebuild
+make -j8                 # rebuild from source
 make check               # MUST pass (ROM matches baserom)
 python3 tools/agent/progress_stats.py   # snapshot the scoreboard
 ```
+
+**The `make tidy` step is non-negotiable.** A bare `make check` only
+verifies the SHA1 of the existing `frog_us.gba`; if a prior in-flight
+agent left intermediate `.o` files on disk, `make check` can pass while
+the committed source doesn't actually reproduce the matching ROM. That's
+what caused the iter-9 false-positive that halted the loop on iter 10
+(see `docs/decisions.md` "Iter-9 false-positive verification → loop halt").
+The ~30s `make tidy` cost is worth it.
 
 If the tree isn't clean, find out why. If a prior agent's work is partly
 staged-uncommitted, finish committing it (or revert if it was unsalvageable).
