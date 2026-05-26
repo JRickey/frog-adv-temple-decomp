@@ -46,4 +46,4 @@ const SoundWaveInstrument sDefaultSquareWaveInstr = {
     0x00000000,
 };
 
-const u8 sDefaultSquareWavePcm[128] = INCBIN_U8("data/sound/default_square_wave_pcm.bin");
+const s8 sDefaultSquareWavePcm[128] = INCBIN_S8("data/sound/default_square_wave_pcm.bin");
