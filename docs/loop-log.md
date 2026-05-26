@@ -516,3 +516,27 @@ The agent infrastructure grew organically with each iter — each new friction d
 **Trajectory:** 8 iters post-resume (11-18). Functions 41→55 (+14). Raw INCBIN 98.1%→95.7% (**-2.4pp**, accelerating). db 117→195 (+78). src C 75→153 KiB (**+78 KiB**). **Data deblob 1.0%→4.3% (+3.3pp)** — iter 18 alone contributed +1.2pp, the largest single-iter jump. Loop is healthy and on trend to cross 5% data + 11% fns next iteration.
 
 ---
+
+## Iter 19 — 2026-05-26
+
+**Before:** 55 / ~513 fns (10.7%), 63 peeled-asm, 195 db, 152.8 KiB src C, 95.7% raw
+
+**Targets:** Decomp sub_0800A3A4 (22-instr comparator peeled in iter 18). Data 0x081d8398 (iter-18 followup screen-clear tilemap) + 0x080e3xxx cluster scout.
+
+**Outcomes:**
+- Decomp: **PURE C, first-try byte-match** (rare — 4th pure-C of the post-resume run after sub_080008DC, sub_080004C4, sub_0800A520). The 22-instr descending-sort comparator reproduces cleanly via `struct-copy + mixed halfword/word-shift access` idiom. No permuter, no NAKED. Demonstrates the contiguous-append path is working end-to-end (2nd append to dispatch_helpers.c).
+- Data: 1 table (2 KiB, sScreenTilemapD8398). Charter floor met. **Iter-18 hypothesis correction**: this is a HUD/menu template tilemap, not a clear-screen blanker. Sparse glyph tiles 0x33-0x91 in palette-5. 0x080e3xxx bonus cluster deferred — it's 4bpp tile pixel data, not records.
+
+**Commit:** `5998574` (single combined: decomp + data + subsystems doc + clang-format).
+
+**After:** 56 / ~513 fns (**10.9%**), 62 peeled-asm (-1, sub_0800A3A4 promoted C), 196 db, **154.9 KiB src C**, **95.6% raw**, 4.4% data deblob.
+
+**Architectural duties:**
+- docs/subsystems.md "Tile-blit helper at 0x000196ec" — new entry. Inferred signature `TileBlit(coords, src, dst_mode)` with the {charblock0, sb29, sb30, sb31} dst_mode enum. **Unlocks renames** across the sub_0801F1E0-family tilemap consumers once decomped.
+- No new codegen-notes — the "struct-copy forces full load" idiom is general C, not agbcc-specific.
+
+**Decisions:** none material.
+
+**Trajectory:** 9 iters post-resume (11-19). Functions 41→56 (+15). Raw INCBIN 98.1%→95.6% (-2.5pp). db 117→196 (+79). src C 75→155 KiB (+80 KiB). Pure-C/NAKED ratio so far across post-resume iters: 4 pure-C / 5 NAKED. Comparator landed pure-C is a healthy signal — pre-existing peel ranges with proper boundary discipline are giving fully-tractable C targets.
+
+---
