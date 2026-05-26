@@ -1535,3 +1535,45 @@ If any of those return a match, the brief's UNPEELED is wrong;
 move on. TODO: harden decomp_brief.py to check src/**/*.c +
 all thumb_func_start labels across all disasm files. Would have
 saved iter 22's time spent investigating these.
+
+## 64-bit OR-store tail-merging — agbcc 2.x cannot avoid
+
+When a function sets bits in a 64-bit (u64) flag bank via
+`(u64)1 << n` shifted into either the lo or hi half:
+
+```c
+u64 mask = 1ULL << n;
+if (n < 32)
+    state->bank_lo |= (u32)mask;
+else
+    state->bank_hi |= (u32)(mask >> 32);
+```
+
+agbcc 2.x **always** tail-merges the duplicated "load bank lo/hi,
+OR with shift result, store back" block from both branches into a
+single shared epilogue (typically a 12-byte saving). The baserom
+keeps the branches DUPLICATED and DOES NOT tail-merge.
+
+No source-level mutation tested can prevent the fold:
+- Early `return` in one branch: fold still happens.
+- Separate base-pointer pin per branch (`u32 *p_lo` / `u32 *p_hi`):
+  fold still happens.
+- u32-split with explicit lo/hi: fold still happens.
+- Casts through `u8 *` / `u32 *` / locals: fold still happens.
+
+Also: when the fold IS forced, agbcc picks `orrs r2, r0` (clobbers
+the LOAD register) instead of baserom's `orrs r0, r3` (clobbers the
+SHIFT register). Independent register-coloring choice, same effect:
+no-match.
+
+**Resolution**: NAKED + `#ifdef NON_MATCHING`. The 64-bit OR-store
+shape commonly arises from in-ROM `__ashldi3` calls (e.g., the
+sub_0800696C iter-28 instance which sets bits in a 128-bit IWRAM
+flag bank via two `(u64)1 << n` shifts).
+
+Worked example: `sub_0800696C` (iter 28, 22 instr, both bank-lo and
+bank-hi branches affected).
+
+Related codegen-notes:
+- "In-ROM libgcc helpers" — `__ashldi3` at 0x08033ca4 added iter 28.
+- "Fifth unmatchable class" — same register-coloring root cause.

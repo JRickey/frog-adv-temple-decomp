@@ -64,6 +64,7 @@ LIBGCC_SYMBOLS = frozenset({
     "__divsi3",
     "__udivsi3",
     "__umodsi3",
+    "__ashldi3",   # 64-bit left shift, at 0x08033ca4 (iter 28)
     "_call_via_r0", "_call_via_r1", "_call_via_r2", "_call_via_r3",
     "_call_via_r4", "_call_via_r5", "_call_via_r6", "_call_via_r7",
     "_call_via_r8", "_call_via_r9", "_call_via_sl", "_call_via_fp",

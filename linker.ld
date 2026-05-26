@@ -109,11 +109,12 @@ SECTIONS {
         src/game/set_game_mode_15.o(.text);  /* 0x080052c0 - 0x080052cc, SetGameMode_15 */
         asm/text/text_0x080052cc.o(.text);  /* 0x080052cc - 0x080054a8, raw bytes */
         asm/disasm_0x080054a8.o(.text);  /* 0x080054a8 - 0x0800586c, sub_080054A8 (auto-peeled) */
-        asm/text/text_0x0800586c.o(.text);  /* 0x0800586c - 0x08005fc8, raw bytes */
+        asm/text/text_0x0800586c.o(.text);  /* 0x0800586c - 0x080059c4, raw bytes */
+        asm/disasm_0x080059c4.o(.text);  /* 0x080059c4 - 0x08005d10, sub_080059C4 (auto-peeled) */
+        asm/text/text_0x08005d10.o(.text);  /* 0x08005d10 - 0x08005fc8, raw bytes */
         asm/disasm_0x08005fc8.o(.text);  /* 0x08005fc8 - 0x08006600, sub_08005FC8 (auto-peeled) */
         asm/text/text_0x08006600.o(.text);  /* 0x08006600 - 0x08006948, raw bytes */
-        src/game/sub_08006948.o(.text);  /* 0x08006948 - 0x0800696c, sub_08006948 + sub_08006958 */
-        asm/disasm_0x0800696c.o(.text);  /* 0x0800696c - 0x080069bc, sub_0800696C (auto-peeled) */
+        src/game/sub_08006948.o(.text);  /* 0x08006948 - 0x080069bc, sub_08006948 + sub_08006958 + sub_0800696C */
         asm/text/text_0x080069bc.o(.text);  /* 0x080069bc - 0x08006adc, raw bytes */
         asm/disasm_0x08006adc.o(.text);  /* 0x08006adc - 0x08006afc, sub_08006ADC (auto-peeled) */
         asm/text/text_0x08006afc.o(.text);  /* 0x08006afc - 0x08006b88, raw bytes */
@@ -136,7 +137,7 @@ SECTIONS {
         src/game/sub_08009984.o(.text);  /* 0x08009984 - 0x08009ba0, sub_08009984 + sub_08009A58 */
         src/game/sub_08009ba0.o(.text);  /* 0x08009ba0 - 0x08009cbc, sub_08009BA0 + sub_08009C14 */
         asm/text/text_0x08009cbc.o(.text);  /* 0x08009cbc - 0x08009d9c, raw bytes */
-        asm/disasm_0x08009d9c.o(.text);  /* 0x08009d9c - 0x08009eec, sub_08009D9C (auto-peeled) */
+        src/game/sub_08009d9c.o(.text);  /* 0x08009d9c - 0x08009eec, sub_08009D9C (NAKED+NON_MATCHING) */
         asm/text/text_0x08009eec.o(.text);  /* 0x08009eec - 0x0800a05c, raw bytes */
         asm/disasm_0x0800a05c.o(.text);  /* 0x0800a05c - 0x0800a104, sub_0800A05C (auto-peeled) */
         asm/disasm_0x0800a104.o(.text);  /* 0x0800a104 - 0x0800a158, sub_0800A104 (auto-peeled) */
@@ -231,7 +232,8 @@ SECTIONS {
         src/system/sound_mixer_tail.o(.text);  /* 0x080325b0 - 0x08032894, sub_080325B0 (NAKED+NON_MATCHING) */
         asm/text/text_0x08032894.o(.text);  /* 0x08032894 - 0x08033910, raw bytes */
         src/game/sub_08033910.o(.text);  /* 0x08033910 - 0x08033948, sub_08033910 */
-        asm/text/text_0x08033948.o(.text);  /* 0x08033948 - 0x08033cd8, raw bytes */
+        asm/text/text_0x08033948.o(.text);  /* 0x08033948 - 0x08033ca4, raw bytes */
+        asm/disasm_0x08033ca4.o(.text);  /* 0x08033ca4 - 0x08033cd8, __ashldi3 (libgcc; auto-peeled) */
         asm/disasm_0x08033cd8.o(.text);  /* 0x08033cd8 - 0x08033d14, _call_via_rX libgcc helper table (auto-peeled) */
         asm/disasm_0x08033d14.o(.text);  /* 0x08033d14 - 0x08033da8, __divsi3 (libgcc; auto-peeled) */
         asm/text/text_0x08033da8.o(.text);  /* 0x08033da8 - 0x08033ee4, raw bytes */
@@ -290,7 +292,9 @@ SECTIONS {
         asm/text/text_0x081a0000.o(.text);  /* 0x081a0000 - 0x081a3b6a, raw bytes (shrunk for screen_1a3b6a cluster) */
         asm/data/screen_1a3b6a.o(.rodata);  /* 0x081a3b6a - 0x081a636a, sScreenCharTiles_1A3B6A (8 KiB) + sScreenTilemap_1A5B6A (2 KiB) */
         asm/text/text_0x081a636a.o(.text);  /* 0x081a636a - 0x081b0000, raw bytes (tail after screen_1a3b6a cluster) */
-        asm/text/text_0x081b0000.o(.text);  /* 0x081b0000 - 0x081bd8cc, raw bytes (shrunk for ui-text cluster) */
+        asm/text/text_0x081b0000.o(.text);  /* 0x081b0000 - 0x081b23ca, raw bytes (shrunk for screen_1b23ca + scenery_1b62aa clusters) */
+        asm/data/screen_1b23ca.o(.rodata);  /* 0x081b23ca - 0x081b62aa, sScreenCharTiles_1B23CA (8 KiB) + sScreenTilemap_1B43CA (2 KiB) + sScreenExtraData_1B4BCA (0x16e0 B) */
+        asm/data/scenery_1b62aa.o(.rodata);  /* 0x081b62aa - 0x081bd8cc, 4 mode-dispatch pairs (8 x 0xec4) + 2 B tail pad */
         src/data/eeprom_signature.o(.rodata);  /* 0x081bd8cc - 0x081bd90c, sEepromSignatureBlock */
         asm/text/text_0x081bd90c.o(.text);  /* 0x081bd90c - 0x081bd910, 4 B pad */
         src/data/win_pose_oam.o(.rodata);  /* 0x081bd910 - 0x081bda44, win-pose OAM + tile-stream */

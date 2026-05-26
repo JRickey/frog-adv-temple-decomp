@@ -1744,6 +1744,102 @@
     "size": 2
   },
   {
+    "path": "sprite/screen_1b23ca/char_tiles.bin",
+    "addr": {
+      "us": "0x1B23CA"
+    },
+    "count": "0x2000",
+    "size": 1
+  },
+  {
+    "path": "sprite/screen_1b23ca/tilemap.bin",
+    "addr": {
+      "us": "0x1B43CA"
+    },
+    "count": "0x400",
+    "size": 2
+  },
+  {
+    "path": "sprite/screen_1b23ca/post_tilemap_pad.bin",
+    "addr": {
+      "us": "0x1B4BCA"
+    },
+    "count": "0x16E0",
+    "size": 1
+  },
+  {
+    "path": "sprite/scenery_1b62aa/mode1_low.bin",
+    "addr": {
+      "us": "0x1B62AA"
+    },
+    "count": "0xEC4",
+    "size": 1
+  },
+  {
+    "path": "sprite/scenery_1b62aa/mode1_high.bin",
+    "addr": {
+      "us": "0x1B716E"
+    },
+    "count": "0xEC4",
+    "size": 1
+  },
+  {
+    "path": "sprite/scenery_1b62aa/mode3_low.bin",
+    "addr": {
+      "us": "0x1B8032"
+    },
+    "count": "0xEC4",
+    "size": 1
+  },
+  {
+    "path": "sprite/scenery_1b62aa/mode3_high.bin",
+    "addr": {
+      "us": "0x1B8EF6"
+    },
+    "count": "0xEC4",
+    "size": 1
+  },
+  {
+    "path": "sprite/scenery_1b62aa/mode0_low.bin",
+    "addr": {
+      "us": "0x1B9DBA"
+    },
+    "count": "0xEC4",
+    "size": 1
+  },
+  {
+    "path": "sprite/scenery_1b62aa/mode0_high.bin",
+    "addr": {
+      "us": "0x1BAC7E"
+    },
+    "count": "0xEC4",
+    "size": 1
+  },
+  {
+    "path": "sprite/scenery_1b62aa/mode2_low.bin",
+    "addr": {
+      "us": "0x1BBB42"
+    },
+    "count": "0xEC4",
+    "size": 1
+  },
+  {
+    "path": "sprite/scenery_1b62aa/mode2_high.bin",
+    "addr": {
+      "us": "0x1BCA06"
+    },
+    "count": "0xEC4",
+    "size": 1
+  },
+  {
+    "path": "sprite/scenery_1b62aa/post_tail_pad.bin",
+    "addr": {
+      "us": "0x1BD8CA"
+    },
+    "count": "0x2",
+    "size": 1
+  },
+  {
     "path": "game/mode_config_2f99e8.bin",
     "addr": {
       "us": "0x2F99E8"
