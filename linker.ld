@@ -88,7 +88,7 @@ SECTIONS {
         asm/disasm_0x0802ea80.o(.text);  /* 0x0802ea80 - 0x0802eb34, sub_0802EA80 (auto-peeled) */
         asm/text/text_0x0802eb34.o(.text);  /* 0x0802eb34 - 0x0802ec7c, raw bytes */
         asm/disasm_0x0802ec7c.o(.text);  /* 0x0802ec7c - 0x0802ed5c, sub_0802EC7C (auto-peeled) */
-        asm/disasm_0x0802ed5c.o(.text);  /* 0x0802ed5c - 0x0802edf0, sub_0802ED5C (auto-peeled) */
+        asm/disasm_0x0802ed5c.o(.text);  /* 0x0802ed5c - 0x0802edf0, sub_0802ED5C (refined; C in sound_channel.c is NON_MATCHING) */
         asm/disasm_0x0802edf0.o(.text);  /* 0x0802edf0 - 0x0802eef8, sub_0802EDF0 (auto-peeled) */
         asm/text/text_0x0802eef8.o(.text);  /* 0x0802eef8 - 0x0802f054, raw bytes */
         asm/disasm_0x0802f054.o(.text);  /* 0x0802f054 - 0x0802f2fc, sub_0802F054 (auto-peeled) */
