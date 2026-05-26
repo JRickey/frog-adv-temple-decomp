@@ -475,3 +475,41 @@ helper. Different call patterns serving the same hardware family.
 Decomp this when `sub_0801F1E0` lands in C — it's a leaf utility and
 should be tractable. The typed signature unlocks renames across all
 the tilemap consumers.
+
+## 4-way parallel-array level-layout subset (0x083180xx cluster, iter 20)
+
+A second instance of the parallel-arrays-with-kind-code shape, separate
+from the larger sLevelLayoutDispatch_* family. Anchors at
+0x08318{07c,0ac,0dc,10c}, identical structure (5 records each, header
++ records), discriminated by a per-table "kind" code in the high half
+of word 1: 0x0303 / 0x3303 / 0x2303 / 0x1303.
+
+Two consumer dispatchers reference all four with different index → anchor
+mappings:
+- **sub_0802C780** (dispatch by `r2` param): `0→07c, 1→10c, 2→0dc, 3→0ac`
+- **sub_0802C8C8** (dispatch by `*(u8 *)r0`): `0→07c, 1→0ac, 2→0dc, 3→10c`
+
+Strongly suggests a 2-bit enum encoding (difficulty / region / scene)
+where all four tables encode the same 5 record coordinates with a
+per-table varying type discriminator.
+
+### Walker family extension (iter 20)
+
+The iter-15 documentation of `sub_08021140` + `sub_080219bc` as level-layout
+walkers extends with a third variant discovered here:
+
+- **sub_080210a0** — single-shot reader (no count loop). Used by entry
+  `sLevelLayout_31805C` and `sLevelLayout_31813C`. Discriminates outer-
+  dispatcher-iterated sub-tables from count-from-byte0 family.
+- **sub_08021140** — full-record walker (stride 0x10).
+- **sub_08021510** — compact-record walker (stride 0x4).
+- **sub_080219bc** — twin of sub_08021140 (different consumer family).
+
+All four pull `[r1, #2]`, `[r1, #8]`, `[r1, #10]` from the header,
+confirming the 8-byte header convention is canonical across the
+level-layout subsystem.
+
+Decomp priority: the four walkers + two dispatchers (sub_0802C780,
+sub_0802C8C8) form the entry-point cluster for typed `struct
+LevelLayoutSubTable` promotion. Once one of these lands, ALL
+sLevelLayout_* placeholders across iters 15, 16, 19, 20 can promote.

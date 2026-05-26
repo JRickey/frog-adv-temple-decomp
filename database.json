@@ -1272,6 +1272,70 @@
     "size": 4
   },
   {
+    "path": "level/layout_318020_sentinels.bin",
+    "addr": {
+      "us": "0x318020"
+    },
+    "count": "0x3",
+    "size": 4
+  },
+  {
+    "path": "level/layout_manifest_31802c.bin",
+    "addr": {
+      "us": "0x31802C"
+    },
+    "count": "0xC",
+    "size": 4
+  },
+  {
+    "path": "level/layout_31805c.bin",
+    "addr": {
+      "us": "0x31805C"
+    },
+    "count": "0x8",
+    "size": 4
+  },
+  {
+    "path": "level/layout_31807c.bin",
+    "addr": {
+      "us": "0x31807C"
+    },
+    "count": "0xC",
+    "size": 4
+  },
+  {
+    "path": "level/layout_3180ac.bin",
+    "addr": {
+      "us": "0x3180AC"
+    },
+    "count": "0xC",
+    "size": 4
+  },
+  {
+    "path": "level/layout_3180dc.bin",
+    "addr": {
+      "us": "0x3180DC"
+    },
+    "count": "0xC",
+    "size": 4
+  },
+  {
+    "path": "level/layout_31810c.bin",
+    "addr": {
+      "us": "0x31810C"
+    },
+    "count": "0xC",
+    "size": 4
+  },
+  {
+    "path": "level/layout_31813c.bin",
+    "addr": {
+      "us": "0x31813C"
+    },
+    "count": "0x20",
+    "size": 4
+  },
+  {
     "path": "sound/wave_vol_lut.bin",
     "addr": {
       "us": "0x3DDA3C"

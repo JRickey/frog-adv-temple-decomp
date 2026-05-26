@@ -52,6 +52,24 @@ LINKER_OBJ_RE = re.compile(r"\s*(\S+\.o)\(\.text\)")
 ADDR_COMMENT_RE = re.compile(r"@\s*0x([0-9a-fA-F]{8})")
 DEFAULT_NAME_PREFIX_MIN = 3
 
+# libgcc helpers compiled into the ROM. These are byte-identical to the
+# corresponding members of tools/agbcc/lib/libgcc.a (modulo BL relocations
+# resolved against the in-ROM `__divsi3_help` site at 0x08033da8). They are
+# NOT decomp targets — the asm/disasm_*.s slices that host them are already
+# in their final state: labelled with the canonical libgcc symbol name so
+# `bl __divsi3` / `bl _call_via_r3` etc. from project code resolve to the
+# in-ROM bytes via the linker. See docs/codegen-notes.md "In-ROM libgcc
+# helpers" + "`_call_via_rX` libgcc thunk table".
+LIBGCC_SYMBOLS = frozenset({
+    "__divsi3",
+    "__udivsi3",
+    "__umodsi3",
+    "_call_via_r0", "_call_via_r1", "_call_via_r2", "_call_via_r3",
+    "_call_via_r4", "_call_via_r5", "_call_via_r6", "_call_via_r7",
+    "_call_via_r8", "_call_via_r9", "_call_via_sl", "_call_via_fp",
+    "_call_via_ip", "_call_via_sp", "_call_via_lr",
+})
+
 
 @dataclass
 class Target:
@@ -267,6 +285,18 @@ def _sheet_status(addr: int) -> tuple[str, str] | None:
 
 
 def classify(t: Target, min_prefix: int) -> Target:
+    # Guard 0: libgcc helpers — permanent-asm by design. The asm slices that
+    # host them are already labelled with the canonical libgcc name so the
+    # linker resolves project-emitted `bl __divsi3` etc. to the in-ROM bytes.
+    # No C scaffold is wanted (would just be NAKED .incbin busywork) and the
+    # picker should not suggest these as decomp candidates.
+    if t.name in LIBGCC_SYMBOLS:
+        t.legality_note = (
+            f"skipped: {t.name} is an in-ROM libgcc helper (permanent-asm). "
+            "Already labelled correctly in asm/disasm_*.s; not a decomp target."
+        )
+        return t
+
     # Guard 1: another src/*.c already defines this function (linked or not).
     existing = _existing_c_definition(t.name)
     if existing is not None:

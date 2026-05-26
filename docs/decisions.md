@@ -184,3 +184,67 @@ note, do not dispatch iter 11.**
    step is incremental.
 
 Loop is paused. Resume by re-running `/loop ...` whenever ready.
+
+## In-ROM libgcc cluster `[0x08033cd8, 0x0803401c)` — Option B (permanent-asm) is the final state
+
+A dispatch brief landed targeting the libgcc helper cluster
+(`_call_via_r0`..`_call_via_lr` at 0x08033cd8, `__divsi3` at 0x08033d14,
+`__udivsi3` at 0x08033ee4, `__umodsi3` at 0x08033f5c). The brief offered
+three options: (A) scaffold `src/libgcc/libgcc.c` with `.thumb_set`
+aliases over libgcc.a-extracted symbols, (B) keep the in-place asm
+slices with proper `thumb_func_start` labels, (C) NAKED inline-asm
+wrappers in C around the original bytes.
+
+**Outcome on inspection**: Option B was already done in prior loop
+iters (1–3 era). All four ranges are peeled into
+`asm/disasm_0x080339xx.s` / `asm/disasm_0x080340xx.s` slices with the
+canonical libgcc symbol names declared via `thumb_func_start`, wired
+into `linker.ld` at the correct positions. `make check` exits 0. BL
+relocations from project code (`bl __divsi3` etc.) resolve cleanly
+through the linker to the in-ROM bytes.
+
+Byte-match verification against `tools/agbcc/lib/libgcc.a`:
+
+- `_call_via_rX.o`: 60 B, identical to ROM 0x33cd8..0x33d14.
+- `_divsi3.o`: 148 B, 4 bytes differ at offsets 0x8a..0x8d — the
+  internal `bl __divsi3_help` relocation, resolved to the in-ROM
+  helper at 0x08033da8 in the baserom but left as `R_ARM_THM_CALL`
+  placeholder in the .a member. Expected.
+- `_udivsi3.o`: 120 B, 1 byte differs at 0x72 — same relocation
+  pattern.
+- `_umodsi3.o`: 192 B, 2 bytes differ at 0xba..0xbb — same.
+
+All four cluster slices use `.incbin` from the baserom, which already
+has correct relocations applied. So the source-rom bytes are exactly
+the libgcc bytes with the project-specific BL targets baked in. No
+further work needed to make the symbols resolvable.
+
+**Why not scaffold a C file anyway**: The brief leaned toward
+scaffolding for picker hygiene (`pick_target.py --all` listed the
+libgcc symbols as "blocked: no src/*.c adjacent — scaffold a new C
+file"). A `src/libgcc/libgcc.c` with NAKED `asm(".incbin ...")` stubs
+would satisfy the picker but adds zero matching value:
+
+1. The bytes don't change — `.incbin` either way.
+2. libgcc helpers aren't "decompiled" in any useful sense; they're
+   library code byte-for-byte.
+3. Empty C scaffolds for non-decomp-targets pollute `src/` and
+   misrepresent project progress (would inflate the
+   "functions decompiled" count without doing any decomp work).
+4. The cluster spans 4 disasm slices interleaved with text buckets;
+   making the C file the picker's adjacent neighbour would require
+   either 4 separate stub files or absorbing the intervening text
+   buckets — both bad options.
+
+**Picker fix instead** (this commit's only change):
+`tools/agent/pick_target.py` now classifies the 18 libgcc symbols as
+`skipped: in-ROM libgcc helper (permanent-asm)` via a `LIBGCC_SYMBOLS`
+frozenset checked first in `classify()`. They no longer appear as
+"needs scaffolding" entries in `--all` output, which removes the
+false signal that drove this brief. The asm slices stay exactly as
+they are.
+
+If a future agent needs to add a libgcc helper that isn't in the
+current set (`__mulsi3`, `__ashldi3`, etc.), append it to
+`LIBGCC_SYMBOLS` after peeling and verifying byte-match against
+`tools/agbcc/lib/libgcc.a`.
