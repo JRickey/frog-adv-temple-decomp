@@ -79,7 +79,7 @@ SECTIONS {
         asm/disasm_0x08001214.o(.text);  /* 0x08001214 - 0x08001478, sub_08001214 (auto-peeled) */
         src/game/set_game_mode_03.o(.text);  /* 0x08001478 - 0x08001484, SetGameMode_03 */
         asm/text/text_0x08001484.o(.text);  /* 0x08001484 - 0x08001508, raw bytes */
-        asm/disasm_0x08001508.o(.text);  /* 0x08001508 - 0x08001794, sub_08001508 (auto-peeled) */
+        src/system/sub_08001508.o(.text);  /* 0x08001508 - 0x08001794, sub_08001508 (NAKED + NON_MATCHING; mode-11 dispatch — `mov pc, rN` jump table, sibling of sub_08000EB8) */
         asm/text/text_0x08001794.o(.text);  /* 0x08001794 - 0x080019b4, raw bytes */
         asm/disasm_0x080019b4.o(.text);  /* 0x080019b4 - 0x08001d18, sub_080019B4 (auto-peeled) */
         asm/text/text_0x08001d18.o(.text);  /* 0x08001d18 - 0x08002184, raw bytes */
@@ -311,9 +311,10 @@ SECTIONS {
         asm/text/text_0x081d0000.o(.text);  /* 0x081d0000 - 0x081d8398, raw bytes (shrunk for screen_d8398 + screen_d8b98 clusters) */
         src/data/screen_d8398.o(.rodata);   /* 0x081d8398 - 0x081d8b98, sScreenTilemapD8398 (screenblock-30 source tilemap) */
         src/data/screen_d8b98.o(.rodata);   /* 0x081d8b98 - 0x081e4c18, screen tilemap + palette + char tiles + tilemap (spans across former 0x081e0000 blob) */
-        asm/text/text_0x081e4c18.o(.text);  /* 0x081e4c18 - 0x081e6c18, raw bytes (shrunk for tilemap_e6c18 + obj_assets_ecc18 clusters) */
+        asm/text/text_0x081e4c18.o(.text);  /* 0x081e4c18 - 0x081e6418, raw bytes (shrunk for screen_tilemaps_e6418 + tilemap_e6c18 + screen_tilemaps_e7418 + screen_tilemaps_e9418 + obj_assets_ecc18 clusters) */
+        src/data/screen_tilemaps_e6418.o(.rodata);  /* 0x081e6418 - 0x081e6c18, sScreenTilemap_E6418 (sVramTilePtrTable slot [32], screenblock-29 source tilemap, 2 KiB) */
         src/data/tilemap_e6c18.o(.rodata);  /* 0x081e6c18 - 0x081e7418, sBgTilemap_E6C18 (screenblock-29 source tilemap, 2 KiB) */
-        asm/text/text_0x081e7418.o(.text);  /* 0x081e7418 - 0x081e9418, raw bytes (shrunk for screen_tilemaps_e9418 family) */
+        src/data/screen_tilemaps_e7418.o(.rodata);  /* 0x081e7418 - 0x081e9418, sScreenTilemap_E7418 + E7C18 + E8418 + E8C18 (sVramTilePtrTable slots [33..36], 4 x 2 KiB screenblock-29 tilemap variants) */
         src/data/screen_tilemaps_e9418.o(.rodata);  /* 0x081e9418 - 0x081ecc18, sScreenTilemap_E9418 + E9C18 + EA418 + EAC18 + EB418 + EBC18 + EC418 (7 x 2 KiB screenblock-29 tilemap variants) */
         src/data/obj_assets_ecc18.o(.rodata);  /* 0x081ecc18 - 0x081ece58, sObjPalette_ECC18 + sObjCharTiles_ECC38 + sObjPalette_ECE38 (576 B) */
         asm/text/text_0x081ece58.o(.text);  /* 0x081ece58 - 0x081f0000, raw bytes (tail after obj_assets_ecc18 cluster) */

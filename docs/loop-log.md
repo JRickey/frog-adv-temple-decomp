@@ -974,3 +974,28 @@ The agent infrastructure grew organically with each iter — each new friction d
 **Trajectory:** 26 iters post-resume (11-36). Functions 41→85 (+44). Raw INCBIN 98.1%→89.1% (**-9.0pp, under 90%**). db 117→260 (+143). src C 75→289 KiB (+214 KiB). Data deblob 1.0%→10.86% (+9.86pp, approaching 11%). **74 asm-fn-remaining.** Consumer-driven data extraction now the active strategy; mode-X cluster has ~2-4 more likely-NAKED jump-table siblings before that vein is mined out.
 
 ---
+
+## Iter 37 — 2026-05-26 (dual-agent: sub_08001508 + screen_tilemaps [32..36])
+
+**Before:** 85 fns, 74 asm-fn-remaining, 260 db, 89.1% raw, 10.86% deblob
+
+**Targets:** Decomp **sub_08001508** (652 B mode-X handler, 20 callees ALL peeled). Data: extend iter-32 screen_tilemaps_e9418 family backwards with sVramTilePtrTable slots [32..36].
+
+**Outcomes:**
+- **Decomp**: NAKED+NON_MATCHING, byte_diff 0. mode-11 dispatcher (uses mode constants 11/24, not 9/24), same `mov pc, rN` 9-case jump-table class as sub_08000EB8 (iter 36) / sub_08002844 / AgbMain. 524-line .c, 84-byte stack (vs sub_08000EB8's 332), case-3 fallthrough inlines a stripped probe block instead of calling sub_08000E0C. Per user's coverage-first direction (set this iter), shipped without per-function permuter — class-level evidence is the gate-edge satisfaction.
+- **Data**: 5 × 2 KiB tilemaps / 10 KiB deblob across 2 NEW family files. Split forced by sBgTilemap_E6C18 (literal-pool-loaded, between slot [32] and [34..36] in ROM): `screen_tilemaps_e6418.c` (slot 32 only) + `screen_tilemaps_e7418.c` (slots 33-36, ROM-ordered 34→33→35→36 — table NOT strictly address-ordered). Sibling-cross-reference comments link all 3 family files (e6418 / e7418 / e9418).
+
+**Commit:** iter-37 hash (single combined: decomp NAKED + 2 new tilemap files + sprite_dma_records slot map update + loop-log).
+
+**After:** 86 fns (+1), 73 asm-fn-remaining (-1), 265 db (+5), ~298.6 KiB src C (+10 KiB), **88.8% raw (-0.3pp)**, **11.10% data deblob (+0.24pp — crosses 11%)**.
+
+**Architectural duties:**
+- **Mode-X cluster: 5/?? landed.** Confirmed `mov pc, rN` 9-case dispatcher class members: sub_08000918, sub_08000EB8, sub_08001508, sub_08002844, AgbMain. Likely remaining: sub_08001214 (612 B, blocked on 4 unpeeled callees — multi-peel chain, defer). The decomp agent's iter-37 commit note also mentions sub_080019B4, sub_08002184, sub_08002524 etc. as potential mode-X siblings — those are bigger and have unpeeled callees. Auto-peel chains are next iter's friction candidate if we hit them.
+- **sVramTilePtrTable: 10/51 slots landed.** iter-32 [37..41] (7 slots) + iter-36 [42..50] (9 slots) + iter-37 [32..36] (5 slots) = 21/51. Remaining slots [0..31] are in text_0x081d0000 (32 raw-byte chunks of variable size, per iter-32/36 reports) — needs sprite-frame-descriptor consumer in C before sizes can be assigned. **Strategy decision needed iter 38+**: either pivot to a different consumer-driven extraction OR work on the sprite-frame consumer that will unlock the remaining 31 slots.
+- **Friction-watch**: preproc-apostrophe bug rediscovered by data agent (already documented in docs/codegen-notes.md line ~622, but the ASCII apostrophe slipped past again). 6th occurrence-level friction now (after the 5 bucket-size errors). Tool-fix candidate next iter: add a pre-commit `lint_apostrophes_in_data_c.py` or similar that hooks into the existing preproc-apostrophe trap.
+
+**Decisions:** Both ships landed clean under coverage-first direction. No reverts. Two NAKED+NON_MATCHING ships in iter 37 (sub_08001508 — class-level evidence; carried over the gate-edge precedent from iters 34/36).
+
+**Trajectory:** 27 iters post-resume (11-37). Functions 41→86 (+45). Raw INCBIN 98.1%→88.8% (**-9.3pp**). db 117→265 (+148). src C 75→299 KiB (+224 KiB). Data deblob 1.0%→11.10% (+10.10pp — past 11%). **73 asm-fn-remaining.** Mode-X cluster nearly exhausted of clean targets; the next data-strategy decision is upcoming.
+
+---

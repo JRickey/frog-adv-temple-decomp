@@ -17,6 +17,13 @@
  * gUnk_030034b0 == 3. The other five are reached through the offset
  * table at 0x08308f84 (still raw INCBIN, see "Offset table" below).
  *
+ * The sVramTilePtrTable at 0x08308EF0 also references these as slots
+ * [37..41]; the earlier slots [32..36] (0x081e6418, 0x081e7c18,
+ * 0x081e7418, 0x081e8418, 0x081e8c18) are sibling 2 KiB tilemaps of
+ * the same shape, extracted into screen_tilemaps_e6418.c and
+ * screen_tilemaps_e7418.c (split around the tilemap_e6c18 anchor
+ * that sits between slots 32 and 34 in ROM).
+ *
  * Content: sparse 32x32 halfword tilemap. Most non-zero entries reuse
  * a small set of tile ids as 17-cell-wide stripes on rows 2..17 -- the
  * same "low-detail status backdrop" shape seen in sBgTilemap_E6C18

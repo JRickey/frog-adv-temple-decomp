@@ -49,11 +49,17 @@
  *   [ 0..31]  0x081d1d46..0x081daa98  -> raw bytes inside
  *                                        asm/text/text_0x081d0000.s
  *                                        (32 unnamed sprite tile chunks)
- *   [32..36]  0x081e6418, 0x081e7c18, 0x081e7418, 0x081e8418, 0x081e8c18
- *                                     -> raw bytes inside the
- *                                        text_0x081e4c18 / text_0x081e7418
- *                                        gap blobs (five 2 KiB tilemaps,
- *                                        sibling family to slots 37..41)
+ *   [32]      0x081e6418 sScreenTilemap_E6418
+ *                                     -> src/data/screen_tilemaps_e6418.c
+ *                                        (1 x 2 KiB tilemap, sibling family
+ *                                        to slots 33..41)
+ *   [33..36]  0x081e7c18 sScreenTilemap_E7C18   (note: ROM order is
+ *             0x081e7418 sScreenTilemap_E7418    34, 33, 35, 36 -- table
+ *             0x081e8418 sScreenTilemap_E8418    not strictly address
+ *             0x081e8c18 sScreenTilemap_E8C18    ordered)
+ *                                     -> src/data/screen_tilemaps_e7418.c
+ *                                        (4 x 2 KiB tilemaps, sibling
+ *                                        family to slots 32 + 37..41)
  *   [37..41]  0x081e9418 sScreenTilemap_E9418
  *             0x081eac18 sScreenTilemap_EAC18
  *             0x081eb418 sScreenTilemap_EB418

@@ -1920,9 +1920,49 @@
     "size": 1
   },
   {
+    "path": "sprite/screen_tilemaps_e6418/tilemap_slot32.bin",
+    "addr": {
+      "us": "0x1E6418"
+    },
+    "count": "0x400",
+    "size": 2
+  },
+  {
     "path": "sprite/tilemap_e6c18/tilemap_screenblock29.bin",
     "addr": {
       "us": "0x1E6C18"
+    },
+    "count": "0x400",
+    "size": 2
+  },
+  {
+    "path": "sprite/screen_tilemaps_e7418/tilemap_slot34.bin",
+    "addr": {
+      "us": "0x1E7418"
+    },
+    "count": "0x400",
+    "size": 2
+  },
+  {
+    "path": "sprite/screen_tilemaps_e7418/tilemap_slot33.bin",
+    "addr": {
+      "us": "0x1E7C18"
+    },
+    "count": "0x400",
+    "size": 2
+  },
+  {
+    "path": "sprite/screen_tilemaps_e7418/tilemap_slot35.bin",
+    "addr": {
+      "us": "0x1E8418"
+    },
+    "count": "0x400",
+    "size": 2
+  },
+  {
+    "path": "sprite/screen_tilemaps_e7418/tilemap_slot36.bin",
+    "addr": {
+      "us": "0x1E8C18"
     },
     "count": "0x400",
     "size": 2
