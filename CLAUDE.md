@@ -347,6 +347,13 @@ For each decomp target:
    - When stuck on register order: `register T x asm("r5");`
    - `NON_MATCHING` ifdef pattern: when you can't match, wrap the readable C
      in `#ifdef NON_MATCHING` and keep the matching but uglier C in `#else`.
+   - High-register pins (`mov sl, …`, `mov r9/r8, …`) for loop state are
+     corpus-validated unmatchable in pure C. Skip straight to NAKED + `#ifdef
+     NON_MATCHING` (see `docs/codegen-notes.md` "High registers").
+   - Every NAKED inline-asm block MUST end with `"    .syntax divided\n"` —
+     the `.syntax unified` directive at the top of the block bleeds into the
+     rest of the .o and breaks subsequent agbcc-emitted Thumb-1 instructions.
+     See `docs/codegen-notes.md` "`.syntax unified` in NAKED inline asm bleeds".
 
 6. **Move the asm.** Delete the `thumb_func_start <name>` block from
    `asm/disasm_0x*.s`. If the file becomes empty, remove its
