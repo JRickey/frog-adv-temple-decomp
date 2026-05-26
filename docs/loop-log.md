@@ -793,3 +793,28 @@ The agent infrastructure grew organically with each iter — each new friction d
 **Trajectory:** 19 iters post-resume (11-29). Functions 41→77 (+36). Raw INCBIN 98.1%→91.2% (-6.9pp). db 117→241 (+124). src C 75→220 KiB (+145 KiB). Data deblob 1.0%→8.8% (+7.8pp). Iter 29 is the lightest since iter 20 (no C body landed) but architectural insight is real — sub_08000EB8's shape match with sub_08000918 means cracking one likely unlocks several others.
 
 ---
+
+## Iter 30 — 2026-05-26 (LYNCHPIN landed!)
+
+**Before:** 77 / ~513 fns (15.4%), 78 asm-fn-remaining, 241 db, 220.0 KiB src C, 91.2% raw
+
+**Targets:** Decomp **sub_08000918** (the 14-case state-machine dispatcher, lynchpin function). Data: 0x081fc758 + 0x081fbd58 pair.
+
+**Outcomes:**
+- Decomp: **LYNCHPIN LANDED**! sub_08000918 (298 instr / 596 B) NAKED + #ifdef NON_MATCHING, byte-perfect after 3 iterations (case-label ordering fix + pool-literal typo fix). The `mov pc, r0` jump-table dispatch is the unmatchable trigger — agbcc 2.x has no codegen path for computed branches.
+- Data: 3 tables, **34.5 KiB** — 6th screen-install cluster (sScreenPaletteBD58 + sScreenTilemapBF58 + sScreenCharTilesC758). First **cross-bucket extraction** in this region (char-tiles span across the old 0x08200000 bucket boundary).
+
+**Commit:** iter-30 hash (single combined: lynchpin decomp + screen cluster + 2 codegen-notes additions).
+
+**After:** 78 / ~513 fns (**15.8%** +0.4pp), **93 asm-fn-remaining (-1, lynchpin gone!)**, 244 db (+3), **255.1 KiB src C** (+35 KiB), **90.4% raw (-0.8pp — under 91%)**, **9.6% data deblob (+0.8pp — closing on 10%)**.
+
+**Architectural duties:**
+- docs/codegen-notes.md "mov pc, rN jump tables: addresses are EVEN, NOT LSB-flagged" — new section. Critical ARMv4T finding: Thumb-mode `mov pc, rN` does not interwork (different from `bx rN`). Mis-labeling the table cost iter-30 one match cycle.
+- docs/codegen-notes.md "Case-number ≠ source-block-order trap" — new section. Fallthrough drop blocks between explicitly-targeted cases shift the source ordinal away from case number. Cross-reference table entries against targets before assigning labels.
+- **MODE-X FAMILY UNLOCKED**: sub_08000EB8 (iter 29 deferral), sub_08001214, sub_08001508 are now tractable as siblings of sub_08000918. Same shape (jump-table dispatch + per-mode state machine), same NAKED requirement. **The deferred decomp from iter 29 can land any iter now.**
+
+**Decisions:** none material — the lynchpin was the planned target.
+
+**Trajectory:** 20 iters post-resume (11-30). Functions 41→78 (+37). Raw INCBIN 98.1%→90.4% (-7.7pp). db 117→244 (+127). src C 75→255 KiB (+180 KiB). Data deblob 1.0%→9.6% (+8.6pp). **MODE-X FAMILY DECOMPABLE NOW**. Pace through the post-resume run: 37 fns / 20 iters = ~1.85 fns/iter, growing with each cluster-unlock.
+
+---
