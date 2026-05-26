@@ -490,3 +490,29 @@ The agent infrastructure grew organically with each iter — each new friction d
 **Trajectory:** 7 iters post-resume (11-17). Functions 41→53 (+12). Raw INCBIN 98.1%→96.9% (-1.2pp). db 117→190 (+73). src C 75→105 KiB (+30 KiB). Loop still forward-moving but data-side haul this iter was small (116 B) — the cluster around 0x082f9xxx has limited pool-load anchors. Next data targets should be checked via refcount tool for refs ≥5.
 
 ---
+
+## Iter 18 — 2026-05-26
+
+**Before:** 53 / ~513 fns (10.3%), 61 peeled-asm, 190 db, 104.6 KiB src C, 96.9% raw
+
+**Targets:** Decomp sub_0800A328 (2-line peel). Data 4-anchor cluster at 0x081d8b98 / 0x081dab98 / 0x081dad98 / 0x081e4418.
+
+**Outcomes:**
+- Decomp: NAKED + NON_MATCHING (adds r0,r1,r0 vs r0,r0,r1 encoding swap — same class as sub_0800A2D8 from iter 16). **Critical catch**: the pre-existing 0x0800a328 peel range hid a SECOND function (sub_0800A3A4, 44 B). Without re-peeling, the ROM would have shifted by 0x1974 B. Folded into codegen-notes "Pre-existing peel range may hide a second function". 2 callee peels (sub_08005FC8, sub_0800FCC8).
+- Data: **5 tables, 48 KiB (full charter haul, biggest single-iter data extraction since iter 12)**. Discovered as one coherent screen-install resource block: palette + char tiles + 2 tilemaps + aux, DMA3'd by 3 sibling routines in [0x0801eed4..0x0801fdb0]. Char-tiles table sized via inter-anchor gap (0x9680 B), NOT DMA cnt (0x8000 B) — a +0x1680 ghost was caught and fixed pre-commit.
+
+**Commit:** `932445b` (iter 17 log) + iter-18 hash (single combined: decomp + data + codegen-notes).
+
+**After:** 55 / ~513 fns (**10.7%** +0.4pp), 63 peeled-asm, 195 db, **152.8 KiB src C** (+48 KiB), **95.7% raw** (-1.2pp), **4.3% data deblob** (+1.2pp).
+
+**Architectural duties:**
+- docs/codegen-notes.md "Pre-existing peel range may hide a second function" — new entry. **High-leverage finding** — every wide-peeled .s file with >1 `push {` is a latent layout-shift bomb.
+- docs/codegen-notes.md "Stale .o cache after auto_peel.py" — touch+rebuild workaround documented.
+- docs/codegen-notes.md "DMA-cnt vs table-real-size" — size from inter-anchor gap idiom.
+- docs/codegen-notes.md "Apostrophe-trap substitution cheatsheet" — quick-reference table for INCBIN comment drafting.
+
+**Decisions:** none material.
+
+**Trajectory:** 8 iters post-resume (11-18). Functions 41→55 (+14). Raw INCBIN 98.1%→95.7% (**-2.4pp**, accelerating). db 117→195 (+78). src C 75→153 KiB (**+78 KiB**). **Data deblob 1.0%→4.3% (+3.3pp)** — iter 18 alone contributed +1.2pp, the largest single-iter jump. Loop is healthy and on trend to cross 5% data + 11% fns next iteration.
+
+---
