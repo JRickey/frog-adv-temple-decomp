@@ -40,6 +40,142 @@
     "size": 1
   },
   {
+    "path": "sprite/asset_index_table.bin",
+    "addr": {
+      "us": "0x306444"
+    },
+    "count": "0x24",
+    "size": 4
+  },
+  {
+    "path": "sprite/grid_layout.bin",
+    "addr": {
+      "us": "0x3064D4"
+    },
+    "count": "0xC0",
+    "size": 4
+  },
+  {
+    "path": "sprite/grid_subtable.bin",
+    "addr": {
+      "us": "0x3067D4"
+    },
+    "count": "0x10",
+    "size": 4
+  },
+  {
+    "path": "sprite/anim_perm_lut.bin",
+    "addr": {
+      "us": "0x306814"
+    },
+    "count": "0x10",
+    "size": 1
+  },
+  {
+    "path": "sprite/anim_frame_set_06824.bin",
+    "addr": {
+      "us": "0x306824"
+    },
+    "count": "0x5",
+    "size": 4
+  },
+  {
+    "path": "sprite/anim_block_06838.bin",
+    "addr": {
+      "us": "0x306838"
+    },
+    "count": "0x1B4",
+    "size": 4
+  },
+  {
+    "path": "sprite/dma_cfg_06f08.bin",
+    "addr": {
+      "us": "0x306F08"
+    },
+    "count": "0x4",
+    "size": 4
+  },
+  {
+    "path": "sprite/anim_block_06f18.bin",
+    "addr": {
+      "us": "0x306F18"
+    },
+    "count": "0x45",
+    "size": 4
+  },
+  {
+    "path": "sprite/scale_anim_descriptors.bin",
+    "addr": {
+      "us": "0x30702C"
+    },
+    "count": "0x6",
+    "size": 4
+  },
+  {
+    "path": "sprite/anim_block_07044.bin",
+    "addr": {
+      "us": "0x307044"
+    },
+    "count": "0x2A",
+    "size": 4
+  },
+  {
+    "path": "sprite/scale_anim_descriptors_2.bin",
+    "addr": {
+      "us": "0x3070EC"
+    },
+    "count": "0x6",
+    "size": 4
+  },
+  {
+    "path": "sprite/anim_block_07104.bin",
+    "addr": {
+      "us": "0x307104"
+    },
+    "count": "0x3FF",
+    "size": 4
+  },
+  {
+    "path": "sprite/oam_dma_cfg_08100.bin",
+    "addr": {
+      "us": "0x308100"
+    },
+    "count": "0x4",
+    "size": 4
+  },
+  {
+    "path": "sprite/sprite_frame_ptrs_08110.bin",
+    "addr": {
+      "us": "0x308110"
+    },
+    "count": "0x378",
+    "size": 4
+  },
+  {
+    "path": "sprite/vram_tile_ptr_table.bin",
+    "addr": {
+      "us": "0x308EF0"
+    },
+    "count": "0x33",
+    "size": 4
+  },
+  {
+    "path": "sprite/palette_load_records.bin",
+    "addr": {
+      "us": "0x308FBC"
+    },
+    "count": "0x770",
+    "size": 4
+  },
+  {
+    "path": "sprite/dma_load_dispatch.bin",
+    "addr": {
+      "us": "0x30AD7C"
+    },
+    "count": "0xBA",
+    "size": 4
+  },
+  {
     "path": "sound/wave_vol_lut.bin",
     "addr": {
       "us": "0x3DDA3C"

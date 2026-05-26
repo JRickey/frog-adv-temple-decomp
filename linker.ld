@@ -155,7 +155,11 @@ SECTIONS {
         src/data/eeprom_id.o(.rodata);  /* 0x082f8e8c - 0x082f8e98, gEepromIdString */
         src/data/sound_dma_records.o(.rodata);  /* 0x082f8e98 - 0x082f8ec4, sSoundDmaBufCfg + sSoundDmaMaster */
         asm/text/text_0x082f8ec4.o(.text);  /* 0x082f8ec4 - 0x08300000, raw bytes */
-        asm/text/text_0x08300000.o(.text);  /* 0x08300000 - 0x08310000, raw bytes */
+        asm/text/text_0x08300000.o(.text);  /* 0x08300000 - 0x08306444, raw bytes */
+        src/data/sprite_dispatch.o(.rodata);  /* 0x08306444 - 0x08306814, sSpriteAssetIndexTable + sSpriteGridLayout + sSpriteGridSubtable */
+        src/data/sprite_anim_block.o(.rodata);  /* 0x08306814 - 0x08308100, anim / OAM-DMA descriptor cluster (9 named symbols) */
+        src/data/sprite_dma_records.o(.rodata);  /* 0x08308100 - 0x0830b064, OAM-DMA cfg + sprite frame ptrs + VRAM tile ptrs + DMA load records + dispatch table */
+        asm/text/text_0x0830b064.o(.text);  /* 0x0830b064 - 0x08310000, raw bytes */
         asm/text/text_0x08310000.o(.text);  /* 0x08310000 - 0x08320000, raw bytes */
         asm/text/text_0x08320000.o(.text);  /* 0x08320000 - 0x08330000, raw bytes */
         asm/text/text_0x08330000.o(.text);  /* 0x08330000 - 0x08340000, raw bytes */

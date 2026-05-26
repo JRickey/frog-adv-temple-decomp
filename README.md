@@ -129,9 +129,9 @@ Regenerate with `python3 tools/agent/progress_stats.py --update-readme`.
 - **Functions decompiled to C**: 22 / ~513 estimated total (**4.3%**)
   - peeled-but-still-asm: 18
   - estimate range (lower / upper): 335 / 1140
-- **Data deblobbed**: 8.9 KiB of 4.00 MiB (**0.22%**)
-  - raw INCBIN bytes: 3.99 MiB (99.8% of ROM)
-  - `database.json` entries: 10
+- **Data deblobbed**: 27.9 KiB of 4.00 MiB (**0.68%**)
+  - raw INCBIN bytes: 3.97 MiB (99.3% of ROM)
+  - `database.json` entries: 27
 
 Code occupies roughly [0x08000000, 0x08036000) (~216.0 KiB). Past that the
 ROM is graphics, audio, level/script data, and lookup tables.
