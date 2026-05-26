@@ -118,11 +118,25 @@ make check
 make tidy
 ```
 
-## Status
+## Progress
 
-This decomp is in its earliest setup phase. The disassembly has not started,
-so `asm/`, `src/`, and most of `linker.ld` are empty/placeholder. The agent
-tooling (`tools/agent/`) is in place and ready to use once those exist.
+<!-- BEGIN PROGRESS (managed by tools/agent/progress_stats.py) -->
+
+**All figures are estimates** — the function-count denominator is a
+Thumb prologue scan, not a ground-truth disassembly. Treat ±20% as honest.
+Regenerate with `python3 tools/agent/progress_stats.py --update-readme`.
+
+- **Functions decompiled to C**: 18 / ~513 estimated total (**3.5%**)
+  - peeled-but-still-asm: 20
+  - estimate range (lower / upper): 335 / 1140
+- **Data deblobbed**: 7.0 KiB of 4.00 MiB (**0.17%**)
+  - raw INCBIN bytes: 3.99 MiB (99.8% of ROM)
+  - `database.json` entries: 0
+
+Code occupies roughly [0x08000000, 0x08036000) (~216.0 KiB). Past that the
+ROM is graphics, audio, level/script data, and lookup tables.
+
+<!-- END PROGRESS -->
 
 ## Contributing
 

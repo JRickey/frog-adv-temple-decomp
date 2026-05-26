@@ -221,6 +221,14 @@ python3 tools/agent/compile_and_view_assembly.py SomeFunction --human
 # the diff tool can detect layout drift even after an agent deletes the
 # asm stub. Refresh after each landed decomp.
 python3 tools/agent/snapshot_addresses.py
+
+# Recompute project-wide function-decomp + data-deblob percentages and
+# patch the "## Progress" block of README.md in place. Run this after every
+# landed pass — a decomp, a peel batch, a database.json data extraction —
+# and include the README update in the same commit. The numbers shown in
+# the README are estimates (function-count denominator is a Thumb prologue
+# scan, not ground-truth), so each pass keeps them slightly more honest.
+python3 tools/agent/progress_stats.py --update-readme
 ```
 
 `sheet.py` is a no-op stub — there's no public progress sheet for this decomp
@@ -405,10 +413,19 @@ wall time. Serialize within a cluster, parallelize across clusters.
 
 ### The "is this making progress?" rule
 
-Single number to watch: `asm_funcs_remaining` from `progress.py`. Every
-accepted change should decrement it by ≥1. If it stays the same after an
-attempted decomp, the change is either non-matching (asm not removed) or
-broke the build (revert).
+For decomp passes: single number to watch is `asm_funcs_remaining` from
+`progress.py`. Every accepted change should decrement it by ≥1. If it
+stays the same after an attempted decomp, the change is either
+non-matching (asm not removed) or broke the build (revert).
+
+For data extraction passes: the equivalent number is the raw INCBIN byte
+count in `progress_stats.py` (or equivalently, `database.json` entry
+count). Every extraction pass should reduce the raw-INCBIN bytes and add
+≥1 named entry to `database.json` — pointing at a typed C array in
+`src/data/` or a per-system file, never at an anonymous `INCBIN_U8`
+stub. Re-run `python3 tools/agent/progress_stats.py --update-readme`
+after each pass; the README percentages are the public scoreboard, so
+keep them current in the same commit that lands the work.
 
 ### C style — keep it human-readable
 
