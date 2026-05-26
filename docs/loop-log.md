@@ -419,3 +419,26 @@ The agent infrastructure grew organically with each iter — each new friction d
 **Trajectory check:** 4 iters post-resume (11/12/13/14). Functions: 41→48 (+7). Raw INCBIN: 98.1%→97.3% (-0.8pp). The cheap-leaf decomp pipeline is flush (28 AgbMain callees + smaller bootstrap helpers); data side continues steady ~3 KB/iter on level-layout + opportunistic new subsystems (icon-animator this iter, sCharacterSpriteFrames iter 8, UI status-bar iter 2). Loop is healthy.
 
 ---
+## Iter 15 — 2026-05-26
+
+**Before:** 48 / ~513 fns (9.4%), 42 peeled-asm, 139 db, 93.8 KiB src C, 97.3% raw
+
+**Targets:** Decomp sub_08002844 (129 instr game-mode handler). Data text_0x083112c8 cluster (6.5 KB).
+
+**Outcomes:**
+- Decomp: NAKED + NON_MATCHING. Same indirect-jump idiom as AgbMain. **14 new auto-peeled callees** queued. Filename `mode_15.c` (may need rename to mode_8.c per iter-12 AgbMain dispatch math).
+- Data: **28 tables, 6488 B (largest single-iter data haul yet by symbol count).** Full 6.5 KB blob cleared. 9 (backing + ptr-array) cluster pairs.
+
+**Commit:** iter-15 hash
+
+**After:** 50 / ~513 fns (9.7%), 54 peeled-asm (+14 callees), 167 db, **100.7 KiB src C (crossed 100 KiB!), 97.1% raw** (fifth consecutive decimal drop)
+
+**Architectural duties:**
+- docs/codegen-notes.md "Pointer-array slot size != byte[0]*stride+header" — third level-layout extraction convention.
+- docs/subsystems.md "Level-layout walker functions" — sub_08021140 + sub_080219bc as high-priority decomp targets (would unlock typed `struct LevelLayoutSubTable` rename across ALL sLevelLayout* extractions).
+
+**Decisions:** none.
+
+**Trajectory:** 5 iters post-resume (11-15). Functions 41→50 (+9). Raw INCBIN 98.1%→97.1% (-1.0pp). db 117→167 (+50). src C 75→101 KiB (+26 KiB). The loop is solidly forward-moving since the post-halt fix.
+
+---
