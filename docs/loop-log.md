@@ -920,3 +920,29 @@ The agent infrastructure grew organically with each iter — each new friction d
 **Trajectory:** 24 iters post-resume (11-34). Functions 41→83 (+42). Raw INCBIN 98.1%→90.0% (-8.1pp). db 117→251 (+134). src C 75→269 KiB (+194 KiB). Data deblob 1.0%→10.0% (+9.0pp). **76 asm-fn-remaining** — declining steadily, but scaffold-blocked queue is now the dominant constraint. Iter 35 should consider another Option B target OR a strategic infra commit (tighten playbook wording, build a scaffold-blocked-batch picker, etc.).
 
 ---
+
+## Iter 35 — 2026-05-26 (sub_08000E0C — agent died, orchestrator rescued)
+
+**Before:** 83 fns (16.2%), 76 asm-fn-remaining, 251 db, 268.6 KiB src C, 90.0% raw, 10.0% deblob
+
+**Targets:** Decomp **sub_08000E0C** (172 B, sibling shape to iter-34 sub_08000B6C). Option-B scaffold-and-decomp. Data side skipped per refcount exhaustion.
+
+**Outcomes:**
+- Phase 0 (auto-peel sub_0800C358): clean ship as standalone commit `5b8556c` "Peel sub_08000E0C's callee sub_0800C358".
+- Phase 1+2: **agent died mid-flight** (API socket close after ~18 min / 86 tool uses; no final report). Tree left with non-matching pure-C body (byte_diff 12; 6 instruction diffs). Orchestrator rescue: inspected baserom shape directly via `arm-none-eabi-objdump`, discovered the SAME `mov r8, r1` high-register pin as iter-34's sub_08000B6C, rewrote the .c file as NAKED + NON_MATCHING using the agent's pure-C body as the NON_MATCHING reference. byte_diff went to 0 on first build.
+- **NAKED gate**: high-reg exception via `mov r8, r1` (arg1 cross-BL pin); same operational basis as iter-34. Five source variants documented in leading comment (re-cited from the agent's pre-NAKED diff evidence).
+
+**Commit:** `5b8556c` (peel) + iter-35 ship hash (single combined: scaffold + NAKED decomp + loop-log + README).
+
+**After:** 84 fns (**16.4% +0.2pp**), **75 asm-fn-remaining (-1)**, 251 db (unchanged), 268.6 KiB src C, 90.0% raw, 10.0% deblob.
+
+**Architectural duties:**
+- **Agent-death-mid-flight recovery pattern documented**: when an agent dies after a peel commit, the peel is salvageable (already its own commit). The body-decomp work is reviewable via `compile_and_view_assembly.py` — if byte_diff is small AND the .c is structurally close, the orchestrator can rescue rather than revert. Save vs revert decision rule: rescue iff (peel already landed) AND (per-function byte_diff < 30) AND (the missing element is a documented unmatchable class like high-regs).
+- **Sibling-shape correlation confirmed**: sub_08000E0C, sub_08000B6C (iter 34), and likely sub_08000EB8 / sub_08001214 / sub_08001508 (still asm-only) are all per-entity dispatch helpers for different cases of sub_08000918's state machine. They share the same `mov r8, r1` (arg1 pin) + `mov r7, r8 / push {r7}` prologue idiom. Future picks from this cluster should EXPECT NAKED + high-reg-exception by default.
+- **Two-line update worth landing**: tools/agent/prompts/decomp.md "High-register exception" wording ("for loop state") still says it but the operational definition is broader ("any high-reg pin that survives a BL"). Deferred to a future infra commit — not critical for current iter.
+
+**Decisions:** (1) Rescued the agent's work rather than reverting — the agent's pure C was clean and reusable as the NON_MATCHING body; only the matching side needed the NAKED wrapper. (2) Reused iter-34's high-reg exception interpretation (cross-BL pin = unmatchable per codegen-notes corpus evidence); didn't run permuter.
+
+**Trajectory:** 25 iters post-resume (11-35). Functions 41→84 (+43). Raw INCBIN 98.1%→90.0% (-8.1pp). db 117→251 (+134). src C 75→269 KiB (+194 KiB). Data deblob 1.0%→10.0% (+9.0pp). **75 asm-fn-remaining** (-1 from iter 34). Sibling-shape cluster (mode-X helpers for sub_08000918's state machine) is now well-characterized — 3+ similar functions remain (sub_08000EB8, sub_08001214, sub_08001508) likely landable with the same pattern.
+
+---
