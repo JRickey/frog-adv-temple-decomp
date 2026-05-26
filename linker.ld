@@ -61,8 +61,7 @@ SECTIONS {
         src/system/init.o(.text);        /* 0x0800072c - 0x08000820, sub_0800072C + sub_08000764 + sub_08000790 */
         src/game/sub_08000820.o(.text);  /* 0x08000820 - 0x0800088c, sub_08000820 + sub_08000884/sub_08000888 stubs */
         asm/text/text_0x0800088c.o(.text);  /* 0x0800088c - 0x080008dc, raw bytes */
-        asm/disasm_0x080008dc.o(.text);  /* 0x080008dc - 0x08000900, sub_080008DC */
-        asm/disasm_0x08000900.o(.text);  /* 0x08000900 - 0x0800090c, sub_08000900 (split from sub_080008DC peel) */
+        src/system/vblank.o(.text);      /* 0x080008dc - 0x0800090c, sub_080008DC + sub_08000900 */
         asm/text/text_0x0800090c.o(.text);  /* 0x0800090c - 0x08000918, raw bytes */
         asm/disasm_0x08000918.o(.text);  /* 0x08000918 - 0x08000b6c, sub_08000918 (auto-peeled) */
         asm/text/text_0x08000b6c.o(.text);  /* 0x08000b6c - 0x08000eb8, raw bytes */
@@ -192,7 +191,9 @@ SECTIONS {
         asm/text/text_0x08140000.o(.text);  /* 0x08140000 - 0x08150000, raw bytes */
         asm/text/text_0x08150000.o(.text);  /* 0x08150000 - 0x08160000, raw bytes */
         asm/text/text_0x08160000.o(.text);  /* 0x08160000 - 0x08170000, raw bytes */
-        asm/text/text_0x08170000.o(.text);  /* 0x08170000 - 0x08180000, raw bytes */
+        asm/text/text_0x08170000.o(.text);  /* 0x08170000 - 0x08173000, raw bytes (shrunk for icon-anim cluster) */
+        src/data/icon_anim_frames.o(.rodata);  /* 0x08173000 - 0x08173ab8, sIconTilesHeader_173000 + sIconPalette_173038 + sIconUnrefAnimData_173058 + sIconAnimFrames */
+        asm/text/text_0x08173ab8.o(.text);  /* 0x08173ab8 - 0x08180000, raw bytes (tail after icon-anim cluster) */
         asm/text/text_0x08180000.o(.text);  /* 0x08180000 - 0x08190000, raw bytes */
         asm/text/text_0x08190000.o(.text);  /* 0x08190000 - 0x081a0000, raw bytes */
         asm/text/text_0x081a0000.o(.text);  /* 0x081a0000 - 0x081b0000, raw bytes */

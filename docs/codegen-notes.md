@@ -1121,3 +1121,97 @@ The `register ... asm("rN")` pin only works for arg-style locals
 (passed in or assigned a base value before any spills). On
 multi-clause locals it tends to break worse than it helps; if so,
 back off and try a different shadow placement instead.
+
+## `old_agbcc` for leaf functions with control-flow joins
+
+Newer `agbcc` (the default in this project) emits a
+`push {lr}; ...; pop {r0}; bx r0` frame on ANY function that has a
+control-flow join — even a leaf busy-wait like:
+
+```c
+void wait(void) {
+    while ((mask & *p) == 0) { }
+}
+```
+
+Baserom emits a NO-frame leaf:
+```
+ldrh r1, [r2, #0]
+ands r1, r3
+bne+ continue
+b back
+```
+
+`old_agbcc` (in `tools/agbcc/bin/old_agbcc`) doesn't emit the
+preamble for these. The project's Makefile already supports
+per-file overrides via `src/.../foo.s: CC = $(OLD_AGBCC_BIN)` —
+the precedent is `init.c` and `init1.c`.
+
+When you land a small leaf function whose baserom prologue is empty
+(no `push`) but your C compile emits `push {lr}`, the symptom is a
+fixed +4-byte function size and the obvious mismatch at offset 0.
+Add the per-file Makefile override and retry.
+
+Worked example: `sub_080008DC` (VBlank semaphore wait, iter 14).
+Worked across all three init files (init1, init, vblank) so far.
+
+## `while`-loop pointer-and-mask hoisting (iter 14)
+
+To get the baserom's `adds rA, rB, #0; movs rC, #N` setup *before*
+the loop (rather than rematerialized inside it), the C source
+needs THREE separate locals around a busy-wait:
+
+```c
+register volatile u16 *p asm("r0") = (volatile u16 *)0x03006148;
+volatile u16 *q;
+u32 mask;
+
+*p &= 0xfffe;   /* clear bit through p */
+q = p;          /* DIFFERENT local for the loop pointer */
+mask = 1;       /* DIFFERENT local for the mask */
+while ((mask & *q) == 0) { }
+```
+
+Inlining `q` or `mask` as a literal collapses the loop into 4
+instructions instead of 5, dropping 2 bytes. The condition
+`(mask & *q) == 0` is what wires `ldrh r1, [r2, #0]; adds r0, r3, #0;
+ands r0, r1` — `mask` first in the AND keeps `r3` as the live carrier.
+
+Joins the shadow-copy trick (iter 13) as a class of "split a live
+range into multiple source-level locals to force agbcc's allocator
+into the baserom shape" idioms. Both work because agbcc 2.x's
+allocator inherits SSA-like behavior per local name.
+
+## Icon-animator pattern (state-keyed palette+tile DMA)
+
+Iter-14 data agent identified a GBA UI/HUD idiom: 5 records of
+`{u16 palette[16]; u16 tiles[80]}` (192 B per record, 96 halfwords),
+loaded by a state-byte switch and DMA'd to PAL_RAM + VRAM.
+
+Recognition pattern in code:
+```asm
+ldr Rx, [pc, #N]       @ Rx = sIconAnimFrames + state * 192
+ldr Ry, [pc, #M]       @ Ry = REG_DMA3
+str Rx, [Ry, #0]       @ DMA3 src
+ldr Rz, [pc, #K]       @ Rz = 0x05000180 (PAL_RAM)
+str Rz, [Ry, #4]       @ DMA3 dst
+...                    @ cnt 32 halfwords, src += 32
+str Rx, [Ry, #0]       @ next DMA: tiles
+ldr Rz, [pc, #J]       @ Rz = 0x06008800 (VRAM tile slot)
+str Rz, [Ry, #4]
+...                    @ cnt 160 halfwords
+```
+
+Recognition in data: a contiguous run of 192-byte records, each
+starting with 16 halfwords of palette (0x0000ffff trans+white,
+typical NES-era palette signature), followed by 80 halfwords of
+tile-row data. Look for periodic 192-byte alignment with palette
+signatures.
+
+Worked example: `sIconAnimFrames` at 0x081736f8 (5 records × 192 B
+= 960 B). Consumer at 0x080166ac (still asm) state-switches on
+`*(u8*)(g+0x33)` ∈ {0..3} and DMA-loads selected frame.
+
+This is distinct from the iter-2 UI/HUD descriptor format
+(`{x,y,w,h,*ptr}`) — that one targeted BG tilemap blitters; this
+one targets DMA-driven palette+tile slot loads.
