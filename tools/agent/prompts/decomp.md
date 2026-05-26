@@ -12,7 +12,7 @@
   general-purpose agents that pick a target, scaffold a new C file, drive
   it to match, and handle the decision tree around fallbacks.
 
-  Last verified: commit e68028c. Update the "last verified" line in every
+  Last verified: commit 3ce7961. Update the "last verified" line in every
   PR that materially changes the playbook.
 -->
 
@@ -103,27 +103,73 @@ After step 4 (iteration), branch on the diff state:
   `linker.ld` (remove the disasm entry; the src/ entry's range now
   covers it). Run `tools/agent/snapshot_addresses.py`,
   `tools/agent/progress_stats.py --update-readme`. Leave staged.
-- **`byte_diff ≤ 30`, no high-register pins, no other agent has solved
-  this specific shape**: try corpus search + permuter. Budget ≤ 30
-  min total. If it doesn't land, fall through.
-- **High-register pins seen in the asm** (`mov sl, …`, `mov sb, …`,
-  `mov r8, …` for loop state): SKIP pure C and permuter. Corpus
-  evidence (`docs/codegen-notes.md` "High registers") says no agbcc
-  decomp has ever matched this shape in C. Ship as NAKED +
-  `#ifdef NON_MATCHING`.
-- **NAKED + `#ifdef NON_MATCHING` fallback**:
-  - Outer: `NAKED void <FN>(void) { asm(".syntax unified\n" … ".syntax divided\n"); }`
-  - Inner: `#ifdef NON_MATCHING / void <FN>(void) { … readable goto-shaped C … } / #endif`
-  - **CRITICAL**: every NAKED `asm()` block ends with `".syntax divided\n"`.
-    `.syntax unified` bleeds into following functions in the same .o
-    and breaks Thumb-1 syntax silently. See `docs/codegen-notes.md`.
-  - The reference body doesn't need to compile; it documents intent
-    for the phase-3 PC port. Use `register T x asm("rN")` pins, gotos,
-    raw casts — whatever makes the algorithm readable.
-- **`byte_diff > 30` after a reasonable effort and no NAKED-trigger**:
-  stop. Don't ship a half-matching C. Restore the asm slice + the
-  refined-mnemonics version. Land a comment in the cluster's C file
-  describing what blocked you. Future agents can pick it up.
+
+- **`byte_diff > 0` (any nonzero value)**: you are NOT done. The
+  default is to keep iterating in pure C. NAKED is a LAST resort with
+  hard prerequisites — see "NAKED gate" below.
+
+### NAKED gate — hard prerequisites, not guidance
+
+A 9-iter retrospective (iters 16-28) found that ~9 of 10 NAKED commits
+shipped without honest evidence of unmatchability. Multiple were later
+shown to be matchable in pure C with simple source mutations. From now
+on, NAKED requires ALL of the following before the commit lands:
+
+1. **Permuter was actually run.** Set up `nonmatchings/<fn>/` with the
+   pure-C base and the target asm. Run at least 1000 iterations OR
+   until the best score has been stalled for 500 iterations. Save the
+   `permuter.log` tail showing iter count + best score in your report.
+   "Permuter probably won't help" or "same class as X" is NOT
+   sufficient — RUN IT.
+2. **At least 5 distinct source-form variations were tried** in pure C
+   before resorting to NAKED. Document each in the report:
+   - Variant tried (one-line description)
+   - Resulting byte_diff
+   Examples of variants: register pins on different regs, local-var
+   factoring, explicit casts, pointer typedef changes, statement
+   reordering, splitting compound expressions, volatile.
+3. **The specific unmatchable class is matched by EVIDENCE for THIS
+   function**, not borrowed from a sibling. Cite either:
+   - A concrete corpus hit pattern (run `tools/agent/corpus.py grep
+     '<exact-pattern>' --c` and quote the result).
+   - A specific permuter log line showing the score plateaued for
+     500+ iters at >0.
+   "Same class as sub_XYZ" without independent evidence is REJECTED.
+4. **The NON_MATCHING reference body MUST be present.** A NAKED-only
+   commit without a parallel `#ifdef NON_MATCHING / void <FN>(...)`
+   readable C body is rejected. The readable body documents intent
+   for the phase-3 PC port and IS the source-of-truth for future
+   re-attempts when permuter improves or a new idiom is discovered.
+
+### High-register exception (the one fast-path NAKED)
+
+`mov sl, …` / `mov sb, …` / `mov r8, …` / `mov ip, …` for loop state
+is the ONE shape that skips the NAKED gate above. Corpus evidence
+across 7 agbcc decomps shows no matched C has ever produced these
+patterns. Cite the specific high-register pin in the asm + the
+codegen-notes section ("High registers") and ship NAKED. Still ship
+the NON_MATCHING reference body (rule #4 applies).
+
+### NAKED format (when justified)
+
+- Outer: `NAKED void <FN>(void) { asm(".syntax unified\n" … ".syntax divided\n"); }`
+- Inner: `#ifdef NON_MATCHING / void <FN>(void) { … readable goto-shaped C … } / #endif`
+- **CRITICAL**: every NAKED `asm()` block ends with `".syntax divided\n"`.
+  `.syntax unified` bleeds into following functions in the same .o
+  and breaks Thumb-1 syntax silently. See `docs/codegen-notes.md`.
+
+### `byte_diff > 0` and gate not satisfied
+
+If you cannot satisfy the NAKED gate AND cannot reach byte_diff 0,
+STOP. Do not ship NAKED. Restore the asm slice + the refined-mnemonics
+version. Stage your best pure-C attempt in a docs/decisions.md entry
+or commit message describing what you tried and where you got stuck.
+The orchestrator (main conversation) will decide: run permuter
+longer, escalate to human review, or defer the target.
+
+This is a real change from earlier iters where NAKED was the default
+fallback. Going forward, NAKED is rare. If you ship one without
+satisfying all four prerequisites, the commit will be reverted.
 
 ## Common pitfalls
 

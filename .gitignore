@@ -38,6 +38,7 @@ tools/agent/.progress_sheet.csv
 # Scratch / nonmatching exploration
 .scratch/
 nonmatchings/
+.permuter_staging/
 
 # tools/agent/build_expected.py output — regenerate any time with:
 #   python3 tools/agent/build_expected.py --clean
