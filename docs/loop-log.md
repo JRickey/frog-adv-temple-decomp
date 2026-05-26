@@ -739,3 +739,30 @@ The agent infrastructure grew organically with each iter — each new friction d
 **Trajectory:** 17 iters post-resume (11-27). Functions 41→75 (+34). Raw INCBIN 98.1%→92.4% (**-5.7pp**). db 117→225 (+108). src C 75→217 KiB (+142 KiB). Data deblob 1.0%→7.6% (+6.6pp). **src C threshold 200 KiB crossed** (data INCBIN files count toward src C). Brief-fix from iter 26 confirmed working — no false-positive friction this iter. Loop continuing strong.
 
 ---
+
+## Iter 28 — 2026-05-26
+
+**Before:** 75 / ~513 fns (14.6%), 80 asm-fn-remaining, 225 db, 217.1 KiB src C, 92.4% raw
+
+**Targets:** Decomp sub_0800696C + sub_08009D9C (contiguous + scaffold). Data: 10-anchor 0x081bxxxx cluster.
+
+**Outcomes:**
+- Decomp: **2 NAKED fns + 1 libgcc helper** named (`__ashldi3` at 0x08033ca4, byte-match against libgcc.a confirmed; added to LIBGCC_SYMBOLS). sub_0800696C surfaced a **new unmatchable pattern**: u64 OR-store tail-merging — agbcc 2.x always merges duplicate `*bank |= mask` tails across if/else. sub_08009D9C identified as **the per-tick advance for sub_08000918's 14-case state machine**.
+- Data: **12 tables, 45.3 KiB** across TWO architectural clusters. Cluster A (BG2 install) **CONFIRMS the iter-27 hypothesis** — case-3 dispatcher at 0x080152c0 populates BG2 screenblock 30 + charblock 2 mid-region. Cluster B (4-mode scenery dispatcher) is 8 × 0xec4 B parallel arrays indexed by mode × select.
+
+**Commit:** iter-28 hash (single combined: 2 decomps + libgcc rename + 12 data tables + codegen-notes u64-tail-merge addition + LIBGCC_SYMBOLS extension).
+
+**After:** 77 / ~513 fns (**15.4%** +0.8pp — second-largest single-iter fn gain since loop resume), 78 asm-fn-remaining (-2), 237 db (+12), 217.5 KiB src C, **91.3% raw (-1.1pp)**, **8.7% data deblob (+1.1pp)**.
+
+**Architectural duties:**
+- docs/codegen-notes.md "64-bit OR-store tail-merging" — new section. Worked example sub_0800696C with full discussion of why no source-level mutation fixes it.
+- tools/agent/pick_target.py — `__ashldi3` added to LIBGCC_SYMBOLS (libgcc helper count is now 19 — 14 _call_via_rX + 3 div/mod helpers + 1 shift + 1 unused entry).
+- **BG2 hypothesis CONFIRMED** (iter-27 → iter-28). Screen-install resource family now spans 5 clusters: iter-18 (0x081d8b98), iter-22 (0x0819c312), iter-23 (0x0820c578), iter-27 (0x080f7xxx dual-BG), iter-28 (0x081b23ca BG2 install). Each variant exists for different game-state contexts.
+- **4-mode scenery dispatcher subsystem** discovered. 8 parallel arrays of identical 0xec4 B size — modes × low/high select bit. New subsystem worth a docs/subsystems.md entry once a consumer lands in C.
+- **sub_08000918 state machine architecture now fully mapped**: iter-26 mode-config data (0x082f99e8) + iter-28 per-tick advance (sub_08009D9C) + the 14 dispatcher cases + 4 walker variants from iter-20. Decompiling sub_08000918 itself will now have full context.
+
+**Decisions:** none material.
+
+**Trajectory:** 18 iters post-resume (11-28). Functions 41→77 (+36). Raw INCBIN 98.1%→91.3% (**-6.8pp**). db 117→237 (+120). src C 75→218 KiB (+143 KiB). Data deblob 1.0%→8.7% (+7.7pp). **Approaching 90% raw INCBIN threshold** and **approaching 10% data deblob** — both potentially crossed next iter.
+
+---
