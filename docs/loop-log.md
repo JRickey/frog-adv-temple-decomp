@@ -640,3 +640,28 @@ The agent infrastructure grew organically with each iter — each new friction d
 **Trajectory:** 13 iters post-resume (11-23). Functions 41→63 (+22). Raw INCBIN 98.1%→95.3% (-2.8pp). db 117→212 (+95). src C 75→161 KiB (+86 KiB). **Crossing 12% function decomp** — first major milestone since 10%. **Crossed 95.5% → 95% raw INCBIN** threshold this iter (95.4% → 95.3%). Pace acceleration is steady: ~1.5-2 fns per iter on average across post-resume iters.
 
 ---
+
+## Iter 24 — 2026-05-26
+
+**Before:** 63 / ~513 fns (12.3%), 84 asm-fn-remaining, 212 db, 160.7 KiB src C, 95.3% raw
+
+**Targets:** Decomp peel sub_0800B7B0 + scaffold-decomp sub_08000C98 + sub_08000D2C. Data: long-deferred 0x080e3774 + 0x080e3ab6 (4-5 iters of deferral).
+
+**Outcomes:**
+- Decomp: **2 fns FIRST-TRY pure-C** + 1 callee peel. Both decomps are trivial forwarders (sub_0800B7B0(a, b, 18) — likely mode-set event ID = 18). Net asm_funcs_remaining: 84 → 83.
+- Data: **2 anchors, 16.5 KiB** extracted. sFrogSpritePalettes_E3774 (5×16-color OBJ palettes, 160 B). sFrogTilePixels_E3AB6 (16 KiB 4bpp tile pixels via iter-22 non-u32-aligned protocol). **Iter-19 mis-classification corrected**: 0x080e3774 was incorrectly tagged as tile pixel data in iter-19's scout; it's actually palette data (32-byte DMAs to palette RAM).
+
+**Commit:** iter-24 hash (single combined: 1 peel + 2 decomps + 2 data tables).
+
+**After:** 65 / ~513 fns (**12.7%** +0.4pp), 83 asm-fn-remaining (-1), 214 db (+2), 160.9 KiB src C, **94.9% raw** (-0.4pp), **5.1% data deblob (+0.4pp — crossed 5%!)**.
+
+**Architectural duties:**
+- **CROSSED 5% DATA DEBLOB milestone**. First time over the 5% threshold; +1pp from iter-23. The screen-install + sprite-palette extractions are paying off in deblob percentage now that semantic-grouped clusters land 4-16 KiB per pass instead of <1 KiB single-table extractions.
+- **CROSSED 95% raw INCBIN threshold the other direction** (95.3% → 94.9%).
+- Iter-19 scout correction logged. Future scouts should DMA-cnt-check before tagging "tile pixel data needs encoder workflow" — 0x20-cnt DMAs are palette; larger cnts to OBJ-tile VRAM are pixels. Adding to docs/codegen-notes.md would be premature (one occurrence); flag for repeated pattern.
+
+**Decisions:** none material.
+
+**Trajectory:** 14 iters post-resume (11-24). Functions 41→65 (+24). Raw INCBIN 98.1%→94.9% (-3.2pp). db 117→214 (+97). src C 75→161 KiB (+86 KiB). Data deblob 1.0%→5.1% (+4.1pp). **Two major milestones crossed this iter** (5% data deblob, sub-95% raw INCBIN). Pace continues to accelerate as semantic-cluster extraction patterns mature.
+
+---
