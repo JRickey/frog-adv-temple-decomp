@@ -1,0 +1,89 @@
+#include "macros.h"
+#include "types.h"
+
+/* Cluster of six helpers living between sub_0800A540 and sub_0800A7A8.
+ *
+ * sub_0800A710 is a 10-argument struct initializer called from
+ * sub_0800A540 (still asm). The remaining five are tiny flag/field
+ * helpers on the same struct, all sharing the +0x34 flag halfword.
+ *
+ * The struct type isn't yet identified — the layout below covers only
+ * the fields these six helpers touch.
+ *
+ * Matching notes:
+ *   - This whole .c is compiled with old_agbcc (Makefile override).
+ *     sub_0800A778 has two return paths that converge at a `bx lr`;
+ *     the newer agbcc wraps such functions in a spurious
+ *     `push {lr}; ...; pop {r1}; bx r1` frame. sub_0800A768 likewise
+ *     needs old_agbcc to emit the `bics r2, r1; adds r1, r2, #0;
+ *     strh r1, [r0, #52]` route-through-r1 (newer agbcc strh's r2
+ *     directly). See docs/codegen-notes.md "old_agbcc vs agbcc".
+ *   - sub_0800A710 takes 10 args; six arrive on the stack. The four
+ *     stack args used last (stored at dest +22, +23, +26, +52) spill
+ *     into r8/r9/sl/r4 — agbcc runs out of low callee-saved registers
+ *     mid-prologue. First two stack args (+6, +20) stay in r5/r6.
+ *   - sub_0800A798 uses `& 0xffbf` (not `& ~0x40`); the literal lands
+ *     in the pool just past the function's bx lr. */
+
+struct ClusterA710 {
+    u8 _field_00;
+    u8 _pad01;
+    u16 _field_02;
+    u16 _field_04;
+    u8 _field_06;
+    u8 _pad07[5];
+    u16 _field_0C;
+    u16 _field_0E;
+    u16 _field_10;
+    u8 _pad12[2];
+    u16 _field_14;
+    u8 _field_16;
+    u8 _field_17;
+    u8 _pad18[2];
+    u8 _field_1A;
+    u8 _pad1B[0x19];
+    u16 _field_34;
+};
+
+void sub_0800A710(struct ClusterA710 *p, u8 a, u16 b, u16 c, u8 d, u16 e, u8 f, u8 g, u8 h, u16 i)
+{
+    p->_field_00 = a;
+    p->_field_02 = b;
+    p->_field_04 = c;
+    p->_field_06 = d;
+    p->_field_14 = e;
+    p->_field_16 = f;
+    p->_field_17 = g;
+    p->_field_1A = h;
+    p->_field_34 = i | 2;
+}
+
+void sub_0800A75C(struct ClusterA710 *p, u16 mask)
+{
+    p->_field_34 |= mask;
+}
+
+void sub_0800A768(struct ClusterA710 *p, u16 mask)
+{
+    p->_field_34 &= ~mask;
+}
+
+u8 sub_0800A778(struct ClusterA710 *p, u16 mask)
+{
+    if ((p->_field_34 & mask) != 0)
+        return 1;
+    return 0;
+}
+
+void sub_0800A788(struct ClusterA710 *p, u16 a, u16 b, u16 c)
+{
+    p->_field_0C = a;
+    p->_field_0E = b;
+    p->_field_10 = c;
+    p->_field_34 |= 0x40;
+}
+
+void sub_0800A798(struct ClusterA710 *p)
+{
+    p->_field_34 &= 0xffbf;
+}
