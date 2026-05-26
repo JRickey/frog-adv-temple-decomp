@@ -89,7 +89,7 @@ SECTIONS {
         asm/text/text_0x0802eb34.o(.text);  /* 0x0802eb34 - 0x0802ec7c, raw bytes */
         src/system/sound_channel.o(.text);  /* 0x0802ec7c - 0x0802eef8, sub_0802EC7C + sub_0802ED5C + sub_0802EDF0 (sub_0802EC7C and sub_0802EDF0 NAKED+NON_MATCHING) */
         asm/text/text_0x0802eef8.o(.text);  /* 0x0802eef8 - 0x0802f054, raw bytes */
-        asm/disasm_0x0802f054.o(.text);  /* 0x0802f054 - 0x0802f2fc, sub_0802F054 (auto-peeled) */
+        src/system/sound_envelope_slide.o(.text);  /* 0x0802f054 - 0x0802f2fc, sub_0802F054 (NAKED+NON_MATCHING) */
         src/system/sound_pan.o(.text);  /* 0x0802f2fc - 0x0802f398, sub_0802F2FC (NAKED+NON_MATCHING) */
         asm/text/text_0x0802f398.o(.text);  /* 0x0802f398 - 0x0802f4b0, raw bytes */
         src/system/sound_mixer.o(.text);
@@ -176,9 +176,15 @@ SECTIONS {
         src/data/sprite_dispatch.o(.rodata);  /* 0x08306444 - 0x08306814, sSpriteAssetIndexTable + sSpriteGridLayout + sSpriteGridSubtable */
         src/data/sprite_anim_block.o(.rodata);  /* 0x08306814 - 0x08308100, anim / OAM-DMA descriptor cluster (9 named symbols) */
         src/data/sprite_dma_records.o(.rodata);  /* 0x08308100 - 0x08310000, OAM-DMA cfg + sprite frame ptrs + VRAM tile ptrs + DMA load records + dispatch tables + Scene 2 DMA cluster */
-        asm/text/text_0x08310000.o(.text);  /* 0x08310000 - 0x08316f24, raw bytes */
-        src/data/level_layout.o(.rodata);  /* 0x08316f24 - 0x083170d4, sLevelLayout_316F24 + _316F44 + _316F64 + _317024 + _317054 + _31707C */
-        asm/text/text_0x083170d4.o(.text);  /* 0x083170d4 - 0x08320000, raw bytes */
+        asm/text/text_0x08310000.o(.text);  /* 0x08310000 - 0x083112a8, raw bytes */
+        src/data/level_layout_dispatch_3112a8.o(.rodata);  /* 0x083112a8 - 0x083112c8, sLevelLayoutDispatch_3112A8 */
+        asm/text/text_0x083112c8.o(.text);  /* 0x083112c8 - 0x08315a48, raw bytes */
+        src/data/level_layout_dispatch_315a48.o(.rodata);  /* 0x08315a48 - 0x08315bb0, sLevelLayoutDispatch_315A48 */
+        asm/text/text_0x08315bb0.o(.text);  /* 0x08315bb0 - 0x08316dc8, raw bytes */
+        src/data/level_layout_dispatch_316dc8.o(.rodata);  /* 0x08316dc8 - 0x08316e5c, sLevelLayoutDispatch_316DC8 */
+        asm/text/text_0x08316e5c.o(.text);  /* 0x08316e5c - 0x08316f24, raw bytes */
+        src/data/level_layout.o(.rodata);  /* 0x08316f24 - 0x08317b54, sLevelLayout_316F24..._31707C + sLevelLayoutData + sLevelLayoutPtrs */
+        asm/text/text_0x08317b54.o(.text);  /* 0x08317b54 - 0x08320000, raw bytes */
         asm/text/text_0x08320000.o(.text);  /* 0x08320000 - 0x08330000, raw bytes */
         asm/text/text_0x08330000.o(.text);  /* 0x08330000 - 0x08340000, raw bytes */
         asm/text/text_0x08340000.o(.text);  /* 0x08340000 - 0x08350000, raw bytes */

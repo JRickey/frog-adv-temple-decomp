@@ -268,6 +268,49 @@ boundaries. Not urgent — bytes are correct and database.json doesn't
 need to perfectly mirror logical groupings; what matters is that the
 typed symbol exists.
 
+## Level layout / room data
+
+Identified iter-4 and extended iter-5. Multi-tier dispatch system in
+the 0x083XXXXX region with four pointer-array dispatchers, dozens of
+mini-table sub-tables (each `{count, 0, records…}` shape), and the
+top-level pointer array that the consumer code indexes.
+
+Pointer-array dispatchers (each `const u32[N]`):
+- `sLevelLayoutDispatch_3112A8` (0x083112a8, 8 entries) — points into
+  0x083111a8..0x08311288 sub-tables; consumers `[0x080220ca,
+  0x08022126]`.
+- `sLevelLayoutDispatch_315A48` (0x08315a48, 90 entries) — points into
+  0x08314c00..0x08315aa0 sub-tables; consumers `[0x080260cc..
+  0x08026a5e]`.
+- `sLevelLayoutDispatch_316DC8` (0x08316dc8, 35 entries + 2× sentinel)
+  — 0x08316770..0x08316dc8 sub-tables; consumers `[0x08027c88..
+  0x08027cde]`. Last 2 entries point upstream — pointer aliasing
+  across dispatchers.
+- `sLevelLayoutPtrs` (0x08317a4c, 64 entries + 2× sentinel) — the
+  primary dispatch array. Points into `sLevelLayoutData` (the
+  contiguous backing store at 0x083170d4, 2424 B).
+
+Iter-3-and-prior extracted the foundational sub-tables in the
+adjacent address range:
+- `sLevelLayout_316F24`, `sLevelLayout_316F44` (iter 3)
+- `sLevelLayout_316F64`, `sLevelLayout_317024`, `sLevelLayout_317054`,
+  `sLevelLayout_31707C` (iter 4)
+
+Common record shape inferred from consumer-code byte-reads:
+`{u8 count, u8 _, u8 X, u8 _, u32 _}` 8-byte header followed by
+`count`-many fixed-stride records. Stride and field semantics vary
+per sub-table; callee 0x080219bc (still asm) reads `count = ptr[0]`
+internally so callers don't have to pass it.
+
+Open work:
+- `[0x08317b54, 0x08317bac)` and onward — 16 more pool-load anchors
+  in `[0x08317b54, 0x08318000)` with consumers in `[0x0802a186..
+  0x0802b3b6]`. Same shape continues, deferred to a future pass.
+- Once 0x080219bc and the consumer cluster around 0x08029000 land in
+  C, rename the `_NNNNNN` ROM-address-suffixed dispatchers to
+  semantic names tied to whatever they dispatch (room-types? entity
+  spawn-tables?).
+
 ## Render / sprite
 
 (Not yet identified.)

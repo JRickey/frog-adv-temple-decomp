@@ -392,6 +392,46 @@
     "size": 4
   },
   {
+    "path": "level/layout_ptrs_3112a8.bin",
+    "addr": {
+      "us": "0x3112A8"
+    },
+    "count": "0x8",
+    "size": 4
+  },
+  {
+    "path": "level/layout_ptrs_315a48.bin",
+    "addr": {
+      "us": "0x315A48"
+    },
+    "count": "0x5A",
+    "size": 4
+  },
+  {
+    "path": "level/layout_ptrs_316dc8.bin",
+    "addr": {
+      "us": "0x316DC8"
+    },
+    "count": "0x25",
+    "size": 4
+  },
+  {
+    "path": "level/layout_sub_tables.bin",
+    "addr": {
+      "us": "0x3170D4"
+    },
+    "count": "0x25E",
+    "size": 4
+  },
+  {
+    "path": "level/layout_ptrs.bin",
+    "addr": {
+      "us": "0x317A4C"
+    },
+    "count": "0x42",
+    "size": 4
+  },
+  {
     "path": "sound/wave_vol_lut.bin",
     "addr": {
       "us": "0x3DDA3C"

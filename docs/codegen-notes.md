@@ -913,3 +913,51 @@ with open('frog_us_baserom.gba','rb') as f:
 
 Joins `__umodsi3` (0x08033f5c) and `__divsi3` (0x08033d14) in the
 ROM's libgcc cluster `[0x08033cd8, 0x0803401c)`.
+
+## Apostrophe trap fires at COMPILE time too (not just pre-commit)
+
+Confirms + extends the existing "Apostrophes in C comments break
+`tools/preproc`" section. The pre-commit guard (`e3bf8d5`,
+`tools/agent/lint_incbin_apostrophes.py`) catches `'` in `/* */`
+in INCBIN-using files at COMMIT time. **But agbcc's CPP itself
+swallows everything after an apostrophe in a comment** — so if you
+add a new file and `make` it without committing, the build will
+fail at the INCBIN line with `invalid initializer`.
+
+Two visible signatures of an in-flight trap:
+
+- agbcc `.s` output: `.comm sFoo, NNN` lines (bss declarations)
+  instead of `.word`/`.byte` content. (This is the playbook's
+  existing signature.)
+- ld error: `invalid initializer` at every INCBIN macro line in
+  the affected .c file. Stems from agbcc emitting placeholder
+  initializers for `.comm` declarations that the C array's
+  initializer list can't accept.
+
+Confirmed via the `header's` apostrophe in `src/data/level_layout.c`
+at iter 5. Fix is the same: replace with typographic `’` (U+2019)
+or rephrase.
+
+## `.incbin "frog_us_baserom.gba", offset, count` — second arg is FILE OFFSET
+
+Caught twice now (iter 4 and iter 5). The `.incbin` directive's
+second argument is the **file offset** into `frog_us_baserom.gba`,
+which equals `ROM_address - 0x08000000`. Easy to typo when adapting
+from a ROM-address mental model:
+
+- WRONG: `.incbin "frog_us_baserom.gba", 0x003112c8, ...` (when you
+  meant 0x080312c8 → 0x000312c8)
+- WRONG: `.incbin "frog_us_baserom.gba", 0x080312c8, ...` (full
+  ROM address — produces a seek past EOF or wildly off bytes)
+- RIGHT: `.incbin "frog_us_baserom.gba", 0x000312c8, ...`
+
+Detection: `python3 tools/agent/progress.py --human` shows
+`ROM diff` jump from 0 to thousands at a specific address right
+after the affected blob file's start in the linker.ld order. The
+shift propagates downstream until the next valid blob.
+
+Worth a future lint: parse linker.ld for each `asm/text/text_0x*.o`
+range, verify its `.incbin` skip+count match the comment-declared
+range exactly. Sketched in `docs/decisions.md` "Linker-blob
+boundary lint".
+

@@ -1,41 +1,94 @@
 #include "macros.h"
 #include "types.h"
 
-/* Level/room-layout anchors flagged by the data-extraction pass.
+/* Level/room-layout cluster spanning [0x08316f24..0x08317b54).
  *
- * The first two tables are 32 bytes each: an 8-byte header { u32 mask,
- * u32 count } followed by three 8-byte records { u32 coord, u32 type }.
- * Both 32-byte tables use the same header value 0x00040302 / 0x00000001;
- * the third field of the trailing record uses sentinel 0x00000007 in
- * both tables.
+ * --- Cluster overview ---
  *
- * The remaining tables follow a different but consistent shape: an
- * 8-byte header { u32 count, u32 zero } followed by count*8-byte
- * records. Boundaries are pinned by pool-literal callsites:
- *   0x08317024 -- 2 refs (0x080295fc, 0x08029624), count=5
- *   0x08317054 -- 2 refs (0x08029648, 0x08029670), count=4
- *   0x0831707c -- 1 ref  (0x08029694),             count=10
- * The count=23 sub-table at 0x08316f64 immediately follows the existing
- * 0x08316f44 table; it has no direct pool reference but its 23 records
- * end exactly at 0x08317024 where the next anchored table begins.
+ * The cluster has three logically-distinct regions:
  *
- * 0x08316f24 has 6 pool-literal callsites from the still-asm range
- *   [0x08028af0, 0x08029a10] -- the room-layout / level-renderer
- *   cluster pass 3 deferred.
- * 0x08316f44 has 7 pool-literal callsites from the same range.
+ *   [0x08316f24..0x083170d4)  sLevelLayout_316F24..._31707C
+ *       Six standalone sub-tables anchored individually by 1..7 pool
+ *       references each. Extracted in prior data passes.
  *
- * Field naming awaits decomp of the consumers; the current names are
- * keyed off ROM offset so the symbols are addressable without
- * pretending to know what each field means.
+ *   [0x083170d4..0x08317a4c)  sLevelLayoutData
+ *       Backing store for 64 size-varying sub-tables addressed
+ *       indirectly via sLevelLayoutPtrs (below). No direct pool
+ *       references -- every consumer pulls a base pointer out of
+ *       sLevelLayoutPtrs[idx].
  *
- * TODO: confirm field semantics after the room-renderer functions
- * around 0x08028af0..0x08029a10 land in C. The cluster likely encodes
- * a list of related room/section descriptors selected by mode flag,
- * with the trailing tables holding per-mode object placement lists. */
+ *   [0x08317a4c..0x08317b54)  sLevelLayoutPtrs
+ *       Dispatch array of 64 sub-table pointers followed by two
+ *       0xffffffff sentinel entries. Consumers in the still-asm range
+ *       [0x08028xxx..0x08029xxx] load *interior* anchors (e.g.,
+ *       0x08317a60, 0x08317a98, 0x08317b2c) as pool literals and index
+ *       relative to them -- so the array is conceptually a flat
+ *       lookup, but a single ROM byte appears under multiple base
+ *       names depending on which consumer "window" loads it.
+ *
+ *       Verified anchor windows (refcount_pool_loads.py):
+ *         entry  5 (0x08317a60)  -- loaded at 0x08028586, 0x08029714
+ *         entry 20 (0x08317a98)  -- loaded at 0x0802860a, 0x0802974c
+ *         entry 27 (0x08317ab0)  -- loaded at 0x080297b2, 0x080297f4
+ *         entry 29 (0x08317ab8)  -- loaded at 0x08028736, 0x0802982e
+ *         entry 43 (0x08317af8)  -- 3 refs (0x0802883c, 0x08029880,
+ *                                   0x080298ac)
+ *         entry 45 (0x08317b00)  -- 2 refs
+ *         entry 50 (0x08317b10)  -- 1 ref (window of 4 entries)
+ *         entry 52 (0x08317b1c)  -- 3 refs (window of 4 entries)
+ *         entry 56 (0x08317b2c)  -- 5 refs (window of 8 entries:
+ *                                   0x08029356, 0x08029388, 0x080293d2,
+ *                                   0x0802940e, 0x0802942e)
+ *
+ * --- Sub-table shape (sLevelLayoutData) ---
+ *
+ * Each sub-table starts with an 8-byte header `{u16 a, u16 b, u32
+ * count}` followed by `count * 8` record bytes. Records appear to be
+ * `{u16 coordA, u16 coordB, u8 flags, u8 type, u16 _pad}` based on the
+ * value distribution (high halfwords cycle through small fixed values;
+ * second u32 always has 0 in upper bits except for a 0x4303 / 0x0303
+ * "kind" field).
+ *
+ * Sub-table sizes (from sLevelLayoutPtrs stride): mostly 32 B (3-
+ * record tables) or 48 B (5-record), with a handful of larger entries
+ * up to 192 B. Two pointer-array entries (indices 50, 55) reference
+ * earlier sub-tables, so total unique-byte coverage is < 64 * 48 B.
+ *
+ * Field names await decomp of the consumer cluster around
+ * 0x08029000..0x0802a000 (level/room renderer + state advance).
+ *
+ * --- Sub-table count read (consumer-side) ---
+ *
+ * Sub-table iteration is driven by `ptr[0]` (u8) -- the callee
+ * 0x080219bc loads count from offset 0 of the table base, not from a
+ * caller arg. Both 32-byte and 48-byte tables share this convention;
+ * what differs is whether the trailing record count happens to equal
+ * the header u8 (in which case the "stride" matches "ptr[0]+1
+ * 8-byte records") or whether the table is "padded" out to its
+ * pointer-array slot.
+ *
+ * TODO: confirm field semantics + sub-table boundaries once
+ * 0x080219bc and 0x08029000..0x0802a000 land in C. Until then the
+ * sub-tables ship as a single typed `u32[]` and consumers index via
+ * sLevelLayoutPtrs[idx]. */
 
+/* Six original sub-tables (prior data passes). Counts as previously
+ * documented; underlying shape verified against the consumer-side
+ * `ptr[0] = u8 count` reading convention. */
 const u32 sLevelLayout_316F24[8] = INCBIN_U32("data/level/layout_316f24.bin");
 const u32 sLevelLayout_316F44[8] = INCBIN_U32("data/level/layout_316f44.bin");
 const u32 sLevelLayout_316F64[48] = INCBIN_U32("data/level/layout_316f64.bin");
 const u32 sLevelLayout_317024[12] = INCBIN_U32("data/level/layout_317024.bin");
 const u32 sLevelLayout_317054[10] = INCBIN_U32("data/level/layout_317054.bin");
 const u32 sLevelLayout_31707C[22] = INCBIN_U32("data/level/layout_31707c.bin");
+
+/* 64-entry sub-table backing store. Sub-table boundaries are dictated
+ * by sLevelLayoutPtrs (below); see the cluster overview at the top of
+ * this file for the access pattern. */
+const u32 sLevelLayoutData[606] = INCBIN_U32("data/level/layout_sub_tables.bin");
+
+/* Dispatch array: 64 sub-table pointers + 2 sentinel entries
+ * (0xffffffff each). Consumers load interior offsets into this array
+ * as base pointers; see the anchor-window list in the cluster
+ * overview. */
+const u32 sLevelLayoutPtrs[66] = INCBIN_U32("data/level/layout_ptrs.bin");
