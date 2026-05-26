@@ -1071,3 +1071,41 @@ The class IS unmatchable, but specifically because of THREE downstream structura
 **Trajectory:** 29 iters post-resume (11-39). Functions 41→87 (+46). Raw INCBIN 98.1%→88.8%. db 117→265. src C 75→300 KiB. Data deblob 1.0%→11.10%. **Decomp-pivot strategy working when data side is dry.** Next iter: pick from the 5 newly-peeled candidates (start with sub_08001198 thunk for warm-up).
 
 ---
+
+## Iter 40 — 2026-05-26 (batch-decomp + 2nd peel-scout)
+
+**Before:** 87 fns (16.7%), 77 asm-fn-remaining, 265 db, 88.8% raw, 11.10% deblob
+
+**Targets:** Batch-decomp 4 small fns from iter-39's peel-scout cluster + peel-scout text_0x08001d18.
+
+**Outcomes:**
+
+- **Batch decomp**: ALL 4 PURE-C MATCH FIRST-TRY. Consolidated into `src/system/sub_08001128.c`:
+  - sub_08001128(a, b): `gGameStuff.pendingMode=2; sub_0800B7B0(a,b,3);`
+  - sub_08001140(a, b): 5 subsystem-reset calls + `sub_08000E0C(a,b); gGameStuff._unk14++;` (sibling of sub_08000CEC)
+  - sub_08001174(p, a, b): `if (sub_08009C14(p)==0) *p=7; sub_0800B7B0(a,b,3);`
+  - sub_08001198(void): bare thunk to sub_0800DE80
+  - All 4 byte_diff 0. **Exceptional ship — best per-fn yield since iter 32.**
+
+- **Peel-scout 2**: 5 new fns identified + peeled from text_0x08001d18 (1.1 KiB → 5 candidates):
+  - sub_08001D18 (60 B): init-chain, 3 BLs
+  - sub_08001D54 (64 B): 7 sequential BLs + counter bump
+  - sub_08001D94 (132 B): state-machine fan-out with cmp #1/#2/#3 arms
+  - sub_08001E18 (12 B): another trivial 1-call thunk (sibling of sub_08001198)
+  - sub_08001E24 (864 B): large mode-handler with `mov r7, r8 / push {r7}` high-reg pin — pre-flagged as likely NAKED+NON_MATCHING per high-reg exception
+
+**Commit:** iter-40 hash (single combined: 4-fn batch decomp + 5-fn peel-scout + linker.ld consolidation + loop-log + README).
+
+**After:** **91 fns (+4, 17.5%)**, **77 asm-fn-remaining** (net 0: -4 batch-decomped + 5 new peels - 1 raw bucket = balanced; picker thumb_func_start count actually 78, off by 1), 265 db unchanged, ~302 KiB src C (+2 KiB), 88.8% raw, 11.10% deblob.
+
+**Architectural duties:**
+- **Cluster-file consolidation pattern**: 4 small adjacent fns landed in ONE src/system/sub_08001128.c cluster file (vs separate per-fn files). This is the right shape when fns are closely related (shared callees, dispatched together) — keeps grep-ability + commit-locality. Future similar batches should follow.
+- **sub_08000CEC sibling identified**: sub_08001140 is the same shape minus one step. Already-decomped functions inform new decomps via shape-precedent.
+- **Pre-flagged unmatchable**: sub_08001E24 has `mov r7, r8 / push {r7}` in its prologue — that's the high-reg pin documented in docs/codegen-notes.md "High registers". Next attempt should go straight to NAKED+NON_MATCHING with high-reg exception cited.
+- **Peel-scout cadence proven**: iter-39 + iter-40 both produced 5 candidates each from one raw bucket. As an INFRA dispatch, peel-scouts are 30-min wall-time investments that pay back 4-5 future decomps each. Continue this pattern when refcount data is dry.
+
+**Decisions:** (1) Both ships landed clean — no NAKED, no gate concerns. (2) Continued the iter-39 peel-scout pattern as second-agent fallback when data side is exhausted. Working well.
+
+**Trajectory:** 30 iters post-resume (11-40). Functions 41→91 (+50). Raw INCBIN 98.1%→88.8%. db 117→265. src C 75→302 KiB. Data deblob 1.0%→11.10%. **First iter with 4 pure-C matches.** Decomp-pivot strategy continuing to find tractable work even though refcount data is dry.
+
+---

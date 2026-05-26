@@ -75,10 +75,7 @@ SECTIONS {
         asm/text/text_0x08000d5c.o(.text);  /* 0x08000d5c - 0x08000e0c, raw bytes */
         src/system/sub_08000e0c.o(.text);  /* 0x08000e0c - 0x08000eb8, sub_08000E0C */
         src/system/sub_08000eb8.o(.text);  /* 0x08000eb8 - 0x08001128, sub_08000EB8 (NAKED + NON_MATCHING; mode-9 dispatch — `mov pc, rN` jump table, sibling of sub_08002844) */
-        asm/disasm_0x08001128.o(.text);  /* 0x08001128 - 0x08001140, sub_08001128 (auto-peeled) */
-        asm/disasm_0x08001140.o(.text);  /* 0x08001140 - 0x08001174, sub_08001140 (auto-peeled) */
-        asm/disasm_0x08001174.o(.text);  /* 0x08001174 - 0x08001198, sub_08001174 (auto-peeled) */
-        asm/disasm_0x08001198.o(.text);  /* 0x08001198 - 0x080011a4, sub_08001198 (auto-peeled) */
+        src/system/sub_08001128.o(.text);  /* 0x08001128 - 0x080011a4, sub_08001128 / sub_08001140 / sub_08001174 / sub_08001198 cluster */
         asm/disasm_0x080011a4.o(.text);  /* 0x080011a4 - 0x08001214, sub_080011A4 (auto-peeled) */
         asm/disasm_0x08001214.o(.text);  /* 0x08001214 - 0x08001478, sub_08001214 (auto-peeled) */
         src/game/set_game_mode_03.o(.text);  /* 0x08001478 - 0x08001484, SetGameMode_03 */
@@ -86,7 +83,11 @@ SECTIONS {
         src/system/sub_08001508.o(.text);  /* 0x08001508 - 0x08001794, sub_08001508 (NAKED + NON_MATCHING; mode-11 dispatch — `mov pc, rN` jump table, sibling of sub_08000EB8) */
         asm/text/text_0x08001794.o(.text);  /* 0x08001794 - 0x080019b4, raw bytes */
         asm/disasm_0x080019b4.o(.text);  /* 0x080019b4 - 0x08001d18, sub_080019B4 (auto-peeled) */
-        asm/text/text_0x08001d18.o(.text);  /* 0x08001d18 - 0x08002184, raw bytes */
+        asm/disasm_0x08001d18.o(.text);  /* 0x08001d18 - 0x08001d54, sub_08001D18 (auto-peeled) */
+        asm/disasm_0x08001d54.o(.text);  /* 0x08001d54 - 0x08001d94, sub_08001D54 (auto-peeled) */
+        asm/disasm_0x08001d94.o(.text);  /* 0x08001d94 - 0x08001e18, sub_08001D94 (auto-peeled) */
+        asm/disasm_0x08001e18.o(.text);  /* 0x08001e18 - 0x08001e24, sub_08001E18 (auto-peeled) */
+        asm/disasm_0x08001e24.o(.text);  /* 0x08001e24 - 0x08002184, sub_08001E24 (auto-peeled) */
         asm/disasm_0x08002184.o(.text);  /* 0x08002184 - 0x08002444, sub_08002184 (auto-peeled) */
         src/game/game_mode.o(.text);     /* 0x08002444 - 0x08002450, SetGameMode_06 */
         asm/text/text_0x08002450.o(.text);  /* 0x08002450 - 0x08002524, raw bytes */
