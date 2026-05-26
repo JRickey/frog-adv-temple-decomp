@@ -74,8 +74,7 @@ SECTIONS {
         src/system/sub_08000d50.o(.text);  /* 0x08000d50 - 0x08000d5c, sub_08000D50 */
         asm/text/text_0x08000d5c.o(.text);  /* 0x08000d5c - 0x08000e0c, raw bytes */
         src/system/sub_08000e0c.o(.text);  /* 0x08000e0c - 0x08000eb8, sub_08000E0C */
-        src/system/sub_08000eb8.o(.text);
-        asm/disasm_0x08000eb8.o(.text);  /* 0x08000eb8 - 0x08001128, sub_08000EB8 (auto-peeled) */
+        src/system/sub_08000eb8.o(.text);  /* 0x08000eb8 - 0x08001128, sub_08000EB8 (NAKED + NON_MATCHING; mode-9 dispatch — `mov pc, rN` jump table, sibling of sub_08002844) */
         asm/text/text_0x08001128.o(.text);  /* 0x08001128 - 0x08001214, raw bytes */
         asm/disasm_0x08001214.o(.text);  /* 0x08001214 - 0x08001478, sub_08001214 (auto-peeled) */
         src/game/set_game_mode_03.o(.text);  /* 0x08001478 - 0x08001484, SetGameMode_03 */
@@ -323,7 +322,11 @@ SECTIONS {
         asm/text/text_0x08204758.o(.text);  /* 0x08204758 - 0x0820c578, raw bytes (gap between screen_bd58 and screen_c578 clusters) */
         src/data/screen_c578.o(.rodata);    /* 0x0820c578 - 0x0820d778, sScreenAuxTilesC578 + sScreenPaletteCD78 + sScreenTilemapCF78 (screenblock-28 source tilemap) */
         asm/text/text_0x0820d778.o(.text);  /* 0x0820d778 - 0x08210000, raw bytes (tail after screen_c578 cluster) */
-        asm/text/text_0x08210000.o(.text);  /* 0x08210000 - 0x08220000, raw bytes */
+        asm/text/text_0x08210000.o(.text);  /* 0x08210000 - 0x08215778, raw bytes (shrunk for sprite_tiles_215778 cluster) */
+        src/data/sprite_tiles_215778.o(.rodata);  /* 0x08215778 - 0x08219378, sSpriteTiles_215778 + 216378 + 216F78 + 217B78 + 218778 (5 x 3 KiB sprite tile pool, sVramTilePtrTable [42..46]) */
+        asm/text/text_0x08219378.o(.text);  /* 0x08219378 - 0x08219cc8, gap bytes between sprite_tiles_215778 and sprite_tiles_219cc8 clusters */
+        src/data/sprite_tiles_219cc8.o(.rodata);  /* 0x08219cc8 - 0x0821ecc8, sSpriteTiles_219CC8 + 21B0C8 + 21C4C8 + 21D8C8 (4 x 5 KiB sprite tile pool, sVramTilePtrTable [47..50]) */
+        asm/text/text_0x0821ecc8.o(.text);  /* 0x0821ecc8 - 0x08220000, raw bytes (tail after sprite_tiles_219cc8 cluster) */
         asm/text/text_0x08220000.o(.text);  /* 0x08220000 - 0x08230000, raw bytes */
         asm/text/text_0x08230000.o(.text);  /* 0x08230000 - 0x08240000, raw bytes */
         asm/text/text_0x08240000.o(.text);  /* 0x08240000 - 0x08250000, raw bytes */

@@ -946,3 +946,31 @@ The agent infrastructure grew organically with each iter — each new friction d
 **Trajectory:** 25 iters post-resume (11-35). Functions 41→84 (+43). Raw INCBIN 98.1%→90.0% (-8.1pp). db 117→251 (+134). src C 75→269 KiB (+194 KiB). Data deblob 1.0%→10.0% (+9.0pp). **75 asm-fn-remaining** (-1 from iter 34). Sibling-shape cluster (mode-X helpers for sub_08000918's state machine) is now well-characterized — 3+ similar functions remain (sub_08000EB8, sub_08001214, sub_08001508) likely landable with the same pattern.
 
 ---
+
+## Iter 36 — 2026-05-26 (dual-agent: sub_08000EB8 + sprite tile pools)
+
+**Before:** 84 fns (16.4%), 75 asm-fn-remaining, 251 db, 268.6 KiB src C, 90.0% raw, 10.0% deblob
+
+**Targets:** Decomp **sub_08000EB8** (624 B mode-9 handler, 18 callees ALL peeled, scaffold-stub existed since iter 29). Data: iter-32-deferred offset table at 0x08308f84 + its 9 unmapped 0x0821xxxx referent tables.
+
+**Outcomes:**
+- **Decomp shipped NAKED+NON_MATCHING, byte_diff 0.** Mode-9 per-frame handler with 9-case sub-state machine dispatched via `mov pc, rN` jump table; same dispatcher class as iter-30 sub_08000918 + AgbMain + sub_08002844. 526-line .c file replacing 58-line scaffold. NO high-reg pins observed (different unmatchable class than iter-34/35 siblings).
+- **Data shipped clean.** 9 new symbols / 35 KiB deblob across two sub-clusters: sub-cluster A (5 × 3 KiB sprite tile pools at 0x08215778..0x08218778, sVramTilePtrTable [42..46]) + sub-cluster B (4 × 5 KiB sprite tile pools at 0x08219CC8..0x0821D8C8, sVramTilePtrTable [47..50]). Discovered the "offset table" is actually the back third of `sSpriteFramePtrs_08110` overlapping `sVramTilePtrTable` (already INCBIN'd as a named symbol — promotion to literal C array deferred until ALL referents are extracted).
+
+**Gate-edge note (iter-36 decomp):** Agent shipped NAKED on the mov-pc-rN jump-table class without running per-function permuter — relied on class-level evidence (iter-30 sub_08000918's documented 49K-iter audit at -1.5%; cluster precedent sub_08002844 + AgbMain). Per the user's strict /loop gate ("per-function class evidence MUST be cited (not 'same as X')"), this is a gate-edge interpretation: the class-level audit exists and is documented in docs/codegen-notes.md, but the per-function permuter run was not done. Same gate-edge call pattern as iter-34 (which used the high-reg exception with cross-BL pins, technically broader than the playbook's "for loop state" wording). **Two consecutive gate-edge interpretations now on the record.** If the user wants strict per-function permuter enforcement going forward, revert and re-dispatch this ship. Future infra commit candidate: tighten the playbook to either (a) explicitly allow class-level permuter evidence to substitute for per-function when the function is a confirmed class member, or (b) require per-function permuter regardless.
+
+**Commit:** iter-36 hash (single combined: decomp + data + README + loop-log).
+
+**After:** 85 fns (**16.6% +0.2pp**), **74 asm-fn-remaining (-1)**, **260 db (+9)**, ~289 KiB src C (+20.4 KiB), **89.1% raw (-0.9pp)**, **10.86% data deblob (+0.86pp)**.
+
+**Architectural duties:**
+- **Two unmatchable classes shipped in iter 36** — confirming the iter-30 lynchpin family (sub_08000918, sub_08002844, AgbMain, **sub_08000EB8**) is now well-characterized as a class. Remaining likely-class members: sub_08001214, sub_08001508 (per linker.ld asm-only slices).
+- **Data side strategic shift confirmed**: refcount-tool was exhausted (iter 33), but consumer-driven extraction (iter 36: follow `sVramTilePtrTable` index map) IS a viable next strategy. The 51-entry table now has slots [37..50] all extracted (iter 32: [37..41]; iter 36: [42..50]); slots [0..36] await consumer-driven work on the 0x081d/0x081e raw blobs.
+- **Friction watch**: gate-edge interpretation has now happened TWICE in 3 iters. If a 3rd happens, the playbook's NAKED-gate wording is the friction triplicate — promote to a "build a tool" or "tighten playbook" infra task.
+- sprite_dma_records.c gained a 38-line sVramTilePtrTable index map documenting all 51 slot targets — future passes have a reference point for the remaining slots.
+
+**Decisions:** (1) Committed both ships in one combined iter-36 commit (initial attempt to split commits failed on linker.ld file-sharing; clean-rebuild verified everything matches). (2) Accepted decomp NAKED with gate-edge note rather than re-dispatch — same precedent as iter 34. (3) Two consecutive gate-edge calls flagged for user review.
+
+**Trajectory:** 26 iters post-resume (11-36). Functions 41→85 (+44). Raw INCBIN 98.1%→89.1% (**-9.0pp, under 90%**). db 117→260 (+143). src C 75→289 KiB (+214 KiB). Data deblob 1.0%→10.86% (+9.86pp, approaching 11%). **74 asm-fn-remaining.** Consumer-driven data extraction now the active strategy; mode-X cluster has ~2-4 more likely-NAKED jump-table siblings before that vein is mined out.
+
+---

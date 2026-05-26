@@ -2006,5 +2006,77 @@
     },
     "count": "0x10",
     "size": 2
+  },
+  {
+    "path": "sprite/sprite_tiles_215778/tiles_215778.bin",
+    "addr": {
+      "us": "0x215778"
+    },
+    "count": "0xC00",
+    "size": 1
+  },
+  {
+    "path": "sprite/sprite_tiles_215778/tiles_216378.bin",
+    "addr": {
+      "us": "0x216378"
+    },
+    "count": "0xC00",
+    "size": 1
+  },
+  {
+    "path": "sprite/sprite_tiles_215778/tiles_216f78.bin",
+    "addr": {
+      "us": "0x216F78"
+    },
+    "count": "0xC00",
+    "size": 1
+  },
+  {
+    "path": "sprite/sprite_tiles_215778/tiles_217b78.bin",
+    "addr": {
+      "us": "0x217B78"
+    },
+    "count": "0xC00",
+    "size": 1
+  },
+  {
+    "path": "sprite/sprite_tiles_215778/tiles_218778.bin",
+    "addr": {
+      "us": "0x218778"
+    },
+    "count": "0xC00",
+    "size": 1
+  },
+  {
+    "path": "sprite/sprite_tiles_219cc8/tiles_219cc8.bin",
+    "addr": {
+      "us": "0x219CC8"
+    },
+    "count": "0x1400",
+    "size": 1
+  },
+  {
+    "path": "sprite/sprite_tiles_219cc8/tiles_21b0c8.bin",
+    "addr": {
+      "us": "0x21B0C8"
+    },
+    "count": "0x1400",
+    "size": 1
+  },
+  {
+    "path": "sprite/sprite_tiles_219cc8/tiles_21c4c8.bin",
+    "addr": {
+      "us": "0x21C4C8"
+    },
+    "count": "0x1400",
+    "size": 1
+  },
+  {
+    "path": "sprite/sprite_tiles_219cc8/tiles_21d8c8.bin",
+    "addr": {
+      "us": "0x21D8C8"
+    },
+    "count": "0x1400",
+    "size": 1
   }
 ]

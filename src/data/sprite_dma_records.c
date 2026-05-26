@@ -17,10 +17,11 @@
  *                                        and 0x08308f3c (5 refs)
  *                                        as inner pointer tables.)
  *   0x08308EF0  sVramTilePtrTable        (204 B -- 51 ROM pointers into
- *                                        the 0x081d.. sprite tile region;
- *                                        accessed as base + idx*4 with
- *                                        idx coming from the sprite frame
- *                                        descriptors.)
+ *                                        the sprite tile region; accessed
+ *                                        as base + idx*4 with idx coming
+ *                                        from the sprite frame descriptors.
+ *                                        See "sVramTilePtrTable index map"
+ *                                        below for the per-slot targets.)
  *   0x08308FBC  sDmaLoadRecords          (7616 B -- 476 records of 16 B
  *                                        each, see DmaLoadRecord below.
  *                                        Three observed magics:
@@ -41,6 +42,43 @@
  * channel + cnt-register bits used by the loader (`14 18 00 10` reads
  * as DMA_ENABLE | DMA_32BIT | dest-fixed... after byte-swap). Confirm
  * once a consumer is decompiled.
+ *
+ * sVramTilePtrTable index map (51 entries, kept as raw INCBIN until
+ * every slot has a named target):
+ *
+ *   [ 0..31]  0x081d1d46..0x081daa98  -> raw bytes inside
+ *                                        asm/text/text_0x081d0000.s
+ *                                        (32 unnamed sprite tile chunks)
+ *   [32..36]  0x081e6418, 0x081e7c18, 0x081e7418, 0x081e8418, 0x081e8c18
+ *                                     -> raw bytes inside the
+ *                                        text_0x081e4c18 / text_0x081e7418
+ *                                        gap blobs (five 2 KiB tilemaps,
+ *                                        sibling family to slots 37..41)
+ *   [37..41]  0x081e9418 sScreenTilemap_E9418
+ *             0x081eac18 sScreenTilemap_EAC18
+ *             0x081eb418 sScreenTilemap_EB418
+ *             0x081ec418 sScreenTilemap_EC418
+ *             0x081ebc18 sScreenTilemap_EBC18
+ *                                     -> src/data/screen_tilemaps_e9418.c
+ *                                        (iter-32 extracted; note table
+ *                                        order swaps EBC18 and EC418)
+ *   [42..46]  0x08215778 sSpriteTiles_215778
+ *             0x08216378 sSpriteTiles_216378
+ *             0x08216f78 sSpriteTiles_216F78
+ *             0x08217b78 sSpriteTiles_217B78
+ *             0x08218778 sSpriteTiles_218778
+ *                                     -> src/data/sprite_tiles_215778.c
+ *                                        (5 x 3 KiB sub-cluster A)
+ *   [47..50]  0x08219cc8 sSpriteTiles_219CC8
+ *             0x0821b0c8 sSpriteTiles_21B0C8
+ *             0x0821c4c8 sSpriteTiles_21C4C8
+ *             0x0821d8c8 sSpriteTiles_21D8C8
+ *                                     -> src/data/sprite_tiles_219cc8.c
+ *                                        (4 x 5 KiB sub-cluster B)
+ *
+ * Promote the INCBIN to a literal C array referencing the named symbols
+ * once all 51 entries have semantic names (slots [0..36] still need
+ * extraction passes through the 0x081d and 0x081e regions).
  */
 
 /* 16-byte DMA-load record. Field names are scaffold-grade until a

@@ -1,6 +1,6 @@
 @ Auto-emitted by tools/disasm/bucket.py — do not hand-edit this header.
-@ Address-aligned bucket of unparsed baserom bytes.
-@ Range:  [0x08210000, 0x08215778)  (0x5778 bytes, shrunk for sprite_tiles_215778 cluster)
+@ Tail bucket after src/data/sprite_tiles_219cc8.c.
+@ Range:  [0x0821ecc8, 0x08220000)  (0x1338 bytes)
 @
 @ This file holds raw bytes only; no instructions are assembled here.
 @ As individual functions are identified and peeled out into
@@ -9,8 +9,8 @@
 
         .section .text, "ax", %progbits
         .align  2
-        .global text_08210000
-        .type   text_08210000, %object
-text_08210000:
-        .incbin "frog_us_baserom.gba", 0x00210000, 0x00005778
-        .size   text_08210000, . - text_08210000
+        .global text_0821ecc8
+        .type   text_0821ecc8, %object
+text_0821ecc8:
+        .incbin "frog_us_baserom.gba", 0x0021ecc8, 0x00001338
+        .size   text_0821ecc8, . - text_0821ecc8
