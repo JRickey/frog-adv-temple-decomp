@@ -1928,6 +1928,22 @@
     "size": 2
   },
   {
+    "path": "sprite/screen_tilemaps_e9c18/tilemap_default.bin",
+    "addr": {
+      "us": "0x1E9C18"
+    },
+    "count": "0x400",
+    "size": 2
+  },
+  {
+    "path": "sprite/screen_tilemaps_e9c18/tilemap_mode3.bin",
+    "addr": {
+      "us": "0x1EA418"
+    },
+    "count": "0x400",
+    "size": 2
+  },
+  {
     "path": "sprite/obj_assets_ecc18/palette0.bin",
     "addr": {
       "us": "0x1ECC18"

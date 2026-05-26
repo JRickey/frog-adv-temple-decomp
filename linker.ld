@@ -120,8 +120,7 @@ SECTIONS {
         asm/text/text_0x080069bc.o(.text);  /* 0x080069bc - 0x08006adc, raw bytes */
         asm/disasm_0x08006adc.o(.text);  /* 0x08006adc - 0x08006afc, sub_08006ADC (auto-peeled) */
         asm/text/text_0x08006afc.o(.text);  /* 0x08006afc - 0x08006b88, raw bytes */
-        src/game/sub_08006b88.o(.text);  /* 0x08006b88 - 0x08006b94, sub_08006B88 */
-        asm/disasm_0x08006b94.o(.text);  /* 0x08006b94 - 0x08006ba4, sub_08006B94 (auto-peeled) */
+        src/game/sub_08006b88.o(.text);  /* 0x08006b88 - 0x08006ba4, sub_08006B88 + sub_08006B94 */
         asm/disasm_0x08006ba4.o(.text);  /* 0x08006ba4 - 0x08006bb4, sub_08006BA4 (auto-peeled) */
         asm/text/text_0x08006bb4.o(.text);  /* 0x08006bb4 - 0x08007874, raw bytes */
         asm/disasm_0x08007874.o(.text);  /* 0x08007874 - 0x0800793c, sub_08007874 (auto-peeled) */
@@ -314,7 +313,9 @@ SECTIONS {
         src/data/screen_d8b98.o(.rodata);   /* 0x081d8b98 - 0x081e4c18, screen tilemap + palette + char tiles + tilemap (spans across former 0x081e0000 blob) */
         asm/text/text_0x081e4c18.o(.text);  /* 0x081e4c18 - 0x081e6c18, raw bytes (shrunk for tilemap_e6c18 + obj_assets_ecc18 clusters) */
         src/data/tilemap_e6c18.o(.rodata);  /* 0x081e6c18 - 0x081e7418, sBgTilemap_E6C18 (screenblock-29 source tilemap, 2 KiB) */
-        asm/text/text_0x081e7418.o(.text);  /* 0x081e7418 - 0x081ecc18, raw bytes (gap between tilemap and OBJ asset cluster) */
+        asm/text/text_0x081e7418.o(.text);  /* 0x081e7418 - 0x081e9c18, raw bytes (shrunk for screen_tilemaps_e9c18 pair cluster) */
+        src/data/screen_tilemaps_e9c18.o(.rodata);  /* 0x081e9c18 - 0x081eac18, sScreenTilemap_E9C18 + sScreenTilemap_EA418 (2 x 2 KiB screenblock-29 tilemap variants) */
+        asm/text/text_0x081eac18.o(.text);  /* 0x081eac18 - 0x081ecc18, raw bytes (tail after screen_tilemaps_e9c18 cluster) */
         src/data/obj_assets_ecc18.o(.rodata);  /* 0x081ecc18 - 0x081ece58, sObjPalette_ECC18 + sObjCharTiles_ECC38 + sObjPalette_ECE38 (576 B) */
         asm/text/text_0x081ece58.o(.text);  /* 0x081ece58 - 0x081f0000, raw bytes (tail after obj_assets_ecc18 cluster) */
         asm/text/text_0x081f0000.o(.text);  /* 0x081f0000 - 0x081fbd58, raw bytes (shrunk for screen_bd58 cluster) */

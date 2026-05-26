@@ -1702,3 +1702,24 @@ Always cross-reference each jump-table `.word` entry against its
 TARGET address before assigning case labels. Iter-30 sub_08000918
 had this trap; the table entries explicitly point past the
 fallthrough block.
+
+## Stale incremental build after asm/text slice split
+
+When an `asm/text/text_0x*.s` bucket is split (one slice → two via a
+new tail blob), the incremental Makefile occasionally produces a
+stale `frog_us.gba` that masks an otherwise-clean byte-match — the
+build "succeeds" but `make check` reports a multi-MB ROM diff that
+disappears entirely on `make tidy && make -j8 && make check`.
+
+Caught iter 31 while splitting `text_0x081e7418.s`: incremental
+build emitted 2 MB diff; clean rebuild matched perfectly with zero
+changes to source.
+
+**Workflow**: after splitting an asm/text slice (or any time you've
+edited a `.s` whose linker entry was also edited), run `make tidy &&
+make -j8 && make check` as a single chain. Treat incremental
+post-split builds as untrustworthy.
+
+`lint_blob_boundaries.py` passes in both stale-incremental and
+clean-rebuild states, so the discrepancy is downstream of the
+boundary check.
