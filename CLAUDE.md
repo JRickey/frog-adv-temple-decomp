@@ -350,6 +350,11 @@ For each decomp target:
    - High-register pins (`mov sl, …`, `mov r9/r8, …`) for loop state are
      corpus-validated unmatchable in pure C. Skip straight to NAKED + `#ifdef
      NON_MATCHING` (see `docs/codegen-notes.md` "High registers").
+   - Two-stage loops over a shared `*gpGlobal` (baserom reloads from `ip`
+     at every count-check; agbcc instead caches in a low callee-saved
+     register) — also unmatchable. Same NAKED + NON_MATCHING fallback.
+     See `docs/codegen-notes.md` "Two-stage loop functions with shared
+     `*gpGlobal` cache".
    - Every NAKED inline-asm block MUST end with `"    .syntax divided\n"` —
      the `.syntax unified` directive at the top of the block bleeds into the
      rest of the .o and breaks subsequent agbcc-emitted Thumb-1 instructions.

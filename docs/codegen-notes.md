@@ -686,3 +686,42 @@ NAKED static void sub_0802EC7C(void) {
 Caught when `sub_0802EC7C` got prepended to `sound_channel.c` and broke
 `sub_0802ED5C`'s compilation 200 lines downstream — symptom looks
 unrelated to the new function.
+
+## Two-stage loop functions with shared `*gpGlobal` cache — also unmatchable
+
+This is a second class of "agbcc 2.x can't reproduce the baserom shape in C"
+beyond the high-register-pin case in "High registers — corpus-validated
+unmatchable" above.
+
+The shape: a function with TWO loops over the same dereferenced global
+pointer (typically `*gpSoundSystem` or similar), where the global is
+re-loaded inside the stage-2 count-check via the `mov rX, ip; ldr rY, [rX]`
+spill/reload pattern. agbcc 2.x, given any plausible C structure, instead
+chooses to cache `*gpGlobal` into a callee-saved LOW register (r5 in the
+worked example below) at the stage 1 → stage 2 boundary, and reloads from
+there. Baserom reloads from `ip` (the high-register spill) at every
+count-check site.
+
+500+ permuter iterations + manual variations across the obvious shapes
+(do-while vs while, `register T *p asm("rN")` pins, plain `register`
+without asm pin, explicit `SoundSystem *ss = *gpsp` cache hints, swapping
+which loop comes first) all converged at byte_diff ~160 of a 180-byte
+function. The drift isn't a fold — it's an allocator preference for
+caching in a low callee-saved over the high-reg `ip` spill, and there's
+no source-level lever to flip it.
+
+Worked example: `sub_0802EA80` (per-frame countdown-bounce envelope tick).
+Ships as NAKED + `#ifdef NON_MATCHING` reference body, same pattern as
+the high-register cases. Critical distinction: this function does NOT
+use any of r8/r9/r10/sl/sb, so the "high register → NAKED immediately"
+rule from the previous section doesn't fire. The new rule:
+
+> If a function has two loops over the same `*gpGlobal` cached at the
+> stage boundary, and the baserom reloads from `ip` at each count-check
+> site, expect ~160 of 180 byte_diff with any pure-C attempt. Skip
+> straight to NAKED + NON_MATCHING.
+
+Detection heuristic before you start writing pure C: in the refined asm,
+look for `mov rX, ip; ldr rY, [rX, #0]` pairs at multiple loop tops AND
+a `mov ip, rZ` cache somewhere in the prologue or stage transition.
+If both present, this rule applies.
