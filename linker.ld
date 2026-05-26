@@ -83,7 +83,7 @@ SECTIONS {
         src/system/sound_pitch.o(.text);  /* 0x0802e5d8 - 0x0802e684, sub_0802E5D8 */
         src/system/sound_volume.o(.text);  /* 0x0802e684 - 0x0802e724, sub_0802E684 */
         asm/text/text_0x0802e724.o(.text);  /* 0x0802e724 - 0x0802e934, raw bytes */
-        asm/disasm_0x0802e934.o(.text);  /* 0x0802e934 - 0x0802ea2c, sub_0802E934 (auto-peeled) */
+        src/system/sound_envelope_dual.o(.text);  /* 0x0802e934 - 0x0802ea2c, sub_0802E934 (NAKED+NON_MATCHING) */
         asm/text/text_0x0802ea2c.o(.text);  /* 0x0802ea2c - 0x0802ea80, raw bytes */
         src/system/sound_envelope.o(.text);  /* 0x0802ea80 - 0x0802eb34, sub_0802EA80 */
         asm/text/text_0x0802eb34.o(.text);  /* 0x0802eb34 - 0x0802ec7c, raw bytes */
@@ -177,8 +177,8 @@ SECTIONS {
         src/data/sprite_anim_block.o(.rodata);  /* 0x08306814 - 0x08308100, anim / OAM-DMA descriptor cluster (9 named symbols) */
         src/data/sprite_dma_records.o(.rodata);  /* 0x08308100 - 0x08310000, OAM-DMA cfg + sprite frame ptrs + VRAM tile ptrs + DMA load records + dispatch tables + Scene 2 DMA cluster */
         asm/text/text_0x08310000.o(.text);  /* 0x08310000 - 0x08316f24, raw bytes */
-        src/data/level_layout.o(.rodata);  /* 0x08316f24 - 0x08316f64, sLevelLayout_316F24 + sLevelLayout_316F44 */
-        asm/text/text_0x08316f64.o(.text);  /* 0x08316f64 - 0x08320000, raw bytes */
+        src/data/level_layout.o(.rodata);  /* 0x08316f24 - 0x083170d4, sLevelLayout_316F24 + _316F44 + _316F64 + _317024 + _317054 + _31707C */
+        asm/text/text_0x083170d4.o(.text);  /* 0x083170d4 - 0x08320000, raw bytes */
         asm/text/text_0x08320000.o(.text);  /* 0x08320000 - 0x08330000, raw bytes */
         asm/text/text_0x08330000.o(.text);  /* 0x08330000 - 0x08340000, raw bytes */
         asm/text/text_0x08340000.o(.text);  /* 0x08340000 - 0x08350000, raw bytes */

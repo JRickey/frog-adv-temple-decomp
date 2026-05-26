@@ -360,6 +360,38 @@
     "size": 4
   },
   {
+    "path": "level/layout_316f64.bin",
+    "addr": {
+      "us": "0x316F64"
+    },
+    "count": "0x30",
+    "size": 4
+  },
+  {
+    "path": "level/layout_317024.bin",
+    "addr": {
+      "us": "0x317024"
+    },
+    "count": "0xC",
+    "size": 4
+  },
+  {
+    "path": "level/layout_317054.bin",
+    "addr": {
+      "us": "0x317054"
+    },
+    "count": "0xA",
+    "size": 4
+  },
+  {
+    "path": "level/layout_31707c.bin",
+    "addr": {
+      "us": "0x31707C"
+    },
+    "count": "0x16",
+    "size": 4
+  },
+  {
     "path": "sound/wave_vol_lut.bin",
     "addr": {
       "us": "0x3DDA3C"
