@@ -62,6 +62,10 @@ struct IwramAt3720 {
     u8 _field_1A;    /* +0x1A: dispatch state read often */
     u8 _pad1B[0x19]; /* +0x1B..+0x33 */
     u16 _field_34;   /* +0x34: halfword written zero before entity-dispatch */
+    u8 _pad36[2];    /* +0x36..+0x37 */
+    u8 _field_38;    /* +0x38: sub-struct head passed by pointer to sub_080059C4 */
+    u8 _pad39[0x33]; /* +0x39..+0x6b */
+    u16 _field_6c;   /* +0x6c: flag halfword (bits 0x08, 0x4 / 0x8000 / 0x7fff tested) */
 };
 
 struct IwramAt34C0 {

@@ -3,4 +3,77 @@
 #include "macros.h"
 #include "types.h"
 
-/* TODO: decomp */
+/* Per-tick refresh helper for gIwram_3720. Two flag-toggles on the
+ * halfword at +0x6c, then hands the sub-struct at +0x38 to sub_080059C4
+ * (the frame-setup / palette-refresh routine the entity-dispatch cluster
+ * also calls).
+ *
+ *   - Bail early if (field_6c & 8) is already set.
+ *   - If (field_34 & 4) is set, raise bit 8 in field_6c.
+ *   - If (field_6c & 0x8000) is set, clear the top bit (mask &= 0x7fff)
+ *     and OR bit 8 back in.
+ *   - Tail: sub_080059C4(&field_38).
+ *
+ * Matching notes (agbcc 2.x):
+ *   - The full four-register pin set is load-bearing:
+ *       `register u32 mask asm("r0")`  — scratch for both AND tests
+ *       `register u16 t asm("r1")`    — caches *flags across both blocks
+ *       `register u32 bit8 asm("r4")` — caches the constant 8 across blocks
+ *       `register u16 fld asm("r5")`  — temporary for field_34 only
+ *     Drop any one and agbcc shifts everything (base lands in r4/r5, the
+ *     conditional stores fold into RMW on r1/r2, function shrinks to
+ *     76 bytes and the pool alignment NOP at +0x46 vanishes).
+ *   - `flags` (a `u16 *` local to gIwram_3720._field_6c) materialises
+ *     the +0x6c offset (too large for Thumb-1 ldrh imm5) once into
+ *     `adds r2, r3, #0 ; adds r2, #108`; both conditional stores and
+ *     the inter-block re-read share it.
+ *   - First conditional store uses `newv = bit8; newv |= t; *flags = newv;`
+ *     (not `*flags = bit8 | t`) to defeat agbcc's RMW-on-t fold and
+ *     emit baserom's `adds r0, r4, #0 ; orrs r0, r1 ; strh r0, [r2]`.
+ *   - Second conditional store walks through `mask` (already pinned to
+ *     r0) — `mask = 0x7fff; mask &= t; mask |= bit8; *flags = mask`
+ *     emits `ldr r0, =0x7fff ; ands r0, r1 ; orrs r0, r4 ; strh r0`.
+ *   - The re-read `t = *flags;` between the two if-blocks is
+ *     load-bearing — baserom emits an explicit `ldrh r1, [r2, #0]` at
+ *     0x0800a4f4 to refresh; without it agbcc reuses the cached t. */
+
+extern void sub_080059C4(void *p);
+
+void sub_0800A4D0(void)
+{
+    struct IwramAt3720 *base = &gIwram_3720;
+    u16 *flags = &base->_field_6c;
+    register u32 mask asm("r0");
+    register u16 fld asm("r5");
+    register u32 bit8 asm("r4");
+    register u16 t asm("r1");
+    u16 newv;
+
+    t = *flags;
+    bit8 = 8;
+    mask = 8;
+    mask &= t;
+    if (mask != 0)
+        return;
+
+    mask = 4;
+    fld = base->_field_34;
+    mask &= fld;
+    if (mask != 0) {
+        newv = (u16)bit8;
+        newv |= t;
+        *flags = newv;
+    }
+
+    t = *flags;
+    mask = 0x8000;
+    mask &= t;
+    if (mask != 0) {
+        mask = 0x7fff;
+        mask &= t;
+        mask |= bit8;
+        *flags = (u16)mask;
+    }
+
+    sub_080059C4(&base->_field_38);
+}
