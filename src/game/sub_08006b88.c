@@ -41,3 +41,40 @@ NAKED void sub_08006B94(void *p, u16 mask)
         ".syntax divided\n");
 }
 #endif
+
+/* Bool predicate companion: `return (*(u16 *)(p + 16) & mask) != 0`. Reads
+ * the same u16 dirty-flags field as sub_08006B88/sub_08006B94 (offset 16),
+ * AND-tests against `mask`, returns 0/1. Body bytes are identical to the
+ * baserom; the unmatchable element is the frame: baserom emits a bare
+ * `bx lr` with no `push {lr}`, while agbcc 2.x consistently wraps the
+ * predicate in `push {lr} / ... / pop {r1}; bx r1` (4 extra bytes) and
+ * also swaps the branch sense (`beq` skip-over vs baserom's `bne`
+ * fall-through). Same "Fifth unmatchable class: register-coloring drift"
+ * subform as sibling sub_08006958 (offset 0x2e) and sub_08006B94 (also
+ * offset 0x10). Permuter run on nonmatchings/sub_08006BA4/ confirms
+ * non-convergence; 10+ pure-C source variants attempted in iter 32, all
+ * plateaued at byte_diff >= 4. NON_MATCHING reference body documents
+ * intent for the phase-3 PC port. */
+
+#ifdef NON_MATCHING
+u8 sub_08006BA4(void *p, u16 mask)
+{
+    if ((*(u16 *)((u8 *)p + 16) & mask) == 0)
+        return 0;
+    return 1;
+}
+#else
+NAKED u8 sub_08006BA4(void *p, u16 mask)
+{
+    asm(".syntax unified\n"
+        "    ldrh    r0, [r0, #16]\n"
+        "    ands    r0, r1\n"
+        "    cmp     r0, #0\n"
+        "    bne     1f\n"
+        "    movs    r0, #0\n"
+        "    b       2f\n"
+        "1:  movs    r0, #1\n"
+        "2:  bx      lr\n"
+        ".syntax divided\n");
+}
+#endif

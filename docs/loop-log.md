@@ -869,3 +869,28 @@ The agent infrastructure grew organically with each iter — each new friction d
 **Trajectory:** 22 iters post-resume (11-32). Functions 41→81 (+40, no change). Raw INCBIN 98.1%→90.0% (**-8.1pp**). db 117→251 (+134). src C 75→269 KiB (+194 KiB). Data deblob 1.0%→10.0% (+9.0pp). **10% deblob hit.** Next data target unclear — refcount tool returns no remaining ≥2-ref data anchors (all extracted or named). Pivoting to either: (a) low-refcount cluster scouting via offset tables (e.g., extract 0x08308f84 once consumer is mapped), or (b) decomp-only iters until data tools resurface candidates.
 
 ---
+
+## Iter 33 — 2026-05-26 (sub_08006BA4 gated re-attempt + libgcc scout)
+
+**Before:** 81 fns (15.8%), 78 asm-fn-remaining, 251 db, 268.6 KiB src C, 90.0% raw, 10.0% deblob
+
+**Targets:** Decomp **sub_08006BA4 re-attempt** with mandatory permuter run (iter 32 deferred this exact target for lack of permuter evidence). Data: pivot — libgcc-helper byte-match scout against 8 unidentified ARM code-region pendings (0x08032f68..0x08033800) since the refcount tool was exhausted of data anchors.
+
+**Outcomes:**
+- Decomp: **NAKED gate satisfied, shipped.** Permuter ran 10,384 iter on nonmatchings/sub_08006BA4/, base score 415, best 205 (-50.6%) — never reached 0. The best-candidate diff fixes branch sense (`bne` matches baserom) but cannot remove the 4-byte `push {lr} / pop {r1}; bx r1` frame around the bare `bx lr` body. Same fifth-class register-coloring-drift subform as sibs sub_08006958 / sub_08006B94. Promoted from "deferred" → "shipped" in [[codegen-notes:Fifth unmatchable class]] instances list; new row in permuter convergence audit table.
+- Data-pivot: **research-only ship.** Scanned all 30 libgcc.a members against the 8 candidates — zero matches. Identified them as ARM-mode DSP mixer routines (M4A/MP2K family per sound_mixer_tail.c hint + cvaos/pokeruby corpus matches). Documented in docs/unknowns.md; explicit note "do not add to LIBGCC_SYMBOLS". Standalone commit `e64d184` (single-file) to avoid collision with in-flight decomp tree.
+
+**Commits:** `e64d184` (libgcc-scout negative finding) + iter-33 decomp ship hash (combined: NAKED ship + fifth-class table update + loop-log).
+
+**After:** 82 fns (16.0% +0.2pp), **77 asm-fn-remaining (-1)**, 251 db (unchanged), 268.6 KiB src C (unchanged — NAKED ship doesn't grow byte count), 90.0% raw, 10.0% deblob.
+
+**Architectural duties:**
+- docs/codegen-notes.md fifth-class — sub_08006BA4 promoted to "shipped" with permuter audit row. Three consecutive 8-instr leaves in src/game/sub_08006b88.c are now all classified and shipped; the per-class permuter convergence audit table has 4 entries (sub_08000918, sub_08006948, sub_08009D9C, sub_08006BA4) with consistent "no score-0 across 10K+ iter" evidence.
+- docs/unknowns.md — new "ARM-mode DSP mixer routines" section. Future passes targeting the 0x08032xxx-0x08033xxx ARM region will start from this analysis rather than re-scouting libgcc.
+- **Refcount data-side exhaustion confirmed** — iter 33 is the first iter where the refcount tool returned no actionable data anchors at any threshold. The libgcc-scout pivot was an effective fallback. Future iters likely need similar pivots: consumer-driven extraction (follow a function's pool to its data tables), or cluster-scouting from offset tables (e.g., 0x08308e00 / 0x08308f84 area still has unmapped 0x0821xxxx entries from iter-32).
+
+**Decisions:** Pivoted data side to "libgcc-helper scout" rather than halting per the orchestrator's blocked-state guidance — the orchestrator says "halt with note" if ≥3 refcount returns nothing, but ≥3 here returns code-region pendings (peelable, not data). The libgcc-scout pivot returned a negative finding that's still a valid ship (saves future iters from re-scouting). Worth promoting "code-region pendings → libgcc-scout pivot" to the orchestrator runbook as a documented fallback before halting.
+
+**Trajectory:** 23 iters post-resume (11-33). Functions 41→82 (+41). Raw INCBIN 98.1%→90.0% (-8.1pp). db 117→251 (+134). src C 75→269 KiB (+194 KiB). Data deblob 1.0%→10.0% (+9.0pp). Iter 33 closes out src/game/sub_08006b88.c (all 3 functions landed: sub_08006B88 matched, sub_08006B94 + sub_08006BA4 NAKED). **Next: refcount-tool exhaustion means data side needs a strategy refresh — either consumer-driven extraction or offset-table-driven cluster scouting.**
+
+---

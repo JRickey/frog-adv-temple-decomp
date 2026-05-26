@@ -1267,11 +1267,15 @@ Confirmed instances:
 - `sub_08006B94` (iter 31, 8 instr) — same bool-return shape; shipped
   NAKED+NON_MATCHING after gate-satisfying permuter run (1761 iter,
   plateaued at base score, 11 distinct source variants).
-- `sub_08006BA4` (iter 32, 8 instr) — same bool-return shape as
-  sub_08006958/B94; 10 source variants tried, body bytes match exactly
-  but agbcc emits spurious `push {lr} / pop {r1}; bx r1` frame around
-  `bx lr`-only baserom. Deferred — per-function permuter run not done
-  in iter 32; next dispatch must include it to satisfy the NAKED gate.
+- `sub_08006BA4` (iter 33, 8 instr) — same bool-return shape as
+  sub_08006958/B94; shipped NAKED+NON_MATCHING after gate-satisfying
+  permuter run (10,384 iter on nonmatchings/sub_08006BA4/, base score
+  415, best score 205 — never reached 0). The score-205 candidate
+  fixes branch sense (`bne` matches baserom) but STILL emits
+  `push {lr} / pop {r1}; bx r1` (4 unremovable bytes around baserom's
+  bare `bx lr`). 10 iter-32 source variants documented (re-cited as
+  evidence) — all hit byte_diff >= 4. NON_MATCHING reference body in
+  src/game/sub_08006b88.c.
 
 The unifying shape: agbcc 2.x makes a register-allocator choice that
 differs from baserom in a way no source-level mutation flips. The
@@ -1293,6 +1297,7 @@ were the empirical outcomes:
 | sub_08000918 | 49,534 | 11285 | 11110 | -1.5% | Genuine ceiling. Many simultaneous register-coloring choices. |
 | sub_08006948 | 34,919 | 205 | 205 | **0%** | Strongest validation: permuter could not produce ANY improvement. The 4-byte `adds r1, r2, #0; strh r1, ...` shape vs `strh r2, ...` fold is unreachable from C. |
 | sub_08009D9C | 11,952 | 9205 | 8705 | -5.4% | Found split-write trick + `do{}while(0)` block scope. Useful documentation for future re-attempts but still far from 0. |
+| sub_08006BA4 | 10,384 | 415 | 205 | -50.6% | Best candidate fixes branch sense (`bne` vs `beq`) but cannot remove the 4-byte `push {lr} / pop {r1}; bx r1` frame. No score-0 hit across 10K+ iter — score floor is the frame, not the body. |
 
 **Process lesson**: permuter convergence on near-zero improvement after
 ~10K+ iters IS the evidence the playbook now requires. Always run
