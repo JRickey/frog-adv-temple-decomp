@@ -61,20 +61,78 @@ be referenced by name without breaking the matching build.
 
 ## Game-state machine
 
-`AgbMain` (`0x080002A4`) is a 26-entry switch dispatched by the byte at
-`gGameStuff.mode` (`0x03005339`, offset 9). Flow:
+`AgbMain` (`0x080002A4`, decomp landed in `src/system/agb_main.c` as
+NAKED+NON_MATCHING, 396 bytes) is a 26-entry switch dispatched by the
+byte at `gGameStuff.mode` (`0x03005339`, offset 9). Flow:
 
 ```
 AgbMain():
-    bl Init1()                           @ 0x430
+    REG_WAITCNT = 0x4014
+    bl Init1()                           @ sub_08000430 — one-time boot init
     gGameStuff.mode = 4                  @ initial state (writes to offset 9)
-    bl Init2()                           @ 0x20BC0
-    loop:
-        idx = gGameStuff.mode - 4
-        if (idx > 25) return              @ falls through to end
-        switch (idx):
-            case 0..25:  jump_table[idx]()
+loopHead:
+    bl Init2()                           @ sub_08020BC0 — per-frame tick / VBlank
+    idx = gGameStuff.mode - 4
+    if (idx > 25) goto tail              @ default: out-of-range -> tail
+    switch (idx):
+        case 0  (mode 4): sub_080004C4 + sub_08019500 + mode-update from gIwram_3480[5]
+        case 1  (mode 5): sub_080202A8
+        case 2  (mode 6): sub_080201A8
+        case 3  (mode 7): sub_080201C8
+        case 4  (mode 8): sub_08000918
+        case 5  (mode 9): sub_08000EB8
+        case 6  (mode 10): sub_08001214
+        case 7  (mode 11): sub_08001508
+        case 8  (mode 12): sub_080019B4
+        case 9  (mode 13): sub_08002184
+        case 10 (mode 14): sub_08002524
+        case 11 (mode 15): sub_08002844
+        case 12 (mode 16): sub_08002B58
+        case 13 (mode 17): sub_0800336C
+        case 14 (mode 18): sub_08003864
+        case 15 (mode 19): sub_08003CA8
+        case 16 (mode 20): sub_0800411C
+        case 17 (mode 21): sub_08004938
+        case 18 (mode 22): sub_08004FAC
+        case 19 (mode 23): sub_080054A8
+        case 20 (mode 24): sub_0801793C
+        case 21 (mode 25): sub_08019560
+        case 22 (mode 26): sub_08019540
+        case 23 (mode 27): sub_080201E8
+        case 24 (mode 28): /* fallthrough straight to tail */
+        case 25 (mode 29): sub_0801A268(gIwram_3540._data[0])
+tail:
+    bl sub_080008DC                      @ per-frame finalize
+    goto loopHead                        @ NB: every case branches here, not above Init2
 ```
+
+**Architectural finding — Init2 runs every frame.** The loop-back from
+every case body lands on the `bl Init2` (sub_08020BC0), not just at the
+mode read. This means Init2 runs once per frame for every dispatched
+mode. Consistent with Init2 being a VBlank-wait + per-frame input tick.
+
+**Mode 4 boot-time sub-dispatch.** Mode 4 is the initial state. Its body
+runs two helpers (`sub_080004C4` stashes its u16 result at `0x03005398 /
+gIwram_5398`, then `sub_08019500`), then reads `gIwram_3480._data[5]`
+twice and uses it to set `gGameStuff.mode` to one of {5, 6, 7, 24}. The
+double-read is significant — it suggests `sub_08019500` may mutate the
+gIwram_3480 state. Best guesses for the mode 4 sub-dispatch:
+- 5 = "go to title screen"
+- 6 / 7 = "go to menu / save select"
+- 24 = "go to gameplay (continue mode)" — the high mode is suggestive of
+  "use the last-loaded level state instead of starting fresh".
+
+**Mode 28 is the shared tail.** Its handler is empty (no `bl` of its
+own); its address is just the entry point of the per-frame finalize
+(`bl sub_080008DC; b loopHead`). All other case bodies branch to it.
+
+**Mode 29 is unique** — it's the only case that passes an arg to its
+handler, reading `gIwram_3540._data[0]` (a previously-undeclared IWRAM
+byte) into `r0` before `bl sub_0801A268`.
+
+All 28 callees (29 including the already-decompiled Init1) were
+auto-peeled before the C decomp landed, so each has a real Thumb-typed
+symbol the NAKED `bl` instructions can resolve against.
 
 **Naming caveat:** the existing `SetGameMode_NN` helpers (0x08001478,
 0x08002444, 0x08002760, 0x08002A5C, 0x08002E04, 0x08004074, 0x080052C0)

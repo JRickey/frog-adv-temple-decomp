@@ -1,8 +1,8 @@
-@ Auto-emitted by tools/disasm/bucket.py — do not hand-edit this header.
+@ Auto-emitted by tools/agent/auto_peel.py — do not hand-edit this header.
 @ Address-aligned bucket of unparsed baserom bytes.
-@ Range:  [0x08002e10, 0x08004074)  (0x1264 bytes)
+@ Range:  [0x08002e10, 0x0800336c)  (0x55c bytes)
 @
-@ Bucket trimmed at 0x08004074 by the SetGameMode_12 peel.
+@ Pre-peel chunk before sub_0800336C.
 @
 @ This file holds raw bytes only; no instructions are assembled here.
 
@@ -11,5 +11,5 @@
         .global text_08002e10
         .type   text_08002e10, %object
 text_08002e10:
-        .incbin "frog_us_baserom.gba", 0x00002e10, 0x00001264
+        .incbin "frog_us_baserom.gba", 0x00002e10, 0x0000055c
         .size   text_08002e10, . - text_08002e10

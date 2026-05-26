@@ -1048,3 +1048,30 @@ setup half (preserves the original boundaries) and the ARM half (use
 `arm_func_start` rather than `thumb_func_start` per the existing
 `sub_08000240` precedent). The cluster keeps its interwork BLs via
 the `_call_via_rX` thunks at 0x08033cd8.
+
+## Variant: embedded mini pointer-array inside a single backing-store
+
+Iter-12 data agent discovered a variant of the established (backing-
+store + pointer-array) cluster pattern: a *single* sub-table backing
+store can host its own internal mini-dispatch array partway through
+itself, distinct from the prior pattern where the pointer array lives
+at the tail.
+
+Worked example (iter 12): `sLevelLayoutPtrs_315268` (6 entries) is
+embedded inside `sLevelLayoutData_314B78` / `sLevelLayoutData_315280`'s
+combined backing range. The entries point BACK into the surrounding
+backing store at non-ascending offsets (`a8, 28, 48, c8, e8, 08`),
+strongly indicating the consumer indexes by semantic key rather than
+address order. Pool-load refcount 2 against `0x08315274` (= entry 3
+of this embedded array) is the surface signal.
+
+**Recognition heuristic for data agents**: in the middle of a backing-
+store region, if you find a 6- to 16-entry stretch of u32 values
+where every value points back into the SAME enclosing range (and
+where the values aren't in ascending order), it's an embedded
+dispatch — extract it as a separate `sLevelLayoutPtrs_<addr>`
+sub-symbol even though it doesn't have its own bucketed
+backing-store-then-array structure.
+
+The (backing + tail-ptr-array) pattern remains the common case;
+this is the exception.
