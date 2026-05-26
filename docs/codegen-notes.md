@@ -1012,3 +1012,39 @@ The lint accepts arbitrary paths. The data playbook
 (`tools/agent/prompts/data.md`) now points this out inline. Future
 hardening: add the lint as a Makefile pre-build step
 (`pre-build: lint-incbin && actual-build`).
+
+## ARM-mode interwork mixer cluster
+
+A pattern observed in this ROM (and likely others using agbcc 2.x's
+mixed-mode compilation): a sound-mixer-cluster blob has a mix of
+**Thumb dispatchers** that pool-load addresses pointing into the
+same blob's **ARM-mode inner DSP routines**, then `bx Rn`-switch to
+ARM mode to execute the tight arithmetic loop. The cluster looks
+like a function-pointer table when you scan `ldr [pc, #N]` pool
+literals — but the targets are NOT entries in a table; they're
+individual functions in an interwork cluster.
+
+Worked example in this ROM: `[0x08032894, 0x08033910)`. Thumb code
+at `[0x08032894, 0x08032f68)` (buffer-setup dispatchers in
+`sub_080325B0`); ARM code at `[0x08032f68, 0x08033910)` — 8
+ARM-mode mixer/DSP inner routines that pool-load constants then run
+clamp/saturate loops.
+
+**Detection heuristic for data agents looking at high-refcount "code"
+anchors:**
+
+- If `addr & 1 == 0` → the target is an ARM-mode entry. It's NOT a
+  Thumb function-pointer-table entry; it's a function. Skip the
+  "find the function-pointer table" angle entirely.
+- If `addr & 1 == 1` → Thumb function pointer. May be a function-
+  pointer-table entry; pursue the table-hunt angle.
+
+`tools/agent/refcount_pool_loads.py` was updated iter 8 to emit
+`code-arm` vs `code-thumb` as the region tag for code-region anchors,
+making this distinction visible at scan time.
+
+For decomp agents: when peeling such a cluster, peel both the Thumb
+setup half (preserves the original boundaries) and the ARM half (use
+`arm_func_start` rather than `thumb_func_start` per the existing
+`sub_08000240` precedent). The cluster keeps its interwork BLs via
+the `_call_via_rX` thunks at 0x08033cd8.

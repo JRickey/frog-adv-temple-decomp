@@ -320,6 +320,14 @@
     "size": 4
   },
   {
+    "path": "entity/character_sprite_frames.bin",
+    "addr": {
+      "us": "0xE3190"
+    },
+    "count": "0xCC",
+    "size": 4
+  },
+  {
     "path": "ui/asset_slots.bin",
     "addr": {
       "us": "0xE3550"

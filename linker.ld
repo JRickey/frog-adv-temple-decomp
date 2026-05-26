@@ -80,8 +80,7 @@ SECTIONS {
         asm/text/text_0x08020b50.o(.text);  /* 0x08020b50 - 0x0802d558, raw bytes */
         asm/disasm_0x0802d558.o(.text);  /* 0x0802d558 - 0x0802d890, sub_0802D558 (auto-peeled) */
         asm/text/text_0x0802d890.o(.text);  /* 0x0802d890 - 0x0802e3f8, raw bytes */
-        src/system/sound_lock.o(.text);  /* 0x0802e3f8 - 0x0802e418, sub_0802E3F8 */
-        asm/disasm_0x0802e418.o(.text);  /* 0x0802e418 - 0x0802e43c, sub_0802E418 (auto-peeled) */
+        src/system/sound_lock.o(.text);  /* 0x0802e3f8 - 0x0802e43c, sub_0802E3F8 + sub_0802E418 */
         asm/text/text_0x0802e43c.o(.text);  /* 0x0802e43c - 0x0802e5d8, raw bytes */
         src/system/sound_pitch.o(.text);  /* 0x0802e5d8 - 0x0802e684, sub_0802E5D8 */
         src/system/sound_volume.o(.text);  /* 0x0802e684 - 0x0802e724, sub_0802E684 */
@@ -112,7 +111,8 @@ SECTIONS {
         asm/disasm_0x08033f5c.o(.text);  /* 0x08033f5c - 0x0803401c, __umodsi3 (libgcc; auto-peeled) */
         asm/text/text_0x0803401c.o(.text);  /* 0x0803401c - 0x08035d7c, raw bytes */
         asm/disasm_0x08035d7c.o(.text);  /* 0x08035d7c - 0x08035d84, sub_08035D7C (auto-peeled) */
-        asm/text/text_0x08035d84.o(.text);  /* 0x08035d84 - 0x08035d94, two Thumb-to-ARM veneers */
+        asm/text/text_0x08035d84.o(.text);  /* 0x08035d84 - 0x08035d8c, one Thumb-to-ARM veneer */
+        asm/disasm_0x08035d8c.o(.text);  /* 0x08035d8c - 0x08035d94, sub_08035D8C (Thumb-to-ARM veneer, sound-IRQ disable) */
         asm/disasm_0x08035d94.o(.text);  /* 0x08035d94 - 0x08035d9c, sub_08035D94 (Thumb-to-ARM veneer, sound-IRQ enable) */
         src/data/irq_handler_table.o(.rodata);  /* 0x08035d9c - 0x08035dd0, sIrqHandlerTable */
         asm/text/text_0x08035dd0.o(.text);  /* 0x08035dd0 - 0x08040000, raw bytes */
@@ -128,7 +128,9 @@ SECTIONS {
         src/data/entity_dispatch.o(.rodata);  /* 0x080c0ab0 - 0x080c1254, entity dispatch + sine table (13 named tables) */
         asm/text/text_0x080c1254.o(.text);  /* 0x080c1254 - 0x080d0000, raw bytes (tail after entity-dispatch cluster) */
         asm/text/text_0x080d0000.o(.text);  /* 0x080d0000 - 0x080e0000, raw bytes */
-        asm/text/text_0x080e0000.o(.text);  /* 0x080e0000 - 0x080e3550, raw bytes (shrunk for ui-status-bar cluster) */
+        asm/text/text_0x080e0000.o(.text);  /* 0x080e0000 - 0x080e3190, raw bytes (shrunk for character-sprite-frames cluster) */
+        src/data/character_sprite_frames.o(.rodata);  /* 0x080e3190 - 0x080e34c0, sCharacterSpriteFrames (51 records x 16 B) */
+        asm/text/text_0x080e34c0.o(.text);  /* 0x080e34c0 - 0x080e3550, raw bytes (intra-cluster zero padding) */
         src/data/ui_status_bar.o(.rodata);  /* 0x080e3550 - 0x080e3754, sUiAssetSlots + sFrogStatusBarFrames */
         asm/text/text_0x080e3754.o(.text);  /* 0x080e3754 - 0x080e3a30, raw bytes (intra-cluster gap) */
         src/data/ui_status_bar_tiles.o(.rodata);  /* 0x080e3a30 - 0x080e3ab4, sFrogStatusBarTileData */

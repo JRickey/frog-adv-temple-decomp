@@ -205,11 +205,17 @@ def load_map_symbols() -> dict[int, str]:
 
 
 def region_for(addr: int, code_end: int) -> str:
+    """Classify an address. For code-region targets, distinguish Thumb
+    (LSB=1) function pointers from ARM-mode entries (LSB=0). The
+    distinction matters when investigating "code" refcount anchors —
+    LSB=0 entries are NOT function-pointer-table candidates; they're
+    ARM-mode functions in an interwork cluster (see
+    docs/codegen-notes.md "ARM-mode interwork mixer cluster")."""
     for lo, hi, name in REGION_TAGS:
         if lo <= addr < hi:
             return name
     if ROM_BASE <= addr < code_end:
-        return "code"
+        return "code-thumb" if (addr & 1) else "code-arm"
     if code_end <= addr < ROM_END:
         return "data"
     return "?"
