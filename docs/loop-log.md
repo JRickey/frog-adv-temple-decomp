@@ -766,3 +766,30 @@ The agent infrastructure grew organically with each iter — each new friction d
 **Trajectory:** 18 iters post-resume (11-28). Functions 41→77 (+36). Raw INCBIN 98.1%→91.3% (**-6.8pp**). db 117→237 (+120). src C 75→218 KiB (+143 KiB). Data deblob 1.0%→8.7% (+7.7pp). **Approaching 90% raw INCBIN threshold** and **approaching 10% data deblob** — both potentially crossed next iter.
 
 ---
+
+## Iter 29 — 2026-05-26 (post-pause resume)
+
+**Before:** 77 / ~513 fns (15.4%), 78 asm-fn-remaining, 237 db, 217.5 KiB src C, 91.3% raw
+
+**Targets:** Decomp sub_08000EB8 (mode-9 sibling of sub_08000918). Data: 0x081ecxxx cluster.
+
+**Outcomes:**
+- Decomp: **DEFERRED**. sub_08000EB8 turns out to be same shape as sub_08000918 (9-way switch + state-loop, 6 adjacent IWRAM bases, 332-B stack frame, 156+ instr). Agent landed scaffold + characterization comment + 1 callee peel (sub_08000E0C). C body deferred until sub_08000918 cracks first.
+- Data: 4 tables, 2.6 KiB (sBgTilemap_E6C18 + 3-table OBJ asset triple). Modest haul but cluster fully characterized.
+
+**Pre-commit catch (loop-orchestrator hygiene)**: data agent's tail bucket text_0x081ece58.s had .incbin count off by 0x2000 (5th occurrence of bucket-size friction since iter 4). bytes_diff_rom was 1.36 MiB until the fix. lint_blob_boundaries.py caught it post-build, but ahead of commit. Considering whether to harden tools/disasm/bucket.py to derive count from comment header — watching for next occurrence.
+
+**Commit:** iter-29 hash (single combined: scaffold + 1 peel + 4 data tables + post-build hygiene fix).
+
+**After:** 77 / ~513 fns (15.4% unchanged), 78 asm-fn-remaining (unchanged), 241 db (+4), 220.0 KiB src C (+2.5 KiB), 91.2% raw (-0.1pp), **8.8% data deblob** (+0.1pp).
+
+**Architectural duties:**
+- No new codegen-notes — the iter-22 contiguous-append + iter-22 brief-UNPEELED + iter-22 hidden-fn-in-peel + iter-26 fixed brief all working as designed.
+- **Bucket-size friction watch**: 5th occurrence (iters 4, 5, 6, 7, 29). The lint catches it after build, but agents are hand-computing bytes which is error-prone. Tool fix candidate if 6th occurrence happens.
+- **Mode-9/mode-X family identified**: sub_08000EB8 is one of 14 cases for sub_08000918's state machine; each case may be a separate fn similarly shaped (sub_08000918 itself, sub_08000EB8, sub_08001214, sub_08001508 — all "same shape" per picker reports). Decomp them in batch once sub_08000918 lands?
+
+**Decisions:** none material.
+
+**Trajectory:** 19 iters post-resume (11-29). Functions 41→77 (+36). Raw INCBIN 98.1%→91.2% (-6.9pp). db 117→241 (+124). src C 75→220 KiB (+145 KiB). Data deblob 1.0%→8.8% (+7.8pp). Iter 29 is the lightest since iter 20 (no C body landed) but architectural insight is real — sub_08000EB8's shape match with sub_08000918 means cracking one likely unlocks several others.
+
+---
