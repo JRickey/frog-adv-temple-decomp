@@ -515,3 +515,45 @@ a stub until purposes are identified), (2) an `extern` declaration in
 a shared header, (3) a linker.ld dot-pin assignment. The struct types
 can grow with `struct_grow.py` as accesses surface, same as
 `GameStuff` today.
+
+## `asm("" : "=r"(dst) : "0"(src))` as a "mov-fence" — defeat agbcc's
+## `lsrs`-into-init fold
+
+agbcc 2.x folds `s32 x = arg; x >>= N;` into a single `lsrs Rx, Rarg,
+#N` whenever `Rx` is a fresh register. If the baserom emits the
+two-instruction form `mov Rx, Rarg; lsrs Rx, Rx, #N` instead, no
+amount of intermediate-variable shuffling will reproduce it — agbcc
+constant-folds across moves and assignments.
+
+The matching idiom (used in `sub_0802E684`, the per-channel volume
+setter):
+
+```c
+register s32 newCode asm("r4");
+asm("" : "=r"(newCode) : "0"(vol)); /* mov r4, vol — fight the lsrs-fold */
+newCode = (u32)newCode >> 3;
+```
+
+The empty `asm("")` block with input constraint `"0"` (same register
+as output) instructs gcc/agbcc that `newCode` now holds `vol` but its
+value is opaque to the optimizer. agbcc can't fold the subsequent
+`>>= 3` because it can't see through the asm block. Result: literal
+`adds r4, r0, #0; lsrs r4, r4, #3` matches the baserom.
+
+Same pattern applies to any "fold-resistant" value plumbing:
+- Forcing a fresh pool-literal `ldr` to happen BEFORE a dependent
+  shift (`asm("" : "=r"(tbl) : "0"((u32)tableAddr))` — see the
+  table-indexing block in `sub_0802E684`).
+- Pinning a shift's result into a destination register different from
+  its source (`register u32 shifted asm("r1"); asm("" : "=r"(shifted)
+  : "0"(src << 12))` — yields `lsls r1, r4, #12` not
+  `lsls r4, r4, #12`).
+
+This is **not** an inline assembly emission — the `asm("")` produces
+zero instructions. It's a barrier annotation that prevents
+constant-folding. Comparable to `volatile` for reads but lighter and
+more targeted.
+
+Permuter doesn't include this idiom in its mutation set (as of 2024).
+Apply it manually when `compile_and_view_assembly.py` reports a fold
+that no source rearrangement breaks.
