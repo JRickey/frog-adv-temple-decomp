@@ -615,3 +615,28 @@ The agent infrastructure grew organically with each iter — each new friction d
 **Trajectory:** 12 iters post-resume (11-22). Functions 41→58 (+17). Raw INCBIN 98.1%→95.4% (-2.7pp). db 117→209 (+92). src C 75→156 KiB (+81 KiB). **The "asm_funcs_remaining went UP" is misleading**: it's not new debt, it's previously-opaque blob bytes promoted to named-asm-function status. The actual surface remaining is roughly unchanged.
 
 ---
+
+## Iter 23 — 2026-05-26
+
+**Before:** 58 / ~513 fns (11.3%), 86 asm-fn-remaining, 209 db, 156.1 KiB src C, 95.4% raw
+
+**Targets:** Decomp batch on iter-22's tiny peeled callees (sub_08000C98/CEC/D2C/D50, sub_08006948). Data: 0x0820c578 fresh anchor.
+
+**Outcomes:**
+- Decomp: **3 functions landed** (1 pure-C + 2 NAKED+NON_MATCHING). sub_08000D50 pure-C 12 B trivial forwarder. sub_08006948 + sub_08006958 NAKED — paired peel hidden inside the same .s slice (4th instance of "iter-18 peel-hides-second-function" pattern this loop). Both NAKED'd for 5th unmatchable class (register-coloring drift). 3 others deferred: sub_08000C98 + sub_08000D2C blocked on unpeeled 0x0800B7B0; sub_08000CEC needs 5 callee peels.
+- Data: **3 tables, 4.6 KiB** + major architectural finding — this is a SECOND screen-install cluster paralleling iter-18's 0x081d8b98 family. Confirms the screen-install resource pattern as a recurring subsystem.
+
+**Commit:** iter-23 hash (single combined: 3 decomps + 3 data + codegen-notes 5th-class extension).
+
+**After:** 63 / ~513 fns (**12.3%** +1.0pp), 84 asm-fn-remaining (-2 net), 212 db (+3), **160.7 KiB src C** (+4.6 KiB), 95.3% raw (-0.1pp), **4.7% data deblob** (+0.1pp).
+
+**Architectural duties:**
+- docs/codegen-notes.md "5th unmatchable class" — updated: 5 confirmed instances (was 3 at iter 21's promotion). Class firmly established across diverse triggers. Two new triggers documented: strh-folding through parameter register, bool-return register coloring.
+- **Screen-install resource family** — confirmed as a recurring multi-cluster subsystem (iter-18 0x081d8b98 + iter-23 0x0820c578). Dispatcher functions sub_0801e078, sub_0801e28c, sub_0801eed4 noted as decomp-priority for the family unlock.
+- **Iter-18 hidden-fn-in-peel pattern**: 4th occurrence (sub_08006958 inside sub_08006948's peel). The pattern is becoming a regular feature, not a one-off. Worth adding a `decomp_brief.py` enhancement to count `push {` directives in the .s and flag potential hidden fns.
+
+**Decisions:** none material.
+
+**Trajectory:** 13 iters post-resume (11-23). Functions 41→63 (+22). Raw INCBIN 98.1%→95.3% (-2.8pp). db 117→212 (+95). src C 75→161 KiB (+86 KiB). **Crossing 12% function decomp** — first major milestone since 10%. **Crossed 95.5% → 95% raw INCBIN** threshold this iter (95.4% → 95.3%). Pace acceleration is steady: ~1.5-2 fns per iter on average across post-resume iters.
+
+---
