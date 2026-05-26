@@ -1275,3 +1275,61 @@ helper, iter 16). The baserom's r2/r1/r4 chain looks pessimal
 relative to agbcc's r0 chain — but it's what the original C
 source's allocator preference produces, and we can't reproduce it.
 
+
+## "Append to existing C file" only works for CONTIGUOUS ranges
+
+The data + decomp playbooks suggest "append to an existing C file"
+when a target sits in the same cluster as a landed sibling. **This
+only works when the new function's ROM range is directly adjacent
+to the existing file's range.** A linker.ld entry maps one `.o` to
+ONE contiguous address range; agbcc 2.x without `-ffunction-sections`
+can't produce two `.o(.text)` slots at different addresses from one
+.c file.
+
+Example caught iter 17: `sub_0800A2D8` lives in
+`src/game/dispatch_helpers.c` at `[0x0800a2d8, 0x0800a2f4)`. Trying
+to append `sub_0800A520` (at `[0x0800a520, 0x0800a53c)`) to the same
+file would require two linker.ld slots — agbcc emits everything to
+one `.text` section and you'd get the wrong byte layout.
+
+Resolution: create a sibling C file (`src/game/sub_0800a520.c` or a
+thematic name) at the new slot. Multiple cluster-sibling C files
+in `src/game/` are fine — they group thematically without sharing
+a `.o`.
+
+Decomp playbook step 2 ("Scaffold the destination") should clarify
+this. If a target's previous-C-neighbour-in-linker.ld is a cluster
+sibling, you CAN extend that .o's range backwards — but only if no
+text bucket intervenes.
+
+## `&sFoo[N*stride]` for pointer-array indexing into typed data
+
+When a small pointer array (typically 2-8 entries) indexes into a
+contiguous data block at fixed offsets, prefer the
+`&sFoo[N*stride]` form over the literal address:
+
+```c
+/* WRONG: hardcodes ROM address, breaks if data shifts */
+const u32 sPtrPair[2] = { 0x082f9920, 0x082f9968 };
+
+/* RIGHT: relocs through the C symbol */
+const u32 *const sPtrPair[2] = {
+    &sUnkDispatchData_2F9920[0],
+    &sUnkDispatchData_2F9920[8 * 3],  /* row 8, stride 3 u32s */
+};
+```
+
+agbcc emits the same bytes either way at the current ROM layout
+(the linker resolves both to identical pool entries), but the
+typed form keeps your extraction stable if a future pass shifts
+the data symbol. Precedent: `&sIrqHandlerTable[6]` substitution in
+src/game/sub_08000820.c (iter 14eec4d).
+
+Worked examples (cumulative as of iter 17):
+- `&sIrqHandlerTable[6]` (sub_08000820.c)
+- `&sUnkDispatchData_2F9920[N]` (unk_dispatch_2f9920.c, iter 17)
+- All the iter-15 sLevelLayoutDispatch_* pointer arrays use this
+  form when their target sub-tables have C symbols.
+
+Use when extracting any small ptr-array that points into a
+larger typed data block AT or near the same ROM region.
