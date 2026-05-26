@@ -127,6 +127,7 @@ agbcc codegen is now `corpus.py grep` and `corpus.py decomps`.
 | `tools/agent/craft_prompt.py` | Builds the per-function decomp prompt — destination C file lookup via linker.ld, callee declarations from `include/`, sampled neighbour functions. |
 | `tools/agent/pre_pr_check.py` | Style/readability lint for staged commits. |
 | `tools/agent/scope_survey.py` | Heuristic count of probable Thumb/ARM functions in the ROM. Order-of-magnitude planning. |
+| `tools/agent/refcount_pool_loads.py` | Ranks ROM data addresses by how many times code loads them via `ldr Rd, [pc, #N]`. Scans both Thumb and ARM pool-load encodings across the code region. Cross-checks each target against `database.json` (`EXTRACTED`) and `frog_us.map` (`NAMED`), so `--pending-only` surfaces unclaimed high-yield anchors for the next data pass. `--threshold 5` is the suggested cutoff for charter-grade anchors. |
 | `tools/agent/bin/objdiff-cli` | encounter/objdiff binary. Use when `progress.py` says nonmatching but the function looks right. |
 
 ## Mizuchi-ported TS toolchain (under `tools/agent/ts/`)
