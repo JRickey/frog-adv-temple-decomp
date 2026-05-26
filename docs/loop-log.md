@@ -214,3 +214,29 @@ e34fe59 CLAUDE.md: note NAKED + .syntax divided requirement
 **Decisions:** Blob-boundary lint will be built before iter 8's agent dispatch.
 
 ---
+## Iter 8 — 2026-05-26
+
+**Before:** 38 / ~513 fns (7.4%), 16 peeled-asm, 111 db, 72.2 KiB src C, 98.1% raw
+
+**Pre-flight infra:** blob-boundary lint landed (88e5e59) before agent dispatch. Friction-quadruple threshold met.
+
+**Targets:** Decomp sub_0802E418 (18-instr lock-increment). Data novel charter — find fn-ptr table for 0x0803XXXX anchors.
+
+**Outcomes:**
+- Decomp: **pure C** match (2 in a row!). Both lock primitives now in sound_lock.c. Side-peel sub_08035D8C (3rd interwork veneer).
+- Data: **charter premise was WRONG** — the 8 anchors are ARM-mode functions in an interwork mixer cluster, not table entries. Agent recovered with sCharacterSpriteFrames extraction (816 B, 17×3 poses) AND surfaced the new pattern. Both addressed by codegen-notes addition + refcount_pool_loads.py LSB-aware classification (code-arm vs code-thumb).
+
+**Commit:** iter-8 hash
+
+**After:** 39 / ~513 fns (7.6%), 15 peeled-asm, 112 db, 73.0 KiB src C, 98.1% raw
+
+**Architectural duties:**
+- docs/codegen-notes.md "ARM-mode interwork mixer cluster" section added.
+- tools/agent/refcount_pool_loads.py enhanced: `region_for()` now distinguishes code-arm/code-thumb. Future iters will see the right classification without false-premise investigation.
+- No subsystems.md update (Sound section already covers the mixer; the ARM-cluster detail is codegen, not subsystem-level).
+
+**Friction observed:** none new. The "wrong charter premise" was handled smoothly per playbook.
+
+**Decisions:** none. The recovery from a wrong charter is exactly the playbook's intent ("skip and report"); not a judgment-call worth logging.
+
+---
