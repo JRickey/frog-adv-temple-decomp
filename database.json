@@ -1510,5 +1510,13 @@
     },
     "count": "0x1E0",
     "size": 2
+  },
+  {
+    "path": "game/unk_dispatch_data_2f9920.bin",
+    "addr": {
+      "us": "0x2F9920"
+    },
+    "count": "0x1B",
+    "size": 4
   }
 ]
