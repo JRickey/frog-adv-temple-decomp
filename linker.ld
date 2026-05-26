@@ -90,7 +90,7 @@ SECTIONS {
         src/system/sound_channel.o(.text);  /* 0x0802ec7c - 0x0802eef8, sub_0802EC7C + sub_0802ED5C + sub_0802EDF0 (sub_0802EC7C and sub_0802EDF0 NAKED+NON_MATCHING) */
         asm/text/text_0x0802eef8.o(.text);  /* 0x0802eef8 - 0x0802f054, raw bytes */
         asm/disasm_0x0802f054.o(.text);  /* 0x0802f054 - 0x0802f2fc, sub_0802F054 (auto-peeled) */
-        asm/disasm_0x0802f2fc.o(.text);  /* 0x0802f2fc - 0x0802f398, sub_0802F2FC (auto-peeled) */
+        src/system/sound_pan.o(.text);  /* 0x0802f2fc - 0x0802f398, sub_0802F2FC (NAKED+NON_MATCHING) */
         asm/text/text_0x0802f398.o(.text);  /* 0x0802f398 - 0x0802f4b0, raw bytes */
         src/system/sound_mixer.o(.text);
         asm/disasm_0x0802f4b0.o(.text);  /* 0x0802f4b0 - 0x0802f870, sub_0802F4B0 (auto-peeled, --force-boundary) */
@@ -120,7 +120,11 @@ SECTIONS {
         src/data/entity_dispatch.o(.rodata);  /* 0x080c0ab0 - 0x080c1254, entity dispatch + sine table (13 named tables) */
         asm/text/text_0x080c1254.o(.text);  /* 0x080c1254 - 0x080d0000, raw bytes (tail after entity-dispatch cluster) */
         asm/text/text_0x080d0000.o(.text);  /* 0x080d0000 - 0x080e0000, raw bytes */
-        asm/text/text_0x080e0000.o(.text);  /* 0x080e0000 - 0x080f0000, raw bytes */
+        asm/text/text_0x080e0000.o(.text);  /* 0x080e0000 - 0x080e3550, raw bytes (shrunk for ui-status-bar cluster) */
+        src/data/ui_status_bar.o(.rodata);  /* 0x080e3550 - 0x080e3754, sUiAssetSlots + sFrogStatusBarFrames */
+        asm/text/text_0x080e3754.o(.text);  /* 0x080e3754 - 0x080e3a30, raw bytes (intra-cluster gap) */
+        src/data/ui_status_bar_tiles.o(.rodata);  /* 0x080e3a30 - 0x080e3ab4, sFrogStatusBarTileData */
+        asm/text/text_0x080e3ab4.o(.text);  /* 0x080e3ab4 - 0x080f0000, raw bytes (tail after ui-status-bar cluster) */
         asm/text/text_0x080f0000.o(.text);  /* 0x080f0000 - 0x08100000, raw bytes */
         asm/text/text_0x08100000.o(.text);  /* 0x08100000 - 0x08110000, raw bytes */
         asm/text/text_0x08110000.o(.text);  /* 0x08110000 - 0x08120000, raw bytes */

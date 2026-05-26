@@ -186,6 +186,40 @@ single typed `EntityProc gEntityVT[17]` with the 5 fields per record.
 Current `sEntityProcA..sEntityProcE` naming is deliberately low-
 commitment placeholder until then.
 
+## UI status-bar / HUD renderer
+
+Identified iter-2 of the autonomous loop. Cluster at
+[0x080e3550, 0x080e3ab4) carries the on-screen status-bar /
+HUD data:
+
+- `sUiAssetSlots` (0x080e3550, 216 B, u32[54]) — sparse asset-pointer
+  table; only 14 of 54 slots non-zero. Consumer at 0x08017af4 hard-
+  codes fixed offsets (+0, +0x84, +0x88, +0x90, +0x9c) to drive DMA
+  loads into PAL RAM / VRAM.
+- `sFrogStatusBarFrames` (0x080e3628, 300 B, 25×12B) — sprite-frame
+  descriptors `{u16 x, u16 y, u16 w, u16 h, const u16 *tile_data}`.
+  Same record layout as `sSpriteFrameDescriptors` at 0x080c1128 in
+  the entity-dispatch cluster. Consumer at 0x080169c0 draws each
+  `w × h` tile block at BG tilemap coord `(x, y)` from `tile_data`,
+  advancing `(32 − w)` tiles per row.
+- `sFrogStatusBarTileData` (0x080e3a30, 132 B, u16[66]) — raw BG
+  tilemap entries that every `tile_data` ptr field resolves into.
+  Palette IDs 0xc/0xe/0xf for three color states.
+
+Renderer + loader (still asm):
+- `sub_080169c0` — the `(x, y, w, h, tile_data)` → BG tilemap blitter.
+- `sub_08017af4` — the DMA-driven asset init from `sUiAssetSlots`.
+
+**Architectural finding**: the 12-byte `{x, y, w, h, ptr}` descriptor
+shape is **shared between the HUD and the entity-dispatch system**
+(both `sSpriteFrameDescriptors` and `sFrogStatusBarFrames` use it).
+Suggests a common "tile-block-blit" primitive is reused across
+subsystems. Once one of the blitter consumers lands in C, define a
+shared `struct SpriteFrame { u16 x, y, w, h; const u16 *tile_data; }`
+in a header (probably `include/sprite.h`) and convert both extracted
+tables to that type. Will retire the iter-1 entity-dispatch `a/b/c/d`
+placeholder naming in the same pass.
+
 ## Render / sprite
 
 (Not yet identified.)

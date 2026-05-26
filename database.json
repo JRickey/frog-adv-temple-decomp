@@ -320,6 +320,30 @@
     "size": 4
   },
   {
+    "path": "ui/asset_slots.bin",
+    "addr": {
+      "us": "0xE3550"
+    },
+    "count": "0x36",
+    "size": 4
+  },
+  {
+    "path": "ui/status_bar_frames.bin",
+    "addr": {
+      "us": "0xE3628"
+    },
+    "count": "0x19",
+    "size": 12
+  },
+  {
+    "path": "ui/status_bar_tile_data.bin",
+    "addr": {
+      "us": "0xE3A30"
+    },
+    "count": "0x42",
+    "size": 2
+  },
+  {
     "path": "level/layout_316f24.bin",
     "addr": {
       "us": "0x316F24"
