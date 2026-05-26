@@ -44,6 +44,7 @@ SECTIONS {
         . = 0x00003550; gIwram_3550 = .;
         . = 0x000035E0; gIwram_35E0 = .;
         . = 0x00003710; gIwram_3710 = .;
+        . = 0x00003720; gIwram_3720 = .;
         . = 0x00005358; gIwram_5358 = .;
     } >iwram
 
@@ -103,13 +104,15 @@ SECTIONS {
         asm/disasm_0x080054a8.o(.text);  /* 0x080054a8 - 0x0800586c, sub_080054A8 (auto-peeled) */
         asm/text/text_0x0800586c.o(.text);  /* 0x0800586c - 0x08005fc8, raw bytes */
         asm/disasm_0x08005fc8.o(.text);  /* 0x08005fc8 - 0x08006600, sub_08005FC8 (auto-peeled) */
-        asm/text/text_0x08006600.o(.text);  /* 0x08006600 - 0x0800793c, raw bytes */
+        asm/text/text_0x08006600.o(.text);  /* 0x08006600 - 0x08006b88, raw bytes */
+        asm/disasm_0x08006b88.o(.text);  /* 0x08006b88 - 0x08006b94, sub_08006B88 (auto-peeled) */
+        asm/text/text_0x08006b94.o(.text);  /* 0x08006b94 - 0x0800793c, raw bytes */
         asm/disasm_0x0800793c.o(.text);  /* 0x0800793c - 0x08007dd0, sub_0800793C (auto-peeled) */
         asm/disasm_0x08007dd0.o(.text);  /* 0x08007dd0 - 0x08007f88, sub_08007DD0 (auto-peeled) */
         asm/text/text_0x08007f88.o(.text);  /* 0x08007f88 - 0x08008174, raw bytes */
         asm/disasm_0x08008174.o(.text);  /* 0x08008174 - 0x08008570, sub_08008174 (auto-peeled) */
         asm/text/text_0x08008570.o(.text);  /* 0x08008570 - 0x080090b0, raw bytes */
-        asm/disasm_0x080090b0.o(.text);  /* 0x080090b0 - 0x080090fc, sub_080090B0 (auto-peeled) */
+        src/game/sub_080090b0.o(.text);  /* 0x080090b0 - 0x080090fc, sub_080090B0 */
         asm/text/text_0x080090fc.o(.text);  /* 0x080090fc - 0x08009188, raw bytes */
         asm/disasm_0x08009188.o(.text);  /* 0x08009188 - 0x080094f8, sub_08009188 (auto-peeled) */
         asm/disasm_0x080094f8.o(.text);  /* 0x080094f8 - 0x080097fc, sub_080094F8 (auto-peeled) */
@@ -295,7 +298,8 @@ SECTIONS {
         src/data/level_layout_316e5c.o(.rodata);  /* 0x08316e5c - 0x08316f24, sLevelLayout_316E5C + sLevelLayout_316EB4 + sLevelLayout_316EC4 */
         src/data/level_layout.o(.rodata);  /* 0x08316f24 - 0x08318020, sLevelLayout_316F24..._317FFC + sLevelLayoutData + sLevelLayoutPtrs + 23 continuation tables */
         src/data/level_layout_318020.o(.rodata);  /* 0x08318020 - 0x083181bc, sLevelLayoutSentinels_318020 + sLevelLayoutManifest_31802C + sLevelLayout_31805C + 4 parallel-array tables (_31807C/_3180AC/_3180DC/_31810C) + sLevelLayout_31813C */
-        asm/text/text_0x083181bc.o(.text);  /* 0x083181bc - 0x08320000, raw bytes */
+        src/data/level_layout_dispatch_3181bc.o(.rodata);  /* 0x083181bc - 0x083184dc, sLevelLayoutDispatch_3181BC (back-ref to _31813C) + sLevelLayoutSectionTable_3181C4 (7 section ptrs) + sLevelLayoutOffsets_3181E0 (191 monotonic offsets) */
+        asm/text/text_0x083184dc.o(.text);  /* 0x083184dc - 0x08320000, raw bytes */
         asm/text/text_0x08320000.o(.text);  /* 0x08320000 - 0x08330000, raw bytes */
         asm/text/text_0x08330000.o(.text);  /* 0x08330000 - 0x08340000, raw bytes */
         asm/text/text_0x08340000.o(.text);  /* 0x08340000 - 0x08350000, raw bytes */

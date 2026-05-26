@@ -37,6 +37,17 @@ struct IwramAt3550 {
 
 struct IwramAt35E0 {
     u8 _data[5]; /* writes at +0 and +4 */
+    u8 _pad05[3];
+    u16 _field_8; /* +8: cached tile-X coord (from gIwram_3720.field_2 / 24) */
+    u16 _field_A; /* +A: cached tile-Y coord (from gIwram_3720.field_4 / 24) */
+    u8 _pad0C[4];
+    u16 _field_10; /* +10: flags; bit 0x40 raised when tile coords change */
+};
+
+struct IwramAt3720 {
+    u8 _pad00[2];
+    s16 _field_2; /* +2: signed sub-coord (X?), divided by 24 to get tile X */
+    s16 _field_4; /* +4: signed sub-coord (Y?), divided by 24 to get tile Y */
 };
 
 struct IwramAt34C0 {
@@ -63,6 +74,7 @@ extern struct IwramAt34C0 gIwram_34C0;
 extern struct IwramAt3550 gIwram_3550;
 extern struct IwramAt35E0 gIwram_35E0;
 extern struct IwramAt3710 gIwram_3710;
+extern struct IwramAt3720 gIwram_3720;
 extern struct IwramAt5358 gIwram_5358;
 
 #endif /* GUARD_IWRAM_H */

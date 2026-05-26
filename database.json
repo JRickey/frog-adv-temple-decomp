@@ -1336,6 +1336,30 @@
     "size": 4
   },
   {
+    "path": "level/layout_dispatch_3181bc.bin",
+    "addr": {
+      "us": "0x3181BC"
+    },
+    "count": "0x2",
+    "size": 4
+  },
+  {
+    "path": "level/layout_section_table_3181c4.bin",
+    "addr": {
+      "us": "0x3181C4"
+    },
+    "count": "0x7",
+    "size": 4
+  },
+  {
+    "path": "level/layout_offsets_3181e0.bin",
+    "addr": {
+      "us": "0x3181E0"
+    },
+    "count": "0xBF",
+    "size": 4
+  },
+  {
     "path": "sound/wave_vol_lut.bin",
     "addr": {
       "us": "0x3DDA3C"

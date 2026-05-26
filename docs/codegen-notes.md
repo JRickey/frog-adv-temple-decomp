@@ -1238,9 +1238,27 @@ extraction in the level-layout subsystem should be PTR-ARRAY-DRIVEN,
 not header-driven.
 
 
-## Fifth unmatchable class candidate: repeated table-dispatch chain coloring
+## Fifth unmatchable class: register-coloring drift after libgcc / table-dispatch calls
 
-Iter-16 candidate for a fifth corpus-classifiable unmatchable shape:
+**Promoted from "candidate" → confirmed in iter 21** after a third
+distinct instance (sub_080090B0) reproduced the same shape.
+Confirmed instances:
+- `sub_0800A2D8` (iter 16, 24 instr, byte_diff 7) — repeated
+  table-dispatch chain.
+- `sub_0800A328` (iter 18, 16 instr, byte_diff 1) — single
+  `adds r0, r1, r0` vs `adds r0, r0, r1` encoding swap.
+- `sub_080090B0` (iter 21, ~22 instr, byte_diff 6) — post-`__divsi3`
+  return-value coloring (`lsrs rN, r0, #16` vs leaving in r0 across
+  subsequent loads).
+
+The unifying shape: agbcc 2.x makes a register-allocator choice that
+differs from baserom in a way no source-level mutation flips. The
+specific trigger varies (table dispatch / encoding swap / libgcc
+return-value reuse), but the symptom is identical: byte_diff plateaus
+at 1-10, permuter doesn't help, and the diffs concentrate on
+register-letter changes in arithmetic/load instructions.
+
+
 
 Function pattern — same expression `sTable[gStruct.field]()` repeated
 3+ times in straight-line code (no CSE possible across calls because
