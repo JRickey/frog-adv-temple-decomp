@@ -557,3 +557,57 @@ more targeted.
 Permuter doesn't include this idiom in its mutation set (as of 2024).
 Apply it manually when `compile_and_view_assembly.py` reports a fold
 that no source rearrangement breaks.
+
+## High registers (sl/r10, sb/r9, r8) — corpus-validated unmatchable
+
+If your baserom uses `mov sl, rN` (or `mov sb, ...` / `mov r8, ...`)
+to spill a value into a Thumb high register, **stop trying to match
+it in C and use NAKED asm + `#ifdef NON_MATCHING` instead.** This is
+the established pattern in every agbcc decomp we've surveyed.
+
+**Corpus evidence (Phase D search, May 2026):**
+- 966 instances of `mov sl, rN` across 3 corpus repos (cvaos, mf, mzm)
+  — every single one is in unrefined `disasm_*.s` or in m4a's
+  asm-only libs, NEVER in matched C.
+- Filesystem-wide `grep 'register.*asm("sl"|"r10"|"sb"|"r9"|"r8")'`
+  across 7 agbcc decomps: only 4 hits total.
+  - 2 are inside `#ifdef NONMATCHING` blocks paired with a NAKED asm
+    fallback (`pret/pokeruby:shop.c:Shop_MoveItemListUp`,
+    `pret/pokepinballrs:high_scores.c:RenderHighScoreSprites`).
+  - 1 is `register T x asm("r8") = arg;` pin-on-init for a single
+    function arg (`pret/pokeruby:palette.c:BeginNormalPaletteFade`)
+    — works because it's NOT loop state.
+  - 1 is `register s32 tmp asm("r8");` used as a sentinel "fake match"
+    assignment (`metroidret/mf:sa_x.c:SaXElevatorBeforeShootingDoor`)
+    — works because tmp doesn't survive across BLs.
+- Even infrastructure code like `metroidret/mf:src/dma.c:BitFill`
+  (which uses `mov sl, r4; mov sb, r5`) fell back to NAKED asm.
+
+The reasonable hypothesis: **agbcc 2.x's register allocator simply
+won't promote a value to a high register from any plausible C input,
+so any function whose baserom uses high registers for loop state has
+to ship as inline asm.**
+
+When you hit a baserom that uses `mov sl, ...`:
+1. Refine the asm to real mnemonics (matching).
+2. Move into the appropriate `src/.../*.c` file as
+   `NAKED static void foo(void) { asm(...); }` plus a
+   `#ifdef NON_MATCHING` "reference C" version that's readable but
+   doesn't actually match.
+3. Document the high-register usage in `docs/unknowns.md`.
+
+The phase-3 PC port (HAL swap) will need the readable NON_MATCHING C
+anyway, so this isn't lost work — it's the right shape for forward
+porting.
+
+Exception: low-register-only (`register T x asm("r4"..."r7")`) pinning
+is widely used and reliably matches; that pattern is documented above
+in "`register T *p asm("rN")` pins agbcc's register choice". The
+limitation is specifically about r8-r10/sl/sb.
+
+Worked example: `sub_0802EDF0` (stream-cursor advancer). Baserom uses
+`mov sl, r1` to pin `gpSoundSystem`. 2000 permuter iterations + multi-
+pin source structures both failed; corpus search confirmed no agbcc
+decomp matches a high-reg-pinned function in C. See
+`docs/unknowns.md` "sub_0802EDF0 — Corpus search (Phase D) — verdict:
+NOVEL" for the full search log.

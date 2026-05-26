@@ -267,3 +267,126 @@ the next agent. Suggested next attempts:
 - Look in the corpus for an agbcc 2.x function that mixes the "prologue
   load + shared count-check" pattern; if it exists, copy the source
   shape.
+
+### Corpus search (Phase D) — verdict: NOVEL
+
+Searched the curated agbcc corpus (testyourmine/cvaos, metroidret/mf,
+metroidret/mzm, pret/{pokeruby,pokeemerald,pokefirered,pokepinballrs})
+for prior art on the two structural blockers. Decisive negative result
+across multiple angles.
+
+**Queries that mattered:**
+- `corpus.py grep 'mov\s+sl,' --asm` → 966 hits across 3 repos
+  (cvaos, mf, mzm), ALL in unrefined `disasm_*.s` or m4a's `.s` libs.
+  ZERO appearances in compiled-and-matching C.
+- `corpus.py grep 'asm\("sl"\)' --c` and `'asm\("r10"\)'` → 0 and 1
+  hits respectively. The one r10 hit is `pret/pokeruby:src/shop.c:758`
+  (`Shop_MoveItemListUp`) — and it's inside `#ifdef NONMATCHING`,
+  with a `NAKED` asm fallback for the real build (see lines 753–887).
+- `grep -rn 'register.*asm("r9"|"r10"|"sl"|"sb"|"r8")'` filesystem-wide →
+  4 total hits across the entire corpus:
+  - `pret/pokeruby:src/palette.c:152` — `register T x asm("r8") = expr;`
+    pin-on-init for a single arg; matches but trivial shape.
+  - `metroidret/mf:src/sa_x.c:1045` — `register s32 tmp asm("r8");`
+    used as a sentinel `tmp = ++ended;` "fake match" assignment; not
+    carrying loop state.
+  - `pret/pokepinballrs:src/high_scores.c:986` — `register T *p asm("r9") = expr;`
+    inside `#ifdef NONMATCHING` (file falls back to NAKED for the
+    real build at line 1093).
+  - `pret/pokeruby:src/shop.c:758` — same NONMATCHING/NAKED pattern.
+- `corpus.py grep 'goto\s+\w+' --c` → 363 hits across 49 files; none
+  match the "prologue branch into the bottom-of-loop count check"
+  shape. Most-common labels are `fail` (109), `END` (10), and
+  audio-state machine labels in m4a (envelope_*, oscillator_off,
+  channel_complete) — but those are intra-state-machine transitions
+  inside one iteration, never `b _loop_count_check` from prologue.
+- `corpus.py grep 'asm\s*\("":::"r' --c` → 8 hits (DCE/clobber fences).
+  Useful pattern (and we used a variant), but none in a prologue-share-
+  count-check shape; all are mid-function register-allocation nudges.
+
+**Smoking-gun evidence:** Even the canonical Konami GBA audio mixer
+in `testyourmine/cvaos:asm/m4a0.s` (4 `mov sl, ...` instances) and the
+pret family's `src/libs/m4a_1.s` / `src/m4a_1.s` (m4a internals across
+ruby/emerald/firered) are LEFT IN ASM, not decompiled. The pret m4a.c
+files only cover the high-level player wrappers (`FadeOutBody`,
+`m4aMPlayStop`, etc.), which use `register T x asm("rN")` for low
+registers only — they never touch sl/r10. `metroidret/mf:src/dma.c:99`
+shows the same pattern at infrastructure level: `BitFill` has a
+NON_MATCHING C version + a NAKED asm fallback because the asm uses
+`mov sl, r4` and `mov sb, r5`. The pret/MF teams have spent thousands
+of commits on agbcc decomp and consistently NAKED-asm any function
+that wants r10.
+
+**What the corpus rules in:**
+- `register T x asm("rN") = expr;` pin-on-init for **low** registers
+  (r4-r7) is widely-used and reliably anchors a register. We already
+  tried this for `gpsp` and got partway there. Worth one more pass
+  pinning `gpsp` and `ss` simultaneously this way.
+- `asm("":::"rN");` clobber-fence to force the compiler to spill/reload.
+  We tried `asm("" :::)` variants in prior attempt without
+  breakthrough — but the corpus uses these single-register clobbers
+  (not multi-) and inside the function body rather than at the top.
+  A targeted clobber at the loop entry point (force r0 to be live
+  across the prologue→count-check branch) is one more thing to try.
+
+**What the corpus rules out:**
+- No "prologue ldr + branch into shared count-check" idiom exists in
+  matched C anywhere in the corpus. Two possible reasons: (a) agbcc 2.x
+  literally cannot produce this CFG from any plausible C source — the
+  prologue preload comes from a hand-written asm template or a custom
+  toolchain patch Konami used, OR (b) decomp teams consistently
+  side-step it via NAKED-asm rather than fight it.
+- No `register T x asm("sl")` / `asm("r10")` / `asm("sb")` ever lands
+  outside `#ifdef NONMATCHING`. Spending more permuter time on a C
+  source structure that pins sl is likely a dead end.
+
+**Verdict: NOVEL.** The corpus has no idiom to ADOPT or ADAPT. The
+two structural blockers (prologue-share-count-check CFG + sl pinning)
+are the same ones every agbcc decomp team has hit and consistently
+worked around with NAKED asm.
+
+**Recommended path forward** (in priority order):
+
+1. **Accept NAKED asm.** The asm slice is already refined and matching;
+   wrap it in `NAKED` with a `#ifdef NON_MATCHING` C body next to it,
+   exactly as `metroidret/mf:src/dma.c:BitFill` and
+   `pret/pokeruby:src/shop.c:Shop_MoveItemListUp` do. This is the
+   corpus-validated answer for this exact problem class. Doesn't
+   decrement `asm_funcs_remaining` (we'd keep the asm), but it would
+   move the function from `asm/disasm_0x0802edf0.s` into
+   `src/system/sound_channel.c` near its siblings, in a form that's
+   readable for porting purposes (phase 3) even if not C-matching.
+
+2. **Targeted permuter mutation** (if a real C match is required).
+   The permuter is unlikely to find the right shape with default
+   `PERM_GENERAL`/`PERM_LINESWAP` because the answer lives in a
+   register-allocation space that mainstream agbcc doesn't reach
+   from any C input. A custom run with these macros would be needed:
+   - `PERM_GENERAL` over the **prologue gpsp load** — try every
+     ordering of `gpsp = &gpSoundSystem; ss = *gpsp; count = ss->count;`
+     with each subset wrapped in a no-op `asm` fence.
+   - `PERM_LINESWAP` to permute the order of `register T x asm("rN")`
+     declarations (their textual order seems to influence agbcc 2.x's
+     allocation pass).
+   - `PERM_RANDOMIZE_TYPE` over the count variable (s32/u32/int) — the
+     bottom count-check uses `ldrb r0, [r0, #0]` which is u8-typed in
+     the baserom; mixing u8/s8/int for the loop bound at multiple sites
+     might dislodge the fold.
+   - Estimated budget: 5k-10k iterations to even sample the relevant
+     state space, vs. the 2k we ran with default mutations. Even then,
+     low probability of success based on corpus evidence.
+
+3. **Try `old_agbcc` per-TU override.** The corpus doesn't tell us
+   which agbcc variant Konami used for the audio engine in this title
+   — pret family uses `agbcc`, mzm/mf use `agbcc`, but pokepinballrs's
+   m4a quirks suggest different toolchains may have been involved.
+   `src/Makefile` already has a per-TU `OLD_AGBCC` override (see
+   `sub_08033910` precedent in docs/codegen-notes.md). Worth one build
+   with sound_channel.o forced through `old_agbcc` to see if it
+   alleviates either blocker.
+
+Recommend option 1 (NAKED + NON_MATCHING C scaffold) for now. It is
+the documented best-practice answer in the corpus for exactly this
+class of un-matchable agbcc function, gets the function into its
+semantic home in `src/system/sound_channel.c`, and unblocks any
+adjacent decomps in the same file.
