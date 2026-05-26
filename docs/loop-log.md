@@ -442,3 +442,26 @@ The agent infrastructure grew organically with each iter — each new friction d
 **Trajectory:** 5 iters post-resume (11-15). Functions 41→50 (+9). Raw INCBIN 98.1%→97.1% (-1.0pp). db 117→167 (+50). src C 75→101 KiB (+26 KiB). The loop is solidly forward-moving since the post-halt fix.
 
 ---
+## Iter 16 — 2026-05-26
+
+**Before:** 50 / ~513 fns (9.7%), 54 peeled-asm, 167 db, 100.7 KiB src C, 97.1% raw
+
+**Targets:** Decomp sub_0800A2D8 (24-instr game-mode helper). Data 0x08310xxx cluster (3.7 KB iter-9-deferred).
+
+**Outcomes:**
+- Decomp: NAKED + NON_MATCHING (permuter 1575 iter could not break byte_diff 7). **New unmatchable class candidate**: "repeated table-dispatch chain coloring" (5th class). 4 callees peeled.
+- Data: **22 tables, 3764 B (full blob).** **Major cross-system architectural finding**: sSpriteAssetTable entries point at level-layout dispatchers — first concrete bridge between iter-3 sprite system and iter-15 level-layout walker.
+
+**Commit:** iter-16 hash
+
+**After:** 52 / ~513 fns (**10.1%** — crossed 10%!), 57 peeled-asm, 189 db, 104.5 KiB src C, **97.0% raw** (sixth decimal drop), **3.0% data deblob** (crossed 3.0%!)
+
+**Architectural duties:**
+- docs/codegen-notes.md "Fifth unmatchable class candidate: repeated table-dispatch chain coloring" — new entry, joins the established four.
+- docs/subsystems.md "sSpriteAssetTable → level-layout dispatcher bridge" — documents the cross-system chain + the typed `struct SpriteAssetEntry` rename plan once a consumer in [0x08022206..0x08022A7C] decomps.
+
+**Decisions:** none.
+
+**Trajectory:** 6 iters post-resume (11-16). Functions 41→52 (+11). Raw INCBIN 98.1%→97.0% (-1.1pp). db 117→189 (+72). src C 75→105 KiB (+30 KiB). Loop is healthy and accelerating — each iter compounds prior architectural findings (sSpriteAssetTable + level-layout linkage discovered this iter unlocks rename propagation across iters 3/10/15/16).
+
+---
