@@ -372,3 +372,27 @@ The agent infrastructure grew organically with each iter — each new friction d
 **Suggested iter-13 candidates (from decomp agent's report):** sub_080202A8, sub_080201A8, sub_080201C8, sub_080201E8, sub_08019540, sub_08019560 (all ≤80 B handlers), or sub_08020BC0 (Init2, 48 B). The decomp pipeline is now flush with small leaf candidates — the cheap-data-anchor exhaustion problem is offset by abundant cheap-decomp candidates.
 
 ---
+## Iter 13 — 2026-05-26
+
+**Before:** 45 / ~513 fns (8.8%), 43 peeled-asm, 132 db, 86.3 KiB src C, 97.5% raw
+
+**Targets:** Decomp sub_080004C4 (276 B input-init bootstrap). Data text_0x08315bb0 cluster (4.6 KB).
+
+**Outcomes:**
+- Decomp: **PURE C** via permuter-helped shadow-copy idiom. ~70 permuter iters found `jpKeysShadow = jpKeys;` prologue assignment that splits the live range and defeats agbcc's pre-spill. **New codegen-notes section** documenting the technique. Side-peels: sub_08000900 + sub_080179B8. Header additions: 3 new IWRAM bases + REG_KEYINPUT + KEY_* macros.
+- Data: 3 tables, 4632 B (full blob). **New variant subform**: non-monotonic tail of a pointer-array (extends iter-12's embedded-mini-ptr-array pattern).
+
+**Commit:** iter-13 hash
+
+**After:** 46 / ~513 fns (9.0%), 44 peeled-asm, 135 db, 91.1 KiB src C, **97.4% raw** (third consecutive decimal-point drop)
+
+**Architectural duties:**
+- docs/codegen-notes.md "Shadow-copy of a live value to defeat pre-spill of a long-lived local" section added — new mitigation idiom.
+- include/iwram.h grew 3 new bases (0x34C0, 0x3710, 0x5358) via linker dot-pin.
+- include/gba/io.h gained REG_KEYINPUT + KEY_* bit macros — first input-handling content.
+
+**Decisions:** none new.
+
+**Trajectory check (post-resume):** 3 iters since loop resumed (iter 11/12/13). Functions: 41→46. Raw INCBIN: 98.1%→97.4%. Both directions advancing steadily. The cheap-data-anchor exhaustion concern from iter 10 has resolved naturally — full-blob extraction of the level-layout cluster yields ~3-7 KB per pass at predictable cost, and the AgbMain peel landed 28 new tractable decomp candidates so the decomp pipeline is flush.
+
+---
