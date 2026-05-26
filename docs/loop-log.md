@@ -396,3 +396,26 @@ The agent infrastructure grew organically with each iter — each new friction d
 **Trajectory check (post-resume):** 3 iters since loop resumed (iter 11/12/13). Functions: 41→46. Raw INCBIN: 98.1%→97.4%. Both directions advancing steadily. The cheap-data-anchor exhaustion concern from iter 10 has resolved naturally — full-blob extraction of the level-layout cluster yields ~3-7 KB per pass at predictable cost, and the AgbMain peel landed 28 new tractable decomp candidates so the decomp pipeline is flush.
 
 ---
+## Iter 14 — 2026-05-26
+
+**Before:** 46 / ~513 fns (9.0%), 44 peeled-asm, 135 db, 91.1 KiB src C, 97.4% raw
+
+**Targets:** Paired decomp sub_080008DC + sub_08000900 (24 instr combined). Data 0x0817XXXX cluster (fresh territory).
+
+**Outcomes:**
+- Decomp: **both pure C** in new src/system/vblank.c. VBlank semaphore wait + frame-counter getter. **Two new codegen-notes**: `old_agbcc` for leaf-with-join functions + while-loop pointer-and-mask hoisting (3-local idiom).
+- Data: 4 tables, 2744 B. **NEW UI/HUD subsystem identified**: state-keyed icon animator at 0x080166ac (still asm). **New codegen-notes**: icon-animator pattern recognition (DMA3 paired palette+tile loads).
+
+**Commit:** iter-14 hash
+
+**After:** 48 / ~513 fns (9.4%), 42 peeled-asm, 139 db, 93.8 KiB src C, **97.3% raw** (fourth consecutive decimal-point drop)
+
+**Architectural duties:**
+- 3 new docs/codegen-notes sections (old_agbcc-for-leaves, pointer-and-mask-hoisting, icon-animator-pattern).
+- vblank.c added to Makefile's OLD_AGBCC override list (precedent: init.c, init1.c).
+
+**Decisions:** none new.
+
+**Trajectory check:** 4 iters post-resume (11/12/13/14). Functions: 41→48 (+7). Raw INCBIN: 98.1%→97.3% (-0.8pp). The cheap-leaf decomp pipeline is flush (28 AgbMain callees + smaller bootstrap helpers); data side continues steady ~3 KB/iter on level-layout + opportunistic new subsystems (icon-animator this iter, sCharacterSpriteFrames iter 8, UI status-bar iter 2). Loop is healthy.
+
+---
