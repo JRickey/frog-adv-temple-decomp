@@ -961,3 +961,54 @@ range, verify its `.incbin` skip+count match the comment-declared
 range exactly. Sketched in `docs/decisions.md` "Linker-blob
 boundary lint".
 
+
+## `make` doesn't regenerate `linker.ld.pp` after `auto_peel` adds entries
+
+`tools/agent/auto_peel.py` modifies `linker.ld` AND creates new `.o`
+files in the same operation. Make's dependency tracker on
+`linker.ld.pp` doesn't always notice the new `.o` files (the rule
+`linker.ld.pp: linker.ld` should force regen but doesn't catch the
+new-file case reliably).
+
+Symptom: `make` keeps using a stale `linker.ld.pp` that lists the
+deleted `disasm_0x*.o` entry, ld fails with "no such file" or links
+the wrong byte range.
+
+Fix: `rm linker.ld.pp` after any `auto_peel` invocation that adds
+callee files. Worth a Makefile patch — investigate why the dep
+trigger isn't firing. Probably needs `linker.ld.pp` to depend on
+the timestamp of every `.o` in the project, or a phony rule that
+forces regen when any new .o appears.
+
+Caught iter 6 by the decomp agent on `sub_0802F4B0` (4 callees
+auto-peeled at once). Cost ~5 min to diagnose.
+
+## Apostrophe trap detection lag in autonomous loops
+
+The `tools/agent/lint_incbin_apostrophes.py` pre-commit guard catches
+apostrophes-in-comments at COMMIT time. But in an autonomous loop
+with parallel agents:
+
+- Agent A creates `src/data/foo.c` with `manifest's` in a comment.
+- Agent A is mid-flight (hasn't committed yet).
+- Agent B runs `make` for an unrelated verification.
+- Agent B's build fails with `invalid initializer` at every INCBIN
+  in foo.c. They diagnose it as agent A's fault; either fixes it
+  themselves or escalates.
+
+Caught twice this loop (iter 5 by the data agent on their own work;
+iter 6 by the parallel decomp agent on the data agent's incomplete
+work).
+
+**Mitigation**: data agents should run the lint manually after
+creating or editing any INCBIN-using C file, NOT wait for
+pre-commit:
+
+```sh
+python3 tools/agent/lint_incbin_apostrophes.py src/data/<just_edited_file>.c
+```
+
+The lint accepts arbitrary paths. The data playbook
+(`tools/agent/prompts/data.md`) now points this out inline. Future
+hardening: add the lint as a Makefile pre-build step
+(`pre-build: lint-incbin && actual-build`).

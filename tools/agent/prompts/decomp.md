@@ -12,7 +12,7 @@
   general-purpose agents that pick a target, scaffold a new C file, drive
   it to match, and handle the decision tree around fallbacks.
 
-  Last verified: commit 24b058f. Update the "last verified" line in every
+  Last verified: commit e68028c. Update the "last verified" line in every
   PR that materially changes the playbook.
 -->
 

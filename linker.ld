@@ -79,7 +79,10 @@ SECTIONS {
         src/game/sub_08020b30.o(.text);  /* 0x08020b30 - 0x08020b50, sub_08020B30 */
         asm/text/text_0x08020b50.o(.text);  /* 0x08020b50 - 0x0802d558, raw bytes */
         asm/disasm_0x0802d558.o(.text);  /* 0x0802d558 - 0x0802d890, sub_0802D558 (auto-peeled) */
-        asm/text/text_0x0802d890.o(.text);  /* 0x0802d890 - 0x0802e5d8, raw bytes */
+        asm/text/text_0x0802d890.o(.text);  /* 0x0802d890 - 0x0802e3f8, raw bytes */
+        asm/disasm_0x0802e3f8.o(.text);  /* 0x0802e3f8 - 0x0802e418, sub_0802E3F8 (auto-peeled) */
+        asm/disasm_0x0802e418.o(.text);  /* 0x0802e418 - 0x0802e43c, sub_0802E418 (auto-peeled) */
+        asm/text/text_0x0802e43c.o(.text);  /* 0x0802e43c - 0x0802e5d8, raw bytes */
         src/system/sound_pitch.o(.text);  /* 0x0802e5d8 - 0x0802e684, sub_0802E5D8 */
         src/system/sound_volume.o(.text);  /* 0x0802e684 - 0x0802e724, sub_0802E684 */
         asm/text/text_0x0802e724.o(.text);  /* 0x0802e724 - 0x0802e934, raw bytes */
@@ -92,12 +95,15 @@ SECTIONS {
         src/system/sound_envelope_slide.o(.text);  /* 0x0802f054 - 0x0802f2fc, sub_0802F054 (NAKED+NON_MATCHING) */
         src/system/sound_pan.o(.text);  /* 0x0802f2fc - 0x0802f398, sub_0802F2FC (NAKED+NON_MATCHING) */
         asm/text/text_0x0802f398.o(.text);  /* 0x0802f398 - 0x0802f4b0, raw bytes */
-        src/system/sound_mixer.o(.text);
-        asm/disasm_0x0802f4b0.o(.text);  /* 0x0802f4b0 - 0x0802f870, sub_0802F4B0 (auto-peeled, --force-boundary) */
+        src/system/sound_mixer.o(.text);  /* 0x0802f4b0 - 0x0802f870, sub_0802F4B0 (NAKED+NON_MATCHING) */
         asm/text/text_0x0802f870.o(.text);  /* 0x0802f870 - 0x08030000, raw bytes */
-        asm/text/text_0x08030000.o(.text);  /* 0x08030000 - 0x080315d8, raw bytes */
+        asm/text/text_0x08030000.o(.text);  /* 0x08030000 - 0x080301c4, raw bytes */
+        asm/disasm_0x080301c4.o(.text);  /* 0x080301c4 - 0x08030264, sub_080301C4 (auto-peeled) */
+        asm/text/text_0x08030264.o(.text);  /* 0x08030264 - 0x080315d8, raw bytes */
         src/system/sound_opcode_dispatch.o(.text);  /* 0x080315d8 - 0x08031638, sub_080315D8 */
-        asm/text/text_0x08031638.o(.text);  /* 0x08031638 - 0x08033910, raw bytes */
+        asm/text/text_0x08031638.o(.text);  /* 0x08031638 - 0x080325b0, raw bytes */
+        asm/disasm_0x080325b0.o(.text);  /* 0x080325b0 - 0x08032894, sub_080325B0 (auto-peeled) */
+        asm/text/text_0x08032894.o(.text);  /* 0x08032894 - 0x08033910, raw bytes */
         src/game/sub_08033910.o(.text);  /* 0x08033910 - 0x08033948, sub_08033910 */
         asm/text/text_0x08033948.o(.text);  /* 0x08033948 - 0x08033cd8, raw bytes */
         asm/disasm_0x08033cd8.o(.text);  /* 0x08033cd8 - 0x08033d14, _call_via_rX libgcc helper table (auto-peeled) */
@@ -183,8 +189,8 @@ SECTIONS {
         asm/text/text_0x08315bb0.o(.text);  /* 0x08315bb0 - 0x08316dc8, raw bytes */
         src/data/level_layout_dispatch_316dc8.o(.rodata);  /* 0x08316dc8 - 0x08316e5c, sLevelLayoutDispatch_316DC8 */
         asm/text/text_0x08316e5c.o(.text);  /* 0x08316e5c - 0x08316f24, raw bytes */
-        src/data/level_layout.o(.rodata);  /* 0x08316f24 - 0x08317b54, sLevelLayout_316F24..._31707C + sLevelLayoutData + sLevelLayoutPtrs */
-        asm/text/text_0x08317b54.o(.text);  /* 0x08317b54 - 0x08320000, raw bytes */
+        src/data/level_layout.o(.rodata);  /* 0x08316f24 - 0x08318020, sLevelLayout_316F24..._317FFC + sLevelLayoutData + sLevelLayoutPtrs + 23 continuation tables */
+        asm/text/text_0x08318020.o(.text);  /* 0x08318020 - 0x08320000, raw bytes */
         asm/text/text_0x08320000.o(.text);  /* 0x08320000 - 0x08330000, raw bytes */
         asm/text/text_0x08330000.o(.text);  /* 0x08330000 - 0x08340000, raw bytes */
         asm/text/text_0x08340000.o(.text);  /* 0x08340000 - 0x08350000, raw bytes */

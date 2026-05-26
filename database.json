@@ -432,6 +432,190 @@
     "size": 4
   },
   {
+    "path": "level/layout_317b54.bin",
+    "addr": {
+      "us": "0x317B54"
+    },
+    "count": "0x16",
+    "size": 4
+  },
+  {
+    "path": "level/layout_317bac.bin",
+    "addr": {
+      "us": "0x317BAC"
+    },
+    "count": "0xC",
+    "size": 4
+  },
+  {
+    "path": "level/layout_317bdc.bin",
+    "addr": {
+      "us": "0x317BDC"
+    },
+    "count": "0xC",
+    "size": 4
+  },
+  {
+    "path": "level/layout_317c0c.bin",
+    "addr": {
+      "us": "0x317C0C"
+    },
+    "count": "0x4",
+    "size": 4
+  },
+  {
+    "path": "level/layout_317c1c.bin",
+    "addr": {
+      "us": "0x317C1C"
+    },
+    "count": "0x1A",
+    "size": 4
+  },
+  {
+    "path": "level/layout_317c84.bin",
+    "addr": {
+      "us": "0x317C84"
+    },
+    "count": "0x10",
+    "size": 4
+  },
+  {
+    "path": "level/layout_317cc4.bin",
+    "addr": {
+      "us": "0x317CC4"
+    },
+    "count": "0x40",
+    "size": 4
+  },
+  {
+    "path": "level/layout_317dc4.bin",
+    "addr": {
+      "us": "0x317DC4"
+    },
+    "count": "0x6",
+    "size": 4
+  },
+  {
+    "path": "level/layout_317ddc.bin",
+    "addr": {
+      "us": "0x317DDC"
+    },
+    "count": "0x4",
+    "size": 4
+  },
+  {
+    "path": "level/layout_317dec.bin",
+    "addr": {
+      "us": "0x317DEC"
+    },
+    "count": "0x8",
+    "size": 4
+  },
+  {
+    "path": "level/layout_317e0c.bin",
+    "addr": {
+      "us": "0x317E0C"
+    },
+    "count": "0x18",
+    "size": 4
+  },
+  {
+    "path": "level/layout_317e6c.bin",
+    "addr": {
+      "us": "0x317E6C"
+    },
+    "count": "0x2",
+    "size": 4
+  },
+  {
+    "path": "level/layout_317e74.bin",
+    "addr": {
+      "us": "0x317E74"
+    },
+    "count": "0xC",
+    "size": 4
+  },
+  {
+    "path": "level/layout_317ea4.bin",
+    "addr": {
+      "us": "0x317EA4"
+    },
+    "count": "0xC",
+    "size": 4
+  },
+  {
+    "path": "level/layout_317ed4.bin",
+    "addr": {
+      "us": "0x317ED4"
+    },
+    "count": "0x1",
+    "size": 4
+  },
+  {
+    "path": "level/layout_317ed8.bin",
+    "addr": {
+      "us": "0x317ED8"
+    },
+    "count": "0x20",
+    "size": 4
+  },
+  {
+    "path": "level/layout_317f58.bin",
+    "addr": {
+      "us": "0x317F58"
+    },
+    "count": "0x4",
+    "size": 4
+  },
+  {
+    "path": "level/layout_317f68.bin",
+    "addr": {
+      "us": "0x317F68"
+    },
+    "count": "0x8",
+    "size": 4
+  },
+  {
+    "path": "level/layout_317f88.bin",
+    "addr": {
+      "us": "0x317F88"
+    },
+    "count": "0x8",
+    "size": 4
+  },
+  {
+    "path": "level/layout_317fa8.bin",
+    "addr": {
+      "us": "0x317FA8"
+    },
+    "count": "0xA",
+    "size": 4
+  },
+  {
+    "path": "level/layout_317fd0.bin",
+    "addr": {
+      "us": "0x317FD0"
+    },
+    "count": "0xA",
+    "size": 4
+  },
+  {
+    "path": "level/layout_317ff8.bin",
+    "addr": {
+      "us": "0x317FF8"
+    },
+    "count": "0x1",
+    "size": 4
+  },
+  {
+    "path": "level/layout_317ffc.bin",
+    "addr": {
+      "us": "0x317FFC"
+    },
+    "count": "0x9",
+    "size": 4
+  },
+  {
     "path": "sound/wave_vol_lut.bin",
     "addr": {
       "us": "0x3DDA3C"

@@ -9,7 +9,7 @@
   agent-facing — passed to subagents in dispatch briefs, not invoked by
   the user.
 
-  Last verified: commit 24b058f. Update the "last verified" line in every
+  Last verified: commit e68028c. Update the "last verified" line in every
   PR that materially changes the playbook.
 -->
 
@@ -178,14 +178,22 @@ collapses.
 - **agbcc emits `const` arrays to `.rodata`.** Pull with
   `src/data/foo.o(.rodata)` in linker.ld, not `(.text)`.
 - **Apostrophes in `/* */` comments** in INCBIN-using C files break
-  `tools/preproc` silently — single `'s`/`don't` swallows every
-  subsequent INCBIN in the file. Pre-commit guard catches it on
-  commit; avoid in the first place by using `’` (U+2019, typographic)
-  or rephrasing. **Detection signature** (when you suspect this but
-  haven't tried to commit): the agbcc `.s` output for your new
-  file has `.comm` declarations instead of `.word`/`.byte` content,
-  and `.rodata` ends up empty. See `docs/codegen-notes.md`
-  "Apostrophe trap: detection via empty `.rodata` / `.comm`".
+  `tools/preproc` AND `agbcc` silently — single `'s`/`don't`
+  swallows every subsequent INCBIN in the file. Pre-commit guard
+  catches it on commit; `make` catches it earlier with `invalid
+  initializer` at every INCBIN line. Avoid by using `’` (U+2019,
+  typographic) or rephrasing. **In an autonomous loop with parallel
+  agents**, your broken file can break a parallel agent's unrelated
+  build mid-flight — so **run the lint manually after every C file
+  you create or edit**:
+
+  ```sh
+  python3 tools/agent/lint_incbin_apostrophes.py src/data/<file>.c
+  ```
+
+  The lint accepts arbitrary paths. See `docs/codegen-notes.md`
+  "Apostrophe trap: detection via empty `.rodata` / `.comm`" and
+  "Apostrophe trap detection lag in autonomous loops".
 - **Outer-`const` on volatile pointer arrays** breaks compilation.
   `vu16 *const sChannelRegTable[4]` is correct (array of vu16*const,
   the data behind each pointer is MMIO and volatile). `const vu16

@@ -302,14 +302,31 @@ Common record shape inferred from consumer-code byte-reads:
 per sub-table; callee 0x080219bc (still asm) reads `count = ptr[0]`
 internally so callers don't have to pass it.
 
+Iter-6 extracted the deferred continuation cluster
+`[0x08317b54, 0x08318020)` as 23 typed sub-tables in
+`src/data/level_layout.c`:
+- 4 mini-tables anchored individually (`sLevelLayout_317BAC`,
+  `_317BDC`, `_317C0C`, `_317C1C`)
+- 3 index manifests (`sLevelLayout_317C84`, `_317E74`, `_317F68`,
+  `_317FFC` — last one crosses 0x08318000 by 32 bytes to keep the
+  manifest whole)
+- 4 mini-table backing stores (`sLevelLayoutData_317CC4`, `_317E0C`,
+  `_317EA4`, `_317ED8`) dispatched by 5 pointer arrays
+  (`sLevelLayoutPtrs_317DEC`, `_317E6C`, `_317ED4`, `_317F58`,
+  `_317FF8`)
+- 5 standalone mini-tables (`sLevelLayout_317DC4`, `_317DDC`,
+  `_317F88`, `_317FA8`, `_317FD0`)
+- Pre-cluster index manifest (`sLevelLayout_317B54`, 11 entries of
+  small u32 values padded to u64 — possibly index/length descriptors
+  for the preceding `sLevelLayoutPtrs` array)
+
 Open work:
-- `[0x08317b54, 0x08317bac)` and onward — 16 more pool-load anchors
-  in `[0x08317b54, 0x08318000)` with consumers in `[0x0802a186..
-  0x0802b3b6]`. Same shape continues, deferred to a future pass.
-- Once 0x080219bc and the consumer cluster around 0x08029000 land in
-  C, rename the `_NNNNNN` ROM-address-suffixed dispatchers to
-  semantic names tied to whatever they dispatch (room-types? entity
-  spawn-tables?).
+- Once 0x080219bc and the consumer cluster around 0x08029000-
+  0x0802b3b6 land in C, rename the `_NNNNNN` ROM-address-suffixed
+  symbols to semantic names tied to whatever they dispatch (room-
+  types? entity spawn-tables?).
+- Resume data extraction at 0x08318020 — same shape likely continues
+  through the rest of the 0x08310000 blob.
 
 ## Render / sprite
 
