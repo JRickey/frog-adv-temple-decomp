@@ -540,3 +540,29 @@ The agent infrastructure grew organically with each iter — each new friction d
 **Trajectory:** 9 iters post-resume (11-19). Functions 41→56 (+15). Raw INCBIN 98.1%→95.6% (-2.5pp). db 117→196 (+79). src C 75→155 KiB (+80 KiB). Pure-C/NAKED ratio so far across post-resume iters: 4 pure-C / 5 NAKED. Comparator landed pure-C is a healthy signal — pre-existing peel ranges with proper boundary discipline are giving fully-tractable C targets.
 
 ---
+
+## Iter 20 — 2026-05-26
+
+**Before:** 56 / ~513 fns (10.9%), 62 peeled-asm, 196 db, 154.9 KiB src C, 95.6% raw
+
+**Targets:** **Strategic pivot** — pick_target ran out of unblocked `<=200 instr` candidates after iter 19. Decomp: in-ROM libgcc helpers cluster at 0x08033CD8..0x08033F94 (__divsi3, __udivsi3, __umodsi3, _call_via_rN). Data: 0x083180xx 5-anchor cluster (entity-dispatch / level-layout parallel arrays).
+
+**Outcomes:**
+- Decomp: **infra-only**. Agent discovered the libgcc cluster was ALREADY properly landed across 4 disasm slices in earlier iters (~iter 1-3) with canonical libgcc symbol names and correct linker.ld wiring. Byte-match against tools/agbcc/lib/libgcc.a verified (diffs were just the relocation bytes for project BLs). Picker hardened with `LIBGCC_SYMBOLS` skip-list (18 names) so it stops reporting "blocked: scaffold C" for permanent-asm libgcc helpers. Decision banked in docs/decisions.md.
+- Data: 8 tables, 392 B from 0x083180xx. **Major architectural finding**: 4-way parallel-array set with kind codes (0x303/0x3303/0x2303/0x1303) dispatched by two consumers (sub_0802C780 by r2, sub_0802C8C8 by *(u8*)r0). Walker family extended from 2 to 4 variants (added sub_080210a0 single-shot + sub_08021510 compact-record). Manifest 0x0831802C is 6×{count, 0} — likely 6-language descriptor.
+
+**Commit:** `f993ddb` (single combined: picker hardening + data extraction + subsystems doc + decisions doc).
+
+**After:** 56 / ~513 fns (10.9%, no change), 62 peeled-asm (no change), 204 db (+8), **155.3 KiB src C** (+0.4 KiB), 95.6% raw, 4.4% data deblob.
+
+**Architectural duties:**
+- docs/subsystems.md "4-way parallel-array level-layout subset (0x083180xx cluster)" — new section, with walker family extension to 4 variants and consumer dispatch mappings.
+- docs/decisions.md (via decomp agent) — libgcc-permanent-asm rationale + extension instructions.
+- tools/agent/pick_target.py — LIBGCC_SYMBOLS skip-list added.
+- **Decomp surface watch**: `pick_target --max-size 80` now returns 0 unblocked candidates. The next decomp target requires either (a) decomping a walker (sub_080210a0 / sub_08021140 / sub_08021510 / sub_080219bc) to unblock typed-struct promotion across all level-layout placeholders, or (b) scaffolding new C files for currently-blocked clusters, or (c) tackling a >80-instr target. The libgcc skip-list eliminates the false-positive blocks but doesn't change the real available-target count.
+
+**Decisions:** 1 — picker `LIBGCC_SYMBOLS` skip-list (see docs/decisions.md).
+
+**Trajectory:** 10 iters post-resume (11-20). Functions 41→56 (+15). Raw INCBIN 98.1%→95.6% (-2.5pp). db 117→204 (+87). src C 75→155 KiB (+80 KiB). **Iter 20 is the first "infra-shaped" iter since iter 9** — no new decomp, but landed picker hardening + major architectural understanding (walker family + 4-way parallel arrays). Counts as ONE infra iter for the no-op stop condition; if iter 21 also produces no decomp, that's two — at three I halt with note.
+
+---
