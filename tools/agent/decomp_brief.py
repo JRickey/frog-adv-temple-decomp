@@ -98,11 +98,56 @@ def list_callees(start: int, end: int) -> list[int]:
 
 
 def peeled_starts() -> set[int]:
+    """All addresses considered already-resolved for BL relocations.
+
+    A callee is "resolved" — i.e., NOT a blocker for C decomp — when it
+    has a real symbol that ld will pick up at link time. That covers:
+
+      1. `asm/disasm_0x<ADDR>.s` exists (the file is named after the
+         function's start address). The original peel discipline.
+      2. ANY `asm/disasm_0x*.s` file contains `thumb_func_start
+         sub_<HEX>` for the address — catches PAIRED peels where one .s
+         holds two named functions (the iter-18 hidden-fn pattern).
+      3. `src/**/*.c` contains a function with the address-named symbol
+         (`sub_<HEX>(`). Catches callees already lifted to C — this
+         was the iter-22/23/25/26 false-positive class that burned 4+
+         iters of effort before this fix.
+
+    Without this, agents waste time peeling functions that already have
+    real symbols, or worse, auto_peel.py hangs trying to peel bytes that
+    already live in src/.
+    """
     addrs: set[int] = set()
+
+    # (1) filename-derived addresses
     for p in (ROOT / "asm").glob("disasm_0x*.s"):
         m = re.match(r"disasm_(0x[0-9a-fA-F]+)\.s", p.name)
         if m:
             addrs.add(int(m.group(1), 16))
+
+    # (2) every `thumb_func_start sub_HEX` label across all disasm files
+    label_re = re.compile(r"thumb_func_start\s+sub_([0-9a-fA-F]{6,8})\b")
+    for p in (ROOT / "asm").glob("disasm_0x*.s"):
+        try:
+            for m in label_re.finditer(p.read_text()):
+                addrs.add(int(m.group(1), 16))
+        except OSError:
+            pass
+
+    # (3) `sub_HEX(` definitions in any src/**/*.c
+    # Lightweight scan: open-paren or whitespace after the name to avoid
+    # matching cross-references in comments. False negatives are fine;
+    # false positives here would cause the OPPOSITE bug (silently miss
+    # a real blocker), so be strict.
+    c_def_re = re.compile(r"\b(?:NAKED\s+)?(?:void|u\d+|s\d+|int|bool)\s+"
+                          r"sub_([0-9a-fA-F]{6,8})\s*\(")
+    for p in (ROOT / "src").rglob("*.c"):
+        try:
+            for m in c_def_re.finditer(p.read_text()):
+                addrs.add(int(m.group(1), 16))
+        except OSError:
+            pass
+
     return addrs
 
 
