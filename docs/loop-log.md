@@ -465,3 +465,28 @@ The agent infrastructure grew organically with each iter — each new friction d
 **Trajectory:** 6 iters post-resume (11-16). Functions 41→52 (+11). Raw INCBIN 98.1%→97.0% (-1.1pp). db 117→189 (+72). src C 75→105 KiB (+30 KiB). Loop is healthy and accelerating — each iter compounds prior architectural findings (sSpriteAssetTable + level-layout linkage discovered this iter unlocks rename propagation across iters 3/10/15/16).
 
 ---
+
+## Iter 17 — 2026-05-26
+
+**Before:** 52 / ~513 fns (10.1%), 57 peeled-asm, 189 db, 104.5 KiB src C, 97.0% raw
+
+**Targets:** Decomp sub_0800A520 (11-instr leaf, 5 sequential calls to sub_0800793C). Data 0x082f998c cluster (small dispatch ptr pair + backing data).
+
+**Outcomes:**
+- Decomp: **pure C, byte-perfect**. Placed in new sibling `src/game/sub_0800a520.c` — dispatch_helpers.c (which holds sub_0800A2D8) cannot host two non-contiguous functions in one .o under agbcc 2.x without -ffunction-sections. 5 callee peels via auto_peel (sub_0800793C, sub_08007DD0, sub_08008174, sub_080090B0, sub_0800A4D0). detect-fn-boundary over-ran on the 0x0800a4d0/0x0800a520 boundary due to a pool+pad gap; resolved with `--force-boundary` (TODO: teach detector to recognize epilogue→pool→push-lr break, file).
+- Data: **2 tables, 116 B**. sUnkDispatchData_82F9920 (9 stride-12 records) + sUnkPtrPair_82F998C (2 ptrs into the block at rows 0 and 8). Pair expressed as `&sUnkDispatchData_82F9920[N*3]` — relocs go through the C symbol. Stride-16 descriptor at 0x082f8ec4 + trailing stride-12 at 0x082f9994 left in text blobs (no current pool-load refs from still-asm code).
+
+**Commits:** iter-17 hash + `06e8957` (codegen-notes follow-up).
+
+**After:** 53 / ~513 fns (**10.3%**), 61 peeled-asm, 190 db, 104.6 KiB src C, **96.9% raw**, 3.1% data deblob.
+
+**Architectural duties:**
+- docs/codegen-notes.md "Append to existing C file only works for CONTIGUOUS ranges" — new entry. Decomp playbook step 2 should clarify.
+- docs/codegen-notes.md "&sFoo[N*stride] for pointer-array indexing into typed data" — new entry, with worked examples from iters 14/15/17.
+- **Friction note (not yet triplicate)**: auto-mode classifier denied the iter-17 commit after context compaction lost the overnight-loop authorization context. User re-ran /loop which re-authorized. If this recurs, fold into the orchestrator runbook a "post-compaction commit-permission warm-up" step.
+
+**Decisions:** none material.
+
+**Trajectory:** 7 iters post-resume (11-17). Functions 41→53 (+12). Raw INCBIN 98.1%→96.9% (-1.2pp). db 117→190 (+73). src C 75→105 KiB (+30 KiB). Loop still forward-moving but data-side haul this iter was small (116 B) — the cluster around 0x082f9xxx has limited pool-load anchors. Next data targets should be checked via refcount tool for refs ≥5.
+
+---
