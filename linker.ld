@@ -64,8 +64,7 @@ SECTIONS {
         asm/text/text_0x0800088c.o(.text);  /* 0x0800088c - 0x080008dc, raw bytes */
         src/system/vblank.o(.text);      /* 0x080008dc - 0x0800090c, sub_080008DC + sub_08000900 */
         asm/text/text_0x0800090c.o(.text);  /* 0x0800090c - 0x08000918, raw bytes */
-        src/system/sub_08000918.o(.text);
-        asm/disasm_0x08000918.o(.text);  /* 0x08000918 - 0x08000b6c, sub_08000918 (auto-peeled) */
+        src/system/sub_08000918.o(.text);  /* 0x08000918 - 0x08000b6c, sub_08000918 (NAKED + NON_MATCHING) */
         asm/disasm_0x08000b6c.o(.text);  /* 0x08000b6c - 0x08000c98, sub_08000B6C (manual peel; full text bucket) */
         src/system/sub_08000c98.o(.text);  /* 0x08000c98 - 0x08000cb0, sub_08000C98 */
         asm/text/text_0x08000cb0.o(.text);  /* 0x08000cb0 - 0x08000cec, raw bytes */
@@ -314,8 +313,9 @@ SECTIONS {
         asm/text/text_0x081e7418.o(.text);  /* 0x081e7418 - 0x081ecc18, raw bytes (gap between tilemap and OBJ asset cluster) */
         src/data/obj_assets_ecc18.o(.rodata);  /* 0x081ecc18 - 0x081ece58, sObjPalette_ECC18 + sObjCharTiles_ECC38 + sObjPalette_ECE38 (576 B) */
         asm/text/text_0x081ece58.o(.text);  /* 0x081ece58 - 0x081f0000, raw bytes (tail after obj_assets_ecc18 cluster) */
-        asm/text/text_0x081f0000.o(.text);  /* 0x081f0000 - 0x08200000, raw bytes */
-        asm/text/text_0x08200000.o(.text);  /* 0x08200000 - 0x0820c578, raw bytes (shrunk for screen_c578 cluster) */
+        asm/text/text_0x081f0000.o(.text);  /* 0x081f0000 - 0x081fbd58, raw bytes (shrunk for screen_bd58 cluster) */
+        src/data/screen_bd58.o(.rodata);    /* 0x081fbd58 - 0x08204758, sScreenPaletteBD58 + sScreenTilemapBF58 + sScreenCharTilesC758 (screen-install cluster, spans across former 0x08200000 boundary) */
+        asm/text/text_0x08204758.o(.text);  /* 0x08204758 - 0x0820c578, raw bytes (gap between screen_bd58 and screen_c578 clusters) */
         src/data/screen_c578.o(.rodata);    /* 0x0820c578 - 0x0820d778, sScreenAuxTilesC578 + sScreenPaletteCD78 + sScreenTilemapCF78 (screenblock-28 source tilemap) */
         asm/text/text_0x0820d778.o(.text);  /* 0x0820d778 - 0x08210000, raw bytes (tail after screen_c578 cluster) */
         asm/text/text_0x08210000.o(.text);  /* 0x08210000 - 0x08220000, raw bytes */

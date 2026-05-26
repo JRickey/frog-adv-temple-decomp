@@ -1688,6 +1688,30 @@
     "size": 2
   },
   {
+    "path": "sprite/screen_bd58/palette.bin",
+    "addr": {
+      "us": "0x1FBD58"
+    },
+    "count": "0x100",
+    "size": 2
+  },
+  {
+    "path": "sprite/screen_bd58/tilemap_screenblock28.bin",
+    "addr": {
+      "us": "0x1FBF58"
+    },
+    "count": "0x400",
+    "size": 2
+  },
+  {
+    "path": "sprite/screen_bd58/char_tiles.bin",
+    "addr": {
+      "us": "0x1FC758"
+    },
+    "count": "0x8000",
+    "size": 1
+  },
+  {
     "path": "sprite/screen_c578/aux_tiles.bin",
     "addr": {
       "us": "0x20C578"

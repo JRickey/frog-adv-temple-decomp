@@ -1634,3 +1634,48 @@ Promoted in this style during the pass that documented this:
 - `DmaLoadRecord[476]` + `DmaLoadDispatch[62/13]` (all-u32 via INCBIN)
 - `SpriteAssetEntry[97]` (all-u32 via INCBIN)
 - `EntityHitbox[31]` (all-u32 via INCBIN)
+
+## `mov pc, rN` jump tables: addresses are EVEN, not LSB-flagged
+
+On ARMv4T, the Thumb-mode `mov pc, rN` instruction does **NOT**
+inspect bit 0 of the target — the CPU stays in Thumb mode without
+interworking. This is qualitatively different from `bx rN` which
+DOES interwork on bit 0.
+
+Consequence for matching: when a function uses a `.word` jump-table
++ `mov pc, r0` dispatch, the table entries are RAW even addresses
+(e.g., `0x0800098c`), NOT the LSB-flagged form (`0x0800098d`) you'd
+expect from a Thumb function pointer. Mis-flagging the table cost
+iter-30 sub_08000918 one match iteration.
+
+Worked example: sub_08000918 at 0x08000954 has a 14-entry `.word`
+table where every target ends in an even nibble. The dispatcher's
+load + `mov pc, r0` lands at the right Thumb instruction without
+the LSB bit set.
+
+agbcc 2.x **has no codegen path** for `mov pc, rN` jump tables — it
+lowers every `switch` statement to a compare-and-branch chain. So
+any function with this dispatch shape is automatically NAKED-class.
+
+## Case-number ≠ source-block-order trap in `switch` dispatchers
+
+When a `switch`-like state machine has a "fallthrough drop block"
+between the explicitly-targeted cases, the source-block ordinal in
+the asm doesn't equal the case number. Specifically:
+
+```
+case 0 → block at 0x100
+case 1 → block at 0x110  (falls through into next block)
+        block at 0x130   (NOT a jump-table target -- shared tail)
+case 2 → block at 0x150  (not 0x130 — the table skips the
+                          fallthrough block)
+```
+
+If you read the asm top-down and assign labels by source order
+(case 0/1/2/3 = blocks #1/2/3/4), you'll be off by one for every
+case after the first fallthrough drop.
+
+Always cross-reference each jump-table `.word` entry against its
+TARGET address before assigning case labels. Iter-30 sub_08000918
+had this trap; the table entries explicitly point past the
+fallthrough block.
