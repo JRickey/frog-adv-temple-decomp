@@ -480,6 +480,54 @@
     "size": 4
   },
   {
+    "path": "level/layout_ptrs_312d60.bin",
+    "addr": {
+      "us": "0x312D60"
+    },
+    "count": "0x8",
+    "size": 4
+  },
+  {
+    "path": "level/layout_ptrs_312d80.bin",
+    "addr": {
+      "us": "0x312D80"
+    },
+    "count": "0xA",
+    "size": 4
+  },
+  {
+    "path": "level/layout_ptrs_312da8.bin",
+    "addr": {
+      "us": "0x312DA8"
+    },
+    "count": "0xB",
+    "size": 4
+  },
+  {
+    "path": "level/layout_ptrs_312dd4.bin",
+    "addr": {
+      "us": "0x312DD4"
+    },
+    "count": "0x26",
+    "size": 4
+  },
+  {
+    "path": "level/layout_ptrs_312e6c.bin",
+    "addr": {
+      "us": "0x312E6C"
+    },
+    "count": "0x6",
+    "size": 4
+  },
+  {
+    "path": "level/layout_sentinel_312e84.bin",
+    "addr": {
+      "us": "0x312E84"
+    },
+    "count": "0x4",
+    "size": 4
+  },
+  {
     "path": "level/layout_ptrs_314a68.bin",
     "addr": {
       "us": "0x314A68"

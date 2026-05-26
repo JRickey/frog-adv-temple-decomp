@@ -97,11 +97,11 @@ SECTIONS {
         src/system/sound_mixer.o(.text);  /* 0x0802f4b0 - 0x0802f870, sub_0802F4B0 (NAKED+NON_MATCHING) */
         asm/text/text_0x0802f870.o(.text);  /* 0x0802f870 - 0x08030000, raw bytes */
         asm/text/text_0x08030000.o(.text);  /* 0x08030000 - 0x080301c4, raw bytes */
-        src/system/sound_period.o(.text);  /* 0x080301c4 - 0x08030264, sub_080301C4 */
+        asm/disasm_0x080301c4.o(.text);  /* 0x080301c4 - 0x08030264, sub_080301C4 (reverted iter 9 — pure-C attempt was non-matching) */
         asm/text/text_0x08030264.o(.text);  /* 0x08030264 - 0x080315d8, raw bytes */
         src/system/sound_opcode_dispatch.o(.text);  /* 0x080315d8 - 0x08031638, sub_080315D8 */
         asm/text/text_0x08031638.o(.text);  /* 0x08031638 - 0x080325b0, raw bytes */
-        asm/disasm_0x080325b0.o(.text);  /* 0x080325b0 - 0x08032894, sub_080325B0 (auto-peeled) */
+        src/system/sound_mixer_tail.o(.text);  /* 0x080325b0 - 0x08032894, sub_080325B0 (NAKED+NON_MATCHING) */
         asm/text/text_0x08032894.o(.text);  /* 0x08032894 - 0x08033910, raw bytes */
         src/game/sub_08033910.o(.text);  /* 0x08033910 - 0x08033948, sub_08033910 */
         asm/text/text_0x08033948.o(.text);  /* 0x08033948 - 0x08033cd8, raw bytes */
@@ -191,7 +191,8 @@ SECTIONS {
         src/data/level_layout_dispatch_3112a8.o(.rodata);  /* 0x083112a8 - 0x083112c8, sLevelLayoutDispatch_3112A8 */
         asm/text/text_0x083112c8.o(.text);  /* 0x083112c8 - 0x08312c20, raw bytes */
         src/data/level_layout_312c20.o(.rodata);  /* 0x08312c20 - 0x08312d60, sLevelLayout_312C20 + sLevelLayoutPtrs_312C98 + sLevelLayout_312CAC + sLevelLayoutPtrs_312D4C */
-        asm/text/text_0x08312d60.o(.text);  /* 0x08312d60 - 0x08314a68, raw bytes */
+        src/data/level_layout_ptrs_312d60.o(.rodata);  /* 0x08312d60 - 0x08312e94, sLevelLayoutPtrs_312D60 + _312D80 + _312DA8 + _312DD4 + _312E6C + sLevelLayoutSentinel_312E84 */
+        asm/text/text_0x08312e94.o(.text);  /* 0x08312e94 - 0x08314a68, raw bytes */
         src/data/level_layout_ptrs_314a68.o(.rodata);  /* 0x08314a68 - 0x08314b30, sLevelLayoutPtrs_314A68 (46 ptrs + 4 sentinels) */
         asm/text/text_0x08314b30.o(.text);  /* 0x08314b30 - 0x08315a48, raw bytes */
         src/data/level_layout_dispatch_315a48.o(.rodata);  /* 0x08315a48 - 0x08315bb0, sLevelLayoutDispatch_315A48 */
