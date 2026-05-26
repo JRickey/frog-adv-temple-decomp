@@ -1,4 +1,5 @@
 #include "game.h"
+#include "iwram.h"
 #include "macros.h"
 #include "types.h"
 
@@ -25,12 +26,12 @@
  *        gGameStuff._unk14.
  *   3 -> sub_080004C4 -> gIwram_5398; if == 0x40 substate = 5 + sub_0800E060;
  *        else falls through to the gIwram_3720 / gIwram_6110 keypad gate:
- *          (gIwram_3720_keysHeld & 8) -> substate = 4
- *          (gIwram_6110_keysJust & 8) -> substate = 8
+ *          (gIwram_3720._field_34 & 8) -> substate = 4
+ *          (gIwram_6110.keysJust & 8) -> substate = 8
  *          neither -> sub_0800A2D8 + sub_080008DC + sub_0800A328 +
  *                     sub_080094F8 + sub_08009984 + sub_08000E0C(sp_buf,
  *                     &r4_obj); gGameStuff._unk14++.
- *   4 -> sub_08009C14(sp_buf); on accept (r0 != 0) skips advance;
+ *   4 -> sub_08009C14(&localState); on accept (r0 != 0) skips advance;
  *        else substate = 7; then sub_0800B7B0(sp_buf, &r4_obj, 3),
  *        sp[+0x140] = 0.
  *   5 -> sub_080004C4 -> gIwram_5398; sub_0800E6A8(); if zero substate = 6
@@ -39,7 +40,8 @@
  *   6 -> sp[+0x140] test: if 0 call sub_08010694(0xBF) + increment;
  *        then ldrsb sp[+0x140] vs #1: must equal 1 to continue;
  *        sub_080106B8() must return 0; then writes gIwram_3480._data[0] = 4,
- *        gIwram_3480[+6] = 0, gGameStuff.mode = 4 (return to dispatcher).
+ *        gIwram_3480[+6] = counter (the byte at sp+0x140 at the decision
+ *        point), gGameStuff.mode = 4 (return to dispatcher).
  *   7 -> sub_0800A104(&sp[+0x140], 0x0800a26d); on accept substate = 2,
  *        gGameStuff._unk14 = 0, sp[+0x140] = 0, sub_0800A1C8(); always
  *        falls through sub_080008DC then tail.
@@ -78,6 +80,14 @@
  *      labels — agbcc coalesces the two tails into a single basic
  *      block, baserom keeps them distinct (the bl sub_080008DC lives
  *      strictly on the case-1 / case-7 accept paths, not the bare-tail).
+ *   6. Single raw `frame[332]` with macros for the sp+0x140/0x141/0x144
+ *      slots, explicit initial tail jump, shared `tailWithFinalize`,
+ *      corrected sub_08009D9C return width (u32 not u8), and low-register
+ *      pins for state stores got the pure-C attempt down to byte_diff
+ *      258 (verified, codex worktree iter-36-followup). Remaining drift
+ *      is mainly literal-pool placement and the case-3 key gate's
+ *      register order; a heavier pin attempt made codegen worse
+ *      (byte_diff 294).
  *
  * Sibling precedent: sub_08002844 (src/game/mode_15.c, mode-15/24)
  * ships NAKED for the exact same shape. AgbMain (src/system/agb_main.c)
@@ -90,7 +100,7 @@
 extern void sub_08020BC0(void);
 extern void sub_0800B7B0(void *sp_buf, void *r4_obj, u32 arg2);
 extern u8 sub_0800A104(u8 *localState, u32 callbackTable);
-extern u8 sub_08009D9C(u8 *localState);
+extern u32 sub_08009D9C(u8 *localState);
 extern u16 sub_080004C4(void);
 extern void sub_0800E060(void);
 extern void sub_0800A2D8(void);
@@ -106,11 +116,15 @@ extern u8 sub_080106B8(void);
 extern void sub_0800A1C8(void);
 extern void sub_0800DE80(void);
 
-extern u16 gIwram_5398;
-extern u16 gIwram_3720_keysHeld; /* halfword at gIwram_3720+0x34 */
-extern u16 gIwram_6110_keysJust; /* halfword at gIwram_6110+0x2e */
-extern u8 gIwram_5328;
-extern u8 gIwram_3480_data0;
+struct IwramAt6110 {
+    u8 _pad00[0x2e];
+    u16 keysJust; /* +0x2e */
+};
+
+#define gIwram_5398       (*(u16 *)0x03005398)
+#define gIwram_6110       (*(struct IwramAt6110 *)0x03006110)
+#define gIwram_5328       (*(u8 *)0x03005328)
+#define gIwram_3480_bytes ((u8 *)0x03003480)
 
 #ifdef NON_MATCHING
 
@@ -162,11 +176,11 @@ void sub_08000EB8(void)
                 sub_0800E060();
                 break;
             }
-            if ((gIwram_3720_keysHeld & 8) != 0) {
+            if ((gIwram_3720._field_34 & 8) != 0) {
                 localState = 4;
                 break;
             }
-            if ((gIwram_6110_keysJust & 8) != 0) {
+            if ((gIwram_6110.keysJust & 8) != 0) {
                 localState = 8;
                 break;
             }
@@ -179,7 +193,7 @@ void sub_08000EB8(void)
             gGameStuff._unk14++;
             break;
         case 4:
-            if (sub_08009C14(sp_buf) == 0)
+            if (sub_08009C14((void *)&localState) == 0)
                 localState = 7;
             sub_0800B7B0(sp_buf, r4_obj, 3);
             spByte = 0;
@@ -204,8 +218,8 @@ void sub_08000EB8(void)
                 break;
             if (sub_080106B8() != 0)
                 break;
-            gIwram_3480_data0 = 4;
-            /* gIwram_3480[+6] = 0 (the counter at decision point) */
+            gIwram_3480_bytes[0] = 4;
+            gIwram_3480_bytes[6] = counter;
             gGameStuff.mode = 4;
             break;
         }
