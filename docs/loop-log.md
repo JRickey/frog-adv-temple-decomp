@@ -321,3 +321,28 @@ e34fe59 CLAUDE.md: note NAKED + .syntax divided requirement
 
 The agent infrastructure grew organically with each iter — each new friction discovered yielded either a tool, a playbook update, a new codegen-notes section, or a refined dispatch brief. The loop's runbook + decisions.md captures the meta-learnings.
 
+## Iter 11 — 2026-05-26 (LOOP RESUMED)
+
+**Pre-iter:** Loop resumed post-iter-10 halt. Applied orchestrator-runbook fix in d6598d6 (mandatory `make tidy && make -j8 && make check` per-iter verification, no more bare-check false-positives).
+
+**Before:** 41 / ~513 fns (8.0%), 17 peeled-asm, 123 db, 75.1 KiB src C, 98.1% raw
+
+**Targets:** Decomp sub_080301C4 NAKED retry (close iter-9 regression hole). Data: level-layout fill-ins in [0x08312e94, 0x08314a68).
+
+**Outcomes:**
+- Decomp: NAKED + #ifdef NON_MATCHING. Verified via `make tidy && make -j8 && make check` (the new mandatory sequence — bare check would have lied like it did at iter 9). Pure-C iter-9 attempt preserved under `#ifdef NON_MATCHING` for the PC port. **iter-9 regression hole closed.**
+- Data: **entire 7124-byte blob extracted** in one pass. 5 tables, 3 (backing + pointer-array) clusters. Range [0x08312e94, 0x08314a68) fully consumed; asm/text/text_0x08312e94.s deleted.
+
+**Commit:** iter-11 hash
+
+**After:** 43 / ~513 fns (8.4%), 16 peeled-asm, 128 db, 82.2 KiB src C, **97.9% raw** (first full decimal-point drop)
+
+**Architectural duties:**
+- No new docs entries this iter (no fresh codegen findings; both ran patterns smoothly).
+- Both pre-commit lints fired correctly (apostrophe + blob-boundary). One apostrophe caught at write-time. Tooling is paying its keep.
+
+**Validation of the halt-fix:** the d6598d6 orchestrator update is working as designed. The decomp agent explicitly used `make tidy && make -j8 && make check`. The iter-9-style false-positive class is closed.
+
+**Decisions:** none new.
+
+---
