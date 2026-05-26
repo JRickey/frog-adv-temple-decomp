@@ -22,8 +22,18 @@
  * from a pre-sorted layout, or padding. Promote once the consumer
  * lands in C and the field shape is clear.
  *
- * 97 entries × 8 B = 776 bytes (0x308). Lives at 0x082f8ad8 in
+ * 97 entries x 8 B = 776 bytes (0x308). Lives at 0x082f8ad8 in
  * baserom, immediately before sUnknownSoundLut_82F8DE0.
+ *
+ * `ptr` kept as u32 (not `const void *`) until the consumer lands in C
+ * and the pointed-at sprite-asset records get C names -- INCBIN expands
+ * to a flat brace list of raw u32 values, which cannot initialize a
+ * pointer field without an explicit cast.
  */
 
-const u32 sSpriteAssetTable[97 * 2] = INCBIN_U32("data/game/sprite_asset_table.bin");
+typedef struct SpriteAssetEntry {
+    u32 id;  /* +0x00 -- sequential 0..96; matches array index in baserom */
+    u32 ptr; /* +0x04 -- ROM pointer into [0x0830XXXX, 0x0831XXXX) */
+} SpriteAssetEntry;
+
+const SpriteAssetEntry sSpriteAssetTable[97] = INCBIN_U32("data/game/sprite_asset_table.bin");

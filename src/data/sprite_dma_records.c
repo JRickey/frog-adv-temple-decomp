@@ -22,8 +22,7 @@
  *                                        idx coming from the sprite frame
  *                                        descriptors.)
  *   0x08308FBC  sDmaLoadRecords          (7616 B -- 476 records of 16 B
- *                                        each: {u32 zero, void *src,
- *                                        u32 count, u32 dmaTypeMagic}.
+ *                                        each, see DmaLoadRecord below.
  *                                        Three observed magics:
  *                                          0x1214000a -- palette (count
  *                                            = palette-entry count)
@@ -44,25 +43,39 @@
  * once a consumer is decompiled.
  */
 
+/* 16-byte DMA-load record. Field names are scaffold-grade until a
+ * consumer at 0x0801xxxx / 0x0802xxxx lands in C. */
+typedef struct DmaLoadRecord {
+    u32 zero;         /* +0x00 — observed 0 across all 476 records */
+    u32 src;          /* +0x04 — ROM source pointer (kept as u32 so the
+                        *         INCBIN flat brace list fills it without
+                        *         needing a cast per record) */
+    u32 count;        /* +0x08 — element count (palette entries or tile words) */
+    u32 dmaTypeMagic; /* +0x0c — 0x1214000a / 0x14180010 / 0 (sentinel) */
+} DmaLoadRecord;
+
+/* 12-byte dispatch record. loadRecords points into sDmaLoadRecords or
+ * sScene2DmaCluster_*; srcData points into ROM-data regions; packedCount
+ * has shape 0x0003NNNN where 0x0003 looks like a fixed "DMA channel 3"
+ * or "type" tag and NNNN is the record count. */
+typedef struct DmaLoadDispatch {
+    u32 loadRecords; /* +0x00 — pointer into sDmaLoadRecords-family */
+    u32 srcData;     /* +0x04 — pointer into ROM data region */
+    u32 packedCount; /* +0x08 — 0x0003NNNN */
+} DmaLoadDispatch;
+
 const u32 sOamDmaCfg_08100[4] = INCBIN_U32("data/sprite/oam_dma_cfg_08100.bin");
 const u32 sSpriteFramePtrs_08110[888] = INCBIN_U32("data/sprite/sprite_frame_ptrs_08110.bin");
 const u32 sVramTilePtrTable[51] = INCBIN_U32("data/sprite/vram_tile_ptr_table.bin");
-const u32 sDmaLoadRecords[476 * 4] = INCBIN_U32("data/sprite/palette_load_records.bin");
-
-/* Dispatch table at 0x0830ad7c -- 62 records of 12 B each
- *   {const void *loadRecords, const void *srcData, u32 packedCount}
- * where loadRecords points back into sDmaLoadRecords above and
- * srcData points into ROM-data regions. packedCount has shape
- * 0x0003NNNN where 0x0003 looks like a fixed "DMA channel 3" or
- * "type" tag and NNNN is the record count. */
-const u32 sDmaLoadDispatchTable[62 * 3] = INCBIN_U32("data/sprite/dma_load_dispatch.bin");
+const DmaLoadRecord sDmaLoadRecords[476] = INCBIN_U32("data/sprite/palette_load_records.bin");
+const DmaLoadDispatch sDmaLoadDispatchTable[62] = INCBIN_U32("data/sprite/dma_load_dispatch.bin");
 
 /* Dispatch-table continuation at 0x0830b064 -- 13 records of 12 B each,
  * same shape as sDmaLoadDispatchTable above. First entry is the all-zero
  * slot at 0x0830b064 (count=0 sentinel); 12 live entries follow. Several
  * loadRecords pointers reach back into sDmaLoadRecords; one (0x0830b100)
  * points forward into sScene2DmaCluster_B100 below. */
-const u32 sDmaLoadDispatchTable2[13 * 3] = INCBIN_U32("data/sprite/dma_load_dispatch2.bin");
+const DmaLoadDispatch sDmaLoadDispatchTable2[13] = INCBIN_U32("data/sprite/dma_load_dispatch2.bin");
 
 /* Second instance of the dispatch-and-records system, spanning the entire
  * [0x0830b100, 0x08310000) range. Structurally identical to the

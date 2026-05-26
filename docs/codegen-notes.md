@@ -1577,3 +1577,60 @@ bank-hi branches affected).
 Related codegen-notes:
 - "In-ROM libgcc helpers" — `__ashldi3` at 0x08033ca4 added iter 28.
 - "Fifth unmatchable class" — same register-coloring root cause.
+
+## Promoting INCBIN-loaded records to typed struct arrays
+
+`INCBIN_U32("foo.bin")` expands (in `tools/preproc`) to a brace-enclosed
+flat list of `u32` literals: `{0x..., 0x..., 0x..., ...}`. C aggregate
+initialization happily distributes a flat scalar list across nested
+struct fields, so:
+
+```c
+typedef struct Foo { u32 a; u32 b; u32 c; u32 d; } Foo;
+const Foo sFoos[N] = INCBIN_U32("foo.bin");   /* works, byte-identical */
+```
+
+…produces byte-identical output to the plain `const u32 sFoos[N*4]`
+form. Useful when the record shape is documented but the consumer
+that would use it is still in asm — the struct typedef adds names
+without committing to relocations.
+
+**The trap**: this only works when *every* struct field is `u32`. A
+mixed-width record like:
+
+```c
+typedef struct Bad { u8 a; u8 b; u16 c; u32 d; } Bad;
+const Bad sBads[N] = INCBIN_U32("bad.bin");   /* BREAKS */
+```
+
+…compiles each `u32` literal from the INCBIN list into the next
+scalar field. The first u32 of each record gets narrowed to fit the
+`u8 a` field, agbcc emits "large integer implicitly truncated to
+unsigned type", and `-Werror` fails the build. agbcc would not
+auto-byteshift the u32 into `{a, b, c}` even if you wanted it to.
+
+**The recipe**:
+
+1. If every field is `u32` (counts, ROM-pointers-held-as-raw-u32,
+   bitfields), declare the struct and use `INCBIN_U32`. Pointer-typed
+   fields still need to stay `u32` (or have an explicit cast per
+   record) because the flat list emits raw integers; you cannot get
+   a `void *` field initialized from a u32 literal without an
+   `(void *)` cast around each value, which the brace-list form
+   doesn't provide.
+2. If field widths are mixed, leave it as `const u32 arr[N*stride]`
+   until either:
+   - The consumer lands in C and can do its own bytewise reads, OR
+   - A future `INCBIN_STRUCT(path, Type)` macro is added to preproc
+     that emits per-field cast/narrow expressions.
+
+For inline-initialized records (no INCBIN), full pointer/mixed-width
+struct types work normally — `&sFoo[0]` etc. expressions in the
+initializer give you proper `.word` relocations. See
+`src/data/sound_dma_records.c` for an example.
+
+Promoted in this style during the pass that documented this:
+- `SoundDmaBufCfg[2]` + `SoundDmaMaster` (inline-init, full types)
+- `DmaLoadRecord[476]` + `DmaLoadDispatch[62/13]` (all-u32 via INCBIN)
+- `SpriteAssetEntry[97]` (all-u32 via INCBIN)
+- `EntityHitbox[31]` (all-u32 via INCBIN)

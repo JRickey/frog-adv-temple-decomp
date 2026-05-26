@@ -127,11 +127,23 @@
  *   sub_0800dc60 entity update) land in C.
  */
 
+/* EntityHitbox is promoted (all-u32 fields). The other record-shaped
+ * tables here have mixed u8/u16/u32 fields, but INCBIN expands as
+ * `{u32, u32, ...}` and a u32-into-u8/u16 narrowing in an aggregate
+ * initializer is a -Werror under agbcc, so they stay as flat u32 arrays
+ * until their consumer lands in C with a real bytewise reader. */
+
+typedef struct EntityHitbox {
+    u32 count;  /* +0x00 -- 1..0x30 (consumer reads as u8) */
+    u32 points; /* +0x04 -- const s16* into 0x082f9xxx..0x082faxxx */
+    u32 flags;  /* +0x08 -- bit-packed (low byte = size class, 0x10000 = extended) */
+} EntityHitbox;
+
 const u32 sEntityScriptIndex[7 * 2] = INCBIN_U32("data/entity/script_descriptors.bin");
 
 const u32 sEntityScriptIndexExt[2 * 3] = INCBIN_U32("data/entity/script_descriptors_ext.bin");
 
-const u32 sEntityHitboxTable[31 * 3] = INCBIN_U32("data/entity/hitbox_table.bin");
+const EntityHitbox sEntityHitboxTable[31] = INCBIN_U32("data/entity/hitbox_table.bin");
 
 const u32 sEntityProcA[17] = INCBIN_U32("data/entity/proc_a_handlers.bin");
 
