@@ -36,10 +36,9 @@ typedef struct SoundSystem {
 
 #define gpSoundSystem (*(SoundSystem **)0x030065e0)
 
-/* ROM-resident data tables. Address-named for now — promote when the
- * surrounding asm slice (text_0x0802e724.o etc.) gets unblobbed. */
-#define sChannelRegTable ((vu16 *const *)0x083dda2c) /* 4 entries */
-#define sWaveVolLut      ((const u8 *)0x083dda3c)    /* 16 entries */
+/* ROM-resident data tables — defined in src/data/sound_tables.c. */
+extern vu16 *const sChannelRegTable[4];
+extern const u8 sWaveVolLut[16];
 
 void sub_0802E684(s32 vol, s32 chIn)
 {

@@ -163,7 +163,11 @@ SECTIONS {
         asm/text/text_0x083a0000.o(.text);  /* 0x083a0000 - 0x083b0000, raw bytes */
         asm/text/text_0x083b0000.o(.text);  /* 0x083b0000 - 0x083c0000, raw bytes */
         asm/text/text_0x083c0000.o(.text);  /* 0x083c0000 - 0x083d0000, raw bytes */
-        asm/text/text_0x083d0000.o(.text);  /* 0x083d0000 - 0x083e0000, raw bytes */
+        asm/text/text_0x083d0000.o(.text);  /* 0x083d0000 - 0x083dda2c, raw bytes */
+        src/data/sound_tables.o(.rodata);  /* 0x083dda2c - 0x083dda4c, sChannelRegTable + sWaveVolLut */
+        asm/text/text_0x083dda4c.o(.text);  /* 0x083dda4c - 0x083ddcdc, raw bytes */
+        src/data/sound_opcode_handlers.o(.rodata);  /* 0x083ddcdc - 0x083dddb4, sSoundOpcodeHandlers */
+        asm/text/text_0x083dddb4.o(.text);  /* 0x083dddb4 - 0x083e0000, raw bytes (all 0xff padding) */
         asm/text/text_0x083e0000.o(.text);  /* 0x083e0000 - 0x083f0000, raw bytes */
         asm/text/text_0x083f0000.o(.text);  /* 0x083f0000 - 0x08400000, raw bytes */
         /* Disassembled function clusters land here, in baserom address

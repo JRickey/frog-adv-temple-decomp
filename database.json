@@ -1,1 +1,14 @@
-[]
+[
+  {
+    "path": "sound/wave_vol_lut.bin",
+    "addr": { "us": "0x3DDA3C" },
+    "count": "0x10",
+    "size": 1
+  },
+  {
+    "path": "sound/sound_opcode_handlers.bin",
+    "addr": { "us": "0x3DDCDC" },
+    "count": "0x36",
+    "size": 4
+  }
+]
