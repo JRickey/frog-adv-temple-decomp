@@ -1973,3 +1973,35 @@ copy is materialised explicitly.
 Use sparingly — this is a last resort *after* `register T x asm("rN")`
 pins fail. Pinning sets the register choice; the volatile barrier
 forces a separate write-then-read across that register.
+
+## Extended-pool / under-peeled function boundary
+
+The mirror of the "peel too wide hides a second function" trap: peel.py
+and detect-fn-boundary stop at the first `bx`/`pop {…, pc}`, treating
+inline literal-pool words as "the next thing". But if the function
+references more pool literals than fit between its last instruction
+and the epilogue, agbcc lays the trailing literals AFTER the epilogue
+— still inside the function's `.text`. The peeled range cuts them off,
+and the next bucket starts mid-pool.
+
+Symptom (caught iter 43 on `sub_0800FD50`): the C decomp's `.o` is
+larger than the peel's stated range (e.g. 0xC0 vs 0xA4). The extra
+bytes are the trailing pool entries. Per-function diff shows pool
+loads with `ldr [pc, #N]` whose target offsets all shift by exactly
+the over-extension delta.
+
+Resolution:
+1. Find the actual end of the literal pool: walk forward from the
+   peel's stated end and disassemble — if the words look like load
+   targets (function-address-shaped or known-MMIO-shaped, NOT
+   instructions), they're pool data, not the next function.
+2. Compute the real boundary as `first_real_next_function_addr`.
+3. Replace the existing text bucket entry: shrink the bucket's
+   range to start at the real boundary (e.g. text_0x0800fdf4 →
+   text_0x0800fe10) and update its `.incbin` size accordingly.
+4. Update linker.ld's comment for the C `.o` to the extended range,
+   and rename the bucket entry to its new start address.
+
+Cross-check: `arm-none-eabi-objdump -d` of the compiled `.o` after
+matching shows the extended pool as plain `.word` entries past the
+function's `bx`. Total `.text` size should equal the new boundary.
