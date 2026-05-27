@@ -3,4 +3,28 @@
 #include "macros.h"
 #include "types.h"
 
-/* TODO: decomp */
+/* Field-extract helper on the per-room packed-halfword grid at EWRAM
+ * 0x02030000. Sister functions sub_0800CDCC / sub_0800CE10 / sub_0800CE54
+ * differ only in which bitfield they pull from the halfword. The grid
+ * stride (entry_descriptor[+4]) comes from sSpriteAssetIndexTable at
+ * 0x08306444 (see src/data/sprite_dispatch.c). */
+
+struct SpriteAssetIndexEntry {
+    u32 dataPtr;
+    u8 stride;
+    u8 _field_5;
+    u8 _field_6;
+    u8 _field_7;
+};
+
+extern const struct SpriteAssetIndexEntry sSpriteAssetIndexTable[];
+
+u32 sub_0800CD88(u8 a, u8 b, s16 c, s16 d)
+{
+    s32 dStride;
+    u16 *cell;
+
+    dStride = d * sSpriteAssetIndexTable[(u8)a].stride;
+    cell = (u16 *)(2 * c + (5 * b * 4096 + 2 * dStride) + 0x02030000);
+    return (*cell & 0x3F0) >> 4;
+}
