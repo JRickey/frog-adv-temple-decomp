@@ -1924,3 +1924,52 @@ post-split builds as untrustworthy.
 `lint_blob_boundaries.py` passes in both stale-incremental and
 clean-rebuild states, so the discrepancy is downstream of the
 boundary check.
+
+## `asm volatile("" : "+r"(x))` barrier defeats agbcc copy-prop fold
+
+Encountered iter 29 on `sub_0800679C`'s case-1 (64-bit bit-test
+expanded over an adjacent `u32` pair). The baserom ordering is
+
+```
+ands r3, r1        ; hi &= signExt
+adds r0, r3, #0    ; r0 = hi (copy)
+orrs r0, r2        ; r0 |= lo
+```
+
+— the AND lands *in* r3, then a separate copy moves it to r0 before
+the OR. The natural C — `hi &= signExt; r = hi; r |= lo;` — gets
+folded by agbcc's copy-propagation into `r = hi & signExt; r |= lo;`,
+which emits
+
+```
+adds r0, r3, #0
+ands r0, r1
+orrs r0, r2
+```
+
+(the AND lands in r0, not r3). Wraps r3 dead before the AND. All
+attempted source-level reshapes (`hi = hi & signExt; r = hi + 0;`,
+splitting onto separate lines, swapping operand order) collapsed to
+the same fold.
+
+**Workaround**: insert an empty inline-asm barrier with a `"+r"`
+constraint on the variable whose value must survive in its register
+across the join point:
+
+```c
+hi &= signExt;
+asm volatile("" : "+r"(hi));   /* prevent copy-prop of hi into r */
+r = hi;
+r |= lo;
+```
+
+The empty asm string emits no instructions, but the `"+r"(hi)`
+constraint tells agbcc that `hi` is both read and written by the
+"asm" — defeating the assumption that `hi` is unchanged between the
+two C statements, which is what enables the copy-prop fold. The
+result is the baserom shape: AND keeps its destination register,
+copy is materialised explicitly.
+
+Use sparingly — this is a last resort *after* `register T x asm("rN")`
+pins fail. Pinning sets the register choice; the volatile barrier
+forces a separate write-then-read across that register.
