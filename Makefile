@@ -114,6 +114,7 @@ src/engine/sub_0800a710.s: CC = $(OLD_AGBCC_BIN)
 src/engine/sub_0800cd88.s: CC = $(OLD_AGBCC_BIN)
 src/engine/sub_0800cdcc.s: CC = $(OLD_AGBCC_BIN)
 src/engine/sub_0800ce10.s: CC = $(OLD_AGBCC_BIN)
+src/engine/sub_0800ce54.s: CC = $(OLD_AGBCC_BIN)
 src/system/sub_08032894.s: CC = $(OLD_AGBCC_BIN)
 src/system/sub_0802e7c4.s: CC = $(OLD_AGBCC_BIN)
 
