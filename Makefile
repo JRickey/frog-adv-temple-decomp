@@ -126,6 +126,7 @@ src/engine/sub_0800e600.s: CC = $(OLD_AGBCC_BIN)
 src/engine/sub_0800fcc8.s: CC = $(OLD_AGBCC_BIN)
 src/engine/sub_0800ee94.s: CC = $(OLD_AGBCC_BIN)
 src/engine/sub_0800ee34.s: CC = $(OLD_AGBCC_BIN)
+src/engine/sub_0800e060.s: CC = $(OLD_AGBCC_BIN)
 
 
 # Enable verbose output
