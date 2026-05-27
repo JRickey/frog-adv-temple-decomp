@@ -273,7 +273,7 @@ SECTIONS {
         asm/disasm_0x0802090c.o(.text);  /* 0x0802090c - 0x08020b30, sub_0802090C (auto-peeled) */
         src/game/sub_08020b30.o(.text);  /* 0x08020b30 - 0x08020b50, sub_08020B30 */
         asm/text/text_0x08020b50.o(.text);  /* 0x08020b50 - 0x08020b60, raw bytes */
-        asm/disasm_0x08020b60.o(.text);  /* 0x08020b60 - 0x08020b78, sub_08020B60 (auto-peeled) */
+        src/system/sub_08020b60.o(.text);  /* 0x08020b60 - 0x08020b78, sub_08020B60 */
         asm/text/text_0x08020b78.o(.text);  /* 0x08020b78 - 0x08020b88, raw bytes */
         asm/disasm_0x08020b88.o(.text);  /* 0x08020b88 - 0x08020bac, sub_08020B88 (auto-peeled) */
         asm/disasm_0x08020bac.o(.text);  /* 0x08020bac - 0x08020bc0, sub_08020BAC (auto-peeled) */
@@ -282,13 +282,17 @@ SECTIONS {
         asm/text/text_0x08020bf0.o(.text);  /* 0x08020bf0 - 0x08020c78, raw bytes */
         src/engine/sub_08020c78.o(.text);
         asm/disasm_0x08020c78.o(.text);  /* 0x08020c78 - 0x08020ca4, sub_08020C78 (auto-peeled) */
-        asm/text/text_0x08020ca4.o(.text);  /* 0x08020ca4 - 0x0802d554, raw bytes */
+        asm/text/text_0x08020ca4.o(.text);  /* 0x08020ca4 - 0x08020e98, raw bytes */
+        asm/disasm_0x08020e98.o(.text);  /* 0x08020e98 - 0x08020f3c, sub_08020E98 (auto-peeled) */
+        asm/text/text_0x08020f3c.o(.text);  /* 0x08020f3c - 0x0802d554, raw bytes */
         asm/disasm_0x0802d554.o(.text);  /* 0x0802d554 - 0x0802d558, sub_0802D554 (auto-peeled) */
         asm/disasm_0x0802d558.o(.text);  /* 0x0802d558 - 0x0802d890, sub_0802D558 (auto-peeled) */
         asm/text/text_0x0802d890.o(.text);  /* 0x0802d890 - 0x0802d8f8, raw bytes */
         asm/disasm_0x0802d8f8.o(.text);  /* 0x0802d8f8 - 0x0802d9ec, sub_0802D8F8 (auto-peeled) */
         asm/disasm_0x0802d9ec.o(.text);  /* 0x0802d9ec - 0x0802dcbc, sub_0802D9EC (auto-peeled) */
-        asm/text/text_0x0802dcbc.o(.text);  /* 0x0802dcbc - 0x0802e3f8, raw bytes */
+        asm/text/text_0x0802dcbc.o(.text);  /* 0x0802dcbc - 0x0802e13c, raw bytes */
+        asm/disasm_0x0802e13c.o(.text);  /* 0x0802e13c - 0x0802e1c8, sub_0802E13C (auto-peeled) */
+        asm/text/text_0x0802e1c8.o(.text);  /* 0x0802e1c8 - 0x0802e3f8, raw bytes */
         src/system/sound_lock.o(.text);  /* 0x0802e3f8 - 0x0802e43c, sub_0802E3F8 + sub_0802E418 */
         asm/text/text_0x0802e43c.o(.text);  /* 0x0802e43c - 0x0802e5d8, raw bytes */
         src/system/sound_pitch.o(.text);  /* 0x0802e5d8 - 0x0802e684, sub_0802E5D8 */
@@ -311,7 +315,9 @@ SECTIONS {
         src/system/sound_period.o(.text);  /* 0x080301c4 - 0x08030264, sub_080301C4 (NAKED+NON_MATCHING — libgcc-BL class) */
         asm/text/text_0x08030264.o(.text);  /* 0x08030264 - 0x080315d8, raw bytes */
         src/system/sound_opcode_dispatch.o(.text);  /* 0x080315d8 - 0x08031638, sub_080315D8 */
-        asm/text/text_0x08031638.o(.text);  /* 0x08031638 - 0x080325b0, raw bytes */
+        asm/text/text_0x08031638.o(.text);  /* 0x08031638 - 0x08032094, raw bytes */
+        asm/disasm_0x08032094.o(.text);  /* 0x08032094 - 0x08032148, sub_08032094 (auto-peeled) */
+        asm/text/text_0x08032148.o(.text);  /* 0x08032148 - 0x080325b0, raw bytes */
         src/system/sound_mixer_tail.o(.text);  /* 0x080325b0 - 0x08032894, sub_080325B0 (NAKED+NON_MATCHING) */
         src/system/sub_08032894.o(.text);  /* 0x08032894 - 0x08032904, sub_08032894 */
         asm/disasm_0x08032904.o(.text);  /* 0x08032904 - 0x0803299c, sub_08032904 (auto-peeled) */
