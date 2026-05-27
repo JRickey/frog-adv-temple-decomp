@@ -153,7 +153,8 @@ SECTIONS {
         asm/disasm_0x08006fec.o(.text);  /* 0x08006fec - 0x080070a0, sub_08006FEC (auto-peeled) */
         asm/text/text_0x080070a0.o(.text);  /* 0x080070a0 - 0x08007660, raw bytes */
         asm/disasm_0x08007660.o(.text);  /* 0x08007660 - 0x080076a4, sub_08007660 (auto-peeled) */
-        asm/text/text_0x080076a4.o(.text);  /* 0x080076a4 - 0x08007874, raw bytes */
+        asm/text/text_0x080076a4.o(.text);  /* 0x080076a4 - 0x080077ac, raw bytes */
+        asm/disasm_0x080077ac.o(.text);  /* 0x080077ac - 0x08007874, sub_080077AC (auto-peeled) */
         src/game/sub_08007874.o(.text);
         asm/disasm_0x08007874.o(.text);  /* 0x08007874 - 0x0800793c, sub_08007874 (auto-peeled) */
         src/game/sub_0800793c.o(.text);
