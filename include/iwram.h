@@ -91,6 +91,8 @@ struct IwramAt6110 {
     u16 _field_2e;   /* +0x2e: flag halfword (bits 0x04, 0x02 set by sub_08009884) */
     u8 _pad30[2];    /* +0x30..+0x31 */
     u8 _field_32;    /* +0x32: state-byte gating the sEntityParamTable lookup in sub_0800A1C8 */
+    u8 _pad33;
+    void *_field_34; /* +0x34: base of the per-state spawn-record pointer table read by sub_08007874 */
 };
 
 extern struct IwramAt3480 gIwram_3480;
