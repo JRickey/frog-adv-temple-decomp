@@ -54,12 +54,11 @@ near-matching C into `src/.../<fn>.c` first). Then:
    `compile.sh` cd's into YOUR worktree, not main. If you hand-build the scratch by
    copying a prior one, FIX the `cd <path>` line in compile.sh to your worktree — a
    leftover `cd /Users/.../Dev/frog-adv-decomp` would compile against main and lie.
-3. VALIDATE the scratch before trusting a run — a 3-second smoke run must report a
-   finite baseline score and a healthy iteration rate (tens–hundreds/sec), not an error:
-   ```sh
-   timeout 4 vendor/decomp-permuter/.venv/bin/python vendor/decomp-permuter/permuter.py \
-       nonmatchings/<fn>-<id> -j2 || true
-   ```
+   If reusing a `target.s` from a prior scratch, STRIP everything above `glabel <fn>` —
+   the prelude (`tools/permuter_prelude.inc`) already defines the `glabel` macro and
+   import.py re-adds it, so a baked-in preamble causes "Macro `glabel' already defined".
+3. VALIDATE the scratch before trusting a run — a few-second smoke run must report a
+   finite baseline score and a healthy iteration rate (tens–hundreds/sec), not an error.
    If it errors (can't compile base, can't read target, 0 iters/sec) the scratch is
    misconfigured — fix it or skip the permuter. Do NOT burn time on a broken scratch.
 
@@ -71,14 +70,22 @@ time or the base/config is wrong — STOP and rewrite the C approach; do not let
 for minutes.
 
 ```sh
-timeout 45 vendor/decomp-permuter/.venv/bin/python vendor/decomp-permuter/permuter.py \
+vendor/decomp-permuter/.venv/bin/python vendor/decomp-permuter/permuter.py \
     nonmatchings/<fn>-<id> -j4 --stop-on-zero --better-only
 ```
-- `--stop-on-zero` exits the instant it finds a byte match (score 0).
+- `--stop-on-zero` exits the instant it finds a byte match (score 0) — so on success the
+  command returns on its own, well under budget.
+- **Time-boxing on macOS:** there is NO `timeout`/`gtimeout` binary here. Do NOT use them,
+  and do NOT `pkill -f permuter.py` (that cross-kills sibling worktrees' permuters in the
+  parallel workflow). Instead bound the run ONE of two safe ways:
+  - run it as a foreground command with your Bash tool's own ~50 s timeout (simplest —
+    `--stop-on-zero` returns early on success, otherwise the tool stops it and you read the
+    best score from the captured status line); OR
+  - background it and kill only its own tree:
+    `… permuter.py <scratch> -j4 --stop-on-zero --better-only & PID=$!; sleep 45; pkill -P $PID 2>/dev/null; kill $PID 2>/dev/null`
 - `-j4` keeps thread use modest — sibling decomp worktrees may be permuting too. Lower to
   `-j2` if the machine is contended.
-- Watch the status line's best score. If it's still > 0 and plateaued at ~2000 iters,
-  KILL it.
+- Watch the status line's best score. If it's still > 0 and plateaued at ~2000 iters, stop.
 
 ## Outcomes
 
