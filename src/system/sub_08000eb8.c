@@ -27,7 +27,7 @@
  *   3 -> sub_080004C4 -> gIwram_5398; if == 0x40 substate = 5 + sub_0800E060;
  *        else falls through to the gIwram_3720 / gIwram_6110 keypad gate:
  *          (gIwram_3720._field_34 & 8) -> substate = 4
- *          (gIwram_6110.keysJust & 8) -> substate = 8
+ *          (gIwram_6110._field_2e & 8) -> substate = 8
  *          neither -> sub_0800A2D8 + sub_080008DC + sub_0800A328 +
  *                     sub_080094F8 + sub_08009984 + sub_08000E0C(sp_buf,
  *                     &r4_obj); gGameStuff._unk14++.
@@ -116,13 +116,7 @@ extern u8 sub_080106B8(void);
 extern void sub_0800A1C8(void);
 extern void sub_0800DE80(void);
 
-struct IwramAt6110 {
-    u8 _pad00[0x2e];
-    u16 keysJust; /* +0x2e */
-};
-
 #define gIwram_5398       (*(u16 *)0x03005398)
-#define gIwram_6110       (*(struct IwramAt6110 *)0x03006110)
 #define gIwram_5328       (*(u8 *)0x03005328)
 #define gIwram_3480_bytes ((u8 *)0x03003480)
 
@@ -180,7 +174,7 @@ void sub_08000EB8(void)
                 localState = 4;
                 break;
             }
-            if ((gIwram_6110.keysJust & 8) != 0) {
+            if ((gIwram_6110._field_2e & 8) != 0) {
                 localState = 8;
                 break;
             }
