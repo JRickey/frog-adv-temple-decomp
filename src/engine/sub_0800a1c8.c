@@ -93,3 +93,29 @@ void sub_0800A1C8(void)
         "    .syntax divided\n");
 }
 #endif
+
+int sub_0800A214(void)
+{
+    /* result pinned to r5 so the &gGameStuff pointer lands in r4 — baserom
+     * keeps the base live across both BLs; the natural allocation swaps r4/r5. */
+    register int result asm("r5");
+    GameStuff *p = &gGameStuff;
+
+    switch (p->_unk00 % 3) {
+    case 0:
+        result = 13;
+        break;
+    case 1:
+        result = 8;
+        break;
+    case 2:
+        result = 18;
+        break;
+    }
+
+    if ((u8)(p->pendingMode - 15) <= 1)
+        result = 7;
+
+    sub_08020BAC();
+    return result;
+}
