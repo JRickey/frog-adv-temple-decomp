@@ -1,3 +1,5 @@
+#include "game.h"
+#include "iwram.h"
 #include "macros.h"
 #include "types.h"
 
@@ -379,6 +381,277 @@ NAKED void sub_08006BB4(u8 partId, u8 *out)
         "    b       _loop_body\n"
         "_epilogue:\n"
         "    add     sp, #20\n"
+        "    pop     {r3, r4, r5}\n"
+        "    mov     r8, r3\n"
+        "    mov     r9, r4\n"
+        "    mov     sl, r5\n"
+        "    pop     {r4, r5, r6, r7}\n"
+        "    pop     {r0}\n"
+        "    bx      r0\n"
+        "    .syntax divided\n");
+}
+#endif
+
+/* Per-cell update sweep over a 36-byte-stride cell array (base = `cells`,
+ * inclusive index range [first, last]). For each cell whose age
+ * (gGameStuff._unk00 minus the cell's last-stamp at +20) exceeds the cell's
+ * threshold at +24, the per-frame counter at +25 is bumped (and snapped down
+ * by 4 when it crosses a multiple of 4), then an inner loop walks the cell's
+ * `count` (signed byte at +28) sub-records — each a {s16 col, s16 row} pair at
+ * the pointer stored at +32 — classifying every tile via sub_0800CD88 and,
+ * for class 8 with the cell's flag byte at +17 clear, enqueueing it through
+ * sub_080112C0 (kinds 4/3 keyed on which tri-step encoding the sub-record
+ * uses). The cell's last-stamp is refreshed to the current tick afterward.
+ *
+ * Shipped NAKED. The outer index is pinned in r9, the cell base in sl, and
+ * the table/record bases shuffle through r8/sl across both the sub_0800CD88
+ * and sub_080112C0 calls — agbcc 2.x will not hold these high registers live
+ * across the nested call-bearing loops and instead recomputes the bases from
+ * low registers, so the high-reg save/restore frame and the `add rN, r8/sl`
+ * index forms can't be reproduced from pure C. This is the
+ * docs/codegen-notes.md "High registers" (Class 1) unmatchable pattern; the
+ * NON_MATCHING body documents intent for the phase-3 PC port. */
+
+extern u8 sub_0800CD88(u8 col, u8 row, s32 tileX, s32 tileY);
+extern void sub_080112C0(s32 kind, s32 a, s32 b, s32 tileX, s32 tileY, s32 sub);
+
+#ifdef NON_MATCHING
+struct Cell {
+    u8 _pad00[20];
+    u32 lastStamp; /* +20 */
+    u8 threshold;  /* +24 */
+    u8 counter;    /* +25 */
+    u8 _pad1A[2];
+    s8 count; /* +28 */
+    u8 _pad1D[3];
+    const s16 *records; /* +32: { s16 col, s16 row } pairs */
+};
+
+void sub_08006D24(struct Cell *cells, s32 first, s32 last, u8 arg3)
+{
+    s32 i;
+    u32 tick = gGameStuff._unk00;
+    s8 flag = (s8)arg3;
+
+    for (i = first; i <= last; i++) {
+        struct Cell *cell = &cells[i];
+        s32 j;
+
+        if (tick - cell->lastStamp <= cell->threshold)
+            continue;
+
+        cell->counter++;
+        if ((cell->counter & 3) == 0)
+            cell->counter -= 4;
+
+        for (j = 0; j < cell->count; j++) {
+            const s16 *rec = &cell->records[j * 2];
+            s32 col = rec[0];
+            s32 row = rec[1] + 1;
+
+            if ((u8)sub_0800CD88(gIwram_35E0._field_18, gIwram_35E0._field_19, col, row) == 8 &&
+                cell->_pad1A[0 - 24 + 0x11] == 0) {
+                /* flag byte at cell+0x11 */
+                s32 a = rec[0] * 3;
+                s32 b = rec[1] * 3;
+                sub_080112C0(1, 4, 3, b, flag, a);
+            } else {
+                s32 a = cell->records[j * 2] * 3;
+                s32 b = cell->records[j * 2 + 1] * 3;
+                sub_080112C0(1, 3, 3, b, flag, a);
+            }
+        }
+
+        cell->lastStamp = tick;
+    }
+}
+#else
+NAKED void sub_08006D24(void *cells, s32 first, s32 last, u8 arg3)
+{
+    asm(".syntax unified\n"
+        "    push    {r4, r5, r6, r7, lr}\n"
+        "    mov     r7, sl\n"
+        "    mov     r6, r9\n"
+        "    mov     r5, r8\n"
+        "    push    {r5, r6, r7}\n"
+        "    sub     sp, #44\n"
+        "    mov     sl, r0\n"
+        "    str     r2, [sp, #12]\n"
+        "    lsls    r3, r3, #24\n"
+        "    lsrs    r3, r3, #24\n"
+        "    ldr     r0, _pool_gGameStuff\n"
+        "    ldr     r0, [r0, #0]\n"
+        "    str     r0, [sp, #20]\n"
+        "    mov     r9, r1\n"
+        "    cmp     r9, r2\n"
+        "    ble     _06d46\n"
+        "    b       _06e7c\n"
+        "_06d46:\n"
+        "    str     r3, [sp, #28]\n"
+        "_06d48:\n"
+        "    mov     r1, r9\n"
+        "    lsls    r0, r1, #3\n"
+        "    adds    r1, r0, r1\n"
+        "    lsls    r3, r1, #2\n"
+        "    mov     r4, sl\n"
+        "    adds    r2, r3, r4\n"
+        "    ldr     r1, [r2, #20]\n"
+        "    ldr     r4, [sp, #20]\n"
+        "    subs    r1, r4, r1\n"
+        "    str     r0, [sp, #36]\n"
+        "    mov     r0, r9\n"
+        "    adds    r0, #1\n"
+        "    str     r0, [sp, #32]\n"
+        "    ldrb    r4, [r2, #24]\n"
+        "    cmp     r1, r4\n"
+        "    bhi     _06d6a\n"
+        "    b       _06e70\n"
+        "_06d6a:\n"
+        "    ldrb    r0, [r2, #25]\n"
+        "    str     r0, [sp, #16]\n"
+        "    adds    r0, #1\n"
+        "    strb    r0, [r2, #25]\n"
+        "    ldrb    r1, [r2, #25]\n"
+        "    movs    r0, #3\n"
+        "    ands    r0, r1\n"
+        "    cmp     r0, #0\n"
+        "    bne     _06d80\n"
+        "    subs    r0, r1, #4\n"
+        "    strb    r0, [r2, #25]\n"
+        "_06d80:\n"
+        "    movs    r7, #0\n"
+        "    movs    r0, #28\n"
+        "    ldrsb   r0, [r2, r0]\n"
+        "    cmp     r7, r0\n"
+        "    bge     _06e64\n"
+        "    str     r3, [sp, #24]\n"
+        "    adds    r6, r2, #0\n"
+        "    movs    r1, #0\n"
+        "    mov     r8, r1\n"
+        "_06d92:\n"
+        "    ldr     r5, [sp, #16]\n"
+        "    movs    r0, #28\n"
+        "    ldrsb   r0, [r6, r0]\n"
+        "    cmp     r0, #1\n"
+        "    ble     _06dbe\n"
+        "    subs    r0, #1\n"
+        "    cmp     r7, r0\n"
+        "    bne     _06db0\n"
+        "    lsls    r0, r5, #24\n"
+        "    movs    r2, #128\n"
+        "    lsls    r2, r2, #20\n"
+        "    adds    r0, r0, r2\n"
+        "    b       _06dbc\n"
+        "    .align  2, 0\n"
+        "_pool_gGameStuff: .4byte 0x03005330\n"
+        "_06db0:\n"
+        "    cmp     r7, #0\n"
+        "    ble     _06dbe\n"
+        "    lsls    r0, r5, #24\n"
+        "    movs    r4, #128\n"
+        "    lsls    r4, r4, #19\n"
+        "    adds    r0, r0, r4\n"
+        "_06dbc:\n"
+        "    lsrs    r5, r0, #24\n"
+        "_06dbe:\n"
+        "    ldr     r1, _pool_gIwram35E0\n"
+        "    ldrb    r0, [r1, #24]\n"
+        "    ldrb    r1, [r1, #25]\n"
+        "    str     r1, [sp, #40]\n"
+        "    ldr     r4, [sp, #24]\n"
+        "    add     r4, sl\n"
+        "    ldr     r3, [r4, #32]\n"
+        "    add     r3, r8\n"
+        "    movs    r2, #0\n"
+        "    ldrsh   r1, [r3, r2]\n"
+        "    mov     ip, r1\n"
+        "    ldrh    r3, [r3, #2]\n"
+        "    adds    r3, #1\n"
+        "    lsls    r3, r3, #16\n"
+        "    asrs    r3, r3, #16\n"
+        "    ldr     r1, [sp, #40]\n"
+        "    mov     r2, ip\n"
+        "    bl      sub_0800CD88\n"
+        "    lsls    r0, r0, #24\n"
+        "    lsrs    r0, r0, #24\n"
+        "    cmp     r0, #8\n"
+        "    bne     _06e28\n"
+        "    movs    r0, #17\n"
+        "    ldrsb   r0, [r4, r0]\n"
+        "    cmp     r0, #0\n"
+        "    bne     _06e28\n"
+        "    ldr     r1, [r4, #32]\n"
+        "    add     r1, r8\n"
+        "    movs    r4, #0\n"
+        "    ldrsh   r0, [r1, r4]\n"
+        "    lsls    r3, r0, #1\n"
+        "    adds    r3, r3, r0\n"
+        "    lsls    r3, r3, #16\n"
+        "    lsrs    r3, r3, #16\n"
+        "    movs    r0, #2\n"
+        "    ldrsh   r1, [r1, r0]\n"
+        "    lsls    r0, r1, #1\n"
+        "    adds    r0, r0, r1\n"
+        "    lsls    r0, r0, #16\n"
+        "    lsrs    r0, r0, #16\n"
+        "    str     r0, [sp, #0]\n"
+        "    ldr     r1, [sp, #28]\n"
+        "    str     r1, [sp, #4]\n"
+        "    str     r5, [sp, #8]\n"
+        "    movs    r0, #1\n"
+        "    movs    r1, #4\n"
+        "    movs    r2, #3\n"
+        "    bl      sub_080112C0\n"
+        "    b       _06e56\n"
+        "    .align  2, 0\n"
+        "_pool_gIwram35E0: .4byte 0x030035e0\n"
+        "_06e28:\n"
+        "    ldr     r1, [r6, #32]\n"
+        "    add     r1, r8\n"
+        "    movs    r2, #0\n"
+        "    ldrsh   r0, [r1, r2]\n"
+        "    lsls    r3, r0, #1\n"
+        "    adds    r3, r3, r0\n"
+        "    lsls    r3, r3, #16\n"
+        "    lsrs    r3, r3, #16\n"
+        "    movs    r4, #2\n"
+        "    ldrsh   r1, [r1, r4]\n"
+        "    lsls    r0, r1, #1\n"
+        "    adds    r0, r0, r1\n"
+        "    lsls    r0, r0, #16\n"
+        "    lsrs    r0, r0, #16\n"
+        "    str     r0, [sp, #0]\n"
+        "    ldr     r0, [sp, #28]\n"
+        "    str     r0, [sp, #4]\n"
+        "    str     r5, [sp, #8]\n"
+        "    movs    r0, #1\n"
+        "    movs    r1, #3\n"
+        "    movs    r2, #3\n"
+        "    bl      sub_080112C0\n"
+        "_06e56:\n"
+        "    movs    r1, #4\n"
+        "    add     r8, r1\n"
+        "    adds    r7, #1\n"
+        "    movs    r0, #28\n"
+        "    ldrsb   r0, [r6, r0]\n"
+        "    cmp     r7, r0\n"
+        "    blt     _06d92\n"
+        "_06e64:\n"
+        "    ldr     r0, [sp, #36]\n"
+        "    add     r0, r9\n"
+        "    lsls    r0, r0, #2\n"
+        "    add     r0, sl\n"
+        "    ldr     r2, [sp, #20]\n"
+        "    str     r2, [r0, #20]\n"
+        "_06e70:\n"
+        "    ldr     r4, [sp, #32]\n"
+        "    mov     r9, r4\n"
+        "    ldr     r0, [sp, #12]\n"
+        "    cmp     r9, r0\n"
+        "    bgt     _06e7c\n"
+        "    b       _06d48\n"
+        "_06e7c:\n"
+        "    add     sp, #44\n"
         "    pop     {r3, r4, r5}\n"
         "    mov     r8, r3\n"
         "    mov     r9, r4\n"
