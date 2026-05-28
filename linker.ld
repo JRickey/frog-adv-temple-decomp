@@ -78,8 +78,7 @@ SECTIONS {
         src/system/sub_08000eb8.o(.text);  /* 0x08000eb8 - 0x08001128, sub_08000EB8 (NAKED + NON_MATCHING; mode-9 dispatch — `mov pc, rN` jump table, sibling of sub_08002844) */
         src/system/sub_08001128.o(.text);  /* 0x08001128 - 0x080011a4, sub_08001128 / sub_08001140 / sub_08001174 / sub_08001198 cluster */
         src/game/sub_080011a4.o(.text);    /* 0x080011a4 - 0x08001214, sub_080011A4 */
-        src/game/sub_08001214.o(.text);
-        asm/disasm_0x08001214.o(.text);  /* 0x08001214 - 0x08001478, sub_08001214 (auto-peeled) */
+        src/game/sub_08001214.o(.text);  /* 0x08001214 - 0x08001478, sub_08001214 (NAKED + NON_MATCHING; mode-10 dispatch — `mov pc, rN` jump table, sibling of sub_08001508) */
         src/game/set_game_mode_03.o(.text);  /* 0x08001478 - 0x08001484, SetGameMode_03 */
         asm/text/text_0x08001484.o(.text);  /* 0x08001484 - 0x08001508, raw bytes */
         src/system/sub_08001508.o(.text);  /* 0x08001508 - 0x08001794, sub_08001508 (NAKED + NON_MATCHING; mode-11 dispatch — `mov pc, rN` jump table, sibling of sub_08000EB8) */
