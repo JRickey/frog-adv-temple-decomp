@@ -22,3 +22,9 @@ void sub_08013FA0(void)
 
     sub_08012BC4(desc->unk08, desc->unk00, desc->unk02, desc->unk04, desc->unk06, desc->tiles, 1);
 }
+
+/* Dead stub with no callers or references — bare `bx lr` plus a halfword of
+ * alignment padding. Kept as its own symbol so the surrounding layout stays
+ * byte-identical. */
+void sub_08013FCC(void)
+{}
