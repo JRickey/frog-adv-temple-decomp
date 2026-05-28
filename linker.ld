@@ -305,8 +305,7 @@ SECTIONS {
         src/system/sound_pitch.o(.text);  /* 0x0802e5d8 - 0x0802e684, sub_0802E5D8 */
         src/system/sound_volume.o(.text);  /* 0x0802e684 - 0x0802e724, sub_0802E684 */
         src/system/sub_0802e724.o(.text);  /* 0x0802e724 - 0x0802e7c4, sub_0802E724 */
-        src/system/sub_0802e7c4.o(.text);  /* 0x0802e7c4 - 0x0802e874, sub_0802E7C4 */
-        asm/disasm_0x0802e874.o(.text);  /* 0x0802e874 - 0x0802e934, sub_0802E874 (deferred) */
+        src/system/sub_0802e7c4.o(.text);  /* 0x0802e7c4 - 0x0802e934, sub_0802E7C4 + sub_0802E874 */
         src/system/sound_envelope_dual.o(.text);  /* 0x0802e934 - 0x0802ea2c, sub_0802E934 (NAKED+NON_MATCHING) */
         asm/text/text_0x0802ea2c.o(.text);  /* 0x0802ea2c - 0x0802ea80, raw bytes */
         src/system/sound_envelope.o(.text);  /* 0x0802ea80 - 0x0802eb34, sub_0802EA80 */
