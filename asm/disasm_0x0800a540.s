@@ -237,7 +237,7 @@
 @   0x0800a70a: 7001        strb	r1, [r0, #0]
 @   0x0800a70c: 4770        bx	lr
 
-        thumb_func_start sub_0800A540
-sub_0800A540: @ 0x0800a540
-        .incbin "frog_us_baserom.gba", 0xa540, 0x1d0
-        thumb_func_end sub_0800A540
+        thumb_func_start sub_0800A580
+sub_0800A580: @ 0x0800a580
+        .incbin "frog_us_baserom.gba", 0xa580, 0x190
+        thumb_func_end sub_0800A580

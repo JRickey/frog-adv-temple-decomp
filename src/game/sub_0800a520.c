@@ -27,3 +27,23 @@ void sub_0800A520(void)
     sub_080090B0();
     sub_0800A4D0();
 }
+
+struct ClusterA710;
+extern void sub_0800A710(struct ClusterA710 *p, u8 a, s16 b, s16 c, u8 d, u16 e, u8 f, u8 g, u8 h, u16 i);
+
+/* Seeds entity[1] (0x03003758) from entity[0] (0x03003720, one 0x38 stride
+ * back): copies its position halfwords (offsets 2/4, the +4 value biased by
+ * 24) into the 10-arg struct initializer with otherwise constant fields.
+ *
+ * dst anchors the only pool literal (0x03003758); src is derived by
+ * subtracting the 0x38 stride at runtime so agbcc keeps one pool word and
+ * emits register-offset ldrsh instead of folding to a second literal. The
+ * b/c parameters are declared s16 here (the canonical sub_0800A710 stores
+ * them into u16 fields) so the caller sign-extends the position values. */
+void sub_0800A540(void)
+{
+    struct ClusterA710 *dst = (struct ClusterA710 *)0x03003758;
+    u8 *src = (u8 *)dst - 0x38;
+
+    sub_0800A710(dst, 84, *(s16 *)(src + 2), (s16)(*(u16 *)(src + 4) - 24), 3, 992, 15, 2, 0, 32);
+}
