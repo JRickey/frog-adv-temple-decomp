@@ -662,3 +662,265 @@ NAKED void sub_08006D24(void *cells, s32 first, s32 last, u8 arg3)
         "    .syntax divided\n");
 }
 #endif
+
+/* Re-centres the gIwram_3720 scroll cursor toward a target tile by stepping it
+ * along a row of 36-byte (0x24) grid entries, inclusive index range
+ * [first, last]. The current tick is snapshotted from gGameStuff._unk00; an
+ * entry is only revisited once (tick - entry.stamp) exceeds entry.ageMax.
+ *
+ * For each ripe entry with flags bit 1 set (and the cursor's own dirty bit 1
+ * at gIwram_35E0+0x10 set), the candidate tile is computed from the cursor's
+ * gIwram_3720 sub-coords plus the entry's per-axis delta scaled by 4 then
+ * divided by 24 (the sub-pixel-per-tile factor). sub_0800CD88 classifies that
+ * tile against the gIwram_35E0 entity coords (+0x18/+0x19); class 2 (blocked)
+ * aborts the step for this entry, leaving only the stamp refreshed. Otherwise
+ * the cursor sub-coords advance by the raw delta and each axis is clamped to
+ * within +/-1 of entry.limit, then the stamp is refreshed.
+ *
+ * Shipped NAKED. The outer entry base is pinned in sl and the loop index is
+ * carried byte-shifted in r8/r9 across the two __divsi3 calls and the
+ * sub_0800CD88 call; agbcc 2.x will not hold these high registers live across
+ * the call-bearing loop and instead recomputes the base from low registers,
+ * so the high-reg save/restore frame and the `mov rN, sl` / `add r0, sl`
+ * index forms can't be reproduced from pure C. This is the
+ * docs/codegen-notes.md "High registers" (Class 1) unmatchable pattern; the
+ * NON_MATCHING body documents intent for the phase-3 PC port. */
+
+extern int __divsi3(int num, int den);
+
+#ifdef NON_MATCHING
+struct GridEntry {
+    u8 _pad00[2];
+    s16 limit; /* +2 */
+    u8 _pad04[8];
+    u32 stamp; /* +12 */
+    s8 deltaX; /* +16 */
+    s8 deltaY; /* +17 */
+    u8 ageMax; /* +18 */
+    u8 _pad13[7];
+    u8 flags; /* +26 */
+    u8 _pad1B[9];
+};
+
+void sub_08006E8C(struct GridEntry *entries, s8 first, s8 last)
+{
+    u32 tick = gGameStuff._unk00;
+    s8 i;
+
+    for (i = first; i <= last; i++) {
+        struct GridEntry *e = &entries[i];
+
+        if (tick - e->stamp <= e->ageMax)
+            continue;
+
+        if ((gIwram_35E0._field_10 & 2) != 0 && (e->flags & 2) != 0) {
+            s16 tileX = __divsi3(gIwram_3720._field_2 + e->deltaX * 4, 24);
+            s16 tileY = __divsi3(gIwram_3720._field_4 + e->deltaY * 4, 24);
+
+            if ((u8)sub_0800CD88(gIwram_35E0._field_18, gIwram_35E0._field_19, tileX, tileY) != 2) {
+                gIwram_3720._field_2 += e->deltaX;
+                gIwram_3720._field_4 += e->deltaY;
+
+                if (e->deltaX != 0) {
+                    if ((s16)gIwram_3720._field_4 > e->limit)
+                        gIwram_3720._field_4--;
+                    if ((s16)gIwram_3720._field_4 < e->limit)
+                        gIwram_3720._field_4++;
+                }
+
+                if (entries[i].deltaY != 0) {
+                    if (gIwram_3720._field_2 > entries[i].limit)
+                        gIwram_3720._field_2--;
+                    if (gIwram_3720._field_2 < entries[i].limit)
+                        gIwram_3720._field_2++;
+                }
+            }
+        }
+
+        entries[i].stamp = tick;
+    }
+}
+#else
+NAKED void sub_08006E8C(void *entries, s8 first, s8 last)
+{
+    asm(".syntax unified\n"
+        "    push    {r4, r5, r6, r7, lr}\n"
+        "    mov     r7, sl\n"
+        "    mov     r6, r9\n"
+        "    mov     r5, r8\n"
+        "    push    {r5, r6, r7}\n"
+        "    sub     sp, #8\n"
+        "    mov     sl, r0\n"
+        "    lsls    r2, r2, #24\n"
+        "    ldr     r0, _pool_gGameStuff_6e8c\n"
+        "    ldr     r0, [r0, #0]\n"
+        "    str     r0, [sp, #4]\n"
+        "    lsls    r1, r1, #24\n"
+        "    lsrs    r1, r1, #24\n"
+        "    mov     r9, r1\n"
+        "    lsls    r1, r1, #24\n"
+        "    lsrs    r0, r2, #24\n"
+        "    str     r0, [sp, #0]\n"
+        "    cmp     r1, r2\n"
+        "    ble     _06eb4\n"
+        "    b       _06fce\n"
+        "_06eb4:\n"
+        "    asrs    r0, r1, #24\n"
+        "    lsls    r1, r0, #3\n"
+        "    adds    r1, r1, r0\n"
+        "    lsls    r1, r1, #2\n"
+        "    mov     r2, sl\n"
+        "    adds    r5, r1, r2\n"
+        "    ldr     r0, [r5, #12]\n"
+        "    ldr     r3, [sp, #4]\n"
+        "    subs    r0, r3, r0\n"
+        "    mov     r4, r9\n"
+        "    lsls    r4, r4, #24\n"
+        "    mov     r8, r4\n"
+        "    ldrb    r1, [r5, #18]\n"
+        "    cmp     r0, r1\n"
+        "    bls     _06fb8\n"
+        "    ldr     r7, _pool_gIwram35E0_6e8c\n"
+        "    movs    r1, #2\n"
+        "    adds    r0, r1, #0\n"
+        "    ldrh    r2, [r7, #16]\n"
+        "    ands    r0, r2\n"
+        "    cmp     r0, #0\n"
+        "    beq     _06fa8\n"
+        "    adds    r0, r1, #0\n"
+        "    ldrb    r3, [r5, #26]\n"
+        "    ands    r0, r3\n"
+        "    cmp     r0, #0\n"
+        "    beq     _06fa8\n"
+        "    ldr     r6, _pool_gIwram3720_6e8c\n"
+        "    movs    r4, #2\n"
+        "    ldrsh   r0, [r6, r4]\n"
+        "    movs    r1, #16\n"
+        "    ldrsb   r1, [r5, r1]\n"
+        "    lsls    r1, r1, #2\n"
+        "    adds    r0, r0, r1\n"
+        "    movs    r1, #24\n"
+        "    bl      __divsi3\n"
+        "    adds    r4, r0, #0\n"
+        "    lsls    r4, r4, #16\n"
+        "    lsrs    r4, r4, #16\n"
+        "    movs    r1, #4\n"
+        "    ldrsh   r0, [r6, r1]\n"
+        "    movs    r1, #17\n"
+        "    ldrsb   r1, [r5, r1]\n"
+        "    lsls    r1, r1, #2\n"
+        "    adds    r0, r0, r1\n"
+        "    movs    r1, #24\n"
+        "    bl      __divsi3\n"
+        "    adds    r3, r0, #0\n"
+        "    ldrb    r0, [r7, #24]\n"
+        "    ldrb    r1, [r7, #25]\n"
+        "    lsls    r4, r4, #16\n"
+        "    asrs    r4, r4, #16\n"
+        "    lsls    r3, r3, #16\n"
+        "    asrs    r3, r3, #16\n"
+        "    adds    r2, r4, #0\n"
+        "    bl      sub_0800CD88\n"
+        "    lsls    r0, r0, #24\n"
+        "    lsrs    r0, r0, #24\n"
+        "    cmp     r0, #2\n"
+        "    beq     _06fa8\n"
+        "    movs    r0, #16\n"
+        "    ldrsb   r0, [r5, r0]\n"
+        "    ldrh    r2, [r6, #2]\n"
+        "    adds    r0, r2, r0\n"
+        "    strh    r0, [r6, #2]\n"
+        "    movs    r0, #17\n"
+        "    ldrsb   r0, [r5, r0]\n"
+        "    ldrh    r3, [r6, #4]\n"
+        "    adds    r2, r3, r0\n"
+        "    strh    r2, [r6, #4]\n"
+        "    movs    r0, #16\n"
+        "    ldrsb   r0, [r5, r0]\n"
+        "    cmp     r0, #0\n"
+        "    beq     _06f6c\n"
+        "    lsls    r0, r2, #16\n"
+        "    asrs    r0, r0, #16\n"
+        "    movs    r4, #2\n"
+        "    ldrsh   r1, [r5, r4]\n"
+        "    cmp     r0, r1\n"
+        "    ble     _06f5e\n"
+        "    subs    r0, r2, #1\n"
+        "    strh    r0, [r6, #4]\n"
+        "_06f5e:\n"
+        "    ldrh    r2, [r6, #4]\n"
+        "    movs    r3, #4\n"
+        "    ldrsh   r0, [r6, r3]\n"
+        "    cmp     r0, r1\n"
+        "    bge     _06f6c\n"
+        "    adds    r0, r2, #1\n"
+        "    strh    r0, [r6, #4]\n"
+        "_06f6c:\n"
+        "    mov     r4, r9\n"
+        "    lsls    r2, r4, #24\n"
+        "    asrs    r1, r2, #24\n"
+        "    lsls    r0, r1, #3\n"
+        "    adds    r0, r0, r1\n"
+        "    lsls    r0, r0, #2\n"
+        "    mov     r3, sl\n"
+        "    adds    r1, r0, r3\n"
+        "    movs    r0, #17\n"
+        "    ldrsb   r0, [r1, r0]\n"
+        "    mov     r8, r2\n"
+        "    cmp     r0, #0\n"
+        "    beq     _06fa8\n"
+        "    ldr     r3, _pool_gIwram3720_6e8c\n"
+        "    ldrh    r2, [r3, #2]\n"
+        "    movs    r4, #2\n"
+        "    ldrsh   r0, [r3, r4]\n"
+        "    movs    r4, #0\n"
+        "    ldrsh   r1, [r1, r4]\n"
+        "    cmp     r0, r1\n"
+        "    ble     _06f9a\n"
+        "    subs    r0, r2, #1\n"
+        "    strh    r0, [r3, #2]\n"
+        "_06f9a:\n"
+        "    ldrh    r2, [r3, #2]\n"
+        "    movs    r4, #2\n"
+        "    ldrsh   r0, [r3, r4]\n"
+        "    cmp     r0, r1\n"
+        "    bge     _06fa8\n"
+        "    adds    r0, r2, #1\n"
+        "    strh    r0, [r3, #2]\n"
+        "_06fa8:\n"
+        "    mov     r0, r8\n"
+        "    asrs    r1, r0, #24\n"
+        "    lsls    r0, r1, #3\n"
+        "    adds    r0, r0, r1\n"
+        "    lsls    r0, r0, #2\n"
+        "    add     r0, sl\n"
+        "    ldr     r1, [sp, #4]\n"
+        "    str     r1, [r0, #12]\n"
+        "_06fb8:\n"
+        "    movs    r0, #128\n"
+        "    lsls    r0, r0, #17\n"
+        "    add     r0, r8\n"
+        "    lsrs    r0, r0, #24\n"
+        "    mov     r9, r0\n"
+        "    lsls    r1, r0, #24\n"
+        "    ldr     r2, [sp, #0]\n"
+        "    lsls    r0, r2, #24\n"
+        "    cmp     r1, r0\n"
+        "    bgt     _06fce\n"
+        "    b       _06eb4\n"
+        "_06fce:\n"
+        "    add     sp, #8\n"
+        "    pop     {r3, r4, r5}\n"
+        "    mov     r8, r3\n"
+        "    mov     r9, r4\n"
+        "    mov     sl, r5\n"
+        "    pop     {r4, r5, r6, r7}\n"
+        "    pop     {r0}\n"
+        "    bx      r0\n"
+        "    .align  2, 0\n"
+        "_pool_gGameStuff_6e8c: .4byte 0x03005330\n"
+        "_pool_gIwram35E0_6e8c: .4byte 0x030035e0\n"
+        "_pool_gIwram3720_6e8c: .4byte 0x03003720\n"
+        "    .syntax divided\n");
+}
+#endif
