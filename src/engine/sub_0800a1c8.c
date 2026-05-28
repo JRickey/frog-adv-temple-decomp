@@ -119,3 +119,9 @@ int sub_0800A214(void)
     sub_08020BAC();
     return result;
 }
+
+void sub_0800A258(u32 arg)
+{
+    sub_08020BAC();
+    sub_08020B88(arg);
+}
