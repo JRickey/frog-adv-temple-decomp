@@ -127,9 +127,9 @@ Thumb prologue scan, not a ground-truth disassembly. Treat ±20% as honest.
 Regenerate with `python3 tools/agent/progress_stats.py --update-readme`.
 
 - **Functions decompiled to C**: 158 / ~513 estimated total (**30.8%**)
-  - peeled-but-still-asm: 105
+  - peeled-but-still-asm: 110
   - estimate range (lower / upper): 335 / 1140
-- **Data deblobbed**: 474.1 KiB of 4.00 MiB (**11.58%**)
+- **Data deblobbed**: 475.2 KiB of 4.00 MiB (**11.60%**)
   - raw INCBIN bytes: 3.54 MiB (88.4% of ROM)
   - `database.json` entries: 265
 
