@@ -42,12 +42,18 @@ CODE_END_GUESS = 0x08036000
 
 @dataclass
 class FunctionCounts:
-    decomped_c: int            # function defs in src/**/*.c
+    decomped_c: int            # function defs compiled from src/**/*.c (true-C + NAKED)
+    naked_c: int               # of decomped_c, how many are NAKED+NON_MATCHING (asm fallback)
     peeled_asm: int            # asm/disasm_*.s slices not yet in C
     strong_signal_total: int   # lower bound: 4B-aligned `push {…,lr}` preceded by clean fn-end
     aligned_total: int         # upper bound: all 4B-aligned `push {…,lr}` in code region
     arm_total: int             # ARM `stmfd sp!, {…,lr}` count
     estimate_total: int        # realistic estimate (midpoint, capped)
+
+    @property
+    def true_c(self) -> int:
+        """Pure-C byte matches — the real quality metric (excludes NAKED fallbacks)."""
+        return self.decomped_c - self.naked_c
 
     @property
     def landed(self) -> int:
@@ -99,18 +105,47 @@ def parse_linker_ranges() -> tuple[int, int, int]:
     return raw, asm, src
 
 
-def count_c_functions() -> int:
-    """Count top-level function definitions across src/**/*.c."""
+def count_c_functions() -> tuple[int, int]:
+    """Count top-level function definitions across src/**/*.c.
+
+    Returns (total, naked):
+      total — function defs actually COMPILED into the ROM. The non-compiled
+              readable branch of a `#ifdef NON_MATCHING … #else … #endif` pair
+              is skipped, so a NAKED+NON_MATCHING function counts once (its
+              #else NAKED body), not twice.
+      naked — of those, how many are NAKED+NON_MATCHING (an
+              __attribute__((naked)) inline-asm body — byte-matches via the asm
+              path, NOT a pure-C match). `total - naked` = true pure-C matches.
+    """
     fn_def_re = re.compile(r"^[A-Za-z_][\w\s\*]*\s+[A-Za-z_]\w*\s*\([^)]*\)\s*$")
-    n = 0
+    naked_re = re.compile(r"\bNAKED\b")
+    total = naked = 0
     for p in ROOT.glob("src/**/*.c"):
         try:
-            for line in p.read_text().splitlines():
-                if fn_def_re.match(line) and "typedef" not in line and "#" not in line:
-                    n += 1
+            lines = p.read_text().splitlines()
         except UnicodeDecodeError:
             continue
-    return n
+        in_nm_readable = False  # inside the non-compiled `#ifdef NON_MATCHING` branch
+        prev = ""
+        for line in lines:
+            s = line.strip()
+            if s.startswith("#ifdef NON_MATCHING"):
+                in_nm_readable = True
+                prev = ""
+                continue
+            if in_nm_readable and (s.startswith("#else") or s.startswith("#endif")):
+                in_nm_readable = False  # the #else (matching/NAKED) branch IS compiled
+                prev = ""
+                continue
+            if in_nm_readable:
+                continue  # skip the readable branch — it is not in the ROM
+            if fn_def_re.match(line) and "typedef" not in line and "#" not in line:
+                total += 1
+                if naked_re.search(line) or naked_re.search(prev):
+                    naked += 1
+            if s:
+                prev = line
+    return total, naked
 
 
 def count_peeled_asm() -> int:
@@ -174,8 +209,10 @@ def gather_stats() -> tuple[FunctionCounts, DataStats]:
     # [strong, aligned].
     estimate = max(strong, min(aligned, (strong + int(aligned * 0.6)) // 2 + arm))
 
+    total_c, naked_c = count_c_functions()
     fns = FunctionCounts(
-        decomped_c=count_c_functions(),
+        decomped_c=total_c,
+        naked_c=naked_c,
         peeled_asm=count_peeled_asm(),
         strong_signal_total=strong,
         aligned_total=aligned,
@@ -209,7 +246,9 @@ def render_human(fns: FunctionCounts, data: DataStats) -> str:
     out.append("=" * 60)
     out.append("")
     out.append("Functions (code region [0x08000000, 0x{:08x})):".format(CODE_END_GUESS))
-    out.append(f"  decomped to C       : {fns.decomped_c}")
+    out.append(f"  decomped (in ROM)   : {fns.decomped_c}")
+    out.append(f"    - true pure-C     : {fns.true_c}")
+    out.append(f"    - NAKED+NON_MATCH : {fns.naked_c}  (asm fallback — byte-matches, not pure C)")
     out.append(f"  peeled to asm slice : {fns.peeled_asm}")
     out.append(f"  estimated TOTAL     : {fns.estimate_total} "
                f"(range {fns.strong_signal_total} … {fns.aligned_total + fns.arm_total})")
@@ -246,6 +285,8 @@ def render_readme_section(fns: FunctionCounts, data: DataStats) -> str:
         "",
         f"- **Functions decompiled to C**: {fns.decomped_c} / ~{fns.estimate_total} "
         f"estimated total (**{decomp_pct:.1f}%**)",
+        f"  - true pure-C matches: {fns.true_c}",
+        f"  - NAKED+NON_MATCHING (asm fallback, byte-matches but not pure C): {fns.naked_c}",
         f"  - peeled-but-still-asm: {fns.peeled_asm}",
         f"  - estimate range (lower / upper): {fns.strong_signal_total} / "
         f"{fns.aligned_total + fns.arm_total}",
@@ -314,6 +355,8 @@ def main() -> None:
         print(json.dumps({
             "functions": {
                 "decomped_c": fns.decomped_c,
+                "true_c": fns.true_c,
+                "naked_c": fns.naked_c,
                 "peeled_asm": fns.peeled_asm,
                 "estimate_total": fns.estimate_total,
                 "strong_signal_lower": fns.strong_signal_total,
