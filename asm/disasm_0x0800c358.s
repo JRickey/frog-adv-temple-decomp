@@ -112,5 +112,10 @@
 
         thumb_func_start sub_0800C358
 sub_0800C358: @ 0x0800c358
-        .incbin "frog_us_baserom.gba", 0xc358, 0xec
+        .incbin "frog_us_baserom.gba", 0xc358, 0x8c
         thumb_func_end sub_0800C358
+
+        thumb_func_start sub_0800C3E4
+sub_0800C3E4: @ 0x0800c3e4
+        .incbin "frog_us_baserom.gba", 0xc3e4, 0x60
+        thumb_func_end sub_0800C3E4
