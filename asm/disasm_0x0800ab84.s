@@ -444,5 +444,20 @@
 
         thumb_func_start sub_0800AB84
 sub_0800AB84: @ 0x0800ab84
-        .incbin "frog_us_baserom.gba", 0xab84, 0x3cc
+        .incbin "frog_us_baserom.gba", 0xab84, 0xc0
         thumb_func_end sub_0800AB84
+
+        thumb_func_start sub_0800AC44
+sub_0800AC44: @ 0x0800ac44
+        .incbin "frog_us_baserom.gba", 0xac44, 0xa4
+        thumb_func_end sub_0800AC44
+
+        thumb_func_start sub_0800ACE8
+sub_0800ACE8: @ 0x0800ace8
+        .incbin "frog_us_baserom.gba", 0xace8, 0x154
+        thumb_func_end sub_0800ACE8
+
+        thumb_func_start sub_0800AE3C
+sub_0800AE3C: @ 0x0800ae3c
+        .incbin "frog_us_baserom.gba", 0xae3c, 0x114
+        thumb_func_end sub_0800AE3C
