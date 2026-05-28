@@ -84,6 +84,11 @@ struct IwramAt5358 {
     u16 justPressed; /* +0: just-pressed raw key bitmask (active-high) */
 };
 
+struct IwramAt6110 {
+    u8 _pad00[0x32];
+    u8 _field_32; /* +0x32: state-byte gating the sEntityParamTable lookup in sub_0800A1C8 */
+};
+
 extern struct IwramAt3480 gIwram_3480;
 extern struct IwramAt34A0 gIwram_34A0;
 extern struct IwramAt34B0 gIwram_34B0;
@@ -94,5 +99,6 @@ extern struct IwramAt35E0 gIwram_35E0;
 extern struct IwramAt3710 gIwram_3710;
 extern struct IwramAt3720 gIwram_3720;
 extern struct IwramAt5358 gIwram_5358;
+extern struct IwramAt6110 gIwram_6110;
 
 #endif /* GUARD_IWRAM_H */

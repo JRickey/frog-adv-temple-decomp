@@ -46,6 +46,7 @@ SECTIONS {
         . = 0x00003710; gIwram_3710 = .;
         . = 0x00003720; gIwram_3720 = .;
         . = 0x00005358; gIwram_5358 = .;
+        . = 0x00006110; gIwram_6110 = .;
     } >iwram
 
     .text : ALIGN(4) {
@@ -184,7 +185,7 @@ SECTIONS {
         asm/disasm_0x0800a104.o(.text);  /* 0x0800a104 - 0x0800a158, sub_0800A104 (auto-peeled) */
         asm/text/text_0x0800a158.o(.text);  /* 0x0800a158 - 0x0800a1c8, raw bytes */
         src/engine/sub_0800a1c8.o(.text);
-        asm/disasm_0x0800a1c8.o(.text);  /* 0x0800a1c8 - 0x0800a214, sub_0800A1C8 (auto-peeled) */
+        src/engine/sub_0800a1c8.o(.text);  /* 0x0800a1c8 - 0x0800a214, sub_0800A1C8 */
         asm/text/text_0x0800a214.o(.text);  /* 0x0800a214 - 0x0800a2d8, raw bytes */
         src/game/dispatch_helpers.o(.text);  /* 0x0800a2d8 - 0x0800a3d0, sub_0800A2D8, sub_0800A328, sub_0800A3A4 */
         asm/text/text_0x0800a3d0.o(.text);  /* 0x0800a3d0 - 0x0800a4d0, raw bytes */
