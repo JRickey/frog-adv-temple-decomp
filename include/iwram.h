@@ -85,8 +85,12 @@ struct IwramAt5358 {
 };
 
 struct IwramAt6110 {
-    u8 _pad00[0x32];
-    u8 _field_32; /* +0x32: state-byte gating the sEntityParamTable lookup in sub_0800A1C8 */
+    u8 _pad00[2];
+    u8 _field_2;     /* +0x02: threshold compared (signed) against gIwram_35E0[4] in sub_08009884 */
+    u8 _pad03[0x2b]; /* +0x03..+0x2d */
+    u16 _field_2e;   /* +0x2e: flag halfword (bits 0x04, 0x02 set by sub_08009884) */
+    u8 _pad30[2];    /* +0x30..+0x31 */
+    u8 _field_32;    /* +0x32: state-byte gating the sEntityParamTable lookup in sub_0800A1C8 */
 };
 
 extern struct IwramAt3480 gIwram_3480;
