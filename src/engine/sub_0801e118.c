@@ -1,3 +1,4 @@
+#include "game.h"
 #include "types.h"
 
 extern void sub_0801D150(u8 arg);
@@ -13,6 +14,7 @@ extern u8 sub_0801E1AC(u8 arg);
 extern void sub_0801A980(u8 a, u8 b);
 extern u8 sub_08010694(u8 arg);
 extern s32 sub_080106B8(void);
+extern u8 sub_0801D570(u8 arg);
 
 /* Scene transition: fade the screen out, swap room state, then fade back
  * in. sub_080106EC/sub_08010710 drive the fade-out, sub_08010694/
@@ -53,4 +55,29 @@ u8 sub_0801E118(void)
         sub_0801E270(2);
 
     return 1;
+}
+
+/* Fade-in poll step (called from the do/while in sub_0801E118). Mirrors the
+ * room-state delay bookkeeping at 0x03006440 from sub_0800FD50: when the
+ * delay counter (state[11]) has elapsed it steps sub_0801D570 and re-arms,
+ * carrying that step's result out. Reports 0xFE once gIwram_5398 reaches 0x20,
+ * which the caller's loop watches for. */
+u8 sub_0801E1AC(u8 arg)
+{
+    u8 *state;
+    u8 ret;
+
+    ret = 1;
+    state = (u8 *)0x03006440;
+    if (*(u16 *)(state + 48) == 0) {
+        state[11] = 8;
+    }
+    if (gGameStuff._unk00 - *(u32 *)(state + 4) >= state[11]) {
+        ret = sub_0801D570(arg);
+        *(u32 *)(state + 4) = gGameStuff._unk00;
+    }
+    if (*(u16 *)0x03005398 == 32) {
+        ret = 254;
+    }
+    return ret;
 }
