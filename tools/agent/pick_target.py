@@ -50,6 +50,16 @@ FUNC_START_RE = re.compile(
 )
 LINKER_OBJ_RE = re.compile(r"\s*(\S+\.o)\(\.text\)")
 ADDR_COMMENT_RE = re.compile(r"@\s*0x([0-9a-fA-F]{8})")
+# `.incbin "...", <offset>, <size>` — the size arg is the function's true byte
+# span. For an un-refined slice the body is a single INCBIN, so the line-based
+# instr_count is a constant ~2 (label + thumb_func_end) regardless of how big
+# the function actually is. That made `--max-size` a no-op and the small-first
+# ordering pick the lowest-address func instead of the smallest (it kept
+# feeding 800-byte dispatchers to one-shot agents). Parse the real size.
+INCBIN_SIZE_RE = re.compile(
+    r"\.incbin\s+\"[^\"]*\"\s*,\s*0x[0-9a-fA-F]+\s*,\s*(0x[0-9a-fA-F]+|\d+)"
+)
+THUMB_AVG_INSTR_BYTES = 2  # Thumb-1 is mostly 2-byte; BL is 4 — estimate only
 DEFAULT_NAME_PREFIX_MIN = 3
 
 # libgcc helpers compiled into the ROM. These are byte-identical to the
@@ -79,7 +89,8 @@ class Target:
     start_line: int       # 1-indexed for editor jumps
     end_line: int
     line_count: int
-    instr_count: int
+    instr_count: int      # real for refined slices; byte-derived estimate for INCBIN stubs
+    byte_size: int        # true function byte span (from .incbin size, or instr*2 if refined)
     addr: int             # baserom address of the function (from @ 0xADDR)
     is_first_in_file: bool
     destination: str | None   # previous src/*.c in linker order, or None
@@ -112,6 +123,7 @@ def parse_asm_file(path: Path) -> list[Target]:
 
         instr = 0
         addr = 0
+        incbin_bytes = 0
         for raw in body:
             stripped = raw.strip()
             if not stripped or stripped.startswith("@"):
@@ -119,12 +131,25 @@ def parse_asm_file(path: Path) -> list[Target]:
                     addr = int(m.group(1), 16)
                 continue
             if stripped.startswith("."):
+                if im := INCBIN_SIZE_RE.search(stripped):
+                    incbin_bytes += int(im.group(1), 16 if im.group(1).startswith("0x") else 10)
                 continue
             if stripped.endswith(":"):
                 continue
             instr += 1
             if addr == 0 and (m := ADDR_COMMENT_RE.search(raw)):
                 addr = int(m.group(1), 16)
+
+        # An INCBIN stub has no real instruction lines (instr counts only the
+        # `label:` and `thumb_func_end` lines). Use the incbin byte span as the
+        # truth, and back-derive an instr estimate so --max-size / the sort do
+        # the right thing. A refined slice has real mnemonics and no incbin →
+        # keep the counted instr and estimate bytes from it.
+        if incbin_bytes:
+            byte_size = incbin_bytes
+            instr = max(1, round(incbin_bytes / THUMB_AVG_INSTR_BYTES))
+        else:
+            byte_size = instr * THUMB_AVG_INSTR_BYTES
 
         out.append(Target(
             file=str(path.relative_to(ROOT)),
@@ -133,6 +158,7 @@ def parse_asm_file(path: Path) -> list[Target]:
             end_line=end_line,
             line_count=end_line - line_no,
             instr_count=instr,
+            byte_size=byte_size,
             addr=addr,
             is_first_in_file=(idx == 0),
             destination=None,
@@ -412,7 +438,7 @@ def main() -> int:
             targets = [t for t in targets if t.legal]
         if args.max_size is not None:
             targets = [t for t in targets if t.instr_count <= args.max_size]
-        targets.sort(key=lambda t: (not t.legal, t.instr_count, t.name))
+        targets.sort(key=lambda t: (not t.legal, t.byte_size, t.name))
         targets = targets[: args.limit]
 
     if args.json:
@@ -423,7 +449,7 @@ def main() -> int:
             mark = "✓" if t.legal else "✗"
             print(
                 f"{mark} {t.file}:{t.start_line:<6}  {t.name:<48}"
-                f"  {t.instr_count:>4} instr  {t.addr_hex}"
+                f"  {t.byte_size:>5}B  (~{t.instr_count:>4} instr)  {t.addr_hex}"
             )
             print(f"   → {t.legality_note}")
 
