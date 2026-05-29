@@ -98,26 +98,31 @@ NAKED void sub_0800A2D8(void)
  * caller's context so the scene is up-to-date before whatever happens
  * next. Re-enables VBlank on the way out.
  *
- * Shipped NAKED. The pure-C body (see NON_MATCHING block below) lands
- * with byte_diff=1 (one Thumb instruction): the `adds r0, r1, r0` after
- * the LUT load. agbcc 2.x always emits `adds rd, rd, rm` for `base +
- * index` regardless of operand order in source — confirmed by corpus
- * grep (all 16 `adds r0, r1, r0` hits in pret/pokeruby are inside NAKED
- * blocks). Same class of register-coloring drift as sub_0800A2D8 above. */
-#ifdef NON_MATCHING
+ * Two agbcc levers are needed to match the baserom's `adds r0, r1, r0`
+ * (LUT base + entity index, index first):
+ *   - The gGameStuff base is read through the link-time IWRAM symbol
+ *     gIwram_5330 (= 0x03005330) rather than the `(*(GameStuff *)0x...)`
+ *     absolute-address macro. The macro form lets agbcc tie the add result
+ *     to the index register (`adds r1, r1, r0`); the opaque relocation
+ *     pins the LUT base in r0 and ties the result there instead. Same
+ *     linker-symbol idiom that defeats the adjacent-IWRAM CSE-fold
+ *     (see docs/codegen-notes.md "Adjacent IWRAM bases").
+ *   - `idx + (u32)lut` (index first, integer-space add) gives the
+ *     `r1, r0` operand order; `lut[idx]` folds the pointer to the front
+ *     and yields `adds r0, r0, r1` instead. */
+extern u8 gIwram_5330;
+
 void sub_0800A328(void)
 {
     register const u8 *lut asm("r0");
-    register GameStuff *g asm("r1");
+    register u32 idx asm("r1");
     register vu16 *dst asm("r1");
     register u16 *src asm("r2");
-    u8 idx;
 
     REG_IE &= ~IRQ_VBLANK;
     lut = sEntitySubtypeLut;
-    g = &gGameStuff;
-    idx = g->pendingMode;
-    sub_0800FCC8(lut[idx]);
+    idx = ((GameStuff *)&gIwram_5330)->pendingMode;
+    sub_0800FCC8(*(const u8 *)(idx + (u32)lut));
     sub_08005FC8();
     sub_0802D558((void *)0x030054a0, (void *)0x07000000, 0x100);
     dst = (vu16 *)0x04000010;
@@ -130,66 +135,6 @@ void sub_0800A328(void)
     *dst = src[5];
     REG_IE |= IRQ_VBLANK;
 }
-#else
-NAKED void sub_0800A328(void)
-{
-    asm(".syntax unified\n"
-        "    push    {r4, lr}\n"
-        "    ldr     r4, _pool_REG_IE\n"
-        "    ldrh    r1, [r4, #0]\n"
-        "    ldr     r0, _pool_clear_vblank\n"
-        "    ands    r0, r1\n"
-        "    strh    r0, [r4, #0]\n"
-        "    ldr     r0, _pool_lut_a328\n"
-        "    ldr     r1, _pool_gGameStuff_a328\n"
-        "    ldrb    r1, [r1, #10]\n"
-        "    adds    r0, r1, r0\n"
-        "    ldrb    r0, [r0, #0]\n"
-        "    bl      sub_0800FCC8\n"
-        "    bl      sub_08005FC8\n"
-        "    ldr     r0, _pool_oam_shadow\n"
-        "    movs    r1, #224\n"
-        "    lsls    r1, r1, #19\n"
-        "    movs    r2, #128\n"
-        "    lsls    r2, r2, #1\n"
-        "    bl      sub_0802D558\n"
-        "    ldr     r1, _pool_bg_scroll_mmio\n"
-        "    ldr     r2, _pool_bg_scroll_shadow\n"
-        "    ldrh    r0, [r2, #0]\n"
-        "    strh    r0, [r1, #0]\n"
-        "    adds    r1, #2\n"
-        "    ldrh    r0, [r2, #2]\n"
-        "    strh    r0, [r1, #0]\n"
-        "    adds    r1, #2\n"
-        "    ldrh    r0, [r2, #4]\n"
-        "    strh    r0, [r1, #0]\n"
-        "    adds    r1, #2\n"
-        "    ldrh    r0, [r2, #6]\n"
-        "    strh    r0, [r1, #0]\n"
-        "    adds    r1, #2\n"
-        "    ldrh    r0, [r2, #8]\n"
-        "    strh    r0, [r1, #0]\n"
-        "    adds    r1, #2\n"
-        "    ldrh    r0, [r2, #10]\n"
-        "    strh    r0, [r1, #0]\n"
-        "    ldrh    r0, [r4, #0]\n"
-        "    movs    r1, #1\n"
-        "    orrs    r0, r1\n"
-        "    strh    r0, [r4, #0]\n"
-        "    pop     {r4}\n"
-        "    pop     {r0}\n"
-        "    bx      r0\n"
-        "    .align  2, 0\n"
-        "_pool_REG_IE:             .4byte 0x04000200\n"
-        "_pool_clear_vblank:       .4byte 0x0000fffe\n"
-        "_pool_lut_a328:           .4byte sEntitySubtypeLut\n"
-        "_pool_gGameStuff_a328:    .4byte 0x03005330\n"
-        "_pool_oam_shadow:         .4byte 0x030054a0\n"
-        "_pool_bg_scroll_mmio:     .4byte 0x04000010\n"
-        "_pool_bg_scroll_shadow:   .4byte 0x03003550\n"
-        ".syntax divided\n");
-}
-#endif
 
 /* Descending-sort comparator over a pair of 8-byte records.
  *
