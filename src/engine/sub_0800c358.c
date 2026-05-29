@@ -40,3 +40,25 @@ void sub_0800C358(u8 mode)
         }
     }
 }
+
+/* agbcc register layout: case 20 loads base into r5; case 21 loads base
+ * into r4 (r5 is still live from the previous block). The register pin for
+ * case 21 forces agbcc to use r4 instead of spilling to r5. */
+void sub_0800C3E4(u8 mode)
+{
+    if (mode == 20) {
+        u8 *base = (u8 *)0x03006110;
+        if (sub_0800679C(base, 5, 0) == 0) {
+            sub_08006600(base, 5, 0);
+        }
+    }
+
+    if (mode == 21) {
+        register u8 *base4 asm("r4") = (u8 *)0x03006110;
+        if (sub_0800679C(base4, 5, 0) != 0) {
+            if (sub_0800679C(base4, 5, 1) == 0) {
+                sub_08006600(base4, 5, 1);
+            }
+        }
+    }
+}
