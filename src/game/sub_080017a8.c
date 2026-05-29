@@ -8,6 +8,7 @@ extern void sub_0800CE98(u32 a, u32 b);
 extern void sub_08009CBC(void);
 extern u32 sub_08009C14(u8 *state);
 extern void sub_0800B7B0(u32 a, u32 b, u8 c);
+extern void sub_0800DE80(void);
 
 extern void sub_0800A2D8(void);
 extern void sub_080008DC(void);
@@ -83,4 +84,11 @@ void sub_08001850(u8 *state, u32 a, u32 b)
     } else {
         gIwram_6110._field_10 = 5;
     }
+}
+
+/* Thin forwarder to sub_0800DE80 — same shape as sub_08001E18
+ * (push lr; bl sub_0800DE80; pop r0; bx r0). */
+void sub_0800189C(void)
+{
+    sub_0800DE80();
 }
