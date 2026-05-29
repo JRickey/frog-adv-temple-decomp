@@ -90,6 +90,12 @@ SECTIONS {
      * index read. Indexed by gIwram_3480._data[2] in sub_080201C8. */
     gHandlerTable_08308AD4 = 0x08308AD4;
 
+    /* ROM dispatch table at 0x08308aec (also inside the sprite_dma_records
+     * blob; not yet broken out). Linker-assigned for the same reason as
+     * gHandlerTable_08308AD4 — keeps its pool load ahead of the gIwram_3480
+     * index read. Indexed by gIwram_3480._data[2] in sub_080202A8. */
+    gHandlerTable_08308AEC = 0x08308AEC;
+
     .text : ALIGN(4) {
         asm/disasm_0x08000000.o(.text);  /* 0x08000000 - 0x08000004, entry branch */
         asm/header.o(.text);             /* 0x08000004 - 0x080000BF, header */
@@ -447,8 +453,7 @@ SECTIONS {
         src/engine/sub_080201e8.o(.text);
         asm/disasm_0x080201e8.o(.text);  /* 0x080201e8 - 0x08020270, sub_080201E8 (auto-peeled) */
         asm/text/text_0x08020270.o(.text);  /* 0x08020270 - 0x080202a8, raw bytes */
-        src/engine/sub_080202a8.o(.text);
-        asm/disasm_0x080202a8.o(.text);  /* 0x080202a8 - 0x080202f8, sub_080202A8 (auto-peeled) */
+        src/engine/sub_080202a8.o(.text);  /* 0x080202a8 - 0x080202f8, sub_080202A8 + sub_080202C8 */
         asm/text/text_0x080202f8.o(.text);  /* 0x080202f8 - 0x080204a4, raw bytes */
         src/engine/sub_080204a4.o(.text);
         asm/disasm_0x080204a4.o(.text);  /* 0x080204a4 - 0x080205d8, sub_080204A4 (auto-peeled) */
