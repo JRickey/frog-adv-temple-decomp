@@ -69,22 +69,29 @@ whole budget.** Past ~2000 iterations / ~30–45 s with no score-0, you are eith
 time or the base/config is wrong — STOP and rewrite the C approach; do not let it grind
 for minutes.
 
+**Time-boxing — use EXACTLY this recipe (a process-group kill).** There is NO
+`timeout`/`gtimeout` on macOS, and the naive `cmd & PID=$!; kill $PID` LEAKS: the permuter
+forks `-j` multiprocessing workers that orphan (reparent to PID 1) when only the main is
+killed — and if you PIPE the permuter (`… | grep | head &`), `$!` is `head`, so the kill
+misses the permuter entirely. Both leak CPU-burning workers. So: do NOT pipe the permuter
+(redirect to a file), and kill the whole PROCESS GROUP with `set -m`:
+
 ```sh
+set -m   # job control: the bg job becomes its own process-group leader
 vendor/decomp-permuter/.venv/bin/python vendor/decomp-permuter/permuter.py \
-    nonmatchings/<fn>-<id> -j4 --stop-on-zero --better-only
+    nonmatchings/<fn>-<id> -j4 --stop-on-zero --better-only > /tmp/perm-<fn>.log 2>&1 &
+PGID=$!
+sleep 45
+kill -- -$PGID 2>/dev/null   # negative = kill the ENTIRE group (main + all -j workers)
+wait 2>/dev/null
+grep -E 'base score|new best|score = 0|Found match' /tmp/perm-<fn>.log | tail -20
+# safety net (scoped to THIS scratch — never cross-kills siblings):
+pkill -f "permuter.py nonmatchings/<fn>-<id>" 2>/dev/null || true
 ```
-- `--stop-on-zero` exits the instant it finds a byte match (score 0) — so on success the
-  command returns on its own, well under budget.
-- **Time-boxing on macOS:** there is NO `timeout`/`gtimeout` binary here. Do NOT use them,
-  and do NOT `pkill -f permuter.py` (that cross-kills sibling worktrees' permuters in the
-  parallel workflow). Instead bound the run ONE of two safe ways:
-  - run it as a foreground command with your Bash tool's own ~50 s timeout (simplest —
-    `--stop-on-zero` returns early on success, otherwise the tool stops it and you read the
-    best score from the captured status line); OR
-  - background it and kill only its own tree:
-    `… permuter.py <scratch> -j4 --stop-on-zero --better-only & PID=$!; sleep 45; pkill -P $PID 2>/dev/null; kill $PID 2>/dev/null`
-- `-j4` keeps thread use modest — sibling decomp worktrees may be permuting too. Lower to
-  `-j2` if the machine is contended.
+- `--stop-on-zero` exits the instant it finds a byte match, so on success it returns early.
+- NEVER `pkill -f permuter.py` unscoped — that cross-kills sibling worktrees' permuters.
+- `-j4` keeps thread use modest — sibling worktrees may be permuting too. Lower to `-j2`.
+- After your run, VERIFY nothing leaked: `pgrep -f "nonmatchings/<fn>-<id>"` must be empty.
 - Watch the status line's best score. If it's still > 0 and plateaued at ~2000 iters, stop.
 
 ## Outcomes
