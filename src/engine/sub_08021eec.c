@@ -11,3 +11,24 @@ void sub_08021EEC(void *obj, u8 idx)
     sub_080219BC(obj, idx);
     sub_080059C4((u8 *)&gIwram_3720 + idx * 56);
 }
+
+void sub_08021F1C(u8 dir, s8 *outX, s8 *outY)
+{
+    *outX = 0;
+    *outY = 0;
+
+    switch (dir) {
+    case 1:
+        *outY = -1;
+        break;
+    case 2:
+        *outY = 1;
+        break;
+    case 3:
+        *outX = -1;
+        break;
+    case 4:
+        *outX = 1;
+        break;
+    }
+}
