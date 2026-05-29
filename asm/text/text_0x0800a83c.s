@@ -1,6 +1,6 @@
 @ Auto-emitted by tools/agent/auto_peel.py — do not hand-edit this header.
 @ Address-aligned bucket of unparsed baserom bytes.
-@ Range:  [0x0800a83c, 0x0800a9d4)  (0x198 bytes)
+@ Range:  [0x0800a83c, 0x0800a910)  (0xd4 bytes)
 @
 @ Post-peel chunk after sub_0800A7A8.
 @
@@ -11,5 +11,5 @@
         .global text_0800a83c
         .type   text_0800a83c, %object
 text_0800a83c:
-        .incbin "frog_us_baserom.gba", 0x0000a83c, 0x00000198
+        .incbin "frog_us_baserom.gba", 0x0000a83c, 0x000000d4
         .size   text_0800a83c, . - text_0800a83c
