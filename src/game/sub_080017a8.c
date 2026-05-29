@@ -92,3 +92,35 @@ void sub_0800189C(void)
 {
     sub_0800DE80();
 }
+
+/* Like sub_080017DC but without the five per-frame setup calls and
+ * without the gGameStuff._unk14 bump — bare tile-cache probe. */
+void sub_080018A8(u32 arg0, u32 arg1)
+{
+    register u32 mask asm("r0");
+    register struct IwramAt35E0 *p35E0 asm("r4");
+    register u16 field asm("r4");
+    struct IwramAt3720 *p3720;
+    u8 tile;
+
+    sub_0800B918((void *)arg0, arg1, 4);
+
+    p3720 = &gIwram_3720;
+    mask = 4;
+    mask &= p3720->_field_34;
+    if (mask != 0)
+        goto done;
+
+    p35E0 = &gIwram_35E0;
+    tile = (u8)sub_0800CD88(p35E0->_field_18, p35E0->_field_19, p35E0->_field_8, p35E0->_field_A);
+
+    mask = 0x10;
+    field = p35E0->_field_10;
+    mask &= field;
+    if (mask == 0)
+        goto done;
+
+    sub_0800B8A8((void *)arg0, arg1, 4, tile);
+
+done:;
+}
