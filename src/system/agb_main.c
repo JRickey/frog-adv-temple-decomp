@@ -22,20 +22,24 @@
  *       sub_0801A268, then falls into the shared tail.
  *     - Mode 28 *is* the shared tail (bl sub_080008DC; b.n loopHead).
  *
- * Shipped as NAKED inline asm + NON_MATCHING reference C.
+ * Shipped as NAKED inline asm + NON_MATCHING reference C — but this is a
+ * PREMATURE NAKED, not a structural one (corrected 2026-05-29).
  *
- * The computed jump (`mov pc, r0` after table lookup) cannot be expressed
- * in agbcc-emitted C; the only way to match the dispatcher shape exactly
- * is to ship the asm directly. The NON_MATCHING reference body documents
- * the dispatch table for the phase-3 PC port, where the computed jump
- * becomes a normal `switch` statement.
+ * The old claim "the `mov pc, r0` computed jump cannot be expressed in agbcc C"
+ * is FALSE. A plain C `switch` over a dense case range compiles — under BOTH
+ * agbcc and old_agbcc — to exactly this dispatcher core:
+ *     lsls r0,#2; ldr r1,=table; adds r0,r0,r1; ldr r0,[r0]; mov pc, r0
+ * plus an absolute-address `.word` table (verified by direct probe; see
+ * docs/codegen-notes.md "`mov pc, rN` jump tables"). So AgbMain IS matchable in
+ * pure C — the dispatcher core already matches byte-for-byte.
  *
- * This is the LEGITIMATE structural class — agbcc cannot emit `mov pc, rN`
- * (a computed jump) from any C input (`classify_unmatchable` → class4-movpc;
- * docs/codegen-notes.md "`mov pc, rN` jump tables"). It is NOT the retracted
- * "high registers" / "fifth register-coloring" classes — those were 2026-05-29
- * misdiagnoses (see codegen-notes "Reclamation idioms"). Don't re-attempt this
- * one in plain C: the dispatch genuinely needs the asm.
+ * What it still needs (not yet done): the case BODIES written in the baserom's
+ * PHYSICAL order (mode04, mode24, mode08, 09, 10, …) — agbcc emits case bodies in
+ * SOURCE order while the `.word` table stays in case-value order, so the cases in
+ * the NON_MATCHING switch below (currently numeric order) must be reordered to the
+ * NAKED form's body order (see "Case-number ≠ source-block-order trap"). Plus
+ * matching mode-04's sub-dispatch and the bounds check. Normal decomp work, no
+ * structural wall — a reclamation candidate, not a forever-NAKED.
  *
  * The case-body branch-back-to-loopHead arrangement is unusual:
  * every body — including mode 28 / shared tail — branches to the BL Init2
