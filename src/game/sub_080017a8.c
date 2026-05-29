@@ -6,6 +6,8 @@
 extern void sub_0800658C(void *p, u32 a, u32 b, const void *table, u32 e, u32 f);
 extern void sub_0800CE98(u32 a, u32 b);
 extern void sub_08009CBC(void);
+extern u32 sub_08009C14(u8 *state);
+extern void sub_0800B7B0(u32 a, u32 b, u8 c);
 
 extern void sub_0800A2D8(void);
 extern void sub_080008DC(void);
@@ -67,4 +69,18 @@ void sub_080017DC(u32 arg0, u32 arg1)
 
 done:
     gGameStuff._unk14++;
+}
+
+void sub_08001850(u8 *state, u32 a, u32 b)
+{
+    if (sub_08009C14(state) == 0) {
+        *state = 7;
+    }
+    sub_0800B7B0(a, b, 4);
+    if (gIwram_35E0._field_5 <= 1) {
+        gIwram_6110._field_10 = 0;
+        gIwram_6110._field_26 = 0;
+    } else {
+        gIwram_6110._field_10 = 5;
+    }
 }
