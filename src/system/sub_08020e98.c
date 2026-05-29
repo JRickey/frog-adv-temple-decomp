@@ -110,3 +110,11 @@ void sub_08020E98(u32 arg)
         "    .syntax divided\n");
 }
 #endif
+
+/* Setter for the offset-3 counter byte that sub_08020EE4 (++) and
+ * sub_08020F08 (--) maintain. The value arrives in the second argument
+ * register (r1); r0 is unused on entry and is reused to hold the base. */
+void sub_08020ED8(u32 unused, u32 value)
+{
+    gStructAt3003570.d = value;
+}
