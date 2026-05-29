@@ -1,11 +1,17 @@
 @ Auto-emitted by tools/disasm/peel.py — do not hand-edit this header.
 @ Range:  [0x0803299c, 0x08032aa0)  (260 bytes, thumb mode)
 @ Re-peel:  python3 tools/disasm/peel.py --start 0x803299c --end 0x8032aa0 --mode thumb
+@
+@ NOTE: the original auto-peel labeled this whole range as a single
+@ function sub_0803299C, but the boundary heuristic over-extended past
+@ several leaf functions (no push-lr prologue). Split into the five real
+@ functions below so each cross-region BL target has its own Thumb symbol.
+@ The .incbin bytes are unchanged — this split is byte-identical.
 
         .include "asm/macros.inc"
         .syntax unified
 
-@ Disassembly preview (the bytes come from the INCBIN below):
+@ Disassembly preview (the bytes come from the INCBINs below):
 @   0x0803299c: b5f0        push	{r4, r5, r6, r7, lr}
 @   0x0803299e: 1c07        adds	r7, r0, #0
 @   0x080329a0: 468c        mov	ip, r1
@@ -46,10 +52,15 @@
 @   0x080329e6: bcf0        pop	{r4, r5, r6, r7}
 @   0x080329e8: bc01        pop	{r0}
 @   0x080329ea: 4700        bx	r0
-@   0x080329ec: 65e0        str	r0, [r4, #92]	@ 0x5c
-@   0x080329ee: 0300        lsls	r0, r0, #12
-@   0x080329f0: 7eef        ldrb	r7, [r5, #27]
-@   0x080329f2: ffff        4806 	vtbl.8	d20, {d15}, d6
+@   0x080329ec: 65e0 0300   .word 0x030065e0  (pool)
+@   0x080329f0: 7eef ffff   .word 0xffff7eef  (pool)
+
+        thumb_func_start sub_0803299C
+sub_0803299C: @ 0x0803299c
+        .incbin "frog_us_baserom.gba", 0x3299c, 0x58
+        thumb_func_end sub_0803299C
+
+@   0x080329f4: 4806        ldr	r0, [pc, #24]	@ (0x32a10)
 @   0x080329f6: 6800        ldr	r0, [r0, #0]
 @   0x080329f8: 218c        movs	r1, #140	@ 0x8c
 @   0x080329fa: 0049        lsls	r1, r1, #1
@@ -63,14 +74,18 @@
 @   0x08032a0a: 2000        movs	r0, #0
 @   0x08032a0c: e006        b.n	0x32a1c
 @   0x08032a0e: 0000        movs	r0, r0
-@   0x08032a10: 65e0        str	r0, [r4, #92]	@ 0x5c
-@   0x08032a12: 0300        lsls	r0, r0, #12
+@   0x08032a10: 65e0 0300   .word 0x030065e0  (pool)
 @   0x08032a14: 2002        movs	r0, #2
 @   0x08032a16: 4308        orrs	r0, r1
 @   0x08032a18: 7010        strb	r0, [r2, #0]
 @   0x08032a1a: 2001        movs	r0, #1
 @   0x08032a1c: 4770        bx	lr
-@   0x08032a1e: 0000        movs	r0, r0
+
+        thumb_func_start sub_080329F4
+sub_080329F4: @ 0x080329f4
+        .incbin "frog_us_baserom.gba", 0x329f4, 0x2c
+        thumb_func_end sub_080329F4
+
 @   0x08032a20: 4807        ldr	r0, [pc, #28]	@ (0x32a40)
 @   0x08032a22: 6800        ldr	r0, [r0, #0]
 @   0x08032a24: 218c        movs	r1, #140	@ 0x8c
@@ -87,8 +102,7 @@
 @   0x08032a3a: 2000        movs	r0, #0
 @   0x08032a3c: e008        b.n	0x32a50
 @   0x08032a3e: 0000        movs	r0, r0
-@   0x08032a40: 65e0        str	r0, [r4, #92]	@ 0x5c
-@   0x08032a42: 0300        lsls	r0, r0, #12
+@   0x08032a40: 65e0 0300   .word 0x030065e0  (pool)
 @   0x08032a44: 20fb        movs	r0, #251	@ 0xfb
 @   0x08032a46: 4008        ands	r0, r1
 @   0x08032a48: 2102        movs	r1, #2
@@ -96,7 +110,12 @@
 @   0x08032a4c: 7010        strb	r0, [r2, #0]
 @   0x08032a4e: 2001        movs	r0, #1
 @   0x08032a50: 4770        bx	lr
-@   0x08032a52: 0000        movs	r0, r0
+
+        thumb_func_start sub_08032A20
+sub_08032A20: @ 0x08032a20
+        .incbin "frog_us_baserom.gba", 0x32a20, 0x34
+        thumb_func_end sub_08032A20
+
 @   0x08032a54: b500        push	{lr}
 @   0x08032a56: 0400        lsls	r0, r0, #16
 @   0x08032a58: 0c03        lsrs	r3, r0, #16
@@ -119,22 +138,25 @@
 @   0x08032a7a: 0049        lsls	r1, r1, #1
 @   0x08032a7c: 1850        adds	r0, r2, r1
 @   0x08032a7e: 8003        strh	r3, [r0, #0]
-@   0x08032a80: f7ff        f99c 	bl	0x31dbc
+@   0x08032a80: f7ff f99c   bl	0x31dbc
 @   0x08032a84: 2001        movs	r0, #1
 @   0x08032a86: e004        b.n	0x32a92
-@   0x08032a88: 65e0        str	r0, [r4, #92]	@ 0x5c
-@   0x08032a8a: 0300        lsls	r0, r0, #12
-@   0x08032a8c: 0151        lsls	r1, r2, #5
-@   0x08032a8e: 0000        movs	r0, r0
+@   0x08032a88: 65e0 0300   .word 0x030065e0  (pool)
+@   0x08032a8c: 0151 0000   .word 0x00000151  (pool)
 @   0x08032a90: 2000        movs	r0, #0
 @   0x08032a92: bc02        pop	{r1}
 @   0x08032a94: 4708        bx	r1
-@   0x08032a96: 0000        movs	r0, r0
+
+        thumb_func_start sub_08032A54
+sub_08032A54: @ 0x08032a54
+        .incbin "frog_us_baserom.gba", 0x32a54, 0x44
+        thumb_func_end sub_08032A54
+
 @   0x08032a98: 20a8        movs	r0, #168	@ 0xa8
 @   0x08032a9a: 0040        lsls	r0, r0, #1
 @   0x08032a9c: 4770        bx	lr
 
-        thumb_func_start sub_0803299C
-sub_0803299C: @ 0x0803299c
-        .incbin "frog_us_baserom.gba", 0x3299c, 0x104
-        thumb_func_end sub_0803299C
+        thumb_func_start sub_08032A98
+sub_08032A98: @ 0x08032a98
+        .incbin "frog_us_baserom.gba", 0x32a98, 0x8
+        thumb_func_end sub_08032A98
