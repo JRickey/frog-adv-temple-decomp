@@ -721,13 +721,40 @@ Permuter doesn't include this idiom in its mutation set (as of 2024).
 Apply it manually when `compile_and_view_assembly.py` reports a fold
 that no source rearrangement breaks.
 
-## High registers (sl/r10, sb/r9, r8, ip/r12) — corpus-validated unmatchable
+## High registers (sl/r10, r9, r8, ip/r12) — usually MATCHABLE from plain C
 
-If your baserom uses `mov sl, rN` (or `mov sb, …` / `mov r8, …` /
-`mov ip, …`) to spill a value into a Thumb high register, **stop
-trying to match it in C and use NAKED asm + `#ifdef NON_MATCHING`
-instead.** This is the established pattern in every agbcc decomp
-we've surveyed.
+> **RETRACTED 2026-05-29 (reclamation pass).** The original claim below — "any
+> baserom that uses a high register for state must ship NAKED" — is WRONG, and it
+> drove ~a dozen premature NAKED ships (our NAKED rate hit 37% vs ~0.3% for the
+> mature Konami agbcc decomp cvaos). What's actually true:
+> - agbcc 2.x **does** allocate r8/r9/sl/ip for values that are simultaneously live
+>   across a call. You do NOT pin them — you write plain C with that many call-live
+>   values and agbcc spills to high regs **on its own**. Validated: `sub_08007874`
+>   spills 6 call-live values to r8/r9/sl/r7 with **no** register-asm pins;
+>   `sub_08006A74` emits the exact `movs r0,#0; mov r8,r0` zero-pin + high-reg
+>   `push {r4-r6,lr}; mov r6,r8; push {r6}` prologue from plain field-assignment C.
+> - The corpus evidence below (966 `mov sl` only in asm; `register asm("r8")` rare)
+>   is about EXPLICIT register-asm **pinning** — that *is* unreliable for arbitrary
+>   state. It does NOT mean agbcc won't *use* high regs; it uses them naturally.
+> - Most "high-reg unmatchable" verdicts were **misdiagnoses masking a real bug**:
+>   a struct-layout error (`sub_08006A74` had a spurious `_pad14`; `sub_08006FEC`
+>   had the wrong record stride + field offsets), a load-scheduling order, a
+>   branch-sense phrasing, or an operand-order choice — all fixable in pure C,
+>   frequently with the `OLD_AGBCC` per-TU lever.
+> - Even `sub_08009BA0` — cited below as the `mov ip` proof — is reproducible from C
+>   via two-pointer aliasing (see its source + the "Reclamation idioms" section).
+>   The "`mov ip` only appears in NAKED" claim was simply false.
+>
+> **Procedure now:** drop the readable C in as the *active* body and diff. If
+> byte_diff is small, the high regs already matched — the residual is a struct /
+> scheduling / operand / compiler issue; see "Reclamation idioms (2026-05-29)".
+> NAKED only after those levers AND a corpus check fail. The corpus data + original
+> argument below are kept for the record, re-interpreted per the above.
+
+(Historical, superseded by the retraction above.) If your baserom uses `mov sl, rN`
+(or `mov sb, …` / `mov r8, …` / `mov ip, …`) to spill a value into a Thumb high
+register, the early playbook said to ship NAKED asm + `#ifdef NON_MATCHING`. Try
+plain C first now.
 
 **`ip` (r12) added to the list iter 25** after a third corpus-confirmed
 instance (sub_08009BA0 — uses `mov ip, r3` to cache a ROM table base,
@@ -1408,9 +1435,30 @@ extraction in the level-layout subsystem should be PTR-ARRAY-DRIVEN,
 not header-driven.
 
 
-## Fifth unmatchable class: register-coloring drift after libgcc / table-dispatch calls
+## Fifth "unmatchable class" — RETRACTED (mostly reclaimed 2026-05-29)
 
-**Promoted from "candidate" → confirmed in iter 21** after a third
+> **RETRACTED 2026-05-29.** This "class" was a misdiagnosis. SIX of its listed
+> instances were reclaimed to true-C byte matches: `sub_080090B0` (single-register-
+> reuse pin), `sub_0800A328` (linker-symbol base + index-first cast), `sub_08006948`,
+> `sub_08006958`, `sub_08006B94`, `sub_08006BA4` (all `OLD_AGBCC` per-TU override +
+> branch-sense ordering). The "register-coloring drift no source mutation flips"
+> framing was wrong; the missed levers were (1) the COMPILER itself — `OLD_AGBCC`
+> per-TU fixes const-first AND ordering, leaf epilogues, and redundant-recolour-move
+> folds across the 0x8006xxx / sound cluster; (2) operand-order C idioms (index-first
+> pointer cast, linker-assigned IWRAM base, single-register-reuse). See "Reclamation
+> idioms (2026-05-29)" at the end of this file.
+>
+> CRUCIAL process correction: the "Permuter convergence audit" table below concluded
+> `sub_08006948` was unmatchable ("0% improvement … unreachable from C"). It was then
+> reclaimed via `OLD_AGBCC`. **Permuter non-convergence does NOT prove unmatchable** —
+> the permuter only mutates SOURCE FORMS; it cannot change the compiler or discover a
+> structural idiom (operand-order cast, struct-layout fix). Do not cite a flat
+> permuter run as proof of unmatchability again.
+>
+> Of the list, only `sub_0800A2D8` remains NAKED (a reclaim demote-attempt didn't
+> land) — it is OPEN, not confirmed-unmatchable. Original analysis kept below.
+
+(Historical.) **Promoted from "candidate" → confirmed in iter 21** after a third
 distinct instance (sub_080090B0) reproduced the same shape.
 Confirmed instances:
 - `sub_0800A2D8` (iter 16, 24 instr, byte_diff 7) — repeated
@@ -2038,6 +2086,73 @@ larger than the peel's stated range (e.g. 0xC0 vs 0xA4). The extra
 bytes are the trailing pool entries. Per-function diff shows pool
 loads with `ldr [pc, #N]` whose target offsets all shift by exactly
 the over-extension delta.
+
+## Reclamation idioms (2026-05-29) — the levers the early agents missed
+
+A reclamation pass turned 16 "unmatchable" NAKED ships into true-C byte matches
+(NAKED rate 37% → 26%) and RETRACTED the "High registers" and "Fifth unmatchable
+class" sections above. The recurring lesson: **"unmatchable" was almost always a
+misdiagnosis.** Before you NAKED a game/engine function, work this checklist — these
+are the levers, with the function that proved each:
+
+1. **Suspect a real bug FIRST (most common).** Drop the readable C in as the active
+   body, `make`, and read where `compile_and_view_assembly` says the diff is. A small
+   byte_diff at a `str/ldr [rN, #imm]` almost always means a STRUCT-LAYOUT bug, not a
+   codegen wall: a spurious pad (`sub_08006A74` had a 4-byte `_pad14` that pushed
+   `_field_14` from +0x14 to +0x18) or a wrong record stride / field offset
+   (`sub_08006FEC` used stride 27 not 36; wrong matchId offset). Fix the struct →
+   byte_diff 0. The high registers were never the problem.
+
+2. **`OLD_AGBCC` per-TU override — try it EARLY, not last.** For the 0x8006xxx game
+   cluster and the sound engine, baserom is built with the older gcc-2.x. Add
+   `src/<dir>/<name>.s: CC = $(OLD_AGBCC_BIN)` to the Makefile (there's an existing
+   block of them). It fixes: const-first `movs #k; ldr; ands` AND-operand ordering
+   (`sub_08009984`), bare `bx lr` leaf epilogues vs the spurious `push{lr}/pop{r1};bx r1`
+   (`sub_08006BA4`), and the redundant `adds r1,r2,#0; strh r1` recolour-before-store
+   fold (`sub_08006948`, `sub_08006B94`). The permuter CANNOT find this — it only
+   mutates source, never the compiler.
+
+3. **Operand order of a single `adds` (the old "fifth class"):** to get baserom's
+   `adds r0, <off>, <base>` instead of agbcc's canonicalized `adds r0, <base>, <off>`:
+   - **Index-first pointer cast:** form the element pointer as
+     `(T *)(i * sizeof(T) + (s32)base)` instead of `&base[i]` — casting the base to
+     `s32` makes the scaled index the dominant (left) addend (`sub_08006FEC`,
+     `sub_0800A328`).
+   - **Linker-assigned IWRAM base symbol:** read a global through a link-time symbol
+     (`gIwram_5330 = 0x03005330;` in linker.ld's NOLOAD block) instead of the
+     `(*(T *)0x03005330)` absolute-address macro — it ties the add result to the base
+     register, not the index (`sub_0800A328`). Same family as the cvaos "Adjacent
+     IWRAM bases" idiom (§"Adjacent IWRAM bases").
+
+4. **Single-register-reuse pin for a cache-compare:** to make agbcc reuse one register
+   for two field loads and emit `cmp cached, new` (cached operand first), pin one temp
+   (`register u16 cached asm("r1");`) and read BOTH fields through it, with the cast on
+   the RHS of `==` (`newX == (u16)cache_field`) to force the unsigned `ldrh` into that
+   register (`sub_080090B0`, byte_diff 48 → 0).
+
+5. **Two-pointer aliasing to reproduce a `mov ip` table-base fold:** declare two
+   pointers both initialised to the same ROM literal (`s16 *xtab = (s16*)0xADDR;
+   u16 *ytab = (u16*)0xADDR;`), assigned AFTER the gate checks, indexing the two
+   strided columns separately — agbcc loads the base once (`ldr r3; mov ip, r3`) and
+   reuses `ip` (`sub_08009BA0`; the `mov ip` "unmatchable" claim was false).
+
+6. **Dead-base-reuse via a pointer cast:** to make agbcc overwrite a now-dead base
+   register with a derived value (baserom's `ldrb r5, [r5, #N]` reusing the base reg),
+   cast the dead pointer to the next value: `p = (T *)(u32)p->field; x = table[(u32)p];`
+   (`sub_0800A1C8`, codex).
+
+7. **Branch-sense ordering:** phrase a bool predicate "test the nonzero case first"
+   (`if ((field & mask) != 0) return 1; return 0;`) so agbcc emits baserom's `bne`
+   fall-through and the matching return-block order (`sub_08006BA4`).
+
+8. **Load-scheduling via statement order:** when two independent loads in an address
+   computation are scheduled in the wrong order, move the C reads so the desired one is
+   emitted first (`sub_08007874`: read the record bytes AFTER the halfword stores).
+
+Only after ALL of these + a genuine corpus negative-confirmation should a game/engine
+function ship NAKED. Structural-impossibility (`mov pc, rN` jump tables; wide
+`push {r4-r7,lr}` + libgcc-only calls) and the sound/boot hand-asm remain legitimately
+NAKED — those are NOT in scope here.
 
 Resolution:
 1. Find the actual end of the literal pool: walk forward from the
