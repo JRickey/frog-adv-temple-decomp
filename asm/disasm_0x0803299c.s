@@ -1,12 +1,13 @@
 @ Auto-emitted by tools/disasm/peel.py — do not hand-edit this header.
-@ Range:  [0x0803299c, 0x08032aa0)  (260 bytes, thumb mode)
-@ Re-peel:  python3 tools/disasm/peel.py --start 0x803299c --end 0x8032aa0 --mode thumb
+@ Range:  [0x080329f4, 0x08032aa0)  (172 bytes, thumb mode)
+@ Re-peel:  python3 tools/disasm/peel.py --start 0x80329f4 --end 0x8032aa0 --mode thumb
 @
-@ NOTE: the original auto-peel labeled this whole range as a single
-@ function sub_0803299C, but the boundary heuristic over-extended past
+@ NOTE: the original auto-peel labeled the [0x0803299c, 0x08032aa0) range as a
+@ single function sub_0803299C, but the boundary heuristic over-extended past
 @ several leaf functions (no push-lr prologue). Split into the five real
-@ functions below so each cross-region BL target has its own Thumb symbol.
-@ The .incbin bytes are unchanged — this split is byte-identical.
+@ functions so each cross-region BL target has its own Thumb symbol; the .incbin
+@ bytes are unchanged. sub_0803299C has since been decompiled to
+@ src/game/sub_0803299c.c, leaving the four leaf functions below.
 
         .include "asm/macros.inc"
         .syntax unified
@@ -54,11 +55,6 @@
 @   0x080329ea: 4700        bx	r0
 @   0x080329ec: 65e0 0300   .word 0x030065e0  (pool)
 @   0x080329f0: 7eef ffff   .word 0xffff7eef  (pool)
-
-        thumb_func_start sub_0803299C
-sub_0803299C: @ 0x0803299c
-        .incbin "frog_us_baserom.gba", 0x3299c, 0x58
-        thumb_func_end sub_0803299C
 
 @   0x080329f4: 4806        ldr	r0, [pc, #24]	@ (0x32a10)
 @   0x080329f6: 6800        ldr	r0, [r0, #0]
