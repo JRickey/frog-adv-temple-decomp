@@ -19,6 +19,13 @@ MEMORY {
     rom   : ORIGIN = 0x08000000 LENGTH = 32M
 }
 
+/* ROM dispatch table at 0x08308028 (inside the sprite_anim_block blob).
+ * Indexed by a 3-step cycle counter (gGameStuff._step24) in sub_0801793C —
+ * entries 0..8 are Thumb function pointers to the set-game-mode handlers
+ * (sub_08000918, sub_08000EB8, ...). Linker-assigned so agbcc loads the
+ * table base into r1 before the index shift, matching baserom pool order. */
+gHandlerTable_08308028 = 0x08308028;
+
 /* State-handler dispatch table, currently inside the sSpriteAnimBlock_07104
  * INCBIN blob. Surfaced as a linker-assigned absolute symbol so a C
  * function-pointer array operand becomes a relocation rather than a
@@ -383,8 +390,7 @@ SECTIONS {
         asm/disasm_0x08017814.o(.text);  /* 0x08017814 - 0x08017858, sub_08017814 (auto-peeled) */
         asm/disasm_0x08017858.o(.text);  /* 0x08017858 - 0x0801789c, sub_08017858 (auto-peeled) */
         asm/text/text_0x0801789c.o(.text);  /* 0x0801789c - 0x0801793c, raw bytes */
-        src/engine/sub_0801793c.o(.text);
-        asm/disasm_0x0801793c.o(.text);  /* 0x0801793c - 0x080179b8, sub_0801793C (auto-peeled) */
+        src/engine/sub_0801793c.o(.text);  /* 0x0801793c - 0x080179b8, sub_0801793C */
         src/engine/sub_080179b8.o(.text);
         asm/disasm_0x080179b8.o(.text);  /* 0x080179b8 - 0x08017a88, sub_080179B8 (auto-peeled) */
         src/engine/sub_08017a88.o(.text);  /* 0x08017a88 - 0x08017aa8, sub_08017A88 */

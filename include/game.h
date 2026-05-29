@@ -16,6 +16,10 @@
  *                              `mode` later via code we haven't decompiled yet.
  *  offset 28  `rngSeed`      - LCG state stepped by sub_08000764
  *                              (seed = seed * 109 + 1021).
+ *  offset 34  `_unk22`       - halfword; written by sub_0801932C.
+ *  offset 36  `_step24`      - 3-step cycle counter (0→1→2→0) used by
+ *                              sub_0801793C to index gHandlerTable_08308028
+ *                              and select a pendingMode value.
  */
 typedef struct GameStuff {
     u32 _unk00;
@@ -31,6 +35,9 @@ typedef struct GameStuff {
     u8 _unk18;
     u8 _pad19[3];
     u32 rngSeed;
+    u8 _pad20[2];
+    u16 _unk22;
+    u8 _step24;
 } GameStuff;
 
 #define gGameStuff (*(GameStuff *)0x03005330)
