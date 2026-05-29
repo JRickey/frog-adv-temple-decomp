@@ -87,3 +87,23 @@ void sub_0800A798(struct ClusterA710 *p)
 {
     p->flags &= 0xffbf;
 }
+
+typedef struct EntityHitbox {
+    u32 count;
+    u32 points;
+    u32 flags;
+} EntityHitbox;
+
+extern const EntityHitbox sEntityHitboxTable[];
+
+s8 sub_0800A7A8(s8 a, s16 x, s16 y)
+{
+    s8 i;
+
+    for (i = 0; i < (s8)sEntityHitboxTable[a].count; i++) {
+        if (x == ((const s16 *)(u32)sEntityHitboxTable[a].points + i * 2)[0] &&
+            y == ((const s16 *)(u32)sEntityHitboxTable[a].points + i * 2)[1])
+            return i;
+    }
+    return -1;
+}
