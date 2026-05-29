@@ -61,7 +61,8 @@ struct IwramAt3720 {
     u8 _field_17;    /* +0x17: u8 written by sub_08009984 (tile-class result) */
     u8 _pad18[2];    /* +0x18..+0x19 */
     u8 _field_1A;    /* +0x1A: dispatch state read often */
-    u8 _pad1B[0x19]; /* +0x1B..+0x33 */
+    u8 _field_1B;    /* +0x1B: active-entity count; loop bound (<= 4) for the per-frame entity tick */
+    u8 _pad1C[0x18]; /* +0x1C..+0x33 */
     u16 _field_34;   /* +0x34: halfword written zero before entity-dispatch */
     u8 _pad36[2];    /* +0x36..+0x37 */
     u8 _field_38;    /* +0x38: sub-struct head passed by pointer to sub_080059C4 */
@@ -92,7 +93,7 @@ struct IwramAt6110 {
     u16 _field_2e;   /* +0x2e: flag halfword (bits 0x04, 0x02 set by sub_08009884) */
     u8 _pad30[2];    /* +0x30..+0x31 */
     u8 _field_32;    /* +0x32: state-byte gating the sEntityParamTable lookup in sub_0800A1C8 */
-    u8 _pad33;
+    u8 _field_33;    /* +0x33: spawn-record index seed; (s8)(_field_33 + 1) is handed to sub_08007874 */
     void *_field_34; /* +0x34: base of the per-state spawn-record pointer table read by sub_08007874 */
 };
 
