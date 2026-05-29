@@ -30,6 +30,13 @@
  * the dispatch table for the phase-3 PC port, where the computed jump
  * becomes a normal `switch` statement.
  *
+ * This is the LEGITIMATE structural class — agbcc cannot emit `mov pc, rN`
+ * (a computed jump) from any C input (`classify_unmatchable` → class4-movpc;
+ * docs/codegen-notes.md "`mov pc, rN` jump tables"). It is NOT the retracted
+ * "high registers" / "fifth register-coloring" classes — those were 2026-05-29
+ * misdiagnoses (see codegen-notes "Reclamation idioms"). Don't re-attempt this
+ * one in plain C: the dispatch genuinely needs the asm.
+ *
  * The case-body branch-back-to-loopHead arrangement is unusual:
  * every body — including mode 28 / shared tail — branches to the BL Init2
  * at the loop head, NOT to the mode read. That means Init2 runs once per
@@ -37,10 +44,12 @@
  * or per-frame tick.
  */
 
-/* All 29 callees. The bodies all live as peeled .s slices today (auto-peeled
- * before this file landed). Declared `extern` rather than via a header
- * because none of them are subsystem-classified yet — they get headers when
- * they get C decomps. */
+/* All 29 callees. Some are now decomped to C, the rest are still peeled .s
+ * slices — the mix shifts as decomp proceeds, so it isn't tracked here. These
+ * `extern` decls feed ONLY the #ifdef NON_MATCHING reference body; the compiled
+ * NAKED asm below resolves every callee by symbol at link time, so this list
+ * never needs to change when a callee gets decomped. Declared inline rather than
+ * via a header because none are subsystem-classified / semantically named yet. */
 extern void sub_08000430(void);   /* Init1 */
 extern u16 sub_080004C4(void);    /* boot helper — returns u16 stored at gIwram_5398 */
 extern void sub_08000918(void);   /* mode 8 handler */
