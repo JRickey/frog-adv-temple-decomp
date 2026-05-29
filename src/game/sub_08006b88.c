@@ -13,36 +13,17 @@ void sub_08006B88(void *p, u16 mask)
     *(u16 *)((u8 *)p + 16) |= mask;
 }
 
-/* Bit-clear companion to sub_08006B88 — same u16 field at offset 16. Same
- * unmatchable class as the sibling sub_08006948 (offset 0x2e): baserom emits
- * `bics r2, r1; adds r1, r2, #0; strh r1, [r0, #16]` (round-tripping the
- * masked value through r1 before the store), while agbcc 2.x folds the move
- * out and emits `bics r2, r1; strh r2, [r0, #16]` directly. Permuter 1761
- * iter run (nonmatchings/sub_08006B94/) plateaued at base score 205 with
- * zero matches; 11 pure-C source-form variants all hit byte_diff >= 4.
- * NON_MATCHING reference body below documents intent for the phase-3
- * PC port. */
+/* Bit-clear companion to sub_08006B88 - same u16 field at offset 16. Like the
+ * matched sibling sub_08006948 (offset 0x2e), this whole TU is built with
+ * OLD_AGBCC_BIN (see the Makefile per-TU override): old_agbcc keeps the
+ * redundant `adds r1, r2, #0` move that recolours the BIC result into r1
+ * before `strh r1` (newer agbcc coalesces it away to the 2-byte-shorter
+ * `strh r2`). */
 
-#ifdef NON_MATCHING
 void sub_08006B94(void *p, u16 mask)
 {
     *(u16 *)((u8 *)p + 16) &= ~mask;
 }
-#else
-NAKED void sub_08006B94(void *p, u16 mask)
-{
-    asm(".syntax unified\n"
-        "    lsls    r1, r1, #16\n"
-        "    lsrs    r1, r1, #16\n"
-        "    ldrh    r2, [r0, #16]\n"
-        "    bics    r2, r1\n"
-        "    adds    r1, r2, #0\n"
-        "    strh    r1, [r0, #16]\n"
-        "    bx      lr\n"
-        "    .align  2, 0\n"
-        ".syntax divided\n");
-}
-#endif
 
 /* Bool predicate companion: `return (*(u16 *)(p + 16) & mask) != 0`. Reads
  * the same u16 dirty-flags field as sub_08006B88/sub_08006B94 (offset 16),
