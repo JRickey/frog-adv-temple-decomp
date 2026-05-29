@@ -56,36 +56,6 @@
 @   0x080329ec: 65e0 0300   .word 0x030065e0  (pool)
 @   0x080329f0: 7eef ffff   .word 0xffff7eef  (pool)
 
-@   0x08032a20: 4807        ldr	r0, [pc, #28]	@ (0x32a40)
-@   0x08032a22: 6800        ldr	r0, [r0, #0]
-@   0x08032a24: 218c        movs	r1, #140	@ 0x8c
-@   0x08032a26: 0049        lsls	r1, r1, #1
-@   0x08032a28: 1840        adds	r0, r0, r1
-@   0x08032a2a: 6800        ldr	r0, [r0, #0]
-@   0x08032a2c: 3139        adds	r1, #57	@ 0x39
-@   0x08032a2e: 1842        adds	r2, r0, r1
-@   0x08032a30: 7811        ldrb	r1, [r2, #0]
-@   0x08032a32: 2007        movs	r0, #7
-@   0x08032a34: 4008        ands	r0, r1
-@   0x08032a36: 2805        cmp	r0, #5
-@   0x08032a38: d004        beq.n	0x32a44
-@   0x08032a3a: 2000        movs	r0, #0
-@   0x08032a3c: e008        b.n	0x32a50
-@   0x08032a3e: 0000        movs	r0, r0
-@   0x08032a40: 65e0 0300   .word 0x030065e0  (pool)
-@   0x08032a44: 20fb        movs	r0, #251	@ 0xfb
-@   0x08032a46: 4008        ands	r0, r1
-@   0x08032a48: 2102        movs	r1, #2
-@   0x08032a4a: 4308        orrs	r0, r1
-@   0x08032a4c: 7010        strb	r0, [r2, #0]
-@   0x08032a4e: 2001        movs	r0, #1
-@   0x08032a50: 4770        bx	lr
-
-        thumb_func_start sub_08032A20
-sub_08032A20: @ 0x08032a20
-        .incbin "frog_us_baserom.gba", 0x32a20, 0x34
-        thumb_func_end sub_08032A20
-
 @   0x08032a54: b500        push	{lr}
 @   0x08032a56: 0400        lsls	r0, r0, #16
 @   0x08032a58: 0c03        lsrs	r3, r0, #16

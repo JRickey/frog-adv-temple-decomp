@@ -109,3 +109,29 @@ u32 sub_080329F4(void)
 
     return 0;
 }
+
+/* sub_08032A20 — sibling predicate of sub_080329F4. Reaches the active sound
+ * slot through *gpSoundSystem->slot (+0x118) and inspects the same +0x151 flag
+ * byte. Acts only when the low 3 bits equal 5: clears bit 2 (0x04) and sets bit
+ * 1 (0x02), then returns 1. Otherwise returns 0 without touching the byte.
+ *
+ * Matching note: the flag byte is read once into `f` and reused by both the
+ * `(f & 7) == 5` test and the `(~4 & f) | 2` write-back — the baserom keeps the
+ * loaded byte in r1 across the compare-and-branch and produces the AND/OR result
+ * in r0 (the scratch from the `& 7` test). Pinning `f` to r1 (`register u8 f
+ * asm("r1")`) reproduces that allocation; without it agbcc reuses `f`'s register
+ * as the result destination and swaps the operands. The `== 5` test (not an
+ * early-return `!= 5`) keeps agbcc's forward `beq` to the act block, matching
+ * sub_080329F4's branch direction. */
+u32 sub_08032A20(void)
+{
+    SoundSlot *slot = gpSoundSystem->slot;
+    register u8 f asm("r1") = slot->flags;
+
+    if ((f & 7) == 5) {
+        slot->flags = (~4 & f) | 2;
+        return 1;
+    }
+
+    return 0;
+}
