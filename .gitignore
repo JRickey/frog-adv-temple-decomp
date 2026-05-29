@@ -34,6 +34,7 @@ tools/agbcc-src/
 tools/agent/bin/
 tools/agent/.function_addresses.json
 tools/agent/.progress_sheet.csv
+tools/agent/.rename_manifest.json
 
 # Scratch / nonmatching exploration
 .scratch/

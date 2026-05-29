@@ -1,0 +1,291 @@
+#!/usr/bin/env python3
+"""Apply a reviewed rename manifest to the tree, guarded by `make check`.
+
+The naming workflow (.claude/workflows/name-cluster.js) produces a manifest of
+*name decisions only* — function symbols, per-function locals/params, struct
+field names, struct type names. This script is the deterministic applier: it
+performs pure identifier substitution (which cannot change ROM bytes, since
+identifiers don't appear in the ROM), runs `make check`, and reverts the whole
+batch atomically if anything fails to match.
+
+Why mechanical (not agent-rewritten bodies): an agent rewriting a function body
+might "tidy" a matching-critical construct and silently break the byte match.
+Renaming identifiers can only ever produce a compile error or an identical ROM —
+never a different-but-valid ROM — so `make check` is a complete safety net.
+
+Manifest schema (JSON):
+{
+  "cluster": "engine/sub_0800a710",         # label, for messages only
+  "struct_types":  [{"old": "ClusterA710", "new": "Entity", ...}],
+  "struct_fields": [{"old": "_field_34", "new": "flags", "type": "Entity", ...}],
+  "functions":     [{"old": "sub_0800A710", "new": "Entity_Init",
+                     "file": "src/engine/sub_0800a710.c", ...}],
+  "variables":     [{"function": "sub_0800A710", "old": "a", "new": "kind",
+                     "file": "src/engine/sub_0800a710.c", ...}]
+}
+  - struct_types / functions: GLOBAL word-boundary identifier replace across
+    all src + include sources (also updates call sites, extern decls, comments
+    — desirable: keeps docs in sync). Safe because these identifiers are unique.
+  - struct_fields: FILE-SCOPED word-boundary replace, restricted to the entry's
+    `files` list (defaults to [header_file]). This is mandatory, not an
+    optimization: `_field_NN` / `_unkNN` names are POSITIONAL placeholders reused
+    across every anonymous struct in the tree (e.g. `_field_34` lives in 25+
+    files for unrelated structs). A global field replace would silently rename
+    all of them — and because field names don't affect codegen, `make check`
+    would still PASS. So make check is NOT a backstop for field scoping; the
+    manifest's `files` list (the accessor set, from the workflow's map pass) is.
+    Assumes each scoped file uses the target struct as its only `_field_NN`-
+    bearing struct; a file mixing two anonymous structs that share a field id
+    needs type-aware scoping (not yet supported — split such a rename out).
+  - variables: scoped to the *body* of the named function in `file` only.
+    `function` is the OLD function name (variables are applied before the
+    function rename). `file` is required so we don't scan the whole tree.
+
+Order of operations: variables (scoped, by old fn name) -> struct_fields
+(file-scoped) -> struct_types -> functions (global). Then `make -j8 && make
+check`. On any failure the touched files are restored via `git checkout --`.
+
+Usage:
+    python3 tools/agent/apply_renames.py <manifest.json>
+    python3 tools/agent/apply_renames.py <manifest.json> --dry-run   # show plan, touch nothing
+    python3 tools/agent/apply_renames.py <manifest.json> --no-check  # apply, skip make check (NOT recommended)
+"""
+import argparse
+import json
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+REPO = Path(__file__).resolve().parents[2]
+SRC_GLOBS = ["src/**/*.c", "src/**/*.h", "include/**/*.h"]
+
+
+def repo_sources():
+    seen = {}
+    for g in SRC_GLOBS:
+        for p in REPO.glob(g):
+            seen[p.resolve()] = p
+    return list(seen.values())
+
+
+def word_replace(text, old, new):
+    """Word-boundary identifier replace. Returns (new_text, count)."""
+    pat = re.compile(r"\b" + re.escape(old) + r"\b")
+    return pat.subn(new, text)
+
+
+def find_function_body_span(text, fn_name):
+    """Return (start, end) char offsets covering `<fn_name>(...) { ... }`.
+
+    Locates the definition (a `name(` followed, after the param list, by `{`
+    rather than `;`) and brace-matches the body, skipping braces inside
+    string/char literals and // and /* */ comments. Returns None if not found
+    as a definition.
+    """
+    for m in re.finditer(r"\b" + re.escape(fn_name) + r"\s*\(", text):
+        # Walk past the parameter list to the first '{' or ';'.
+        i = m.end()
+        depth = 0
+        while i < len(text):
+            ch = text[i]
+            if ch == "(":
+                depth += 1
+            elif ch == ")":
+                if depth == 0:
+                    i += 1
+                    break
+                depth -= 1
+            i += 1
+        # Skip whitespace/newlines after the param list.
+        while i < len(text) and text[i] in " \t\r\n":
+            i += 1
+        if i >= len(text) or text[i] != "{":
+            continue  # a declaration or call, not a definition
+        body_start = i
+        # Brace-match the body.
+        i += 1
+        depth = 1
+        in_line, in_block, in_str, in_chr = False, False, False, False
+        while i < len(text) and depth > 0:
+            ch = text[i]
+            two = text[i : i + 2]
+            if in_line:
+                if ch == "\n":
+                    in_line = False
+            elif in_block:
+                if two == "*/":
+                    in_block = False
+                    i += 1
+            elif in_str:
+                if ch == "\\":
+                    i += 1
+                elif ch == '"':
+                    in_str = False
+            elif in_chr:
+                if ch == "\\":
+                    i += 1
+                elif ch == "'":
+                    in_chr = False
+            elif two == "//":
+                in_line = True
+                i += 1
+            elif two == "/*":
+                in_block = True
+                i += 1
+            elif ch == '"':
+                in_str = True
+            elif ch == "'":
+                in_chr = True
+            elif ch == "{":
+                depth += 1
+            elif ch == "}":
+                depth -= 1
+            i += 1
+        if depth != 0:
+            return None  # unbalanced — bail
+        return (m.start(), i)
+    return None
+
+
+def apply_manifest(manifest, dry_run):
+    """Mutate sources per the manifest. Returns dict path->new_text for changed files."""
+    sources = repo_sources()
+    contents = {p: p.read_text() for p in sources}
+    touched = {}  # path -> count summary list
+
+    def note(p, label):
+        touched.setdefault(p, []).append(label)
+
+    # 1. Variables — scoped to the named function's body in its file only.
+    for v in manifest.get("variables", []):
+        rel = v["file"]
+        p = (REPO / rel).resolve()
+        if p not in contents:
+            print(f"  ! variable {v['old']}->{v['new']}: file {rel} not in source set, skipped")
+            continue
+        text = contents[p]
+        span = find_function_body_span(text, v["function"])
+        if span is None:
+            print(f"  ! variable {v['old']}->{v['new']}: function {v['function']} body not found in {rel}, skipped")
+            continue
+        s, e = span
+        body, n = word_replace(text[s:e], v["old"], v["new"])
+        if n:
+            contents[p] = text[:s] + body + text[e:]
+            note(p, f"var {v['function']}:{v['old']}->{v['new']} x{n}")
+
+    # 2. Struct field names — FILE-SCOPED (positional `_field_NN` ids collide
+    #    across unrelated structs; see module docstring).
+    for sf in manifest.get("struct_fields", []):
+        scope = sf.get("files") or ([sf["header_file"]] if sf.get("header_file") else [])
+        if not scope:
+            print(f"  ! field {sf['old']}->{sf['new']}: no files/header_file scope given, skipped")
+            continue
+        for rel in scope:
+            p = (REPO / rel).resolve()
+            if p not in contents:
+                print(f"  ! field {sf['old']}->{sf['new']}: scope file {rel} not in source set, skipped")
+                continue
+            new_text, n = word_replace(contents[p], sf["old"], sf["new"])
+            if n:
+                contents[p] = new_text
+                note(p, f"field {sf.get('type','?')}.{sf['old']}->{sf['new']} x{n}")
+
+    # 3. Struct type names — global (unique identifiers).
+    # 4. Function names — global (unique identifiers).
+    global_renames = []
+    for st in manifest.get("struct_types", []):
+        global_renames.append((st["old"], st["new"], f"type {st['old']}->{st['new']}"))
+    for fn in manifest.get("functions", []):
+        global_renames.append((fn["old"], fn["new"], f"fn {fn['old']}->{fn['new']}"))
+
+    for old, new, label in global_renames:
+        for p in list(contents.keys()):
+            text = contents[p]
+            new_text, n = word_replace(text, old, new)
+            if n:
+                contents[p] = new_text
+                note(p, f"{label} x{n}")
+
+    changed = {p: contents[p] for p in touched}
+    return changed, touched
+
+
+def git_clean(paths):
+    rels = [str(p.relative_to(REPO)) for p in paths]
+    subprocess.run(["git", "-C", str(REPO), "checkout", "--"] + rels, check=False)
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("manifest")
+    ap.add_argument("--dry-run", action="store_true", help="show the plan, modify nothing")
+    ap.add_argument("--no-check", action="store_true", help="apply but skip make check (not recommended)")
+    args = ap.parse_args()
+
+    manifest = json.loads(Path(args.manifest).read_text())
+    cluster = manifest.get("cluster", "?")
+
+    # Require a clean tree so revert-on-failure restores the committed state.
+    if not args.dry_run:
+        st = subprocess.run(["git", "-C", str(REPO), "status", "--porcelain"], capture_output=True, text=True)
+        # Only tracked modifications matter: revert-on-failure uses `git checkout --`,
+        # which restores tracked files and never touches untracked ones (e.g. the
+        # manifest itself). Untracked files are therefore safe to leave in place.
+        tracked = [ln for ln in st.stdout.splitlines() if not ln.startswith("??")]
+        if tracked:
+            print("error: tracked files have uncommitted changes. Commit or stash first "
+                  "so a failed apply can be reverted cleanly.\n" + "\n".join(tracked), file=sys.stderr)
+            return 2
+
+    print(f"== rename manifest: {cluster} ==")
+    print(f"   {len(manifest.get('functions', []))} functions, "
+          f"{len(manifest.get('variables', []))} variables, "
+          f"{len(manifest.get('struct_fields', []))} struct fields, "
+          f"{len(manifest.get('struct_types', []))} struct types")
+
+    changed, touched = apply_manifest(manifest, args.dry_run)
+
+    if not changed:
+        print("nothing to change (no identifiers matched).")
+        return 0
+
+    print(f"\n{len(changed)} file(s) to change:")
+    for p in sorted(changed, key=lambda x: str(x)):
+        rel = p.relative_to(REPO)
+        print(f"  {rel}")
+        for lbl in touched[p]:
+            print(f"      - {lbl}")
+
+    if args.dry_run:
+        print("\n(dry run — no files written)")
+        return 0
+
+    for p, text in changed.items():
+        p.write_text(text)
+    print(f"\nwrote {len(changed)} file(s).")
+
+    if args.no_check:
+        print("skipping make check (--no-check). Remember to verify before committing.")
+        return 0
+
+    print("\nrunning make -j8 && make check ...")
+    build = subprocess.run(["make", "-j8"], cwd=REPO)
+    check = subprocess.run(["make", "check"], cwd=REPO) if build.returncode == 0 else build
+    if build.returncode != 0 or check.returncode != 0:
+        print("\n*** make check FAILED — reverting all renamed files ***", file=sys.stderr)
+        git_clean(list(changed.keys()))
+        print("reverted. The manifest contains a name collision or scoping error; "
+              "inspect the failing function and fix the offending entry.", file=sys.stderr)
+        return 1
+
+    print("\nmake check PASSED — rename is byte-identical. Refreshing caches ...")
+    subprocess.run(["python3", "tools/agent/snapshot_addresses.py"], cwd=REPO, check=False)
+    subprocess.run(["python3", "tools/agent/progress_stats.py", "--update-readme"], cwd=REPO, check=False)
+    print("done. Review the diff, then commit when ready.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
