@@ -93,7 +93,6 @@ SECTIONS {
         src/game/sub_08001e24.o(.text);
         asm/disasm_0x08001e24.o(.text);  /* 0x08001e24 - 0x08002184, sub_08001E24 (auto-peeled) */
         src/game/sub_08002184.o(.text);
-        asm/disasm_0x08002184.o(.text);  /* 0x08002184 - 0x08002444, sub_08002184 (auto-peeled) */
         src/game/game_mode.o(.text);     /* 0x08002444 - 0x08002450, SetGameMode_06 */
         asm/text/text_0x08002450.o(.text);  /* 0x08002450 - 0x08002524, raw bytes */
         src/game/sub_08002524.o(.text);
