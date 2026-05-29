@@ -4,7 +4,7 @@
 #include "types.h"
 
 extern void sub_08006A74(struct IwramAt35E0 *p, s8 a, s16 b, s8 c, s8 e);
-extern void sub_0800A710(struct IwramAt3720 *p, u8 a, s16 b, s16 c, u8 d, u16 e, u8 f, u8 g, u8 h, u16 i);
+extern void Entity_Init(struct IwramAt3720 *p, u8 a, s16 b, s16 c, u8 d, u16 e, u8 f, u8 g, u8 h, u16 i);
 
 struct SpawnRec {
     s16 _h0;
@@ -19,7 +19,7 @@ struct SpawnRec {
 /* gIwram_6110 +0x34 holds a base pointer into a table of SpawnRec arrays; the
  * state byte at +0x32 selects which array (one back), and `id` indexes into
  * the chosen array. The record's two leading halfwords become tile-to-pixel
- * positions (n*24 + 11) seeded into gIwram_35E0 / forwarded to sub_0800A710,
+ * positions (n*24 + 11) seeded into gIwram_35E0 / forwarded to Entity_Init,
  * while sub_08006A74 re-reads the bytes just stored into gIwram_35E0. */
 
 void sub_08007874(u8 id)
@@ -43,5 +43,5 @@ void sub_08007874(u8 id)
     sub_08006A74(&gIwram_35E0, (s8)gIwram_35E0._data[0], *(s16 *)&gIwram_35E0._data[2], (s8)gIwram_35E0._data[4],
                  gIwram_35E0._field_5);
 
-    sub_0800A710(&gIwram_3720, 0, px, py, b5, 1, 0, b6, b4, 16);
+    Entity_Init(&gIwram_3720, 0, px, py, b5, 1, 0, b6, b4, 16);
 }
