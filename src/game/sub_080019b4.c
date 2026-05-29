@@ -465,28 +465,9 @@ void sub_080019B4(void)
  * takes the per-frame object pointers as arguments. Lives inside the same
  * compilation slice as sub_080019B4 (nothing in the ROM BLs to it; kept as
  * a separate symbol so the surrounding layout stays byte-identical). */
-NAKED
 void sub_08001CEC(void *buf, void *r4_obj, u32 kind)
 {
-    asm(".syntax unified\n"
-        "    push    {r4, r5, lr}\n"
-        "    adds    r3, r0, #0\n"
-        "    adds    r4, r1, #0\n"
-        "    adds    r5, r2, #0\n"
-        "    ldr     r1, _sub_08001CEC_pool_gGameStuff\n"
-        "    movs    r0, #5\n"
-        "    strb    r0, [r1, #10]\n"
-        "    movs    r0, #0\n"
-        "    adds    r1, r3, #0\n"
-        "    bl      sub_08006BB4\n"
-        "    adds    r0, r4, #0\n"
-        "    adds    r1, r5, #0\n"
-        "    movs    r2, #5\n"
-        "    bl      sub_0800B7B0\n"
-        "    pop     {r4, r5}\n"
-        "    pop     {r0}\n"
-        "    bx      r0\n"
-        "    .hword  0\n"
-        "_sub_08001CEC_pool_gGameStuff: .4byte 0x03005330\n"
-        "    .syntax divided\n");
+    gGameStuff.pendingMode = 5;
+    sub_08006BB4(0, buf);
+    sub_0800B7B0(r4_obj, (void *)kind, 5);
 }
