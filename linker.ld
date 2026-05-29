@@ -557,7 +557,8 @@ SECTIONS {
         asm/disasm_0x08033ca4.o(.text);  /* 0x08033ca4 - 0x08033cd8, __ashldi3 (libgcc; auto-peeled) */
         asm/disasm_0x08033cd8.o(.text);  /* 0x08033cd8 - 0x08033d14, _call_via_rX libgcc helper table (auto-peeled) */
         asm/disasm_0x08033d14.o(.text);  /* 0x08033d14 - 0x08033da8, __divsi3 (libgcc; auto-peeled) */
-        asm/text/text_0x08033da8.o(.text);  /* 0x08033da8 - 0x08033ee4, raw bytes */
+        asm/text/text_0x08033da8.o(.text);  /* 0x08033da8 - 0x08033e14, raw bytes */
+        asm/disasm_0x08033e14.o(.text);  /* 0x08033e14 - 0x08033ee4, __modsi3 (libgcc; auto-peeled) */
         asm/disasm_0x08033ee4.o(.text);  /* 0x08033ee4 - 0x08033f5c, __udivsi3 (libgcc; auto-peeled) */
         asm/disasm_0x08033f5c.o(.text);  /* 0x08033f5c - 0x0803401c, __umodsi3 (libgcc; auto-peeled) */
         asm/text/text_0x0803401c.o(.text);  /* 0x0803401c - 0x08035d7c, raw bytes */
