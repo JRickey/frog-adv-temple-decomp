@@ -7,49 +7,33 @@
  * 36-byte slice; the second has no own thumb_func_start in baserom and is
  * given the name sub_08006958 here.
  *
- * sub_08006948 matches only under old_agbcc (see the Makefile per-TU
- * override): the baserom keeps the redundant `adds r1, r2, #0` move that
- * recolours the BIC result from r2 into r1 before `strh r1`. The newer
- * agbcc coalesces that move away and emits the 2-bytes-shorter `strh r2`.
- * old_agbcc does not coalesce it, reproducing the baserom byte-for-byte.
+ * This whole TU is built with OLD_AGBCC_BIN (see the Makefile per-TU override):
+ * baserom's codegen for this cluster is the older agbcc. The leaf epilogue is
+ * the tell — old_agbcc emits a bare `bx lr` with no frame, while newer agbcc
+ * wraps a branch-structured multi-return in `push {lr}` / `pop {r1}; bx r1`.
  *
- * sub_08006958 still ships NAKED: baserom's `ands r1, r0` (dest=r1, leaving
- * r0 free for the explicit `movs r0, #{0,1}` tail) and the no-push-no-pop
- * frame. agbcc instead does `ands r0, r1` (clobbers r0 with the masked
- * field) and folds the false-return into the already-zero r0, picking up a
- * push/pop wrapper. Permuter has no statement reorder that recovers this
- * shape; its reference body in the NON_MATCHING block documents intent for
- * the phase-3 PC port. */
+ * sub_08006948: old_agbcc keeps the redundant `adds r1, r2, #0` move that
+ * recolours the BIC result into r1 before `strh r1` (newer agbcc coalesces it
+ * away to the 2-byte-shorter `strh r2`).
+ *
+ * sub_08006958: written `mask & field` (not `field & mask`) so the AND lands
+ * `and r1, r1, r0` — dest r1, leaving r0 free for the `mov r0, #{0,1}` tail —
+ * with the nonzero test first (`if (m & f) return 1; return 0;`) so the branch
+ * is `bne` to the return-1 case.
+ *
+ * sub_0800696C still ships NAKED (see its #ifdef NON_MATCHING block). */
 
 void sub_08006948(u8 *rec, u16 mask)
 {
     *(u16 *)(rec + 0x2e) &= ~mask;
 }
 
-#ifdef NON_MATCHING
 u8 sub_08006958(u8 *rec, u8 mask)
 {
-    if ((*(u16 *)(rec + 0x2e) & mask) == 0)
-        return 0;
-    return 1;
+    if (mask & *(u16 *)(rec + 0x2e))
+        return 1;
+    return 0;
 }
-#else
-NAKED u8 sub_08006958(u8 *rec, u8 mask)
-{
-    asm(".syntax unified\n"
-        "    lsls    r1, r1, #24\n"
-        "    lsrs    r1, r1, #24\n"
-        "    ldrh    r0, [r0, #46]\n"
-        "    ands    r1, r0\n"
-        "    cmp     r1, #0\n"
-        "    bne     1f\n"
-        "    movs    r0, #0\n"
-        "    b       2f\n"
-        "1:  movs    r0, #1\n"
-        "2:  bx      lr\n"
-        ".syntax divided\n");
-}
-#endif
 
 /* Sets bit `bits` in the 128-bit flag bank at 0x03006110+20..0x03006110+35.
  *
