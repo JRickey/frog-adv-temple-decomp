@@ -98,6 +98,36 @@ Makefile override list — don't try to defeat the spurious push with
 contortions in C; that path produces ugly code that still mis-matches
 elsewhere.
 
+### `old_agbcc` also flips commutative-operand evaluation order
+
+A second, distinct symptom of the same `old_agbcc`-vs-`agbcc` split:
+for a commutative bitwise op against a memory field (`field & K`,
+`field |= K`), the two compilers disagree on which operand is evaluated
+first.
+
+- `agbcc` (newer) loads the **field first**, then materialises the
+  constant: `ldrh r1,[base]; movs r0,#K; ands r0,r1`.
+- `old_agbcc` (baserom here) materialises the **constant first**, then
+  loads the field: `movs r0,#K; ldrh r1,[base]; ands r0,r1` — and for a
+  multi-instruction constant like `0x100` keeps the extra `adds rD,rS,#0`
+  copy (`movs r1,#128; lsls r1,#1; adds r0,r1,#0; ldrh r2,[base]; orrs r0,r2`).
+
+`sub_08009884` was shipped NAKED+NON_MATCHING by a prior pass that
+plateaued at byte_diff 21 and concluded the load-order was "not
+source-reachable in agbcc 2.x" — true for `agbcc`, but the whole engine
+TU cluster (`sub_0800ce10` it calls, plus `sub_0800cd88`/`cdcc`/`ce54`/
+`e600`/…) is built with `old_agbcc`. Adding
+`src/engine/sub_08009884.s: CC = $(OLD_AGBCC_BIN)` made the pure-C body a
+first-try byte match (all three `& 4` / `|= 0x100` / `|= 4` sites flipped
+to const-first at once).
+
+**Lesson:** when a near-match (~single-digit/low-tens byte_diff) is a
+handful of commutative `field OP const` sites all showing field-first vs
+const-first, try `old_agbcc` *before* the permuter — especially if
+neighbouring TUs in the same `src/engine/` cluster are already on the
+override list. The permuter cannot reach this (it's a compiler-version
+codegen choice, not statement-ordering).
+
 ## ARM immediate encoding rotation
 
 GAS picks the smallest rotation R (0..15, applied as ROR by 2R) where
