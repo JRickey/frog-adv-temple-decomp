@@ -38,9 +38,16 @@ typedef struct ChannelState {
     /* 0x42 */ u16 acc;
 } ChannelState;
 
+typedef struct SoundSlot {
+    u8 _pad000[0x151];
+    /* 0x151 */ u8 flags;
+} SoundSlot;
+
 typedef struct SoundSystem {
     u8 _pad00[0x10];
     /* 0x10 */ u32 chDirty[4];
+    u8 _pad20[0xf8];
+    /* 0x118 */ SoundSlot *slot;
 } SoundSystem;
 
 #define gpSoundSystem (*(SoundSystem **)0x030065e0)
@@ -79,4 +86,26 @@ void sub_0803299C(u32 index, u32 step, u32 mode, u32 ctrl)
     chSum = ch->delta + ch->step;
     ch->acc = chSum;
     ch->step = step << 8;
+}
+
+/* sub_080329F4 — sets the "queued" bit (0x2) on the active sound slot, but
+ * only when its flag byte is exactly 1 (idle/ready). Returns 1 if it acted,
+ * 0 otherwise. The active slot is reached through *gpSoundSystem->slot (the
+ * +0x118 pointer); the +0x151 flag byte is the same one tested by the sibling
+ * predicates sub_08032A20 / sub_08032A54.
+ *
+ * Matching note: the `== 1` test (not an early-return `!= 1`) is required —
+ * agbcc lays the set-and-return-1 block AFTER the fall-through return-0, which
+ * is the baserom's `beq`-forward branch direction. An early-return inverts it
+ * to `bne` and drifts. */
+u32 sub_080329F4(void)
+{
+    SoundSlot *slot = gpSoundSystem->slot;
+
+    if (slot->flags == 1) {
+        slot->flags |= 2;
+        return 1;
+    }
+
+    return 0;
 }

@@ -1,13 +1,13 @@
 @ Auto-emitted by tools/disasm/peel.py — do not hand-edit this header.
-@ Range:  [0x080329f4, 0x08032aa0)  (172 bytes, thumb mode)
-@ Re-peel:  python3 tools/disasm/peel.py --start 0x80329f4 --end 0x8032aa0 --mode thumb
+@ Range:  [0x08032a20, 0x08032aa0)  (128 bytes, thumb mode)
+@ Re-peel:  python3 tools/disasm/peel.py --start 0x8032a20 --end 0x8032aa0 --mode thumb
 @
 @ NOTE: the original auto-peel labeled the [0x0803299c, 0x08032aa0) range as a
 @ single function sub_0803299C, but the boundary heuristic over-extended past
 @ several leaf functions (no push-lr prologue). Split into the five real
 @ functions so each cross-region BL target has its own Thumb symbol; the .incbin
-@ bytes are unchanged. sub_0803299C has since been decompiled to
-@ src/game/sub_0803299c.c, leaving the four leaf functions below.
+@ bytes are unchanged. sub_0803299C and sub_080329F4 have since been decompiled
+@ to src/game/sub_0803299c.c, leaving the three leaf functions below.
 
         .include "asm/macros.inc"
         .syntax unified
@@ -55,32 +55,6 @@
 @   0x080329ea: 4700        bx	r0
 @   0x080329ec: 65e0 0300   .word 0x030065e0  (pool)
 @   0x080329f0: 7eef ffff   .word 0xffff7eef  (pool)
-
-@   0x080329f4: 4806        ldr	r0, [pc, #24]	@ (0x32a10)
-@   0x080329f6: 6800        ldr	r0, [r0, #0]
-@   0x080329f8: 218c        movs	r1, #140	@ 0x8c
-@   0x080329fa: 0049        lsls	r1, r1, #1
-@   0x080329fc: 1840        adds	r0, r0, r1
-@   0x080329fe: 6800        ldr	r0, [r0, #0]
-@   0x08032a00: 3139        adds	r1, #57	@ 0x39
-@   0x08032a02: 1842        adds	r2, r0, r1
-@   0x08032a04: 7811        ldrb	r1, [r2, #0]
-@   0x08032a06: 2901        cmp	r1, #1
-@   0x08032a08: d004        beq.n	0x32a14
-@   0x08032a0a: 2000        movs	r0, #0
-@   0x08032a0c: e006        b.n	0x32a1c
-@   0x08032a0e: 0000        movs	r0, r0
-@   0x08032a10: 65e0 0300   .word 0x030065e0  (pool)
-@   0x08032a14: 2002        movs	r0, #2
-@   0x08032a16: 4308        orrs	r0, r1
-@   0x08032a18: 7010        strb	r0, [r2, #0]
-@   0x08032a1a: 2001        movs	r0, #1
-@   0x08032a1c: 4770        bx	lr
-
-        thumb_func_start sub_080329F4
-sub_080329F4: @ 0x080329f4
-        .incbin "frog_us_baserom.gba", 0x329f4, 0x2c
-        thumb_func_end sub_080329F4
 
 @   0x08032a20: 4807        ldr	r0, [pc, #28]	@ (0x32a40)
 @   0x08032a22: 6800        ldr	r0, [r0, #0]
