@@ -1,6 +1,6 @@
 @ Auto-emitted by tools/disasm/peel.py — do not hand-edit this header.
-@ Range:  [0x0800cb80, 0x0800cd88)  (520 bytes, thumb mode)
-@ Re-peel:  python3 tools/disasm/peel.py --start 0x800cb80 --end 0x800cd88 --mode thumb
+@ Range:  [0x0800cbe8, 0x0800cd88)  (416 bytes, thumb mode)
+@ Re-peel:  python3 tools/disasm/peel.py --start 0x800cbe8 --end 0x800cd88 --mode thumb
 
         .include "asm/macros.inc"
         .syntax unified
@@ -263,11 +263,6 @@
 @   0x0800cd80: 0000        movs	r0, r0
 @   0x0800cd82: 0203        lsls	r3, r0, #8
 @   0x0800cd84: f3ff        0000 			@ <UNDEFINED> instruction: 0xf3ff0000
-
-        thumb_func_start sub_0800CB80
-sub_0800CB80: @ 0x0800cb80
-        .incbin "frog_us_baserom.gba", 0xcb80, 0x68
-        thumb_func_end sub_0800CB80
 
         thumb_func_start sub_0800CBE8
 sub_0800CBE8: @ 0x0800cbe8
