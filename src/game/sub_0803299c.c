@@ -1,6 +1,6 @@
 #include "types.h"
 
-/* sub_0803299C — per-channel sound-state primer (sibling of the high-register
+/* SoundChannel_Init — per-channel sound-state primer (sibling of the high-register
  * variant sub_08032904 at 0x08032904). Clears the channel's "playing" dirty
  * bits, stores a per-channel mode byte and a control halfword, and for the
  * non-wave channels (index != 3) primes the mixer accumulator and step.
@@ -54,7 +54,7 @@ typedef struct SoundSystem {
 
 #define gpSoundSystem (*(SoundSystem **)0x030065e0)
 
-void sub_0803299C(u32 index, u32 step, u32 mode, u32 ctrl)
+void SoundChannel_Init(u32 index, u32 step, u32 mode, u32 ctrl)
 {
     register u32 index8 asm("r4");
     SoundSystem **pPool = &gpSoundSystem;
@@ -90,17 +90,17 @@ void sub_0803299C(u32 index, u32 step, u32 mode, u32 ctrl)
     ch->step = step << 8;
 }
 
-/* sub_080329F4 — sets the "queued" bit (0x2) on the active sound slot, but
+/* SoundSlot_QueueRequest — sets the "queued" bit (0x2) on the active sound slot, but
  * only when its flag byte is exactly 1 (idle/ready). Returns 1 if it acted,
  * 0 otherwise. The active slot is reached through *gpSoundSystem->slot (the
  * +0x118 pointer); the +0x151 flag byte is the same one tested by the sibling
- * predicates sub_08032A20 / sub_08032A54.
+ * predicates SoundSlot_ClearInProgress / SoundSlot_QueueId.
  *
  * Matching note: the `== 1` test (not an early-return `!= 1`) is required —
  * agbcc lays the set-and-return-1 block AFTER the fall-through return-0, which
  * is the baserom's `beq`-forward branch direction. An early-return inverts it
  * to `bne` and drifts. */
-u32 sub_080329F4(void)
+u32 SoundSlot_QueueRequest(void)
 {
     SoundSlot *slot = gpSoundSystem->slot;
 
@@ -112,7 +112,7 @@ u32 sub_080329F4(void)
     return 0;
 }
 
-/* sub_08032A20 — sibling predicate of sub_080329F4. Reaches the active sound
+/* SoundSlot_ClearInProgress — sibling predicate of SoundSlot_QueueRequest. Reaches the active sound
  * slot through *gpSoundSystem->slot (+0x118) and inspects the same +0x151 flag
  * byte. Acts only when the low 3 bits equal 5: clears bit 2 (0x04) and sets bit
  * 1 (0x02), then returns 1. Otherwise returns 0 without touching the byte.
@@ -124,14 +124,14 @@ u32 sub_080329F4(void)
  * asm("r1")`) reproduces that allocation; without it agbcc reuses `f`'s register
  * as the result destination and swaps the operands. The `== 5` test (not an
  * early-return `!= 5`) keeps agbcc's forward `beq` to the act block, matching
- * sub_080329F4's branch direction. */
-u32 sub_08032A20(void)
+ * SoundSlot_QueueRequest's branch direction. */
+u32 SoundSlot_ClearInProgress(void)
 {
     SoundSlot *slot = gpSoundSystem->slot;
-    register u8 f asm("r1") = slot->flags;
+    register u8 flags asm("r1") = slot->flags;
 
-    if ((f & 7) == 5) {
-        slot->flags = (~4 & f) | 2;
+    if ((flags & 7) == 5) {
+        slot->flags = (~4 & flags) | 2;
         return 1;
     }
 
@@ -140,11 +140,11 @@ u32 sub_08032A20(void)
 
 extern void sub_08031DBC(void);
 
-/* sub_08032A54 — queues a 16-bit id (pose/sound selector) onto the active
+/* SoundSlot_QueueId — queues a 16-bit id (pose/sound selector) onto the active
  * sound slot, but only for a non-zero id and when the slot's +0x151 flag has
  * bit 0 set (ready). On success it stashes the id at slot+0x148, kicks
  * sub_08031DBC, and returns 1; otherwise returns 0. Sibling of the +0x151
- * predicates sub_080329F4 / sub_08032A20.
+ * predicates SoundSlot_QueueRequest / SoundSlot_ClearInProgress.
  *
  * Matching note: the u16 argument is zero-extended into r3 and kept there
  * across the slot load — pinning `id` to r3 (`register u16 id asm("r3")`)
@@ -154,7 +154,7 @@ extern void sub_08031DBC(void);
  * ahead of the compare). The two guards stay as separate `if (cond) return 0;`
  * early-returns (id, then flag bit) to keep both `beq`-forward branches to the
  * shared return-0 tail. */
-u32 sub_08032A54(u16 idArg)
+u32 SoundSlot_QueueId(u16 idArg)
 {
     register u16 id asm("r3") = idArg;
     SoundSlot *slot = gpSoundSystem->slot;
@@ -170,10 +170,10 @@ u32 sub_08032A54(u16 idArg)
     return 1;
 }
 
-/* sub_08032A98 — returns the fixed per-slot stride 0x150 (the size of one
+/* SoundSlot_Stride — returns the fixed per-slot stride 0x150 (the size of one
  * SoundSlot record). agbcc materialises the constant as 0xa8 << 1, matching
  * the baserom's `movs r0, #168; lsls r0, r0, #1`. */
-u32 sub_08032A98(void)
+u32 SoundSlot_Stride(void)
 {
     return 0x150;
 }

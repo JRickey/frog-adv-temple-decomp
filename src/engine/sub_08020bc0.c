@@ -10,10 +10,10 @@ typedef struct {
 #define gStructAt3003570 (*(StructAt3003570 *)0x03003570)
 
 extern u32 sub_08032148(void);
-extern void sub_080329F4(void);
+extern void SoundSlot_QueueRequest(void);
 
 /* When bit 1 of the 0x03003570 flags byte is set and sub_08032148() reports
- * zero, poke sub_080329F4. Sibling of sub_08020B88 in this cluster (same
+ * zero, poke SoundSlot_QueueRequest. Sibling of sub_08020B88 in this cluster (same
  * push{lr}/bx-r0 void-tail epilogue).
  *
  * agbcc matching lever (same as sub_08020B88 / sub_08020C78): accumulate the
@@ -31,7 +31,7 @@ void sub_08020BC0(void)
     mask = mask & p->flags;
     if (mask != 0) {
         if (sub_08032148() == 0) {
-            sub_080329F4();
+            SoundSlot_QueueRequest();
         }
     }
 }

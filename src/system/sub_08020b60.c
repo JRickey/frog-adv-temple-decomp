@@ -3,7 +3,7 @@
 extern void sub_0802E13C(void);
 extern void sub_08020E98(u32 a);
 extern void sub_08032094(u32 a);
-extern u32 sub_08032A20(void);
+extern u32 SoundSlot_ClearInProgress(void);
 
 void sub_08020B60(void)
 {
@@ -15,5 +15,5 @@ void sub_08020B60(void)
 void sub_08020B78(void)
 {
     sub_08020E98(45);
-    sub_08032A20();
+    SoundSlot_ClearInProgress();
 }

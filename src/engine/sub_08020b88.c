@@ -10,10 +10,10 @@ typedef struct {
 #define gStructAt3003570 (*(StructAt3003570 *)0x03003570)
 
 extern void sub_08031E24(u32 arg);
-extern void sub_080329F4(void);
+extern void SoundSlot_QueueRequest(void);
 
 /* When bit 0 of the 0x03003570 flags byte is set, forward `arg` to
- * sub_08031E24 and then poke sub_080329F4.
+ * sub_08031E24 and then poke SoundSlot_QueueRequest.
  *
  * agbcc matching levers (the readable form `if (gStructAt3003570.flags & 1)`
  * drifts by 4 bytes):
@@ -35,6 +35,6 @@ void sub_08020B88(u32 arg)
     mask = mask & s.flags;
     if (mask) {
         sub_08031E24(arg);
-        sub_080329F4();
+        SoundSlot_QueueRequest();
     }
 }
