@@ -140,6 +140,7 @@ src/engine/sub_08009884.s: CC = $(OLD_AGBCC_BIN)
 src/game/sub_08007874.s: CC = $(OLD_AGBCC_BIN)
 src/game/sub_08009984.s: CC = $(OLD_AGBCC_BIN)
 src/game/sub_080031d4.s: CC = $(OLD_AGBCC_BIN)
+src/engine/sub_0800dffc.s: CC = $(OLD_AGBCC_BIN)
 
 
 # Enable verbose output
