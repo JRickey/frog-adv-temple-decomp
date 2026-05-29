@@ -35,3 +35,9 @@ void sub_08006A74(struct StructA74 *p, u8 a, u16 b, u8 c, u8 e)
     p->_field_10 = 0;
     p->_field_12 = 0;
 }
+
+void sub_08006AAC(u8 *p, u8 v)
+{
+    *p = v;
+    sub_08016A40();
+}
