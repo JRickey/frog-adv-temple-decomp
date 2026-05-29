@@ -1,4 +1,5 @@
 #include "game.h"
+#include "iwram.h"
 #include "macros.h"
 #include "types.h"
 
@@ -23,16 +24,33 @@
  *     fire sub_08006B88(0x030035e0, 0x400) + sub_08020C78(93).
  *   - gGameStuff._unk14++ on every tick.
  *
- * Shipped NAKED + NON_MATCHING. Same fourth-class blocker as the sibling
- * dispatch_helpers.c (sub_0800A2D8) and sub_08009D9C: gGameStuff is pinned
- * in r4 across two `_call_via_r0` indirect dispatches through the
- * sEntityProcB / sEntityProcD ROM tables (agbcc lowers a Thumb
- * function-pointer call to the libgcc helper at asm/disasm_0x08033cd8.s).
- * The register-coloring around those callee-saved-base dispatches is not
- * recoverable from pure C — the NON_MATCHING reference documents intent
- * for the phase-3 PC port. */
+ * Matching notes (old_agbcc):
+ *   - The newer agbcc allocates the dispatch-table index in r0/r1 and uses
+ *     ldrsb for the subtype byte. old_agbcc keeps the gGameStuff base in r4/r5
+ *     and lets us reuse it as the index, producing the baserom's r2/r4/r3
+ *     scratch-register shape and ldrb + lsls/asrs sign extension.
+ *   - The 0x03006110 tests use short-lived local base pointers so agbcc emits
+ *     pool loads of 0x03006110 followed by `ldr [base,#0x10]`, instead of
+ *     folding the address to 0x03006120.
+ *   - The function-pointer dispatches are spelled through byte addresses so
+ *     the table index is materialized before the indirect call helper.
+ *   - The final sub_0800CD88 argument bundle is written as GNU C statement
+ *     expressions and this TU is compiled with -ffixed-r3. Together they make
+ *     old_agbcc use r6, not r3, as the first ldrsh offset scratch while still
+ *     passing the fourth argument in r3. */
 
 typedef void (*GameProc)(void);
+
+#define FIXED_ARG_U8(reg, expr)                                                                                        \
+    ({                                                                                                                 \
+        register u8 value asm(reg) = (expr);                                                                           \
+        value;                                                                                                         \
+    })
+#define FIXED_ARG_S32(reg, expr)                                                                                       \
+    ({                                                                                                                 \
+        register s32 value asm(reg) = (expr);                                                                          \
+        value;                                                                                                         \
+    })
 
 extern const GameProc sEntityProcB[17];
 extern const GameProc sEntityProcD[17];
@@ -53,179 +71,117 @@ extern void sub_080008DC(void);
 extern void sub_0800A328(void);
 extern void sub_080094F8(void);
 extern void sub_08009984(void);
-extern u8 sub_0800CD88(u8 a, u8 b, s16 c, s16 d);
+extern u8 sub_0800CD88();
 extern void sub_08006B88(void *a, u32 b);
 extern void sub_08020C78(u32 arg);
 
-NAKED void sub_08003254(void *arg)
-{
-    asm(".syntax unified\n"
-        "    push    {r4, r5, r6, lr}\n"
-        "    adds    r5, r0, #0\n"
-        "    movs    r0, #6\n"
-        "    bl      sub_08007660\n"
-        "    bl      sub_08007DD0\n"
-        "    ldr     r0, _pool_3254_6110_a\n"
-        "    ldr     r0, [r0, #16]\n"
-        "    cmp     r0, #0\n"
-        "    bne     1f\n"
-        "    movs    r0, #24\n"
-        "    movs    r1, #24\n"
-        "    bl      sub_0800793C\n"
-        "    b       2f\n"
-        "    .align  2, 0\n"
-        "_pool_3254_6110_a: .4byte 0x03006110\n"
-        "1:\n"
-        "    cmp     r0, #2\n"
-        "    bne     2f\n"
-        "    movs    r0, #2\n"
-        "    bl      sub_080031D4\n"
-        "2:\n"
-        "    bl      sub_08008174\n"
-        "    bl      sub_080090B0\n"
-        "    bl      sub_0800A4D0\n"
-        "    ldr     r1, _pool_3254_procB\n"
-        "    ldr     r4, _pool_3254_gGameStuff_a\n"
-        "    ldrb    r2, [r4, #10]\n"
-        "    lsls    r0, r2, #2\n"
-        "    adds    r0, r0, r1\n"
-        "    ldr     r0, [r0, #0]\n"
-        "    bl      _call_via_r0\n"
-        "    ldr     r0, _pool_3254_6110_b\n"
-        "    ldr     r0, [r0, #16]\n"
-        "    cmp     r0, #0\n"
-        "    bne     3f\n"
-        "    ldr     r0, _pool_3254_lut_a\n"
-        "    ldrb    r4, [r4, #10]\n"
-        "    adds    r0, r4, r0\n"
-        "    ldrb    r0, [r0, #0]\n"
-        "    bl      sub_0800F24C\n"
-        "    b       4f\n"
-        "    .align  2, 0\n"
-        "_pool_3254_procB:        .4byte 0x080c0cb8\n"
-        "_pool_3254_gGameStuff_a: .4byte 0x03005330\n"
-        "_pool_3254_6110_b:       .4byte 0x03006110\n"
-        "_pool_3254_lut_a:        .4byte 0x080c0d84\n"
-        "3:\n"
-        "    ldr     r0, _pool_3254_lut_b\n"
-        "    ldrb    r4, [r4, #10]\n"
-        "    adds    r0, r4, r0\n"
-        "    ldrb    r0, [r0, #0]\n"
-        "    lsls    r0, r0, #24\n"
-        "    asrs    r0, r0, #24\n"
-        "    adds    r1, r5, #0\n"
-        "    bl      sub_08002EE8\n"
-        "4:\n"
-        "    ldr     r1, _pool_3254_procD\n"
-        "    ldr     r5, _pool_3254_gGameStuff_b\n" /* shared with the tail load below */
-        "    ldrb    r3, [r5, #10]\n"
-        "    lsls    r0, r3, #2\n"
-        "    adds    r0, r0, r1\n"
-        "    ldr     r0, [r0, #0]\n"
-        "    bl      _call_via_r0\n"
-        "    bl      sub_08009A58\n"
-        "    bl      sub_08009188\n"
-        "    bl      sub_080008DC\n"
-        "    bl      sub_0800A328\n"
-        "    bl      sub_080094F8\n"
-        "    bl      sub_08009984\n"
-        "    ldr     r1, _pool_3254_3720\n"
-        "    movs    r0, #4\n"
-        "    ldrh    r1, [r1, #52]\n"
-        "    ands    r0, r1\n"
-        "    cmp     r0, #0\n"
-        "    bne     5f\n"
-        "    ldr     r0, _pool_3254_6110_c\n"
-        "    ldr     r0, [r0, #16]\n"
-        "    cmp     r0, #2\n"
-        "    bne     5f\n"
-        "    ldr     r4, _pool_3254_35e0\n"
-        "    ldrb    r0, [r4, #24]\n"
-        "    ldrb    r1, [r4, #25]\n"
-        "    movs    r6, #8\n"
-        "    ldrsh   r2, [r4, r6]\n"
-        "    movs    r6, #10\n"
-        "    ldrsh   r3, [r4, r6]\n"
-        "    bl      sub_0800CD88\n"
-        "    lsls    r0, r0, #24\n"
-        "    lsrs    r1, r0, #24\n"
-        "    movs    r0, #1\n"
-        "    ldrb    r5, [r5, #16]\n"
-        "    ands    r0, r5\n"
-        "    cmp     r0, #0\n"
-        "    bne     5f\n"
-        "    cmp     r1, #2\n"
-        "    bne     5f\n"
-        "    adds    r0, r4, #0\n"
-        "    movs    r1, #128\n"
-        "    lsls    r1, r1, #3\n"
-        "    bl      sub_08006B88\n"
-        "    movs    r0, #93\n"
-        "    bl      sub_08020C78\n"
-        "5:\n"
-        "    ldr     r1, _pool_3254_gGameStuff_b\n"
-        "    ldr     r0, [r1, #20]\n"
-        "    adds    r0, #1\n"
-        "    str     r0, [r1, #20]\n"
-        "    pop     {r4, r5, r6}\n"
-        "    pop     {r0}\n"
-        "    bx      r0\n"
-        "    .align  2, 0\n"
-        "_pool_3254_lut_b:        .4byte 0x080c0d84\n"
-        "_pool_3254_procD:        .4byte 0x080c0d40\n"
-        "_pool_3254_gGameStuff_b: .4byte 0x03005330\n"
-        "_pool_3254_3720:         .4byte 0x03003720\n"
-        "_pool_3254_6110_c:       .4byte 0x03006110\n"
-        "_pool_3254_35e0:         .4byte 0x030035e0\n"
-        ".syntax divided\n");
-}
-
-#ifdef NON_MATCHING
-/* Reference body for the phase-3 PC port — mirrors the asm shape. Does
- * not match in pure C (see header note). */
 void sub_08003254(void *arg)
 {
-    u8 id;
+    u8 result;
 
     sub_08007660(6);
     sub_08007DD0();
 
-    if (*(u32 *)(0x03006110 + 16) == 0) {
-        sub_0800793C(24, 24);
-    } else if (*(u32 *)(0x03006110 + 16) == 2) {
-        sub_080031D4(2);
+    {
+        u8 *p6110 = (u8 *)0x03006110;
+
+        if (*(u32 *)(p6110 + 16) == 0) {
+            sub_0800793C(24, 24);
+        } else if (*(u32 *)(p6110 + 16) == 2) {
+            sub_080031D4(2);
+        }
     }
 
     sub_08008174();
     sub_080090B0();
     sub_0800A4D0();
 
-    id = gGameStuff.pendingMode;
-    sEntityProcB[id]();
+    {
+        register const GameProc *procs asm("r1") = sEntityProcB;
+        register GameStuff *g asm("r4") = &gGameStuff;
+        register u8 id asm("r2");
+        register u32 offset asm("r0");
 
-    if (*(u32 *)(0x03006110 + 16) == 0) {
-        sub_0800F24C(sEntitySubtypeLut[gGameStuff.pendingMode]);
-    } else {
-        sub_08002EE8((s8)sEntitySubtypeLut[gGameStuff.pendingMode], arg);
+        id = g->pendingMode;
+        offset = id << 2;
+        offset += (u32)procs;
+        (*(GameProc *)offset)();
     }
 
-    sEntityProcD[gGameStuff.pendingMode]();
-    sub_08009A58();
-    sub_08009188();
-    sub_080008DC();
-    sub_0800A328();
-    sub_080094F8();
-    sub_08009984();
+    {
+        register GameStuff *g asm("r4") = &gGameStuff;
+        u8 *p6110 = (u8 *)0x03006110;
 
-    if ((*(u16 *)(0x03003720 + 0x34) & 4) == 0 && *(u32 *)(0x03006110 + 16) == 2) {
-        u8 *e = (u8 *)0x030035e0;
-        u8 result = sub_0800CD88(e[24], e[25], *(s16 *)(e + 8), *(s16 *)(e + 10));
-        if ((gGameStuff._unk10 & 1) == 0 && result == 2) {
-            sub_08006B88(e, 0x400);
-            sub_08020C78(93);
+        if (*(u32 *)(p6110 + 16) == 0) {
+            register const volatile u8 *lut asm("r0") = sEntitySubtypeLut;
+
+            g = (GameStuff *)(u32)g->pendingMode;
+            sub_0800F24C(lut[(u32)g]);
+        } else {
+            register const volatile u8 *lut asm("r0") = sEntitySubtypeLut;
+            s32 subtype;
+
+            g = (GameStuff *)(u32)g->pendingMode;
+            subtype = lut[(u32)g];
+            subtype <<= 24;
+            subtype >>= 24;
+            sub_08002EE8(subtype, arg);
         }
     }
 
-    gGameStuff._unk14++;
+    {
+        register const GameProc *procsD asm("r1") = sEntityProcD;
+        register GameStuff *gTail asm("r5");
+
+        gTail = &gGameStuff;
+        {
+            register u8 id asm("r3");
+            register u32 offset asm("r0");
+
+            id = gTail->pendingMode;
+            offset = id << 2;
+            offset += (u32)procsD;
+            (*(GameProc *)offset)();
+        }
+
+        sub_08009A58();
+        sub_08009188();
+        sub_080008DC();
+        sub_0800A328();
+        sub_080094F8();
+        sub_08009984();
+
+        {
+            register struct IwramAt3720 *p3720 asm("r1") = &gIwram_3720;
+
+            if ((p3720->_field_34 & 4) != 0)
+                goto inc_timer;
+        }
+
+        {
+            u8 *p6110 = (u8 *)0x03006110;
+
+            if (*(u32 *)(p6110 + 16) != 2)
+                goto inc_timer;
+        }
+
+        {
+            register struct IwramAt35E0 *ent asm("r4") = &gIwram_35E0;
+
+            result = sub_0800CD88(FIXED_ARG_U8("r0", ent->_field_18), FIXED_ARG_U8("r1", ent->_field_19),
+                                  FIXED_ARG_S32("r2", ent->_field_8), FIXED_ARG_S32("r3", ent->_field_A));
+            gTail = (GameStuff *)(u32)gTail->_unk10;
+            if (((u32)gTail & 1) == 0) {
+                if (result == 2) {
+                    register struct IwramAt35E0 *entArg asm("r0") = (struct IwramAt35E0 *)ent;
+
+                    sub_08006B88(entArg, 0x400);
+                    sub_08020C78(93);
+                }
+            }
+        }
+
+    inc_timer:
+        gGameStuff._unk14++;
+    }
 }
-#endif
