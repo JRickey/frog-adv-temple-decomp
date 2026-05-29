@@ -325,6 +325,7 @@ SECTIONS {
         asm/text/text_0x08017a88.o(.text);  /* 0x08017a88 - 0x08019500, raw bytes */
         src/engine/sub_08019500.o(.text);
         asm/disasm_0x08019500.o(.text);  /* 0x08019500 - 0x08019540, sub_08019500 (auto-peeled) */
+        src/engine/sub_08019540.o(.text);
         asm/disasm_0x08019540.o(.text);  /* 0x08019540 - 0x08019560, sub_08019540 (auto-peeled) */
         asm/disasm_0x08019560.o(.text);  /* 0x08019560 - 0x08019580, sub_08019560 (auto-peeled) */
         asm/text/text_0x08019580.o(.text);  /* 0x08019580 - 0x0801a268, raw bytes */
