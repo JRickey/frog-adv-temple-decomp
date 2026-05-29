@@ -13,60 +13,69 @@
  *   - gGameStuff.pendingMode (offset 10) must be 1
  *   - *(u8*)(0x03006110 + 0x32) must be 1
  *
- * Shipped NAKED. The baserom caches the ROM table base into the high
- * register `ip` (r12) via `mov ip, r3` and reads it back inside the
- * loop via `mov r7, ip`. Per docs/codegen-notes.md "High registers
- * (sl/r10, sb/r9, r8) — corpus-validated unmatchable", agbcc 2.x's
- * register allocator will not promote a value into a high register
- * (r8-r12) from any plausible C input. Corpus search across 7 agbcc
- * decomps confirms `mov ip, rN` only appears inside NAKED inline-asm
- * blocks — no matched C body ever produces it. Pure-C attempt
- * converged at byte_diff=88 of 104 with the table-base load in a
- * low register; the high-register fold is unreachable.
+ * Shipped NAKED — but the prior "mov ip is corpus-unmatchable" rationale was WRONG
+ * (a reclaim pass disproved it, 2026-05-28). The baserom caches the ROM table base in
+ * the high register ip (`mov ip, r3`, read back as `mov r7, ip`), and that fold IS
+ * reproducible from pure C via TWO-POINTER ALIASING: declare two pointers both set to
+ * the same ROM literal (s16 *xtab / u16 *ytab = 0x082f9cf4), assigned AFTER the gate
+ * checks, indexing X as xtab[i*2] and Y as ytab[i*2+1]. agbcc then loads the base once
+ * (`ldr r3; mov ip, r3`) and reuses ip for the X-indexed load, exactly like baserom.
  *
- * The reference body in the NON_MATCHING block documents intent for
- * the phase-3 PC port.
+ * Reclaim progress: byte_diff 86 -> 54 (size 116 B, prologue, X-load path, and the whole
+ * control flow now match baserom). Working levers, by impact: (1) end-block written
+ * `if (match != 0) { sub_08020C78(8); return match; } return 0;` (NOT early-return — this
+ * fixed the size, 96->80); (2) table-pointer init AFTER the gates so agbcc keeps
+ * `movs match,#0` second and doesn't hoist the base load to entry (80->54); (3) the
+ * second gate via the gIwram_6110._field_32 symbol+offset (not the bare 0x03006110+0x32
+ * address) so +0x32 isn't folded into the pool literal; (4) two-pointer aliasing (above).
+ *
+ * REMAINING WALL (~54 byte_diff, a single instruction-selection diff): baserom computes
+ * the Y address as `(base+2) + i*4` => `adds r0,r3,#2; adds r0,r1,r0; ldrh [r0,#0]`
+ * (offset-0 load), but agbcc -O2 AND old_agbcc both reassociate-and-fold the +2 into the
+ * load immediate => `adds r0,r1,r3; ldrh [r0,#2]`. No C phrasing found yet that blocks
+ * that fold — permuter candidate / future corpus dig. Until then it stays NAKED; the
+ * NON_MATCHING body below is the byte_diff-54 shape, the resume point for the next attempt.
  */
 
 extern void sub_08020C78(u32 a);
 
-struct CoordEntry {
-    s16 x;
-    u16 y;
-};
-
 #ifdef NON_MATCHING
 u8 sub_08009BA0(void)
 {
-    const struct CoordEntry *table = (const struct CoordEntry *)0x082f9cf4;
-    u8 match = 0;
+    s16 *xtab;
+    u16 *ytab;
     s16 needleX;
     u16 needleY;
+    u8 match = 0;
     u8 i;
 
     if (gGameStuff.pendingMode != 1)
         goto end;
-    if (*(u8 *)(0x03006110 + 0x32) != 1)
+    if (*(u8 *)(0x03006110 + 0x32) != 1) /* lever 3: prefer gIwram_6110._field_32 symbol */
         goto end;
 
+    /* lever 2: init the alias pointers AFTER the gates (no `mov ip` hoist to entry) */
+    xtab = (s16 *)0x082f9cf4;
+    ytab = (u16 *)0x082f9cf4;
     needleX = (s16)gIwram_35E0._field_8;
     i = 0;
     do {
         u8 cur = i;
         i = (u8)(i + 1);
-        if (needleX != table[cur].x)
+        if (needleX != xtab[cur * 2]) /* lever 4: aliased base → `mov ip` reuse */
             continue;
         needleY = gIwram_35E0._field_A;
-        if (needleY != table[cur].y)
+        if (needleY != ytab[cur * 2 + 1]) /* the +2 fold here is the remaining wall */
             continue;
         match = i;
     } while (i <= 4);
 
 end:
-    if (match == 0)
-        return 0;
-    sub_08020C78(8);
-    return match;
+    if (match != 0) { /* lever 1: not early-return — matches baserom size + end block */
+        sub_08020C78(8);
+        return match;
+    }
+    return 0;
 }
 #else
 NAKED u8 sub_08009BA0(void)
