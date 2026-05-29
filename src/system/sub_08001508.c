@@ -539,3 +539,13 @@ void sub_08001508(void)
 }
 
 #endif
+
+/* Mode-4 re-arm thunk: queues pendingMode = 4, then forwards its two
+ * (untouched) register arguments plus the same literal 4 to sub_0800B7B0.
+ * agbcc reuses the 4 it materialised for the strb as the third call arg,
+ * so the constant is loaded once. */
+void sub_08001794(void *a, void *b)
+{
+    gGameStuff.pendingMode = 4;
+    sub_0800B7B0(a, b, 4);
+}
