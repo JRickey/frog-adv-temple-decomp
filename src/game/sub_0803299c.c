@@ -169,3 +169,11 @@ u32 sub_08032A54(u16 idArg)
     sub_08031DBC();
     return 1;
 }
+
+/* sub_08032A98 — returns the fixed per-slot stride 0x150 (the size of one
+ * SoundSlot record). agbcc materialises the constant as 0xa8 << 1, matching
+ * the baserom's `movs r0, #168; lsls r0, r0, #1`. */
+u32 sub_08032A98(void)
+{
+    return 0x150;
+}
