@@ -128,6 +128,25 @@ neighbouring TUs in the same `src/engine/` cluster are already on the
 override list. The permuter cannot reach this (it's a compiler-version
 codegen choice, not statement-ordering).
 
+### `old_agbcc` also keeps a redundant result-recolour move before a store
+
+A third symptom of the same split, with **no constant involved**:
+`*(u16 *)(rec + 0x2e) &= ~mask` (register `mask`, BIC against a loaded
+field) compiles under `agbcc` to `ldrh r2,[r0,#0x2e]; bic r2,r2,r1;
+strh r2,[r0,#0x2e]` — the result stays in r2 and stores directly.
+`old_agbcc` (baserom) does not coalesce the move that the allocator
+inserts to recolour the BIC result into the now-dead parameter register:
+`ldrh r2,…; bic r2,r2,r1; add r1,r2,#0; strh r1,…`. The two-instruction
+tail (`add rD,rS,#0; strh rD`) instead of one (`strh rS`) is the whole
+diff — byte_diff 4 on a 6-instruction leaf. `sub_08006948` matched
+first-try after adding its TU to the `OLD_AGBCC_BIN` override; the naive
+one-line C body needs no rewrite.
+
+**Lesson generalised:** any leaf whose only diff is a stray `add rD,rS,#0`
+register-to-register copy right before the matching store (baserom has it,
+agbcc dropped it) is an `old_agbcc` coalescing difference, not a C-shape
+problem — switch the TU before reaching for locals/permuter.
+
 ## ARM immediate encoding rotation
 
 GAS picks the smallest rotation R (0..15, applied as ROR by 2R) where

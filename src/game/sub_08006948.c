@@ -7,42 +7,24 @@
  * 36-byte slice; the second has no own thumb_func_start in baserom and is
  * given the name sub_08006958 here.
  *
- * Both shipped NAKED:
- *   - sub_08006948: agbcc folds the explicit `adds r1, r2, #0` (move into
- *     the parameter register before strh) and emits the smaller
- *     `strh r2, [r0, #0x2e]`. Same shape category as the documented
- *     register-coloring drift; the smaller-by-2-bytes built form is
- *     functionally correct but byte-different.
- *   - sub_08006958: baserom's `ands r1, r0` (dest=r1, leaving r0 free for
- *     the explicit `movs r0, #{0,1}` tail) and the no-push-no-pop frame.
- *     agbcc instead does `ands r0, r1` (clobbers r0 with the masked field)
- *     and folds the false-return into the already-zero r0, picking up a
- *     push/pop wrapper. Permuter has no statement reorder that recovers
- *     this shape.
+ * sub_08006948 matches only under old_agbcc (see the Makefile per-TU
+ * override): the baserom keeps the redundant `adds r1, r2, #0` move that
+ * recolours the BIC result from r2 into r1 before `strh r1`. The newer
+ * agbcc coalesces that move away and emits the 2-bytes-shorter `strh r2`.
+ * old_agbcc does not coalesce it, reproducing the baserom byte-for-byte.
  *
- * The reference bodies in the NON_MATCHING blocks document intent for
+ * sub_08006958 still ships NAKED: baserom's `ands r1, r0` (dest=r1, leaving
+ * r0 free for the explicit `movs r0, #{0,1}` tail) and the no-push-no-pop
+ * frame. agbcc instead does `ands r0, r1` (clobbers r0 with the masked
+ * field) and folds the false-return into the already-zero r0, picking up a
+ * push/pop wrapper. Permuter has no statement reorder that recovers this
+ * shape; its reference body in the NON_MATCHING block documents intent for
  * the phase-3 PC port. */
 
-#ifdef NON_MATCHING
 void sub_08006948(u8 *rec, u16 mask)
 {
     *(u16 *)(rec + 0x2e) &= ~mask;
 }
-#else
-NAKED void sub_08006948(u8 *rec, u16 mask)
-{
-    asm(".syntax unified\n"
-        "    lsls    r1, r1, #16\n"
-        "    lsrs    r1, r1, #16\n"
-        "    ldrh    r2, [r0, #46]\n"
-        "    bics    r2, r1\n"
-        "    adds    r1, r2, #0\n"
-        "    strh    r1, [r0, #46]\n"
-        "    bx      lr\n"
-        "    .align  2, 0\n"
-        ".syntax divided\n");
-}
-#endif
 
 #ifdef NON_MATCHING
 u8 sub_08006958(u8 *rec, u8 mask)
