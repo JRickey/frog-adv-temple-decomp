@@ -70,6 +70,12 @@ SECTIONS {
      * sub_08019560. See docs/codegen-notes.md "Adjacent IWRAM bases". */
     gHandlerTable_08308058 = 0x08308058;
 
+    /* ROM dispatch table at 0x08308ac8 (same sprite_dma_records blob).
+     * Linker-assigned so its pool load precedes the gIwram_34A0 index read,
+     * matching the baserom register/pool order in sub_080201A8 — the same
+     * idiom as gHandlerTable_08308058 above. */
+    gDispatchTable_08308AC8 = 0x08308AC8;
+
     .text : ALIGN(4) {
         asm/disasm_0x08000000.o(.text);  /* 0x08000000 - 0x08000004, entry branch */
         asm/header.o(.text);             /* 0x08000004 - 0x080000BF, header */
@@ -393,8 +399,7 @@ SECTIONS {
         asm/disasm_0x0801e28c.o(.text);  /* 0x0801e28c - 0x0801ea08, sub_0801E28C (auto-peeled) */
         asm/text/text_0x0801ea08.o(.text);  /* 0x0801ea08 - 0x08020000, raw bytes */
         asm/text/text_0x08020000.o(.text);  /* 0x08020000 - 0x080201a8, raw bytes */
-        src/engine/sub_080201a8.o(.text);
-        asm/disasm_0x080201a8.o(.text);  /* 0x080201a8 - 0x080201c8, sub_080201A8 (auto-peeled) */
+        src/engine/sub_080201a8.o(.text);  /* 0x080201a8 - 0x080201c8, sub_080201A8 */
         src/engine/sub_080201c8.o(.text);
         asm/disasm_0x080201c8.o(.text);  /* 0x080201c8 - 0x080201e8, sub_080201C8 (auto-peeled) */
         src/engine/sub_080201e8.o(.text);

@@ -20,7 +20,8 @@ struct IwramAt3480 {
 };
 
 struct IwramAt34A0 {
-    u8 _data[2]; /* write at +1 */
+    u8 _pad00;
+    u8 dispatchIdx; /* +1: index into the ROM dispatch table at 0x08308ac8 (sub_080201A8) */
 };
 
 struct IwramAt34B0 {
