@@ -34,3 +34,13 @@ void sub_0800C4A0(void)
         }
     }
 }
+
+/* Two empty dispatch stubs kept as separate symbols (sub_0800C4E4 is the
+ * "dispatch stub" referenced from the entity-frame-descriptor cluster) so the
+ * surrounding layout stays byte-identical: each compiles to `bx lr` plus a
+ * 2-byte align-to-4 pad, packing the pair into the original 8-byte slice. */
+void sub_0800C4E0(void)
+{}
+
+void sub_0800C4E4(void)
+{}
