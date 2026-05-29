@@ -62,6 +62,14 @@ SECTIONS {
         . = 0x00006110; gIwram_6110 = .;
     } >iwram
 
+    /* ROM dispatch table at 0x08308058 (a sub-region of the
+     * sSpriteAnimBlock_07104 blob, not yet broken out as its own data
+     * symbol). Declared as a linker-assigned symbol so agbcc treats it as
+     * an opaque address — keeps its pool load ahead of the gIwram_3480
+     * index read, matching the baserom. Shared by sub_08019540 /
+     * sub_08019560. See docs/codegen-notes.md "Adjacent IWRAM bases". */
+    gHandlerTable_08308058 = 0x08308058;
+
     .text : ALIGN(4) {
         asm/disasm_0x08000000.o(.text);  /* 0x08000000 - 0x08000004, entry branch */
         asm/header.o(.text);             /* 0x08000004 - 0x080000BF, header */
@@ -336,8 +344,7 @@ SECTIONS {
         src/engine/sub_08019500.o(.text);
         asm/disasm_0x08019500.o(.text);  /* 0x08019500 - 0x08019540, sub_08019500 (auto-peeled) */
         src/engine/sub_08019540.o(.text);  /* 0x08019540 - 0x08019560, sub_08019540 */
-        src/engine/sub_08019560.o(.text);
-        asm/disasm_0x08019560.o(.text);  /* 0x08019560 - 0x08019580, sub_08019560 (auto-peeled) */
+        src/engine/sub_08019560.o(.text);  /* 0x08019560 - 0x08019580, sub_08019560 */
         asm/text/text_0x08019580.o(.text);  /* 0x08019580 - 0x0801a268, raw bytes */
         src/engine/sub_0801a268.o(.text);
         asm/disasm_0x0801a268.o(.text);  /* 0x0801a268 - 0x0801a614, sub_0801A268 (auto-peeled) */
