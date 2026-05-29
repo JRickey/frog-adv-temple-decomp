@@ -56,7 +56,8 @@ struct IwramAt3720 {
     u8 _pad00[2];
     s16 _field_2;    /* +2: signed sub-coord (X?), divided by 24 to get tile X */
     s16 _field_4;    /* +4: signed sub-coord (Y?), divided by 24 to get tile Y */
-    u8 _pad06[0x11]; /* +6..+0x16 */
+    u8 _field_6;     /* +6: active actor id (matched against entry+8 by sub_08006FEC) */
+    u8 _pad07[0x10]; /* +7..+0x16 */
     u8 _field_17;    /* +0x17: u8 written by sub_08009984 (tile-class result) */
     u8 _pad18[2];    /* +0x18..+0x19 */
     u8 _field_1A;    /* +0x1A: dispatch state read often */

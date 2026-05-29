@@ -883,35 +883,27 @@ NAKED void sub_08006E8C(void *entries, s8 first, s8 last)
 #endif
 
 /* Sweeps the same 36-byte (0x24) entry array as the sub_08006D24/sub_08006E8C
- * neighbours over the inclusive index range [0, count), looking for an entry
- * that matches the active actor and, when found, raises its "engaged" bit.
+ * neighbours over the index range [0, count), looking for an entry that matches
+ * the active actor and, when found, raises its "engaged" bit.
  *
  * Bails out immediately (returns 0) if the gIwram_3720 dispatch halfword at
  * +0x34 has bit 0x04 set. Otherwise each entry's transient bit 0x02 at +26 is
  * cleared up front; entries whose bit 0x01 (at +26) is set are skipped. A
- * candidate must also match the active id (gIwram_3720[6] == entry[8]) and pass
- * sub_080076A4(&gIwram_3720, entry). A passing entry whose own state byte at +26
- * is > 3 additionally requires the gIwram_35E0 flags halfword at +0x10 to have
- * bit 0x10 set. The first fully-qualifying entry gets bit 0x02 raised on both
- * its +26 byte and the gIwram_35E0 +0x10 halfword, and the routine records a
- * hit (return value becomes 1) but keeps scanning the remaining entries.
- *
- * Shipped NAKED. The running hit-flag is pinned in r8 and the loop index is
- * carried byte-shifted in r9 across the sub_080076A4 call; agbcc 2.x will not
- * hold these high registers live across the call-bearing loop and instead
- * recomputes them from low registers, so the high-reg save/restore frame and
- * the `mov rN, r8/r9` index forms can't be reproduced from pure C. This is the
- * docs/codegen-notes.md "High registers" (Class 1) unmatchable pattern; the
- * NON_MATCHING body documents intent for the phase-3 PC port. */
+ * candidate must also match the active id (gIwram_3720+6 == entry+8) and pass
+ * sub_080076A4(&gIwram_3720, entry). A passing entry additionally requires, when
+ * the gIwram_3720 dispatch state at +0x1A is > 3, that the gIwram_35E0 flags
+ * halfword at +0x10 have bit 0x10 set. Every fully-qualifying entry gets bit
+ * 0x02 raised on both its +26 byte and the gIwram_35E0 +0x10 halfword, and the
+ * routine records a hit (return value becomes 1) while scanning the rest. */
 
-extern u8 sub_080076A4(struct IwramAt3720 *actor, void *entry);
+extern s32 sub_080076A4(struct IwramAt3720 *actor, void *entry);
 
-#ifdef NON_MATCHING
 struct EngageEntry {
-    u8 _pad00[6];
+    u8 _pad00[8];
     u8 matchId; /* +8 */
     u8 _pad09[0x11];
-    u8 state; /* +26: bit 0x01 = skip, bit 0x02 = engaged (raised here) */
+    u8 state;       /* +26: bit 0x01 = skip, bit 0x02 = engaged (raised here) */
+    u8 _pad1B[0x9]; /* +27..+0x23: pad to 36-byte (0x24) stride */
 };
 
 u8 sub_08006FEC(struct EngageEntry *entries, s8 count)
@@ -923,19 +915,22 @@ u8 sub_08006FEC(struct EngageEntry *entries, s8 count)
         return 0;
 
     for (i = 0; i < count; i++) {
-        struct EngageEntry *e = &entries[i];
+        /* index-first cast (offset + (s32)base, not &entries[i]) forces the
+         * baserom's `adds r4, r0, r1` operand order; the pointer-arithmetic
+         * form canonicalises to `adds r4, r1, r0` and is the only byte off. */
+        struct EngageEntry *e = (struct EngageEntry *)(i * sizeof(struct EngageEntry) + (s32)entries);
 
         e->state &= ~2;
         if ((e->state & 1) != 0)
             continue;
 
-        if (((u8 *)&gIwram_3720)[6] != e->matchId)
+        if (gIwram_3720._field_6 != e->matchId)
             continue;
 
         if (!sub_080076A4(&gIwram_3720, e))
             continue;
 
-        if (e->state > 3 && (gIwram_35E0._field_10 & 0x10) == 0)
+        if (gIwram_3720._field_1A > 3 && (gIwram_35E0._field_10 & 0x10) == 0)
             continue;
 
         e->state |= 2;
@@ -945,104 +940,3 @@ u8 sub_08006FEC(struct EngageEntry *entries, s8 count)
 
     return hit;
 }
-#else
-NAKED u8 sub_08006FEC(void *entries, s8 count)
-{
-    asm(".syntax unified\n"
-        "    push    {r4, r5, r6, r7, lr}\n"
-        "    mov     r7, sl\n"
-        "    mov     r6, r9\n"
-        "    mov     r5, r8\n"
-        "    push    {r5, r6, r7}\n"
-        "    mov     sl, r0\n"
-        "    lsls    r1, r1, #24\n"
-        "    lsrs    r3, r1, #24\n"
-        "    movs    r0, #0\n"
-        "    mov     r8, r0\n"
-        "    ldr     r1, _pool_gIwram3720_6fec\n"
-        "    movs    r0, #4\n"
-        "    ldrh    r1, [r1, #52]\n"
-        "    ands    r0, r1\n"
-        "    cmp     r0, #0\n"
-        "    beq     _07014\n"
-        "    movs    r0, #0\n"
-        "    b       _0708a\n"
-        "    .align  2, 0\n"
-        "_pool_gIwram3720_6fec: .4byte 0x03003720\n"
-        "_07014:\n"
-        "    movs    r2, #0\n"
-        "    lsls    r0, r3, #24\n"
-        "    asrs    r1, r0, #24\n"
-        "    mov     r9, r0\n"
-        "    cmp     r8, r1\n"
-        "    bge     _07088\n"
-        "    ldr     r7, _pool_gIwram35E0_6fec\n"
-        "_07022:\n"
-        "    lsls    r2, r2, #24\n"
-        "    asrs    r1, r2, #24\n"
-        "    lsls    r0, r1, #3\n"
-        "    adds    r0, r0, r1\n"
-        "    lsls    r0, r0, #2\n"
-        "    mov     r1, sl\n"
-        "    adds    r4, r0, r1\n"
-        "    movs    r1, #253\n"
-        "    ldrb    r0, [r4, #26]\n"
-        "    ands    r1, r0\n"
-        "    strb    r1, [r4, #26]\n"
-        "    movs    r0, #1\n"
-        "    ands    r1, r0\n"
-        "    adds    r6, r2, #0\n"
-        "    cmp     r1, #0\n"
-        "    bne     _0707c\n"
-        "    ldr     r5, _pool_gIwram35E0_6fec_b\n"
-        "    ldrb    r1, [r5, #6]\n"
-        "    ldrb    r0, [r4, #8]\n"
-        "    cmp     r1, r0\n"
-        "    bne     _0707c\n"
-        "    adds    r0, r5, #0\n"
-        "    adds    r1, r4, #0\n"
-        "    bl      sub_080076A4\n"
-        "    cmp     r0, #0\n"
-        "    beq     _0707c\n"
-        "    ldrb    r5, [r5, #26]\n"
-        "    cmp     r5, #3\n"
-        "    bls     _07068\n"
-        "    movs    r0, #16\n"
-        "    ldrh    r1, [r7, #16]\n"
-        "    ands    r0, r1\n"
-        "    cmp     r0, #0\n"
-        "    beq     _0707c\n"
-        "_07068:\n"
-        "    movs    r0, #2\n"
-        "    ldrb    r1, [r4, #26]\n"
-        "    orrs    r0, r1\n"
-        "    strb    r0, [r4, #26]\n"
-        "    movs    r0, #2\n"
-        "    ldrh    r1, [r7, #16]\n"
-        "    orrs    r0, r1\n"
-        "    strh    r0, [r7, #16]\n"
-        "    movs    r0, #1\n"
-        "    mov     r8, r0\n"
-        "_0707c:\n"
-        "    movs    r1, #128\n"
-        "    lsls    r1, r1, #17\n"
-        "    adds    r0, r6, r1\n"
-        "    lsrs    r2, r0, #24\n"
-        "    cmp     r0, r9\n"
-        "    blt     _07022\n"
-        "_07088:\n"
-        "    mov     r0, r8\n"
-        "_0708a:\n"
-        "    pop     {r3, r4, r5}\n"
-        "    mov     r8, r3\n"
-        "    mov     r9, r4\n"
-        "    mov     sl, r5\n"
-        "    pop     {r4, r5, r6, r7}\n"
-        "    pop     {r1}\n"
-        "    bx      r1\n"
-        "    .align  2, 0\n"
-        "_pool_gIwram35E0_6fec: .4byte 0x030035e0\n"
-        "_pool_gIwram35E0_6fec_b: .4byte 0x03003720\n"
-        "    .syntax divided\n");
-}
-#endif
