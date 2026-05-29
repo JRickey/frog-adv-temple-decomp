@@ -1906,7 +1906,24 @@ the dispatch shape itself is NOT an automatic NAKED trigger.
 
 ### Iter-38 research interlude: triangulating WHY the cluster ships NAKED
 
-Three parallel experiments (worktrees: `os-flag`, `dispatch-macro`,
+> **CONCLUSION RETRACTED 2026-05-29.** This interlude concluded the mode-X cluster
+> (AgbMain et al.) is "unreachable from C" — that is WRONG, and it even contradicts
+> this same file (the "agbcc 2.x DOES emit `mov pc, rN`" note just above, and item 3
+> below which got the dispatcher core matching). A direct probe settles it: a plain
+> dense C `switch` compiles under BOTH agbcc and old_agbcc to the exact baserom
+> dispatcher core (`lsls #2; ldr =table; adds; ldr [r0]; mov pc, r0` + absolute
+> `.word` table). The "58 mov-pc all in NAKED" corpus finding (item 2) is CIRCULAR —
+> other decomps NAKED'd these for the same wrong reason; it is not evidence of
+> impossibility. The "three downstream structural choices" below are NOT walls: the
+> "r5 pinned across the loop" one is the now-retracted high-register class (agbcc
+> allocates it from plain C — see "High registers"); case-0 fallthrough and pool
+> placement are normal matching nuances. The real remaining work for these
+> dispatchers is **case-body ordering** (write cases in the baserom's physical body
+> order — see "Case-number ≠ source-block-order trap"), not the `mov pc`. Treat the
+> whole mode-X cluster (AgbMain, sub_08000918/EB8/1508/2844/1214/19B4, sub_0802090C,
+> sub_0800A580, …) as RECLAIMABLE, not forever-NAKED. (Original analysis kept below.)
+
+(Historical.) Three parallel experiments (worktrees: `os-flag`, `dispatch-macro`,
 `corpus-expand`) on the same day pinned down why the mode-X cluster
 (sub_08000918, sub_08000EB8, sub_08001508, sub_08002844, AgbMain) ships
 NAKED despite the dispatcher idiom itself being agbcc's natural lowering:
@@ -1928,8 +1945,11 @@ of all 17+ agbcc-targeted decomps spanning 2001-2006:
 - **100%** are inside `NAKED` functions with `asm(".syntax unified\n…")`.
 - **ZERO** matched as a real pure-C `switch` compiling to mov-pc-rN.
 
-That's strong empirical proof the pattern is unreachable in agbcc
-2.x's emitter from C source. Not specific to our title.
+That was read as "strong empirical proof the pattern is unreachable in agbcc
+2.x's emitter from C source" — WRONG (see the retraction at the top of this
+interlude). It is circular: those 58 hits are NAKED because every project hit
+the same wrong conclusion. The probe shows a C `switch` emits `mov pc, rN`
+directly.
 
 **3. NOT a shared dispatch-macro issue.** The dispatch-macro agent
 verified all 5 cluster dispatcher CORES are byte-identical 10-byte

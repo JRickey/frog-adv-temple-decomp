@@ -19,15 +19,20 @@ Design contract (matters — read before tuning):
     structural part of the decision; the corpus confirms the empirical part.
 
 Signatures flagged STRONG_UNMATCHABLE:
-  class4-movpc  : `mov pc, rN` (computed jump / inline jump table). agbcc cannot
-                  emit this from C at all.
-  class1-hireg  : a value loaded into a callee-saved HIGH register (r8/r9/sl/fp)
-                  and read back AFTER an intervening `bl` — agbcc 2.x will not
-                  promote a local/pointer into a high reg across a call.
   class3-libgcc : a WIDE prologue (`push {…, r4, r5, r6, r7, lr}`) whose every `bl`
                   target is a libgcc helper. agbcc emits a narrower prologue because
                   it knows libgcc helpers preserve r4-r7. (Narrow prologues do NOT
-                  qualify — that is the sub_0800A214 false-alarm guard.)
+                  qualify — that is the sub_0800A214 false-alarm guard.) NOTE: this is
+                  the ONLY remaining STRONG trigger and it is low-confidence — no
+                  confirmed instance on this ROM; corpus-confirm before NAKED.
+
+ADVISORY (NOT auto-NAKED — matchable, just flagged for which lever to reach for):
+  mov pc, rN    : computed jump. RETRACTED as "structural" 2026-05-29 — a dense C
+                  `switch` emits exactly this + an absolute-address table (probe-
+                  verified, both agbcc and old_agbcc). Write it as a switch.
+  class1-hireg  : >=1 value held in a HIGH register (r8/r9/sl/fp) across a `bl`. agbcc
+                  allocates these from plain C when values are call-live; do NOT pin,
+                  write plain C. (Earlier "unmatchable" claim retracted.)
 
 Everything else → ATTEMPT_MATCH.
 
@@ -142,11 +147,22 @@ def classify(target: str) -> dict:
     advisories = []
     classes = []  # ONLY structural-impossibility signatures go here → STRONG verdict
 
-    # --- class4-movpc: computed jump / inline jump table -------------------
+    # --- mov pc, rN computed jump (ADVISORY ONLY — matchable via a C switch) ---
+    # RETRACTED 2026-05-29: `mov pc, rN` is NOT a structural wall. A dense C `switch`
+    # compiles under BOTH agbcc and old_agbcc to exactly this `mov pc,rN` + absolute-
+    # address `.word` table (probe-verified). The old "agbcc can't emit mov pc" claim
+    # was false. So we DON'T auto-NAKED — we hint to write a switch and match the
+    # case-BODY order. NAKED only after an honest attempt (for the rare non-switch
+    # computed-goto / opcode-dispatch iterator that genuinely resists).
     for a, t in insns:
         if re.match(r"mov\s+pc,\s*(r\d+|sl|fp|ip)\b", t):
-            classes.append("class4-movpc")
-            evidence.append(f"{t}  @ 0x{a:08x}  (computed jump — agbcc cannot emit `mov pc,rN` from C)")
+            advisories.append(
+                f"`{t}` @ 0x{a:08x} — computed jump. NOT auto-NAKED: a dense C `switch` "
+                f"emits exactly this `mov pc,rN` + absolute-address table (agbcc AND old_agbcc). "
+                f"Write it as a switch; match the case-BODY order (baserom physical order, see "
+                f"codegen-notes 'Case-number != source-block-order trap'). NAKED only if it's a "
+                f"non-switch computed-goto / opcode-iterator that resists after attempting."
+            )
             break
 
     # --- class3-libgcc: WIDE r4-r7 prologue + every bl is a libgcc helper ---
@@ -222,15 +238,21 @@ def classify(target: str) -> dict:
     }
 
 
-# --- validation set: (name, expected_verdict) drawn from the playbook -------
-# STRONG = confirmed NAKED ships; ATTEMPT = confirmed true byte-matches (incl. the
-# critical libgcc-calling / look-classy false-alarm cases).
+# --- validation set: (name, expected_verdict) -------------------------------
+# As of 2026-05-29 the classifier returns NO confirmed STRONG cases on this ROM:
+# class1 (high-reg), class4 (mov pc), and class5 (register-coloring) were all
+# DISPROVEN by the reclamation pass + the mov-pc probe. The only remaining STRONG
+# trigger is class3-libgcc (wide r4-r7 prologue + libgcc-only calls), which has no
+# confirmed instance here and is low-confidence — corpus-confirm before trusting it.
+# The selftest therefore validates the ATTEMPT path (the critical no-false-positive
+# property); every fn below is genuinely matchable or matchable-after-effort.
 SELFTEST = [
-    # STRONG = structural impossibility (mov pc, rN). agbcc cannot emit these from C.
-    ("sub_0802090C", "STRONG_UNMATCHABLE"),   # class4 mov pc,r0 jump table
-    ("sub_0800A580", "STRONG_UNMATCHABLE"),   # class4 mov pc + dispatch
-    ("sub_08000918", "STRONG_UNMATCHABLE"),   # class4 mov pc,r0 — the mislabeled smoke-test NAKED
-    ("sub_08001214", "STRONG_UNMATCHABLE"),   # class4 mov pc,r0 — the mislabeled smoke-test NAKED
+    # mov pc, rN dispatchers — ADVISORY now (matchable as a C switch; probe-verified),
+    # NOT auto-NAKED. Expected ATTEMPT_MATCH with a computed-jump advisory.
+    ("sub_0802090C", "ATTEMPT_MATCH"),        # mov pc,r0 jump table → write as switch
+    ("sub_0800A580", "ATTEMPT_MATCH"),        # mov pc + dispatch → write as switch
+    ("sub_08000918", "ATTEMPT_MATCH"),        # mov pc,r0 mode-8 dispatcher
+    ("sub_08001214", "ATTEMPT_MATCH"),        # mov pc,r0 mode-10 dispatcher
     # ATTEMPT = confirmed true byte-matches (the false-positive guards).
     ("sub_0800A214", "ATTEMPT_MATCH"),        # looked class3 but prologue push {r4,r5,lr}
     ("sub_0800A540", "ATTEMPT_MATCH"),        # matched once split from dispatcher
