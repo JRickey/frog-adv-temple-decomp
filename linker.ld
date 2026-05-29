@@ -19,6 +19,16 @@ MEMORY {
     rom   : ORIGIN = 0x08000000 LENGTH = 32M
 }
 
+/* State-handler dispatch table, currently inside the sSpriteAnimBlock_07104
+ * INCBIN blob. Surfaced as a linker-assigned absolute symbol so a C
+ * function-pointer array operand becomes a relocation rather than a
+ * compile-time constant — this is what makes agbcc load the table base
+ * before the (absolute) index base, matching baserom's pool/register order
+ * in sub_08019540. See docs/codegen-notes.md "Adjacent IWRAM bases" (the
+ * same defeat-the-fold principle, applied to a ROM data table). Promote to
+ * a real extracted array when the dispatcher cluster is named. */
+gStateHandlers_0830804C = 0x0830804C;
+
 SECTIONS {
     ewram (NOLOAD) : ALIGN(4) {
         /* Add ewram globals here as the disassembly identifies them. */
@@ -325,8 +335,7 @@ SECTIONS {
         asm/text/text_0x08017a88.o(.text);  /* 0x08017a88 - 0x08019500, raw bytes */
         src/engine/sub_08019500.o(.text);
         asm/disasm_0x08019500.o(.text);  /* 0x08019500 - 0x08019540, sub_08019500 (auto-peeled) */
-        src/engine/sub_08019540.o(.text);
-        asm/disasm_0x08019540.o(.text);  /* 0x08019540 - 0x08019560, sub_08019540 (auto-peeled) */
+        src/engine/sub_08019540.o(.text);  /* 0x08019540 - 0x08019560, sub_08019540 */
         src/engine/sub_08019560.o(.text);
         asm/disasm_0x08019560.o(.text);  /* 0x08019560 - 0x08019580, sub_08019560 (auto-peeled) */
         asm/text/text_0x08019580.o(.text);  /* 0x08019580 - 0x0801a268, raw bytes */
