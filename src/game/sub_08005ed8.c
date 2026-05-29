@@ -45,3 +45,46 @@ u8 sub_08005ED8(u8 state, u8 dir)
 
     return 0xFF;
 }
+
+u8 sub_08005F50(u8 state, u8 dir)
+{
+    switch (state) {
+    case 0:
+        switch (dir) {
+        case 0:
+            return 8;
+        case 1:
+            return 16;
+        case 2:
+            return 32;
+        case 3:
+            return 64;
+        }
+        /* fallthrough */
+    case 1:
+        switch (dir) {
+        case 0:
+            return 8;
+        case 1:
+            return 8;
+        case 2:
+            return 16;
+        case 3:
+            return 32;
+        }
+        /* fallthrough */
+    case 2:
+        switch (dir) {
+        case 0:
+            return 16;
+        case 1:
+            return 32;
+        case 2:
+            return 32;
+        case 3:
+            return 64;
+        }
+    }
+
+    return 0xFF;
+}
