@@ -39,7 +39,9 @@ typedef struct ChannelState {
 } ChannelState;
 
 typedef struct SoundSlot {
-    u8 _pad000[0x151];
+    u8 _pad000[0x148];
+    /* 0x148 */ u16 pendingId;
+    u8 _pad14a[0x7];
     /* 0x151 */ u8 flags;
 } SoundSlot;
 
@@ -134,4 +136,36 @@ u32 sub_08032A20(void)
     }
 
     return 0;
+}
+
+extern void sub_08031DBC(void);
+
+/* sub_08032A54 — queues a 16-bit id (pose/sound selector) onto the active
+ * sound slot, but only for a non-zero id and when the slot's +0x151 flag has
+ * bit 0 set (ready). On success it stashes the id at slot+0x148, kicks
+ * sub_08031DBC, and returns 1; otherwise returns 0. Sibling of the +0x151
+ * predicates sub_080329F4 / sub_08032A20.
+ *
+ * Matching note: the u16 argument is zero-extended into r3 and kept there
+ * across the slot load — pinning `id` to r3 (`register u16 id asm("r3")`)
+ * reproduces that; a plain local truncates into r0 then copies to r3, adding
+ * a spurious `adds r3, r0, #0`. The slot pointer is loaded unconditionally
+ * before the `id == 0` guard (the baserom reads *gpSoundSystem->slot into r2
+ * ahead of the compare). The two guards stay as separate `if (cond) return 0;`
+ * early-returns (id, then flag bit) to keep both `beq`-forward branches to the
+ * shared return-0 tail. */
+u32 sub_08032A54(u16 idArg)
+{
+    register u16 id asm("r3") = idArg;
+    SoundSlot *slot = gpSoundSystem->slot;
+
+    if (id == 0)
+        return 0;
+
+    if (!(slot->flags & 1))
+        return 0;
+
+    slot->pendingId = id;
+    sub_08031DBC();
+    return 1;
 }

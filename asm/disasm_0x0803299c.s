@@ -6,8 +6,9 @@
 @ single function sub_0803299C, but the boundary heuristic over-extended past
 @ several leaf functions (no push-lr prologue). Split into the five real
 @ functions so each cross-region BL target has its own Thumb symbol; the .incbin
-@ bytes are unchanged. sub_0803299C and sub_080329F4 have since been decompiled
-@ to src/game/sub_0803299c.c, leaving the three leaf functions below.
+@ bytes are unchanged. sub_0803299C, sub_080329F4, sub_08032A20 and sub_08032A54
+@ have since been decompiled to src/game/sub_0803299c.c, leaving the single leaf
+@ sub_08032A98 below.
 
         .include "asm/macros.inc"
         .syntax unified
@@ -86,11 +87,6 @@
 @   0x08032a90: 2000        movs	r0, #0
 @   0x08032a92: bc02        pop	{r1}
 @   0x08032a94: 4708        bx	r1
-
-        thumb_func_start sub_08032A54
-sub_08032A54: @ 0x08032a54
-        .incbin "frog_us_baserom.gba", 0x32a54, 0x44
-        thumb_func_end sub_08032A54
 
 @   0x08032a98: 20a8        movs	r0, #168	@ 0xa8
 @   0x08032a9a: 0040        lsls	r0, r0, #1
