@@ -45,8 +45,10 @@ SECTIONS {
         . = 0x000035E0; gIwram_35E0 = .;
         . = 0x00003710; gIwram_3710 = .;
         . = 0x00003720; gIwram_3720 = .;
+        . = 0x00005328; gIwram_5328 = .;
         . = 0x00005330; gIwram_5330 = .;
         . = 0x00005358; gIwram_5358 = .;
+        . = 0x00005398; gIwram_5398 = .;
         . = 0x00006110; gIwram_6110 = .;
     } >iwram
 
@@ -103,8 +105,7 @@ SECTIONS {
         src/game/set_game_mode_08.o(.text);  /* 0x08002a5c - 0x08002a68, SetGameMode_08 */
         asm/text/text_0x08002a68.o(.text);  /* 0x08002a68 - 0x08002ae8, raw bytes */
         asm/disasm_0x08002ae8.o(.text);  /* 0x08002ae8 - 0x08002b58, sub_08002AE8 (auto-peeled) */
-        src/game/sub_08002b58.o(.text);
-        asm/disasm_0x08002b58.o(.text);  /* 0x08002b58 - 0x08002e04, sub_08002B58 (auto-peeled) */
+        src/game/sub_08002b58.o(.text);  /* 0x08002b58 - 0x08002e04, sub_08002B58 */
         src/game/set_game_mode_09.o(.text);  /* 0x08002e04 - 0x08002e10, SetGameMode_09 */
         asm/text/text_0x08002e10.o(.text);  /* 0x08002e10 - 0x08002ee8, raw bytes */
         src/game/sub_08002ee8.o(.text);

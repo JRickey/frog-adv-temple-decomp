@@ -16,7 +16,7 @@
  * docs/codegen-notes.md "Adjacent IWRAM bases". */
 
 struct IwramAt3480 {
-    u8 _data[6]; /* writes at +0 and +5 */
+    u8 _data[7]; /* writes at +0, +5, +6 */
 };
 
 struct IwramAt34A0 {
