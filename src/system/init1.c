@@ -38,7 +38,7 @@ void sub_08000430(void)
     gGameStuff._unk04 = 0;
     gIwram_3480._data[5] = 0;
     gIwram_3480._data[0] = 0;
-    gIwram_34A0._data[1] = 0;
+    gIwram_34A0.dispatchIdx = 0;
     gIwram_34B4._data[0] = 1;
     gIwram_34B4._data[1] = 1;
     gIwram_34B4._data[2] = 5;
