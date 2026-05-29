@@ -80,7 +80,7 @@ SECTIONS {
         asm/disasm_0x08000240.o(.text);  /* 0x08000240 - 0x080002a4, sub_08000240 */
         src/system/agb_main.o(.text);    /* 0x080002a4 - 0x08000430, AgbMain (NAKED) */
         src/system/init1.o(.text);       /* 0x08000430 - 0x080005d8, sub_08000430 (Init1) + sub_080004C4 */
-        asm/text/text_0x080005d8.o(.text);  /* 0x080005d8 - 0x08000678, raw bytes */
+        asm/disasm_0x080005d8.o(.text);  /* 0x080005d8 - 0x08000678, sub_080005D8 (auto-peeled) */
         asm/disasm_0x08000678.o(.text);  /* 0x08000678 - 0x0800072c, sub_08000678 (auto-peeled) */
         src/system/init.o(.text);        /* 0x0800072c - 0x08000820, sub_0800072C + sub_08000764 + sub_08000790 */
         src/game/sub_08000820.o(.text);  /* 0x08000820 - 0x0800088c, sub_08000820 + sub_08000884/sub_08000888 stubs */
