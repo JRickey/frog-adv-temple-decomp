@@ -246,7 +246,7 @@ SECTIONS {
         src/engine/sub_0800a1c8.o(.text);  /* 0x0800a1c8 - 0x0800a26c, sub_0800A1C8, sub_0800A214, sub_0800A258 */
         asm/text/text_0x0800a26c.o(.text);  /* 0x0800a26c - 0x0800a2d8, raw bytes */
         src/game/dispatch_helpers.o(.text);  /* 0x0800a2d8 - 0x0800a3d0, sub_0800A2D8, sub_0800A328, sub_0800A3A4 */
-        asm/text/text_0x0800a3d0.o(.text);  /* 0x0800a3d0 - 0x0800a4d0, raw bytes */
+        asm/disasm_0x0800a3d0.o(.text);  /* 0x0800a3d0 - 0x0800a4d0, sub_0800A3D0 (auto-peeled) */
         src/engine/sub_0800a4d0.o(.text);  /* 0x0800a4d0 - 0x0800a520, sub_0800A4D0 */
         src/game/sub_0800a520.o(.text);  /* 0x0800a520 - 0x0800a580, sub_0800A520 + sub_0800A540 */
         asm/disasm_0x0800a540.o(.text);  /* 0x0800a580 - 0x0800a710, sub_0800A580 (auto-peeled) */
