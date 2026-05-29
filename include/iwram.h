@@ -89,7 +89,9 @@ struct IwramAt5358 {
 struct IwramAt6110 {
     u8 _pad00[2];
     u8 _field_2;     /* +0x02: threshold compared (signed) against gIwram_35E0[4] in sub_08009884 */
-    u8 _pad03[0x2b]; /* +0x03..+0x2d */
+    u8 _pad03[0xd];  /* +0x03..+0x0f */
+    u32 _field_10;   /* +0x10: scene-phase selector (read by sub_08003254 / sub_0800336C) */
+    u8 _pad14[0x1a]; /* +0x14..+0x2d */
     u16 _field_2e;   /* +0x2e: flag halfword (bits 0x04, 0x02 set by sub_08009884) */
     u8 _pad30[2];    /* +0x30..+0x31 */
     u8 _field_32;    /* +0x32: state-byte gating the sEntityParamTable lookup in sub_0800A1C8 */
