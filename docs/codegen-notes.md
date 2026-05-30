@@ -2225,3 +2225,54 @@ NAKED, no register pin. Worked example: `sub_08003B8C`. Use this lever
 whenever a function is a 1–2 byte near-match whose only drift is a
 `bge.n` countdown (or `bls.n`) where the baserom has a signed `ble.n`
 count-up.
+
+## Cracking the "unmatchable" tail — read the compiler, invent structure
+
+Source: codex matched 6 functions our Sonnet/Opus+permuter pipeline deferred or
+NAKED'd (sub_08003254, AgbMain, sub_0800088C, sub_080210A0, and two NAKED→true-C
+promotions sub_0800A104 / sub_0800A1C8). The throughline: a near-match is a
+*local minimum*; the permuter only **mutates** existing structure and cannot
+**invent** the structure that matches. The wins came from reasoning backwards
+from the target codegen — and reading the agbcc source — to the C that produces
+it. This is a thinking problem, not a search.
+
+**The agbcc source is local.** `tools/agbcc-src/gcc_arm/` (gitignored; symlink
+into worktrees) has the actual gcc-2.x passes. When a *register choice* is wrong
+read `local-alloc.c` / `regclass.c` / `reload.c`; a *loop reversal* / strength
+reduction → `loop.c`; a *fold* → `cse.c` / `gcse.c`. Understand WHY agbcc picks
+what it picks, then write the C that avoids it.
+
+**The per-TU `CFLAGS +=` flag surface (underused).** Beyond `CC=$(OLD_AGBCC_BIN)`,
+the whole gcc-2.x `-fXXX` set is available per file in the Makefile:
+- `-ffixed-rN` — reserve a register so agbcc uses a different scratch
+  (`sub_08003254.s: CFLAGS += -ffixed-r3`).
+- `-fno-strength-reduce` — defeats the loop-reversal that turns `s32 i <= N` into a
+  `bge.n` countdown; restores the baserom's signed `ble.n` count-up in pure C with
+  no pin (`sub_08003b8c.s`). Use for the 1–2-byte `bls.n`/`ble.n`-vs-countdown class.
+- `-fno-gcse`, `-fno-schedule-insns` — try when a fold or instruction schedule
+  diverges and no source-level lever reaches it.
+
+**Structural idioms the permuter can't reach** (it mutates, doesn't invent):
+- **Dead-pointer-cast-to-index** — force a dead base register's reuse by casting it
+  to the index and re-reading through it: `p = (T *)(u32)p->field; x = table[(u32)p];`
+  (`sub_0800A1C8`: makes agbcc overwrite r5 with the index instead of allocating fresh).
+- **`asm("")` barrier on an r0-pinned local** — block agbcc tail-merging two distinct
+  return paths into one (`sub_0800A104`).
+- **Statement-expression argument pinning** (`FIXED_ARG`-style `({ register T v
+  asm("rN") = expr; v; })`) — fix which register a call argument lands in
+  (`sub_08003254`).
+- **Jump-table case-body ordering** — agbcc sorts switch cases by value but emits
+  bodies in source order; ordering the source cases right matches a clean switch with
+  NO pins/flags (`AgbMain`).
+
+**High-register pins (r8/r9/sl) are NOT a blanket NAKED trigger.** `sub_080210A0`
+byte-matches with `r8`/`r9`/`sl` pins; `sub_0800A1C8` was a premature NAKED. The
+genuinely-hard high-reg case is narrow — high regs holding *loop state across an
+inner function-pointer BL* (the two-stage / opcode-dispatch classes below). A
+straight-line initializer or handler with high-reg pins should be ATTEMPTED, not
+auto-NAKED'd. `classify_unmatchable.py` already treats high-reg pins as advisory.
+
+**Don't anchor on the prior attempt.** When resuming a deferral, its analysis tells
+you what does NOT work — RE-DERIVE the structure from scratch rather than tweaking the
+near-match (tweaking stays in the same basin). Grind across several *distinct*
+structures (codex spends ~200-330k tokens / 10-15 min doing exactly this) before defer.

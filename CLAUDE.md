@@ -344,12 +344,24 @@ For each decomp target:
      local variable assignment is needed to match
    - `goto` and labels are used heavily; don't rewrite into structured forms
    - Hex-asm output: `-fhex-asm` is on, so literal `0xNN` matters
-   - When stuck on register order: `register T x asm("r5");`
+   - When stuck on register order: `register T x asm("r5");` — incl. HIGH regs
+     (`asm("r8")`/`asm("r9")`/`asm("sl")`). High-reg pins are matchable in pure C
+     (sub_080210A0 matches with all three) — see below.
+   - Per-TU `CFLAGS +=` flag surface beyond `OLD_AGBCC`: `-ffixed-rN` (free a
+     register), `-fno-strength-reduce` (defeat loop-reversal → signed `ble.n`
+     count-up), `-fno-gcse`/`-fno-schedule-insns`. The whole gcc-2.x `-fXXX` set
+     is a lever. See `docs/codegen-notes.md` "Cracking the unmatchable tail".
+   - Read the agbcc SOURCE (`tools/agbcc-src/gcc_arm/{local-alloc,reload,cse,loop}.c`)
+     to learn WHY a register/fold/loop diverges, then write the C that avoids it.
+     A near-match is a local minimum — re-derive structure, don't tweak it.
    - `NON_MATCHING` ifdef pattern: when you can't match, wrap the readable C
      in `#ifdef NON_MATCHING` and keep the matching but uglier C in `#else`.
-   - High-register pins (`mov sl, …`, `mov r9/r8, …`) for loop state are
-     corpus-validated unmatchable in pure C. Skip straight to NAKED + `#ifdef
-     NON_MATCHING` (see `docs/codegen-notes.md` "High registers").
+   - High-register pins (`mov sl, …`, `mov r9/r8, …`) are NOT a blanket NAKED
+     trigger (codex matched sub_080210A0 with r8/r9/sl; sub_0800A1C8 was a
+     premature NAKED). The genuinely-hard case is narrow: a high reg holding
+     *loop state across an inner function-pointer BL* (the two-stage / opcode-
+     dispatch classes below). A straight-line init/handler with high-reg pins
+     should be ATTEMPTED (`classify_unmatchable.py` already treats it as advisory).
    - Two-stage loops over a shared `*gpGlobal` (baserom reloads from `ip`
      at every count-check; agbcc instead caches in a low callee-saved
      register) — also unmatchable. Same NAKED + NON_MATCHING fallback.
