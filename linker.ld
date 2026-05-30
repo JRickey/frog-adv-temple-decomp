@@ -133,8 +133,7 @@ SECTIONS {
         src/system/sub_08000c98.o(.text);  /* 0x08000c98 - 0x08000cec, sub_08000C98 + sub_08000CB0 */
         src/system/sub_08000cec.o(.text);  /* 0x08000cec - 0x08000d2c, sub_08000CEC */
         src/system/sub_08000d2c.o(.text);  /* 0x08000d2c - 0x08000d50, sub_08000D2C */
-        src/system/sub_08000d50.o(.text);  /* 0x08000d50 - 0x08000d5c, sub_08000D50 */
-        asm/disasm_0x08000d5c.o(.text);  /* 0x08000d5c - 0x08000e0c, sub_08000D5C (auto-peeled) */
+        src/system/sub_08000d50.o(.text);  /* 0x08000d50 - 0x08000e0c, sub_08000D50 + sub_08000D5C */
         src/system/sub_08000e0c.o(.text);  /* 0x08000e0c - 0x08000eb8, sub_08000E0C */
         src/system/sub_08000eb8.o(.text);  /* 0x08000eb8 - 0x08001128, sub_08000EB8 (NAKED + NON_MATCHING; mode-9 dispatch — `mov pc, rN` jump table, sibling of sub_08002844) */
         src/system/sub_08001128.o(.text);  /* 0x08001128 - 0x080011a4, sub_08001128 / sub_08001140 / sub_08001174 / sub_08001198 cluster */
