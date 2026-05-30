@@ -8,7 +8,7 @@
  * convention.
  *
  *   idx 0  (VBlank)  -> 0x08000791 — sub_08000790 (per-frame mixer)
- *   idx 1  (HBlank)  -> 0x0800088d — sub_0800088C (asm, TBD)
+ *   idx 1  (HBlank)  -> 0x0800088d — sub_0800088C
  *   idx 2  (VCount)  -> 0x08000889 — sub_08000888 (empty stub)
  *   idx 3  (Timer0)  -> 0x08000885 — sub_08000884 (empty stub)
  *   idx 4  (Timer1)  -> 0x0800090d — sub_0800090C (sound DMA timer)

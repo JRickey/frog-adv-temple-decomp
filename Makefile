@@ -143,6 +143,7 @@ src/game/sub_08009984.s: CC = $(OLD_AGBCC_BIN)
 src/game/sub_080031d4.s: CC = $(OLD_AGBCC_BIN)
 src/game/sub_08003254.s: CC = $(OLD_AGBCC_BIN)
 src/game/sub_08003254.s: CFLAGS += -ffixed-r3
+src/game/sub_0800088c.s: CC = $(OLD_AGBCC_BIN)
 src/engine/sub_0800dffc.s: CC = $(OLD_AGBCC_BIN)
 src/game/sub_0803299c.s: CC = $(OLD_AGBCC_BIN)
 src/engine/sub_080217d4.s: CC = $(OLD_AGBCC_BIN)
