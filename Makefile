@@ -111,6 +111,7 @@ src/system/init.s: CC = $(OLD_AGBCC_BIN)
 src/system/init1.s: CC = $(OLD_AGBCC_BIN)
 src/system/vblank.s: CC = $(OLD_AGBCC_BIN)
 src/engine/sub_0800a710.s: CC = $(OLD_AGBCC_BIN)
+src/engine/sub_0800a83c.s: CC = $(OLD_AGBCC_BIN)
 src/engine/sub_0800cd88.s: CC = $(OLD_AGBCC_BIN)
 src/engine/sub_0800cb80.s: CC = $(OLD_AGBCC_BIN)
 src/game/sub_08006600.s: CC = $(OLD_AGBCC_BIN)
@@ -148,6 +149,8 @@ src/game/sub_08003254.s: CFLAGS += -ffixed-r3
 # Loop reverses to a `bge.n` countdown under strength reduction; the baserom
 # keeps a signed count-up (`ble.n`). Disabling strength reduction restores it.
 src/game/sub_08003b8c.s: CFLAGS += -fno-strength-reduce
+# Keeps the scroll-object address arithmetic in the baserom's non-hoisted form.
+src/engine/sub_0800f24c.s: CFLAGS += -fno-strength-reduce
 src/game/sub_0800088c.s: CC = $(OLD_AGBCC_BIN)
 src/engine/sub_0800dffc.s: CC = $(OLD_AGBCC_BIN)
 src/game/sub_0803299c.s: CC = $(OLD_AGBCC_BIN)
