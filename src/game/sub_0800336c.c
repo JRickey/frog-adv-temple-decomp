@@ -185,3 +185,31 @@ void sub_080035F8(void)
 {
     sub_0800DE80();
 }
+
+extern u32 sub_0800CD88(u8 col, u8 row, s16 tileX, s16 tileY);
+extern void sub_08006B88(struct IwramAt35E0 *p, u32 mask);
+extern void sub_08020C78(u32 arg);
+
+void sub_08003604(void)
+{
+    register struct IwramAt35E0 *p asm("r4");
+    u8 tile;
+
+    if ((gIwram_3720._field_34 & 4) != 0)
+        return;
+
+    if (gIwram_6110._field_10 != 2)
+        return;
+
+    p = &gIwram_35E0;
+    tile = (u8)sub_0800CD88(p->_field_18, p->_field_19, p->_field_8, p->_field_A);
+
+    if ((gGameStuff._unk10 & 1) != 0)
+        return;
+
+    if (tile != 2)
+        return;
+
+    sub_08006B88(p, 0x400);
+    sub_08020C78(0x5d);
+}
