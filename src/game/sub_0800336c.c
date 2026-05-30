@@ -180,3 +180,8 @@ void sub_080035D0(u8 *state, u16 *hw)
     gIwram_6110._field_10 = 0;
     *hw = 0x87;
 }
+
+void sub_080035F8(void)
+{
+    sub_0800DE80();
+}
