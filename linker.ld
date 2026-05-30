@@ -36,6 +36,15 @@ gHandlerTable_08308028 = 0x08308028;
  * a real extracted array when the dispatcher cluster is named. */
 gStateHandlers_0830804C = 0x0830804C;
 
+
+/* Sprite animation descriptor instances within the sSpriteAnimBlock_06838 blob.
+ * Both at offset 0x5d0 / 0x5f0 into the block (addresses 0x08306e08 / 0x08306e28).
+ * Linker-assigned so agbcc emits two separate pool loads instead of folding
+ * the adjacent compile-time constants into a single base+offset computation.
+ * Promote to real typed C symbols once the consumer cluster is fully named. */
+sAnimDesc_6e08 = 0x08306e08;
+sAnimDesc_6e28 = 0x08306e28;
+
 SECTIONS {
     ewram (NOLOAD) : ALIGN(4) {
         /* Add ewram globals here as the disassembly identifies them. */
@@ -67,9 +76,11 @@ SECTIONS {
         . = 0x00005328; gIwram_5328 = .;
         . = 0x00005330; gIwram_5330 = .;
         . = 0x00005358; gIwram_5358 = .;
+        . = 0x00005360; gIwram_5360 = .;
         . = 0x00005398; gIwram_5398 = .;
         . = 0x000053A0; gIwram_53A0 = .;
         . = 0x00006110; gIwram_6110 = .;
+        . = 0x00006150; gIwram_6150 = .;
     } >iwram
 
     /* ROM dispatch table at 0x08308058 (a sub-region of the
@@ -390,9 +401,11 @@ SECTIONS {
         asm/disasm_0x080112c0.o(.text);  /* 0x080112c0 - 0x080113e8, sub_080112C0 (auto-peeled) */
         src/engine/sub_080113e8.o(.text);  /* 0x080113e8 - 0x08011478, sub_080113E8 */
         asm/text/text_0x08011478.o(.text);  /* 0x08011478 - 0x0801185c, raw bytes */
-        src/engine/sub_0801185c.o(.text);  /* 0x0801185c - 0x08011884, sub_0801185C */
-        asm/disasm_0x08011884.o(.text);  /* 0x08011884 - 0x080118d8, sub_08011884 (auto-peeled) */
-        asm/text/text_0x080118d8.o(.text);  /* 0x080118d8 - 0x08012664, raw bytes */
+        src/engine/sub_0801185c.o(.text);  /* 0x0801185c - 0x080118d8, sub_0801185C + sub_08011884 */
+        asm/text/text_0x080118d8.o(.text);  /* 0x080118d8 - 0x08012180, raw bytes */
+        asm/disasm_0x08012180.o(.text);  /* 0x08012180 - 0x0801223c, sub_08012180 (auto-peeled) */
+        asm/disasm_0x0801223c.o(.text);  /* 0x0801223c - 0x080122e4, sub_0801223C (auto-peeled) */
+        asm/text/text_0x080122e4.o(.text);  /* 0x080122e4 - 0x08012664, raw bytes */
         src/engine/sub_08012664.o(.text);
         asm/disasm_0x08012664.o(.text);  /* 0x08012664 - 0x0801288c, sub_08012664 (auto-peeled) */
         src/engine/sub_0801288c.o(.text);

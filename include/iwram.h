@@ -87,6 +87,24 @@ struct IwramAt5358 {
     u16 justPressed; /* +0: just-pressed raw key bitmask (active-high) */
 };
 
+struct IwramAt5360 {
+    u8 _field_00; /* +0: state byte (written as 1/2/3/4 by sub_0801223C) */
+    u8 _pad01[3];
+    u32 _field_04; /* +4: position/counter (r/w; compared against ROM anchor field_04) */
+    u32 _field_08; /* +8: cached position (written from gIwram_5330 by sub_08012180) */
+    u8 _maxFrames; /* +12: frame-count limit (copied from ROM AnimDesc.maxFrames) */
+    u8 _pad0d;
+    s16 _field_0e; /* +14: signed frame counter (decremented; nonzero = animation in progress) */
+};
+
+struct IwramAt6150 {
+    u8 _field_00; /* +0: state byte (written as 1 by sub_0801223C) */
+    u8 _pad01[3];
+    u32 _field_04; /* +4: position/counter (r/w; compared against ROM anchor field_04) */
+    u32 _field_08; /* +8: cached position (written from gIwram_5330 by sub_08012180) */
+    u8 _maxFrames; /* +12: frame-count limit (copied from ROM AnimDesc.maxFrames) */
+};
+
 struct IwramAt6110 {
     u8 _pad00[2];
     u8 _field_2;     /* +0x02: threshold compared (signed) against gIwram_35E0[4] in sub_08009884 */
@@ -116,4 +134,6 @@ extern struct IwramAt3720 gIwram_3720;
 extern struct IwramAt5358 gIwram_5358;
 extern struct IwramAt6110 gIwram_6110;
 
+extern struct IwramAt5360 gIwram_5360;
+extern struct IwramAt6150 gIwram_6150;
 #endif /* GUARD_IWRAM_H */
