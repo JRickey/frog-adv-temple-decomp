@@ -158,3 +158,17 @@ void sub_08003584(void *buf)
     gGameStuff.pendingMode = 10;
     sub_08006BB4(6, buf);
 }
+
+extern void sub_0800658C(void *p, u32 a, u32 b, const void *table, u32 e, u32 f);
+extern void sub_0800CE98(u32 a, u32 b);
+extern void sub_08009CBC(void);
+
+/* Sibling of sub_08001D18/sub_08001484. Installs config table 0x082f9aec into
+ * the gGameStuff_6110 cluster via the shared 6-arg setup helper, then primes
+ * the post-setup state (sub_0800CE98(0xb, 0); sub_08009CBC()). */
+void sub_0800359C(void)
+{
+    sub_0800658C((void *)0x03006110, 0x80, 0xb, (const void *)0x082f9aec, 1, 3);
+    sub_0800CE98(0xb, 0);
+    sub_08009CBC();
+}
