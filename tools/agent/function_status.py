@@ -80,6 +80,11 @@ class FnStatus:
     pins: int             # register-pin declarations (0 for asm/naked)
     file: str             # src/.../x.c or asm/disasm_*.s
     registers: str        # comma-joined pinned regs, for the de-pin worklist
+    # Escalation ladder (deferred rows only): which model tiers have already
+    # attempted this function, and which tier the next pass should use. Derived
+    # from the deferred-analysis note — never stored. Empty for non-deferred rows.
+    defer_tiers: str = ""  # "sonnet" or "sonnet,opus"
+    next_tier: str = ""    # "opus" (sonnet-only so far) | "codex" (opus tried = firm-defer)
 
 
 def _scan_src(pin_threshold: int) -> tuple[dict[str, FnStatus], set[str]]:
@@ -173,6 +178,30 @@ def _deferred_names() -> set[str]:
     return {p.stem for p in DEFERRED_DIR.glob("*.md")}
 
 
+# A re-attempt by a higher tier appends an "## Opus attempt" section to the note
+# (the standalone Opus agents + finish-decomp's escalated defer step both do this).
+# A note with no such marker was only attempted at the base (sonnet) tier.
+_OPUS_ATTEMPT_RE = re.compile(r"opus[ _-]{0,3}attempt", re.I)
+
+
+def _defer_tier(name: str) -> tuple[str, str]:
+    """(defer_tiers, next_tier) for one deferred function, derived from its note.
+
+    The escalation ladder: sonnet (auto-loop base) -> opus (next pass) -> codex
+    (firm-defer, manual/rate-limited). 'next_tier' is what should attempt it next.
+    """
+    note = DEFERRED_DIR / f"{name}.md"
+    try:
+        text = note.read_text(errors="replace")
+    except OSError:
+        text = ""
+    tiers = ["sonnet"]  # every auto-loop defer starts at the cheap tier
+    if _OPUS_ATTEMPT_RE.search(text):
+        tiers.append("opus")
+    next_tier = "codex" if "opus" in tiers else "opus"
+    return ",".join(tiers), next_tier
+
+
 def collect(pin_threshold: int) -> list[FnStatus]:
     by_name, defined = _scan_src(pin_threshold)
     rows = list(by_name.values()) + _scan_asm(defined)
@@ -180,6 +209,7 @@ def collect(pin_threshold: int) -> list[FnStatus]:
     for r in rows:
         if r.name in deferred:
             r.status = "deferred"
+            r.defer_tiers, r.next_tier = _defer_tier(r.name)
     return rows
 
 
@@ -205,12 +235,17 @@ def main() -> int:
     ap.add_argument("--with-commit", action="store_true",
                     help="annotate each row with its file's latest commit")
     ap.add_argument("--counts", action="store_true", help="just the per-status tally")
+    ap.add_argument("--next-tier", choices=["opus", "codex"],
+                    help="filter to deferred functions whose next escalation tier is this "
+                         "(opus = sonnet-only so far; codex = opus tried = firm-defer queue)")
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args()
 
     rows = collect(args.pin_threshold)
     if args.status:
         rows = [r for r in rows if r.status == args.status]
+    if args.next_tier:
+        rows = [r for r in rows if r.status == "deferred" and r.next_tier == args.next_tier]
 
     # rank: status priority, then pins desc, then name
     rank = {s: i for i, s in enumerate(STATUS_ORDER)}
