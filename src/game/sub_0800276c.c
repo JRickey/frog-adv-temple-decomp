@@ -56,3 +56,17 @@ void sub_08002808(void)
 {
     sub_0800DE80();
 }
+
+void sub_08002814(void)
+{
+    struct IwramAt35E0 *p;
+    u32 mask;
+
+    p = &gIwram_35E0;
+    mask = 0x10;
+    mask &= p->_field_10;
+    if (mask != 0) {
+        u8 result = (u8)sub_0800CD88(p->_field_18, p->_field_19, p->_field_8, p->_field_A);
+        sub_0800C3E4(result);
+    }
+}
