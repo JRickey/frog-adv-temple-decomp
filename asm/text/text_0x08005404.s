@@ -13,3 +13,8 @@
 text_08005404:
         .incbin "frog_us_baserom.gba", 0x00005404, 0x000000a4
         .size   text_08005404, . - text_08005404
+
+@ Thumb function alias so C code can BL to this address correctly.
+        .thumb_func
+        .global sub_08005404
+        .set    sub_08005404, text_08005404

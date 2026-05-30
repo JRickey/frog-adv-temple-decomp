@@ -24,3 +24,21 @@ void sub_08005890(void)
     sub_08009CBC();
     p->_field_10 = 4;
 }
+
+extern void sub_0800A2D8(void);
+extern void sub_080008DC(void);
+extern void sub_0800A328(void);
+extern void sub_080094F8(void);
+extern void sub_08009984(void);
+extern void sub_08005404(u32 arg);
+
+void sub_080058CC(u32 arg)
+{
+    sub_0800A2D8();
+    sub_080008DC();
+    sub_0800A328();
+    sub_080094F8();
+    sub_08009984();
+    sub_08005404(arg);
+    gGameStuff._unk14++;
+}
