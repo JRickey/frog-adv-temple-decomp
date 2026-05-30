@@ -41,3 +41,17 @@ void sub_08006AAC(u8 *p, u8 v)
     *p = v;
     sub_08016A40();
 }
+
+u32 sub_08006AB8(u8 *p)
+{
+    u32 v;
+
+    v = *p + 1;
+    *p = (u8)v;
+    if ((s32)(v << 24) >> 24 > 10) {
+        *p = 10;
+        return 0;
+    }
+    sub_08016A40();
+    return 1;
+}
