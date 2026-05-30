@@ -56,3 +56,16 @@ void sub_08002EAC(void)
 {
     sub_0800DE80();
 }
+
+void sub_08002EB8(void)
+{
+    struct IwramAt35E0 *p;
+    register u32 mask asm("r0");
+
+    p = &gIwram_35E0;
+    mask = 0x10;
+    mask &= p->_field_10;
+    if (mask != 0) {
+        sub_0800ACE8((u8)sub_0800CD88(p->_field_18, p->_field_19, p->_field_8, p->_field_A));
+    }
+}
