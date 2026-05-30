@@ -223,3 +223,14 @@ NAKED void sub_08008F98(void)
         "    .syntax divided\n");
 }
 #endif
+
+extern u8 sub_08007F88(void);
+
+u8 sub_0800908C(void)
+{
+    if (sub_08007F88()) {
+        sub_08006B94(&gIwram_35E0, 1);
+        return 1;
+    }
+    return 0;
+}
