@@ -60,3 +60,34 @@ check:
     sub_08006600(checkBase, 5, 15);
     sub_080066C4(checkBase, 8, 1);
 }
+
+void sub_0800AC44(u8 tile)
+{
+    u8 *base6110;
+    struct IwramAt6110 *p6110;
+
+    if (tile != 20)
+        return;
+
+    base6110 = (u8 *)0x03006110;
+
+    if (sub_0800679C(base6110, 5, 0) == 0) {
+        sub_08006600(base6110, 5, 0);
+        sub_08020C78(25);
+        sub_08006600(base6110, 8, 4);
+    } else if (sub_0800679C(base6110, 5, 1) == 0) {
+        sub_08006600(base6110, 5, 1);
+        sub_08020C78(25);
+        sub_08006600(base6110, 8, 4);
+    } else if (sub_0800679C(base6110, 5, 2) == 0) {
+        sub_08006600(base6110, 5, 2);
+        sub_08020C78(25);
+        sub_08006600(base6110, 8, 4);
+    }
+
+    p6110 = &gIwram_6110;
+    if (p6110->_field_26 == 7)
+        sub_08006600((u8 *)p6110, 8, 5);
+
+    sub_08006600((u8 *)p6110, 8, 2);
+}
