@@ -1,97 +1,11 @@
 @ Auto-emitted by tools/disasm/peel.py — do not hand-edit this header.
-@ Range:  [0x0800ab84, 0x0800af50)  (972 bytes, thumb mode)
-@ Re-peel:  python3 tools/disasm/peel.py --start 0x800ab84 --end 0x800af50 --mode thumb
+@ Range:  [0x0800ac44, 0x0800af50)  (780 bytes, thumb mode)
+@ Re-peel:  python3 tools/disasm/peel.py --start 0x800ac44 --end 0x800af50 --mode thumb
 
         .include "asm/macros.inc"
         .syntax unified
 
 @ Disassembly preview (the bytes come from the INCBIN below):
-@   0x0800ab84: b530        push	{r4, r5, lr}
-@   0x0800ab86: 0600        lsls	r0, r0, #24
-@   0x0800ab88: 0e00        lsrs	r0, r0, #24
-@   0x0800ab8a: 2814        cmp	r0, #20
-@   0x0800ab8c: d154        bne.n	0xac38
-@   0x0800ab8e: 4807        ldr	r0, [pc, #28]	@ (0xabac)
-@   0x0800ab90: 2208        movs	r2, #8
-@   0x0800ab92: 5e81        ldrsh	r1, [r0, r2]
-@   0x0800ab94: 230a        movs	r3, #10
-@   0x0800ab96: 5ec2        ldrsh	r2, [r0, r3]
-@   0x0800ab98: 2013        movs	r0, #19
-@   0x0800ab9a: f7ff        fe05 	bl	0xa7a8
-@   0x0800ab9e: 0604        lsls	r4, r0, #24
-@   0x0800aba0: 1622        asrs	r2, r4, #24
-@   0x0800aba2: 2a00        cmp	r2, #0
-@   0x0800aba4: d106        bne.n	0xabb4
-@   0x0800aba6: 4802        ldr	r0, [pc, #8]	@ (0xabb0)
-@   0x0800aba8: 0e22        lsrs	r2, r4, #24
-@   0x0800abaa: e010        b.n	0xabce
-@   0x0800abac: 35e0        adds	r5, #224	@ 0xe0
-@   0x0800abae: 0300        lsls	r0, r0, #12
-@   0x0800abb0: 6110        str	r0, [r2, #16]
-@   0x0800abb2: 0300        lsls	r0, r0, #12
-@   0x0800abb4: 4d08        ldr	r5, [pc, #32]	@ (0xabd8)
-@   0x0800abb6: 3a01        subs	r2, #1
-@   0x0800abb8: 0612        lsls	r2, r2, #24
-@   0x0800abba: 0e12        lsrs	r2, r2, #24
-@   0x0800abbc: 1c28        adds	r0, r5, #0
-@   0x0800abbe: 2105        movs	r1, #5
-@   0x0800abc0: f7fb        fdec 	bl	0x679c
-@   0x0800abc4: 0600        lsls	r0, r0, #24
-@   0x0800abc6: 2800        cmp	r0, #0
-@   0x0800abc8: d008        beq.n	0xabdc
-@   0x0800abca: 0e22        lsrs	r2, r4, #24
-@   0x0800abcc: 1c28        adds	r0, r5, #0
-@   0x0800abce: 2105        movs	r1, #5
-@   0x0800abd0: f7fb        fd16 	bl	0x6600
-@   0x0800abd4: e005        b.n	0xabe2
-@   0x0800abd6: 0000        movs	r0, r0
-@   0x0800abd8: 6110        str	r0, [r2, #16]
-@   0x0800abda: 0300        lsls	r0, r0, #12
-@   0x0800abdc: 2072        movs	r0, #114	@ 0x72
-@   0x0800abde: f016        f84b 	bl	0x20c78
-@   0x0800abe2: 4c17        ldr	r4, [pc, #92]	@ (0xac40)
-@   0x0800abe4: 1c20        adds	r0, r4, #0
-@   0x0800abe6: 2105        movs	r1, #5
-@   0x0800abe8: 2200        movs	r2, #0
-@   0x0800abea: f7fb        fdd7 	bl	0x679c
-@   0x0800abee: 0600        lsls	r0, r0, #24
-@   0x0800abf0: 2800        cmp	r0, #0
-@   0x0800abf2: d021        beq.n	0xac38
-@   0x0800abf4: 1c20        adds	r0, r4, #0
-@   0x0800abf6: 2105        movs	r1, #5
-@   0x0800abf8: 2201        movs	r2, #1
-@   0x0800abfa: f7fb        fdcf 	bl	0x679c
-@   0x0800abfe: 0600        lsls	r0, r0, #24
-@   0x0800ac00: 2800        cmp	r0, #0
-@   0x0800ac02: d019        beq.n	0xac38
-@   0x0800ac04: 1c20        adds	r0, r4, #0
-@   0x0800ac06: 2105        movs	r1, #5
-@   0x0800ac08: 2202        movs	r2, #2
-@   0x0800ac0a: f7fb        fdc7 	bl	0x679c
-@   0x0800ac0e: 0600        lsls	r0, r0, #24
-@   0x0800ac10: 2800        cmp	r0, #0
-@   0x0800ac12: d011        beq.n	0xac38
-@   0x0800ac14: 1c20        adds	r0, r4, #0
-@   0x0800ac16: 2105        movs	r1, #5
-@   0x0800ac18: 2203        movs	r2, #3
-@   0x0800ac1a: f7fb        fdbf 	bl	0x679c
-@   0x0800ac1e: 0600        lsls	r0, r0, #24
-@   0x0800ac20: 2800        cmp	r0, #0
-@   0x0800ac22: d009        beq.n	0xac38
-@   0x0800ac24: 1c20        adds	r0, r4, #0
-@   0x0800ac26: 2105        movs	r1, #5
-@   0x0800ac28: 220f        movs	r2, #15
-@   0x0800ac2a: f7fb        fce9 	bl	0x6600
-@   0x0800ac2e: 1c20        adds	r0, r4, #0
-@   0x0800ac30: 2108        movs	r1, #8
-@   0x0800ac32: 2201        movs	r2, #1
-@   0x0800ac34: f7fb        fd46 	bl	0x66c4
-@   0x0800ac38: bc30        pop	{r4, r5}
-@   0x0800ac3a: bc01        pop	{r0}
-@   0x0800ac3c: 4700        bx	r0
-@   0x0800ac3e: 0000        movs	r0, r0
-@   0x0800ac40: 6110        str	r0, [r2, #16]
-@   0x0800ac42: 0300        lsls	r0, r0, #12
 @   0x0800ac44: b510        push	{r4, lr}
 @   0x0800ac46: 0600        lsls	r0, r0, #24
 @   0x0800ac48: 0e00        lsrs	r0, r0, #24
@@ -441,11 +355,6 @@
 @   0x0800af4a: 0000        movs	r0, r0
 @   0x0800af4c: 6110        str	r0, [r2, #16]
 @   0x0800af4e: 0300        lsls	r0, r0, #12
-
-        thumb_func_start sub_0800AB84
-sub_0800AB84: @ 0x0800ab84
-        .incbin "frog_us_baserom.gba", 0xab84, 0xc0
-        thumb_func_end sub_0800AB84
 
         thumb_func_start sub_0800AC44
 sub_0800AC44: @ 0x0800ac44
