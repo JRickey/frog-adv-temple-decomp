@@ -129,9 +129,9 @@ Regenerate with `python3 tools/agent/progress_stats.py --update-readme`.
 - **Functions decompiled to C**: 229 / ~513 estimated total (**44.6%**)
   - true pure-C matches: 187
   - NAKED+NON_MATCHING (asm fallback, byte-matches but not pure C): 42
-  - peeled-but-still-asm: 145
+  - peeled-but-still-asm: 149
   - estimate range (lower / upper): 335 / 1140
-- **Data deblobbed**: 506.5 KiB of 4.00 MiB (**12.37%**)
+- **Data deblobbed**: 506.7 KiB of 4.00 MiB (**12.37%**)
   - raw INCBIN bytes: 3.51 MiB (87.6% of ROM)
   - `database.json` entries: 265
 
