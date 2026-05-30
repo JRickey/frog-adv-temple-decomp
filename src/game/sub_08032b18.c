@@ -84,3 +84,35 @@ s32 SoundSlot_PickByPriority(s32 a0, u32 priority, s32 a2, s32 idx)
 
     return bestIdx;
 }
+
+typedef struct SoundHwSystem {
+    u8 _pad00[0xac];
+    u16 chHwCtrl[4]; /* +0xac */
+} SoundHwSystem;
+
+#define gpSoundHw (*(SoundHwSystem **)0x030065e0)
+
+/* sub_08032BA0 — hardware-channel volume gate. Compares the stored hw control
+ * halfword for channel idx against an adjusted threshold (threshold + 0x100 if
+ * flag is set). Returns 1 if the stored value is <= the threshold (channel is
+ * within the allowed range), 0 otherwise.
+ *
+ * Matching notes:
+ *   - Must be compiled with OLD_AGBCC_BIN: the regular agbcc emits
+ *     `push {lr}` / `pop {pc}` even for this leaf, while old_agbcc with
+ *     -mthumb-interwork correctly elides the prologue and emits `bx lr`.
+ *   - The inverted test (<=, return-1-first) matches the baserom's `bls`
+ *     branch to the return-1 block with return-0 as the fall-through.
+ */
+u32 sub_08032BA0(u32 flag, u32 threshold, u32 idx)
+{
+    u32 adj;
+
+    adj = threshold;
+    if (flag != 0)
+        adj += 0x100;
+
+    if (gpSoundHw->chHwCtrl[idx] <= adj)
+        return 1;
+    return 0;
+}
