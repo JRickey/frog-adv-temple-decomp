@@ -39,3 +39,10 @@ void sub_080090B0(void)
     gIwram_35E0._field_8 = newX;
     gIwram_35E0._field_A = newY;
 }
+
+extern void Entity_Init(struct IwramAt3720 *p, u8 a, s16 b, s16 c, u8 d, u16 e, u8 f, u8 g, u8 h, u16 i);
+
+void sub_080090FC(u16 x, u16 y, u8 g, u8 h)
+{
+    Entity_Init(&gIwram_3720, 0, (s16)x, (s16)y, 3, 1, 0, g, h, 16);
+}
