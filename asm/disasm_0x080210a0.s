@@ -84,8 +84,3 @@
 @   0x0802113a: 4700        bx	r0
 @   0x0802113c: 3720        adds	r7, #32
 @   0x0802113e: 0300        lsls	r0, r0, #12
-
-        thumb_func_start sub_080210A0
-sub_080210A0: @ 0x080210a0
-        .incbin "frog_us_baserom.gba", 0x210a0, 0xa0
-        thumb_func_end sub_080210A0

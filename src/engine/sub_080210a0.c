@@ -1,1 +1,105 @@
+#include "iwram.h"
 #include "types.h"
+
+typedef struct EntitySlot {
+    u8 _field_00;
+    u8 _field_01;
+    u16 x;
+    u16 y;
+    u8 matchKey;
+    u8 _pad07[13];
+    u16 _field_14;
+    u8 _field_16;
+    u8 _field_17;
+    u8 _pad18[2];
+    u8 dispatchState;
+    u8 _pad1B[0x18];
+    u8 _field_33;
+    u16 flags;
+    u8 _pad36[2];
+} EntitySlot;
+
+typedef struct SpawnRecord {
+    u8 _field_00;
+    u8 _field_01;
+    u8 state;
+    u8 _pad03[5];
+    u16 x;
+    u16 y;
+    s8 param;
+} SpawnRecord;
+
+extern void sub_08021F1C(u8 dir, s8 *outX, s8 *outY);
+extern void sub_0800A580(EntitySlot *e, s8 param, s8 deltaX, s8 deltaY);
+
+void sub_080210A0(u32 idx, const void *record, u32 flags, u32 kind, u32 field14, u32 field16, u32 matchKey, u32 field17)
+{
+    register const volatile SpawnRecord *recVol asm("sl") = (const volatile SpawnRecord *)record;
+    const SpawnRecord *rec;
+    register u32 base asm("r4");
+    register u32 offset asm("r1");
+    register u32 transfer asm("r1");
+    register u32 field14Reg asm("r6");
+    register u32 field16Reg asm("r8");
+    register u32 matchKeyReg asm("r9");
+    register u32 field17Reg asm("r5");
+    register u32 idxReg asm("r0");
+    register const SpawnRecord *rec2 asm("r2");
+    register u32 flagMask asm("r0");
+    register u16 oldFlags asm("r1");
+    register u32 recHeadReg asm("r2");
+    register u32 byteScratch0 asm("r0");
+    register u32 byteScratch1 asm("r1");
+    register const u8 *paramRec asm("r2");
+    register s32 param asm("r1");
+    EntitySlot *entity;
+    u8 state;
+    s32 dir;
+    s32 initDir;
+    s8 deltaX;
+    s8 deltaY;
+
+    field14Reg = field14;
+    transfer = field16;
+    field16Reg = transfer;
+    transfer = matchKey;
+    matchKeyReg = transfer;
+    field17Reg = field17;
+
+    idxReg = (u16)idx;
+    state = recVol->state;
+    rec = (const SpawnRecord *)recVol;
+    base = (u32)&gIwram_3720;
+    offset = idxReg * sizeof(EntitySlot);
+    entity = (EntitySlot *)(offset + base);
+    entity->flags = flags;
+    rec2 = rec;
+    entity->x = rec2->x;
+    entity->y = rec2->y;
+    entity->_field_00 = kind;
+    entity->_field_14 = field14Reg;
+    byteScratch0 = field16Reg;
+    entity->_field_16 = byteScratch0;
+    entity->_field_17 = field17Reg;
+    byteScratch1 = matchKeyReg;
+    entity->matchKey = byteScratch1;
+
+    recHeadReg = *(const u16 *)rec2;
+    byteScratch0 = recHeadReg << 16;
+    dir = (s32)byteScratch0 >> 24;
+    initDir = 2;
+    if (dir != 0)
+        initDir = dir;
+    entity->_field_33 = initDir;
+
+    byteScratch0 = state;
+    entity->dispatchState = byteScratch0;
+    flagMask = 2;
+    oldFlags = entity->flags;
+    entity->flags = flagMask | oldFlags;
+
+    sub_08021F1C(state, &deltaX, &deltaY);
+    paramRec = (const u8 *)recVol;
+    param = *(const s8 *)(paramRec + 12);
+    sub_0800A580(entity, param, deltaX, deltaY);
+}
