@@ -41,3 +41,11 @@ void sub_08002E44(void)
 
     gGameStuff._unk14++;
 }
+
+extern u32 sub_08009C14(u8 *state);
+
+void sub_08002E94(u8 *state)
+{
+    if (sub_08009C14(state) == 0)
+        *state = 9;
+}
