@@ -49,3 +49,10 @@ void sub_080027F0(u8 *state)
     if (sub_08009C14(state) == 0)
         *state = 7;
 }
+
+extern void sub_0800DE80(void);
+
+void sub_08002808(void)
+{
+    sub_0800DE80();
+}
