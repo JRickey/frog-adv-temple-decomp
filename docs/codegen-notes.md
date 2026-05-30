@@ -2189,3 +2189,39 @@ Resolution:
 Cross-check: `arm-none-eabi-objdump -d` of the compiled `.o` after
 matching shows the extended pool as plain `.word` entries past the
 function's `bx`. Total `.text` size should equal the new boundary.
+
+
+## Loop-reversal `bge.n` countdown — defeat with `-fno-strength-reduce`
+
+agbcc's strength-reduction pass reverses a signed count-up loop
+`for (i = 0; i <= N; i++)` (with `i` dead in the body and `N` a
+constant) into a countdown: `i = N; ...; subs i, #1; cmp i, #0;
+bge.n`. When the baserom instead keeps the natural signed count-up
+(`adds r7, #1; cmp r7, #5; ble.n`), this presents as a frustrating
+near-match where every byte matches except the loop branch.
+
+Levers that DON'T fully fix it:
+- `u32 i` — blocks reversal (unsigned `i >= 0` is always true, so the
+  pass can't reverse) but emits the *unsigned* compare `bls.n`, not the
+  signed `ble.n` the baserom wants. One byte off.
+- `register s32 i asm("r7")` — the hard-register pin disables the
+  reversal pass for that biv, so you get `ble.n` count-up — BUT agbcc
+  (and old_agbcc) then omit r7 from the prologue `push`/epilogue `pop`
+  (an explicit-register-var is excluded from `regs_ever_live`), leaving
+  two bytes off in the prologue/epilogue instead.
+
+The clean fix: keep plain `s32 i` (pure C, no pin) and disable the
+reversal pass for just that translation unit via a per-file Makefile
+override:
+
+```make
+src/game/sub_08003b8c.s: CFLAGS += -fno-strength-reduce
+```
+
+`-fno-strength-reduce` turns off the whole strength-reduction/loop-
+reversal pass, so the signed count-up survives verbatim: `push {…, r7}`,
+`adds r7, #1; cmp r7, #5; ble.n`, `pop {…, r7}` — byte-identical, no
+NAKED, no register pin. Worked example: `sub_08003B8C`. Use this lever
+whenever a function is a 1–2 byte near-match whose only drift is a
+`bge.n` countdown (or `bls.n`) where the baserom has a signed `ble.n`
+count-up.
