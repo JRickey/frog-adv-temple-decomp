@@ -295,3 +295,102 @@ NAKED u8 sub_08009C14(u8 *flag)
         "    .syntax divided\n");
 }
 #endif
+
+typedef void (*GameProc)(void);
+
+extern const u32 sEntityParamTable[17];
+extern const u32 sEntityProcB[17];
+extern const u32 sEntityProcC[17];
+extern const u8 sEntitySubtypeLut[20];
+
+extern void sub_08020BAC(void);
+extern void sub_08020B88(u32 arg);
+extern void sub_0800A05C(void);
+extern void sub_080077AC(s8 a, s16 b, s8 c);
+extern void sub_0800F24C(u8 arg);
+extern void sub_0800A520(void);
+extern void sub_08009A58(void);
+extern void sub_08009188(void);
+extern void sub_080008DC(void);
+extern void sub_0800A328(void);
+
+void sub_08009CBC(void)
+{
+    struct IwramAt6110 *s;
+    GameStuff *p;
+    u32 value;
+
+    p = &gGameStuff;
+
+    /* The `!= 16` read is volatile-qualified so agbcc re-loads pendingMode after the
+     * __umodsi3 call instead of caching it in a callee-saved reg across the BL; that
+     * keeps the base in r4 (re-read each time), matching the baserom. */
+    if ((u8)(p->pendingMode % 3) != 0 && ((volatile GameStuff *)p)->pendingMode != 16) {
+        value = 0;
+        sub_08020BAC();
+        if (gIwram_6110._field_32 == 1) {
+            const u32 *table = sEntityParamTable;
+            /* Reuse the now-dead base pointer so agbcc overwrites r4 with the index. */
+            p = (GameStuff *)(u32)p->pendingMode;
+            value = table[(u32)p];
+        }
+        sub_08020B88(value);
+    }
+
+    sub_0800A05C();
+    sub_080077AC((s8)gIwram_35E0._data[0], *(s16 *)&gIwram_35E0._data[2], 0);
+
+    {
+        register const u32 *procC asm("r5");
+        register GameStuff *base asm("r4");
+        register u8 idx1 asm("r1");
+        register u8 idx2 asm("r2");
+        register u32 offset asm("r0");
+
+        procC = sEntityProcC;
+        base = &gGameStuff;
+        idx1 = base->pendingMode;
+        offset = ((u32)idx1 << 2) + (u32)procC;
+        ((GameProc)(*(const u32 *)offset))();
+
+        {
+            register const u8 *lut asm("r0");
+            lut = sEntitySubtypeLut;
+            idx2 = base->pendingMode;
+            sub_0800F24C(*(const u8 *)(idx2 + (u32)lut));
+        }
+
+        {
+            register const u32 *procA asm("r1");
+            procA = sEntityProcA;
+            idx2 = base->pendingMode;
+            offset = ((u32)idx2 << 2) + (u32)procA;
+            ((GameProc)(*(const u32 *)offset))();
+        }
+
+        idx1 = base->pendingMode;
+        offset = ((u32)idx1 << 2) + (u32)procC;
+        ((GameProc)(*(const u32 *)offset))();
+
+        s = &gIwram_6110;
+        s->_field_14 = -1;
+        s->_field_1c = -1;
+
+        sub_0800A520();
+
+        {
+            register const u32 *procB asm("r1");
+            procB = sEntityProcB;
+            idx2 = base->pendingMode;
+            offset = ((u32)idx2 << 2) + (u32)procB;
+            ((GameProc)(*(const u32 *)offset))();
+        }
+
+        sub_08009A58();
+        sub_08009188();
+        sub_080008DC();
+        sub_0800A328();
+
+        base->_unk14 = 0;
+    }
+}
