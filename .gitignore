@@ -50,8 +50,10 @@ expected/
 .DS_Store
 .idea/
 
-# Claude Code harness state (loop / schedule lock files etc.)
-.claude/
+# Claude Code harness state (loop / schedule lock files, worktrees, etc.) —
+# but keep the project's reusable agent workflows under source control.
+.claude/*
+!.claude/workflows/
 
 # Logs
 err.log
