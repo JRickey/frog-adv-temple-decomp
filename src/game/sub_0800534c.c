@@ -48,3 +48,12 @@ void sub_080053A4(u8 *arg0, u8 *arg1, u32 *arg2, u8 *arg3, u32 *arg4)
     sub_0800BE18(arg1, arg2, 29);
     sub_0800BE18(arg3, arg4, 30);
 }
+
+extern void sub_08015A00(void);
+extern void sub_0800DE80(void);
+
+void sub_080053F4(void)
+{
+    sub_08015A00();
+    sub_0800DE80();
+}
