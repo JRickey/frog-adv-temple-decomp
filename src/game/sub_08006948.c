@@ -74,3 +74,27 @@ void sub_0800696C(void *unused, s32 bits)
     bank = (unsigned long long *)0x03006110;
     *(unsigned long long *)((char *)bank + 28) |= mask;
 }
+
+/* Clears bit `bits` in the 128-bit flag bank at 0x03006110+20..0x03006110+35.
+ *
+ * Mirror of sub_0800696C (which sets a bit); this function clears one. */
+void sub_080069BC(void *unused, s32 bits)
+{
+    unsigned long long mask;
+    unsigned long long nmask;
+    register unsigned long long *bank asm("r2");
+
+    if (bits <= 63) {
+        mask = (unsigned long long)1 << bits;
+        nmask = ~mask;
+        bank = (unsigned long long *)0x03006110;
+        *(unsigned long long *)((char *)bank + 20) &= nmask;
+        return;
+    }
+
+    bits -= 64;
+    mask = (unsigned long long)1 << bits;
+    nmask = ~mask;
+    bank = (unsigned long long *)0x03006110;
+    *(unsigned long long *)((char *)bank + 28) &= nmask;
+}
