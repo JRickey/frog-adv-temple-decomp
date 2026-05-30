@@ -172,3 +172,11 @@ void sub_0800359C(void)
     sub_0800CE98(0xb, 0);
     sub_08009CBC();
 }
+
+void sub_080035D0(u8 *state, u16 *hw)
+{
+    if (sub_08009C14(state) == 0)
+        *state = 7;
+    gIwram_6110._field_10 = 0;
+    *hw = 0x87;
+}
