@@ -26,3 +26,25 @@ void sub_0800534C(void)
     sub_08006600(base6110, 3, 3);
     sub_080066C4(base6110, 3, 8);
 }
+
+extern u32 sub_08009C14(u8 *state);
+extern void sub_0800BE18(u8 *slots, u32 *out, s8 type);
+
+void sub_080053A4(u8 *arg0, u8 *arg1, u32 *arg2, u8 *arg3, u32 *arg4)
+{
+    if (sub_08009C14(arg0) == 0)
+        *arg0 = 8;
+
+    {
+        u8 *base = (u8 *)&gIwram_6110;
+        gIwram_6110._field_10 = 0;
+        base[0x2a] = 0;
+        base[0x2b] = 0;
+
+        if (gIwram_6110._field_33 != 1)
+            return;
+    }
+
+    sub_0800BE18(arg1, arg2, 29);
+    sub_0800BE18(arg3, arg4, 30);
+}
