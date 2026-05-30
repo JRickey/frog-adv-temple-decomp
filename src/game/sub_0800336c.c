@@ -152,3 +152,9 @@ void sub_0800336C(void)
         }
     }
 }
+
+void sub_08003584(void *buf)
+{
+    gGameStuff.pendingMode = 10;
+    sub_08006BB4(6, buf);
+}
