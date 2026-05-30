@@ -3,6 +3,15 @@
 #include "macros.h"
 #include "types.h"
 
+typedef struct EntityHitbox {
+    u32 count;
+    u32 points;
+    u32 flags;
+} EntityHitbox;
+
+extern const EntityHitbox sEntityHitboxTable[];
+extern int sub_0800CB80(int xTile, int unused, int x, int y, int flags);
+
 /* Resets the first N collision slots of the per-entity array at `slots`
  * (8-byte records) and re-registers each as a collision point.
  *
@@ -13,127 +22,105 @@
  *   sub_0800CB80(gIwram_35E0._field_18, 0, x, y, flags)
  * to register the point. `out` (arg1) is finally zeroed (two u32 writes).
  *
- * Shipped NAKED. Class-1 high-register-pin: the baserom keeps the slot
- * base (arg0), the sign-extended `type` (arg2), and the hitbox-table base
- * pinned in sl/r9/r8 across the inner sub_0800CB80 call. agbcc 2.x will
- * not pin loop-invariant state in the high banked registers from pure C —
- * it recomputes or spills to the stack instead — so the high-reg
- * prologue/epilogue save and the cross-call survivors are unmatchable.
- * See docs/codegen-notes.md "High registers".
+ * Matched C relies on explicit high-register pins for the slot base, shifted
+ * type, and hitbox-table base across the inner sub_0800CB80 call.
  */
 
-#ifdef NON_MATCHING
-extern int sub_0800CB80(int xTile, int unused, int x, int y, int flags);
-
-void sub_0800BE18(u8 *slots, u32 *out, s8 type)
+void sub_0800BE18(slotsArg, outArg, type) u8 *slotsArg;
+u32 *outArg;
+u32 type;
 {
-    s32 i;
-    const EntityHitbox *entry = &sEntityHitboxTable[type];
+    volatile u32 outStack;
+    register u8 *slots asm("sl");
+    register u32 typeShift asm("r9");
+    register const EntityHitbox *tableBase asm("r8");
+    register const EntityHitbox *table asm("r4");
+    register s32 i asm("r3");
+    register s32 iSigned asm("r5");
+    register s32 typeSigned asm("r6");
+    register u32 zero;
+    register s32 count asm("r0");
 
-    for (i = 0; i < (s8)entry->count; i++) {
-        u8 *slot = &slots[i * 8];
-        const s16 *pt = (const s16 *)entry->points + i * 2;
+    slots = slotsArg;
+    outStack = (u32)outArg;
+    i = 0;
+    table = sEntityHitboxTable;
+    typeShift = type << 24;
+    {
+        register s32 typeSigned asm("r0");
+        register u32 offset asm("r1");
+        register s8 *countPtr asm("r1");
+        register s32 zeroIndex asm("r0");
 
-        slot[4] = 0;
-        slot[5] = 0;
-        slot[6] = 0;
-        *(u32 *)slot = 0;
-
-        sub_0800CB80(gIwram_35E0._field_18, 0, pt[0], pt[1], (u8)entry->flags);
+        typeSigned = (s32)typeShift >> 24;
+        offset = (typeSigned * 3) << 2;
+        countPtr = (s8 *)(offset + (u32)table);
+        zeroIndex = 0;
+        count = countPtr[zeroIndex];
     }
+    if (i >= count)
+        goto done;
 
-    out[0] = 0;
-    out[1] = 0;
+    zero = 0;
+    tableBase = table;
+    do {
+        u8 *slot;
+        const s16 *pt;
+        register u32 offset asm("r4");
+        register u32 pointsBase asm("r1");
+        register u32 pointAddr asm("r3");
+        register u32 xTile asm("r0");
+        register s32 x asm("r2");
+        register s32 y asm("r3");
+        register u32 flag asm("r1");
+
+        i <<= 24;
+        iSigned = i >> 24;
+        slot = (u8 *)((iSigned << 3) + (u32)slots);
+        slot[4] = zero;
+        slot[5] = zero;
+        slot[6] = zero;
+        *(u32 *)slot = zero;
+
+        asm volatile("" : "+r"(typeShift));
+        typeSigned = (s32)typeShift >> 24;
+        xTile = gIwram_35E0._field_18;
+        offset = (typeSigned * 3) << 2;
+        pointsBase = (u32)tableBase + 4;
+        pointsBase = offset + pointsBase;
+        pointsBase = *(u32 *)pointsBase;
+        pointAddr = ((u32)i >> 22) + pointsBase;
+        pt = (const s16 *)pointAddr;
+        x = pt[0];
+        y = pt[1];
+        flag = *(u8 *)((u32)tableBase + offset + 8);
+        sub_0800CB80(xTile, 0, x, y, flag);
+
+        iSigned++;
+        iSigned <<= 24;
+        {
+            register u32 countOffset asm("r0");
+
+            countOffset = (typeSigned * 3) << 2;
+            countOffset = (u32)tableBase + countOffset;
+            i = (u32)iSigned >> 24;
+            count = *(u8 *)countOffset;
+            count <<= 24;
+        }
+    } while (iSigned < count);
+
+done: {
+    register u32 zero0 asm("r0");
+    register u32 zero1 asm("r1");
+    register u32 *outPtr asm("r2");
+
+    zero0 = 0;
+    zero1 = 0;
+    outPtr = (u32 *)outStack;
+    outPtr[0] = zero0;
+    outPtr[1] = zero1;
 }
-#else
-NAKED void sub_0800BE18(u8 *slots, u32 *out, s8 type)
-{
-    asm(".syntax unified\n"
-        "    push    {r4, r5, r6, r7, lr}\n"
-        "    mov     r7, sl\n"
-        "    mov     r6, r9\n"
-        "    mov     r5, r8\n"
-        "    push    {r5, r6, r7}\n"
-        "    sub     sp, #8\n"
-        "    mov     sl, r0\n"
-        "    str     r1, [sp, #4]\n"
-        "    movs    r3, #0\n"
-        "    ldr     r4, _pool_hitbox\n"
-        "    lsls    r2, r2, #24\n"
-        "    mov     r9, r2\n"
-        "    asrs    r0, r2, #24\n"
-        "    lsls    r1, r0, #1\n"
-        "    adds    r1, r1, r0\n"
-        "    lsls    r1, r1, #2\n"
-        "    adds    r1, r1, r4\n"
-        "    movs    r0, #0\n"
-        "    ldrsb   r0, [r1, r0]\n"
-        "    cmp     r3, r0\n"
-        "    bge     _sub_0800BE18_done\n"
-        "    movs    r7, #0\n"
-        "    mov     r8, r4\n"
-        "_sub_0800BE18_loop:\n"
-        "    lsls    r3, r3, #24\n"
-        "    asrs    r5, r3, #24\n"
-        "    lsls    r0, r5, #3\n"
-        "    add     r0, sl\n"
-        "    strb    r7, [r0, #4]\n"
-        "    strb    r7, [r0, #5]\n"
-        "    strb    r7, [r0, #6]\n"
-        "    str     r7, [r0, #0]\n"
-        "    mov     r0, r9\n"
-        "    asrs    r6, r0, #24\n"
-        "    ldr     r0, _pool_iwram_35E0\n"
-        "    ldrb    r0, [r0, #24]\n"
-        "    lsls    r4, r6, #1\n"
-        "    adds    r4, r4, r6\n"
-        "    lsls    r4, r4, #2\n"
-        "    mov     r1, r8\n"
-        "    adds    r1, #4\n"
-        "    adds    r1, r4, r1\n"
-        "    ldr     r1, [r1, #0]\n"
-        "    lsrs    r3, r3, #22\n"
-        "    adds    r3, r3, r1\n"
-        "    movs    r1, #0\n"
-        "    ldrsh   r2, [r3, r1]\n"
-        "    movs    r1, #2\n"
-        "    ldrsh   r3, [r3, r1]\n"
-        "    add     r4, r8\n"
-        "    ldrb    r1, [r4, #8]\n"
-        "    str     r1, [sp, #0]\n"
-        "    movs    r1, #0\n"
-        "    bl      sub_0800CB80\n"
-        "    adds    r5, #1\n"
-        "    lsls    r5, r5, #24\n"
-        "    lsls    r0, r6, #1\n"
-        "    adds    r0, r0, r6\n"
-        "    lsls    r0, r0, #2\n"
-        "    add     r0, r8\n"
-        "    lsrs    r3, r5, #24\n"
-        "    ldrb    r0, [r0, #0]\n"
-        "    lsls    r0, r0, #24\n"
-        "    cmp     r5, r0\n"
-        "    blt     _sub_0800BE18_loop\n"
-        "_sub_0800BE18_done:\n"
-        "    movs    r0, #0\n"
-        "    movs    r1, #0\n"
-        "    ldr     r2, [sp, #4]\n"
-        "    str     r0, [r2, #0]\n"
-        "    str     r1, [r2, #4]\n"
-        "    add     sp, #8\n"
-        "    pop     {r3, r4, r5}\n"
-        "    mov     r8, r3\n"
-        "    mov     r9, r4\n"
-        "    mov     sl, r5\n"
-        "    pop     {r4, r5, r6, r7}\n"
-        "    pop     {r0}\n"
-        "    bx      r0\n"
-        "    .align  2, 0\n"
-        "_pool_hitbox: .4byte sEntityHitboxTable\n"
-        "_pool_iwram_35E0: .4byte gIwram_35E0\n"
-        "    .syntax divided\n");
 }
-#endif
 
 /* Twin of sub_0800B8A8 (item-pickup handler) without the SFX call: on
  * b == 23, looks up an entity slot via sub_0800A7A8(a, gIwram_35E0.tileX,
