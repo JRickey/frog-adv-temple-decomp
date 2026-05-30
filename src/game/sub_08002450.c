@@ -66,3 +66,24 @@ void sub_08002484(void *arg0, void *arg1)
     sub_08001E24(arg0, arg1);
     g->_unk14++;
 }
+
+extern u32 sub_08009C14(u8 *state);
+extern void sub_0802AB64(void);
+
+void sub_080024E4(u8 *state)
+{
+    register u8 *p asm("r4") = state;
+    register u8 *base asm("r0");
+    register u32 zero asm("r1");
+    u8 *addr;
+
+    if (sub_08009C14(p) == 0)
+        *p = 8;
+    base = (u8 *)0x03006110;
+    addr = base + 42;
+    zero = 0;
+    *addr = (u8)zero;
+    *(u16 *)(base + 12) = (u16)zero;
+    if (*(base + 43) == 1)
+        sub_0802AB64();
+}
