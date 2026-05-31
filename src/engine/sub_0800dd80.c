@@ -79,3 +79,46 @@ void sub_0800DD80(void)
         }
     }
 }
+
+extern void sub_0800A520(void);
+extern u32 sub_080115F8(void);
+extern void sub_08009A58(void);
+extern void sub_08009188(void);
+extern void sub_080008DC(void);
+extern void sub_0800A328(void);
+
+void sub_0800DE0C(void)
+{
+    register u32 done asm("r5") = 0;
+    GameStuff *gs;
+    u8 *base = (u8 *)0x03003720;
+    u32 off = 0x32a;
+    u8 val;
+
+    base[off] = val = 2;
+    *(u16 *)(base + 0xd1 * 4) |= val;
+    *(u32 *)(base + 0xb1c) = gGameStuff._unk00;
+    gGameStuff._unk22 = (u16)gGameStuff._unk00;
+    gs = &gGameStuff;
+
+    do {
+        sub_0800A520();
+        if (sub_080115F8() != 0) {
+            if (gs->_unk00 - (u32)(s16)gs->_unk22 > 0xdb) {
+                register u32 one asm("r0") = 1;
+                done |= one;
+            }
+        }
+        sub_08009A58();
+        sub_08009188();
+        sub_080008DC();
+        sub_0800A328();
+        {
+            register u32 check asm("r0") = 1;
+            check &= done;
+            if (check == 0)
+                continue;
+        }
+        break;
+    } while (1);
+}
