@@ -334,7 +334,6 @@ SECTIONS {
         src/engine/sub_0800ce98.o(.text);
         asm/disasm_0x0800ced0.o(.text);  /* 0x0800ced0 - 0x0800cfdc, sub_0800CED0 (auto-peeled) */
         src/engine/sub_0800cfdc.o(.text);
-        asm/disasm_0x0800cfdc.o(.text);  /* 0x0800cfdc - 0x0800d028, sub_0800CFDC (auto-peeled) */
         src/engine/sub_0800d028.o(.text);
         src/engine/sub_0800d0f8.o(.text);
         asm/disasm_0x0800d0f8.o(.text);  /* 0x0800d0f8 - 0x0800d1f8, sub_0800D0F8 (auto-peeled) */
