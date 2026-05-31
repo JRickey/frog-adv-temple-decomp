@@ -49,3 +49,20 @@ u32 sub_08011884(void)
 done:
     return result;
 }
+
+extern void sub_0800E85C(u8 arg);
+extern void sub_08011518(void);
+extern void sub_0800EB1C(void);
+extern void sub_0800F24C(u8 arg);
+extern void sub_0800EBDC(u8 arg);
+extern void sub_08016A40(void);
+
+void sub_080118D8(void)
+{
+    sub_0800E85C(2);
+    sub_08011518();
+    sub_0800EB1C();
+    sub_0800F24C(2);
+    sub_0800EBDC(2);
+    sub_08016A40();
+}
