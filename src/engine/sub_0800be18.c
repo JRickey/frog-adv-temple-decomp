@@ -9,6 +9,14 @@ typedef struct EntityHitbox {
     u32 flags;
 } EntityHitbox;
 
+typedef struct CollisionSlot {
+    u32 flags;
+    u8 active;
+    u8 touched;
+    u8 state;
+    u8 _pad7;
+} CollisionSlot;
+
 extern const EntityHitbox sEntityHitboxTable[];
 extern int sub_0800CB80(int xTile, int unused, int x, int y, int flags);
 
@@ -22,104 +30,90 @@ extern int sub_0800CB80(int xTile, int unused, int x, int y, int flags);
  *   sub_0800CB80(gIwram_35E0._field_18, 0, x, y, flags)
  * to register the point. `out` (arg1) is finally zeroed (two u32 writes).
  *
- * Matched C relies on explicit high-register pins for the slot base, shifted
- * type, and hitbox-table base across the inner sub_0800CB80 call.
+ * Matching note: old_agbcc must keep `type << 24` live in r9 across the
+ * sub_0800CB80 call. The empty barrier prevents copy-prop from replacing it
+ * with the sign-extended type index before the loop body.
  */
 
-void sub_0800BE18(slotsArg, outArg, type) u8 *slotsArg;
-u32 *outArg;
-u32 type;
+void sub_0800BE18(CollisionSlot *slotsArg, unsigned long long *outArg, s8 type)
 {
-    volatile u32 outStack;
-    register u8 *slots asm("sl");
-    register u32 typeShift asm("r9");
-    register const EntityHitbox *tableBase asm("r8");
-    register const EntityHitbox *table asm("r4");
-    register s32 i asm("r3");
-    register s32 iSigned asm("r5");
-    register s32 typeSigned asm("r6");
-    register u32 zero;
-    register s32 count asm("r0");
+    volatile unsigned long long *outAddr;
+    CollisionSlot *slots;
+    register u32 shiftedType asm("r9");
+    const EntityHitbox *tableBase;
+    const EntityHitbox *table;
+    s32 indexByte;
+    s32 pointIndex;
+    register s32 typeIndex asm("r6");
+    u32 cleared;
+    s32 pointCount;
 
     slots = slotsArg;
-    outStack = (u32)outArg;
-    i = 0;
+    outAddr = outArg;
+    indexByte = 0;
     table = sEntityHitboxTable;
-    typeShift = type << 24;
+    shiftedType = type << 24;
     {
-        register s32 typeSigned asm("r0");
-        register u32 offset asm("r1");
-        register s8 *countPtr asm("r1");
-        register s32 zeroIndex asm("r0");
+        register s32 typeIndex asm("r0");
+        u32 offset;
 
-        typeSigned = (s32)typeShift >> 24;
-        offset = (typeSigned * 3) << 2;
-        countPtr = (s8 *)(offset + (u32)table);
-        zeroIndex = 0;
-        count = countPtr[zeroIndex];
+        typeIndex = (s32)shiftedType >> 24;
+        offset = typeIndex * sizeof(EntityHitbox);
+        pointCount = *(s8 *)(offset + (u32)table);
     }
-    if (i >= count)
+    if (indexByte >= pointCount)
         goto done;
 
-    zero = 0;
+    cleared = 0;
     tableBase = table;
     do {
-        u8 *slot;
+        CollisionSlot *slot;
         const s16 *pt;
-        register u32 offset asm("r4");
+        u32 offset;
         register u32 pointsBase asm("r1");
-        register u32 pointAddr asm("r3");
-        register u32 xTile asm("r0");
-        register s32 x asm("r2");
-        register s32 y asm("r3");
-        register u32 flag asm("r1");
+        u32 pointAddr;
+        u32 xTile;
+        s32 x;
+        s32 y;
+        u32 flag;
 
-        i <<= 24;
-        iSigned = i >> 24;
-        slot = (u8 *)((iSigned << 3) + (u32)slots);
-        slot[4] = zero;
-        slot[5] = zero;
-        slot[6] = zero;
-        *(u32 *)slot = zero;
+        indexByte <<= 24;
+        pointIndex = indexByte >> 24;
+        slot = &slots[pointIndex];
+        slot->active = cleared;
+        slot->touched = cleared;
+        slot->state = cleared;
+        slot->flags = cleared;
 
-        asm volatile("" : "+r"(typeShift));
-        typeSigned = (s32)typeShift >> 24;
+        asm volatile("" : "+r"(shiftedType));
+        typeIndex = (s32)shiftedType >> 24;
         xTile = gIwram_35E0._field_18;
-        offset = (typeSigned * 3) << 2;
-        pointsBase = (u32)tableBase + 4;
+        offset = typeIndex * sizeof(EntityHitbox);
+        pointsBase = (u32)&tableBase->points;
         pointsBase = offset + pointsBase;
         pointsBase = *(u32 *)pointsBase;
-        pointAddr = ((u32)i >> 22) + pointsBase;
+        pointAddr = ((u32)indexByte >> 22) + pointsBase;
         pt = (const s16 *)pointAddr;
         x = pt[0];
         y = pt[1];
-        flag = *(u8 *)((u32)tableBase + offset + 8);
+        flag = *(u8 *)((u32)&tableBase->flags + offset);
         sub_0800CB80(xTile, 0, x, y, flag);
 
-        iSigned++;
-        iSigned <<= 24;
+        pointIndex++;
+        pointIndex <<= 24;
         {
-            register u32 countOffset asm("r0");
+            u32 countAddr;
 
-            countOffset = (typeSigned * 3) << 2;
-            countOffset = (u32)tableBase + countOffset;
-            i = (u32)iSigned >> 24;
-            count = *(u8 *)countOffset;
-            count <<= 24;
+            countAddr = typeIndex * sizeof(EntityHitbox);
+            countAddr = (u32)tableBase + countAddr;
+            indexByte = (u32)pointIndex >> 24;
+            pointCount = *(u8 *)countAddr;
+            pointCount <<= 24;
         }
-    } while (iSigned < count);
+    } while (pointIndex < pointCount);
 
-done: {
-    register u32 zero0 asm("r0");
-    register u32 zero1 asm("r1");
-    register u32 *outPtr asm("r2");
-
-    zero0 = 0;
-    zero1 = 0;
-    outPtr = (u32 *)outStack;
-    outPtr[0] = zero0;
-    outPtr[1] = zero1;
-}
+done:
+    *outAddr = 0;
 }
 
 /* Twin of sub_0800B8A8 (item-pickup handler) without the SFX call: on
