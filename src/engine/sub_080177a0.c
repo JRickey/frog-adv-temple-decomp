@@ -36,3 +36,19 @@ int sub_080177D8(u16 *src)
     }
     return 0;
 }
+
+int sub_08017814(u16 *dest, u8 idx)
+{
+    u16 buf[8];
+    u8 i;
+
+    if (sub_080178FC(buf, idx * 3 + 1, 2)) {
+        i = 0;
+        do {
+            dest[i] = buf[i];
+            i++;
+        } while (i <= 7);
+        return 1;
+    }
+    return 0;
+}
