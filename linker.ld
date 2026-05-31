@@ -647,7 +647,8 @@ SECTIONS {
         asm/text/text_0x08030000.o(.text);  /* 0x08030000 - 0x080301c4, raw bytes */
         src/system/sound_period.o(.text);  /* 0x080301c4 - 0x08030264, sub_080301C4 (NAKED+NON_MATCHING — libgcc-BL class) */
         asm/disasm_0x08030264.o(.text);  /* 0x08030264 - 0x08030290, sub_08030264 (auto-peeled) */
-        asm/text/text_0x08030290.o(.text);  /* 0x08030290 - 0x080315d8, raw bytes */
+        asm/disasm_0x08030290.o(.text);  /* 0x08030290 - 0x0803038c, sub_08030290 (auto-peeled) */
+        asm/text/text_0x0803038c.o(.text);  /* 0x0803038c - 0x080315d8, raw bytes */
         src/system/sound_opcode_dispatch.o(.text);  /* 0x080315d8 - 0x08031638, sub_080315D8 */
         asm/text/text_0x08031638.o(.text);  /* 0x08031638 - 0x08031dbc, raw bytes */
         asm/disasm_0x08031dbc.o(.text);  /* 0x08031dbc - 0x08031e24, sub_08031DBC (auto-peeled) */
