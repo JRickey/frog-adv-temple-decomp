@@ -39,10 +39,13 @@ typedef struct ChannelState {
 } ChannelState;
 
 typedef struct SoundSlot {
-    u8 _pad000[0x148];
+    u8 _pad000[0x110];
+    /* 0x110 */ u8 *nextRegion;
+    u8 _pad114[0x34];
     /* 0x148 */ u16 pendingId;
     u8 _pad14a[0x7];
     /* 0x151 */ u8 flags;
+    /* 0x152 */ u8 numChannels;
 } SoundSlot;
 
 typedef struct SoundSystem {
@@ -176,4 +179,62 @@ u32 SoundSlot_QueueId(u16 idArg)
 u32 SoundSlot_Stride(void)
 {
     return 0x150;
+}
+
+/* sub_08032AA0 — initializes a sound slot: stores it as gpSoundSystem->slot,
+ * zeros the slot header (0x154 bytes), sets slot->nextRegion to arg1+0x154,
+ * zeros the channel region ((arg0[2]+4)*12 bytes), clears flags, stores the
+ * channel count, and returns 1.
+ *
+ * Matching notes:
+ *   - pPool (&gpSoundSystem, r8) and buf (arg1, r5) are callee-saved across the
+ *     first bl to sub_0802E380. After the bl, sz (r4) = arg1+0x154 (next).
+ *   - To reproduce `mov r2, r8; ldr r1, [r2, #0]`, pPool is explicitly copied
+ *     to r2pPool asm("r2") first; ssTmp asm("r1") then loads from r2.
+ *   - The slot reload after the nextRegion store reuses r1 (slotField, kept across
+ *     the store) and r2 (0x110, recomputed as nextOff asm("r2")).
+ *   - The strb section: flagOff asm("r2") holds 0x151 (from pool), addrHi asm("r1")
+ *     computes buf+flagOff for each strb; v = arg0[2] is read before flagOff++ so
+ *     agbcc can use `ldrb r0, [r1, #2]` (immediate offset) vs modify-then-load.
+ */
+
+extern void sub_0802E380(u8 *ptr, u32 count);
+
+u32 sub_08032AA0(u8 *arg0, u8 *arg1)
+{
+    register u8 *buf asm("r5") = arg1;
+    register SoundSystem **pPool asm("r8") = &gpSoundSystem;
+    u32 sz;
+    register u32 flagOff asm("r2");
+    register u8 *addrHi asm("r1");
+    u8 v;
+
+    (*pPool)->slot = (SoundSlot *)buf;
+    sz = 0x154;
+    sub_0802E380(buf, sz);
+
+    {
+        register SoundSystem *ssTmp asm("r1");
+        register SoundSystem **r2pPool asm("r2");
+        register SoundSlot **slotField asm("r1");
+        register u32 nextOff asm("r2");
+
+        sz = (u32)buf + sz;
+        r2pPool = pPool;                                 /* mov r2, r8 */
+        ssTmp = *r2pPool;                                /* ldr r1, [r2, #0] */
+        slotField = (SoundSlot **)((u8 *)ssTmp + 0x118); /* adds r1, r1, r6 */
+        nextOff = 0x110;
+        (*slotField)->nextRegion = (u8 *)sz;
+        sub_0802E380((*slotField)->nextRegion, ((u32)arg0[2] + 4) * 12);
+    }
+
+    flagOff = 0x151;
+    addrHi = buf + flagOff;
+    *addrHi = 0;
+    v = arg0[2];
+    flagOff++;
+    addrHi = buf + flagOff;
+    *addrHi = v;
+
+    return 1;
 }
