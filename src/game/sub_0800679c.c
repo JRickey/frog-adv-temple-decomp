@@ -99,3 +99,67 @@ check:
 ret_zero:
     return 0;
 }
+
+/* Reads bit-range [lo, hi] out of the 128-bit flag bank at IWRAM
+ * 0x03006110 (two adjacent u64 lanes at byte offsets 20 and 28), shifts
+ * the selected bits down so bit `lo` lands at bit 0, and returns them as
+ * a 64-bit value. The `unused` base pointer callers pass is ignored — the
+ * bank address is reloaded from this function's own pool.
+ *
+ * Matching notes (old_agbcc):
+ *   - `mask` is a single local reused by all three branches; the spanning
+ *     branch's four live values (lowCount, the literal 1, the bank pointer,
+ *     and `hi`) consume r4-r7, which spills `mask` to the stack everywhere,
+ *     exactly as the baserom does.
+ *   - The two-statement `result = bankval >> shift; result &= mask;` form
+ *     routes the masked AND through the stack (the lone-expression
+ *     `mask & (bankval >> shift)` keeps it in registers and diverges).
+ *   - `bankBase` is a branch-local pointer distinct from `bank` so its live
+ *     range pins it into r6 across both reads in the spanning branch.
+ */
+s64 sub_08006830(void *unused, s32 lo, s32 hi)
+{
+    u8 count = hi - lo + 1;
+    s64 mask;
+    s32 shift;
+    unsigned long long bankval;
+    unsigned long long *bank;
+    s64 result;
+
+    if (hi <= 63) {
+        mask = (unsigned long long)(s32)((1 << (s8)count) - 1);
+        bank = (unsigned long long *)0x03006110;
+        bankval = *(unsigned long long *)((char *)bank + 20);
+        shift = lo;
+        goto applyMask;
+    }
+
+    if (lo > 63) {
+        mask = (unsigned long long)(s32)((1 << (s8)count) - 1);
+        bank = (unsigned long long *)0x03006110;
+        shift = lo - 64;
+        bankval = *(unsigned long long *)((char *)bank + 28);
+    applyMask:
+        result = bankval >> shift;
+        result &= mask;
+        goto done;
+    }
+
+    {
+        s32 lowCount = 64 - lo;
+        unsigned long long *bankBase;
+        s64 highBits;
+
+        mask = (unsigned long long)(s32)((1 << lowCount) - 1);
+        bankBase = (unsigned long long *)0x03006110;
+        result = *(unsigned long long *)((char *)bankBase + 20) >> lo;
+        result &= mask;
+
+        mask = (unsigned long long)(s32)((1 << (hi - 63)) - 1);
+        highBits = *(unsigned long long *)((char *)bankBase + 28) & mask;
+        result += (unsigned long long)highBits << lowCount;
+    }
+
+done:
+    return result;
+}
