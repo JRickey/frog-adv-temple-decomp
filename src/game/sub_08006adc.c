@@ -50,3 +50,28 @@ u8 sub_08006AFC(u8 *p)
     sub_08016A40();
     return 1;
 }
+
+/* Increment-and-call timer: increments the s16 counter at [p+2]. When
+ * the incremented value goes negative (bit 15 set), clamps it back to 0
+ * and returns 0; otherwise invokes sub_08016A40() and returns 1.
+ *
+ * int v avoids u16 truncation before strh; (s16) cast matches the lsls/cmp
+ * blt check in baserom. v = 0; *f = v; return v; shares the single
+ * materialised zero between the strh and the return value (same trick as
+ * sub_08006ADC), avoiding a second movs r0, #0. */
+
+u8 sub_08006B20(u8 *p)
+{
+    u16 *f = (u16 *)(p + 2);
+    int v;
+
+    v = *f + 1;
+    *f = v;
+    if ((s16)v < 0) {
+        v = 0;
+        *f = v;
+        return v;
+    }
+    sub_08016A40();
+    return 1;
+}
