@@ -123,8 +123,10 @@
 @   0x0802d9e6: 4700        bx	r0
 @   0x0802d9e8: 65e0        str	r0, [r4, #92]	@ 0x5c
 @   0x0802d9ea: 0300        lsls	r0, r0, #12
-
-        thumb_func_start sub_0802D8F8
-sub_0802D8F8: @ 0x0802d8f8
-        .incbin "frog_us_baserom.gba", 0x2d8f8, 0xf4
-        thumb_func_end sub_0802D8F8
+        .thumb
+        .thumb_func
+        .global sub_0802D99C
+        .type   sub_0802D99C, %function
+sub_0802D99C: @ 0x0802d99c
+        .incbin "frog_us_baserom.gba", 0x2d99c, 0x50
+        .size   sub_0802D99C, . - sub_0802D99C

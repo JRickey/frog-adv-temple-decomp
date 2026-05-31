@@ -155,6 +155,7 @@ src/engine/sub_0800f24c.s: CFLAGS += -fno-strength-reduce
 src/game/sub_0800088c.s: CC = $(OLD_AGBCC_BIN)
 src/engine/sub_0800dffc.s: CC = $(OLD_AGBCC_BIN)
 src/game/sub_0803299c.s: CC = $(OLD_AGBCC_BIN)
+src/game/sub_0802d8f8.s: CC = $(OLD_AGBCC_BIN)
 src/engine/sub_080217d4.s: CC = $(OLD_AGBCC_BIN)
 src/engine/sub_0801129c.s: CC = $(OLD_AGBCC_BIN)
 src/engine/sub_0801d4cc.s: CC = $(OLD_AGBCC_BIN)
