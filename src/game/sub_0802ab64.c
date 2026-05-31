@@ -1,3 +1,4 @@
+#include "game.h"
 #include "iwram.h"
 #include "types.h"
 
@@ -10,9 +11,12 @@ extern void sub_0802A4A4(void);
 extern void sub_0802A394(void);
 extern void sub_0802AB14(void);
 extern void sub_0802A538(void);
+extern void sub_0802AAE8(void);
+extern void sub_0802AAEC(void);
 
 extern const void *const sLevelLayoutPtrs_317E6C[2];
 extern const u32 sLevelLayout_317DDC[4];
+extern const u32 sLevelLayout_317E74[12];
 
 struct Entity {
     u8 _pad00[0x34];
@@ -57,4 +61,35 @@ void sub_0802ABDC(void)
 
     sub_0802AB14();
     sub_0802A538();
+}
+
+void sub_0802AC60(void)
+{
+    u8 i;
+    u8 *dst;
+    const u8 *src;
+    u8 *base;
+    u32 off;
+    register u32 *dp asm("r2");
+    register const u32 *sp asm("r0");
+    u32 v0;
+    u32 v1;
+
+    i = 0;
+    dst = (u8 *)0x03003570;
+    src = (const u8 *)sLevelLayout_317E74;
+    for (; i < 6; i++) {
+        dp = (u32 *)((u32)i * 8 + (u32)dst);
+        sp = (const u32 *)((u32)i * 8 + (u32)src);
+        v1 = sp[1];
+        v0 = sp[0];
+        dp[1] = v0;
+        dp[2] = v1;
+    }
+    sub_0802AAE8();
+    sub_0802AAEC();
+    sub_0802ABB0();
+    base = (u8 *)gEntities_03003720;
+    off = 0x0b48;
+    *(u32 *)(base + off) = gGameStuff._unk00;
 }
