@@ -76,3 +76,57 @@ u8 sub_0800FD50(void)
     }
     return ret;
 }
+extern void sub_08019AEC(s16 arg);
+
+void sub_0800FE10(void)
+{
+    u8 *state;
+    u16 x;
+    u16 y;
+    u32 cnt;
+    register u32 base asm("r5");
+    register u32 bk asm("r4");
+    u16 t;
+
+    state = (u8 *)0x03006440;
+    if (state[8] == 0xFF) {
+        return;
+    }
+
+    x = *(u16 *)(state + 48);
+    y = *(u16 *)(state + 50);
+    base = *(u32 *)(state + 20);
+
+    /* y6 computed in r1, then pool load via r0, then copy to r4 */
+    *(u16 *)((y << 7) + ((x << 1) + base)) =
+        (u16)(x + (__extension__({
+                  register u32 y6 asm("r1") = (u32)(y << 6);
+                  register u32 r0v asm("r0") = (u32)0xffffe0a0;
+                  asm volatile(".syntax unified\n\t.thumb\n\t.inst.n 0x1c04\n\t.syntax divided\n"
+                               : "=r"(bk)
+                               : "r"(r0v));
+                  y6 + bk;
+              })));
+
+    x = *(u16 *)(state + 48);
+    y = *(u16 *)(state + 50);
+    *(u16 *)((y << 7) + ((x << 1) + base) + 64) = (u16)(x + bk + (y << 6) + 32);
+
+    cnt = *(u16 *)(state + 48);
+    cnt++;
+    *(u16 *)(state + 48) = cnt;
+    if ((u16)cnt != 32) {
+        return;
+    }
+
+    *(u16 *)(state + 48) = 0;
+    t = 0;
+    y = *(u16 *)(state + 50);
+    if (y == 0) {
+        t = 1;
+    }
+    *(u16 *)(state + 50) = t;
+
+    state[8]++;
+    sub_08019AEC(*(s16 *)(state + 44));
+}
