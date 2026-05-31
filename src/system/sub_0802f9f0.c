@@ -61,17 +61,43 @@ typedef struct SoundSlot {
     u32 flags; /* +0x38 — channel flag word (shared with sound_envelope.c) */
 } SoundSlot;
 
+/* Per-slot accumulator view: 6 envelope-channel accumulators at offsets
+ * 0, 2, 4, 12, 20, 28. Pointed to by SoundSystem.slotPtrTable[i]. */
+typedef struct SoundSlotAccs {
+    u16 acc0; /* +0x00 */
+    u16 acc1; /* +0x02 */
+    u16 acc2; /* +0x04 */
+    u8 _pad06[6];
+    u16 acc3; /* +0x0c */
+    u8 _pad0e[6];
+    u16 acc4; /* +0x14 */
+    u8 _pad16[6];
+    u16 acc5; /* +0x1c */
+} SoundSlotAccs;
+
+/* Mix-table entry view: base oscillator value at +0, period result at +0x14. */
+typedef struct SoundPeriodEntry {
+    u32 base; /* +0x00 */
+    u8 _pad04[16];
+    u16 period; /* +0x14 */
+} SoundPeriodEntry;
+
 typedef struct SoundSystem {
     u8 count; /* +0x00 */
     u8 _pad01[0xf];
     u32 chFlags[4]; /* +0x10 — per-music-channel flag word */
-    u8 _pad20[0xa8];
-    SoundSlot *swSlots; /* +0xc8 — software-mixed slot array (64-byte stride) */
-    u8 _padcc[0x48];
+    u8 _pad20[0xa0];
+    u32 *mixTable; /* +0xc0 */
+    u8 _padc4[4];
+    SoundSlot *swSlots;           /* +0xc8 — software-mixed slot array (64-byte stride) */
+    SoundSlotAccs **slotPtrTable; /* +0xcc */
+    u8 _padd0[0x44];
     SoundChannelSeq *channelSeqs; /* +0x114 — channel sequencer array (16-byte stride) */
 } SoundSystem;
 
 #define gpSoundSystem (*(SoundSystem **)0x030065e0)
+
+extern u32 sub_080301C4(u32 base, u32 hi, u32 lo);
 
 void sub_0802F9F0(s32 idx)
 {
@@ -110,4 +136,21 @@ void sub_0802F9F0(s32 idx)
         seq->cursor = 0;
         seq->opPtr = (u32 *)seq->queuedOpPtr;
     }
+}
+
+void sub_0802FA60(s32 idx)
+{
+    SoundSystem *ss;
+    SoundSlotAccs *slot;
+    SoundPeriodEntry *entry;
+    u32 sum;
+
+    ss = gpSoundSystem;
+    slot = ss->slotPtrTable[idx];
+    if (slot == NULL)
+        return;
+
+    entry = (SoundPeriodEntry *)((u8 *)ss->mixTable + idx * 28);
+    sum = (u16)(slot->acc0 + slot->acc1 + slot->acc2 + slot->acc3 + slot->acc4 + slot->acc5);
+    entry->period = (u16)sub_080301C4(entry->base, (u16)sum >> 8, (sum << 24) >> 24);
 }

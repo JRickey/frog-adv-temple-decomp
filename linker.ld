@@ -641,8 +641,7 @@ SECTIONS {
         src/system/sound_mixer.o(.text);  /* 0x0802f4b0 - 0x0802f870, sub_0802F4B0 (NAKED+NON_MATCHING) */
         asm/disasm_0x0802f870.o(.text);  /* 0x0802f870 - 0x0802f8f0, sub_0802F870 (auto-peeled) */
         asm/text/text_0x0802f8f0.o(.text);  /* 0x0802f8f0 - 0x0802f9f0, raw bytes */
-        src/system/sub_0802f9f0.o(.text);  /* 0x0802f9f0 - 0x0802fa60, sub_0802F9F0 */
-        asm/disasm_0x0802fa60.o(.text);  /* 0x0802fa60 - 0x0802fab8, sub_0802FA60 (auto-peeled) */
+        src/system/sub_0802f9f0.o(.text);  /* 0x0802f9f0 - 0x0802fab8, sub_0802F9F0 + sub_0802FA60 */
         asm/text/text_0x0802fab8.o(.text);  /* 0x0802fab8 - 0x08030000, raw bytes */
         asm/text/text_0x08030000.o(.text);  /* 0x08030000 - 0x080301c4, raw bytes */
         src/system/sound_period.o(.text);  /* 0x080301c4 - 0x08030264, sub_080301C4 (NAKED+NON_MATCHING — libgcc-BL class) */
