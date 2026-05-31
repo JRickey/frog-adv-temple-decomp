@@ -30,3 +30,12 @@ void sub_0800EFC8(void)
     sub_0800EBDC(2);
     sub_08016A40();
 }
+
+void sub_0800EFF4(void)
+{
+    sub_0800E85C(2);
+    sub_0800EB1C();
+    sub_0800F24C(2);
+    sub_0800EBDC(2);
+    sub_08016A40();
+}
