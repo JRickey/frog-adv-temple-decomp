@@ -600,8 +600,7 @@ SECTIONS {
         src/engine/sub_08022160.o(.text);  /* 0x08022160 - 0x080221fc, sub_08022160 */
         src/engine/sub_080221fc.o(.text);  /* 0x080221fc - 0x080222bc, sub_080221FC */
         src/engine/sub_080222bc.o(.text);  /* 0x080222bc - 0x08022360, sub_080222BC */
-        src/engine/sub_08022360.o(.text);
-        asm/disasm_0x08022360.o(.text);  /* 0x08022360 - 0x08022434, sub_08022360 (auto-peeled) */
+        src/engine/sub_08022360.o(.text);  /* 0x08022360 - 0x08022434, sub_08022360 */
         src/engine/sub_08022434.o(.text);
         asm/disasm_0x08022434.o(.text);  /* 0x08022434 - 0x08022730, sub_08022434 (auto-peeled) */
         src/engine/sub_08022730.o(.text);  /* 0x08022730 - 0x08022758, sub_08022730 */
