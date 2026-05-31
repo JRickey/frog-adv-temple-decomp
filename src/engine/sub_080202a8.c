@@ -27,7 +27,7 @@ void sub_080202C8(void)
 {
     gGameStuff.mode = 4;
     gIwram_3480._data[0] = 8;
-    gIwram_3480._data[20] = 0;
+    gIwram_3480._unk14 = 0;
     gIwram_5398 = 0;
     gIwram_3480._data[2] = 0;
     gIwram_3480._data[5] = 0;

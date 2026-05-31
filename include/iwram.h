@@ -16,7 +16,11 @@
  * docs/codegen-notes.md "Adjacent IWRAM bases". */
 
 struct IwramAt3480 {
-    u8 _data[21]; /* writes at +0, +2, +5, +6, +20 */
+    u8 _data[9];  /* bytes 0-8: writes at +0, +2, +5, +6, +7, +8 */
+    u8 _pad09[3]; /* bytes 9-11: alignment padding */
+    u32 _unk0C;   /* +0x0C: tick timestamp (u32 ldr/str) */
+    u32 _unk10;   /* +0x10: word written by sub_08017DB8 */
+    u8 _unk14;    /* +0x14 (offset 20): state byte */
 };
 
 struct IwramAt34A0 {
@@ -52,6 +56,12 @@ struct IwramAt35E0 {
     u8 _field_18; /* +18: entity coord (X tile) */
     u8 _field_19; /* +19: entity coord (Y tile) */
     u8 _field_1A;
+};
+
+struct IwramAt3608 {
+    u32 _data;   /* +0x0: u32 written by sub_08019580 */
+    u8 _pad4;    /* +0x4 */
+    u8 _field_5; /* +0x5: byte accessed by sub_0800E85C and sub_0800F814 */
 };
 
 struct IwramAt3720 {
@@ -130,6 +140,7 @@ extern struct IwramAt34B4 gIwram_34B4;
 extern struct IwramAt34C0 gIwram_34C0;
 extern struct IwramAt3550 gIwram_3550;
 extern struct IwramAt35E0 gIwram_35E0;
+extern struct IwramAt3608 gIwram_3608;
 extern struct IwramAt3710 gIwram_3710;
 extern struct IwramAt3720 gIwram_3720;
 extern struct IwramAt5358 gIwram_5358;

@@ -27,7 +27,7 @@ void sub_08020208(void)
 {
     gGameStuff.mode = 4;
     gIwram_3480._data[0] = 8;
-    gIwram_3480._data[20] = 2;
+    gIwram_3480._unk14 = 2;
     gIwram_5398 = 0;
     gIwram_3480._data[2] = 0;
     gIwram_3480._data[5] = 0;
@@ -43,7 +43,7 @@ void sub_0802023C(void)
 {
     gGameStuff.mode = 4;
     gIwram_3480._data[0] = 8;
-    gIwram_3480._data[20] = 1;
+    gIwram_3480._unk14 = 1;
     gIwram_5398 = 0;
     gIwram_3480._data[2] = 0;
     gIwram_3480._data[5] = 0;
