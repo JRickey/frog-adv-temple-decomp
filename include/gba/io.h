@@ -24,6 +24,8 @@
 #define DISPCNT_BG2_ON      (1U << 10)
 #define DISPCNT_BG3_ON      (1U << 11)
 #define DISPCNT_OBJ_ON      (1U << 12)
+#define DISPCNT_WIN0_ON     (1U << 13)
+#define DISPCNT_WIN1_ON     (1U << 14)
 
 /* Bus / waitstate control. AgbMain's prologue writes 0x4014 here. */
 #define REG_WAITCNT (*(volatile u16 *)0x04000204)
