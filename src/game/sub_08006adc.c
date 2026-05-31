@@ -75,3 +75,21 @@ u8 sub_08006B20(u8 *p)
     sub_08016A40();
     return 1;
 }
+
+/* Increment-and-call timer: increments the s8 counter at [p+4]. When
+ * the incremented value exceeds 12, clamps it back to 12 and returns 0;
+ * otherwise invokes sub_08016A40() and returns 1.
+ *
+ * The (s8) cast defers sign-extension to the comparison, matching the
+ * baserom's lsls/asrs after the strb. */
+
+u8 sub_08006B40(u8 *p)
+{
+    p[4] += 1;
+    if ((s8)p[4] > 12) {
+        p[4] = 12;
+        return 0;
+    }
+    sub_08016A40();
+    return 1;
+}
