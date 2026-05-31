@@ -27,3 +27,11 @@ void sub_08022920(void)
     sub_08020FE4(0x4c, 0x53);
     sub_08005D10(0x4c, 0x53);
 }
+
+extern void sub_08021140(s32 a0, const void *a1, s32 a2, s32 a3, s32 a4, s32 a5, s32 a6);
+extern const u32 sLevelLayout_311418[10];
+
+void sub_08022958(void)
+{
+    sub_08021140(2, sLevelLayout_311418, 0x10, 2, 0x51, 2, 0x14);
+}
