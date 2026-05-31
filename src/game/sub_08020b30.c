@@ -34,3 +34,12 @@ void sub_08020B30(void)
     p->b = 0xCD;
     p->d = 0xF5;
 }
+
+extern void sub_0802E13C(void);
+extern void sub_08031FDC(u32 a);
+
+void sub_08020B50(void)
+{
+    sub_0802E13C();
+    sub_08031FDC(1);
+}
