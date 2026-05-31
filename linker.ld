@@ -666,7 +666,9 @@ SECTIONS {
         src/game/sub_0803299c.o(.text);  /* 0x0803299c - 0x08032aa0, sub_0803299C + sub_080329F4 + sub_08032A20 + sub_08032A54 + sub_08032A98 */
         asm/text/text_0x08032aa0.o(.text);  /* 0x08032aa0 - 0x08032b18, raw bytes */
         src/game/sub_08032b18.o(.text);  /* 0x08032b18 - 0x08032bc8, SoundSlot_PickByPriority + sub_08032BA0 */
-        asm/text/text_0x08032bc8.o(.text);  /* 0x08032bc8 - 0x08033910, raw bytes */
+        asm/text/text_0x08032bc8.o(.text);  /* 0x08032bc8 - 0x080338a8, raw bytes */
+        asm/disasm_0x080338a8.o(.text);  /* 0x080338a8 - 0x080338ec, sub_080338A8 */
+        asm/disasm_0x080338ec.o(.text);  /* 0x080338ec - 0x08033910, sub_080338EC */
         src/game/sub_08033910.o(.text);  /* 0x08033910 - 0x08033948, sub_08033910 */
         asm/text/text_0x08033948.o(.text);  /* 0x08033948 - 0x08033ca4, raw bytes */
         asm/disasm_0x08033ca4.o(.text);  /* 0x08033ca4 - 0x08033cd8, __ashldi3 (libgcc; auto-peeled) */
@@ -677,7 +679,9 @@ SECTIONS {
         asm/disasm_0x08033e14.o(.text);  /* 0x08033e14 - 0x08033ee4, __modsi3 (libgcc; auto-peeled) */
         asm/disasm_0x08033ee4.o(.text);  /* 0x08033ee4 - 0x08033f5c, __udivsi3 (libgcc; auto-peeled) */
         asm/disasm_0x08033f5c.o(.text);  /* 0x08033f5c - 0x0803401c, __umodsi3 (libgcc; auto-peeled) */
-        asm/text/text_0x0803401c.o(.text);  /* 0x0803401c - 0x08035d7c, raw bytes */
+        asm/text/text_0x0803401c.o(.text);  /* 0x0803401c - 0x0803578c, raw bytes */
+        asm/disasm_0x0803578c.o(.text);  /* 0x0803578c - 0x080357ec, sub_0803578C */
+        asm/text/text_0x080357ec.o(.text);  /* 0x080357ec - 0x08035d7c, raw bytes */
         asm/disasm_0x08035d7c.o(.text);  /* 0x08035d7c - 0x08035d84, sub_08035D7C (auto-peeled) */
         asm/text/text_0x08035d84.o(.text);  /* 0x08035d84 - 0x08035d8c, one Thumb-to-ARM veneer */
         asm/disasm_0x08035d8c.o(.text);  /* 0x08035d8c - 0x08035d94, sub_08035D8C (Thumb-to-ARM veneer, sound-IRQ disable) */
