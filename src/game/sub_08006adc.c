@@ -27,3 +27,26 @@ u8 sub_08006ADC(u8 *p)
     sub_08016A40();
     return 1;
 }
+
+/* Increment-and-call timer: increments the s16 counter at [p+2]. When
+ * the incremented value exceeds 99, clamps it back to 99 and returns 0;
+ * otherwise invokes sub_08016A40() and returns 1.
+ *
+ * Using int for v avoids the agbcc u16-truncation pattern (lsls/lsrs)
+ * before strh; the (s16) cast defers sign-extension to the comparison,
+ * matching the baserom's lsls/asrs after the strh. */
+
+u8 sub_08006AFC(u8 *p)
+{
+    u16 *f = (u16 *)(p + 2);
+    int v;
+
+    v = *f + 1;
+    *f = v;
+    if ((s16)v > 99) {
+        *f = 99;
+        return 0;
+    }
+    sub_08016A40();
+    return 1;
+}
