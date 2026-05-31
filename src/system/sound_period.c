@@ -312,3 +312,85 @@ void sub_08030290(void)
 
     sub_0802E3F8();
 }
+
+typedef struct SoundSlotAcc {
+    u8 _pad00[0x34];
+    u16 accA;  /* +0x34 */
+    u16 accB;  /* +0x36 */
+    u32 flags; /* +0x38 */
+} SoundSlotAcc;
+
+typedef struct SoundSystemAcc {
+    u8 count; /* +0x00 */
+    u8 _pad01[0xf];
+    u32 chFlags[4]; /* +0x10 */
+    u8 _pad20[0x8c];
+    u16 chanAcc[4]; /* +0xac */
+    u8 _padb4[0x14];
+    SoundSlotAcc *swSlots; /* +0xc8 */
+} SoundSystemAcc;
+
+#define gpSoundSystemAcc (*(SoundSystemAcc **)0x030065e0)
+
+s32 sub_0803030C(s32 channel, u32 *state_ptr)
+{
+    register s32 ch asm("r5");
+    register u32 *sp asm("r6");
+    register SoundSystemAcc **gpss asm("r2");
+
+    ch = channel;
+    sp = state_ptr;
+
+    if (ch <= 3) {
+        SoundSystemAcc *ss;
+        gpss = &gpSoundSystemAcc;
+        ss = *gpss;
+        ss->chanAcc[ch] = 0;
+    } else {
+        register SoundSystemAcc **gp4 asm("r4");
+        register s32 adj asm("r2");
+        register SoundSlotAcc **swSlotsPtr asm("r1");
+        SoundSystemAcc *ss;
+        SoundSlotAcc *swSlots;
+        adj = ch - 4;
+        gp4 = &gpSoundSystemAcc;
+        ss = *gp4;
+        swSlotsPtr = (SoundSlotAcc **)((u8 *)ss + 0xc8);
+        swSlots = *swSlotsPtr;
+        adj <<= 6;
+        *(u16 *)((u8 *)(adj + (s32)swSlots) + 0x34) = 0;
+        swSlots = *swSlotsPtr;
+        adj = (s32)((u8 *)(adj + (s32)swSlots));
+        *(u16 *)(adj + 0x36) = 0;
+        gpss = gp4;
+    }
+
+    *sp = 0;
+
+    if (ch > 3) {
+        register SoundSlotAcc *swSlots asm("r1");
+        SoundSystemAcc *ss;
+        register SoundSlotAcc *slot asm("r2");
+        register s32 chShifted asm("r0");
+        ss = *gpss;
+        swSlots = *(SoundSlotAcc **)((u8 *)ss + 0xc8);
+        chShifted = ch << 6;
+        chShifted += (s32)swSlots;
+        slot = (SoundSlotAcc *)(chShifted + 0xffffff00);
+        slot->flags |= 0x8000;
+    } else {
+        register u32 *chFlagsPtr asm("r1");
+        register u32 mask asm("r2");
+        u32 flags;
+        register u32 chOff asm("r0");
+        chFlagsPtr = (u32 *)*gpss;
+        chOff = (u32)ch << 2;
+        chFlagsPtr = (u32 *)((u8 *)chFlagsPtr + 0x10);
+        chFlagsPtr = (u32 *)((u8 *)chFlagsPtr + chOff);
+        flags = *chFlagsPtr;
+        mask = 0x8000;
+        flags |= mask;
+        *chFlagsPtr = flags;
+    }
+    return 0;
+}
