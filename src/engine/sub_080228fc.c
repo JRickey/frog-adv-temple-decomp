@@ -35,3 +35,8 @@ void sub_08022958(void)
 {
     sub_08021140(2, sLevelLayout_311418, 0x10, 2, 0x51, 2, 0x14);
 }
+
+void sub_08022980(void)
+{
+    sub_08021510(2, sLevelLayout_311418, 2, &gIwram_6110, 0x14);
+}
