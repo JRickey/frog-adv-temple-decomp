@@ -1,5 +1,6 @@
 #include "types.h"
 #include "macros.h"
+#include "iwram.h"
 
 typedef struct {
     s32 fieldA;
@@ -99,6 +100,105 @@ void sub_08020DC4(u8 idx)
         "    bx      r0\n"
         "    .align  2, 0\n"
         "_08020E10: .4byte 0x03003570\n"
+        "    .syntax divided\n");
+}
+#endif
+
+extern u8 sub_08021E34(struct IwramAt3720 *s, u8 halfW, u8 halfH);
+
+/* sub_08020E14 — guard check + sound channel restart.
+ *
+ * Same struct/callee pattern as sub_08020DC4 but with a leading
+ * proximity guard: calls sub_08021E34(s, halfW, halfH) and returns early
+ * if 0. Then manages entries[idx].fieldB exactly as DC4 does.
+ *
+ * Ships NAKED + #ifdef NON_MATCHING for the identical commutative-add
+ * operand-order drift: baserom emits `adds r0, r5, #0; adds r0, #8;
+ * adds r6, r4, r0` (keeping the struct base in r5 throughout), while
+ * agbcc 2.x re-materializes 0x03003570 from the literal pool a second
+ * time and flips the add operand order. All structural approaches tried
+ * (register pin, byte-offset locals, pointer cache) gave 60-74 byte_diff.
+ * Same class as sibling sub_08020DC4 / sub_08020E98 in this file.
+ */
+#ifdef NON_MATCHING
+void sub_08020E14(struct IwramAt3720 *s, u8 idx, u8 halfW, u8 halfH)
+{
+    StructAt3003570 *p;
+    u32 offset;
+    s32 sound;
+    s32 handle;
+
+    if (sub_08021E34(s, halfW, halfH) == 0)
+        return;
+
+    p = &gStructAt3003570;
+    offset = (u32)idx << 3;
+    if (sub_0802E184(*(u32 *)((u8 *)p + 8 + offset)) != 0)
+        return;
+
+    sound = *(s32 *)((u8 *)p + 4 + offset);
+    handle = -1;
+    if ((p->flags & 0x10) != 0) {
+        handle = (s32)sub_0802D9EC((u32)sound, 0xff, 0xff, 0xff);
+        sub_0802DC1C((u32)handle, p->c & 0x7f);
+    }
+    *(u32 *)((u8 *)p + 8 + offset) = (u32)handle;
+}
+#else
+NAKED
+void sub_08020E14(struct IwramAt3720 *s, u8 idx, u8 halfW, u8 halfH)
+{
+    asm(".syntax unified\n"
+        "    push    {r4, r5, r6, lr}\n"
+        "    lsls    r1, r1, #24\n"
+        "    lsrs    r4, r1, #24\n"
+        "    lsls    r2, r2, #24\n"
+        "    lsrs    r2, r2, #24\n"
+        "    lsls    r3, r3, #24\n"
+        "    lsrs    r3, r3, #24\n"
+        "    adds    r1, r2, #0\n"
+        "    adds    r2, r3, #0\n"
+        "    bl      sub_08021E34\n"
+        "    lsls    r0, r0, #24\n"
+        "    cmp     r0, #0\n"
+        "    beq     _08020E72\n"
+        "    ldr     r5, _08020E78\n"
+        "    lsls    r4, r4, #3\n"
+        "    adds    r0, r5, #0\n"
+        "    adds    r0, #8\n"
+        "    adds    r6, r4, r0\n"
+        "    ldr     r0, [r6, #0]\n"
+        "    bl      sub_0802E184\n"
+        "    cmp     r0, #0\n"
+        "    bne     _08020E72\n"
+        "    adds    r0, r5, #4\n"
+        "    adds    r0, r4, r0\n"
+        "    ldr     r1, [r0, #0]\n"
+        "    movs    r4, #1\n"
+        "    negs    r4, r4\n"
+        "    movs    r0, #0x10\n"
+        "    ldrb    r2, [r5, #0]\n"
+        "    ands    r0, r2\n"
+        "    cmp     r0, #0\n"
+        "    beq     _08020E70\n"
+        "    adds    r0, r1, #0\n"
+        "    movs    r1, #0xff\n"
+        "    movs    r2, #0xff\n"
+        "    movs    r3, #0xff\n"
+        "    bl      sub_0802D9EC\n"
+        "    adds    r4, r0, #0\n"
+        "    movs    r1, #0x7f\n"
+        "    ldrb    r5, [r5, #2]\n"
+        "    ands    r1, r5\n"
+        "    bl      sub_0802DC1C\n"
+        "_08020E70:\n"
+        "    str     r4, [r6, #0]\n"
+        "_08020E72:\n"
+        "    pop     {r4, r5, r6}\n"
+        "    pop     {r0}\n"
+        "    bx      r0\n"
+        "    .align  2, 0\n"
+        "_08020E78: .4byte 0x03003570\n"
         "    .syntax divided\n");
 }
 #endif
