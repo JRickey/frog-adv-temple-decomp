@@ -711,3 +711,94 @@ void sub_0802F4B0(void)
         "    .syntax divided\n");
 }
 #endif
+
+extern vu16 *const sChannelRegTable[4];
+extern vu16 *const sChannelFreqRegTable[4];
+
+/* sub_0802F870 — write to a PSG channel's duty/envelope byte register.
+ * Sets the byte at sChannelRegTable[channelIdx] to (value << 6). */
+void sub_0802F870(u32 value, u32 channelIdx)
+{
+    *((u8 *)sChannelRegTable[channelIdx]) = value << 6;
+}
+
+/* sub_0802F884 — write to channel 3 (noise) frequency register byte. */
+void sub_0802F884(u8 value)
+{
+    *((u8 *)sChannelFreqRegTable[3]) = value;
+}
+
+typedef struct SoundMixerSys {
+    u8 count;
+    u8 _pad01[10];
+    u8 lockRefCount;
+    u8 _pad0c[4];
+    u32 chFlags[4]; /* +0x10 */
+} SoundMixerSys;
+
+#define gpSoundMixerSys (*(SoundMixerSys **)0x030065e0)
+
+/* sub_0802F890 — update a PSG channel's duty/envelope register and mark dirty.
+ *
+ * If bit 3 of value is clear: reads the current halfword, masks with
+ * 0xf0c0, OR-s in (value << 8), and writes back.
+ * If bit 3 of value is set: writes (value << 8) directly without masking.
+ * Either way, updates chFlags[channelIdx]: clears bits 0, 5, 7 and sets bit 9.
+ *
+ * Matching notes:
+ *   - val pinned to r4 (push {r4, lr}) via register asm("r4").
+ *   - byteOff pinned to r3 for the common-tail add (adds r2, r2, r3).
+ *   - NOT-set path uses register vu16* rg asm("r2") so the reg ptr goes
+ *     in r2, matching the baserom's ldr r2, [r0] / ldrh r1, [r2] / strh r0, [r2].
+ *   - SET path uses register u32 off2 asm("r2") for the index so the
+ *     baserom's lsls r2, r1, #2 / adds r0, r2, r0 / ldr r1, [r0] sequence
+ *     is reproduced. The adds r3, r2, #0 at the end copies the index to r3.
+ *   - Commuted add form (off + tbl) forces "adds r0, r3/r2, r0" encoding.
+ *   - asm("" : : "r"(val)) after each store keeps val (r4) live so the
+ *     compiler uses r1 for the shifted intermediate instead of r4.
+ *   - Common tail: ss+0x10 is computed in r2 via "ss = (u8*)ss + 0x10",
+ *     giving adds r2, #16 then adds r2, r2, r3.
+ */
+void sub_0802F890(u8 value, u32 channelIdx)
+{
+    register u8 val asm("r4");
+    register u32 byteOff asm("r3");
+    SoundMixerSys *ss;
+    u32 flags;
+    u32 *pF;
+    vu16 *reg;
+
+    val = value;
+    if (val & 8)
+        goto set_path;
+
+    {
+        register vu16 *const *tbl asm("r0") = sChannelRegTable;
+        register vu16 *rg asm("r2");
+
+        byteOff = channelIdx << 2;
+        rg = *(vu16 **)(byteOff + (u32)tbl);
+        *rg = (*rg & 0xf0c0) | (val << 8);
+        asm("" : : "r"(val));
+    }
+    goto common_tail;
+
+set_path: {
+    register vu16 *const *tbl asm("r0") = sChannelRegTable;
+    register u32 off2 asm("r2") = channelIdx << 2;
+
+    reg = *(vu16 **)(off2 + (u32)tbl);
+    *reg = val << 8;
+    asm("" : : "r"(val));
+    asm("" : "=r"(byteOff) : "0"(off2));
+}
+
+common_tail:
+    ss = gpSoundMixerSys;
+    ss = (SoundMixerSys *)((u8 *)ss + 0x10);
+    pF = (u32 *)((u8 *)ss + byteOff);
+    flags = *pF;
+    flags &= (u32)-0xa2;
+    flags |= 0x200;
+    *pF = flags;
+}
