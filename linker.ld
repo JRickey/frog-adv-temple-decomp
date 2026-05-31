@@ -624,10 +624,10 @@ SECTIONS {
         asm/text/text_0x0802a63c.o(.text);  /* 0x0802a63c - 0x0802a8fc, raw bytes */
         asm/disasm_0x0802a8fc.o(.text);  /* 0x0802a8fc - 0x0802a9fc, sub_0802A8FC (auto-peeled) */
         asm/disasm_0x0802a9fc.o(.text);  /* 0x0802a9fc - 0x0802aae8, sub_0802A9FC (auto-peeled) */
-        asm/text/text_0x0802aae8.o(.text);  /* 0x0802aae8 - 0x0802ab14, raw bytes */
+        asm/disasm_0x0802aae8.o(.text);  /* 0x0802aae8 - 0x0802aaec, sub_0802AAE8 (auto-peeled) */
+        asm/disasm_0x0802aaec.o(.text);  /* 0x0802aaec - 0x0802ab14, sub_0802AAEC (auto-peeled) */
         asm/disasm_0x0802ab14.o(.text);  /* 0x0802ab14 - 0x0802ab64, sub_0802AB14 (auto-peeled) */
-        src/game/sub_0802ab64.o(.text);  /* 0x0802ab64 - 0x0802ac60, sub_0802AB64 + sub_0802ABB0 + sub_0802ABDC */
-        asm/disasm_0x0802ac60.o(.text);  /* 0x0802ac60 - 0x0802acb4, sub_0802AC60 (auto-peeled) */
+        src/game/sub_0802ab64.o(.text);  /* 0x0802ab64 - 0x0802acb4, sub_0802AB64 + sub_0802ABB0 + sub_0802ABDC + sub_0802AC60 */
         asm/disasm_0x0802acb4.o(.text);  /* 0x0802acb4 - 0x0802af10, sub_0802ACB4 (auto-peeled) */
         asm/text/text_0x0802af10.o(.text);  /* 0x0802af10 - 0x0802b9d4, raw bytes */
         asm/disasm_0x0802b9d4.o(.text);  /* 0x0802b9d4 - 0x0802ba64, sub_0802B9D4 (auto-peeled) */
