@@ -6,9 +6,12 @@ extern void sub_08020FE4(s32 a0, s32 a1);
 extern void sub_08005D10(s32 a0, s32 a1);
 extern void sub_08021140(s32 a0, const void *a1, s32 a2, s32 a3, s32 a4, s32 a5, s32 a6);
 extern void sub_08021510(u8 a0, const void *a1, u8 a2, void *a3, u8 a4);
+extern void sub_080210A0(u16 a0, const void *a1, u16 a2, u8 a3, u16 a4, u8 a5, u8 a6, u8 a7);
+extern void sub_080063EC(u8 idx);
 extern const u32 sLevelLayoutPtrs_310DD4[8];
 extern const u32 sLevelLayout_310C2C[6];
 extern const u32 sLevelLayoutPtrs_311074[14];
+extern const u32 sLevelLayoutPtrs_31118C[7];
 
 void sub_0802277C(void)
 {
@@ -46,4 +49,17 @@ void sub_08022800(void)
 
     sub_08020FE4(25, 38);
     sub_08005D10(25, 38);
+}
+
+void sub_08022838(void)
+{
+    u8 i;
+
+    i = 0;
+    do {
+        sub_080210A0(i + 0x3e, (const void *)sLevelLayoutPtrs_31118C[i], 0x400, 14, 0x165, 9, 3, 3);
+        i++;
+    } while (i <= 6);
+
+    sub_080063EC(0x3e);
 }
