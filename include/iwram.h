@@ -125,7 +125,9 @@ struct IwramAt6110 {
     s64 _field_1c;   /* +0x1c: initialized to -1 by sub_0800A26C */
     u8 _pad24[2];    /* +0x24..+0x25 */
     u16 _field_26;   /* +0x26: flag halfword (zeroed when _field_5 <= 1) */
-    u8 _pad28[6];    /* +0x28..+0x2d */
+    u8 _pad28[3];    /* +0x28..+0x2a */
+    u8 _field_2b;    /* +0x2b: gate byte; sub_0802ABDC sets entity flags when > 1 */
+    u8 _pad2c[2];    /* +0x2c..+0x2d */
     u16 _field_2e;   /* +0x2e: flag halfword (bits 0x04, 0x02 set by sub_08009884) */
     u8 _pad30[2];    /* +0x30..+0x31 */
     u8 _field_32;    /* +0x32: state-byte gating the sEntityParamTable lookup in sub_0800A1C8 */
