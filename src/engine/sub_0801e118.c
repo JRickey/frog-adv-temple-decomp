@@ -1,5 +1,6 @@
 #include "game.h"
 #include "types.h"
+#include "gba/dma.h"
 
 extern void sub_0801D150(u8 arg);
 extern void sub_0801D268(u8 arg);
@@ -80,4 +81,40 @@ u8 sub_0801E1AC(u8 arg)
         ret = 254;
     }
     return ret;
+}
+
+extern void sub_0801DBB4(const void *src, u32 dst, u8 arg2, u8 arg3);
+
+u8 sub_0801E1FC(u8 arg0, u8 arg1)
+{
+    u16 zero;
+    u32 dst;
+    u8 i;
+    const u32 *table;
+    u32 entry;
+    u16 *zeroPtr;
+
+    dst = (u32)arg1 * 0x800 + 0x2000000;
+    /* zeroPtr anchors &zero into r1 before the zero-store, so r1 survives as
+     * DMA3.src without a redundant reload: mov r1,sp / movs r0,#0 / strh r0,[r1]. */
+    zeroPtr = &zero;
+    zero = 0;
+    REG_DMA3.src = zeroPtr;
+    REG_DMA3.dst = (void *)dst;
+    REG_DMA3.cnt = DMA_ENABLE | DMA_SRC_FIXED | 0x400;
+    (void)REG_DMA3.cnt;
+
+    i = 0;
+    table = (const u32 *)0x08308808;
+    for (; i <= 15; i++) {
+        entry = table[(u32)arg0 * 16 + i];
+        if (entry == 0x081be2fc)
+            goto exit_false;
+        if (entry == 0)
+            goto exit_false;
+        sub_0801DBB4((const void *)entry, dst, 0, (u8)(i * 2));
+    }
+    return 1;
+exit_false:
+    return 0;
 }
