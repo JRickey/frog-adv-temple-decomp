@@ -43,3 +43,25 @@ void sub_08020BE4(u32 arg)
 {
     gStructAt3003570.b = arg;
 }
+
+extern void sub_08031FDC(u32 a);
+
+/* Clear bit 0 of gStructAt3003570.flags, then if sub_08032148() is non-zero,
+ * call sub_08031FDC(1). Sibling of sub_08020BC0 in this cluster.
+ *
+ * agbcc matching lever: base pointer pinned to r0, mask to r1 so agbcc emits
+ * movs r1, #254 before ldrb r2, [r0, #0]; ands r1, r2; strb r1, [r0, #0].
+ */
+void sub_08020BF0(void)
+{
+    register StructAt3003570 *p asm("r0");
+    register int mask asm("r1");
+
+    p = &gStructAt3003570;
+    mask = 0xfe;
+    mask = mask & p->flags;
+    p->flags = mask;
+    if (sub_08032148()) {
+        sub_08031FDC(1);
+    }
+}
