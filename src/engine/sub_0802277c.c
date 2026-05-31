@@ -12,6 +12,7 @@ extern const u32 sLevelLayoutPtrs_310DD4[8];
 extern const u32 sLevelLayout_310C2C[6];
 extern const u32 sLevelLayoutPtrs_311074[14];
 extern const u32 sLevelLayoutPtrs_31118C[7];
+extern const u32 sLevelLayout_310B84[42];
 
 void sub_0802277C(void)
 {
@@ -62,4 +63,9 @@ void sub_08022838(void)
     } while (i <= 6);
 
     sub_080063EC(0x3e);
+}
+
+void sub_08022884(void)
+{
+    sub_08021140(5, sLevelLayout_310B84, 0, 2, 0x51, 2, 0);
 }
