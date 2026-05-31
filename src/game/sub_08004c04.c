@@ -23,3 +23,23 @@ void sub_08004C30(void)
     sub_0800CE98(0xf, 0);
     sub_08009CBC();
 }
+
+extern void sub_08007660(u32 a, u32 b);
+extern void sub_0800A2D8(void);
+extern void sub_080008DC(void);
+extern void sub_0800A328(void);
+extern void sub_080094F8(void);
+extern void sub_08009984(void);
+extern void sub_080045EC(u32 a, u32 b);
+
+void sub_08004C64(u32 a, u32 b, u32 c)
+{
+    sub_08007660(5, a);
+    sub_0800A2D8();
+    sub_080008DC();
+    sub_0800A328();
+    sub_080094F8();
+    sub_08009984();
+    sub_080045EC(b, c);
+    gGameStuff._unk14++;
+}
