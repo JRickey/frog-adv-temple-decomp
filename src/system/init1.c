@@ -141,3 +141,59 @@ u32 sub_080004C4(void)
     gIwram_34C0.lastTick = sub_08000900();
     return (u16)sub_080179B8();
 }
+
+u32 sub_080005D8(void)
+{
+    u16 raw;
+    u16 mapped;
+    u32 now;
+    struct IwramAt5358 *jp;
+    struct IwramAt3710 *prevRead;
+    struct IwramAt3710 *prev;
+    register u16 prevKeys asm("r3");
+    u16 jpKeys;
+    u16 keyA;
+    u16 aHeld;
+    register u16 keyB asm("r1");
+
+    raw = ~REG_KEYINPUT;
+    mapped = 0;
+    jp = &gIwram_5358;
+    prevRead = &gIwram_3710;
+    prevKeys = prevRead->prevKeys;
+    jpKeys = raw & ~prevKeys;
+    jp->justPressed = jpKeys;
+    keyA = KEY_A;
+    aHeld = keyA & prevKeys;
+    prev = prevRead;
+    if (!aHeld)
+        mapped = (u16)(jpKeys & keyA) ? KEY_RIGHT : 0;
+    keyB = KEY_B;
+    if (!(prevKeys & keyB)) {
+        jpKeys &= keyB;
+        if (jpKeys != 0)
+            mapped = KEY_LEFT;
+    }
+    prev->prevKeys = raw;
+
+    {
+        register GameStuff *gs asm("r0");
+        gs = &gGameStuff;
+        if (gs->mode != 24) {
+            return mapped;
+        }
+
+        if (mapped == 0) {
+            now = sub_08000900();
+            if (now - gIwram_34C0.lastTick > 10) {
+                gIwram_34C0.lastTick = sub_08000900();
+                return (u16)sub_080179B8();
+            }
+            return 0;
+        }
+
+        gs->mode = 4;
+        gIwram_3480._data[0] = 4;
+        return 0;
+    }
+}
