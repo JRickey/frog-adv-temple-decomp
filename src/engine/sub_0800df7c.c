@@ -16,3 +16,12 @@ void sub_0800DF7C(void)
 {
     sEntityProcE[gGameStuff.pendingMode]();
 }
+
+extern void sub_0800A05C(void);
+extern void sub_08013880(void);
+
+void sub_0800DF9C(void)
+{
+    sub_0800A05C();
+    sub_08013880();
+}
