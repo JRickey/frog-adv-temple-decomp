@@ -197,3 +197,65 @@ u32 sub_080005D8(void)
         return 0;
     }
 }
+
+/* Per-frame input poll variant: like sub_080004C4 / sub_080005D8 but with a
+ * different remap. START is edge-triggered (just-pressed) and maps to KEY_UP;
+ * the four D-pad directions are level-triggered (currently-held `raw`) and map
+ * to the game's extended virtual-button bits 10..13.
+ *
+ * In the mode==24 attract case: any remapped input forces mode 4 (return to
+ * title); otherwise the attract step advances via sub_080179B8 (no timer gate,
+ * unlike the two siblings).
+ *
+ * Matching trick: `rawShadow = raw` before the directional bit-test sequence
+ * splits the held-key mask onto a separate value, defeating agbcc 2.x's
+ * preemptive spill of `raw` into a second callee-saved register (which
+ * otherwise widens the prologue to `push {r4, r5, lr}`). Same idiom the
+ * `jpKeysShadow` copy uses in sub_080004C4. */
+u32 sub_08000678(void)
+{
+    u16 raw;
+    u16 rawShadow;
+    u16 mapped;
+    struct IwramAt5358 *jp;
+    struct IwramAt3710 *prev;
+    u16 jpKeys;
+    GameStuff *gs;
+
+    raw = ~REG_KEYINPUT;
+    jp = &gIwram_5358;
+    prev = &gIwram_3710;
+    jpKeys = raw & ~prev->prevKeys;
+    jp->justPressed = jpKeys;
+    prev->prevKeys = raw;
+
+    rawShadow = raw;
+    mapped = ((u16)(jpKeys & KEY_START)) ? KEY_UP : 0;
+    if (rawShadow & KEY_UP)
+        mapped |= (1 << 10);
+    if (rawShadow & KEY_DOWN)
+        mapped |= (1 << 11);
+    if (rawShadow & KEY_LEFT)
+        mapped |= (1 << 12);
+    if (rawShadow & KEY_RIGHT)
+        mapped |= (1 << 13);
+
+    gs = &gGameStuff;
+    if (gs->mode != 24) {
+        return mapped;
+    }
+
+    if (mapped == 0) {
+        return (u16)sub_080179B8();
+    }
+
+    gs->mode = 4;
+    return 0;
+}
+
+/* Empty stub in the 4-byte gap between sub_08000678's epilogue and
+ * sub_0800072C. Caller TBD; kept as a separate symbol so the surrounding
+ * layout stays byte-identical. The Makefile's trailing `.align 2, 0`
+ * emits the 0x0000 halfword pad the baserom has after it. */
+void sub_08000728(void)
+{}
