@@ -234,3 +234,81 @@ void sub_08030264(void)
     sub_0802E380(ps->bufStart, (u32)ps->bufEnd - (u32)ps->bufStart);
     ps->flag = flag;
 }
+
+/* sub_08030290 — (re)start the dual-FIFO sample-DMA + timer chain.
+ *
+ * Wrapped in the sound mutation lock (sub_0802E418 acquire / sub_0802E3F8
+ * release). It arms the REG_SOUNDCNT_X high byte, points DMA1 at FIFO A
+ * and DMA2 at FIFO B (each sourced from one of the two PCM ring buffers
+ * cached in the SoundSystem block at +0xe4 / +0xe8), then turns on
+ * timers 0 and 1 that clock the FIFO drain.
+ *
+ * Matching notes:
+ *   - The DMAxSAD/DMAxDAD pairs and the SOUNDCNT_X byte are written
+ *     through absolute MMIO addresses (not the REG_DMA1/2 struct) so
+ *     agbcc reuses one pool literal per group and reaches the
+ *     neighbouring register with an `adds` — e.g. SOUNDCNT_X (0x4000083)
+ *     +0x39 = DMA1SAD, DMA1SAD +4 = DMA1DAD. The struct-field form
+ *     instead emits `[base, #4]` and breaks the match.
+ *   - DMAxCNT is reached relative to the FIFO destination pointer
+ *     (FIFO_A +0x24 = DMA1CNT_L, FIFO_B +0x2c = DMA2CNT_L), reusing the
+ *     value just stored as DMAxDAD; the count (4) and control halfword
+ *     are written through an incrementing pointer, splitting the 32-bit
+ *     CNT into two `strh`. */
+
+#define REG_FIFO_A       ((void *)0x040000a0)
+#define REG_FIFO_B       ((void *)0x040000a4)
+
+#define REG_SOUNDCNT_X_H (*(vu8 *)0x04000083)
+#define REG_DMA1SAD      (*(vu32 *)0x040000bc)
+#define REG_DMA1DAD      (*(vu32 *)0x040000c0)
+#define REG_DMA2SAD      (*(vu32 *)0x040000c8)
+#define REG_DMA2DAD      (*(vu32 *)0x040000cc)
+#define REG_TM0CNT_H     (*(vu16 *)0x04000102)
+#define REG_TM1CNT_H     (*(vu16 *)0x04000106)
+
+/* DMA_ENABLE | DMA_TIMING_SOUND | DMA_32BIT | DMA_REPEAT | DMA_DST_RELOAD,
+ * the high (CNT_H) control halfword for a FIFO sound-DMA. */
+#define SOUND_DMA_CNT_H 0xb660
+
+/* The SoundSystem base + 0xd0 is held in r4 across the lock BLs, with the
+ * two PCM ring-buffer pointers reached at +0x14 / +0x18 from there. */
+typedef struct DmaSrcBlock {
+    u8 _pad00[0x14];
+    const void *pcmBufA; /* +0x14 (abs +0xe4) — DMA1 source */
+    const void *pcmBufB; /* +0x18 (abs +0xe8) — DMA2 source */
+} DmaSrcBlock;
+
+#define gpSoundSystem3 (*(u8 **)0x030065e0)
+
+extern void sub_0802E418(void);
+extern void sub_0802E3F8(void);
+
+void sub_08030290(void)
+{
+    DmaSrcBlock *ss = (DmaSrcBlock *)(gpSoundSystem3 + 0xd0);
+    vu8 *cnt;
+
+    sub_0802E418();
+
+    REG_SOUNDCNT_X_H = 0x9a;
+
+    REG_DMA1SAD = (u32)ss->pcmBufA;
+    REG_DMA1DAD = (u32)REG_FIFO_A;
+    cnt = (vu8 *)REG_FIFO_A + 0x24;
+    *(vu16 *)cnt = 4;
+    cnt += 2;
+    *(vu16 *)cnt = SOUND_DMA_CNT_H;
+
+    REG_DMA2SAD = (u32)ss->pcmBufB;
+    REG_DMA2DAD = (u32)REG_FIFO_B;
+    cnt = (vu8 *)REG_FIFO_B + 0x2c;
+    *(vu16 *)cnt = 4;
+    cnt += 2;
+    *(vu16 *)cnt = SOUND_DMA_CNT_H;
+
+    REG_TM1CNT_H |= 0xc0;
+    REG_TM0CNT_H |= 0x80;
+
+    sub_0802E3F8();
+}
