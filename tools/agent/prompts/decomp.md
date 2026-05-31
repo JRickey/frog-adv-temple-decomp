@@ -12,8 +12,10 @@
   general-purpose agents that pick a target, scaffold a new C file, drive
   it to match, and handle the decision tree around fallbacks.
 
-  Last verified: commit 3ce7961. Update the "last verified" line in every
-  PR that materially changes the playbook.
+  Last verified: commit 3ce7961 (+ removed the High-register NAKED
+  fast-path; high-reg pins are matchable pure-C levers, per CLAUDE.md).
+  Update the "last verified" line in every PR that materially changes the
+  playbook.
 -->
 
 # Decomp agent playbook
@@ -43,7 +45,9 @@ is wrong about half the time on agbcc 2.x.
    - "Adjacent IWRAM bases — defeat CSE-fold via linker-assigned symbols"
    - "`register T *p asm("rN")` pins agbcc's register choice"
    - "`asm("" : "=r"(dst) : "0"(src))` as a mov-fence"
-   - "High registers (sl/r10, sb/r9, r8) — corpus-validated unmatchable"
+   - "High registers (sl/r10, sb/r9, r8)" — for the `register asm("rN")`
+     pin syntax; these are usually MATCHABLE in pure C, not a NAKED trigger
+     (see "High registers are NOT a NAKED fast-path" below)
    - "`.syntax unified` in NAKED inline asm bleeds into the rest of the .o"
    - "Apostrophes in C comments break `tools/preproc`" (rare for code,
      more common for data — but the pre-commit guard catches it anyway).
@@ -141,14 +145,24 @@ on, NAKED requires ALL of the following before the commit lands:
    for the phase-3 PC port and IS the source-of-truth for future
    re-attempts when permuter improves or a new idiom is discovered.
 
-### High-register exception (the one fast-path NAKED)
+### High registers are NOT a NAKED fast-path
 
-`mov sl, …` / `mov sb, …` / `mov r8, …` / `mov ip, …` for loop state
-is the ONE shape that skips the NAKED gate above. Corpus evidence
-across 7 agbcc decomps shows no matched C has ever produced these
-patterns. Cite the specific high-register pin in the asm + the
-codegen-notes section ("High registers") and ship NAKED. Still ship
-the NON_MATCHING reference body (rule #4 applies).
+Earlier guidance treated `mov sl/sb/r8/ip` high-register pins as a shape
+that *skips* the NAKED gate. That was wrong and is removed — it caused
+premature NAKED ships (see CLAUDE.md "High-register pins are NOT a blanket
+NAKED trigger" and the corpus finding that a Konami GBA agbcc title matches
+game logic ~100% in pure C). A high register holding a value is usually
+**matchable** via a `register T x asm("r8"/"r9"/"sl")` declaration — that is
+a *pure-C* matching lever, not inline asm and not a NAKED trigger
+(sub_080210A0 matches with all three; sub_08004508 holds r8+r9 across a
+`bl`). Treat a high-reg pin as **advisory**: a hint for *which* lever to
+reach for in step 3, never license to skip the attempt.
+
+The genuinely-unmatchable high-reg case is narrow — a high reg holding *loop
+state across an inner function-pointer `bl`* (the opcode-dispatch /
+two-stage-loop classes). That case still goes through the full NAKED gate
+above (`classify_unmatchable.py` STRONG verdict + the four prerequisites),
+exactly like any other candidate. There is no fast path.
 
 ### NAKED format (when justified)
 

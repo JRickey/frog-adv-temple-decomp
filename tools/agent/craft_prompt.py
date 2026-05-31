@@ -14,7 +14,9 @@ What it does, given a function name from `pick_target.py`:
   1. Locates the asm block in `asm/disasm_0x*.s` (uses pick_target's parser).
   2. Finds the destination `src/*.c` from `linker.ld` (the disasm file sits
      between two named .o entries; the function belongs to one of them — we
-     pick the next named C file as a heuristic, agent should confirm).
+     prefer name-affinity, falling back to the PREVIOUS named C file per the
+     repo layout invariant: a peeled slice's bytes append to its previous C
+     neighbour, not the next one; the agent should confirm).
   3. Extracts the called functions (`bl Name`) from the target asm.
   4. Pulls C declarations for those callees from `include/`.
   5. Samples up to 5 already-decomped functions from the same destination
@@ -134,14 +136,17 @@ def destination_c_file(asm_file: Path, target_name: str) -> Path | None:
 
     Looks at the C files immediately before and after the asm in linker.ld;
     picks whichever has functions whose names share the longest prefix with
-    the target. Falls back to the next C file (legacy heuristic) when both
-    score 0. Returns None only if linker.ld has no surrounding C file at all.
+    the target. Falls back to the PREVIOUS C file when both score 0 — the repo
+    layout invariant is that a peeled slice's bytes append to its previous C
+    neighbour (the destination is the previous src/*.c in linker.ld order, not
+    the next; see CLAUDE.md "Layout invariant" / pick_target.py). Returns None
+    only if linker.ld has no surrounding C file at all.
     """
     prev, nxt = _neighbour_c_files(asm_file)
     prev_score = _name_score(target_name, prev) if prev else 0
     nxt_score = _name_score(target_name, nxt) if nxt else 0
     if prev_score == 0 and nxt_score == 0:
-        return nxt or prev
+        return prev or nxt
     return prev if prev_score >= nxt_score else nxt
 
 
