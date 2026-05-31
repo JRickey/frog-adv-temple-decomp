@@ -51,6 +51,7 @@ struct IwramAt35E0 {
     u8 _pad14[4];
     u8 _field_18; /* +18: entity coord (X tile) */
     u8 _field_19; /* +19: entity coord (Y tile) */
+    u8 _field_1A;
 };
 
 struct IwramAt3720 {
