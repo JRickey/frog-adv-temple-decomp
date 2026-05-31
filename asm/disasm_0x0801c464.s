@@ -306,11 +306,6 @@
 @   0x0801c6e0: b001        add	sp, #4
 @   0x0801c6e2: 4770        bx	lr
 
-        thumb_func_start sub_0801C464
-sub_0801C464: @ 0x0801c464
-        .incbin "frog_us_baserom.gba", 0x1c464, 0x94
-        thumb_func_end sub_0801C464
-
         thumb_func_start sub_0801C4F8
 sub_0801C4F8: @ 0x0801c4f8
         .incbin "frog_us_baserom.gba", 0x1c4f8, 0x1ec
