@@ -1,4 +1,5 @@
 #include "game.h"
+#include "iwram.h"
 #include "gba/intr.h"
 #include "macros.h"
 #include "types.h"
@@ -167,4 +168,79 @@ int sub_0800A3A4(const CmpPair *a, const CmpPair *b)
     (void)aa.word1;
     (void)bb.word1;
     return 0;
+}
+
+/* Boundary/collision step gate. dir is a 4-way direction flag
+ * (1/2 = vertical, 4/8 = horizontal); coord is the candidate tile
+ * coordinate along that axis. Reads the cached tile coords at
+ * gIwram_35E0._field_8 (X) / _field_A (Y), and returns:
+ *   0    when the actor isn't ready (gIwram_3720._field_1A > 3),
+ *   0xff when the move is blocked by the cached coordinate,
+ *   1    otherwise, after recording dir in gIwram_35E0._field_12.
+ *
+ * The cached coord and the candidate are both u16 but compared as
+ * signed 16-bit: `field << 16 > coord << 16` is the agbcc 2.x idiom
+ * for `(s16)field > (s16)coord` over two u16 values — both operands
+ * sign-align at bit 31 via the left shift, so the arithmetic
+ * right-shift is elided and the field loads as ldrh (not ldrsh).
+ *
+ * Matching shape (agbcc 2.x register allocation): the three pinned
+ * locals + the `tmp` split are all load-bearing.
+ *   - `field` (r4) holds the freshly-loaded u16, kept callee-saved so
+ *     cases 1/4 and 2/8 can cross-jump to a shared `field << 16; cmp`
+ *     tail (baserom's `b 0xa42e` / `b 0xa442`).
+ *   - `cs` (r2) caches `coord << 16` and `fs` (r1) caches `field << 16`
+ *     so the compare reads `cmp r1, r2` in that operand order.
+ *   - Reading the field value into `tmp` *before* `cs = coord << 16`
+ *     forces the base-address `ldr r0` to precede the `lsls r2` (cs),
+ *     matching baserom's `ldr r0; lsls r2; ldrh r4` order. Inlining the
+ *     field read instead emits the cs shift first.
+ */
+u8 sub_0800A3D0(u16 dir, u16 coord)
+{
+    register u16 field asm("r4");
+    register int cs asm("r2");
+    register int fs asm("r1");
+    u16 tmp;
+
+    if (gIwram_3720._field_1A > 3)
+        return 0;
+
+    switch (dir) {
+    case 1:
+        tmp = (u16)gIwram_35E0._field_A;
+        cs = coord << 16;
+        field = tmp;
+        fs = field << 16;
+        if (fs > cs)
+            break;
+        return 0xff;
+    case 2:
+        tmp = (u16)gIwram_35E0._field_A;
+        cs = coord << 16;
+        field = tmp;
+        fs = field << 16;
+        if (fs >= cs)
+            return 0xff;
+        break;
+    case 4:
+        tmp = (u16)gIwram_35E0._field_8;
+        cs = coord << 16;
+        field = tmp;
+        fs = field << 16;
+        if (fs > cs)
+            break;
+        return 0xff;
+    case 8:
+        tmp = (u16)gIwram_35E0._field_8;
+        cs = coord << 16;
+        field = tmp;
+        fs = field << 16;
+        if (fs >= cs)
+            return 0xff;
+        break;
+    }
+
+    gIwram_35E0._field_12 = dir;
+    return 1;
 }
