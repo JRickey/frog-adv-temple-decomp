@@ -46,3 +46,40 @@ void sub_080090FC(u16 x, u16 y, u8 g, u8 h)
 {
     Entity_Init(&gIwram_3720, 0, (s16)x, (s16)y, 3, 1, 0, g, h, 16);
 }
+
+extern void sub_080059C4(void *p);
+
+/* When the dispatch state at +0x1A is 0x23, normalise the flags halfword at
+ * +0x34 before handing the record to sub_080059C4:
+ *   - bit 1 set       -> clear bit 15
+ *   - else bit 15 set -> clear bit 15 and set bit 1
+ *   - else            -> leave unchanged
+ *
+ * The address is anchored in r0 (the asm("") barrier blocks agbcc's
+ * reg-equiv fold that would load it straight into the working register) and
+ * copied to base in r2, matching the baserom's `ldr r0; adds r2, r0`. `f` is
+ * pinned to r1 so the flag ANDs accumulate mask-first into the r0 scratch. */
+void sub_08009140(void)
+{
+    register struct IwramAt3720 *src asm("r0") = &gIwram_3720;
+    struct IwramAt3720 *base;
+    register u16 f asm("r1");
+
+    asm("" : "+r"(src));
+    base = src;
+
+    if (base->_field_1A != 0x23)
+        goto do_call;
+
+    f = base->_field_34;
+    if (f & 2) {
+        base->_field_34 = f & 0x7fff;
+        goto do_call;
+    }
+    if (!(f & 0x8000))
+        goto do_call;
+    base->_field_34 = (f & 0x7fff) | 2;
+
+do_call:
+    sub_080059C4(base);
+}
