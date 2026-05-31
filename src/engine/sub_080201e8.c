@@ -49,3 +49,22 @@ void sub_0802023C(void)
     gIwram_3480._data[5] = 0;
     gIwram_34A0.dispatchIdx = 0;
 }
+
+extern u16 sub_08010694(u16 arg);
+
+void sub_08020270(void)
+{
+    gGameStuff.mode = 4;
+
+    gIwram_3480._data[0] = 4;
+    gIwram_3480._data[5] = 0;
+    gIwram_3480._data[2] = 0;
+    gIwram_3480._data[1] = 0;
+
+    gIwram_5398 = 0;
+
+    gIwram_3480._data[6] = 1;
+    gIwram_3480._data[7] = 0;
+
+    sub_08010694(0xBF);
+}
