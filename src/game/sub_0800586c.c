@@ -42,3 +42,28 @@ void sub_080058CC(u32 arg)
     sub_08005404(arg);
     gGameStuff._unk14++;
 }
+
+extern u32 sub_08009C14(u8 *state);
+extern void sub_080066C4(u32 base, u32 idx, u32 val);
+
+void sub_080058FC(u8 *state, u32 arg)
+{
+    u8 *base;
+    u8 *p;
+    s8 i;
+
+    if (sub_08009C14(state) == 0) {
+        *state = 9;
+    }
+    sub_0800AF50(arg);
+    base = (u8 *)0x03006110;
+    base[0x2a] = 0;
+    sub_080066C4((u32)base, 5, 4);
+    i = 0;
+    p = base;
+    for (; i <= 3; i++) {
+        if (!((p[0x33] >> i) & 1)) {
+            sub_080066C4((u32)p, 5, (u8)i);
+        }
+    }
+}
