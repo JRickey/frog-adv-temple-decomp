@@ -6,107 +6,105 @@ typedef struct EntityHitbox {
     u32 flags;
 } EntityHitbox;
 
-typedef struct EntityHitboxFlags {
-    u8 _pad0[8];
-    u8 flag0;
-    u8 flag1;
+typedef struct EntityHitboxFlagBytes {
+    u32 count;
+    u32 points;
+    u8 primaryFlags;
+    u8 alternateFlags;
     u8 _padA[2];
-} EntityHitboxFlags;
+} EntityHitboxFlagBytes;
+
+typedef struct EntityHitboxPoint {
+    s16 x;
+    s16 y;
+} EntityHitboxPoint;
 
 extern const EntityHitbox sEntityHitboxTable[];
-extern int sub_0800CB80(int xTile, int unused, int x, int y, int flags);
+extern int sub_0800CB80(int gridId, int gridPlane, int x, int y, int flags);
 
-void sub_0800A83C(a, b, c, d) u8 a;
-u32 b;
-u32 c;
-u32 d;
+void sub_0800A83C(u8 type, u32 gridId, u32 gridPlane, u32 useAlternateFlags)
 {
-    volatile s32 dStack;
-    volatile u32 aStack;
-    register u32 bReg asm("r9");
-    register u32 cReg asm("r8");
-    register const u32 *pointsBase asm("sl");
-    register s32 i asm("r6");
-    register s32 j asm("r4");
-    register s32 signedA asm("r1");
-    register s32 savedA asm("r5");
-    register u32 shiftedA asm("r2");
-    register const EntityHitbox *tableBase asm("r3");
-    register u32 initialOffset asm("r0");
-    register s32 loopCount asm("r0");
+    volatile s32 useAlternateFlagsStack;
+    volatile u32 typeStack;
+    register u32 gridIdReg asm("r9");
+    register u32 gridPlaneReg asm("r8");
+    const u32 *pointsFieldBase;
+    s32 pointIndex;
+    s32 pointOffset;
+    register s32 typeIndex asm("r1");
+    register s32 savedTypeIndex asm("r5");
+    u32 shiftedType;
+    const EntityHitbox *hitboxTable;
+    u32 initialOffset;
+    s32 pointCount;
 
-    aStack = a;
-    asm volatile("" : "=r"(b), "=r"(c) : "m"(aStack), "0"(b), "1"(c));
-    bReg = (u8)b;
-    cReg = (u8)c;
-    dStack = (u8)d;
-    i = 0;
-    shiftedA = a << 24;
-    signedA = (s32)shiftedA >> 24;
-    initialOffset = (signedA * 3) << 2;
-    tableBase = sEntityHitboxTable;
-    loopCount = *(s8 *)(initialOffset + (u32)tableBase);
-    if (i >= loopCount)
+    typeStack = type;
+    asm volatile("" : "=r"(gridId), "=r"(gridPlane) : "m"(typeStack), "0"(gridId), "1"(gridPlane));
+    gridIdReg = (u8)gridId;
+    gridPlaneReg = (u8)gridPlane;
+    useAlternateFlagsStack = (u8)useAlternateFlags;
+    pointIndex = 0;
+    shiftedType = type << 24;
+    typeIndex = (s32)shiftedType >> 24;
+    initialOffset = typeIndex * sizeof(EntityHitbox);
+    hitboxTable = sEntityHitboxTable;
+    pointCount = *(s8 *)(initialOffset + (u32)hitboxTable);
+    if (pointIndex >= pointCount)
         return;
 
-    tableBase = (const EntityHitbox *)((u8 *)tableBase + 4);
-    pointsBase = (const u32 *)tableBase;
-    j = 0;
-    savedA = signedA;
+    pointsFieldBase = &hitboxTable->points;
+    pointOffset = 0;
+    savedTypeIndex = typeIndex;
     do {
-        const s16 *pt;
-        register s32 branchA asm("r0");
+        const EntityHitboxPoint *point;
+        s32 branchTypeIndex;
         register u32 offset asm("r1");
         register s32 x asm("r2");
         register s32 y asm("r3");
 
-        asm volatile("" : "+r"(loopCount));
+        asm volatile("" : "+r"(pointCount));
         {
-            register u32 dTest asm("r7");
+            register u32 useAlternateFlagsTest asm("r7");
             register u32 zero asm("r0");
 
-            dTest = dStack;
+            useAlternateFlagsTest = useAlternateFlagsStack;
             zero = 0;
-            if (dTest != zero)
-                goto nonzero_d;
+            if (useAlternateFlagsTest == zero) {
+                branchTypeIndex = (s32)shiftedType >> 24;
+                offset = branchTypeIndex * sizeof(EntityHitbox);
+                point = (const EntityHitboxPoint *)(pointOffset + *(const u32 *)((u32)offset + (u32)pointsFieldBase));
+                x = point->x;
+                y = point->y;
+                sub_0800CB80(gridIdReg, gridPlaneReg, x, y,
+                             ((const EntityHitboxFlagBytes *)((u8 *)sEntityHitboxTable + offset))->primaryFlags);
+            } else {
+                offset = savedTypeIndex * sizeof(EntityHitbox);
+                point = (const EntityHitboxPoint *)(pointOffset + *(const u32 *)((u32)offset + (u32)pointsFieldBase));
+                x = point->x;
+                y = point->y;
+                sub_0800CB80(gridIdReg, gridPlaneReg, x, y,
+                             ((const EntityHitboxFlagBytes *)((u8 *)sEntityHitboxTable + offset))->alternateFlags);
+            }
         }
         {
-            branchA = (s32)shiftedA >> 24;
-            offset = (branchA * 3) << 2;
-            pt = (const s16 *)((u8 *)((u32)j + *(const u32 *)((u32)offset + (u32)pointsBase)));
-            x = pt[0];
-            y = pt[1];
-            sub_0800CB80(bReg, cReg, x, y, ((const EntityHitboxFlags *)((u8 *)sEntityHitboxTable + offset))->flag0);
-            goto after_call;
+            register u32 typeLoad asm("r1");
+            register u32 typeShift asm("r0");
+            s32 countTypeIndex;
+            u32 countOffset;
+            register const s8 *countBase asm("r3");
+            register s8 *countPtr asm("r1");
+
+            typeLoad = typeStack;
+            typeShift = typeLoad << 24;
+            asm volatile("" : "+r"(typeShift));
+            pointOffset += sizeof(EntityHitboxPoint);
+            pointIndex++;
+            shiftedType = typeShift;
+            countTypeIndex = (s32)shiftedType >> 24;
+            countOffset = countTypeIndex * sizeof(EntityHitbox);
+            countBase = (const s8 *)sEntityHitboxTable;
+            countPtr = (s8 *)(countOffset + (u32)countBase);
+            pointCount = *countPtr;
         }
-
-    nonzero_d: {
-        offset = (savedA * 3) << 2;
-        pt = (const s16 *)((u8 *)((u32)j + *(const u32 *)((u32)offset + (u32)pointsBase)));
-        x = pt[0];
-        y = pt[1];
-        sub_0800CB80(bReg, cReg, x, y, ((const EntityHitboxFlags *)((u8 *)sEntityHitboxTable + offset))->flag1);
-    }
-
-    after_call: {
-        register u32 aLoad asm("r1");
-        register u32 aShift asm("r0");
-        register s32 countA asm("r0");
-        register u32 countOffset asm("r1");
-        register const s8 *countBase asm("r3");
-        register s8 *countPtr asm("r1");
-
-        aLoad = aStack;
-        aShift = aLoad << 24;
-        asm volatile("" : "+r"(aShift));
-        j += 4;
-        i++;
-        shiftedA = aShift;
-        countA = (s32)shiftedA >> 24;
-        countOffset = (countA * 3) << 2;
-        countBase = (const s8 *)sEntityHitboxTable;
-        countPtr = (s8 *)(countOffset + (u32)countBase);
-        loopCount = *countPtr;
-    }
-    } while (i < loopCount);
+    } while (pointIndex < pointCount);
 }

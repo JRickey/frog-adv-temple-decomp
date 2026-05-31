@@ -3,83 +3,100 @@
 #include "macros.h"
 #include "types.h"
 
-struct ScrollObj {
+#define SCROLL_STATE_BASE ((struct SceneScrollState *)0x030060A0)
+
+enum {
+    SCROLL_SKIP_PENDING_MODE = 6,
+    SCREEN_HALF_WIDTH = 120,
+    SCREEN_HALF_HEIGHT = 80,
+    TILE_PIXELS_SHIFT = 3,
+};
+
+struct SceneScrollState {
     u8 _pad00[12];
-    s32 x;
-    s32 y;
+    s32 scrollX;
+    s32 scrollY;
     u8 _pad14[4];
-    u16 boundY;
-    u16 boundX;
+    u16 tileHeight;
+    u16 tileWidth;
     u8 _pad1c[4];
+};
+
+struct ScrollCameraTarget {
+    u8 _pad00[2];
+    s16 x;
+    s16 y;
 };
 
 void sub_0800F24C(u8 countArg)
 {
-    register u32 count asm("r8") = (u8)countArg;
-    register u32 zero asm("r9");
-    register struct ScrollObj *objs asm("ip");
-    register struct IwramAt3720 *src asm("r6");
-    register s32 idx asm("r2");
-    s32 *px;
-    s32 *py;
-    register struct ScrollObj *obj asm("r3");
-    register s32 x asm("r1");
-    register s32 y asm("r1");
-    u8 i;
+    u32 stateCount = countArg;
+    struct SceneScrollState *scrollStates;
+    struct ScrollCameraTarget *cameraTarget;
+    register s32 stateOffset asm("r2");
+    s32 *scrollX;
+    s32 *scrollY;
+    struct SceneScrollState *state;
+    s32 targetX;
+    register s32 targetY asm("r1");
+    u8 stateIndex;
 
-    if (gGameStuff.pendingMode == 6) {
+    if (gGameStuff.pendingMode == SCROLL_SKIP_PENDING_MODE) {
         return;
     }
-    i = 0;
-    if (i >= count) {
+    stateIndex = 0;
+    if (stateIndex >= stateCount) {
         return;
     }
-    objs = (struct ScrollObj *)0x030060A0;
-    src = &gIwram_3720;
-    zero = 0;
+    scrollStates = SCROLL_STATE_BASE;
+    cameraTarget = (struct ScrollCameraTarget *)&gIwram_3720;
     do {
-        u32 baseX;
-        u32 baseY;
-        idx = i << 5;
-        baseX = (u32)objs + 12;
-        px = (s32 *)(idx + baseX);
-        *px = src->_field_2 - 120;
-        baseY = (u32)objs + 16;
-        py = (s32 *)(idx + baseY);
-        *py = src->_field_4 - 80;
-        if (src->_field_2 <= 119) {
-            *px = zero;
+        u32 scrollXBase;
+        u32 scrollYBase;
+        stateOffset = stateIndex * sizeof(struct SceneScrollState);
+        scrollXBase = (u32)&scrollStates->scrollX;
+        scrollX = (s32 *)(stateOffset + scrollXBase);
+        *scrollX = cameraTarget->x - SCREEN_HALF_WIDTH;
+        scrollYBase = (u32)&scrollStates->scrollY;
+        scrollY = (s32 *)(stateOffset + scrollYBase);
+        *scrollY = cameraTarget->y - SCREEN_HALF_HEIGHT;
+        if (cameraTarget->x <= SCREEN_HALF_WIDTH - 1) {
+            *scrollX = 0;
         }
-        if (src->_field_4 <= 79) {
-            *py = zero;
+        if (cameraTarget->y <= SCREEN_HALF_HEIGHT - 1) {
+            *scrollY = 0;
         }
-        x = src->_field_2;
-        obj = (struct ScrollObj *)(idx + (u32)objs);
+
+        targetX = cameraTarget->x;
+        state = (struct SceneScrollState *)(stateOffset + (u32)scrollStates);
         {
             register u32 rawX asm("r0");
             register u32 shiftedX asm("r2");
-            register s32 limitX asm("r0");
-            rawX = obj->boundX;
-            shiftedX = rawX << 3;
-            limitX = (s32)shiftedX - 120;
-            if (x > limitX) {
-                limitX -= 120;
-                *px = limitX;
+            s32 limitX;
+
+            rawX = state->tileWidth;
+            shiftedX = rawX << TILE_PIXELS_SHIFT;
+            limitX = (s32)shiftedX - SCREEN_HALF_WIDTH;
+
+            if (targetX > limitX) {
+                *scrollX = limitX - SCREEN_HALF_WIDTH;
             }
         }
-        y = src->_field_4;
+
+        targetY = cameraTarget->y;
         {
             register u32 shiftedY asm("r2");
-            register s32 limitY asm("r0");
             register u32 rawY asm("r3");
-            rawY = obj->boundY;
-            shiftedY = rawY << 3;
-            limitY = (s32)shiftedY - 80;
-            if (y > limitY) {
-                limitY -= 80;
-                *py = limitY;
+            s32 limitY;
+
+            rawY = state->tileHeight;
+            shiftedY = rawY << TILE_PIXELS_SHIFT;
+            limitY = (s32)shiftedY - SCREEN_HALF_HEIGHT;
+
+            if (targetY > limitY) {
+                *scrollY = limitY - SCREEN_HALF_HEIGHT;
             }
         }
-        i++;
-    } while (i < count);
+        stateIndex++;
+    } while (stateIndex < stateCount);
 }
