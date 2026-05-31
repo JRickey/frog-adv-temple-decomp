@@ -8,6 +8,7 @@ extern const u8 sSpriteAnimPermLut[16];
 extern u8 gIwram_53A0;
 extern void sub_0800D450(u32 a, u32 b);
 extern void sub_0800D0F8(void);
+extern u32 sub_0800DAB8(s32 bit);
 
 s8 sub_0800D9FC(s8 idx)
 {
@@ -38,4 +39,29 @@ void sub_0800DA10(void)
     zero = 0;
     *p = 0xF0;
     *(u8 *)(base + 0xB20) = zero;
+}
+
+u32 sub_0800DA70(u32 val)
+{
+    u32 result = val;
+    u32 shifted = val;
+    u32 cnt;
+    u32 one;
+    s8 bit;
+
+    cnt = 0;
+    one = 1;
+    do {
+        if (shifted & one) {
+            bit = (s8)(cnt << 24 >> 24);
+            if (sub_0800DAB8(bit) == 0) {
+                result &= ~(one << bit);
+            }
+        }
+        shifted >>= 1;
+        cnt = (u32)((cnt << 24) + 0x1000000) >> 24;
+        bit = (s8)((cnt << 24) >> 24);
+    } while (bit <= 24);
+
+    return result;
 }
