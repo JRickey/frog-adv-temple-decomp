@@ -67,3 +67,23 @@ void sub_080058FC(u8 *state, u32 arg)
         }
     }
 }
+
+extern void sub_0800C4A0(void);
+extern void sub_0800A520(void);
+
+void sub_08005960(void)
+{
+    sub_0800C4A0();
+    while ((u8)sub_0800679C((u8 *)0x03006110, 8, 2) == 0) {
+        sub_0800A520();
+        sub_0800A2D8();
+        sub_080008DC();
+        sub_0800A328();
+    }
+    {
+        u8 *base = (u8 *)0x03006110;
+        sub_080066C4((u32)base, 8, 2);
+        base[0x2a] = 0;
+        sub_080066C4((u32)base, 5, 4);
+    }
+}
