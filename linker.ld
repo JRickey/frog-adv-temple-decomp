@@ -86,6 +86,10 @@ SECTIONS {
         . = 0x00006400; gIwram_6400 = .;
         . = 0x00006410; gIwram_6410 = .;
         . = 0x00006480; gIwram_6480 = .;
+        . = 0x000064C0; gIwram_64C0 = .;
+        . = 0x00006500; gIwram_6500 = .;
+        . = 0x00006540; gIwram_6540 = .;
+        . = 0x00006580; gIwram_6580 = .;
     } >iwram
 
     /* ROM dispatch table at 0x08308058 (a sub-region of the
@@ -436,7 +440,6 @@ SECTIONS {
         src/engine/sub_080135b8.o(.text);
         asm/disasm_0x080135b8.o(.text);  /* 0x080135b8 - 0x08013694, sub_080135B8 (auto-peeled) */
         src/engine/sub_08013694.o(.text);
-        asm/disasm_0x08013694.o(.text);  /* 0x08013694 - 0x0801377c, sub_08013694 (auto-peeled) */
         src/engine/sub_0801377c.o(.text);
         asm/disasm_0x0801377c.o(.text);  /* 0x0801377c - 0x08013880, sub_0801377C (auto-peeled) */
         src/engine/sub_08013880.o(.text);
