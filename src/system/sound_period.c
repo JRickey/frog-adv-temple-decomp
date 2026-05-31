@@ -202,3 +202,35 @@ void sub_080301C4(void)
         "    .syntax divided\n");
 }
 #endif
+
+typedef struct PeriodState {
+    u8 *bufStart; /* +0x00 */
+    u32 active;   /* +0x04 */
+    u8 _pad08[8]; /* +0x08 */
+    u8 *bufEnd;   /* +0x10 */
+    u8 _pad14[6]; /* +0x14 */
+    u8 flag;      /* +0x1a */
+} PeriodState;
+
+typedef struct SoundSystem2 {
+    u8 _pad00[0xf4];    /* +0x00 */
+    PeriodState period; /* +0xf4 */
+} SoundSystem2;
+
+#define gpSoundSystem2 (*(SoundSystem2 **)0x030065e0)
+
+extern void sub_0802E380(u8 *ptr, u32 count);
+
+void sub_08030264(void)
+{
+    PeriodState *ps = &gpSoundSystem2->period;
+    u8 flag;
+
+    if (ps->active == 0)
+        return;
+
+    flag = ps->flag;
+    ps->flag = 0;
+    sub_0802E380(ps->bufStart, (u32)ps->bufEnd - (u32)ps->bufStart);
+    ps->flag = flag;
+}
