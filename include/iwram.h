@@ -84,10 +84,13 @@ struct IwramAt3720 {
 
 struct IwramAt34C0 {
     /* Subsystem TBD. sub_080004C4 reads a u32 at +8 (used as a tick
-     * timestamp for the mode-24 attract advance). sub_0801A268 writes
-     * a u8 at +1. */
-    u8 _pad0[8];
+     * timestamp for the mode-24 attract advance). */
+    u8 cursor;
+    u8 delay;
+    u8 _pad2[2];
+    u32 stepTick;
     u32 lastTick; /* +8: timestamp at last attract step */
+    u32 holdFlag;
 };
 
 struct IwramAt3710 {

@@ -25,6 +25,7 @@ MEMORY {
  * (sub_08000918, sub_08000EB8, ...). Linker-assigned so agbcc loads the
  * table base into r1 before the index shift, matching baserom pool order. */
 gHandlerTable_08308028 = 0x08308028;
+gScriptPtrTable_08307fec = 0x08307FEC;
 
 /* State-handler dispatch table, currently inside the sSpriteAnimBlock_07104
  * INCBIN blob. Surfaced as a linker-assigned absolute symbol so a C
@@ -481,7 +482,6 @@ SECTIONS {
         asm/disasm_0x080178fc.o(.text);  /* 0x080178fc - 0x0801793c, sub_080178FC (auto-peeled) */
         src/engine/sub_0801793c.o(.text);  /* 0x0801793c - 0x080179b8, sub_0801793C */
         src/engine/sub_080179b8.o(.text);
-        asm/disasm_0x080179b8.o(.text);  /* 0x080179b8 - 0x08017a88, sub_080179B8 (auto-peeled) */
         src/engine/sub_08017a88.o(.text);  /* 0x08017a88 - 0x08017aa8, sub_08017A88 */
         src/engine/sub_08017aa8.o(.text);  /* 0x08017aa8 - 0x08017abc, sub_08017AA8 */
         src/engine/sub_08017abc.o(.text);
