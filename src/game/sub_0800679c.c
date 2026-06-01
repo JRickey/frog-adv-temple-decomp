@@ -26,7 +26,7 @@
  *     three.
  *   - Selector 1 pins `lo asm("r2")`, `hi asm("r3")`, `signExt asm("r1")`
  *     to force agbcc to destructively reuse the input arg registers
- *     for the two `ldr`s. The `asm volatile("" : "+r"(hi))` barrier
+ *     for the two `ldr`s. The empty `hi` barrier
  *     between `hi &= signExt;` and `r = hi;` prevents agbcc from
  *     folding the two into a single `r = hi & signExt`, restoring the
  *     baserom's `ands r3, r1; adds r0, r3, #0; orrs r0, r2` ordering. */

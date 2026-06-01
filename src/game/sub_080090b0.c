@@ -55,7 +55,7 @@ extern void sub_080059C4(void *p);
  *   - else bit 15 set -> clear bit 15 and set bit 1
  *   - else            -> leave unchanged
  *
- * The address is anchored in r0 (the asm("") barrier blocks agbcc's
+ * The address is anchored in r0 (the empty barrier blocks agbcc's
  * reg-equiv fold that would load it straight into the working register) and
  * copied to base in r2, matching the baserom's `ldr r0; adds r2, r0`. `f` is
  * pinned to r1 so the flag ANDs accumulate mask-first into the r0 scratch. */

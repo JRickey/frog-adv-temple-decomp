@@ -62,7 +62,7 @@
  * until case 2 / case 8 consume it via sub_0800A258(r7). agbcc spills
  * those instead, which forces a different prologue (`push {r4-r6, lr}`
  * vs baserom `push {r4-r7, lr}`) and a different stack-frame size
- * (sub sp #224 vs #204). A `register asm("rN")` pin cannot help: a
+ * (sub sp #224 vs #204). A fixed-register pin cannot help: a
  * stack-address (&state) cannot be a register variable, and pinning r7
  * alone (tried) made the prologue worse (drops to `push {r4, r5, lr}`).
  * Best pure-C byte_diff: 542. Corpus: 2037 `mov pc, rN` hits across the

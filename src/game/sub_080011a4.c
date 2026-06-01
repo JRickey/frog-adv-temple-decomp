@@ -20,12 +20,12 @@
  * use.
  *
  * Matching notes (agbcc 2.x):
- *   - `register u32 mask asm("r0")` pins the mask-test result to r0 so
+ *   - The mask local is pinned to r0 so
  *     the two `mask = K; mask &= field` blocks emit
  *     `movs r0, #K; ldrh rN, [base, #o]; ands r0, rN` (the mask-first /
  *     base-overwrite shape — see docs/codegen-notes.md "Mask-before-
  *     field-load on a single-use struct base").
- *   - `register u16 field asm("r4")` on the second test (block 3) forces
+ *   - The field local is pinned to r4 on the second test (block 3), forcing
  *     the field load into r4 (the just-freed second-pool base register)
  *     instead of r1 (which agbcc would otherwise pick).
  *   - The OR-and-write in block 2 is split into three statements

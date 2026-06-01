@@ -13,9 +13,9 @@
  * Called from sub_08003254 with an (ignored) argument.
  *
  * Matching notes (old_agbcc):
- *   - `register u32 mask asm("r0")` + `mask = K; mask &= field; if (mask)`
+ *   - Keeping `mask` in r0 plus `mask = K; mask &= field; if (mask)`
  *     emits the `movs #K; ldrh; ands; cmp; bne` test idiom in r0.
- *   - The base is pinned in r1 (`register struct Entity *p asm("r1")`) so the
+ *   - The base is pinned in r1 so the
  *     `_field_34` test loads through r1; aliasing it into a plain `e` between
  *     the `&=` and the early return schedules the `adds r2, r1, #0` copy right
  *     after `ands` (matching the baserom), and runs the body off r2 (r1 is

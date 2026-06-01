@@ -79,7 +79,7 @@ void sub_08000430(void)
  * copy splits the bit-test sequence onto a separate value, defeating
  * agbcc 2.x's preemptive spill of jpKeys to r4 (which otherwise
  * cascades into a +2 byte branch-offset drift across the whole
- * function). The `register GameStuff *gs asm("r0")` pin pairs with it
+ * function). The r0-pinned `gs` local pairs with it
  * to anchor the gGameStuff load in the right register at the post-
  * remap mode check. */
 u32 sub_080004C4(void)

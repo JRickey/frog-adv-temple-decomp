@@ -13,7 +13,7 @@
  *     baserom's counter-init-first ordering.
  *   - base6110 as a local u8 * anchors 0x03006110 in a callee-saved register
  *     across the BL to sub_0800679C, so the post-call store reuses that base.
- *   - The shift amount is pinned to r1 (`register s32 sh asm("r1")`); without
+ *   - The shift amount is pinned to r1; without
  *     the pin agbcc colours the sign-extended counter into r2 and emits
  *     `asrs r2 / lsls r0, r2` instead of baserom's `asrs r1 / lsls r0, r1`. */
 

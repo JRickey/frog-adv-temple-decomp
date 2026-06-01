@@ -66,7 +66,7 @@
  *   1. Direct switch (case 0..8 sequential) — agbcc emits a jump table
  *      but interleaves the pool literals at different offsets than the
  *      baserom; case-block ordering also drifts.
- *   2. Cache &gIwram_5398 / &gGameStuff in `register T *p asm("rN")`
+ *   2. Cache &gIwram_5398 / &gGameStuff in fixed-register locals
  *      locals — agbcc respects the r4/r5 pins but baserom does NOT
  *      cache (re-emits ldr per case head); pinning forces caching
  *      where there shouldn't be any.

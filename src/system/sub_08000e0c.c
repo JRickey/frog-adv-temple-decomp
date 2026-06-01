@@ -32,7 +32,7 @@
  * Source variants attempted before NAKED (all hit byte_diff >= 12):
  *   1. Pure C with arg1 as plain parameter — agbcc keeps arg1 in r1 then
  *      spills to a low callee-saved register across the BL, NEVER to r8.
- *   2. `register u32 arg1_hi asm("r8") = arg1` — ignored by agbcc for
+ *   2. Pinning `arg1_hi` to r8 — ignored by agbcc for
  *      high regs (corpus-validated).
  *   3. Re-order the early-out check before sub_0800B918 — wrong semantics
  *      (baserom always calls sub_0800B918 first).

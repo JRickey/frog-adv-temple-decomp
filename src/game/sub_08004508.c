@@ -13,9 +13,9 @@ extern void sub_0800B7B0(u32 a, u32 b, u8 c);
  * both pairs with the resolved tile and pokes sub_0800A9D4.
  *
  * Matching notes (agbcc 2.x):
- *   - `register u32 mask asm("r0")` pins both mask-AND tests to r0 so the
+ *   - The mask local is pinned to r0 for both mask-AND tests so the
  *     `movs #K; ldrh; ands` shape emits with K in r0.
- *   - `register struct IwramAt35E0 *p35E0 asm("r4")` keeps the 0x030035e0
+ *   - The r4-pinned `p35E0` local keeps the 0x030035e0
  *     base in r4 across the sub_0800CD88 call so the post-call
  *     `ldrh r4, [r4, #16]` reuses the same base register instead of
  *     reloading the pool literal. */

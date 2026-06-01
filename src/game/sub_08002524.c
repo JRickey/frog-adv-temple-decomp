@@ -22,7 +22,7 @@
  * below reproduces the jump table and all nine case bodies in order),
  * but it cannot reproduce the single cross-call register pin this
  * function carries: r5 holds &state (the sp+1 stack byte) live across the
- * whole loop and every inner call. A `register u8 *p asm("r5")` pin does
+ * whole loop and every inner call. An r5-pinned local does
  * not reach — a stack address cannot be a register variable, so agbcc
  * spills it and recomputes sp+offset, which (a) flips the prologue r0/r1
  * roles (baserom computes &state into r0 → r5 and the zero const into r1;

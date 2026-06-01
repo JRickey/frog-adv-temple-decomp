@@ -53,9 +53,9 @@
  *      (arg1 used after sub_0800CD88 call) and r8 (gIwram_3720
  *      reused after sub_0800CD88 call); no C input reaches a `mov sl, _`
  *      or `mov r8, _`.
- *   2. `register u32 arg1_hi asm("sl") = arg1` pin on entry —
+ *   2. Entry pin of `arg1_hi` to sl —
  *      ignored by agbcc for high regs (corpus-validated; only r4-r7
- *      respected, per codegen-notes "register T x asm(rN)").
+ *      respected, per the fixed-register local note in codegen-notes).
  *   3. Local-pointer-shadow `IwramAt3720 *gp = &gIwram_3720;` —
  *      anchors the address load early but agbcc keeps it in r4/r5,
  *      not r8.
@@ -64,7 +64,7 @@
  *      control flow with an extra `bl`, breaking the baserom's
  *      inline tail.
  *   5. Caching (u8)tile in a low-register local pinned to r5
- *      (`register u8 tile asm("r5")`) — works for the pin, but
+ *      (the r5-pinned `tile` local) — works for the pin, but
  *      surrounding registers re-allocate around r5 in ways that
  *      shift sub_0800B8A8's arg-marshalling and reposition the
  *      inline pool literals at 0xbf8/0xbfc.

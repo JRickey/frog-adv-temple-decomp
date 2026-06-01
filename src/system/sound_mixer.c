@@ -746,11 +746,11 @@ typedef struct SoundMixerSys {
  * Either way, updates chFlags[channelIdx]: clears bits 0, 5, 7 and sets bit 9.
  *
  * Matching notes:
- *   - val pinned to r4 (push {r4, lr}) via register asm("r4").
+ *   - val pinned to r4 (push {r4, lr}) via a fixed-register local.
  *   - The local index shape keeps byteOff/off2 in r3/r2 for the table
  *     lookup and common-tail add without explicit register pins.
  *   - Commuted add form (off + tbl) forces "adds r0, r3/r2, r0" encoding.
- *   - asm("" : : "r"(val)) after each store keeps val (r4) live so the
+ *   - The empty asm after each store keeps val (r4) live so the
  *     compiler uses r1 for the shifted intermediate instead of r4.
  *   - Common tail: ss+0x10 is computed in r2 via "ss = (u8*)ss + 0x10",
  *     giving adds r2, #16 then adds r2, r2, r3.

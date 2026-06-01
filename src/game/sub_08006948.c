@@ -55,7 +55,7 @@ u8 sub_08006958(u8 *rec, u8 mask)
  *     each branch) and indexed via `(char *)bank + 20/28`, keeping the
  *     offset in the load (`ldr [r2, #20]`) instead of folding it into the
  *     pool literal — which is what makes agbcc emit two independent blocks;
- *   - `register ... asm("r2")` pins the base into r2 (the slot `bits`
+ *   - The explicit r2 pin keeps the base in the slot `bits`
  *     vacates) so the shift result colours into r3:r4, matching baserom. */
 void sub_0800696C(void *unused, s32 bits)
 {

@@ -14,7 +14,7 @@
  *
  * Built with old_agbcc (see Makefile): the newer agbcc schedules the case-3
  * `ldrh` flag reads ahead of the shared `8`-constant materialisation, while
- * the baserom (and old_agbcc) defer them. The case-3 `register … asm("r1")`
+ * the baserom (and old_agbcc) defer them. The case-3 r1-pinned
  * base pins keep each flag halfword read off r1, and the case-6 `register s32
  * c0 asm("r0")` pin holds the first `(s8)counter` probe in r0 (ldrsb r0,[r4,r0])
  * separately from the r4-held second read that also feeds gIwram_3480[6].

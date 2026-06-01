@@ -26,11 +26,11 @@ extern void sub_08020C78(u32 a);
  *     with explicit empty cases 1..16 (so agbcc keeps the dense
  *     `subs #1; cmp #15; bhi default` dispatch instead of folding the four
  *     active cases into an if-chain).
- *   - asm volatile("" : "+r"(tileTable)) blocks agbcc from CSE-folding
+ *   - The empty `tileTable` barrier blocks agbcc from CSE-folding
  *     `&tileTable[idx-1]` into `(tileTable - 4) + idx*4`. Without the
  *     barrier the pool literal stores 0x08308FA8 (= 0x08308FAC - 4) and
  *     the `subs r0, #1` step disappears.
- *   - The trailing `register GameStuff *g asm("r0")` + `flag` block forces
+ *   - The trailing r0-pinned `g` plus `flag` block forces
  *     the post-BL recovery sequence to materialize the base in r0 BEFORE
  *     the constant `1`, matching baserom's `ldr r0, [pool]; movs r1, #1;
  *     ldrb r2, [r0, #24]; orrs r1, r2; strb r1, [r0, #24]` shape. Without
