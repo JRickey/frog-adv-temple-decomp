@@ -334,8 +334,8 @@ typedef struct SoundSystemAcc {
 
 s32 sub_0803030C(s32 channel, u32 *state_ptr)
 {
-    register s32 ch asm("r5");
-    register u32 *sp asm("r6");
+    s32 ch;
+    u32 *sp;
     register SoundSystemAcc **gpss asm("r2");
 
     ch = channel;
@@ -347,7 +347,7 @@ s32 sub_0803030C(s32 channel, u32 *state_ptr)
         ss = *gpss;
         ss->chanAcc[ch] = 0;
     } else {
-        register SoundSystemAcc **gp4 asm("r4");
+        SoundSystemAcc **gp4;
         register s32 adj asm("r2");
         register SoundSlotAcc **swSlotsPtr asm("r1");
         SoundSystemAcc *ss;
@@ -368,7 +368,7 @@ s32 sub_0803030C(s32 channel, u32 *state_ptr)
     *sp = 0;
 
     if (ch > 3) {
-        register SoundSlotAcc *swSlots asm("r1");
+        SoundSlotAcc *swSlots;
         SoundSystemAcc *ss;
         register SoundSlotAcc *slot asm("r2");
         register s32 chShifted asm("r0");
@@ -379,8 +379,7 @@ s32 sub_0803030C(s32 channel, u32 *state_ptr)
         slot = (SoundSlotAcc *)(chShifted + 0xffffff00);
         slot->flags |= 0x8000;
     } else {
-        register u32 *chFlagsPtr asm("r1");
-        register u32 mask asm("r2");
+        u32 *chFlagsPtr;
         u32 flags;
         register u32 chOff asm("r0");
         chFlagsPtr = (u32 *)*gpss;
@@ -388,8 +387,7 @@ s32 sub_0803030C(s32 channel, u32 *state_ptr)
         chFlagsPtr = (u32 *)((u8 *)chFlagsPtr + 0x10);
         chFlagsPtr = (u32 *)((u8 *)chFlagsPtr + chOff);
         flags = *chFlagsPtr;
-        mask = 0x8000;
-        flags |= mask;
+        flags |= 0x8000;
         *chFlagsPtr = flags;
     }
     return 0;

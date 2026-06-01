@@ -747,12 +747,8 @@ typedef struct SoundMixerSys {
  *
  * Matching notes:
  *   - val pinned to r4 (push {r4, lr}) via register asm("r4").
- *   - byteOff pinned to r3 for the common-tail add (adds r2, r2, r3).
- *   - NOT-set path uses register vu16* rg asm("r2") so the reg ptr goes
- *     in r2, matching the baserom's ldr r2, [r0] / ldrh r1, [r2] / strh r0, [r2].
- *   - SET path uses register u32 off2 asm("r2") for the index so the
- *     baserom's lsls r2, r1, #2 / adds r0, r2, r0 / ldr r1, [r0] sequence
- *     is reproduced. The adds r3, r2, #0 at the end copies the index to r3.
+ *   - The local index shape keeps byteOff/off2 in r3/r2 for the table
+ *     lookup and common-tail add without explicit register pins.
  *   - Commuted add form (off + tbl) forces "adds r0, r3/r2, r0" encoding.
  *   - asm("" : : "r"(val)) after each store keeps val (r4) live so the
  *     compiler uses r1 for the shifted intermediate instead of r4.
@@ -762,7 +758,7 @@ typedef struct SoundMixerSys {
 void sub_0802F890(u8 value, u32 channelIdx)
 {
     register u8 val asm("r4");
-    register u32 byteOff asm("r3");
+    u32 byteOff;
     SoundMixerSys *ss;
     u32 flags;
     u32 *pF;
@@ -773,8 +769,8 @@ void sub_0802F890(u8 value, u32 channelIdx)
         goto set_path;
 
     {
-        register vu16 *const *tbl asm("r0") = sChannelRegTable;
-        register vu16 *rg asm("r2");
+        vu16 *const *tbl = sChannelRegTable;
+        vu16 *rg;
 
         byteOff = channelIdx << 2;
         rg = *(vu16 **)(byteOff + (u32)tbl);
@@ -784,13 +780,13 @@ void sub_0802F890(u8 value, u32 channelIdx)
     goto common_tail;
 
 set_path: {
-    register vu16 *const *tbl asm("r0") = sChannelRegTable;
-    register u32 off2 asm("r2") = channelIdx << 2;
+    vu16 *const *tbl = sChannelRegTable;
+    u32 off2 = channelIdx << 2;
 
     reg = *(vu16 **)(off2 + (u32)tbl);
     *reg = val << 8;
     asm("" : : "r"(val));
-    asm("" : "=r"(byteOff) : "0"(off2));
+    byteOff = off2;
 }
 
 common_tail:

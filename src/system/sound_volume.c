@@ -44,8 +44,8 @@ void sub_0802E684(s32 vol, s32 chIn)
 {
     register s32 newCode asm("r4");
     register s32 ch asm("r3");
-    register s32 oldCode asm("r1");
-    register vu16 *reg asm("r2");
+    s32 oldCode;
+    vu16 *reg;
     register u16 regVal asm("r1");
 
     asm("" : "=r"(newCode) : "0"(vol)); /* mov r4, vol — fight agbcc's lsrs-fold */
@@ -63,14 +63,13 @@ void sub_0802E684(s32 vol, s32 chIn)
             return;
 
         {
-            u32 tbl;
-            asm("" : "=r"(tbl) : "0"((u32)(const u8 *)sChannelRegTable));
+            u32 tbl = (u32)(const u8 *)sChannelRegTable;
             ch <<= 2;
             reg = *(vu16 *const *)(ch + tbl);
         }
         regVal = *reg;
         {
-            register u32 masked asm("r0") = regVal & 0x0fff;
+            u32 masked = regVal & 0x0fff;
             register u32 shifted asm("r1");
             asm("" : "=r"(shifted) : "0"(newCode << 12));
             *reg = masked | shifted;
@@ -83,10 +82,10 @@ void sub_0802E684(s32 vol, s32 chIn)
         SoundSystem *ss = gpSoundSystem;
         u8 *cache = (u8 *)ss + 0xa2;
         register const u8 *base asm("r0");
-        register const u8 *pOld asm("r1");
+        const u8 *pOld;
         register const u8 *pNew asm("r3");
-        register u32 oldMapped asm("r1");
-        register u32 newMapped asm("r0");
+        u32 oldMapped;
+        u32 newMapped;
 
         oldCode = *cache;
         *cache = newCode;
@@ -105,9 +104,9 @@ void sub_0802E684(s32 vol, s32 chIn)
         }
         regVal = *reg;
         {
-            register u32 masked asm("r0") = regVal & 0x00ff;
-            register u32 mappedNew asm("r3") = *pNew;
-            register u32 shifted asm("r1") = mappedNew << 8;
+            u32 masked = regVal & 0x00ff;
+            u32 mappedNew = *pNew;
+            u32 shifted = mappedNew << 8;
             *reg = masked | shifted;
         }
 

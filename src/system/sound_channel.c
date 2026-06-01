@@ -106,7 +106,7 @@ typedef struct SoundSystem {
 #ifdef NON_MATCHING
 void sub_0802EC7C(void)
 {
-    register SoundSystem **gpsp asm("r8");
+    SoundSystem **gpsp;
     SoundSystem *ss;
     s32 i;
     s32 offset;
@@ -320,7 +320,7 @@ void sub_0802ED5C(void)
             if (slot != NULL && (slot->flags & 0x400)) {
                 SlotEnvelope *env = &slot->envelope;
                 register s32 acc asm("r1");
-                register u16 stepU asm("r4");
+                u16 stepU;
                 register s32 limit asm("r0");
                 SoundMixEntry *entry;
 
@@ -336,10 +336,7 @@ void sub_0802ED5C(void)
                         goto apply;
                 }
                 acc = (limit << 9) - acc;
-                {
-                    register u16 negStep asm("r0") = -stepU;
-                    env->step = negStep;
-                }
+                env->step = -stepU;
             apply:
                 env->acc = acc;
                 entry = (SoundMixEntry *)((u8 *)(*gpsp)->mixTable + byteOffset);
@@ -379,7 +376,7 @@ void sub_0802ED5C(void)
 #ifdef NON_MATCHING
 void sub_0802EDF0(void)
 {
-    register SoundSystem **gpsp asm("sl");
+    SoundSystem **gpsp;
     SoundSystem *ss;
     SoundSlot *slot;
     SoundStream *stream;
@@ -387,8 +384,8 @@ void sub_0802EDF0(void)
     u16 remaining;
     u32 head;
     u32 cursor;
-    register s32 i asm("r9");
-    register s32 overflow asm("r8");
+    s32 i;
+    s32 overflow;
     void *sub;
     u32 sub16;
 
