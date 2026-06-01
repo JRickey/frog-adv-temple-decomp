@@ -2,7 +2,7 @@
 #include "types.h"
 
 extern int sub_080178FC(u16 *buf, u16 start, u8 count);
-extern int sub_0801789C(u16 *buf, u16 start, u8 count);
+extern int sub_0801789C(u16 *buf, u32 start, u8 count);
 
 int sub_080177A0(u16 *dest)
 {
@@ -48,6 +48,32 @@ int sub_08017814(u16 *dest, u8 idx)
             dest[i] = buf[i];
             i++;
         } while (i <= 7);
+        return 1;
+    }
+    return 0;
+}
+
+int sub_08017858(u16 *src, u32 idx)
+{
+    register volatile u16 *srcp asm("r3");
+    register u32 ridx asm("r1");
+    u32 start;
+    u16 buf[8];
+    u8 i;
+
+    srcp = src;
+    asm("" : "+r"(srcp));
+    ridx = idx;
+    ridx <<= 24;
+    ridx >>= 24;
+    start = ridx * 3 + 1;
+    i = 0;
+    do {
+        buf[i] = srcp[i];
+        i++;
+    } while (i <= 7);
+
+    if (sub_0801789C(buf, start, 2)) {
         return 1;
     }
     return 0;
