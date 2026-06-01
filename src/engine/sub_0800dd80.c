@@ -23,16 +23,14 @@ extern void sub_0801756C(u8 a, void *b);
 
 void sub_0800DD80(void)
 {
-    register GameStuff *g asm("r2") = &gGameStuff;
-    register u16 *p asm("r0");
-    register s32 i asm("r1");
-    register u16 *base asm("r5");
-    register u16 zero_h asm("r3");
-    register u16 sentinel asm("r4");
+    GameStuff *g = &gGameStuff;
+    u16 *p;
+    s32 i;
+    u16 *base;
+    u16 zero_h;
+    u16 sentinel;
     u8 *p_3003500;
     u32 zero;
-
-    asm volatile("" : "+r"(g));
 
     if (g->pendingMode != 0) {
         g->_unk0C |= 1 << (g->pendingMode - 1);
@@ -46,8 +44,8 @@ void sub_0800DD80(void)
     zero_h = 0;
     sentinel = 0xf0;
     do {
-        register s32 next asm("r2");
-        register s32 inner asm("r1");
+        s32 next;
+        s32 inner;
         p = (u16 *)(i * 8);
         p = (u16 *)((u32)p + (u32)base);
         *p = sentinel;
@@ -70,8 +68,7 @@ void sub_0800DD80(void)
     sub_0801756C(*p_3003500, (void *)0x03003600);
 
     {
-        register GameStuff *g2 asm("r1") = &gGameStuff;
-        asm volatile("" : "+r"(g2));
+        GameStuff *g2 = &gGameStuff;
         if (g2->pendingMode == 15) {
             g2->mode = 23;
         } else {
@@ -105,8 +102,7 @@ void sub_0800DE0C(void)
         sub_0800A520();
         if (sub_080115F8() != 0) {
             if (gs->_unk00 - (u32)(s16)gs->_unk22 > 0xdb) {
-                register u32 one asm("r0") = 1;
-                done |= one;
+                done |= 1;
             }
         }
         sub_08009A58();
