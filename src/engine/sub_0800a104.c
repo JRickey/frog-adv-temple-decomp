@@ -4,6 +4,25 @@
 
 typedef void (*GameProc)(void);
 
+struct PackedRect0800A158 {
+    s16 x;
+    s16 y;
+    s16 height;
+    s16 width;
+};
+
+struct EntityBounds0800A158 {
+    u8 _pad00[2];
+    u16 x;
+    u16 y;
+    u8 _pad06[0x1E];
+    u16 xOffset;
+    u16 yOffset;
+    u8 height;
+    u8 width;
+};
+
+extern u8 sub_0800CED0(void *ctx, struct PackedRect0800A158 rect, s16 c, s16 d);
 extern u16 sub_08010694(u16 arg);
 extern int sub_080106B8(void);
 extern u16 sub_080106EC(u16 arg);
@@ -41,4 +60,16 @@ int sub_0800A104(s8 *phase, GameProc callback)
         }
     }
     return p;
+}
+
+u8 sub_0800A158(void *ctx, struct EntityBounds0800A158 *entity)
+{
+    struct PackedRect0800A158 rect;
+
+    rect.x = entity->y + entity->yOffset - entity->width;
+    rect.y = entity->x + entity->xOffset - (entity->height >> 1);
+    rect.height = entity->height;
+    rect.width = entity->width;
+
+    return sub_0800CED0(ctx, rect, 0, 0);
 }
