@@ -114,6 +114,12 @@ SECTIONS {
      * idiom as gHandlerTable_08308058 above. */
     gDispatchTable_08308AC8 = 0x08308AC8;
 
+    /* ROM source pointer tables used by sub_0801D33C. Linker-assigned so
+     * agbcc keeps the table-A base as an opaque relocation in r2, matching
+     * the baserom's DMA3 setup sequence. */
+    gFrogTileSrcA_083087C8 = 0x083087C8;
+    gFrogPaletteSrcB_083087E8 = 0x083087E8;
+
     /* ROM dispatch table at 0x08308ad4 (also inside the sprite_dma_records
      * blob; not yet broken out). Linker-assigned for the same reason as
      * gHandlerTable_08308058 — keeps its pool load ahead of the gIwram_3480
@@ -531,7 +537,6 @@ SECTIONS {
         asm/disasm_0x0801d150.o(.text);  /* 0x0801d150 - 0x0801d268, sub_0801D150 (auto-peeled) */
         src/engine/sub_0801d268.o(.text);  /* 0x0801d268 - 0x0801d33c, sub_0801D268 */
         src/engine/sub_0801d33c.o(.text);
-        asm/disasm_0x0801d33c.o(.text);  /* 0x0801d33c - 0x0801d438, sub_0801D33C (auto-peeled) */
         asm/disasm_0x0801d438.o(.text);  /* 0x0801d438 - 0x0801d4cc, sub_0801D438 (auto-peeled) */
         src/engine/sub_0801d4cc.o(.text);  /* 0x0801d4cc - 0x0801d570, sub_0801D4CC */
         src/engine/sub_0801d570.o(.text);
