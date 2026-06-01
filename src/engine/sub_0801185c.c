@@ -58,6 +58,36 @@ extern void sub_0800EBDC(u8 arg);
 extern void sub_08016A40(void);
 extern void text_080116b8(u32 arg);
 extern void sub_08017000(void);
+extern void sub_080135B8(s32 a, s32 b, s32 c, s32 d);
+
+struct IwramAt60A0_sub1190C {
+    u8 _pad00[12];
+    s32 field_c;
+    s32 field_10;
+    u8 _pad14[24];
+    s32 field_2c;
+    s32 field_30;
+};
+
+struct IwramAt6480_sub1190C {
+    u8 _pad00[46];
+    s16 field_2e;
+    u8 _pad30[6];
+    s16 field_36;
+};
+
+struct IwramAt6540_sub1190C {
+    u8 _pad00[9];
+    u8 field_9;
+    u8 _pad0a[34];
+    s16 field_2c;
+    u8 _pad2e[6];
+    s16 field_34;
+};
+
+extern struct IwramAt60A0_sub1190C gIwram_60A0;
+extern struct IwramAt6480_sub1190C gIwram_6480;
+extern struct IwramAt6540_sub1190C gIwram_6540;
 
 void sub_080118D8(void)
 {
@@ -73,4 +103,28 @@ void sub_080118FC(void)
 {
     text_080116b8(4);
     sub_08017000();
+}
+
+u32 sub_0801190C(void)
+{
+    register u32 result asm("r8");
+    s32 x;
+    s32 y;
+
+    result = 0;
+    sub_080135B8(-24, 2, -72, 2);
+    x = gIwram_60A0.field_c + gIwram_6540.field_2c;
+    gIwram_60A0.field_c = x;
+    y = gIwram_60A0.field_10 + gIwram_6480.field_2e;
+    gIwram_60A0.field_10 = y;
+    gIwram_60A0.field_2c = x;
+    gIwram_60A0.field_30 = y;
+
+    if (gIwram_6480.field_36 == -72)
+        gIwram_6540.field_9 = 3;
+
+    if (gIwram_6540.field_34 == -24)
+        result = 1;
+
+    return result;
 }
