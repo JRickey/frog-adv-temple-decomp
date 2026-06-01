@@ -27,12 +27,12 @@ void sub_0800B7B0(CollisionSlot *slotsArg, unsigned long long *outArg, s8 type)
     volatile s32 typeStack;
     register const EntityHitbox *table asm("r8");
     register const u8 *points asm("r9");
-    register const EntityHitbox *tbl2 asm("sl");
-    register u32 typeByte asm("r6");
-    register s32 i asm("r1");
+    const EntityHitbox *tbl2;
+    u32 typeByte;
+    s32 i;
     s32 typeShift;
     register s32 typeIndex asm("r4");
-    register s32 iShift asm("r5");
+    s32 iShift;
     register s32 slotShift asm("r2");
     u32 pendingMode;
     u32 cleared;
@@ -52,7 +52,7 @@ void sub_0800B7B0(CollisionSlot *slotsArg, unsigned long long *outArg, s8 type)
     tbl2 = table;
     typeStack = typeIndex;
     {
-        register u32 pointsAddr asm("r2");
+        u32 pointsAddr;
 
         pointsAddr = 4;
         pointsAddr += (u32)table;
@@ -62,7 +62,7 @@ void sub_0800B7B0(CollisionSlot *slotsArg, unsigned long long *outArg, s8 type)
         CollisionSlot *slot;
         GameStuff *game;
         register u32 slotsBase asm("r7");
-        register s32 slotOffset asm("r1");
+        s32 slotOffset;
 
         slotShift = i << 24;
         slotOffset = slotShift >> 21;
@@ -78,10 +78,10 @@ void sub_0800B7B0(CollisionSlot *slotsArg, unsigned long long *outArg, s8 type)
         iShift = slotShift;
         pendingMode = game->pendingMode;
         if (pendingMode == 1) {
-            register s32 branchType asm("r1");
-            register u32 offset asm("r4");
+            s32 branchType;
+            u32 offset;
             const s16 *pt;
-            register u32 pointAddr asm("r1");
+            u32 pointAddr;
             register u32 pointsReg asm("r2");
             u32 pointBase;
             u32 xTileReg;
@@ -99,11 +99,11 @@ void sub_0800B7B0(CollisionSlot *slotsArg, unsigned long long *outArg, s8 type)
             }
             sub_0800CB80(xTileReg, 1, pt[0], pt[1], *(u8 *)(offset + (u32)&tbl2->flags));
         } else {
-            register s32 stackType asm("r1");
-            register u32 offset asm("r4");
+            s32 stackType;
+            u32 offset;
             const s16 *pt;
-            register u32 pointAddr asm("r1");
-            register u32 pointsReg asm("r2");
+            u32 pointAddr;
+            u32 pointsReg;
             u32 pointBase;
             u32 xTileReg;
 
@@ -135,7 +135,7 @@ void sub_0800B7B0(CollisionSlot *slotsArg, unsigned long long *outArg, s8 type)
     } while (slotShift < pointCount);
 
 done: {
-    register u32 zero0 asm("r0");
+    u32 zero0;
     register u32 zero1 asm("r1");
     register u32 *out asm("r2");
 
