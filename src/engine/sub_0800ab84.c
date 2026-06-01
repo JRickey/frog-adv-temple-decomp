@@ -86,7 +86,7 @@ void sub_0800AC44(u8 tile)
     }
 
     p6110 = &gIwram_6110;
-    if (p6110->_field_26 == 7)
+    if (p6110->selector5Flags == 7)
         sub_08006600((u8 *)p6110, 8, 5);
 
     sub_08006600((u8 *)p6110, 8, 2);

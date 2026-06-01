@@ -37,11 +37,11 @@ void sub_080053A4(u8 *arg0, u8 *arg1, u32 *arg2, u8 *arg3, u32 *arg4)
 
     {
         u8 *base = (u8 *)&gIwram_6110;
-        gIwram_6110._field_10 = 0;
+        gIwram_6110.scenePhase = 0;
         base[0x2a] = 0;
         base[0x2b] = 0;
 
-        if (gIwram_6110._field_33 != 1)
+        if (gIwram_6110.spawnMask != 1)
             return;
     }
 

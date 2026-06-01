@@ -117,23 +117,32 @@ struct IwramAt6150 {
 };
 
 struct IwramAt6110 {
-    u8 _pad00[2];
-    u8 _field_2;     /* +0x02: threshold compared (signed) against gIwram_35E0[4] in sub_08009884 */
-    u8 _pad03[0xd];  /* +0x03..+0x0f */
-    u32 _field_10;   /* +0x10: scene-phase selector (read by sub_08003254 / sub_0800336C) */
-    s64 _field_14;   /* +0x14: initialized to -1 by sub_0800A26C */
-    s64 _field_1c;   /* +0x1c: initialized to -1 by sub_0800A26C */
-    u8 _pad24[2];    /* +0x24..+0x25 */
-    u16 _field_26;   /* +0x26: flag halfword (zeroed when _field_5 <= 1) */
-    u8 _pad28[3];    /* +0x28..+0x2a */
-    u8 _field_2b;    /* +0x2b: gate byte; sub_0802ABDC sets entity flags when > 1 */
-    u8 _pad2c[2];    /* +0x2c..+0x2d */
-    u16 _field_2e;   /* +0x2e: flag halfword (bits 0x04, 0x02 set by sub_08009884) */
-    u8 _pad30[2];    /* +0x30..+0x31 */
-    u8 _field_32;    /* +0x32: state-byte gating the sEntityParamTable lookup in sub_0800A1C8 */
-    u8 _field_33;    /* +0x33: spawn-record index seed; (s8)(_field_33 + 1) is handed to sub_08007874 */
-    void *_field_34; /* +0x34: base of the per-state spawn-record pointer table read by sub_08007874 */
+    u16 flags0;
+    u8 threshold; /* +0x02: compared (signed) against gIwram_35E0[4] in sub_08009884 */
+    u8 _pad03;
+    s64 flags64;
+    u16 flags2;
+    u8 _pad0e[2];
+    u32 scenePhase; /* +0x10: read by sub_08003254 / sub_0800336C */
+    s64 flagBank0;  /* +0x14: initialized to -1 by sub_0800A26C */
+    s64 flagBank1;  /* +0x1c: initialized to -1 by sub_0800A26C */
+    u16 activeFlags;
+    u16 selector5Flags; /* +0x26: zeroed when _field_5 <= 1 */
+    u16 selector6Flags;
+    u8 byteFlags8;
+    u8 gateByte; /* +0x2b: sub_0802ABDC sets entity flags when > 1 */
+    u8 byteFlags7;
+    u8 _pad2d;
+    u16 inputFlags; /* +0x2e: bits 0x04, 0x02 set by sub_08009884 */
+    u8 limit;
+    u8 liveCount;
+    u8 state;          /* +0x32: gates the sEntityParamTable lookup in sub_0800A1C8 */
+    u8 spawnMask;      /* +0x33: (s8)(spawnMask + 1) is handed to sub_08007874 */
+    void *configTable; /* +0x34: per-state spawn-record pointer table */
 };
+
+void ModeControl_Init(struct IwramAt6110 *control, u32 limit, u32 modeId, const void *configTable, u8 state,
+                      u8 threshold);
 
 extern struct IwramAt3480 gIwram_3480;
 extern struct IwramAt34A0 gIwram_34A0;

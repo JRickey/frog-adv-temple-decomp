@@ -119,7 +119,7 @@ loop:
             sub_0800EF90();
             goto tail;
         }
-        if (gIwram_6110._field_2e & 8) {
+        if (gIwram_6110.inputFlags & 8) {
             state = 8;
             goto tail;
         }

@@ -74,7 +74,7 @@ void sub_0800336C(void)
             gGameStuff._unk14 = 0;
             break;
         case 3:
-            if (gIwram_6110._field_10 == 0)
+            if (gIwram_6110.scenePhase == 0)
                 gIwram_5398 = sub_080004C4();
             else
                 gIwram_5398 = sub_08000678();
@@ -92,7 +92,7 @@ void sub_0800336C(void)
             }
             {
                 struct IwramAt6110 *p6110 = &gIwram_6110;
-                if ((p6110->_field_2e & 8) != 0) {
+                if ((p6110->inputFlags & 8) != 0) {
                     state = 8;
                     break;
                 }
@@ -102,7 +102,7 @@ void sub_0800336C(void)
         case 4:
             if (sub_08009C14(&state) == 0)
                 state = 7;
-            gIwram_6110._field_10 = 0;
+            gIwram_6110.scenePhase = 0;
             hw = 0x87;
             counter = 0;
             break;
@@ -158,7 +158,6 @@ void sub_08003584(void *buf)
     sub_08006BB4(6, buf);
 }
 
-extern void sub_0800658C(void *p, u32 a, u32 b, const void *table, u32 e, u32 f);
 extern void sub_0800CE98(u32 a, u32 b);
 extern void sub_08009CBC(void);
 
@@ -167,7 +166,7 @@ extern void sub_08009CBC(void);
  * the post-setup state (sub_0800CE98(0xb, 0); sub_08009CBC()). */
 void sub_0800359C(void)
 {
-    sub_0800658C((void *)0x03006110, 0x80, 0xb, (const void *)0x082f9aec, 1, 3);
+    ModeControl_Init(&gIwram_6110, 0x80, 0xb, (const void *)0x082f9aec, 1, 3);
     sub_0800CE98(0xb, 0);
     sub_08009CBC();
 }
@@ -176,7 +175,7 @@ void sub_080035D0(u8 *state, u16 *hw)
 {
     if (sub_08009C14(state) == 0)
         *state = 7;
-    gIwram_6110._field_10 = 0;
+    gIwram_6110.scenePhase = 0;
     *hw = 0x87;
 }
 
@@ -197,7 +196,7 @@ void sub_08003604(void)
     if ((gIwram_3720._field_34 & 4) != 0)
         return;
 
-    if (gIwram_6110._field_10 != 2)
+    if (gIwram_6110.scenePhase != 2)
         return;
 
     p = &gIwram_35E0;

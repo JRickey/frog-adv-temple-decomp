@@ -3,7 +3,6 @@
 #include "macros.h"
 #include "types.h"
 
-extern void sub_0800658C(void *p, u32 a, u32 b, const void *table, u32 e, u32 f);
 extern void sub_0800CE98(u32 a, u32 b);
 extern void sub_08009CBC(void);
 
@@ -14,7 +13,7 @@ extern void sub_08009CBC(void);
  * and clears halfword 0x36 of the 0x03006500 IWRAM block. */
 void sub_08001D18(void)
 {
-    sub_0800658C((void *)0x03006110, 0x80, 6, (const void *)0x082f9a50, 1, 5);
+    ModeControl_Init(&gIwram_6110, 0x80, 6, (const void *)0x082f9a50, 1, 5);
     sub_0800CE98(6, 0);
     sub_08009CBC();
     {

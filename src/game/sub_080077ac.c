@@ -26,7 +26,7 @@ struct SpawnRec {
 void sub_080077AC(s8 a, s16 b, s8 c)
 {
     struct SpawnRec *rec =
-        (struct SpawnRec *)((const struct SpawnRec **)gIwram_6110._field_34)[gIwram_6110._field_32 - 1];
+        (struct SpawnRec *)((const struct SpawnRec **)gIwram_6110.configTable)[gIwram_6110.state - 1];
     s16 px = rec->_h0 * 24 + 11;
     s16 py = rec->_h2 * 24 + 11;
     u8 b5;

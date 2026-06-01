@@ -3,7 +3,6 @@
 #include "macros.h"
 #include "types.h"
 
-extern void sub_0800658C(void *p, u32 a, u32 b, const void *table, u32 e, u32 f);
 extern void sub_0800CE98(u32 a, u32 b);
 extern void sub_08009CBC(void);
 
@@ -14,7 +13,7 @@ extern void sub_08009CBC(void);
  * not clear the 0x03006500 halfword afterwards. */
 void sub_08001484(void)
 {
-    sub_0800658C((void *)0x03006110, 0x50, 4, (const void *)0x082f9be0, 1, 0);
+    ModeControl_Init(&gIwram_6110, 0x50, 4, (const void *)0x082f9be0, 1, 0);
     sub_0800CE98(4, 0);
     sub_08009CBC();
 }

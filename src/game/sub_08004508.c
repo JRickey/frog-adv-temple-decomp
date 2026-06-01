@@ -59,9 +59,9 @@ void sub_08004508(u32 arg0, u32 arg1, u32 arg2, u32 arg3)
 void sub_08004588(u8 *state, u32 arg1, u32 arg2, u32 arg3, u32 arg4)
 {
     if ((s8)gIwram_35E0._field_5 <= 1)
-        gIwram_6110._field_10 = 0;
+        gIwram_6110.scenePhase = 0;
     else
-        gIwram_6110._field_10 = 1;
+        gIwram_6110.scenePhase = 1;
 
     if (sub_08009C14(state) == 0)
         *state = 7;

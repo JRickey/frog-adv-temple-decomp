@@ -41,7 +41,7 @@ void sub_08002AE8(void)
 
     state = 0;
     sub_08013908();
-    sub_08007874((s8)(gIwram_6110._field_33 + 1));
+    sub_08007874((s8)(gIwram_6110.spawnMask + 1));
 
     while (sub_0800A104(&state, 0x0800A26D) == 0) {
         sub_080008DC();

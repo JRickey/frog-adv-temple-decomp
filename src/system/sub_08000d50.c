@@ -5,7 +5,6 @@
 
 extern void sub_0800DE80(void);
 
-extern void sub_0800658C(void *p, u32 a, u32 b, const void *table, u32 e, u32 f);
 extern void sub_0800CE98(u32 a, u32 b);
 extern void sub_08009CBC(void);
 extern void sub_0800CBE8(u8 col, u8 row, u32 a, u32 b, u32 c);
@@ -23,7 +22,7 @@ void sub_08000D5C(void)
 {
     struct IwramAt35E0 *p35E0;
 
-    sub_0800658C((void *)0x03006110, 0x64, 2, (const void *)0x082f99e8, 1, 5);
+    ModeControl_Init(&gIwram_6110, 0x64, 2, (const void *)0x082f99e8, 1, 5);
     sub_0800CE98(3, 0);
     sub_08009CBC();
 

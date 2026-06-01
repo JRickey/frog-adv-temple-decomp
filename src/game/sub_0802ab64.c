@@ -47,7 +47,7 @@ void sub_0802ABDC(void)
     sub_0802A8FC();
     sub_0802A9FC();
 
-    if (gIwram_6110._field_2b <= 1) {
+    if (gIwram_6110.gateByte <= 1) {
         sub_0802A4A4();
         sub_0802A394();
     } else {

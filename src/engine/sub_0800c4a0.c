@@ -3,7 +3,7 @@
 #include "macros.h"
 #include "types.h"
 
-/* Rebuilds the gIwram_6110._field_33 spawn-record selector mask: for each of
+/* Rebuilds the gIwram_6110.spawnMask spawn-record selector mask: for each of
  * the four selector-5 flag bits (sub_0800679C selector 5 reads the +0x26 flag
  * halfword), OR (1 << i) into _field_33 when the queried bit is set.
  *

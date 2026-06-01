@@ -164,7 +164,7 @@ void sub_08002184(void)
                 state = 5;
                 break;
             }
-            if (gIwram_6110._field_2e & 8) {
+            if (gIwram_6110.inputFlags & 8) {
                 state = 9;
                 break;
             }

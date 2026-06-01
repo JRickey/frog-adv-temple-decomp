@@ -58,7 +58,7 @@ void sub_08008F98(void)
     s16 headerX = gIwram_3720._field_4;
     s32 i;
 
-    for (i = 0; i < (s8)gIwram_6110._pad30[1]; i++) {
+    for (i = 0; i < (s8)gIwram_6110.liveCount; i++) {
         struct IndexEntry *slot = &gEntityIndex_03006160[i];
         u8 rawId = (u8)slot->id;
         s8 id = slot->id;

@@ -25,7 +25,7 @@
  *        gGameStuff._unk14 = 0; then sub_08007660(0, sp_obj); tail.
  *   3 -> gIwram_5398 = sub_080004C4(); if == 0x40 -> spByte = 5 +
  *        sub_0800E060; else if (gIwram_3720._field_34 & 8) -> spByte = 4 +
- *        sub_0800EF90; else if (gIwram_6110._field_2e & 8) -> spByte = 8;
+ *        sub_0800EF90; else if (gIwram_6110.inputFlags & 8) -> spByte = 8;
  *        else the fallthrough: sub_08007660, sub_0800A2D8, sub_080008DC,
  *        sub_0800A328, sub_080094F8, sub_08009984, sub_080018F8(sp+0x438,
  *        &r4_obj), gGameStuff._unk14++.

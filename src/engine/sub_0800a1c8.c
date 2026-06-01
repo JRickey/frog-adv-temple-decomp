@@ -22,7 +22,7 @@ void sub_0800A1C8(void)
 
     value = 0;
     sub_08020BAC();
-    if (gIwram_6110._field_32 == 1) {
+    if (gIwram_6110.state == 1) {
         const u32 *table = sEntityParamTable;
         /* Reuse the now-dead base pointer so agbcc overwrites r5 with the table index. */
         p = (GameStuff *)(u32)p->pendingMode;
@@ -86,8 +86,8 @@ void sub_0800A26C(void)
     u8 idx;
     u32 offset;
 
-    s->_field_14 = -1;
-    s->_field_1c = -1;
+    s->flagBank0 = -1;
+    s->flagBank1 = -1;
 
     sub_0800A520();
 

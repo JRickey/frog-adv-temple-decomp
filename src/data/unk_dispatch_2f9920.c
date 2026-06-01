@@ -5,13 +5,11 @@
  *
  * The 2-entry pointer pair at 0x082f998c is the anchor: it has 2
  * pool-load references from consumers at 0x08000cb6 and 0x0801a104,
- * both of which pass it as `r3` to a setup helper at 0x0800658c
- * which stores it as a field at offset 0x34 of a struct based at
- * `0x03006110` (an IWRAM gGameStuff region). The setup helper
- * pattern is roughly:
+ * both of which pass it as `r3` to ModeControl_Init, which stores it
+ * in gIwram_6110.configTable. The setup helper pattern is roughly:
  *
  *     0x08000cb0: r0 = 0x03006110; r3 = sUnkPtrPair_82F998C;
- *                 bl 0x658c(struct=r0, ..., listPtr=r3);
+ *                 bl ModeControl_Init(struct=r0, ..., listPtr=r3);
  *     0x0801a102: ditto (different invocation context, r3 same).
  *
  * The pair pointers index into the preceding 9-row data block at
@@ -40,10 +38,8 @@
  *
  * TODO: refine field types and rename once one of the consumers
  * (0x08000cb0 or 0x0801a104) lands in C. Both are still in
- * asm/text/text_0x080000c0.s / text_0x0801a0a4.s slices; the
- * setup helper at 0x0800658c is still in
- * asm/text/text_0x080065d8.s. The names here remain `Unk` until
- * the dispatcher purpose is clear -- candidates include sprite
+ * asm/text/text_0x080000c0.s / text_0x0801a0a4.s slices. The names here
+ * remain `Unk` until the dispatcher purpose is clear -- candidates include sprite
  * priority list, particle effect spawner list, or HUD element
  * activation list. No semantic dimension has been confirmed.
  *

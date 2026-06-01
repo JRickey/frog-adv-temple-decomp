@@ -26,7 +26,7 @@ void sub_08009884(u8 arg)
     t = arg;
     t = t - 30;
     if (cls == 3) {
-        if ((s8)gIwram_35E0._data[4] >= gIwram_6110._field_2) {
+        if ((s8)gIwram_35E0._data[4] >= gIwram_6110.threshold) {
             gIwram_35E0._field_10 |= 0x100;
         } else {
             u8 mod = gGameStuff.pendingMode % 3;
@@ -44,11 +44,11 @@ void sub_08009884(u8 arg)
 
     cls = sub_0800CE10(gIwram_35E0._field_18, gIwram_35E0._field_19, gIwram_35E0._field_8, gIwram_35E0._field_A);
     if (cls == 1) {
-        gIwram_6110._field_2e |= 4;
+        gIwram_6110.inputFlags |= 4;
     }
     if ((u8)sub_08009BA0() != 0) {
-        if ((gIwram_6110._field_2e & 2) == 0) {
-            gIwram_6110._field_2e |= 2;
+        if ((gIwram_6110.inputFlags & 2) == 0) {
+            gIwram_6110.inputFlags |= 2;
         }
     }
 

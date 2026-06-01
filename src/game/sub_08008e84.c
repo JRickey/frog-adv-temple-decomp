@@ -64,7 +64,7 @@ u8 sub_08008E84(u8 dir)
         break;
     }
 
-    for (i = 0; i < gIwram_6110._pad30[1]; i++) {
+    for (i = 0; i < gIwram_6110.liveCount; i++) {
         u8 id = gEntityIndex_03006160[i].id;
         struct Entity *e;
         u8 *ep;

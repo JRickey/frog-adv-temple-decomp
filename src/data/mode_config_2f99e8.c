@@ -15,12 +15,12 @@
  *     r2 = <immediate type>      ; mode-specific scalar
  *     [sp+0] = <flag1>           ; e.g. 1
  *     [sp+4] = <flag2>           ; e.g. 3, 5
- *     bl 0x0800658c              ; setup helper installs r3 into gGameStuff[0x34]
+ *     bl ModeControl_Init        ; installs r3 into gIwram_6110.configTable
  *
- * The 0x0800658c helper zero-inits ~50 bytes of gGameStuff state
- * (offsets 0x00..0x33) and then writes the table pointer to offset
- * 0x34. After install, sub_08000918’s per-case body (one of 14)
- * runs the mode using the installed table.
+ * ModeControl_Init zero-inits ~50 bytes of gIwram_6110 mode-control state
+ * (offsets 0x00..0x33) and then writes the table pointer to configTable.
+ * After install, sub_08000918’s per-case body runs the mode using the
+ * installed table.
  *
  * Anchor inventory (15 dispatcher anchors + 1 lookup table):
  *

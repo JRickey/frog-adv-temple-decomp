@@ -1,9 +1,9 @@
 #include "game.h"
+#include "iwram.h"
 #include "types.h"
 
 extern void sub_0800B7B0(u32 a, u32 b, u8 c);
 
-extern void sub_0800658C(void *p, u32 a, u32 b, const void *table, u32 e, u32 f);
 extern void sub_0800CE98(u32 a, u32 b);
 extern void sub_08009CBC(void);
 
@@ -21,7 +21,7 @@ void sub_08000C98(u32 a, u32 b)
  * before sub_08009CBC(). */
 void sub_08000CB0(void)
 {
-    sub_0800658C((void *)0x03006110, 0x64, 0, (const void *)0x082f998c, 1, 3);
+    ModeControl_Init(&gIwram_6110, 0x64, 0, (const void *)0x082f998c, 1, 3);
     sub_0800CE98(0, 0);
     sub_0800CE98(1, 1);
     sub_08009CBC();

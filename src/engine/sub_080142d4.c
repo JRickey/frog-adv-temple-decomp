@@ -48,7 +48,7 @@ extern void sub_080135B8(u16 a, u8 b, u16 c, u8 d);
 u8 sub_080142D4(void)
 {
     if (gIwram_6480.field_36 != 0xc0) {
-        if (gIwram_6110._field_10 & 1)
+        if (gIwram_6110.scenePhase & 1)
             sub_0800EE94(2);
     }
 

@@ -26,7 +26,7 @@
  * `if (match != 0) { sub_08020C78(8); return match; } return 0;` (NOT early-return — this
  * fixed the size, 96->80); (2) table-pointer init AFTER the gates so agbcc keeps
  * `movs match,#0` second and doesn't hoist the base load to entry (80->54); (3) the
- * second gate via the gIwram_6110._field_32 symbol+offset (not the bare 0x03006110+0x32
+ * second gate via the gIwram_6110.state symbol+offset (not the bare 0x03006110+0x32
  * address) so +0x32 isn't folded into the pool literal; (4) two-pointer aliasing (above).
  *
  * REMAINING WALL (~54 byte_diff, a single instruction-selection diff): baserom computes
@@ -51,7 +51,7 @@ u8 sub_08009BA0(void)
 
     if (gGameStuff.pendingMode != 1)
         goto end;
-    if (*(u8 *)(0x03006110 + 0x32) != 1) /* lever 3: prefer gIwram_6110._field_32 symbol */
+    if (*(u8 *)(0x03006110 + 0x32) != 1) /* lever 3: prefer gIwram_6110.state symbol */
         goto end;
 
     /* lever 2: init the alias pointers AFTER the gates (no `mov ip` hoist to entry) */
@@ -328,7 +328,7 @@ void sub_08009CBC(void)
     if ((u8)(p->pendingMode % 3) != 0 && ((volatile GameStuff *)p)->pendingMode != 16) {
         value = 0;
         sub_08020BAC();
-        if (gIwram_6110._field_32 == 1) {
+        if (gIwram_6110.state == 1) {
             const u32 *table = sEntityParamTable;
             /* Reuse the now-dead base pointer so agbcc overwrites r4 with the index. */
             p = (GameStuff *)(u32)p->pendingMode;
@@ -373,8 +373,8 @@ void sub_08009CBC(void)
         ((GameProc)(*(const u32 *)offset))();
 
         s = &gIwram_6110;
-        s->_field_14 = -1;
-        s->_field_1c = -1;
+        s->flagBank0 = -1;
+        s->flagBank1 = -1;
 
         sub_0800A520();
 
