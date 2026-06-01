@@ -6,6 +6,7 @@
 extern u8 sub_0800E4BC(void) asm("text_0800e4bc");
 extern void sub_080008DC(void);
 extern void sub_0800E174(void);
+extern u8 sub_0800FD50(void);
 extern void sub_08020B78(void);
 
 u8 sub_0800E6A8(void)
@@ -40,4 +41,83 @@ u8 sub_0800E6A8(void)
     }
 
     return result;
+}
+
+void text_0800e76c(void)
+{
+    switch (gGameStuff.pendingMode) {
+    case 1:
+    case 2:
+        break;
+    case 3:
+        *(vu16 *)0x04000050 = 0;
+        break;
+    case 4:
+    case 5:
+        break;
+    case 6:
+        *(vu16 *)0x04000050 = 0;
+        break;
+    case 7:
+    case 8:
+        break;
+    case 9:
+        *(vu16 *)0x04000050 = 0;
+        break;
+    case 10:
+    case 11:
+    case 12:
+    case 13:
+    case 14:
+        break;
+    case 15:
+        *(vu16 *)0x04000050 = 0;
+        break;
+    case 16:
+        break;
+    }
+}
+
+void sub_0800E7D4(void)
+{
+    switch (gGameStuff.pendingMode) {
+    case 1:
+    case 2:
+        break;
+    case 3:
+        *(vu16 *)0x04000050 = 0x1748;
+        *(vu16 *)0x04000052 = 0x0A06;
+        break;
+    case 4:
+    case 5:
+        break;
+    case 6:
+        *(vu16 *)0x04000050 = 0x1748;
+        *(vu16 *)0x04000052 = 0x0A06;
+        break;
+    case 7:
+    case 8:
+        break;
+    case 9:
+        *(vu16 *)0x04000050 = 0x1748;
+        *(vu16 *)0x04000052 = 0x0A06;
+        break;
+    case 10:
+    case 11:
+    case 12:
+    case 13:
+    case 14:
+        break;
+    case 15:
+        *(vu16 *)0x04000050 = 0x1748;
+        *(vu16 *)0x04000052 = 0x0A06;
+        break;
+    case 16:
+        break;
+    }
+}
+
+void text_0800e850(void)
+{
+    sub_0800FD50();
 }
