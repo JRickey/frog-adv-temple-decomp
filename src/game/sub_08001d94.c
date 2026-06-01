@@ -31,7 +31,7 @@ void sub_08001D94(u8 *state, u32 a, u32 b)
         sub_080066C4(0x03006110, 9, 1);
     }
     {
-        register u8 lastState asm("r5") = (u8)gIwram_35E0._field_5;
+        u8 lastState = (u8)gIwram_35E0._field_5;
         if (lastState == 3) {
             sub_080066C4(0x03006110, 8, 1);
             sub_080066C4(0x03006110, 9, 1);

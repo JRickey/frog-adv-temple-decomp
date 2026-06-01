@@ -17,7 +17,7 @@ void sub_0800534C(void)
         return;
 
     {
-        register u32 *g asm("r1") = (u32 *)0x03005330;
+        u32 *g = (u32 *)0x03005330;
         u8 *base3720 = (u8 *)&gIwram_3720;
 
         if (*g - *(u32 *)(base3720 + 0xb10) <= 120)

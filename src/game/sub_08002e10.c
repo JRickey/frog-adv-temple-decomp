@@ -24,7 +24,7 @@ extern void sub_0800ACE8(u8 arg);
 void sub_08002E44(void)
 {
     struct IwramAt35E0 *p;
-    register u32 mask asm("r0");
+    u32 mask;
 
     sub_0800A2D8();
     sub_080008DC();
@@ -60,7 +60,7 @@ void sub_08002EAC(void)
 void sub_08002EB8(void)
 {
     struct IwramAt35E0 *p;
-    register u32 mask asm("r0");
+    u32 mask;
 
     p = &gIwram_35E0;
     mask = 0x10;

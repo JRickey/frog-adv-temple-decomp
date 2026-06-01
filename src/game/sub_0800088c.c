@@ -13,8 +13,8 @@ extern u8 gIwram_53A0;
 void sub_0800088C(void)
 {
     u8 scanline;
-    register vu16 *dst asm("r1");
-    register u16 *bgScrollBase asm("r2");
+    vu16 *dst;
+    u16 *bgScrollBase;
 
     scanline = (u8)REG_VCOUNT;
     if (scanline > 0xe3) {

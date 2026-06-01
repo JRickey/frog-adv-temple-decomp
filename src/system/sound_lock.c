@@ -31,8 +31,8 @@ extern void sub_08035D94(void); /* sound-IRQ enable;  b 0x08032e1c */
 
 void sub_0802E3F8(void)
 {
-    register u8 *p asm("r0") = &gpSoundSystem->lockRefCount;
-    register s32 v asm("r1") = *p - 1;
+    u8 *p = &gpSoundSystem->lockRefCount;
+    s32 v = *p - 1;
     *p = v;
     if ((u8)v == 0)
         sub_08035D94();
@@ -40,8 +40,8 @@ void sub_0802E3F8(void)
 
 void sub_0802E418(void)
 {
-    register u8 *p asm("r1") = &gpSoundSystem->lockRefCount;
-    register s32 v asm("r0") = *p + 1;
+    u8 *p = &gpSoundSystem->lockRefCount;
+    s32 v = *p + 1;
     *p = v;
     if ((u8)v == 1)
         sub_08035D8C();
