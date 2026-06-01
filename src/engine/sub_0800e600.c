@@ -52,9 +52,8 @@ void sub_0800E600(u8 arg)
     *(u32 *)(state + 12) = ((u32 **)(tableBase + gIwram_34B0._data * 24))[0][arg];
 
     {
-        register u8 z1 asm("r1") = 0;
+        u8 z1 = 0;
         register u16 z2 asm("r2") = 0;
-        asm volatile("" : "+r"(z1), "+r"(z2));
         state[8] = z1;
         zero = z2;
     }
