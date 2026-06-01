@@ -63,6 +63,7 @@ SECTIONS {
          * Offsets MUST stay in ascending order (ld extends `.` forward,
          * never backward). The (NOLOAD) attribute keeps these byte-neutral
          * — no storage is committed; the symbols only carry addresses. */
+        . = 0x00000000; gIwram_0000 = .;
         . = 0x00003470; gIwram_3470 = .;
         . = 0x00003474; gIwram_3474 = .;
         . = 0x00003478; gIwram_3478 = .;
@@ -74,6 +75,7 @@ SECTIONS {
         . = 0x000034C0; gIwram_34C0 = .;
         . = 0x00003550; gIwram_3550 = .;
         . = 0x00003570; gIwram_3570 = .;
+        . = 0x00003574; gIwram_3574 = .;
         . = 0x000035E0; gIwram_35E0 = .;
         . = 0x00003608; gIwram_3608 = .;
         . = 0x00003610; gIwram_3610 = .;
@@ -538,7 +540,6 @@ SECTIONS {
         src/engine/sub_080201c8.o(.text);
         src/engine/sub_080201e8.o(.text);  /* 0x080201e8 - 0x080202a8, sub_080201E8 + sub_08020208 + sub_0802023C + sub_08020270 */
         src/engine/sub_080202a8.o(.text);  /* 0x080202a8 - 0x080202f8, sub_080202A8 + sub_080202C8 */
-        asm/disasm_0x080202f8.o(.text);  /* 0x080202f8 - 0x08020414, sub_080202F8 (auto-peeled) */
         asm/disasm_0x08020414.o(.text);  /* 0x08020414 - 0x080204a0, sub_08020414 (auto-peeled) */
         asm/text/text_0x080204a0.o(.text);  /* 0x080204a0 - 0x080204a4, raw bytes */
         src/engine/sub_080204a4.o(.text);
