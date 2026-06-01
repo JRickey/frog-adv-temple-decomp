@@ -866,6 +866,8 @@ SECTIONS {
      * C source yet there are no references, but be explicit so a stray
      * .ARM.attributes section can't sneak into the binary. */
     /DISCARD/ : {
+        /* Emitted by -fno-expensive-optimizations for an otherwise .text-only match. */
+        src/game/sub_08002b58.o(.rodata)
         *(.ARM.attributes)
         *(.comment)
         *(.note*)
