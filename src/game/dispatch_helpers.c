@@ -115,10 +115,10 @@ extern u8 gIwram_5330;
 
 void sub_0800A328(void)
 {
-    register const u8 *lut asm("r0");
-    register u32 idx asm("r1");
+    const u8 *lut;
+    u32 idx;
     register vu16 *dst asm("r1");
-    register u16 *src asm("r2");
+    u16 *src;
 
     REG_IE &= ~IRQ_VBLANK;
     lut = sEntitySubtypeLut;
@@ -198,8 +198,8 @@ int sub_0800A3A4(const CmpPair *a, const CmpPair *b)
  */
 u8 sub_0800A3D0(u16 dir, u16 coord)
 {
-    register u16 field asm("r4");
-    register int cs asm("r2");
+    u16 field;
+    int cs;
     register int fs asm("r1");
     u16 tmp;
 

@@ -35,7 +35,7 @@ void sub_08002484(void *arg0, void *arg1)
     sub_0800A520();
 
     {
-        register const GameProc *procs asm("r1") = sEntityProcB;
+        const GameProc *procs = sEntityProcB;
         register u8 id asm("r2");
         register u32 offset asm("r0");
 
@@ -47,7 +47,7 @@ void sub_08002484(void *arg0, void *arg1)
     }
 
     {
-        register const GameProc *procsD asm("r1") = sEntityProcD;
+        const GameProc *procsD = sEntityProcD;
         register u8 id asm("r2");
         register u32 offset asm("r0");
 
