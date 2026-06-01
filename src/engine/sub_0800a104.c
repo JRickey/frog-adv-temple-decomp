@@ -34,7 +34,7 @@ int sub_0800A104(s8 *phase, GameProc callback)
         if (sub_08010710() == 0)
             return 1;
         {
-            register int ret asm("r0");
+            int ret;
             /* Keep phase 3's zero return distinct from the shared 0/1/2 return. */
             asm("" : "=r"(ret) : "0"(0));
             return ret;
