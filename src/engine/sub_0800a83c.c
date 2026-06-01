@@ -1,3 +1,4 @@
+#include "iwram.h"
 #include "types.h"
 
 typedef struct EntityHitbox {
@@ -105,4 +106,32 @@ void sub_0800A83C(u8 type, u32 gridId, u32 gridPlane, u32 useAlternateFlags)
             pointCount = *countPtr;
         }
     } while (pointIndex < pointCount);
+}
+
+extern u8 sub_0800679C(void *base, u32 selector, u32 bit);
+extern void sub_08006600(void *base, u32 selector, u32 bit);
+
+void sub_0800A910(void)
+{
+    if (sub_0800679C(&gIwram_6110, 5, 0) != 0) {
+        sub_08006600(&gIwram_6110, 8, 0);
+        sub_0800A83C(0, 3, 0, 1);
+
+        if (sub_0800679C(&gIwram_6110, 5, 1) != 0)
+            sub_08006600(&gIwram_6110, 8, 3);
+    }
+
+    if (sub_0800679C(&gIwram_6110, 5, 1) != 0) {
+        sub_08006600(&gIwram_6110, 8, 1);
+        sub_0800A83C(1, 3, 0, 1);
+
+        if (sub_0800679C(&gIwram_6110, 5, 0) != 0)
+            sub_08006600(&gIwram_6110, 5, 3);
+    }
+
+    if (sub_0800679C(&gIwram_6110, 5, 2) != 0) {
+        sub_08006600(&gIwram_6110, 5, 4);
+        sub_08006600(&gIwram_6110, 8, 2);
+        sub_0800A83C(2, 3, 0, 1);
+    }
 }
