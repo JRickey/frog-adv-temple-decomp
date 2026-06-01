@@ -14,6 +14,11 @@ extern void sub_08020FE4(s32 a0, s32 a1);
 extern void sub_08005D10(s32 a0, s32 a1);
 extern const u32 sLevelLayoutPtrs_3113C8[8];
 extern const u32 sLevelLayoutPtrs_31118C[7];
+extern const u32 sLevelLayout_310DF4[8];
+extern const u32 sLevelLayout_310E14[12];
+extern const u32 sLevelLayout_310E44[12];
+extern const u32 sLevelLayout_310E74[8];
+extern const u32 sLevelLayout_310E94[8];
 
 void sub_08022920(void)
 {
@@ -65,4 +70,25 @@ void sub_080229F0(void)
 
     sub_08020FE4(0x3e, 0x44);
     sub_08005D10(0x3e, 0x44);
+}
+
+extern int sub_0800D028(u8 a0);
+extern void sub_08021EEC(const void *a0, u8 a1);
+
+void sub_08022A28(void)
+{
+    if (sub_0800D028(0x31) != 0)
+        sub_08021EEC(sLevelLayout_310DF4, 0x31);
+
+    if (sub_0800D028(0x32) != 0)
+        sub_08021EEC(sLevelLayout_310E14, 0x32);
+
+    if (sub_0800D028(0x33) != 0)
+        sub_08021EEC(sLevelLayout_310E44, 0x33);
+
+    if (sub_0800D028(0x34) != 0)
+        sub_08021EEC(sLevelLayout_310E74, 0x34);
+
+    if (sub_0800D028(0x35) != 0)
+        sub_08021EEC(sLevelLayout_310E94, 0x35);
 }
