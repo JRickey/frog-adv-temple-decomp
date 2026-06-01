@@ -128,3 +128,8 @@ u32 sub_0801190C(void)
 
     return result;
 }
+
+void sub_08011978(void)
+{
+    sub_08017000();
+}
