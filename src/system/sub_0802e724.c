@@ -81,17 +81,16 @@ write_freq:
     return;
 
 big_slot: {
-    register SoundSystem *bigSs asm("r2");
-    register SoundSlot *bigSlot asm("r1");
-    register SoundSlot *slots asm("r0");
-    register s32 offset asm("r1");
+    SoundSystem *bigSs;
+    SoundSlot *bigSlot;
+    SoundSlot *slots;
+    s32 offset;
     ch -= 4;
     bigSs = gpSoundSystem;
     bigSs->swSlotResetTab[ch] = 0;
     slots = bigSs->swSlots;
     offset = ch * 64;
-    asm("" : "=r"(bigSlot) : "0"(offset));
-    bigSlot = (SoundSlot *)((u8 *)bigSlot + (u32)slots);
+    bigSlot = (SoundSlot *)(offset + (u32)slots);
     bigSlot->flags &= ~0x200;
 }
 }
