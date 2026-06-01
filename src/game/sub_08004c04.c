@@ -8,6 +8,7 @@ extern void sub_0800B7B0(u32 a, u32 b, u8 c);
 extern void sub_08006600(u8 *base, u32 selector, u32 bit);
 extern void sub_080066C4(u8 *base, u32 selector, u32 bit);
 extern u32 sub_08009C14(u8 *state);
+extern void sub_0800DE80(void);
 
 void sub_08004C04(u8 *buf, u32 arg1, u32 arg2)
 {
@@ -62,4 +63,9 @@ void sub_08004CA4(u8 *state, u32 arg1, u32 arg2)
         state[0] = 7;
 
     sub_0800B7B0(arg1, arg2, 17);
+}
+
+void sub_08004D04(void)
+{
+    sub_0800DE80();
 }
