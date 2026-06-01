@@ -198,5 +198,12 @@
 
         thumb_func_start sub_0800DAB8
 sub_0800DAB8: @ 0x0800dab8
-        .incbin "frog_us_baserom.gba", 0xdab8, 0x184
+        .incbin "frog_us_baserom.gba", 0xdab8, 0x4c
         thumb_func_end sub_0800DAB8
+
+        .global sub_0800DB04
+        .thumb_func
+sub_0800DB04: @ 0x0800db04
+        .incbin "frog_us_baserom.gba", 0xdb04, 0x48
+
+        .incbin "frog_us_baserom.gba", 0xdb4c, 0xf0
