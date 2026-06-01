@@ -56,7 +56,7 @@ extern void sub_0800EB1C(void);
 extern void sub_0800F24C(u8 arg);
 extern void sub_0800EBDC(u8 arg);
 extern void sub_08016A40(void);
-extern void text_080116b8(u32 arg);
+extern void sub_080116B8(u32 arg);
 extern void sub_08017000(void);
 extern void sub_080135B8(s32 a, s32 b, s32 c, s32 d);
 
@@ -101,7 +101,7 @@ void sub_080118D8(void)
 
 void sub_080118FC(void)
 {
-    text_080116b8(4);
+    sub_080116B8(4);
     sub_08017000();
 }
 
