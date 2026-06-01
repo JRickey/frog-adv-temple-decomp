@@ -3,7 +3,7 @@
 #include "macros.h"
 #include "types.h"
 
-extern u8 sub_0800E4BC(void) asm("text_0800e4bc");
+extern u8 sub_0800E4BC(void);
 extern void sub_080008DC(void);
 extern void sub_0800E174(void);
 extern u8 sub_0800FD50(void);
