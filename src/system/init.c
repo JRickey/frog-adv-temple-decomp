@@ -57,7 +57,7 @@ void sub_08000790(void)
     mode = g->mode;
     if ((u8)(mode - 8) > 15 && mode != 29) {
         register vu16 *dst asm("r1");
-        register u16 *src asm("r2");
+        u16 *src;
 
         sub_0802D558((void *)0x030054a0, (void *)0x07000000, 0x100);
         dst = (vu16 *)0x04000010;

@@ -30,13 +30,9 @@ extern void sub_08020C78(u32 a);
  *     `&tileTable[idx-1]` into `(tileTable - 4) + idx*4`. Without the
  *     barrier the pool literal stores 0x08308FA8 (= 0x08308FAC - 4) and
  *     the `subs r0, #1` step disappears.
- *   - The trailing r0-pinned `g` plus `flag` block forces
- *     the post-BL recovery sequence to materialize the base in r0 BEFORE
- *     the constant `1`, matching baserom's `ldr r0, [pool]; movs r1, #1;
- *     ldrb r2, [r0, #24]; orrs r1, r2; strb r1, [r0, #24]` shape. Without
- *     the pin, agbcc keeps `r4 = 1` alive across the two BLs (forcing a
- *     `push {r4, lr}` prologue), or materializes the constant before the
- *     base (swapped register naming).
+ *   - The trailing `g` plus `flag` block keeps the post-BL recovery
+ *     sequence in baserom's `ldr r0, [pool]; movs r1, #1; ldrb r2,
+ *     [r0, #24]; orrs r1, r2; strb r1, [r0, #24]` shape.
  */
 
 void sub_0800E060(void)
@@ -104,7 +100,7 @@ void sub_0800E060(void)
     sub_08020C78(3);
 
     {
-        register GameStuff *g asm("r0");
+        GameStuff *g;
         u8 flag;
         g = &gGameStuff;
         flag = 1;

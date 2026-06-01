@@ -26,10 +26,8 @@ extern void sub_0802D8F8(void);
  * Tail: bl sub_0800DD80, return.
  *
  * Matching notes (old_agbcc):
- *   - gGameStuff base is pinned to r4 across the three opening BLs so
- *     `ldrb r0, [r4, #10]` materializes pendingMode without a fresh pool
- *     load. The volatile barrier prevents the load from being deferred
- *     past the BLs.
+ *   - gGameStuff base is cached across the three opening BLs so
+ *     pendingMode materializes without a fresh pool load.
  *   - The second dispatch reads gGameStuff.pendingMode via the macro
  *     (fresh pool load), not via the cached pointer — baserom reloads
  *     the base address before the second ldrb.
@@ -40,9 +38,8 @@ extern void sub_0802D8F8(void);
  *     the arg-2 body at the lower-address jump-table target (matching
  *     baserom's 0x0800def8 = arg=2, 0x0800df00 = arg=1).
  *   - The flags-clear is written `t = 0xFD; t &= p->flags; p->flags = t;`
- *     and the pointer is pinned to r1 so baserom's `ldr r1, =0x03003570;
- *     movs r0, #253; ldrb r2, [r1]; ands r0, r2; strb r0, [r1]` emerges
- *     instead of the swapped (r0=ptr, r1=const) form agbcc otherwise picks.
+ *     giving baserom's `ldr r1, =0x03003570; movs r0, #253;
+ *     ldrb r2, [r1]; ands r0, r2; strb r0, [r1]` shape.
  */
 
 typedef struct {
@@ -53,19 +50,17 @@ typedef struct {
 
 void sub_0800DE80(void)
 {
-    register GameStuff *g asm("r4");
+    GameStuff *g;
     u8 t;
 
     g = &gGameStuff;
-    asm volatile("" ::"r"(g));
 
     sub_0800DC50();
     sub_0800DF7C();
     sub_0802D8F8();
 
     {
-        register StructAt3003570 *p1 asm("r1") = &gStructAt3003570;
-        asm volatile("" : "+r"(p1));
+        StructAt3003570 *p1 = &gStructAt3003570;
         t = 0xFD;
         t &= p1->flags;
         p1->flags = t;
