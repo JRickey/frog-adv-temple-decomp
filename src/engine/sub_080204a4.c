@@ -1,4 +1,5 @@
 #include "types.h"
+#include "iwram.h"
 
 typedef struct {
     s32 fieldA;
@@ -26,6 +27,47 @@ extern u32 sub_0802D9EC(u32 sound, u32 a, u32 b, u32 c);
 extern void sub_0802DC1C(u32 handle, u8 val);
 extern u32 sub_0802E100(u32 handle);
 extern u32 sub_0802E184(u32 handle);
+extern u8 sub_08021E34(struct IwramAt3720 *s, u8 halfW, u8 halfH);
+
+void sub_08020414(struct IwramAt3720 *entity, u8 channel, u8 halfW, u8 halfH)
+{
+    if (sub_08021E34(entity, halfW, halfH) != 0) {
+        if ((entity->_field_34 & 0x2000) != 0)
+            return;
+
+        entity->_field_34 |= 0x2000;
+
+        {
+            StructAt3003570 *p;
+            u32 offset;
+            register u32 slot asm("r6");
+            u32 base;
+            u32 sound;
+            u32 handle;
+
+            p = (StructAt3003570 *)&gIwram_3570;
+            offset = channel * 8;
+            base = (u32)p;
+            base += 8;
+            slot = offset + base;
+            if (sub_0802E184(*(u32 *)slot) != 0)
+                return;
+
+            base = (u32)p;
+            base += 4;
+            sound = *(u32 *)(offset + base);
+            handle = -1;
+            if ((p->flags & 0x10) != 0) {
+                handle = sub_0802D9EC(sound, 0xff, 0xff, 0xff);
+                sub_0802DC1C(handle, p->c & 0x7f);
+            }
+            *(u32 *)slot = handle;
+        }
+        return;
+    }
+
+    entity->_field_34 &= 0xdfff;
+}
 
 void sub_080204A4(u8 tile)
 {
