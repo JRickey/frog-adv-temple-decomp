@@ -46,3 +46,8 @@ void sub_080229A4(void)
 {
     sub_08021140(6, sLevelLayout_311440, 0, 0xb, 0xd1, 7, 10);
 }
+
+void sub_080229CC(void)
+{
+    sub_08021510(6, sLevelLayout_311440, 0xb, &gIwram_6110, 10);
+}
