@@ -190,3 +190,33 @@ void *sub_08010870(void *ptr, void *base)
     pos = start - (u32)pos;
     return end - (((s32)pos >> 1) << 1);
 }
+
+void sub_0801089C(void)
+{
+    register u32 *frameCounter asm("r4") = (u32 *)0x03005330;
+    register u8 *state asm("r3") = (u8 *)0x03006480;
+    vu32 *dma;
+    register u8 index asm("r5");
+    register u32 *table asm("r2");
+    register u32 offset asm("r0");
+
+    if (*frameCounter - *(u32 *)(state + 4) <= 7)
+        return;
+
+    if (state[10] > 23)
+        state[10] = 0;
+
+    dma = (vu32 *)0x040000D4;
+    table = (u32 *)0x083068A8;
+    asm("" : "+r"(table));
+    index = state[10];
+    offset = index;
+    offset <<= 2;
+    dma[0] = *(u32 *)(offset + (u32)table);
+    dma[1] = 0x06001C00;
+    dma[2] = 0x80000090;
+    (void)dma[2];
+
+    state[10]++;
+    *(u32 *)(state + 4) = *frameCounter;
+}
