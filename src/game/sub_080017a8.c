@@ -38,8 +38,8 @@ void sub_080017A8(void)
 void sub_080017DC(u32 arg0, u32 arg1)
 {
     register u32 mask asm("r0");
-    register struct IwramAt35E0 *p35E0 asm("r4");
-    register u16 field asm("r4");
+    struct IwramAt35E0 *p35E0;
+    u16 field;
     struct IwramAt3720 *p3720;
     u8 tile;
 
@@ -98,8 +98,8 @@ void sub_0800189C(void)
 void sub_080018A8(u32 arg0, u32 arg1)
 {
     register u32 mask asm("r0");
-    register struct IwramAt35E0 *p35E0 asm("r4");
-    register u16 field asm("r4");
+    struct IwramAt35E0 *p35E0;
+    u16 field;
     struct IwramAt3720 *p3720;
     u8 tile;
 

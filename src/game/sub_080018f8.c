@@ -23,14 +23,6 @@
  * sub_080011A4 (the &0x10/&0x40 tile-cache idiom).
  *
  * Matching notes (old_agbcc):
- *   - `register u32 mask asm("r0")` pins the three mask-AND tests to r0
- *     so the `movs #K; ldrh; ands` shape emits with K in r0.
- *   - `register IwramAt3720 *p3720 asm("r1")` forces &gIwram_3720 into
- *     r1 across the second-half block so the post-sub_0800B8A8 register
- *     state matches (r1 = base, r2 = scratch).
- *   - `register s32 lhs asm("r1") = (s16)p3720->_field_4` evaluates the
- *     LHS of the final comparison before the 6480 pool literal is
- *     loaded, matching baserom's `ldrsh r1 then ldr r0, =&6480` order.
  *   - Anonymous-struct cast at 0x03006480 with an `_field_36` at offset
  *     54 forces register-offset ldrsh (`movs r4, #54; ldrsh r0, [r0, r4]`)
  *     and keeps the pool literal at 0x03006480 instead of folding to
@@ -44,9 +36,9 @@ extern void sub_08006B88(void *p, u16 mask);
 
 void sub_080018F8(u32 arg0, u32 arg1)
 {
-    register u32 mask asm("r0");
+    u32 mask;
     struct IwramAt35E0 *p35E0;
-    register struct IwramAt3720 *p3720 asm("r1");
+    struct IwramAt3720 *p3720;
     u8 tile;
 
     sub_0800B918((void *)arg0, arg1, 5);
@@ -81,7 +73,7 @@ void sub_080018F8(u32 arg0, u32 arg1)
         return;
 
     {
-        register s32 lhs asm("r1") = (s16)p3720->_field_4;
+        s32 lhs = (s16)p3720->_field_4;
         struct {
             u8 _pad[0x36];
             s16 _field_36;
