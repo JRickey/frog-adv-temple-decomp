@@ -118,21 +118,23 @@ u32 SoundSlot_QueueRequest(void)
  * byte. Acts only when the low 3 bits equal 5: clears bit 2 (0x04) and sets bit
  * 1 (0x02), then returns 1. Otherwise returns 0 without touching the byte.
  *
- * Matching note: the flag byte is read once into `f` and reused by both the
- * `(f & 7) == 5` test and the `(~4 & f) | 2` write-back — the baserom keeps the
- * loaded byte in r1 across the compare-and-branch and produces the AND/OR result
- * in r0 (the scratch from the `& 7` test). Pinning `f` to r1 (`register u8 f
- * asm("r1")`) reproduces that allocation; without it agbcc reuses `f`'s register
- * as the result destination and swaps the operands. The `== 5` test (not an
- * early-return `!= 5`) keeps agbcc's forward `beq` to the act block, matching
- * SoundSlot_QueueRequest's branch direction. */
+ * Matching note: the flag byte is read once into `flags` and reused by both the
+ * `(flags & 7) == 5` test and the write-back. Splitting the write-back through
+ * `newFlags` keeps the loaded byte in r1 across the compare-and-branch and
+ * produces the AND/OR result in r0. The `== 5` test (not an early-return `!= 5`)
+ * keeps agbcc's forward `beq` to the act block, matching SoundSlot_QueueRequest's
+ * branch direction. */
 u32 SoundSlot_ClearInProgress(void)
 {
     SoundSlot *slot = gpSoundSystem->slot;
-    register u8 flags asm("r1") = slot->flags;
+    u8 flags = slot->flags;
+    u32 newFlags;
 
     if ((flags & 7) == 5) {
-        slot->flags = (~4 & flags) | 2;
+        newFlags = (u8)~4;
+        newFlags &= flags;
+        newFlags |= 2;
+        slot->flags = newFlags;
         return 1;
     }
 
@@ -190,7 +192,7 @@ u32 SoundSlot_Stride(void)
  *     to r2pPool asm("r2") first; ssTmp then naturally loads into r1.
  *   - The slot reload after the nextRegion store reuses r1 (slotField, kept across
  *     the store) and the recomputed 0x110 offset.
- *   - The strb section: flagOff asm("r2") holds 0x151 (from pool), addrHi asm("r1")
+ *   - The strb section: flagOff asm("r2") holds 0x151 (from pool), and addrHi
  *     computes buf+flagOff for each strb; v = arg0[2] is read before flagOff++ so
  *     agbcc can use `ldrb r0, [r1, #2]` (immediate offset) vs modify-then-load.
  */
@@ -203,7 +205,7 @@ u32 sub_08032AA0(u8 *arg0, u8 *arg1)
     register SoundSystem **pPool asm("r8") = &gpSoundSystem;
     u32 sz;
     register u32 flagOff asm("r2");
-    register u8 *addrHi asm("r1");
+    u8 *addrHi;
     u8 v;
 
     (*pPool)->slot = (SoundSlot *)buf;

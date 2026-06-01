@@ -16,8 +16,8 @@
  * r0 across the dispatch).
  *
  * Matching notes (old_agbcc):
- *   - `base asm("r4")` pins the struct base into the callee-saved
- *     register that survives the `__ashldi3` call in selector 1.
+ *   - `base` stays in the callee-saved register that survives the
+ *     `__ashldi3` call in selector 1.
  *   - Selector 1: the union access on `m.u32a[0/1]` (instead of
  *     `(u32)m64` / `(u32)(m64>>32)`) is load-bearing — the cast form
  *     makes old_agbcc materialise the high half via an extra
@@ -25,8 +25,7 @@
  *     trailing `b.n` and jump-table entry by two bytes. Accessing
  *     the halves through a union lets it keep them in the libgcc
  *     return-pair registers (r0/r1) and emit `ands r3, r1` directly.
- *   - `lo asm("r2")` / `hi asm("r3")` pin the two struct halves to
- *     the registers the baserom uses for the back-to-back
+ *   - The `lo` / `hi` locals preserve the baserom's back-to-back
  *     `ands; ands; str; str` pair.
  *   - `p asm("r0")` pins the byte pointer used by selectors 7/8/9
  *     so the shared `clear_byte` block ships as
@@ -34,7 +33,7 @@
 
 void sub_080066C4(void *baseIn, u32 selectorIn, u32 bitIn)
 {
-    register u8 *base asm("r4") = (u8 *)baseIn;
+    u8 *base = (u8 *)baseIn;
     u32 selector = (u8)selectorIn;
     u32 bit = (u8)bitIn;
     u32 mask;
@@ -50,8 +49,8 @@ void sub_080066C4(void *baseIn, u32 selectorIn, u32 bitIn)
             unsigned long long u64;
             u32 u32a[2];
         } m;
-        register u32 lo asm("r2");
-        register u32 hi asm("r3");
+        u32 lo;
+        u32 hi;
         m.u64 = ~(1ULL << bit);
         lo = *(u32 *)(base + 4);
         hi = *(u32 *)(base + 8);

@@ -49,7 +49,7 @@ struct ActorRecord {
 
 void sub_08007DD0(void)
 {
-    register struct IwramAt35E0 *p35E0 asm("r4") = &gIwram_35E0;
+    struct IwramAt35E0 *p35E0 = &gIwram_35E0;
     u8 *base6110;
 
     if ((u8)sub_08006BA4(p35E0, 0x100) != 0) {
@@ -64,8 +64,8 @@ void sub_08007DD0(void)
     }
 
     if ((u8)sub_08006BA4(p35E0, 0x80) != 0) {
-        register u8 *base3720 asm("r0") = (u8 *)&gIwram_3720;
-        register u16 t asm("r1");
+        u8 *base3720 = (u8 *)&gIwram_3720;
+        u16 t;
         *(u8 *)(base3720 + 0x1A) += 0x24;
         t = 2;
         t |= *(u16 *)(base3720 + 0x34);
@@ -136,13 +136,13 @@ void sub_08007DD0(void)
 
 u8 sub_08007F88(void)
 {
-    register struct IwramAt35E0 *p35E0 asm("r5") = &gIwram_35E0;
+    struct IwramAt35E0 *p35E0 = &gIwram_35E0;
     u8 tileClass;
 
     tileClass = (u8)sub_0800CD88(p35E0->_field_18, p35E0->_field_19, p35E0->_field_8, p35E0->_field_A);
 
     if (p35E0->_field_1A == 0) {
-        register u16 flags asm("r6") = p35E0->_field_10;
+        u16 flags = p35E0->_field_10;
         if ((flags & 2) == 0)
             goto tile_test;
     }

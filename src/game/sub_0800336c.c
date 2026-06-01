@@ -14,10 +14,9 @@
  *
  * Built with old_agbcc (see Makefile): the newer agbcc schedules the case-3
  * `ldrh` flag reads ahead of the shared `8`-constant materialisation, while
- * the baserom (and old_agbcc) defer them. The case-3 r1-pinned
- * base pins keep each flag halfword read off r1, and the case-6 `register s32
- * c0 asm("r0")` pin holds the first `(s8)counter` probe in r0 (ldrsb r0,[r4,r0])
- * separately from the r4-held second read that also feeds gIwram_3480[6].
+ * the baserom (and old_agbcc) defer them. The case-3 local base pointers keep
+ * each flag read in the expected block, and the case-6 split `c0`/`c` locals
+ * keep the two signed counter probes distinct.
  */
 
 extern void sub_08020BC0(void);
@@ -85,14 +84,14 @@ void sub_0800336C(void)
                 break;
             }
             {
-                register struct IwramAt3720 *p3720 asm("r1") = &gIwram_3720;
+                struct IwramAt3720 *p3720 = &gIwram_3720;
                 if ((p3720->_field_34 & 8) != 0) {
                     state = 4;
                     break;
                 }
             }
             {
-                register struct IwramAt6110 *p6110 asm("r1") = &gIwram_6110;
+                struct IwramAt6110 *p6110 = &gIwram_6110;
                 if ((p6110->_field_2e & 8) != 0) {
                     state = 8;
                     break;
@@ -117,7 +116,7 @@ void sub_0800336C(void)
                 state = 3;
             break;
         case 6: {
-            register s32 c0 asm("r0");
+            s32 c0;
             s32 c;
             c0 = (s8)counter;
             if (c0 != 0)
@@ -192,7 +191,7 @@ extern void sub_08020C78(u32 arg);
 
 void sub_08003604(void)
 {
-    register struct IwramAt35E0 *p asm("r4");
+    struct IwramAt35E0 *p;
     u8 tile;
 
     if ((gIwram_3720._field_34 & 4) != 0)

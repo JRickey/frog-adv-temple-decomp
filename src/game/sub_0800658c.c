@@ -10,9 +10,9 @@
  *   - The 0x04/0x08, 0x14/0x18, 0x1c/0x20 offset pairs clear as 64-bit
  *     stores (`unsigned long long = 0`), which old_agbcc materialises as the
  *     r4/r5 register pair.
- *   - The two zero constants are pinned: `hz asm("r2")` is the halfword/word
- *     zero, `z asm("r6")` the byte zero. The pins fix both the register
- *     colours and the order the two `movs #0` are emitted (r6 before r2).
+ *   - `hz asm("r2")` is the halfword/word zero; the byte zero local `z`
+ *     naturally lands in r6. This preserves the order the two `movs #0` are
+ *     emitted (r6 before r2).
  *   - `rE asm("r9")` / `rF asm("r8")` hold the two stack args; the baserom
  *     loads them into the high regs up front and keeps them to the tail. */
 
@@ -21,7 +21,7 @@ void sub_0800658C(void *baseIn, u32 a, u32 b, const void *table, u32 e, u32 f)
     u8 *base = (u8 *)baseIn;
     register u32 rE asm("r9") = e;
     register u32 rF asm("r8") = f;
-    register u8 z asm("r6") = 0;
+    u8 z = 0;
     register u32 hz asm("r2") = 0;
 
     *(u16 *)(base + 0x00) = hz;

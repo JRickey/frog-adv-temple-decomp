@@ -341,8 +341,8 @@ void sub_08009CBC(void)
     sub_080077AC((s8)gIwram_35E0._data[0], *(s16 *)&gIwram_35E0._data[2], 0);
 
     {
-        register const u32 *procC asm("r5");
-        register GameStuff *base asm("r4");
+        const u32 *procC;
+        GameStuff *base;
         register u8 idx1 asm("r1");
         register u8 idx2 asm("r2");
         register u32 offset asm("r0");

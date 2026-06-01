@@ -16,10 +16,9 @@
  * ships with a single shared "false" exit.
  *
  * Matching notes (old_agbcc):
- *   - Every live value is pinned to its arg / return register
- *     (`base asm("r3")`, `bit asm("r2")`, `r asm("r0")`, `p asm("r0")`)
- *     so the function ships with no callee-saved push/pop and
- *     `mov pc, r0` dispatches directly out of the jump-table load.
+ *   - The shared result/pointer locals (`r asm("r0")`, `p asm("r0")`) keep
+ *     the function free of callee-saved push/pop and let `mov pc, r0`
+ *     dispatch directly out of the jump-table load.
  *   - Selectors 7/8/9 build `base + off` in `p` (also r0) — the pin
  *     stops agbcc from clobbering r3, and the shared `goto load_byte`
  *     keeps the trailing `ldrb r0, [r0, #0]` block reused by all
@@ -33,9 +32,9 @@
 
 u32 sub_0800679C(u8 *baseIn, u32 selectorIn, u32 bitIn)
 {
-    register u8 *base asm("r3") = baseIn;
-    register u32 selector asm("r0") = (u8)selectorIn;
-    register u32 bit asm("r2") = (u8)bitIn;
+    u8 *base = baseIn;
+    u32 selector = (u8)selectorIn;
+    u32 bit = (u8)bitIn;
     register u32 r asm("r0");
     register u8 *p asm("r0");
     s32 mask;
