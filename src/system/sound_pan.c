@@ -61,8 +61,8 @@ typedef struct SoundSystem {
 #ifdef NON_MATCHING
 void sub_0802F2FC(void)
 {
-    register SoundSystem **gpsp asm("ip");
-    register SoundSlot *slot asm("r8");
+    SoundSystem **gpsp;
+    SoundSlot *slot;
     s32 i;
     s32 step;
     s32 sum;

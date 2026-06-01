@@ -55,7 +55,7 @@ extern const SoundOpcodeHandler sSoundOpcodeHandlers[54];
 #ifdef NON_MATCHING
 void sub_080315D8(void)
 {
-    register const SoundOpcodeHandler *handlers asm("r7");
+    const SoundOpcodeHandler *handlers;
     s32 i;
     s32 byteOffset;
     s32 next;
