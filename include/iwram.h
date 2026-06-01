@@ -26,6 +26,8 @@ struct IwramAt3480 {
 struct IwramAt34A0 {
     u8 _pad00;
     u8 dispatchIdx; /* +1: index into the ROM dispatch table at 0x08308ac8 (sub_080201A8) */
+    u8 _pad02[6];
+    u32 _field_08;
 };
 
 struct IwramAt34B0 {
@@ -157,6 +159,7 @@ extern struct IwramAt3480 gIwram_3480;
 extern struct IwramAt34A0 gIwram_34A0;
 extern struct IwramAt34B0 gIwram_34B0;
 extern struct IwramAt34B4 gIwram_34B4;
+extern struct IwramAt34B4 gIwram_34B8;
 extern struct IwramAt34C0 gIwram_34C0;
 extern struct IwramAt3550 gIwram_3550;
 extern struct IwramAt35E0 gIwram_35E0;

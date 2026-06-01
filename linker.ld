@@ -70,6 +70,7 @@ SECTIONS {
         . = 0x000034A0; gIwram_34A0 = .;
         . = 0x000034B0; gIwram_34B0 = .;
         . = 0x000034B4; gIwram_34B4 = .;
+        . = 0x000034B8; gIwram_34B8 = .;
         . = 0x000034C0; gIwram_34C0 = .;
         . = 0x00003550; gIwram_3550 = .;
         . = 0x00003570; gIwram_3570 = .;
@@ -473,7 +474,6 @@ SECTIONS {
         src/engine/sub_08017abc.o(.text);
         asm/disasm_0x08017abc.o(.text);  /* 0x08017abc - 0x08017bfc, sub_08017ABC (auto-peeled) */
         src/engine/sub_08017bfc.o(.text);
-        asm/disasm_0x08017db8.o(.text);  /* 0x08017db8 - 0x08017f00, sub_08017DB8 (auto-peeled) */
         asm/disasm_0x08017f00.o(.text);  /* 0x08017f00 - 0x080181d0, sub_08017F00 (auto-peeled) */
         asm/disasm_0x080181d0.o(.text);  /* 0x080181d0 - 0x080182cc, sub_080181D0 (auto-peeled) */
         asm/disasm_0x080182cc.o(.text);  /* 0x080182cc - 0x080184dc, sub_080182CC (auto-peeled) */
