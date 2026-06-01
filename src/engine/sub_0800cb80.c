@@ -37,3 +37,27 @@ void sub_0800CB80(u8 a, u8 b, s16 c, s16 d, u8 e)
     *(u16 *)(2 * (d * sSpriteAssetIndexTable[(u8)a].stride) + 5 * b * 4096 + 2 * c + 0x02030000) &= 0xFC0F;
     *(u16 *)(2 * (d * sSpriteAssetIndexTable[(u8)a].stride) + 5 * b * 4096 + 2 * c + 0x02030000) |= (u8)e << 4;
 }
+
+void sub_0800CBE8(u8 a, u8 b, s16 c, s16 d, u8 e)
+{
+    *(u16 *)(2 * (d * sSpriteAssetIndexTable[(u8)a].stride) + 5 * b * 4096 + 2 * c + 0x02030000) &= 0xFFF0;
+    *(u16 *)(2 * (d * sSpriteAssetIndexTable[(u8)a].stride) + 5 * b * 4096 + 2 * c + 0x02030000) |= (u8)e;
+}
+
+void sub_0800CC50(u8 a, u8 b, s16 c, s16 d, u8 e)
+{
+    *(u16 *)(2 * (d * sSpriteAssetIndexTable[(u8)a].stride) + 5 * b * 4096 + 2 * c + 0x02030000) &= 0xBFFF;
+    *(u16 *)(2 * (d * sSpriteAssetIndexTable[(u8)a].stride) + 5 * b * 4096 + 2 * c + 0x02030000) |= (u8)e << 14;
+}
+
+void sub_0800CCB8(u8 a, u8 b, s16 c, s16 d, u8 e)
+{
+    *(u16 *)(2 * (d * sSpriteAssetIndexTable[(u8)a].stride) + 5 * b * 4096 + 2 * c + 0x02030000) &= 0xCFFF;
+    *(u16 *)(2 * (d * sSpriteAssetIndexTable[(u8)a].stride) + 5 * b * 4096 + 2 * c + 0x02030000) |= (u8)e << 12;
+}
+
+void sub_0800CD20(u8 a, u8 b, s16 c, s16 d, u8 e)
+{
+    *(u16 *)(2 * (d * sSpriteAssetIndexTable[(u8)a].stride) + 5 * b * 4096 + 2 * c + 0x02030000) &= 0xF3FF;
+    *(u16 *)(2 * (d * sSpriteAssetIndexTable[(u8)a].stride) + 5 * b * 4096 + 2 * c + 0x02030000) |= (u8)e << 4;
+}

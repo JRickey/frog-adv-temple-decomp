@@ -323,8 +323,7 @@ SECTIONS {
         asm/disasm_0x0800c4e8.o(.text);  /* 0x0800c4e8 - 0x0800c978, sub_0800C4E8 (auto-peeled) */
         src/engine/sub_0800c978.o(.text);
         asm/disasm_0x0800c978.o(.text);  /* 0x0800c978 - 0x0800cb80, sub_0800C978 (auto-peeled) */
-        src/engine/sub_0800cb80.o(.text);  /* 0x0800cb80 - 0x0800cbe8, sub_0800CB80 */
-        asm/disasm_0x0800cb80.o(.text);  /* 0x0800cbe8 - 0x0800cd88, sub_0800CBE8 (auto-peeled) */
+        src/engine/sub_0800cb80.o(.text);  /* 0x0800cb80 - 0x0800cd88, sub_0800CB80/sub_0800CBE8 and sibling grid writers */
         src/engine/sub_0800cd88.o(.text);
         src/engine/sub_0800cdcc.o(.text);
         src/engine/sub_0800ce10.o(.text);
