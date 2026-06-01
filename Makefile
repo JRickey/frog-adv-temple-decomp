@@ -109,6 +109,7 @@ src/engine/sub_08013040.s: CC = $(AGBCC_BIN)
 src/engine/sub_0800d808.s: CC = $(OLD_AGBCC_BIN)
 # Matches the state-byte dispatcher prologue in the baserom.
 src/game/sub_08001214.s: CFLAGS += -fforce-addr -fno-expensive-optimizations
+src/game/sub_080019b4.s: CFLAGS += -fforce-addr -fno-expensive-optimizations -fno-gcse
 src/game/sub_08002b58.s: CFLAGS += -fforce-addr -fno-expensive-optimizations
 src/system/sub_08001508.s: CFLAGS += -fforce-addr -fno-expensive-optimizations
 src/game/sub_08003254.s: CFLAGS += -ffixed-r3

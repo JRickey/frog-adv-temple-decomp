@@ -868,6 +868,7 @@ SECTIONS {
     /DISCARD/ : {
         /* Emitted by -fno-expensive-optimizations for an otherwise .text-only match. */
         src/game/sub_08001214.o(.rodata)
+        src/game/sub_080019b4.o(.rodata)
         src/game/sub_08002b58.o(.rodata)
         src/system/sub_08001508.o(.rodata)
         *(.ARM.attributes)
