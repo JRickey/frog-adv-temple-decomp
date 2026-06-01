@@ -2276,3 +2276,54 @@ auto-NAKED'd. `classify_unmatchable.py` already treats high-reg pins as advisory
 you what does NOT work — RE-DERIVE the structure from scratch rather than tweaking the
 near-match (tweaking stays in the same basin). Grind across several *distinct*
 structures (codex spends ~200-330k tokens / 10-15 min doing exactly this) before defer.
+
+## Instrumenting agbcc itself — build a private debug compiler
+
+Reading the agbcc pass tells you *what the algorithm does*; instrumenting it tells you
+*what it actually decided on YOUR function*. When a register choice / fold / branch
+diverges and reading `local-alloc.c` / `cse.c` / `loop.c` is not enough to see WHY,
+add an `fprintf(stderr, …)` at the decision site, rebuild agbcc, and compile only your
+TU with the instrumented binary to watch the choice. This has cracked matches that
+pure source-reading could not.
+
+**SAFETY INVARIANT (load-bearing in the parallel loop).** In a worktree, `tools/agbcc`
+(installed binaries) and `tools/agbcc-src` (compiler source) are **symlinks to MAIN**.
+*Never* edit `tools/agbcc-src` in place and *never* rebuild into `tools/agbcc` — a
+rebuild there mutates the shared toolchain and **races every sibling decomp worker**,
+corrupting the whole run. Always: copy the source to a PRIVATE dir, build to a PRIVATE
+prefix, read the trace, then delete the sandbox. agbcc/agbcc-src are gitignored, so
+there is nothing to commit — just leave `git status --short` clean.
+
+Recipe (run from your worktree root; `$$` keeps it unique per worker):
+
+```sh
+PRIV=/tmp/agbcc-instr-$$                       # outside the worktree + repo
+cp -RL tools/agbcc-src "$PRIV"                 # -L derefs the symlink → a REAL private copy
+
+# 1. Add a probe at the decision site. Example: trace hard-reg assignment in local-alloc.c.
+#    Read the pass first to find the exact spot; fprintf to STDERR (stdout is the .s output).
+#    e.g. after the reg is chosen:  fprintf(stderr, "AGBCC-DBG alloc pseudo%d -> hard r%d\n", i, reg);
+
+# 2. Build the instrumented compiler + install to a PRIVATE prefix (NOT tools/agbcc).
+#    build.sh needs arm-none-eabi binutils (already on PATH); it builds agbcc + old_agbcc.
+( cd "$PRIV" && ./build.sh && mkdir -p inst && ./install.sh "$PRIV/inst" )
+#    → instrumented binaries at  "$PRIV/inst/tools/agbcc/bin/{agbcc,old_agbcc}"
+
+# 3. Compile ONLY your TU with it, capturing the trace. Default CC is old_agbcc; match it
+#    (or agbcc if this TU is one of the 4 new-agbcc exceptions). Easiest is a one-off make:
+make -j1 src/<path>/<fn>.o CC="$PRIV/inst/tools/agbcc/bin/old_agbcc" 2>/tmp/agbcc-dbg-$$.log || true
+#    (If the TU has a per-TU `src/...s: CC = …` line in the Makefile, that target-specific
+#     assignment wins over the command-line CC — invoke the binary directly on the .i instead,
+#     mirroring the Makefile's cpp→agbcc→as compile rule.)
+grep AGBCC-DBG /tmp/agbcc-dbg-$$.log | head      # read the decisions
+
+# 4. THROW IT AWAY. The shared toolchain was never touched.
+rm -rf "$PRIV" /tmp/agbcc-dbg-$$.log
+```
+
+Good probe sites by symptom: wrong scratch register → the hard-reg assignment loop in
+`local-alloc.c` / `regclass.c`; a value spilled/reloaded oddly → `reload.c` / `reload1.c`;
+a loop reversed or a count strength-reduced → `loop.c`; a CSE/GCSE fold that collapses two
+loads into one → `cse.c` / `gcse.c`. Once the trace shows the decision, the fix is still a
+*source-shape* change (or a per-TU `-fXXX`) that steers the pass — instrumenting is the
+microscope, not the cure.

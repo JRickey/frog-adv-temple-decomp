@@ -256,173 +256,194 @@ emit codexQueue (array of firm-defer names).`
 function decompPrompt(t, round, model) {
   const escalated = t.nextTier === 'opus'
   return `You are a DECOMP agent (running on ${model || 'the inherited model'}) in an isolated git worktree of ${MAIN}
-(Frogger's Adventures: Temple of the Frog — GBA, agbcc). Round ${round}.
+(Frogger's Adventures: Temple of the Frog — GBA, agbcc 2.x). Round ${round}.
 
 Your assigned target: ${t.name}  (asm slice ${t.asmFile} → C file ${t.destC}, addr ${t.addr}, ~${t.byteSize ?? '?'} bytes).
-Decompile EXACTLY this one function. Do not pick a different target.
-${escalated ? `ESCALATION (Opus retry — Sonnet deferred this). READ docs/deferred-analysis/${t.name}.md, but treat the prior attempt as a LOCAL PLATEAU to ESCAPE, not a base to extend: its drift + tried levers tell you what does NOT work, so RE-DERIVE the C from scratch rather than tweaking its near-match (a near-match is a local minimum — tweaking it stays in the same basin). This IS matchable in PURE C — every GBA decomp in the corpus is ~100% pure-C on game logic — so it is a THINKING problem, not a search. The permuter only MUTATES existing structure; it CANNOT invent the structure that matches (a pointer cast that forces a dead-register reuse; an \`asm("")\` barrier that blocks a tail-merge; a \`-fno-strength-reduce\` / \`-ffixed-rN\` per-TU flag). When a register CHOICE, a fold, or a loop shape is wrong, READ the responsible agbcc pass in tools/agbcc-src/gcc_arm/ (local-alloc.c / regclass.c / reload.c = register choice; loop.c = loop-reversal/strength-reduce; cse.c / gcse.c = folds) to learn WHY it diverges, then write the C that avoids it. Grind like codex does (it matches these in ~200-330k tokens by trying many DISTINCT structures + reading the compiler) before you EVER consider defer. Defer (append a "## Opus attempt" section to the note) ONLY after several FUNDAMENTALLY DIFFERENT structural approaches genuinely fail — not at the first plateau.` : ''}
+Decompile EXACTLY this one function to a MATCHING decompilation. Do not pick a different target.
+${escalated ? `ESCALATION (Opus retry — Sonnet deferred this). READ docs/deferred-analysis/${t.name}.md, but treat the prior attempt as a LOCAL PLATEAU to ESCAPE, not a base to extend: its drift + tried levers tell you what does NOT work, so RE-DERIVE the C from scratch rather than tweaking its near-match (a near-match is a local minimum). This IS matchable in PURE C — every GBA decomp in the corpus is ~100% pure-C on game logic — so it is a THINKING problem, not a search.` : ''}
 
-Read ${MAIN}/CLAUDE.md ("Agent workflow", "C style") and docs/codegen-notes.md once
-for the full workflow and the agbcc matching idioms. This brief is the iteration
-contract layered on top.
+Read once: ${MAIN}/CLAUDE.md ("Agent workflow — peel-first, then decomp", "C style") and
+docs/codegen-notes.md (the agbcc 2.x matching idioms — your Phase 2 toolkit). This brief is the
+iteration contract layered on top.
 ${BOOTSTRAP}
 
-DECOMP STEPS:
-1. python3 tools/agent/decomp_brief.py ${t.name}  — range, callees+peel-status, pool
-   labels (resolved addrs), struct xref, m2c seed C, dest hint.
-1b. SEED FROM PRIOR WORK: cat docs/deferred-analysis/${t.name}.md 2>/dev/null. If it
-   exists, a previous attempt stashed its best-effort readable C + the exact drift it
-   got stuck on + levers/permuter already tried. RESUME from that analysis (try a
-   DIFFERENT lever than the ones listed) instead of re-deriving the function cold.
-2. For each callee tagged "UNPEELED ✗":
-     python3 tools/agent/auto_peel.py --addr 0x<callee> --apply
-   (auto_peel runs its own make check and self-reverts bad peels.) Commit each batch
-   "Peel sub_XYZ". Cross-region BL callees MUST be peeled or the C cannot match.
-3. If the target itself is "blocked: needs new C file", scaffold it first:
-     python3 tools/agent/scaffold_cluster.py --asm ${t.asmFile} ${t.name} --apply
-   (build-safe; commit "Scaffold ${t.destC}").
-4. Grow typed struct headers from observed IWRAM/EWRAM offsets when the brief surfaces
-   raw bases (struct_grow.py / struct_xref.py) BEFORE writing C — no raw [rN,#imm] magic.
-TRIAGE — classify BEFORE writing C (prerequisites 2-4 are done either way; a NAKED ship
-still needs callees peeled for symbol resolution + the dest .c scaffolded). Run the
-deterministic classifier (it reads baserom bytes — ground truth):
-     python3 tools/agent/classify_unmatchable.py ${t.name}
-   • VERDICT STRONG_UNMATCHABLE  [class4-movpc | class3-libgcc] — a structural-impossibility
-     signature agbcc 2.x literally cannot emit from C (a \`mov pc, rN\` computed jump, or a
-     WIDE r4-r7 prologue whose only calls are libgcc helpers). CONFIRM it negatively against
-     the corpus before shipping NAKED:
-         python3 tools/agent/corpus.py grep '<exact idiom regex>' --asm   # expect MANY hits
-         python3 tools/agent/corpus.py grep '<related C construct>'  --c   # hunt for matched-C
-     Read the hits — does any repo decompile this idiom to PURE C (a real .c body, NOT an
-     INCLUDE_ASM / NAKED block)? If YES → it is matchable; treat as ATTEMPT (go to 5). If it
-     lives ONLY in hand-asm/NAKED → ship NAKED+NON_MATCHING now (skip the match grind):
-     readable C under #ifdef NON_MATCHING, hand-asm NAKED under #else; every NAKED inline-asm
-     block ends with "    .syntax divided\\n". status="naked".
-   • VERDICT ATTEMPT_MATCH — no structural-impossibility signature. ATTEMPT the C match
-     (step 5). The classifier may print an ⚐ advisory (e.g. "high regs pinned across a bl —
-     POSSIBLE Class-1"): heed it as a HINT for WHICH lever to reach for (\`register asm("rN")\`
-     pins), NOT as license to skip the attempt. High-reg pins are frequently matchable —
-     sub_08004508 holds BOTH r8 and r9 across a bl and still byte-matches via register pins.
-     You MUST attempt.
+Work in FOUR EXPLICIT PHASES. Do NOT jump straight to byte-forcing. The deliverable is readable C
+that HAPPENS to match — NOT matched bytes that happen to be C. You satisfy "match the bytes" THROUGH
+clean source, not by accumulating pins/asm/volatile. (This is the same phased shape the codex
+hard-tier uses; it is the house style now.)
 
-ASYMMETRIC-COST RULE (internalize this): a function wrongly shipped as NAKED is a PERMANENT
-regression — nobody revisits it and it won't survive the phase-3 PC port. Wasted match
-tokens are cheap and recoverable. So NAKED ONLY on a STRONG + corpus-confirmed signature, or
-after the lever+corpus path (below) genuinely fails. When unsure → ATTEMPT.
+== PHASE 0 — UNDERSTAND (no C edits yet) ==
+- python3 tools/agent/decomp_brief.py ${t.name}  — range, callees+peel-status, pool labels
+  (resolved addrs), struct xref, m2c seed C, dest hint.
+- python3 tools/agent/classify_unmatchable.py ${t.name}  — reads baserom bytes = ground truth. Note
+  the VERDICT + any advisory. ONLY class3-libgcc (a WIDE \`push {r4-r7,lr}\` prologue whose every
+  \`bl\` target is a libgcc helper) is STRONG_UNMATCHABLE — and it has NO confirmed instance on this
+  ROM, so corpus-confirm even that. EVERYTHING ELSE = ATTEMPT_MATCH:
+    • A \`mov pc, rN\` computed jump is NOT unmatchable (the old "class4-movpc" wall is RETRACTED). It
+      is the SIGNATURE OF A C \`switch\`: a dense \`switch\` over a sequential index lowers to agbcc's
+      casesi (\`lsls #2; ldr =table; adds; ldr [r0]; mov pc, r0\`) + an absolute \`.word\` table. 7
+      mode-X dispatchers that shipped NAKED were promoted to true-C this way. WRITE THE SWITCH
+      (recipe in Phase 1). NEVER auto-NAKED a computed jump.
+    • High registers (r8/r9/sl/fp) held across a \`bl\` are an ADVISORY, not a wall — usually
+      matchable (sub_08004508 holds r8+r9 across a bl and matches). ATTEMPT.
+- cat docs/deferred-analysis/${t.name}.md 2>/dev/null — if a prior attempt stashed "## Drift" +
+  "## Best-effort C", READ it: those tried levers are what does NOT work. ESCAPE the plateau by
+  re-deriving; do not tweak the near-match.
+- Read ${t.destC} end-to-end (reuse its types/conventions); dump_pool.py ${t.name} for resolved
+  literals; struct_grow.py / struct_xref.py any raw IWRAM/EWRAM base so the C carries TYPED offsets,
+  not [rN,#imm] magic.
+- PREREQUISITES (do these regardless of path): peel every callee tagged "UNPEELED ✗"
+  (python3 tools/agent/auto_peel.py --addr 0x<callee> --apply; commit "Peel sub_XYZ" — cross-region
+  BL callees MUST be peeled or the C cannot match); if the target is "blocked: needs new C file",
+  scaffold it (python3 tools/agent/scaffold_cluster.py --asm ${t.asmFile} ${t.name} --apply;
+  commit "Scaffold ${t.destC}").
+- Write a SHORT model for yourself: params, structs/fields touched, control-flow shape, and the
+  drift you anticipate. For drift you expect, name the responsible agbcc pass in
+  tools/agbcc-src/gcc_arm/ ({local-alloc,regclass,reload}.c = register choice; loop.c =
+  loop-reversal/strength-reduce; cse.c/gcse.c = folds) and READ it. The agbcc SOURCE is symlinked
+  into your worktree — understanding WHY it diverges is how the hard ones get cracked, not mutating.
 
-5. Write C into ${t.destC} (use the brief's m2c seed; project C style — named constants/
-   enums, early-return no-else, no side effects in conditions, u8 booleans).
-6. Verify:
-     make -j4
-     python3 tools/agent/compile_and_view_assembly.py ${t.name} --human
-   COST DISCIPLINE (token audit: ~98% of this workflow's cost is cache traffic from long
-   iterate loops, so fewer/cheaper turns is the whole game):
-   • While CONVERGING, prefer the FAST per-symbol diff — build_expected.py --fn ${t.name}
-     then objdiff-cli on expected/src/<rel>.o vs src/<rel>.o (CLAUDE.md "Agent workflow"
-     step 7). It skips the whole-ROM rebuild; use the full \`make -j4\` + compile_and_view
-     only as an initial sanity check and for the FINAL match verification.
-   • NEVER paste full build/make logs into your reasoning — they re-enter context every
-     turn and dominate cost. Keep only the byte_diff / diff-count lines.
+== PHASE 1 — CLEAN C FIRST ==
+- Write a HUMAN-READABLE first implementation into ${t.destC}: named constants/enums (add the enum
+  to the right include/ header if missing — no bare 0x29 for a thing that has a name), early-return
+  with NO else, u8 booleans, no intermediate local that only caches one field read.
+- HARD CONSTRAINT for this phase: NO inline asm, NO NAKED, NO volatile-for-matching, and ideally NO
+  register pins. This is the readable reference you keep.
+- If it does not match, your FIRST round of fixes is SOURCE-LEVEL — control-flow shape, types,
+  expression structure, statement order — informed by the agbcc pass you read. RE-DERIVE a different
+  structure; do NOT yet reach for pins/barriers. When a register CHOICE is wrong, coerce it by
+  rewriting the C SHAPE (the value's type, where it is read, how the expression associates), NOT by
+  pinning — a pin (or an asm("") or a volatile) means the shape is still wrong. Examples the cleanup
+  sprint used to DELETE pins: split a fused read-modify-write store into staged statements
+  (\`u32 t = (u8)~4; t &= flags; t |= 2; slot->flags = t;\` instead of one expression);
+  pass a parameter directly instead of through a pinned alias; move a derivation inline
+  (\`env->step = -stepU;\`); replace an \`asm("" : "=r"(x) : "0"(y))\` copy-fence with a plain \`x = y;\`.
+- COMPILER FIRST, BEFORE ANY PIN. The default compiler is now OLD_AGBCC (\`CC = $(OLD_AGBCC_BIN)\` is
+  the Makefile default — it is the correct model for this title; only 4 named TUs use the newer
+  agbcc). MOST of the ~45 pins/asm the cleanup sprint deleted were compensating for C written against
+  the WRONG compiler. If a fresh decomp drifts on register coloring, a redundant
+  \`push {lr}; pop {r1}; bx r1\` epilogue at control-flow joins, or AND-operand ordering, add a per-TU
+  CC override in the Makefile (the .s target matching ${t.destC}, e.g.
+  \`src/game/foo.s: CC = $(AGBCC_BIN)\`) and re-check BEFORE you reach for a pin. Swapping the compiler
+  matches more functions than pins do.
+- DISPATCHER RECIPE (mov pc / mode-X): write the dense \`switch\` over the sequential state index, then
+  (a) order the case BODIES in baserom PHYSICAL order, NOT numeric case order (codegen-notes
+  "Case-number ≠ source-block-order"); (b) share epilogues across cases via fallthrough / \`goto tail\`
+  labels; (c) add \`<that .s>: CFLAGS += -fforce-addr -fno-expensive-optimizations -fno-gcse\` to the
+  Makefile and \`/DISCARD/\` the stray \`.rodata\` those flags emit in linker.ld. This exact recipe
+  matched the entire mode-X cluster.
 
-DEFINITION OF DONE — READ CAREFULLY (the previous run lied here):
-  byte_diff 0 does NOT by itself mean "matched". A NAKED+NON_MATCHING function ALSO has
-  byte_diff 0 — its asm path reproduces the bytes by construction. The status is STRUCTURAL,
-  determined by what the committed .c contains, NOT by byte_diff:
-    • status="matched"  ⟺  PURE C: the .c has NO \`NAKED\`, NO inline \`asm(\`, NO
-      \`#ifdef NON_MATCHING\` for this function — AND byte_diff 0 / make check passes.
-    • status="naked"    ⟺  the .c uses NAKED / inline asm / #ifdef NON_MATCHING (it still
-      byte-matches via the asm path, but it is NOT a pure-C match).
-  Verify your own status before reporting: a NAKED ship has a \`NAKED\` attribute or a
-  \`#ifdef NON_MATCHING\` block for THIS function — \`grep -nE 'NON_MATCHING|\\bNAKED\\b' ${t.destC}\`
-  (scope to ${t.name}'s body). If that prints for your function, status MUST be "naked".
-  IMPORTANT: a \`register T x asm("rN")\` register-pin DECLARATION is PURE C (a matching lever),
-  NOT inline asm — it does NOT make the function NAKED. NEVER call a NAKED ship a "true
-  match" / "true byte-match" — say "matches via the NAKED asm path".
+== PHASE 2 — DIFF DOWN (only after a clean attempt exists) ==
+- Verify with the FAST per-symbol diff while converging: python3 tools/agent/build_expected.py --fn
+  ${t.name}, then objdiff-cli on expected/src/<rel>.o vs src/<rel>.o (CLAUDE.md "Agent workflow"
+  step 7). Use the full \`make -j4\` + compile_and_view_assembly.py ${t.name} --human only for the
+  initial sanity check and the FINAL verification. NEVER paste full build logs into your reasoning —
+  keep only the byte_diff / diff-count lines (this workflow's cost is ~98% cache traffic from long
+  loops, so fewer/cheaper turns is the whole game).
+- NOW the matching levers are allowed — but each is DEBT, ordered cheapest-shape-first:
+    1. per-TU CFLAGS (-ffixed-rN; -fno-strength-reduce for a loop-reversal \`bge.n\` countdown;
+       -fno-gcse; -fno-schedule-insns) and/or the compiler swap above — these reach codegen the
+       permuter cannot.
+    2. a local base-ptr anchor (\`T *p = &gThing;\`) to sequence a base-load before constants / keep a
+       base opaque so offsets are not folded into separate IWRAM literals; linker-assigned IWRAM
+       symbols for the same; index-first pointer casts to flip \`adds\` operand order.
+    3. a dead-pointer-cast-to-index to force a register's reuse (\`p = (T*)(u32)p->f; x = tbl[(u32)p];\`)
+       or an \`asm("")\` mov-fence to block a tail-merge / copy-prop fold — structures the permuter
+       cannot invent.
+    4. a \`register T x asm("rN")\` pin INCLUDING high regs r8/r9/sl — LAST resort, only when no shape
+       rewrite coerces the register. A pin is PURE C (still status="matched") and still beats NAKED,
+       but it is the loudest "the shape is wrong" signal — minimize them.
+- SUSPECT A STRUCT-LAYOUT BUG BEFORE A CODEGEN WALL. A spurious _pad, a wrong record stride, or a
+  wrong field offset masquerades as an allocator divergence far more often than the real thing — a
+  small byte_diff at a \`str\`/\`ldr [rN,#imm]\` is almost always a wrong offset. Fix the struct first.
+- INSTRUMENT AGBCC when you cannot tell WHY a pass diverges (a proven technique): build a PRIVATE
+  debug copy of agbcc, add an \`fprintf(stderr, …)\` at the decision site in the relevant gcc_arm pass,
+  and compile ONLY your TU with it to watch the choice (which hard reg, which fold, which branch).
+  SAFETY INVARIANT: NEVER edit or rebuild the SHARED symlinked tools/agbcc or tools/agbcc-src — a
+  rebuild there races every sibling worker and corrupts the run. Copy to a private dir, build to a
+  private prefix, read the trace, then \`rm -rf\` the sandbox. Full recipe in codegen-notes
+  "Instrumenting agbcc itself — build a private debug compiler".
+- Corpus FIRST, permuter LAST: python3 tools/agent/corpus.py grep '<the specific idiom>' --c for
+  pure-C prior art before mutating. Permuter ONLY if you are NEAR a match (byte_diff <= ~40) and the
+  function is NOT corpus-confirmed-unmatchable: bounded ~2000 iters (~30-45s), process-GROUP kill
+  (\`set -m; vendor/decomp-permuter/.venv/bin/python vendor/decomp-permuter/permuter.py
+  nonmatchings/<fn>-<id> -j4 --stop-on-zero --better-only > /tmp/perm-<fn>.log 2>&1 & PGID=\$!;
+  sleep 45; kill -- -\$PGID 2>/dev/null; wait 2>/dev/null\`), per ${MAIN}/docs/permuter-howto.md —
+  NEVER pipe it (redirect to a file), NEVER \`pkill -f permuter.py\` unscoped, and
+  \`pgrep -f nonmatchings/<fn>-<id>\` MUST be empty afterward (leaked -j workers burn CPU forever). If
+  score 0 → adopt the output-*/ variant, confirm byte_diff 0 independently, rm nonmatchings/<fn>-*
+  (never commit it).
+- EVERY pin / asm("") / volatile / -fXXX you KEEP gets a ONE-LINE comment stating WHY, tied to the
+  specific diff instruction it fixes. An unexplained lever is debt the reviewer rejects.
 
-IF IT DRIFTS (ATTEMPT case, pure C not matching yet) — matchable-with-a-lever, NOT NAKED
-yet — it IS matchable in pure C (corpus = ~100% on game logic), so this is a THINKING
-problem, not a search. The "~6 iterations then defer" cost-cap from the audit is about NOT
-GRINDING THE SAME C STRUCTURE (a near-match is a local minimum; tweaking one structure that
-won't converge is wasted) — it is NOT permission to quit at the first plateau. RE-DERIVING a
-FUNDAMENTALLY DIFFERENT structure (a register-forcing pointer cast, a different expression
-shape, a -fXXX flag, an asm("") barrier — informed by READING the agbcc pass) resets the
-budget. Defer only after SEVERAL DISTINCT structural approaches genuinely fail.
-  a. Identify the EXACT drift (which register, fold/schedule, prologue push) — then READ the
-     agbcc pass that causes it: tools/agbcc-src/gcc_arm/{local-alloc,regclass,reload}.c for
-     register choice, loop.c for loop-reversal, cse.c/gcse.c for folds — to learn WHY it picks
-     what it picks, then write the C that avoids it.
-  b. Try levers — INVENT structure, don't just tweak: local base-ptr anchor (\`T *p=&gThing;\`);
-     \`register T x asm("rN")\` pin INCLUDING high regs r8/r9/sl (these ARE matchable — see
-     sub_080210A0 — do NOT auto-NAKED them); cast a now-dead pointer to an index to force its
-     register reuse (\`p=(T*)(u32)p->f; x=tbl[(u32)p];\` — sub_0800A1C8, a structure the permuter
-     cannot invent); \`asm("")\` barrier on an r0-pinned local to block a tail-merge of distinct
-     return paths (sub_0800A104); void-return epilogue (decl caller+callee void → \`pop {r0};
-     bx r0\`); linker-assigned IWRAM symbols to defeat a CSE-fold; per-TU \`CFLAGS +=\` flag
-     overrides (\`-ffixed-rN\` to free a register, \`-fno-strength-reduce\` for loop-reversal,
-     \`-fno-gcse\`, \`-fno-schedule-insns\`) and/or \`CC=\$(OLD_AGBCC_BIN)\`; statement/scope reorder.
-  c. Corpus-grep the SPECIFIC drift; apply any pure-C precedent, retry.
-  d. PERMUTER — if you are NEAR a match (small byte_diff, say ≤ ~40) and the function is
-     NOT corpus-validated unmatchable, brute-force the residual drift per
-     ${MAIN}/docs/permuter-howto.md. HARD BUDGET ~2000 iters ≈ 30s. macOS has NO \`timeout\`,
-     and a naive \`& kill $PID\` LEAKS the -j workers (they orphan to PID 1 and burn CPU
-     forever) — especially if you pipe the permuter. Use EXACTLY this PROCESS-GROUP kill, do
-     NOT pipe it, redirect to a file:
-         set -m
-         vendor/decomp-permuter/.venv/bin/python vendor/decomp-permuter/permuter.py \\
-             nonmatchings/<fn>-<id> -j4 --stop-on-zero --better-only > /tmp/perm-<fn>.log 2>&1 &
-         PGID=$!; sleep 45; kill -- -$PGID 2>/dev/null; wait 2>/dev/null
-         pkill -f "permuter.py nonmatchings/<fn>-<id>" 2>/dev/null || true   # scoped safety net
-         grep -E 'base score|new best|score = 0|Found match' /tmp/perm-<fn>.log | tail
-     NEVER \`pkill -f permuter.py\` unscoped (cross-kills sibling worktrees). After it, VERIFY
-     \`pgrep -f "nonmatchings/<fn>-<id>"\` is EMPTY — leaked permuters are a real problem.
-     If score 0 → adopt the output-*/ variant, CONFIRM byte_diff 0 independently, ship
-     status="matched". If not within budget, do ONE structural rewrite + one more bounded
-     run, then stop. Validate the scratch with a 3s smoke first; rm nonmatchings/<fn>-* when
-     done (never commit it).
-  e. RAISED BAR — if levers + permuter (+ one rewrite) + corpus ALL fail on an ATTEMPT
-     function, DO NOT ship NAKED. The corpus proves game-logic functions match ~always
-     (cvaos, a Konami GBA agbcc title like ours, is ~0.3% NAKED and 0% in game logic), so a
-     stuck ATTEMPT means the right C STRUCTURE hasn't been found yet — NOT that it's
-     impossible. NAKED here would be a false "done". Instead DEFER — but PRESERVE your work
-     first so the next attempt doesn't restart cold (this is the ONE commit a deferral makes):
-       i.  Write docs/deferred-analysis/${t.name}.md (mkdir -p docs/deferred-analysis first):
-           a "## Drift" section (best byte_diff/diff_count, WHICH register/fold/schedule,
-           levers + permuter score already tried — so the next agent picks a DIFFERENT lever)
-           and a "## Best-effort C" section with your most-correct readable C in a \`\`\`c block.
-       ii. git add docs/deferred-analysis/${t.name}.md && git commit -m "Stash deferred analysis: ${t.name}"
-           This commit touches ONLY docs/ (a .md — NEVER compiled, make check stays green).
-           Include its SHA in commits[].
-       iii. THEN revert the rest: \`git checkout -- ${t.destC}\` (or restore the TODO stub),
-           LEAVE the asm slice ${t.asmFile} in place (do NOT delete it, do NOT touch linker.ld).
-     status="deferred". An honest un-decompiled asm slice beats a fake-matched NAKED, and the
-     stashed .md lets the reclamation pass (or a human) resume from your analysis.
-     (NAKED is reserved for classifier STRONG_UNMATCHABLE + corpus-confirmed only — handled
-     in TRIAGE above. You should never reach here for a STRONG function.)
+== PHASE 3 — READABILITY PASS (after byte_diff hits 0) ==
+- If the match required 3+ register pins, ANY asm(""), a suspicious volatile, or contorted locals: do
+  a SECOND pass that REDUCES that debt while PRESERVING the match. Remove each lever that is NOT
+  load-bearing and re-verify byte_diff 0 after EACH removal (fast path: build_expected.py --fn
+  ${t.name} + objdiff-cli). Prefer a shape rewrite that drops the lever entirely (the sprint deleted
+  ~45 pins exactly this way). Keep ONLY genuinely-required levers, each with its WHY note.
+- Ranking of done states: a clean match with ZERO levers > a match with EXPLAINED levers > a match
+  with unexplained levers. Drive toward the left.
 
-ON A PURE-C MATCH or a clean NAKED ship:
-  - rm the now-empty asm slice ${t.asmFile} (if the function's whole slice is consumed).
-  - Edit linker.ld to collapse the scaffold + asm pair into the single src .o(.text)
-    entry, following the preceding sibling's pattern.
-  - If a stale defer note exists for this now-RESOLVED function, remove it:
-    \`[ -f docs/deferred-analysis/${t.name}.md ] && git rm docs/deferred-analysis/${t.name}.md\`
-    (prevents function_status.py from still reporting it as deferred).
-  - make -j4 && make check  (MUST exit 0).
-  - Commit with the subject that matches your status — this is mandatory and the integrator
-    re-checks it:
-      • status="matched":  git commit -m "Decompile ${t.name}"
-      • status="naked":    git commit -m "Decompile ${t.name} (NAKED + NON_MATCHING)"
-    Body explains the structure + agbcc tricks; for NAKED include "class: <classN>, corpus:
-    <the asm-vs-matched-C hit counts>, levers tried: <…>". Do NOT write "true match" for NAKED.
+== NAKED IS EXCEPTIONAL (asymmetric-cost rule) ==
+A function wrongly shipped as NAKED is a PERMANENT regression — nobody revisits it and it will not
+survive the phase-3 PC port. Wasted match tokens are cheap and recoverable. So when unsure → ATTEMPT.
+Ship NAKED+NON_MATCHING ONLY if classify_unmatchable.py returned STRONG_UNMATCHABLE (class3-libgcc)
+AND the corpus confirms the idiom lives ONLY in hand-asm:
+    python3 tools/agent/corpus.py grep '<exact idiom regex>' --asm   (expect MANY hits)
+    python3 tools/agent/corpus.py grep '<related C construct>'  --c   (expect NONE matched to C)
+"All corpus hits are NAKED" is NOT proof of impossibility — it is circular (everyone NAKED'd for the
+same wrong reason, as the movpc cluster proved). A direct compile probe beats a corpus census. If you
+DO ship NAKED: readable C under #ifdef NON_MATCHING, hand-asm NAKED under #else, and EVERY NAKED asm()
+block ends with the literal "    .syntax divided\\n" (the \`.syntax unified\` at the top bleeds into the
+rest of the .o otherwise). status="naked".
 
-IF YOU CANNOT MATCH OR NAKED-SHIP (e.g. asm-slice needs mnemonic refinement too large
-to do safely): revert to a clean tree (git checkout -- / git reset --hard \$BASE,
-git clean -fd untracked you added) and report status "reverted" with the blocker.
-DO NOT remove the asm slice, DO NOT commit a broken/non-matching build.
+== DEFINITION OF DONE (structural, NOT byte_diff) ==
+byte_diff 0 alone does NOT mean matched — a NAKED ship is byte_diff 0 by construction. The status is
+STRUCTURAL, from what the committed .c contains:
+  • status="matched" ⟺ the ${t.name} body has NO \`NAKED\`, NO inline \`asm(\`, NO \`#ifdef
+    NON_MATCHING\` — AND byte_diff 0 / make check passes. (A \`register T x asm("rN")\` pin
+    DECLARATION is PURE C, not inline asm — it does NOT make the function naked.)
+  • status="naked" ⟺ the body uses NAKED / inline asm / #ifdef NON_MATCHING (matches via the asm path).
+Verify before reporting: \`grep -nE 'NON_MATCHING|\\bNAKED\\b' ${t.destC}\` (scope to ${t.name}'s body).
+Never call a NAKED ship a "true match" — say "matches via the NAKED asm path".
+
+== ON A PURE-C MATCH or a clean NAKED SHIP ==
+- rm the now-empty asm slice ${t.asmFile} (if the function's whole slice is consumed).
+- Edit linker.ld to collapse the scaffold + asm pair into the single src .o(.text) entry, following
+  the preceding sibling's pattern.
+- If a stale defer note exists for this now-RESOLVED function, remove it:
+  \`[ -f docs/deferred-analysis/${t.name}.md ] && git rm docs/deferred-analysis/${t.name}.md\`.
+- make -j4 && make check  (MUST exit 0).
+- Commit with the subject that matches your status (the integrator re-checks it):
+    • status="matched":  git commit -m "Decompile ${t.name}"
+    • status="naked":    git commit -m "Decompile ${t.name} (NAKED + NON_MATCHING)"
+  Body explains the structure + agbcc tricks; for NAKED include "class: <classN>, corpus: <hit
+  counts>, levers tried: <…>". Do NOT write "true match" for NAKED.
+
+== IF YOU CANNOT MATCH (after SEVERAL fundamentally-different structural approaches genuinely fail) ==
+Do NOT ship NAKED for a non-STRONG function — an honest un-decompiled asm slice beats a fake match.
+DEFER, preserving your work so the next attempt resumes instead of starting cold (the ONE commit a
+deferral makes):
+  i.   mkdir -p docs/deferred-analysis; write docs/deferred-analysis/${t.name}.md with a "## Drift"
+       section (best byte_diff/diff_count, WHICH register/fold/schedule diverged, levers + permuter
+       score tried — so the next agent picks a DIFFERENT lever) and a "## Best-effort C" section (your
+       most-correct readable C in a \`\`\`c block).
+  ii.  git add docs/deferred-analysis/${t.name}.md && git commit -m "Stash deferred analysis: ${t.name}"
+       (docs-only — never compiled, make check stays green). Include its SHA in commits[].
+  iii. git checkout -- ${t.destC} (restore the stub); LEAVE the asm slice ${t.asmFile} and linker.ld
+       untouched.
+status="deferred". The stashed .md lets the reclamation pass (or a human) resume from your analysis.
+
+IF YOU CANNOT MATCH OR NAKED-SHIP for a mechanical reason (e.g. the asm slice needs mnemonic
+refinement too large to do safely): revert to a clean tree (git reset --hard \$BASE; git clean -fd on
+untracked you added) and report status "reverted" with the blocker. DO NOT remove the asm slice, DO
+NOT commit a broken/non-matching build.
 ${WORKTREE_RULES}
 
 Return the structured object: target="${t.name}", status, worktreePath, commits (the
-\`git rev-list --reverse \$BASE..HEAD\` SHAs in apply order), nakedClass/corpusEvidence
-if NAKED, and notes (what you did / why reverted).`
+\`git rev-list --reverse \$BASE..HEAD\` SHAs in apply order), nakedClass/corpusEvidence if NAKED, and
+notes (what you did / why reverted).`
 }
 
 function builderPrompt(round) {
