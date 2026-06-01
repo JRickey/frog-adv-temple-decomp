@@ -64,6 +64,8 @@ SECTIONS {
          * never backward). The (NOLOAD) attribute keeps these byte-neutral
          * — no storage is committed; the symbols only carry addresses. */
         . = 0x00000000; gIwram_0000 = .;
+        . = 0x00003432; gIwram_3432 = .;
+        . = 0x00003434; gIwram_3434 = .;
         . = 0x00003470; gIwram_3470 = .;
         . = 0x00003474; gIwram_3474 = .;
         . = 0x00003478; gIwram_3478 = .;
@@ -661,7 +663,6 @@ SECTIONS {
         src/game/sub_08032b18.o(.text);  /* 0x08032b18 - 0x08032bc8, SoundSlot_PickByPriority + sub_08032BA0 */
         asm/text/text_0x08032bc8.o(.text);  /* 0x08032bc8 - 0x080338a8, raw bytes */
         src/game/sub_080338a8.o(.text);
-        asm/disasm_0x080338ec.o(.text);  /* 0x080338ec - 0x08033910, sub_080338EC */
         src/game/sub_08033910.o(.text);  /* 0x08033910 - 0x08033948, sub_08033910 */
         asm/text/text_0x08033948.o(.text);  /* 0x08033948 - 0x08033ca4, raw bytes */
         asm/disasm_0x08033ca4.o(.text);  /* 0x08033ca4 - 0x08033cd8, __ashldi3 (libgcc; auto-peeled) */

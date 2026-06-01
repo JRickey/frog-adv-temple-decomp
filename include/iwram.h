@@ -152,6 +152,8 @@ struct IwramAt6110 {
 void ModeControl_Init(struct IwramAt6110 *control, u32 limit, u32 modeId, const void *configTable, u8 state,
                       u8 threshold);
 
+extern vu16 gIwram_3432;
+extern vu8 gIwram_3434;
 extern u8 gIwram_3470[];
 extern u8 gIwram_3474[];
 extern u8 gIwram_3478[];

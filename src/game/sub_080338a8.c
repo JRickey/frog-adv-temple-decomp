@@ -1,3 +1,4 @@
+#include "iwram.h"
 #include "types.h"
 
 #define gUnknown_030065E4 (*(const void **)0x030065e4)
@@ -20,4 +21,19 @@ u32 sub_080338A8(u32 value)
     }
 
     return ret;
+}
+
+void sub_080338EC(void)
+{
+    u32 timer;
+
+    if (gIwram_3432 == 0) {
+        return;
+    }
+
+    timer = gIwram_3432 - 1;
+    gIwram_3432 = timer;
+    if ((u16)timer == 0) {
+        gIwram_3434 = 1;
+    }
 }
