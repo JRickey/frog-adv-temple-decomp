@@ -867,6 +867,7 @@ SECTIONS {
      * .ARM.attributes section can't sneak into the binary. */
     /DISCARD/ : {
         /* Emitted by -fno-expensive-optimizations for an otherwise .text-only match. */
+        src/game/sub_08001214.o(.rodata)
         src/game/sub_08002b58.o(.rodata)
         *(.ARM.attributes)
         *(.comment)
