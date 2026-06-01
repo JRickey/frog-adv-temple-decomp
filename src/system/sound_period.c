@@ -314,18 +314,33 @@ void sub_08030290(void)
 }
 
 typedef struct SoundSlotAcc {
-    u8 _pad00[0x34];
-    u16 accA;  /* +0x34 */
-    u16 accB;  /* +0x36 */
-    u32 flags; /* +0x38 */
+    u8 _pad00[0x2b];
+    u8 period;    /* +0x2b */
+    u8 _pad2c[8]; /* +0x2c */
+    u16 accA;     /* +0x34 */
+    u16 accB;     /* +0x36 */
+    u32 flags;    /* +0x38 */
 } SoundSlotAcc;
 
+typedef struct DirectSoundChannel {
+    u8 _pad00[7];
+    u8 period; /* +0x07 */
+} DirectSoundChannel;
+
+typedef struct SoundCommandBytes {
+    u8 op;
+    u8 arg;
+} SoundCommandBytes;
+
 typedef struct SoundSystemAcc {
-    u8 count; /* +0x00 */
-    u8 _pad01[0xf];
+    u8 count;       /* +0x00 */
+    u8 _pad01[0xb]; /* +0x01 */
+    u16 periodA;    /* +0x0c */
+    u16 periodB;    /* +0x0e */
     u32 chFlags[4]; /* +0x10 */
-    u8 _pad20[0x8c];
-    u16 chanAcc[4]; /* +0xac */
+    u8 _pad20[0x6c];
+    DirectSoundChannel channels[4]; /* +0x8c */
+    u16 chanAcc[4];                 /* +0xac */
     u8 _padb4[0x14];
     SoundSlotAcc *swSlots; /* +0xc8 */
 } SoundSystemAcc;
@@ -391,4 +406,104 @@ s32 sub_0803030C(s32 channel, u32 *state_ptr)
         *chFlagsPtr = flags;
     }
     return 0;
+}
+
+s32 sub_0803038C(s32 channel, u32 *state_ptr)
+{
+    register s32 ch asm("r5");
+    u32 *sp;
+    register u8 *stream asm("ip");
+    register SoundSystemAcc **gpss asm("r8");
+
+    ch = channel;
+    sp = state_ptr;
+    stream = (u8 *)*sp;
+
+    if (ch <= 3) {
+        register SoundSystemAcc **gp asm("r3");
+        register SoundSystemAcc *ss asm("r4");
+        register u32 flagOff asm("r2");
+        register u32 period asm("r0");
+        u32 directOff;
+        DirectSoundChannel *direct;
+        u32 *flags;
+        u32 flagsVal;
+        SoundCommandBytes *cmd;
+        register SoundSystemAcc **gpDirty asm("r3");
+        register u32 *flagsDirty asm("r1");
+
+        gp = &gpSoundSystemAcc;
+        directOff = ch << 3;
+        directOff += 0x8c;
+        ss = *gp;
+        direct = (DirectSoundChannel *)((u8 *)ss + directOff);
+        flagOff = ch << 2;
+        flags = (u32 *)((u8 *)ss + 0x10);
+        flags = (u32 *)((u8 *)flags + flagOff);
+        flagsVal = *flags;
+        period = 0x10000;
+        flagsVal &= period;
+        gpss = gp;
+        if (flagsVal != 0) {
+            period = ss->periodB;
+        } else {
+            period = ss->periodA;
+        }
+        if (period != 0) {
+            period++;
+        }
+        cmd = (SoundCommandBytes *)stream;
+        period *= cmd->arg;
+        direct->period = period >> 8;
+        gpDirty = gpss;
+        flagsDirty = (u32 *)((u8 *)*gpDirty + 0x10);
+        flagsDirty = (u32 *)((u8 *)flagsDirty + flagOff);
+        *flagsDirty |= 0x80;
+    } else {
+        register SoundSystemAcc **gp asm("r2");
+        register SoundSystemAcc *ss asm("r3");
+        register SoundSlotAcc *slot asm("r0");
+        register u8 *periodSlot asm("r6");
+        register u32 period asm("r0");
+        SoundCommandBytes *cmd;
+        register u32 scale asm("r2");
+        register SoundSystemAcc **gpDirty asm("r2");
+        register u8 *ssDirty asm("r0");
+        register SoundSlotAcc *slotDirty asm("r1");
+        register u32 chShift asm("r1");
+
+        ch -= 4;
+        gp = &gpSoundSystemAcc;
+        ss = *gp;
+        slot = (SoundSlotAcc *)((u8 *)ss->swSlots + (ch << 6));
+        periodSlot = (u8 *)slot + 0x24;
+        period = slot->flags & 0x10000;
+        gpss = gp;
+        if (period != 0) {
+            period = ss->periodB;
+        } else {
+            period = ss->periodA;
+        }
+        if (period != 0) {
+            period++;
+        }
+        cmd = (SoundCommandBytes *)stream;
+        period *= cmd->arg;
+        scale = (period >> 8) << 1;
+        periodSlot[7] = scale;
+        if ((u8)scale != 0) {
+            period = scale + 1;
+            periodSlot[7] = period;
+        }
+        gpDirty = gpss;
+        ssDirty = (u8 *)*gpDirty;
+        ssDirty += 0xc8;
+        ssDirty = *(u8 **)ssDirty;
+        chShift = ch << 6;
+        slotDirty = (SoundSlotAcc *)(chShift + (u32)ssDirty);
+        slotDirty->flags |= 0x80;
+    }
+
+    *sp += 2;
+    return 1;
 }
