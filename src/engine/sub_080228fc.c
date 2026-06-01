@@ -13,6 +13,7 @@ extern void sub_080219BC(const void *a0, s32 slot);
 extern void sub_08020FE4(s32 a0, s32 a1);
 extern void sub_08005D10(s32 a0, s32 a1);
 extern const u32 sLevelLayoutPtrs_3113C8[8];
+extern const u32 sLevelLayoutPtrs_31118C[7];
 
 void sub_08022920(void)
 {
@@ -50,4 +51,18 @@ void sub_080229A4(void)
 void sub_080229CC(void)
 {
     sub_08021510(6, sLevelLayout_311440, 0xb, &gIwram_6110, 10);
+}
+
+void sub_080229F0(void)
+{
+    u8 i;
+
+    i = 0;
+    do {
+        sub_080219BC((const void *)sLevelLayoutPtrs_31118C[i], i + 0x3e);
+        i++;
+    } while (i <= 6);
+
+    sub_08020FE4(0x3e, 0x44);
+    sub_08005D10(0x3e, 0x44);
 }
