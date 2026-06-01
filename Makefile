@@ -107,6 +107,7 @@ src/engine/sub_0800f24c.s: CC = $(AGBCC_BIN)
 src/engine/sub_08012d40.s: CC = $(AGBCC_BIN)
 src/engine/sub_08013040.s: CC = $(AGBCC_BIN)
 src/game/sub_08003254.s: CFLAGS += -ffixed-r3
+src/game/sub_08006a0c.s: CFLAGS += -O1
 # Loop reverses to a `bge.n` countdown under strength reduction; the baserom
 # keeps a signed count-up (`ble.n`). Disabling strength reduction restores it.
 src/game/sub_08003b8c.s: CFLAGS += -fno-strength-reduce
