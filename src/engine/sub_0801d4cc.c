@@ -29,7 +29,7 @@ extern void sub_0801D33C(u8 arg);
 void sub_0801D4CC(u8 arg)
 {
     u8 *state;
-    register u32 tableBase asm("r3");
+    u32 tableBase;
     const u32 *const *entry;
     const u32 *base;
     const u32 *table2;
@@ -49,7 +49,7 @@ void sub_0801D4CC(u8 arg)
 
     {
         register u8 byteZero asm("r0") = 0;
-        register u16 halfZero asm("r4") = 0;
+        u16 halfZero = 0;
         asm volatile("" : "+r"(byteZero), "+r"(halfZero));
         state[8] = byteZero;
         zero = halfZero;

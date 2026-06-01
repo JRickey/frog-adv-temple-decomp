@@ -29,11 +29,11 @@
 
 void sub_08006600(void *baseIn, u32 selectorIn, u32 bitIn)
 {
-    register u8 *base asm("r4") = (u8 *)baseIn;
+    u8 *base = (u8 *)baseIn;
     u32 selector = (u8)selectorIn;
     u32 bit = (u8)bitIn;
     u32 mask;
-    register u8 *p asm("r1");
+    u8 *p;
 
     switch (selector) {
     case 0:
@@ -41,8 +41,8 @@ void sub_08006600(void *baseIn, u32 selectorIn, u32 bitIn)
         *(u16 *)(base + 0) = *(u16 *)(base + 0) | mask;
         break;
     case 1: {
-        register s32 maskLo asm("r2");
-        register s32 maskHi asm("r3");
+        s32 maskLo;
+        s32 maskHi;
         register u32 lo asm("r0");
         register u32 hi asm("r1");
         maskLo = 1 << bit;
