@@ -12,18 +12,10 @@ typedef struct {
 extern u32 sub_0802D9EC(u32 sound, u32 a, u32 b, u32 c);
 extern void sub_0802DC1C(u32 handle, u8 val);
 
-/* Returns -1 unless bit 4 of the 0x03003570 flags byte is set, in which
- * case it (re)starts `sound` via sub_0802D9EC and returns the new handle.
- *
- * Same matching lever as the sibling sub_08020B88: accumulate the mask
- * into its own variable (`mask = mask & p->flags`) so agbcc hoists
- * `movs r0, #16` ahead of the `ldrb`, and pin the base pointer to r1 /
- * the mask to r0 to fix the register colouring.
- */
 u32 sub_08020C78(u32 sound)
 {
-    register StructAt3003570 *p asm("r1");
-    register int mask asm("r0");
+    StructAt3003570 *p;
+    int mask;
     u32 handle;
 
     handle = -1;
@@ -38,10 +30,10 @@ u32 sub_08020C78(u32 sound)
 
 u32 sub_08020CA4(u32 sound)
 {
-    register u32 snd asm("r1");
-    register u32 handle asm("r0");
-    register u32 pan asm("r1");
-    register u32 result asm("r4");
+    u32 snd;
+    u32 handle;
+    u32 pan;
+    u32 result;
     StructAt3003570 *p;
 
     snd = sound;

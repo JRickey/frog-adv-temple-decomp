@@ -90,7 +90,7 @@ ifneq (,$(wildcard tools/agbcc))
 	AGBCC_BIN := tools/agbcc/bin/agbcc
 	OLD_AGBCC_BIN := tools/agbcc/bin/old_agbcc
 	AGBCC_LIB := tools/agbcc/lib
-	CC = $(AGBCC_BIN)
+	CC = $(OLD_AGBCC_BIN)
 else
 	AGBCC_BIN := $(shell which agbcc)
 	OLD_AGBCC_BIN := $(shell which old_agbcc)
@@ -100,81 +100,22 @@ endif
 
 LIBS := $(AGBCC_LIB)/libgcc.a $(AGBCC_LIB)/libc.a
 
-# Per-file compiler overrides. Some translation units in the baserom were
-# built with the older gcc-2.x snapshot bundled by pret as `old_agbcc` —
-# notably, it avoids the redundant `push {lr}; pop {r1}; bx r1` epilogue
-# that the newer `agbcc` emits for any function with a control-flow join.
-# When you discover that a function only matches under old_agbcc, add the
-# source file here. See docs/codegen-notes.md.
-src/engine/sub_08012fa0.s: CC = $(OLD_AGBCC_BIN)
-src/game/sub_08033910.s: CC = $(OLD_AGBCC_BIN)
-src/system/init.s: CC = $(OLD_AGBCC_BIN)
-src/system/init1.s: CC = $(OLD_AGBCC_BIN)
-src/system/vblank.s: CC = $(OLD_AGBCC_BIN)
-src/engine/sub_0800a710.s: CC = $(OLD_AGBCC_BIN)
-src/engine/sub_0800a83c.s: CC = $(OLD_AGBCC_BIN)
-src/engine/sub_0800cfdc.s: CC = $(OLD_AGBCC_BIN)
-src/engine/sub_0800b7b0.s: CC = $(OLD_AGBCC_BIN)
-src/engine/sub_0800cd88.s: CC = $(OLD_AGBCC_BIN)
-src/engine/sub_0800cb80.s: CC = $(OLD_AGBCC_BIN)
-src/engine/sub_08012d88.s: CC = $(OLD_AGBCC_BIN)
-src/game/sub_08006600.s: CC = $(OLD_AGBCC_BIN)
-src/game/sub_080066c4.s: CC = $(OLD_AGBCC_BIN)
-src/game/sub_08006948.s: CC = $(OLD_AGBCC_BIN)
-src/game/sub_0800690c.s: CC = $(OLD_AGBCC_BIN)
-src/game/sub_0800586c.s: CC = $(OLD_AGBCC_BIN)
-src/game/sub_08006b88.s: CC = $(OLD_AGBCC_BIN)
-src/game/sub_0800679c.s: CC = $(OLD_AGBCC_BIN)
-src/game/sub_0800336c.s: CC = $(OLD_AGBCC_BIN)
-src/game/sub_080018f8.s: CC = $(OLD_AGBCC_BIN)
-src/engine/sub_0800cdcc.s: CC = $(OLD_AGBCC_BIN)
-src/engine/sub_0800ce10.s: CC = $(OLD_AGBCC_BIN)
-src/engine/sub_0800ce54.s: CC = $(OLD_AGBCC_BIN)
-src/system/sub_08032894.s: CC = $(OLD_AGBCC_BIN)
-src/game/sub_08032b18.s: CC = $(OLD_AGBCC_BIN)
-src/system/sub_0802e7c4.s: CC = $(OLD_AGBCC_BIN)
-src/system/sub_0802e13c.s: CC = $(OLD_AGBCC_BIN)
-src/system/sub_0802e100.s: CC = $(OLD_AGBCC_BIN)
-src/game/sub_08005ed8.s: CC = $(OLD_AGBCC_BIN)
-src/engine/sub_080106b8.s: CC = $(OLD_AGBCC_BIN)
-src/engine/sub_0800e600.s: CC = $(OLD_AGBCC_BIN)
-src/engine/sub_0800fcc8.s: CC = $(OLD_AGBCC_BIN)
-src/engine/sub_0800ee94.s: CC = $(OLD_AGBCC_BIN)
-src/engine/sub_0800ee34.s: CC = $(OLD_AGBCC_BIN)
-src/engine/sub_0800e060.s: CC = $(OLD_AGBCC_BIN)
-src/engine/sub_0800dd80.s: CC = $(OLD_AGBCC_BIN)
-src/engine/sub_0800de80.s: CC = $(OLD_AGBCC_BIN)
-src/engine/sub_0800df7c.s: CC = $(OLD_AGBCC_BIN)
-src/engine/sub_08009884.s: CC = $(OLD_AGBCC_BIN)
-src/game/sub_08007874.s: CC = $(OLD_AGBCC_BIN)
-src/game/sub_080077ac.s: CC = $(OLD_AGBCC_BIN)
-src/game/sub_08008e84.s: CC = $(OLD_AGBCC_BIN)
-src/game/sub_08007dd0.s: CC = $(OLD_AGBCC_BIN)
-src/game/sub_08009984.s: CC = $(OLD_AGBCC_BIN)
-src/game/sub_080031d4.s: CC = $(OLD_AGBCC_BIN)
-src/game/sub_08003254.s: CC = $(OLD_AGBCC_BIN)
+# Most decompiled units match the baserom with pret's older gcc-2.x snapshot.
+# Keep the newer agbcc only for the units where the old snapshot diverges.
+src/game/sub_08002ae8.s: CC = $(AGBCC_BIN)
+src/engine/sub_0800f24c.s: CC = $(AGBCC_BIN)
+src/engine/sub_08012d40.s: CC = $(AGBCC_BIN)
+src/engine/sub_08013040.s: CC = $(AGBCC_BIN)
 src/game/sub_08003254.s: CFLAGS += -ffixed-r3
 # Loop reverses to a `bge.n` countdown under strength reduction; the baserom
 # keeps a signed count-up (`ble.n`). Disabling strength reduction restores it.
 src/game/sub_08003b8c.s: CFLAGS += -fno-strength-reduce
 # Keeps the scroll-object address arithmetic in the baserom's non-hoisted form.
 src/engine/sub_0800f24c.s: CFLAGS += -fno-strength-reduce
-src/engine/sub_0800f2f8.s: CC = $(OLD_AGBCC_BIN)
 src/engine/sub_0800f2f8.s: CFLAGS += -fno-strength-reduce
 # Keeps the duplicated window step value in the baserom's r6/sl allocation.
 src/engine/sub_0801a894.s: CFLAGS += -fno-rerun-cse-after-loop
-src/game/sub_0800088c.s: CC = $(OLD_AGBCC_BIN)
-src/engine/sub_0800dffc.s: CC = $(OLD_AGBCC_BIN)
-src/game/sub_0803299c.s: CC = $(OLD_AGBCC_BIN)
-src/game/sub_0802d8f8.s: CC = $(OLD_AGBCC_BIN)
-src/engine/sub_080217d4.s: CC = $(OLD_AGBCC_BIN)
-src/engine/sub_0801129c.s: CC = $(OLD_AGBCC_BIN)
-src/engine/sub_0801d4cc.s: CC = $(OLD_AGBCC_BIN)
-src/engine/sub_08020f3c.s: CC = $(OLD_AGBCC_BIN)
-src/engine/sub_08022360.s: CC = $(OLD_AGBCC_BIN)
 src/engine/sub_08022360.s: CFLAGS += -fno-gcse
-src/engine/sub_0800d270.s: CC = $(OLD_AGBCC_BIN)
-src/system/sub_0802f9f0.s: CC = $(OLD_AGBCC_BIN)
 
 
 # Enable verbose output
