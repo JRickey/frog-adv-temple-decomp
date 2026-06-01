@@ -21,31 +21,25 @@
  * (peeled into asm/disasm_0x08033cd8.s as the canonical 14-entry
  * `_call_via_rX` helper block).
  *
- * Shipped as NAKED inline asm + NON_MATCHING reference C. The baserom
- * keeps `sSoundOpcodeHandlers` cached in the callee-save register r7
- * across every handler BL inside the inner loop, while reloading
- * `&gpSoundSystem` PC-relative each iteration in caller-save registers
- * r0/r1. agbcc 2.x will not pick r7 as a stable LUT-base across a
- * function-pointer BL — it either drops the cache (and reloads from
- * the pool every inner-loop iteration, missing the r7 push), or
- * promotes the value to r8 (corpus-validated unmatchable). Same class
- * as the MPlayMain/MP2KPlayerMain dispatchers in every pret/cvaos
- * m4a decomp, which all ship as asm. See docs/codegen-notes.md
- * "High registers (sl/r10, sb/r9, r8) — corpus-validated unmatchable"
- * and "Opcode-dispatch iterator: callee-save LUT base around a BL —
- * corpus-validated unmatchable".
+ * Shipped as NAKED inline asm + NON_MATCHING reference C. After the shared
+ * SoundSystem header, agbcc can reproduce the important `r7` handler-table
+ * cache if the loop-carried values are pinned and `&gpSoundSystem` is kept
+ * live through the count-check edge. The remaining NON_MATCHING gap is the
+ * first-pass offset copy timing plus one inner-loop operand-order choice.
+ * Current reference body: size matches, byte_diff 12.
  */
 
-typedef u32 (*SoundOpcodeHandler)(s32 channelIndex, u8 *opPtr);
+typedef u32 (*SoundOpcodeHandler)(s32 channelIndex, SoundChannelSeq *seq);
 extern const SoundOpcodeHandler sSoundOpcodeHandlers[54];
 
 #ifdef NON_MATCHING
 void sub_080315D8(void)
 {
     const SoundOpcodeHandler *handlers;
-    s32 i;
-    s32 byteOffset;
+    register s32 i asm("r5");
+    register s32 byteOffset asm("r4");
     s32 next;
+    register SoundSystem **gpsp asm("r1");
     SoundChannelSeq *seq;
     u8 *opPtr;
     SoundOpcodeHandler handler;
@@ -55,7 +49,7 @@ void sub_080315D8(void)
 
 body:
     /* r1 = &gpSoundSystem is live here from count_check. */
-    seq = &gpSoundSystem->channelSeqs[i];
+    seq = (*gpsp)->channelSeqs + i;
     byteOffset = i << 4;
     next = i + 1;
     opPtr = (u8 *)seq->opPtr;
@@ -65,16 +59,17 @@ body:
     handlers = sSoundOpcodeHandlers;
 inner:
     /* Re-fetch opPtr each pass — handlers mutate it. */
-    seq = (SoundChannelSeq *)((u8 *)gpSoundSystem->channelSeqs + byteOffset);
+    seq = (SoundChannelSeq *)(byteOffset + (u32)gpSoundSystem->channelSeqs);
     opPtr = (u8 *)seq->opPtr;
     handler = handlers[*opPtr];
-    if (handler(i, opPtr) != 0)
+    if (handler(i, seq) != 0)
         goto inner;
 
 advance:
     i = next;
 count_check:
-    if (i < (s32)gpSoundSystem->count + 4)
+    gpsp = &gpSoundSystem;
+    if (i < (s32)(*gpsp)->count + 4)
         goto body;
 }
 #else
