@@ -80,6 +80,9 @@ struct IwramAt3720 {
     u8 _field_38;    /* +0x38: sub-struct head passed by pointer to sub_080059C4 */
     u8 _pad39[0x33]; /* +0x39..+0x6b */
     u16 _field_6c;   /* +0x6c: flag halfword (bits 0x08, 0x4 / 0x8000 / 0x7fff tested) */
+    u8 _pad6e[0x624];
+    u16 _field_692;
+    u16 _field_694;
 };
 
 struct IwramAt34C0 {

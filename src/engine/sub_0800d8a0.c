@@ -10,6 +10,8 @@ extern void sub_0802C000(void);
 extern void sub_0802BF58(void);
 extern void sub_0802CA70(void);
 extern u32 *sub_0800D070(u32 *out, s8 delta);
+extern void sub_080113E8(void);
+extern u32 sub_0800DA70(void);
 
 void sub_0800D8A0(void)
 {
@@ -129,4 +131,30 @@ test:
 
     *outp = result;
     return outp;
+}
+
+u32 sub_0800D9C8(void)
+{
+    register struct IwramAt3720 *dst asm("r2");
+    register struct IwramAt35E0 *src asm("r4");
+    register u32 offset asm("r5");
+    register u32 offset2 asm("r3");
+    register u16 *ptr asm("r1");
+    register u32 x asm("r3");
+    register u32 y asm("r1");
+
+    sub_080113E8();
+    dst = &gIwram_3720;
+    src = &gIwram_35E0;
+    x = (u16)src->_field_8;
+    offset = 0x692;
+    asm("" : "+r"(offset));
+    ptr = (u16 *)((u8 *)dst + offset);
+    *ptr = x;
+    y = (u16)src->_field_A;
+    offset2 = 0x694;
+    asm("" : "+r"(offset2));
+    dst = (struct IwramAt3720 *)((u8 *)dst + offset2);
+    *(u16 *)dst = y;
+    return sub_0800DA70();
 }
