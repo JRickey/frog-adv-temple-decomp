@@ -97,8 +97,8 @@ void sub_08003254(void *arg)
     sub_0800A4D0();
 
     {
-        register const GameProc *procs asm("r1") = sEntityProcB;
-        register GameStuff *g asm("r4") = &gGameStuff;
+        const GameProc *procs = sEntityProcB;
+        GameStuff *g = &gGameStuff;
         register u8 id asm("r2");
         register u32 offset asm("r0");
 
@@ -113,12 +113,12 @@ void sub_08003254(void *arg)
         u8 *p6110 = (u8 *)0x03006110;
 
         if (*(u32 *)(p6110 + 16) == 0) {
-            register const volatile u8 *lut asm("r0") = sEntitySubtypeLut;
+            const volatile u8 *lut = sEntitySubtypeLut;
 
             g = (GameStuff *)(u32)g->pendingMode;
             sub_0800F24C(lut[(u32)g]);
         } else {
-            register const volatile u8 *lut asm("r0") = sEntitySubtypeLut;
+            const volatile u8 *lut = sEntitySubtypeLut;
             s32 subtype;
 
             g = (GameStuff *)(u32)g->pendingMode;
@@ -130,8 +130,8 @@ void sub_08003254(void *arg)
     }
 
     {
-        register const GameProc *procsD asm("r1") = sEntityProcD;
-        register GameStuff *gTail asm("r5");
+        const GameProc *procsD = sEntityProcD;
+        GameStuff *gTail;
 
         gTail = &gGameStuff;
         {
@@ -152,7 +152,7 @@ void sub_08003254(void *arg)
         sub_08009984();
 
         {
-            register struct IwramAt3720 *p3720 asm("r1") = &gIwram_3720;
+            struct IwramAt3720 *p3720 = &gIwram_3720;
 
             if ((p3720->_field_34 & 4) != 0)
                 goto inc_timer;
@@ -173,7 +173,7 @@ void sub_08003254(void *arg)
             gTail = (GameStuff *)(u32)gTail->_unk10;
             if (((u32)gTail & 1) == 0) {
                 if (result == 2) {
-                    register struct IwramAt35E0 *entArg asm("r0") = (struct IwramAt35E0 *)ent;
+                    struct IwramAt35E0 *entArg = ent;
 
                     sub_08006B88(entArg, 0x400);
                     sub_08020C78(93);

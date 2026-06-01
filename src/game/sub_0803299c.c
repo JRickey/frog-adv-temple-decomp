@@ -18,12 +18,10 @@
  *     pool pointer instead of keeping the slot pointer live.
  *   - `index * 8` is materialised once and reused for both the +0x93 byte
  *     address and the (index*9)*4 channel-block index; the `idxCopy` alias
- *     keeps it live across the halfword store. Pinning it to r4 keeps it in
- *     a low callee-saved register (a plain local spills to r8).
+ *     keeps it live across the halfword store so agbcc leaves the value in r4.
  *   - `hwOff` as a u16 variable (not a literal) stops agbcc folding the
  *     +0xac base into the index add — the baserom builds the address in four
- *     instructions. `idx2` pinned to r1 fixes which scratch register holds
- *     index*2 vs the base.
+ *     instructions, with the local `idx2` naturally taking r1.
  *   - `ch->delta + ch->step` (delta first) reproduces the baserom's load
  *     order for the accumulator sum; the `chSum` temp is needed to hold that
  *     order — folding the add straight into `ch->acc =` re-swaps the loads.
@@ -59,7 +57,7 @@ typedef struct SoundSystem {
 
 void SoundChannel_Init(u32 index, u32 step, u32 mode, u32 ctrl)
 {
-    register u32 index8 asm("r4");
+    u32 index8;
     SoundSystem **pPool = &gpSoundSystem;
     u8 *p = (u8 *)*pPool;
     SoundSystem *ss;
@@ -79,7 +77,7 @@ void SoundChannel_Init(u32 index, u32 step, u32 mode, u32 ctrl)
     hwOff = 0xac;
     idxCopy = index8;
     {
-        register u32 idx2 asm("r1") = index * 2;
+        u32 idx2 = index * 2;
         *(u16 *)((u8 *)ss + hwOff + idx2) = ctrl;
     }
 
@@ -149,17 +147,15 @@ extern void sub_08031DBC(void);
  * sub_08031DBC, and returns 1; otherwise returns 0. Sibling of the +0x151
  * predicates SoundSlot_QueueRequest / SoundSlot_ClearInProgress.
  *
- * Matching note: the u16 argument is zero-extended into r3 and kept there
- * across the slot load — pinning `id` to r3 (`register u16 id asm("r3")`)
- * reproduces that; a plain local truncates into r0 then copies to r3, adding
- * a spurious `adds r3, r0, #0`. The slot pointer is loaded unconditionally
- * before the `id == 0` guard (the baserom reads *gpSoundSystem->slot into r2
- * ahead of the compare). The two guards stay as separate `if (cond) return 0;`
- * early-returns (id, then flag bit) to keep both `beq`-forward branches to the
- * shared return-0 tail. */
+ * Matching note: the u16 argument is zero-extended into a local `id` and kept
+ * across the slot load. The slot pointer is loaded unconditionally before the
+ * `id == 0` guard (the baserom reads *gpSoundSystem->slot into r2 ahead of the
+ * compare). The two guards stay as separate `if (cond) return 0;` early-returns
+ * (id, then flag bit) to keep both `beq`-forward branches to the shared
+ * return-0 tail. */
 u32 SoundSlot_QueueId(u16 idArg)
 {
-    register u16 id asm("r3") = idArg;
+    u16 id = idArg;
     SoundSlot *slot = gpSoundSystem->slot;
 
     if (id == 0)
@@ -187,12 +183,13 @@ u32 SoundSlot_Stride(void)
  * channel count, and returns 1.
  *
  * Matching notes:
- *   - pPool (&gpSoundSystem, r8) and buf (arg1, r5) are callee-saved across the
- *     first bl to sub_0802E380. After the bl, sz (r4) = arg1+0x154 (next).
+ *   - pPool (&gpSoundSystem, r8) and buf (arg1, naturally allocated to r5) are
+ *     callee-saved across the first bl to sub_0802E380. After the bl, sz (r4) =
+ *     arg1+0x154 (next).
  *   - To reproduce `mov r2, r8; ldr r1, [r2, #0]`, pPool is explicitly copied
- *     to r2pPool asm("r2") first; ssTmp asm("r1") then loads from r2.
+ *     to r2pPool asm("r2") first; ssTmp then naturally loads into r1.
  *   - The slot reload after the nextRegion store reuses r1 (slotField, kept across
- *     the store) and r2 (0x110, recomputed as nextOff asm("r2")).
+ *     the store) and the recomputed 0x110 offset.
  *   - The strb section: flagOff asm("r2") holds 0x151 (from pool), addrHi asm("r1")
  *     computes buf+flagOff for each strb; v = arg0[2] is read before flagOff++ so
  *     agbcc can use `ldrb r0, [r1, #2]` (immediate offset) vs modify-then-load.
@@ -202,7 +199,7 @@ extern void sub_0802E380(u8 *ptr, u32 count);
 
 u32 sub_08032AA0(u8 *arg0, u8 *arg1)
 {
-    register u8 *buf asm("r5") = arg1;
+    u8 *buf = arg1;
     register SoundSystem **pPool asm("r8") = &gpSoundSystem;
     u32 sz;
     register u32 flagOff asm("r2");
@@ -214,10 +211,10 @@ u32 sub_08032AA0(u8 *arg0, u8 *arg1)
     sub_0802E380(buf, sz);
 
     {
-        register SoundSystem *ssTmp asm("r1");
+        SoundSystem *ssTmp;
         register SoundSystem **r2pPool asm("r2");
         register SoundSlot **slotField asm("r1");
-        register u32 nextOff asm("r2");
+        u32 nextOff;
 
         sz = (u32)buf + sz;
         r2pPool = pPool;                                 /* mov r2, r8 */

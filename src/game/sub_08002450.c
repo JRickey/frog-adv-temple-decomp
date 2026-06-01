@@ -30,7 +30,7 @@ extern void sub_08001E24(void *obj, void *r4_obj);
 
 void sub_08002484(void *arg0, void *arg1)
 {
-    register GameStuff *g asm("r4");
+    GameStuff *g;
 
     sub_0800A520();
 
@@ -72,13 +72,12 @@ extern void sub_0802AB64(void);
 
 void sub_080024E4(u8 *state)
 {
-    register u8 *p asm("r4") = state;
-    register u8 *base asm("r0");
-    register u32 zero asm("r1");
+    u8 *base;
+    u32 zero;
     u8 *addr;
 
-    if (sub_08009C14(p) == 0)
-        *p = 8;
+    if (sub_08009C14(state) == 0)
+        *state = 8;
     base = (u8 *)0x03006110;
     addr = base + 42;
     zero = 0;
