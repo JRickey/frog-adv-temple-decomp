@@ -870,6 +870,7 @@ SECTIONS {
         src/game/sub_08001214.o(.rodata)
         src/game/sub_080019b4.o(.rodata)
         src/game/sub_08002524.o(.rodata)
+        src/game/mode_15.o(.rodata)
         src/game/sub_08002b58.o(.rodata)
         src/system/sub_08001508.o(.rodata)
         *(.ARM.attributes)
