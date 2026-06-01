@@ -196,7 +196,7 @@ int sub_0800A3A4(const CmpPair *a, const CmpPair *b)
  *     matching baserom's `ldr r0; lsls r2; ldrh r4` order. Inlining the
  *     field read instead emits the cs shift first.
  */
-u8 sub_0800A3D0(u16 dir, u16 coord)
+u8 sub_0800A3D0(u16 dir, s16 coord)
 {
     u16 field;
     int cs;
@@ -243,4 +243,69 @@ u8 sub_0800A3D0(u16 dir, u16 coord)
 
     gIwram_35E0._field_12 = dir;
     return 1;
+}
+
+u32 sub_0800A458(u16 x, u16 y)
+{
+    u32 xShift;
+    u32 yShift;
+    register u16 xTile asm("r5");
+    register u16 yTile asm("r4");
+    register u32 coordBits asm("r0");
+    u16 field8;
+    s32 field;
+    s32 coord;
+    u8 result;
+    u8 dir;
+
+    xShift = x << 16;
+    yShift = y << 16;
+    yTile = yShift >> 16;
+    field8 = (u16)gIwram_35E0._field_8;
+    xTile = xShift >> 16;
+
+    if ((int)(field8 << 16) == (int)xShift && (u16)gIwram_35E0._field_A == yTile)
+        return 1;
+
+    coordBits = xTile << 16;
+    coord = (s32)coordBits >> 16;
+    if (coord < gIwram_35E0._field_8) {
+        dir = 4;
+        goto check_x_or_y_low;
+    }
+
+    if (coord > gIwram_35E0._field_8) {
+        dir = 8;
+        goto check_x_or_y_low;
+    }
+
+    coordBits = yTile << 16;
+    coord = (s32)coordBits >> 16;
+    field = gIwram_35E0._field_A;
+    if (coord >= field)
+        goto y_ge;
+
+    dir = 1;
+check_x_or_y_low:
+    switch (sub_0800A3D0(dir, coord)) {
+    case 1:
+        goto return_ff;
+    }
+    result = 0;
+    return result;
+
+y_ge:
+    if (coord <= field)
+        return field;
+
+    result = sub_0800A3D0(2, coord);
+    if (result != 1)
+        goto return_zero_after;
+return_ff:
+    result = 0xff;
+    goto done;
+return_zero_after:
+    result = 0;
+done:
+    return result;
 }
