@@ -1,4 +1,4 @@
-#include "types.h"
+#include "sound.h"
 #include "macros.h"
 
 /* sub_080315D8 — per-frame sound opcode-script dispatcher.
@@ -36,19 +36,6 @@
  * corpus-validated unmatchable".
  */
 
-typedef struct SoundChannelSeq {
-    u8 *opPtr; /* +0x00 — current opcode pointer (handlers may advance) */
-    u8 _pad04[12];
-} SoundChannelSeq; /* sizeof == 16 */
-
-typedef struct SoundSystem {
-    u8 count; /* +0x00 — number of dynamic SFX slots */
-    u8 _pad01[0x113];
-    SoundChannelSeq channelSeqs[1]; /* +0x114 — flexible array, ss->count + 4 valid entries */
-} SoundSystem;
-
-#define gpSoundSystem (*(SoundSystem **)0x030065e0)
-
 typedef u32 (*SoundOpcodeHandler)(s32 channelIndex, u8 *opPtr);
 extern const SoundOpcodeHandler sSoundOpcodeHandlers[54];
 
@@ -71,15 +58,15 @@ body:
     seq = &gpSoundSystem->channelSeqs[i];
     byteOffset = i << 4;
     next = i + 1;
-    opPtr = seq->opPtr;
+    opPtr = (u8 *)seq->opPtr;
     if (opPtr == NULL)
         goto advance;
 
     handlers = sSoundOpcodeHandlers;
 inner:
     /* Re-fetch opPtr each pass — handlers mutate it. */
-    seq = (SoundChannelSeq *)((u8 *)gpSoundSystem + 0x114 + byteOffset);
-    opPtr = seq->opPtr;
+    seq = (SoundChannelSeq *)((u8 *)gpSoundSystem->channelSeqs + byteOffset);
+    opPtr = (u8 *)seq->opPtr;
     handler = handlers[*opPtr];
     if (handler(i, opPtr) != 0)
         goto inner;

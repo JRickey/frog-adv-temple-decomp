@@ -1,4 +1,4 @@
-#include "types.h"
+#include "sound.h"
 
 /* sub_0802E724 — per-channel silence/reset.
  *
@@ -23,23 +23,6 @@
  *                  stride) and clear bit 0x200 in slot->flags (+0x38).
  */
 
-typedef struct SoundSlot {
-    u8 _pad00[0x38];
-    u32 flags; /* +0x38 — 0x200 = "active" */
-} SoundSlot;
-
-typedef struct SoundSystem {
-    u8 _pad00[0x10];
-    u32 chDirty[4]; /* +0x10 — per-channel dirty flags */
-    u8 _pad20[0x94];
-    u16 chWaveBuf[4]; /* +0xB4 — per-channel halfword scratch (ch 0..2) */
-    u8 _padBC[0x8];
-    u32 *swSlotResetTab; /* +0xC4 — pointer table cleared for software slots */
-    SoundSlot *swSlots;  /* +0xC8 — base of the 64-byte software slot array */
-} SoundSystem;
-
-#define gpSoundSystem (*(SoundSystem **)0x030065e0)
-
 extern vu16 *const sChannelFreqRegTable[4];
 extern vu16 *const sChannelRegTable[4];
 
@@ -62,7 +45,7 @@ void sub_0802E724(s32 ch)
         goto big_slot;
 
     ss = gpSoundSystem;
-    ss->chDirty[ch] &= ~0x21;
+    ss->chFlags[ch] &= ~0x21;
 
     if (ch > 2)
         goto write_env_default;
@@ -87,8 +70,8 @@ big_slot: {
     s32 offset;
     ch -= 4;
     bigSs = gpSoundSystem;
-    bigSs->swSlotResetTab[ch] = 0;
-    slots = bigSs->swSlots;
+    SOUND_SYSTEM_RESET_TABLE(bigSs)[ch] = 0;
+    slots = (SoundSlot *)bigSs->swSlots;
     offset = ch * 64;
     bigSlot = (SoundSlot *)(offset + (u32)slots);
     bigSlot->flags &= ~0x200;

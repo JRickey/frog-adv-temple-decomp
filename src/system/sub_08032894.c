@@ -1,4 +1,4 @@
-#include "types.h"
+#include "sound.h"
 #include "macros.h"
 
 /* sub_08032894 — sound slot initializer.
@@ -24,37 +24,6 @@
  *     the asm `lsls #24; cmp #0` is a u8 truncation, not a full-word zero
  *     check; that's preserved here with an explicit `(u8)` cast.
  */
-
-typedef struct SoundSlotInit {
-    /* 0x00 */ u16 word_00;
-    /* 0x02 */ u16 word_02;
-    /* 0x04 */ u16 word_04;
-    /* 0x06 */ u16 word_06;
-    /* 0x08 */ u8 _pad08[4];
-    /* 0x0c */ u16 word_0c;
-    /* 0x0e */ u16 word_0e;
-    /* 0x10 */ u8 _pad10[2];
-    /* 0x12 */ u16 word_12;
-    /* 0x14 */ u16 word_14;
-    /* 0x16 */ u16 word_16;
-    /* 0x18 */ u8 _pad18[4];
-    /* 0x1c */ u16 word_1c;
-    /* 0x1e */ u16 word_1e;
-    /* 0x20 */ u16 word_20;
-    /* 0x22 */ u16 word_22;
-    /* 0x24 */ u8 _pad24[4];
-    /* 0x28 */ u16 word_28;
-    /* 0x2a */ u8 byte_2a;
-    /* 0x2b */ u8 byte_2b;
-    /* 0x2c */ u8 _pad2c[8];
-    /* 0x34 */ u16 word_34;
-    /* 0x36 */ u16 word_36;
-    /* 0x38 */ u32 dword_38;
-    /* 0x3c */ u8 byte_3c;
-    /* 0x3d */ u8 byte_3d;
-    /* 0x3e */ u8 _pad3e;
-    /* 0x3f */ u8 byte_3f;
-} SoundSlotInit;
 
 void sub_08032894(SoundSlotInit *slot, u32 arg1, u32 arg2, u32 arg3, u32 arg4)
 {
@@ -90,16 +59,6 @@ void sub_08032894(SoundSlotInit *slot, u32 arg1, u32 arg2, u32 arg3, u32 arg4)
 
 extern void sub_0802E724(s32 ch);
 extern void sub_0802E7C4(u8 pan, s32 ch);
-
-typedef struct SoundChannelSystem {
-    u8 _pad00[0x10];
-    /* 0x10 */ u32 chDirty[4];
-    u8 _pad20[0x6c];
-    /* 0x8c */ u8 chMode[4][8];
-    /* 0xac */ u16 chHwCtrl[4];
-} SoundChannelSystem;
-
-#define gpSoundSystem (*(SoundChannelSystem **)0x030065e0)
 
 /* sub_08032904 — sound channel state primer (high-register variant of SoundChannel_Init).
  *
@@ -207,8 +166,8 @@ void sub_08032904(s32 ch, u32 step, u32 pan, u32 ctrl, u16 hwCtrl)
 {
     u32 savedStep = step;
     u32 savedCtrl = ctrl;
-    SoundChannelSystem **pPool;
-    SoundChannelSystem *ss;
+    SoundSystem **pPool;
+    SoundSystem *ss;
     SoundSlotInit *chState;
     u8 *chMode;
     u32 ch8;
@@ -223,7 +182,7 @@ void sub_08032904(s32 ch, u32 step, u32 pan, u32 ctrl, u16 hwCtrl)
 
     pPool = &gpSoundSystem;
     ss = *pPool;
-    ss->chDirty[savedCh] = 0;
+    ss->chFlags[savedCh] = 0;
     hwOff = 0xac;
     {
         u32 idx2 = (u32)savedCh * 2;

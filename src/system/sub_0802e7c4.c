@@ -1,4 +1,4 @@
-#include "types.h"
+#include "sound.h"
 #include "macros.h"
 
 /* sub_0802E7C4 — per-channel pan apply.
@@ -33,24 +33,6 @@
  */
 
 #define REG_SOUNDCNT_L (*(vu16 *)0x04000080)
-
-typedef struct SoundSlot {
-    u8 _pad00[0x38];
-    u32 flags; /* +0x38 — 0x80 = "dirty, reapply pan/vol on mix" */
-    u8 _pad3c[4];
-    u8 panCache; /* +0x3c — last emitted pan byte (shared with sound_pan.c) */
-} SoundSlot;
-
-typedef struct SoundSystem {
-    u8 _pad00[0xba];
-    u8 panBits; /* +0xba — hi byte of REG_SOUNDCNT_L cache */
-    u8 _padbb[0xc];
-    SoundSlot *swSlots; /* +0xc8 — software-mixed slot array (64-byte stride) */
-    u8 _padcc[0x43];
-    u8 muteMask; /* +0x010f — per-channel mute bits (0x10 = ch muted) */
-} SoundSystem;
-
-#define gpSoundSystem (*(SoundSystem **)0x030065e0)
 
 /* Matching notes:
  *   - `(0x88 << 21) << ch >> 24` reproduces the baserom's three-shift

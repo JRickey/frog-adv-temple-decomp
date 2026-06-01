@@ -1,4 +1,4 @@
-#include "types.h"
+#include "sound.h"
 #include "macros.h"
 
 /* sub_0802E934 — per-frame "dual envelope" tick.
@@ -42,30 +42,6 @@
 
 /* The +4/+12 sub-envelope pair. Both sub-envelopes share this shape.
  * Promote to include/sound.h once a common header is needed. */
-typedef struct DualSubEnv {
-    u16 acc;   /* +0 — accumulator */
-    s16 step;  /* +2 — per-frame step */
-    s16 limit; /* +4 — wrap threshold (signed) */
-    u8 _pad6[2];
-} DualSubEnv;
-
-typedef struct SoundSlot {
-    u8 _pad00[4];
-    DualSubEnv subEnv[2]; /* +4 (acc/step/limit), +12 (same) */
-    u8 _pad14[0x24];
-    u32 flags; /* slot+0x38 */
-} SoundSlot;
-
-typedef struct SoundSystem {
-    u8 count; /* +0x00 */
-    u8 _pad01[0xf];
-    u32 chFlags[4]; /* +0x10 — per-channel dirty-flag word */
-    u8 _pad20[0xac];
-    SoundSlot **slotPtrTable; /* +0xcc */
-} SoundSystem;
-
-#define gpSoundSystem (*(SoundSystem **)0x030065e0)
-
 #ifdef NON_MATCHING
 void sub_0802E934(void)
 {
@@ -118,7 +94,7 @@ void sub_0802E934(void)
         if (slot != NULL) {
             envOff = 0;
             for (j = 0; j <= 1; j++) {
-                env = (DualSubEnv *)((u8 *)&slot->subEnv[0] + envOff);
+                env = (DualSubEnv *)((u8 *)SOUND_SLOT_DUAL_ENV(slot) + envOff);
                 step = env->step;
                 if (step != 0) {
                     acc = (u16)(env->acc + step);

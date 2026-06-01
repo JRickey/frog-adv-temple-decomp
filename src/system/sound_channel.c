@@ -1,4 +1,4 @@
-#include "types.h"
+#include "sound.h"
 #include "macros.h"
 
 /* Per-frame pitch/pan envelope tick for the sound subsystem.
@@ -23,49 +23,6 @@
  * decomp-permuter.
  */
 
-typedef struct SlotEnvelope {
-    s16 acc;           /* slot+0x2c */
-    s16 step;          /* slot+0x2e */
-    s8 negLimit;       /* slot+0x30 */
-    s8 posLimit;       /* slot+0x31 */
-    u8 frameReload;    /* slot+0x32 — sub_0802EDF0 only */
-    u8 frameCountdown; /* slot+0x33 — sub_0802EDF0 only */
-} SlotEnvelope;
-
-typedef struct SoundSlot {
-    u8 _pad00[0x2c];
-    SlotEnvelope envelope; /* agbcc rounds nested struct to 8 bytes here */
-    u8 _pad34[4];
-    u32 flags; /* slot+0x38 */
-} SoundSlot;
-
-typedef struct SoundMixEntry {
-    u32 base; /* +0x00 */
-    u8 _pad04[8];
-    u32 outSample; /* +0x0c */
-    u8 _pad10[16];
-} SoundMixEntry; /* sizeof == 28 */
-
-/* Per-slot ring-buffer cursor used by sub_0802EDF0. Sub-buffer pointer
- * at +0, sub-buffer bound at +0x8, cursor at +0xc, wrap distance at
- * +0x10. Field +0x4 is unused at this offset granularity. */
-typedef struct SoundStream {
-    void *sub; /* +0x00 — &{bound, ...} */
-    u8 _pad04[4];
-    u32 field8;  /* +0x08 — comparison threshold for cursor */
-    u32 head;    /* +0x0c — current cursor */
-    u32 field10; /* +0x10 — wrap distance */
-} SoundStream;
-
-typedef struct SoundSystem {
-    u8 count; /* +0x00 */
-    u8 _pad01[0xbf];
-    SoundMixEntry *mixTable;   /* +0xc0 */
-    SoundStream **streamTable; /* +0xc4 — sub_0802EDF0 */
-    u8 _padc8[4];
-    SoundSlot **slotPtrTable; /* +0xcc */
-} SoundSystem;
-
 /* SoundSlot also has an "envelope A" block at +0x1c (acc/step/limit s16s)
  * that sub_0802EC7C ticks — the per-slot envelope at +0x2c above is the
  * "envelope B" block ticked by sub_0802ED5C. Both share the same
@@ -77,8 +34,6 @@ typedef struct SoundSystem {
  * SoundSystem itself at ss+0x20..ss+0x83 (stride 36, envelope at +0x1c
  * inside each), plus a parallel u32 flag array at ss+0x10. Same — only
  * needed inside the NAKED body, so left as raw offsets. */
-
-#define gpSoundSystem (*(SoundSystem **)0x030065e0)
 
 /* sub_0802EC7C — per-frame envelope-A tick + per-channel dirty flagging.
  *
@@ -401,7 +356,7 @@ loop_body:
         goto next;
     if (!(slot->flags & 0x800))
         goto next;
-    stream = ss->streamTable[i];
+    stream = SOUND_SYSTEM_STREAM_TABLE(ss)[i];
     if (stream == NULL)
         goto next;
     env = &slot->envelope;

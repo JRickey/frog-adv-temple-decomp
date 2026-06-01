@@ -1,4 +1,4 @@
-#include "types.h"
+#include "sound.h"
 
 /* Sound-system mutation lock — acquire (sub_0802E418) and release
  * (sub_0802E3F8).
@@ -15,13 +15,6 @@
  * DMA. See docs/subsystems.md "Audio / sound" for the broader cluster
  * picture.
  */
-
-typedef struct SoundSystem {
-    u8 _pad00[0xbb];
-    u8 lockRefCount; /* +0xbb */
-} SoundSystem;
-
-#define gpSoundSystem (*(SoundSystem **)0x030065e0)
 
 /* Thumb-callable interwork veneers that branch to the ARM-mode
  * sound-IRQ toggle routines. Both are 8-byte `bx pc; nop; b TARGET`

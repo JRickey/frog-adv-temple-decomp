@@ -1,4 +1,4 @@
-#include "types.h"
+#include "sound.h"
 
 /* Per-channel volume setter for the four DMG-style PSG channels.
  *
@@ -25,16 +25,6 @@
  * function touches. Promote to include/sound.h once neighbouring
  * sub_0802F4B0 / sub_0802F054 / sub_0802F2FC land and confirm them.
  */
-
-typedef struct SoundSystem {
-    u8 _pad00[0x10];
-    u32 chDirty[4]; /* +0x10 — one dirty-flag word per channel */
-    u8 _pad20[0x72];
-    u8 volCache[4 * 8]; /* +0x92 — ch volume cache, 8 bytes apart */
-    /* ch0: +0x92  ch1: +0x9a  ch2: +0xa2 (waveVolCache)  ch3: +0xaa */
-} SoundSystem;
-
-#define gpSoundSystem (*(SoundSystem **)0x030065e0)
 
 /* ROM-resident data tables — defined in src/data/sound_tables.c. */
 extern vu16 *const sChannelRegTable[4];
@@ -110,6 +100,6 @@ void sub_0802E684(s32 vol, s32 chIn)
             *reg = masked | shifted;
         }
 
-        gpSoundSystem->chDirty[2] |= 0x200;
+        gpSoundSystem->chFlags[2] |= 0x200;
     }
 }

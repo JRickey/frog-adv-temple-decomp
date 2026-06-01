@@ -1,4 +1,4 @@
-#include "types.h"
+#include "sound.h"
 #include "macros.h"
 
 /* sub_080301C4 — per-mix-entry pitch-ratio scaler + period divide.
@@ -52,25 +52,12 @@
  * Does NOT byte-match; agbcc 2.x inserts an extra short pad before
  * the trailing pool word for this prologue shape. */
 
-typedef struct SoundSystem {
-    u8 _pad00[2];
-    u16 divisor; /* +0x02 — global sample-rate divisor (period denominator) */
-} SoundSystem;
-
-#define gpSoundSystem (*(SoundSystem **)0x030065e0)
-
 /* ROM-resident pitch LUTs — defined in src/data/sound_pitch.c. */
 extern const u16 sNoteRatioTable[128];    /* 0x083ddadc — *2^(n/12) up */
 extern const u16 sInversePitchTable[128]; /* 0x083ddbdc — /2^(n/12) down */
 
 /* libgcc unsigned-int division helper (0x08033ee4). */
 extern u32 __udivsi3(u32 num, u32 den);
-
-typedef struct MixEntry {
-    u8 _pad00[8];
-    u16 basePeriod; /* +0x08 — slot's nominal period in 4.12 fixed-point */
-    u8 anchor;      /* +0x0a — anchor semitone index */
-} MixEntry;
 
 u32 sub_080301C4(MixEntry *entry, u8 b, u8 c)
 {
@@ -203,27 +190,11 @@ void sub_080301C4(void)
 }
 #endif
 
-typedef struct PeriodState {
-    u8 *bufStart; /* +0x00 */
-    u32 active;   /* +0x04 */
-    u8 _pad08[8]; /* +0x08 */
-    u8 *bufEnd;   /* +0x10 */
-    u8 _pad14[6]; /* +0x14 */
-    u8 flag;      /* +0x1a */
-} PeriodState;
-
-typedef struct SoundSystem2 {
-    u8 _pad00[0xf4];    /* +0x00 */
-    PeriodState period; /* +0xf4 */
-} SoundSystem2;
-
-#define gpSoundSystem2 (*(SoundSystem2 **)0x030065e0)
-
 extern void sub_0802E380(u8 *ptr, u32 count);
 
 void sub_08030264(void)
 {
-    PeriodState *ps = &gpSoundSystem2->period;
+    PeriodState *ps = SOUND_SYSTEM_PERIOD_STATE(gpSoundSystem);
     u8 flag;
 
     if (ps->active == 0)
@@ -273,20 +244,12 @@ void sub_08030264(void)
 
 /* The SoundSystem base + 0xd0 is held in r4 across the lock BLs, with the
  * two PCM ring-buffer pointers reached at +0x14 / +0x18 from there. */
-typedef struct DmaSrcBlock {
-    u8 _pad00[0x14];
-    const void *pcmBufA; /* +0x14 (abs +0xe4) — DMA1 source */
-    const void *pcmBufB; /* +0x18 (abs +0xe8) — DMA2 source */
-} DmaSrcBlock;
-
-#define gpSoundSystem3 (*(u8 **)0x030065e0)
-
 extern void sub_0802E418(void);
 extern void sub_0802E3F8(void);
 
 void sub_08030290(void)
 {
-    DmaSrcBlock *ss = (DmaSrcBlock *)(gpSoundSystem3 + 0xd0);
+    DmaSrcBlock *ss = SOUND_SYSTEM_DMA_SRC(gpSoundSystem);
     vu8 *cnt;
 
     sub_0802E418();
@@ -312,44 +275,6 @@ void sub_08030290(void)
 
     sub_0802E3F8();
 }
-
-typedef struct SoundSlotAcc {
-    u8 _pad00[0x2a];
-    u8 gate;      /* +0x2a */
-    u8 period;    /* +0x2b */
-    u8 _pad2c[8]; /* +0x2c */
-    u16 accA;     /* +0x34 */
-    u16 accB;     /* +0x36 */
-    u32 flags;    /* +0x38 */
-} SoundSlotAcc;
-
-typedef struct DirectSoundChannel {
-    u8 _pad00[6];
-    u8 gate;   /* +0x06 */
-    u8 period; /* +0x07 */
-} DirectSoundChannel;
-
-typedef struct SoundCommandBytes {
-    u8 op;
-    u8 arg;
-} SoundCommandBytes;
-
-typedef struct SoundSystemAcc {
-    u8 count;       /* +0x00 */
-    u8 _pad01[0xb]; /* +0x01 */
-    u16 periodA;    /* +0x0c */
-    u16 periodB;    /* +0x0e */
-    u32 chFlags[4]; /* +0x10 */
-    u8 _pad20[0x6c];
-    DirectSoundChannel channels[4]; /* +0x8c */
-    u16 chanAcc[4];                 /* +0xac */
-    u8 _padb4[0x10];
-    void **slotStateA;     /* +0xc4 */
-    SoundSlotAcc *swSlots; /* +0xc8 */
-    void **slotStateB;     /* +0xcc */
-} SoundSystemAcc;
-
-#define gpSoundSystemAcc (*(SoundSystemAcc **)0x030065e0)
 
 s32 sub_0803030C(s32 channel, u32 *state_ptr)
 {
@@ -550,12 +475,12 @@ s32 sub_0803045C(s32 channel, u32 *state_ptr)
 
         gp = &gpSoundSystemAcc;
         ss = *gp;
-        stateBase = (u8 *)ss->slotStateB;
+        stateBase = (u8 *)ss->slotPtrTable;
         arrayOff = ch << 2;
         stateSlot = (u8 *)(arrayOff + (u32)stateBase);
         if (*(void **)(stateSlot - 0x10) == NULL)
             goto reset;
-        stateBase = (u8 *)ss->slotStateA;
+        stateBase = (u8 *)ss->auxTable;
         stateSlot = (u8 *)(arrayOff + (u32)stateBase);
         if (*(void **)(stateSlot - 0x10) == NULL)
             goto reset;

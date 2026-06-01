@@ -1,4 +1,4 @@
-#include "types.h"
+#include "sound.h"
 #include "macros.h"
 
 /* sub_080325B0 — sound-mixer tail pass (per-VBlank streaming-buffer drain).
@@ -60,25 +60,6 @@
 /* Reference body — describes the algorithm for the phase-3 PC port.
  * Does NOT byte-match; agbcc 2.x will never coerce sl/r9/r8 into loop
  * state from this shape. */
-
-typedef struct StreamSlot {
-    u32 *cursor;   /* +0x00 */
-    s32 countdown; /* +0x04 */
-    u32 acc;       /* +0x08 */
-} StreamSlot;
-
-typedef struct SoundSystem {
-    u8 count; /* +0x00 */
-    u8 _pad01[0x108 - 1];
-    /* +0x108: parallel arrays of stream-buffer pointers */
-    StreamSlot streamA[16]; /* +0x110, stride 8 */
-    u8 _pad190[0x14c - 0x190];
-    u16 samplesThisFrame; /* +0x14c */
-    u8 _pad14e[0x151 - 0x14e];
-    u8 enableFlags; /* +0x151, bit 0x2 gates the whole routine */
-} SoundSystem;
-
-#define gpSoundSystem (*(SoundSystem **)0x030065e0)
 
 extern void sub_0802F9F0(u32 idx);
 extern void sub_080323CC(u32 ss, u32 idx, u32 panOrMode, u32 countdown, u32 extra);

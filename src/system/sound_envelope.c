@@ -1,4 +1,4 @@
-#include "types.h"
+#include "sound.h"
 #include "macros.h"
 
 /* sub_0802EA80 — per-frame countdown-bounce envelope tick (envelope-A0).
@@ -43,30 +43,6 @@
  * channel/slot; envelope-A at +0x1c and envelope-B at +0x2c are owned by
  * sound_channel.c. Promote to include/sound.h once a common header is
  * needed. */
-typedef struct SlotEnvelopeA0 {
-    u16 acc;      /* +0x14 — accumulator */
-    s16 step;     /* +0x16 — per-frame step */
-    u8 countdown; /* +0x18 — frames remaining until bounce */
-    u8 reload;    /* +0x19 — reload value when countdown wraps */
-} SlotEnvelopeA0;
-
-typedef struct SoundSlot {
-    u8 _pad00[0x14];
-    SlotEnvelopeA0 envelopeA0; /* +0x14, sizeof rounded to 8 */
-    u8 _pad1c[0x1c];
-    u32 flags; /* +0x38 */
-} SoundSlot;
-
-typedef struct SoundSystem {
-    u8 count; /* +0x00 */
-    u8 _pad01[0xf];
-    u32 chFlags[4]; /* +0x10 — per-channel dirty-flag word */
-    u8 _pad20[0xac];
-    SoundSlot **slotPtrTable; /* +0xcc */
-} SoundSystem;
-
-#define gpSoundSystem (*(SoundSystem **)0x030065e0)
-
 #ifdef NON_MATCHING
 void sub_0802EA80(void)
 {

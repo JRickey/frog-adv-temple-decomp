@@ -1,4 +1,4 @@
-#include "types.h"
+#include "sound.h"
 
 /* sub_0802E100 — retire a sound handle if it's still active.
  *
@@ -15,12 +15,6 @@
  * sub_0802E13C / sub_0802E184 slice (same toolchain pin).
  */
 
-typedef struct SoundSystem {
-    u8 count; /* +0x00 — number of dynamic SFX slots */
-} SoundSystem;
-
-#define gpSoundSystem (*(SoundSystem **)0x030065e0)
-
 extern void sub_0802F9F0(s32 idx);
 
 u32 sub_0802E100(u32 handle)
@@ -33,7 +27,7 @@ u32 sub_0802E100(u32 handle)
         return 0;
     idx = (handle >> 16) & 0xff;
     ss = gpSoundSystem;
-    slotTable = *(void ***)((u8 *)ss + 0x120);
+    slotTable = SOUND_SYSTEM_SLOT_HANDLE_TABLE(ss);
     if ((u32)slotTable[idx] != handle)
         return 0;
     sub_0802F9F0((s32)idx);

@@ -1,4 +1,4 @@
-#include "types.h"
+#include "sound.h"
 #include "macros.h"
 
 /* sub_0802F054 — per-frame multi-mode envelope tick (envelope-C).
@@ -55,40 +55,6 @@
 
 /* Per-mode configuration block referenced by ch_block->cfg. Halfwords
  * laid out so the dispatch can index them by mode. */
-typedef struct EnvelopeCConfig {
-    u16 w0; /* +0 — slide-up limit (mode 0) */
-    u16 w2; /* +2 — slide-down step (mode 1) */
-    u16 w4; /* +4 — slide-down floor (mode 1) */
-    u16 w6; /* +6 — converge step (mode 3) */
-} EnvelopeCConfig;
-
-/* The 8-byte channel block embedded at ss+0x8c (stride 8) and again at
- * slot+0x24 (stride 8 for the pair). */
-typedef struct EnvelopeCBlock {
-    EnvelopeCConfig *cfg; /* +0 */
-    u16 acc;              /* +4 — current envelope position */
-    u8 _pad6[2];
-} EnvelopeCBlock;
-
-typedef struct SoundSlot {
-    u8 _pad00[0x24];
-    EnvelopeCBlock envelopeC; /* +0x24 */
-    u8 _pad2c[0x0c];
-    u32 flags; /* +0x38 */
-} SoundSlot;
-
-typedef struct SoundSystem {
-    u8 count; /* +0x00 */
-    u8 _pad01[0xf];
-    u32 chFlags[4]; /* +0x10 — per-channel dirty-flag word */
-    u8 _pad20[0x6c];
-    EnvelopeCBlock chEnvelopeC[4]; /* +0x8c, stride 8 */
-    u8 _pad_acTail[0x24];
-    SoundSlot **slotPtrTable; /* +0xcc */
-} SoundSystem;
-
-#define gpSoundSystem (*(SoundSystem **)0x030065e0)
-
 #ifdef NON_MATCHING
 static void envelope_c_tick(EnvelopeCBlock *blk, u32 *pFlags, u32 chFlagWord, u32 dirtyBit);
 

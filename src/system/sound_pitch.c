@@ -1,5 +1,5 @@
 #include "macros.h"
-#include "types.h"
+#include "sound.h"
 
 /* sub_0802E5D8 — per-tone-channel pitch / frequency setter.
  *
@@ -44,14 +44,6 @@
  * source-level rearrangement. Same family as the other NAKED sound
  * functions in this cluster (sub_0802EC7C, sub_0802EDF0, sub_0802EA80).
  */
-
-typedef struct SoundSystem {
-    u8 _pad00[0xb4];
-    u16 pitchCache[3]; /* +0xb4 — last-written freq per channel (ch 0..2) */
-    u8 _padba[6];
-} SoundSystem;
-
-#define gpSoundSystem (*(SoundSystem **)0x030065e0)
 
 /* ROM-resident data — defined in src/data/sound_tables.c and
  * src/data/sound_pitch_luts.c respectively. */

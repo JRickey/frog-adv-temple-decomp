@@ -1,4 +1,4 @@
-#include "types.h"
+#include "sound.h"
 #include "macros.h"
 
 /* sub_0802F2FC — per-frame pan-envelope tick.
@@ -28,36 +28,6 @@
  * "High registers (sl/r10, sb/r9, r8) — corpus-validated unmatchable".
  */
 
-typedef struct SlotPanEnvelope {
-    s16 acc;     /* slot+0x0a — pan accumulator */
-    s16 step;    /* slot+0x12 — per-frame step */
-    s8 negLimit; /* slot+0x1a — limits, scaled << 8 against acc */
-    s8 posLimit; /* slot+0x1b */
-    u32 flags;   /* slot+0x38 — auto-reverse @0x2000, dirty @0x80 */
-    u8 panCache; /* slot+0x3c — last emitted pan byte */
-} SlotPanEnvelope;
-
-typedef struct SoundSlot {
-    u8 _pad00[0xa];
-    s16 panAcc; /* +0x0a */
-    u8 _pad0c[6];
-    s16 panStep; /* +0x12 */
-    u8 _pad14[6];
-    s8 panNegLimit; /* +0x1a */
-    s8 panPosLimit; /* +0x1b */
-    u8 _pad1c[0x1c];
-    u32 flags;   /* +0x38 */
-    u8 panCache; /* +0x3c */
-} SoundSlot;
-
-typedef struct SoundSystem {
-    u8 count; /* +0x00 */
-    u8 _pad01[0xcb];
-    SoundSlot **slotPtrTable; /* +0xcc */
-} SoundSystem;
-
-#define gpSoundSystem (*(SoundSystem **)0x030065e0)
-
 #ifdef NON_MATCHING
 void sub_0802F2FC(void)
 {
@@ -78,33 +48,33 @@ void sub_0802F2FC(void)
         slot = (*gpsp)->slotPtrTable[i];
         if (slot == NULL)
             continue;
-        savedStep = (u16)slot->panStep;
-        step = slot->panStep;
+        savedStep = (u16)SOUND_SLOT_PAN_STEP(slot);
+        step = SOUND_SLOT_PAN_STEP(slot);
         if (step == 0)
             continue;
         sum = slot->panAcc + step;
         if (step > 0) {
-            limQ = slot->panPosLimit << 8;
+            limQ = SOUND_SLOT_PAN_POS_LIMIT(slot) << 8;
             if (sum >= limQ) {
                 /* Reflect across posLimit: sum = 2*limQ - sum. */
                 sum = limQ - (sum - limQ);
                 if (slot->flags & 0x2000)
-                    slot->panStep = -(s16)savedStep;
+                    SOUND_SLOT_PAN_STEP(slot) = -(s16)savedStep;
             } else {
                 goto write_acc;
             }
         } else {
-            limQ = slot->panNegLimit << 8;
+            limQ = SOUND_SLOT_PAN_NEG_LIMIT(slot) << 8;
             if (sum <= limQ) {
                 sum = limQ + (limQ - sum);
                 if (slot->flags & 0x2000)
-                    slot->panStep = -(s16)savedStep;
+                    SOUND_SLOT_PAN_STEP(slot) = -(s16)savedStep;
             } else {
                 goto write_acc;
             }
         }
     write_acc:
-        slot->panAcc = (s16)sum;
+        SOUND_SLOT_PAN_ACC(slot) = (s16)sum;
         {
             s32 newPan = sum >> 8; /* arithmetic — sum is signed */
             if (newPan != slot->panCache) {
