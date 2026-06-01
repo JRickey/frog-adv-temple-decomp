@@ -3,146 +3,46 @@
 #include "macros.h"
 #include "types.h"
 
-/* Searches a 5-entry (X, Y) lookup table at ROM 0x082f9cf4 for a coord
- * pair matching (s16)gIwram_35E0._field_8 / (u16)gIwram_35E0._field_A.
- * Returns 0 if no match or if the pendingMode/flag gates are not set;
- * otherwise returns the 1-based match index (after a side-effect call to
- * sub_08020C78(8)).
- *
- * Gates:
- *   - gGameStuff.pendingMode (offset 10) must be 1
- *   - *(u8*)(0x03006110 + 0x32) must be 1
- *
- * Shipped NAKED — but the prior "mov ip is corpus-unmatchable" rationale was WRONG
- * (a reclaim pass disproved it, 2026-05-28). The baserom caches the ROM table base in
- * the high register ip (`mov ip, r3`, read back as `mov r7, ip`), and that fold IS
- * reproducible from pure C via TWO-POINTER ALIASING: declare two pointers both set to
- * the same ROM literal (s16 *xtab / u16 *ytab = 0x082f9cf4), assigned AFTER the gate
- * checks, indexing X as xtab[i*2] and Y as ytab[i*2+1]. agbcc then loads the base once
- * (`ldr r3; mov ip, r3`) and reuses ip for the X-indexed load, exactly like baserom.
- *
- * Reclaim progress: byte_diff 86 -> 54 (size 116 B, prologue, X-load path, and the whole
- * control flow now match baserom). Working levers, by impact: (1) end-block written
- * `if (match != 0) { sub_08020C78(8); return match; } return 0;` (NOT early-return — this
- * fixed the size, 96->80); (2) table-pointer init AFTER the gates so agbcc keeps
- * `movs match,#0` second and doesn't hoist the base load to entry (80->54); (3) the
- * second gate via the gIwram_6110.state symbol+offset (not the bare 0x03006110+0x32
- * address) so +0x32 isn't folded into the pool literal; (4) two-pointer aliasing (above).
- *
- * REMAINING WALL (~54 byte_diff, a single instruction-selection diff): baserom computes
- * the Y address as `(base+2) + i*4` => `adds r0,r3,#2; adds r0,r1,r0; ldrh [r0,#0]`
- * (offset-0 load), but agbcc -O2 AND old_agbcc both reassociate-and-fold the +2 into the
- * load immediate => `adds r0,r1,r3; ldrh [r0,#2]`. No C phrasing found yet that blocks
- * that fold — permuter candidate / future corpus dig. Until then it stays NAKED; the
- * NON_MATCHING body below is the byte_diff-54 shape, the resume point for the next attempt.
- */
+extern const u16 sModeLookupTable_2F9CF4[10];
 
 extern void sub_08020C78(u32 a);
 
-#ifdef NON_MATCHING
 u8 sub_08009BA0(void)
 {
+    struct IwramAt35E0 *player;
     s16 *xtab;
     u16 *ytab;
-    s16 needleX;
-    u16 needleY;
     u8 match = 0;
+    s16 needleX;
     u8 i;
 
     if (gGameStuff.pendingMode != 1)
         goto end;
-    if (*(u8 *)(0x03006110 + 0x32) != 1) /* lever 3: prefer gIwram_6110.state symbol */
+    if (gIwram_6110.state != 1)
         goto end;
 
-    /* lever 2: init the alias pointers AFTER the gates (no `mov ip` hoist to entry) */
-    xtab = (s16 *)0x082f9cf4;
-    ytab = (u16 *)0x082f9cf4;
-    needleX = (s16)gIwram_35E0._field_8;
     i = 0;
+    player = &gIwram_35E0;
+    xtab = (s16 *)sModeLookupTable_2F9CF4;
+    ytab = (u16 *)sModeLookupTable_2F9CF4;
+    needleX = player->_field_8;
     do {
-        u8 cur = i;
+        if (needleX == xtab[i * 2]) {
+            /* Block-local so agbcc forms the Y-column pointer after the X compare. */
+            u16 *ybase = (u16 *)((u8 *)ytab + 2);
+            if ((u16)player->_field_A == ybase[i * 2])
+                match = i + 1;
+        }
         i = (u8)(i + 1);
-        if (needleX != xtab[cur * 2]) /* lever 4: aliased base → `mov ip` reuse */
-            continue;
-        needleY = gIwram_35E0._field_A;
-        if (needleY != ytab[cur * 2 + 1]) /* the +2 fold here is the remaining wall */
-            continue;
-        match = i;
     } while (i <= 4);
 
 end:
-    if (match != 0) { /* lever 1: not early-return — matches baserom size + end block */
+    if ((match << 24) != 0) {
         sub_08020C78(8);
-        return match;
+        return (match << 24) >> 24;
     }
     return 0;
 }
-#else
-NAKED u8 sub_08009BA0(void)
-{
-    asm(".syntax unified\n"
-        "    push    {r4, r5, r6, r7, lr}\n"
-        "    movs    r6, #0\n"
-        "    ldr     r0, _pool_gGameStuff\n"
-        "    ldrb    r0, [r0, #10]\n"
-        "    cmp     r0, #1\n"
-        "    bne     _sub_08009BA0_check\n"
-        "    ldr     r0, _pool_iwram_6110\n"
-        "    adds    r0, #50\n"
-        "    ldrb    r0, [r0, #0]\n"
-        "    cmp     r0, #1\n"
-        "    bne     _sub_08009BA0_check\n"
-        "    movs    r2, #0\n"
-        "    ldr     r4, _pool_iwram_35E0\n"
-        "    ldr     r3, _pool_table_82F9CF4\n"
-        "    mov     ip, r3\n"
-        "    movs    r0, #8\n"
-        "    ldrsh   r5, [r4, r0]\n"
-        "_sub_08009BA0_loop:\n"
-        "    lsls    r1, r2, #2\n"
-        "    mov     r7, ip\n"
-        "    adds    r0, r1, r7\n"
-        "    movs    r7, #0\n"
-        "    ldrsh   r0, [r0, r7]\n"
-        "    adds    r2, #1\n"
-        "    cmp     r5, r0\n"
-        "    bne     _sub_08009BA0_step\n"
-        "    adds    r0, r3, #2\n"
-        "    adds    r0, r1, r0\n"
-        "    ldrh    r1, [r4, #10]\n"
-        "    ldrh    r0, [r0, #0]\n"
-        "    cmp     r1, r0\n"
-        "    bne     _sub_08009BA0_step\n"
-        "    lsls    r0, r2, #24\n"
-        "    lsrs    r6, r0, #24\n"
-        "_sub_08009BA0_step:\n"
-        "    lsls    r0, r2, #24\n"
-        "    lsrs    r2, r0, #24\n"
-        "    cmp     r2, #4\n"
-        "    bls     _sub_08009BA0_loop\n"
-        "_sub_08009BA0_check:\n"
-        "    lsls    r4, r6, #24\n"
-        "    cmp     r4, #0\n"
-        "    bne     _sub_08009BA0_match\n"
-        "    movs    r0, #0\n"
-        "    b       _sub_08009BA0_ret\n"
-        "    .align  2, 0\n"
-        "_pool_gGameStuff:    .4byte 0x03005330\n"
-        "_pool_iwram_6110:    .4byte 0x03006110\n"
-        "_pool_iwram_35E0:    .4byte 0x030035e0\n"
-        "_pool_table_82F9CF4: .4byte 0x082f9cf4\n"
-        "_sub_08009BA0_match:\n"
-        "    movs    r0, #8\n"
-        "    bl      sub_08020C78\n"
-        "    lsrs    r0, r4, #24\n"
-        "_sub_08009BA0_ret:\n"
-        "    pop     {r4, r5, r6, r7}\n"
-        "    pop     {r1}\n"
-        "    bx      r1\n"
-        "    .align  2, 0\n"
-        "    .syntax divided\n");
-}
-#endif
 
 /* Mode-transition step.
  *
