@@ -22,9 +22,9 @@ extern void sub_0801D33C(u8 arg);
  *     the result lands in r0 (not the pinned r3).
  *   - idx2 = arg + 1 with a barrier blocks the `table2[arg+1]` reassociation
  *     that would fold +1 into the pool constant / ldr offset.
- *   - byteZero (r0) and halfZero (r4) pinned + barrier so the r0 zero
- *     materializes before the r4 zero; r4's zero is then held across both
- *     BLs and reused as the DMA stack-fill halfword.
+ *   - byteZero and halfZero use a barrier so the r0 zero materializes before
+ *     the r4 zero; r4's zero is then held across both BLs and reused as the
+ *     DMA stack-fill halfword.
  */
 void sub_0801D4CC(u8 arg)
 {
@@ -34,7 +34,7 @@ void sub_0801D4CC(u8 arg)
     const u32 *base;
     const u32 *table2;
     u32 idx2;
-    register u16 zero asm("r4");
+    u16 zero;
     vu16 fill;
 
     state = (u8 *)0x03006440;
@@ -48,7 +48,7 @@ void sub_0801D4CC(u8 arg)
     *(u32 *)(state + 12) = *(const u32 *)((const u8 *)base + arg * 4 + 0x9C);
 
     {
-        register u8 byteZero asm("r0") = 0;
+        u8 byteZero = 0;
         u16 halfZero = 0;
         asm volatile("" : "+r"(byteZero), "+r"(halfZero));
         state[8] = byteZero;

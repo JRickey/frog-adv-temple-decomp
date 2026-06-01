@@ -46,7 +46,7 @@ void sub_080210A0(u32 idx, const void *record, u32 flags, u32 kind, u32 field14,
     u32 idxReg;
     register const SpawnRecord *rec2 asm("r2");
     u32 flagMask;
-    register u16 oldFlags asm("r1");
+    u16 oldFlags;
     u32 recHeadReg;
     register u32 byteScratch0 asm("r0");
     register u32 byteScratch1 asm("r1");
