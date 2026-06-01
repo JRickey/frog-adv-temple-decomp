@@ -285,3 +285,33 @@ void sub_0802E934(void)
         "    .syntax divided\n");
 }
 #endif
+
+void sub_0802EA2C(s32 step, u32 reload, s32 ch)
+{
+    if (ch <= 2) {
+        u8 *base;
+        register s32 off asm("r1");
+        u32 half;
+
+        base = (u8 *)gpSoundSystem;
+        off = ch * 36;
+        *(u8 *)(base + off + 57) = reload;
+        base = (u8 *)gpSoundSystem + off;
+        half = reload >> 1;
+        base[56] = half;
+        *(s16 *)((u8 *)gpSoundSystem + off + 54) = step;
+        return;
+    }
+
+    if (ch <= 3)
+        return;
+
+    {
+        u8 **bankp = (u8 **)((u8 *)gpSoundSystem + 0xc8);
+        u8 *slot = (u8 *)(ch * 64 + (s32)*bankp - 0xec);
+
+        slot[5] = reload;
+        slot[4] = reload >> 1;
+        *(s16 *)(slot + 2) = step;
+    }
+}
