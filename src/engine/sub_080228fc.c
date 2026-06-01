@@ -30,6 +30,7 @@ void sub_08022920(void)
 
 extern void sub_08021140(s32 a0, const void *a1, s32 a2, s32 a3, s32 a4, s32 a5, s32 a6);
 extern const u32 sLevelLayout_311418[10];
+extern const u32 sLevelLayout_311440[4];
 
 void sub_08022958(void)
 {
@@ -39,4 +40,9 @@ void sub_08022958(void)
 void sub_08022980(void)
 {
     sub_08021510(2, sLevelLayout_311418, 2, &gIwram_6110, 0x14);
+}
+
+void sub_080229A4(void)
+{
+    sub_08021140(6, sLevelLayout_311440, 0, 0xb, 0xd1, 7, 10);
 }
