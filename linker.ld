@@ -660,6 +660,7 @@ SECTIONS {
         src/game/sub_0803299c.o(.text);  /* 0x0803299c - 0x08032b18, sub_0803299C + sub_080329F4 + sub_08032A20 + sub_08032A54 + sub_08032A98 + sub_08032AA0 */
         src/game/sub_08032b18.o(.text);  /* 0x08032b18 - 0x08032bc8, SoundSlot_PickByPriority + sub_08032BA0 */
         asm/text/text_0x08032bc8.o(.text);  /* 0x08032bc8 - 0x080338a8, raw bytes */
+        src/game/sub_080338a8.o(.text);
         asm/disasm_0x080338a8.o(.text);  /* 0x080338a8 - 0x080338ec, sub_080338A8 */
         asm/disasm_0x080338ec.o(.text);  /* 0x080338ec - 0x08033910, sub_080338EC */
         src/game/sub_08033910.o(.text);  /* 0x08033910 - 0x08033948, sub_08033910 */
