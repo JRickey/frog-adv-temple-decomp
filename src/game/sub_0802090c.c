@@ -1,5 +1,4 @@
 #include "iwram.h"
-#include "macros.h"
 #include "types.h"
 
 extern u32 sub_0802D9EC(u32 sound, u32 a, u32 b, u32 c);
@@ -7,235 +6,120 @@ extern void sub_0802DC1C(u32 handle, u32 pan);
 
 #define gStructAt3003570 (*(u8 *)0x03003570)
 
-/* Dispatches one of a small set of sound IDs from gIwram_35E0's flag/state
- * fields. The matching form is NAKED because the baserom uses `mov pc, r0`
- * into an even-addressed jump table; agbcc cannot produce that construct
- * from C.
- */
-#ifdef NON_MATCHING
 void sub_0802090C(void)
 {
-    static const u8 soundByState[86] = {
-        91, 12, 12, 93, 93, 0,  0,  12, 0,  93, 0,  12, 91, 0,  0,  0, 0,  12, 12, 12, 0,  12,
-        91, 91, 93, 0,  12, 12, 12, 0,  12, 12, 12, 0,  12, 0,  0,  0, 0,  0,  0,  12, 12, 12,
-        12, 0,  0,  0,  91, 91, 91, 12, 12, 12, 12, 0,  0,  0,  91, 0, 91, 0,  0,  0,  93, 93,
-        12, 0,  0,  12, 0,  0,  91, 0,  12, 93, 12, 12, 0,  12, 0,  0, 91, 12, 0,  91,
-    };
+    u8 *base;
+    u32 state;
     u32 sound;
 
     if ((gIwram_35E0._field_10 & 0x800) != 0) {
+        base = (u8 *)0x03003570;
+        if ((*base & 0x10) == 0)
+            return;
+
         sound = 90;
+        goto playSound;
     } else if ((gIwram_35E0._field_10 & 0x2000) != 0) {
+        base = (u8 *)0x03003570;
+        if ((*base & 0x10) == 0)
+            return;
+
         sound = 92;
     } else {
-        u32 state = gIwram_35E0._field_D - 7;
+        state = gIwram_35E0._field_D - 7;
         if (state > 85)
             return;
-        sound = soundByState[state];
-        if (sound == 0)
+
+        switch (state) {
+        case 11:
+        case 21:
+        case 22:
+        case 47:
+        case 48:
+        case 49:
+        case 57:
+        case 59:
+        case 71:
+        case 81:
+        case 84:
+            base = (u8 *)0x03003570;
+            if ((*base & 0x10) == 0)
+                return;
+
+            sound = 91;
+            goto playSound;
+        case 0:
+        case 1:
+        case 6:
+        case 10:
+        case 16:
+        case 17:
+        case 18:
+        case 20:
+        case 25:
+        case 26:
+        case 27:
+        case 29:
+        case 30:
+        case 31:
+        case 33:
+        case 40:
+        case 41:
+        case 42:
+        case 43:
+        case 50:
+        case 51:
+        case 52:
+        case 53:
+        case 65:
+        case 68:
+        case 73:
+        case 75:
+        case 76:
+        case 78:
+        case 82:
+        case 85:
+            base = (u8 *)0x03003570;
+            if ((*base & 0x10) == 0)
+                return;
+
+            sound = 12;
+        playSound:
+            sound = sub_0802D9EC(sound, 0xff, 0xff, 0xff);
+            {
+                register u8 pan asm("r4");
+                register u32 mask asm("r1");
+                mask = 0x7f;
+                pan = base[2];
+                mask &= pan;
+                sub_0802DC1C(sound, mask);
+            }
             return;
+        case 2:
+        case 3:
+        case 8:
+        case 23:
+        case 63:
+        case 64:
+        case 74:
+            base = (u8 *)0x03003570;
+            if ((*base & 0x10) == 0)
+                return;
+
+            sound = sub_0802D9EC(93, 0xff, 0xff, 0xff);
+            {
+                register u8 pan asm("r4");
+                register u32 mask asm("r1");
+                mask = 0x7f;
+                pan = base[2];
+                mask &= pan;
+                sub_0802DC1C(sound, mask);
+            }
+            return;
+        default:
+            return;
+        }
     }
 
-    if ((gStructAt3003570 & 0x10) == 0)
-        return;
-
-    sub_0802DC1C(sub_0802D9EC(sound, 0xff, 0xff, 0xff), (*(u8 *)0x03003572) & 0x7f);
+    goto playSound;
 }
-#else
-NAKED
-void sub_0802090C(void)
-{
-    asm(".syntax unified\n"
-        "    push    {r4, lr}\n"
-        "    ldr     r2, _08020930\n"
-        "    ldrh    r1, [r2, #0x10]\n"
-        "    movs    r0, #0x80\n"
-        "    lsls    r0, r0, #4\n"
-        "    ands    r0, r1\n"
-        "    cmp     r0, #0\n"
-        "    beq     _08020938\n"
-        "    ldr     r4, _08020934\n"
-        "    movs    r0, #0x10\n"
-        "    ldrb    r1, [r4]\n"
-        "    ands    r0, r1\n"
-        "    cmp     r0, #0\n"
-        "    bne     _0802092A\n"
-        "    b       _08020B26\n"
-        "_0802092A:\n"
-        "    movs    r0, #0x5a\n"
-        "    b       _08020AEA\n"
-        "    .align  2, 0\n"
-        "_08020930: .4byte 0x030035e0\n"
-        "_08020934: .4byte 0x03003570\n"
-        "_08020938:\n"
-        "    movs    r0, #0x80\n"
-        "    lsls    r0, r0, #6\n"
-        "    ands    r0, r1\n"
-        "    cmp     r0, #0\n"
-        "    beq     _08020958\n"
-        "    ldr     r4, _08020954\n"
-        "    movs    r0, #0x10\n"
-        "    ldrb    r1, [r4]\n"
-        "    ands    r0, r1\n"
-        "    cmp     r0, #0\n"
-        "    bne     _08020950\n"
-        "    b       _08020B26\n"
-        "_08020950:\n"
-        "    movs    r0, #0x5c\n"
-        "    b       _08020AEA\n"
-        "    .align  2, 0\n"
-        "_08020954: .4byte 0x03003570\n"
-        "_08020958:\n"
-        "    ldrb    r0, [r2, #0xd]\n"
-        "    subs    r0, #7\n"
-        "    cmp     r0, #0x55\n"
-        "    bls     _08020962\n"
-        "    b       _08020B26\n"
-        "_08020962:\n"
-        "    lsls    r0, r0, #2\n"
-        "    ldr     r1, _0802096C\n"
-        "    adds    r0, r0, r1\n"
-        "    ldr     r0, [r0]\n"
-        "    mov     pc, r0\n"
-        "_0802096C: .4byte _08020970\n"
-        "_08020970: .4byte _08020ADC\n"
-        "    .4byte _08020ADC\n"
-        "    .4byte _08020B04\n"
-        "    .4byte _08020B04\n"
-        "    .4byte _08020B26\n"
-        "    .4byte _08020B26\n"
-        "    .4byte _08020ADC\n"
-        "    .4byte _08020B26\n"
-        "    .4byte _08020B04\n"
-        "    .4byte _08020B26\n"
-        "    .4byte _08020ADC\n"
-        "    .4byte _08020AC8\n"
-        "    .4byte _08020B26\n"
-        "    .4byte _08020B26\n"
-        "    .4byte _08020B26\n"
-        "    .4byte _08020B26\n"
-        "    .4byte _08020ADC\n"
-        "    .4byte _08020ADC\n"
-        "    .4byte _08020ADC\n"
-        "    .4byte _08020B26\n"
-        "    .4byte _08020ADC\n"
-        "    .4byte _08020AC8\n"
-        "    .4byte _08020AC8\n"
-        "    .4byte _08020B04\n"
-        "    .4byte _08020B26\n"
-        "    .4byte _08020ADC\n"
-        "    .4byte _08020ADC\n"
-        "    .4byte _08020ADC\n"
-        "    .4byte _08020B26\n"
-        "    .4byte _08020ADC\n"
-        "    .4byte _08020ADC\n"
-        "    .4byte _08020ADC\n"
-        "    .4byte _08020B26\n"
-        "    .4byte _08020ADC\n"
-        "    .4byte _08020B26\n"
-        "    .4byte _08020B26\n"
-        "    .4byte _08020B26\n"
-        "    .4byte _08020B26\n"
-        "    .4byte _08020B26\n"
-        "    .4byte _08020B26\n"
-        "    .4byte _08020ADC\n"
-        "    .4byte _08020ADC\n"
-        "    .4byte _08020ADC\n"
-        "    .4byte _08020ADC\n"
-        "    .4byte _08020B26\n"
-        "    .4byte _08020B26\n"
-        "    .4byte _08020B26\n"
-        "    .4byte _08020AC8\n"
-        "    .4byte _08020AC8\n"
-        "    .4byte _08020AC8\n"
-        "    .4byte _08020ADC\n"
-        "    .4byte _08020ADC\n"
-        "    .4byte _08020ADC\n"
-        "    .4byte _08020ADC\n"
-        "    .4byte _08020B26\n"
-        "    .4byte _08020B26\n"
-        "    .4byte _08020B26\n"
-        "    .4byte _08020AC8\n"
-        "    .4byte _08020B26\n"
-        "    .4byte _08020AC8\n"
-        "    .4byte _08020B26\n"
-        "    .4byte _08020B26\n"
-        "    .4byte _08020B26\n"
-        "    .4byte _08020B04\n"
-        "    .4byte _08020B04\n"
-        "    .4byte _08020ADC\n"
-        "    .4byte _08020B26\n"
-        "    .4byte _08020B26\n"
-        "    .4byte _08020ADC\n"
-        "    .4byte _08020B26\n"
-        "    .4byte _08020B26\n"
-        "    .4byte _08020AC8\n"
-        "    .4byte _08020B26\n"
-        "    .4byte _08020ADC\n"
-        "    .4byte _08020B04\n"
-        "    .4byte _08020ADC\n"
-        "    .4byte _08020ADC\n"
-        "    .4byte _08020B26\n"
-        "    .4byte _08020ADC\n"
-        "    .4byte _08020B26\n"
-        "    .4byte _08020B26\n"
-        "    .4byte _08020AC8\n"
-        "    .4byte _08020ADC\n"
-        "    .4byte _08020B26\n"
-        "    .4byte _08020AC8\n"
-        "_08020AC4: .4byte _08020ADC\n"
-        "_08020AC8:\n"
-        "    ldr     r4, _08020AD8\n"
-        "    movs    r0, #0x10\n"
-        "    ldrb    r1, [r4]\n"
-        "    ands    r0, r1\n"
-        "    cmp     r0, #0\n"
-        "    beq     _08020B26\n"
-        "    movs    r0, #0x5b\n"
-        "    b       _08020AEA\n"
-        "    .align  2, 0\n"
-        "_08020AD8: .4byte 0x03003570\n"
-        "_08020ADC:\n"
-        "    ldr     r4, _08020B00\n"
-        "    movs    r0, #0x10\n"
-        "    ldrb    r1, [r4]\n"
-        "    ands    r0, r1\n"
-        "    cmp     r0, #0\n"
-        "    beq     _08020B26\n"
-        "    movs    r0, #0xc\n"
-        "_08020AEA:\n"
-        "    movs    r1, #0xff\n"
-        "    movs    r2, #0xff\n"
-        "    movs    r3, #0xff\n"
-        "    bl      sub_0802D9EC\n"
-        "    movs    r1, #0x7f\n"
-        "    ldrb    r4, [r4, #2]\n"
-        "    ands    r1, r4\n"
-        "    bl      sub_0802DC1C\n"
-        "    b       _08020B26\n"
-        "    .align  2, 0\n"
-        "_08020B00: .4byte 0x03003570\n"
-        "_08020B04:\n"
-        "    ldr     r4, _08020B2C\n"
-        "    movs    r0, #0x10\n"
-        "    ldrb    r1, [r4]\n"
-        "    ands    r0, r1\n"
-        "    cmp     r0, #0\n"
-        "    beq     _08020B26\n"
-        "    movs    r0, #0x5d\n"
-        "    movs    r1, #0xff\n"
-        "    movs    r2, #0xff\n"
-        "    movs    r3, #0xff\n"
-        "    bl      sub_0802D9EC\n"
-        "    movs    r1, #0x7f\n"
-        "    ldrb    r4, [r4, #2]\n"
-        "    ands    r1, r4\n"
-        "    bl      sub_0802DC1C\n"
-        "_08020B26:\n"
-        "    pop     {r4}\n"
-        "    pop     {r0}\n"
-        "    bx      r0\n"
-        "    .align  2, 0\n"
-        "_08020B2C: .4byte 0x03003570\n");
-}
-#endif
