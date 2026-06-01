@@ -9,6 +9,7 @@ typedef struct {
 
 #define gStructAt3003570 (*(StructAt3003570 *)0x03003570)
 
+extern u8 gIwram_3570;
 extern u32 sub_0802D9EC(u32 sound, u32 a, u32 b, u32 c);
 extern void sub_0802DC1C(u32 handle, u8 val);
 
@@ -38,7 +39,7 @@ u32 sub_08020CA4(u32 sound)
 
     snd = sound;
     result = -1;
-    p = &gStructAt3003570;
+    p = (StructAt3003570 *)&gIwram_3570;
     handle = 0x10;
     handle = handle & p->flags;
     if (handle != 0) {
@@ -133,4 +134,21 @@ u32 sub_08020D2C(struct IwramAt3720 *entity, u32 sound, u8 halfW, u8 halfH)
     r &= f34;
     entity->_field_34 = r;
     return r;
+}
+
+void sub_08020DA0(u8 index)
+{
+    register StructAt3003570 *p asm("r5");
+    u32 offset;
+    register u32 *slot asm("r0");
+    u32 handle;
+
+    p = (StructAt3003570 *)&gIwram_3570;
+    offset = index * 8;
+    slot = (u32 *)((u8 *)p + 4);
+    slot = (u32 *)(offset + (u32)slot);
+    handle = sub_08020C78(*slot);
+    p = (StructAt3003570 *)((u8 *)p + 8);
+    offset = (u32)((u8 *)p + offset);
+    *(u32 *)offset = handle;
 }
