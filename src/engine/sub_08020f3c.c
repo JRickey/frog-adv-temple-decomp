@@ -20,11 +20,11 @@ void sub_08020F3C(u8 arg)
 {
     register EntityMover *base asm("r3");
     EntityMover *e;
-    register GameStuff *gsLo asm("r4");
-    register GameStuff *gsHi asm("r8");
+    GameStuff *gsLo;
+    GameStuff *gsHi;
     register u32 argReg asm("r6");
-    register u32 arg8 asm("r5");
-    register u32 off asm("r1");
+    u32 arg8;
+    u32 off;
     u32 elapsed;
     u8 interval;
 
@@ -49,10 +49,10 @@ void sub_08020F3C(u8 arg)
         return;
 
     {
-        register s32 dx asm("r4");
+        s32 dx;
         register s32 dy asm("r1");
-        register u8 *eBytes asm("r1");
-        register u8 *dxAddr asm("r0");
+        u8 *eBytes;
+        u8 *dxAddr;
         u32 coord;
         u32 sum;
 
@@ -78,7 +78,7 @@ void sub_08020F3C(u8 arg)
     {
         register u32 finalOff asm("r0");
         register u8 *stampBase asm("r1");
-        register GameStuff *gs asm("r2");
+        GameStuff *gs;
         u32 *stamp;
 
         finalOff = (arg8 - argReg) << 3;

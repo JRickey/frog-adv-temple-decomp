@@ -64,24 +64,23 @@ extern u8 sub_08021E34(struct IwramAt3720 *s, u8 halfW, u8 halfH);
 
 u32 sub_08020CDC(struct IwramAt3720 *entity, u32 sound, u8 halfW, u8 halfH)
 {
+    u32 result;
+    u32 handle;
+    u32 pan;
     register u32 r asm("r0");
-    register u32 result asm("r4");
-    register u32 snd asm("r6");
-    register u32 handle asm("r0");
-    register u32 pan asm("r1");
     StructAt3003570 *p;
 
-    snd = sound;
     r = sub_08021E34(entity, halfW, halfH);
     r <<= 24;
     if (!r)
         return r;
+
     result = -1;
     p = &gStructAt3003570;
     handle = 0x10;
     handle = handle & p->flags;
     if (handle) {
-        handle = sub_0802D9EC(snd, 0xff, 0xff, 0xff);
+        handle = sub_0802D9EC(sound, 0xff, 0xff, 0xff);
         result = handle;
         pan = 0x7f;
         p = (StructAt3003570 *)(u32)p->c;
@@ -93,16 +92,14 @@ u32 sub_08020CDC(struct IwramAt3720 *entity, u32 sound, u8 halfW, u8 halfH)
 
 u32 sub_08020D2C(struct IwramAt3720 *entity, u32 sound, u8 halfW, u8 halfH)
 {
-    register u32 r asm("r0");
-    register u32 result asm("r4");
-    register u32 snd asm("r6");
+    u32 r;
+    u32 result;
     register u32 bit asm("r2");
     register u32 f34 asm("r1");
-    register u32 handle asm("r0");
-    register u32 pan asm("r1");
+    u32 handle;
+    u32 pan;
     StructAt3003570 *p;
 
-    snd = sound;
     r = sub_08021E34(entity, halfW, halfH);
     r <<= 24;
     if (r) {
@@ -115,14 +112,14 @@ u32 sub_08020D2C(struct IwramAt3720 *entity, u32 sound, u8 halfW, u8 halfH)
             return r;
 
         r = bit;
-        r |= f34;
+        r = r | f34;
         entity->_field_34 = r;
         result = -1;
         p = &gStructAt3003570;
         handle = 0x10;
         handle = handle & p->flags;
         if (handle) {
-            handle = sub_0802D9EC(snd, 0xff, 0xff, 0xff);
+            handle = sub_0802D9EC(sound, 0xff, 0xff, 0xff);
             result = handle;
             pan = 0x7f;
             p = (StructAt3003570 *)(u32)p->c;
