@@ -9,6 +9,9 @@ struct TransferDesc {
 };
 
 extern u8 gIwram_60A0[];
+extern u8 gIwram_6410[];
+extern u8 gIwram_6400[];
+extern u8 gIwram_6480[];
 
 extern void sub_0800EE94(u8 layer);
 extern void sub_08013C60(struct TransferDesc desc, u8 mode, void *buf);
@@ -52,4 +55,29 @@ void sub_08012E00(void)
     sub_0800F24C(3);
     sub_0800EBDC(3);
     sub_08016A40();
+}
+
+void sub_08012E2C(void)
+{
+    register u8 zero asm("r2");
+    register u8 val asm("r1");
+    register u8 old asm("r3");
+    register u8 *ptr1 asm("r1");
+    register u8 *ptr0 asm("r0");
+
+    ptr1 = gIwram_6410;
+    zero = 0;
+    asm("" : "+r"(zero));
+    ptr1[12] = 8;
+    ptr1[0] = 4;
+    gIwram_6400[12] = 16;
+    gIwram_6400[0] = 2;
+    ptr0 = gIwram_60A0;
+    ptr0 += 0x40;
+    val = 1;
+    old = *ptr0;
+    val |= old;
+    *ptr0 = val;
+    ptr0 = gIwram_6480;
+    ptr0[10] = zero;
 }
