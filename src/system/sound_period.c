@@ -314,7 +314,8 @@ void sub_08030290(void)
 }
 
 typedef struct SoundSlotAcc {
-    u8 _pad00[0x2b];
+    u8 _pad00[0x2a];
+    u8 gate;      /* +0x2a */
     u8 period;    /* +0x2b */
     u8 _pad2c[8]; /* +0x2c */
     u16 accA;     /* +0x34 */
@@ -323,7 +324,8 @@ typedef struct SoundSlotAcc {
 } SoundSlotAcc;
 
 typedef struct DirectSoundChannel {
-    u8 _pad00[7];
+    u8 _pad00[6];
+    u8 gate;   /* +0x06 */
     u8 period; /* +0x07 */
 } DirectSoundChannel;
 
@@ -341,8 +343,10 @@ typedef struct SoundSystemAcc {
     u8 _pad20[0x6c];
     DirectSoundChannel channels[4]; /* +0x8c */
     u16 chanAcc[4];                 /* +0xac */
-    u8 _padb4[0x14];
+    u8 _padb4[0x10];
+    void **slotStateA;     /* +0xc4 */
     SoundSlotAcc *swSlots; /* +0xc8 */
+    void **slotStateB;     /* +0xcc */
 } SoundSystemAcc;
 
 #define gpSoundSystemAcc (*(SoundSystemAcc **)0x030065e0)
@@ -504,6 +508,72 @@ s32 sub_0803038C(s32 channel, u32 *state_ptr)
         slotDirty->flags |= 0x80;
     }
 
+    *sp += 2;
+    return 1;
+}
+
+extern void sub_0802E724(s32 ch);
+
+s32 sub_0803045C(s32 channel, u32 *state_ptr)
+{
+    register s32 ch asm("r3");
+    u32 *sp;
+    u8 *stream;
+    u32 *flags;
+    u8 *gateBase;
+
+    ch = channel;
+    sp = state_ptr;
+    stream = (u8 *)*sp;
+
+    if (ch <= 3) {
+        register SoundSystemAcc **gp asm("r1");
+        SoundSystemAcc *ss;
+        u32 flagOff;
+        u32 channelOff;
+
+        gp = &gpSoundSystemAcc;
+        flagOff = (ch << 2) + 0x10;
+        ss = *gp;
+        flags = (u32 *)((u8 *)ss + flagOff);
+        channelOff = (ch << 3) + 0x8c;
+        gateBase = (u8 *)ss + channelOff;
+    } else {
+        register SoundSystemAcc *ss asm("r1");
+        register u32 arrayOff asm("r2");
+        register u32 slotOff asm("r1");
+        SoundSystemAcc **gp;
+        u8 *slot;
+        u8 **slotPtr;
+        u8 *stateBase;
+        u8 *stateSlot;
+
+        gp = &gpSoundSystemAcc;
+        ss = *gp;
+        stateBase = (u8 *)ss->slotStateB;
+        arrayOff = ch << 2;
+        stateSlot = (u8 *)(arrayOff + (u32)stateBase);
+        if (*(void **)(stateSlot - 0x10) == NULL)
+            goto reset;
+        stateBase = (u8 *)ss->slotStateA;
+        stateSlot = (u8 *)(arrayOff + (u32)stateBase);
+        if (*(void **)(stateSlot - 0x10) == NULL)
+            goto reset;
+
+        slotPtr = (u8 **)ss;
+        slotPtr = (u8 **)((u8 *)slotPtr + 0xc8);
+        slotOff = ch << 6;
+        slotOff += -0x100;
+        slot = *slotPtr + slotOff;
+        flags = (u32 *)(slot + 0x38);
+        gateBase = slot + 0x24;
+    }
+
+    if (stream[1] != 0 && (*flags & 0x21) != 0 && gateBase[6] != 0)
+        return 0;
+
+reset:
+    sub_0802E724(ch);
     *sp += 2;
     return 1;
 }

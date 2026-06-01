@@ -80,8 +80,3 @@
 @   0x080304ee: bc70        pop	{r4, r5, r6}
 @   0x080304f0: bc02        pop	{r1}
 @   0x080304f2: 4708        bx	r1
-
-        thumb_func_start sub_0803045C
-sub_0803045C: @ 0x0803045c
-        .incbin "frog_us_baserom.gba", 0x3045c, 0x98
-        thumb_func_end sub_0803045C
