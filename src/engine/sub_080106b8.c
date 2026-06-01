@@ -70,3 +70,123 @@ u8 sub_08010710(void)
     *(vu16 *)0x04000054 = *countdown;
     return *countdown;
 }
+
+extern void sub_08017000(void);
+
+void sub_08010740(void)
+{
+    sub_08017000();
+
+    if (*(vu8 *)0x03006500 == 1) {
+        *(vu16 *)0x04000050 = 0x1744;
+        *(vu16 *)0x04000052 = 0x0808;
+        *(vu8 *)0x03006500 = 0;
+    }
+}
+
+void sub_08010778(void)
+{
+    u32 *frameCounter = (u32 *)0x03005330;
+    register u32 *state asm("r3") = (u32 *)0x03006540;
+    u32 *savedFrameCounter;
+    register u32 *savedState asm("r6");
+    u16 value;
+    u16 next;
+    u8 i;
+    u32 elapsed = *frameCounter - state[1];
+
+    savedFrameCounter = frameCounter;
+    savedState = state;
+
+    if (elapsed <= 31) {
+        return;
+    }
+
+    savedState[3] = 0x05000042;
+    value = *(u16 *)0x05000042;
+
+    for (i = 0; i <= 14; i++) {
+        if (i <= 13) {
+            u16 *cursor = (u16 *)state[3];
+            next = cursor[1];
+            state[3] = (u32)(cursor + 1);
+            cursor[1] = value;
+            value = next;
+        } else {
+            u16 *cursor = (u16 *)(state[3] - 28);
+            state[3] = (u32)cursor;
+            *cursor = next;
+        }
+    }
+
+    savedState[1] = *savedFrameCounter;
+}
+
+u32 sub_080107D0(u8 layer)
+{
+    vu32 *dma;
+    u32 cnt;
+
+    switch (layer) {
+    case 0:
+        dma = (vu32 *)0x040000D4;
+        dma[0] = *(u32 *)0x08306918;
+        dma[1] = 0x06008040;
+        cnt = 0x80000420;
+        break;
+    case 1:
+        dma = (vu32 *)0x040000D4;
+        {
+            u32 *sources = (u32 *)0x08306918;
+            dma[0] = sources[1];
+        }
+        dma[1] = 0x06008880;
+        /* Keep agbcc from tail-merging this case with case 2; emits no code. */
+        asm("");
+        cnt = 0x80000400;
+        break;
+    case 2:
+        dma = (vu32 *)0x040000D4;
+        {
+            u32 *sources = (u32 *)0x08306918;
+            dma[0] = sources[2];
+        }
+        dma[1] = 0x06009080;
+        cnt = 0x80000400;
+        break;
+    case 3:
+        dma = (vu32 *)0x040000D4;
+        {
+            u32 *sources = (u32 *)0x08306918;
+            dma[0] = sources[3];
+        }
+        dma[1] = 0x06009880;
+        cnt = 0x80000500;
+        break;
+    default:
+        return layer;
+    }
+
+    dma[2] = cnt;
+    return dma[2];
+}
+
+void *sub_08010870(void *ptr, void *base)
+{
+    u8 *pos = ptr;
+    u8 *start = base;
+    u8 *end = start + 0x800;
+
+    if (pos >= end) {
+        pos += -0x800;
+        pos -= (u32)start;
+        return start + (((s32)pos >> 1) << 1);
+    }
+
+    if (pos >= start) {
+        return pos;
+    }
+
+    pos = start - (u32)pos;
+    return end - (((s32)pos >> 1) << 1);
+}
