@@ -142,8 +142,3 @@
 @   0x0801d262: 0400        lsls	r0, r0, #16
 @   0x0801d264: 3540        adds	r5, #64	@ 0x40
 @   0x0801d266: 0300        lsls	r0, r0, #12
-
-        thumb_func_start sub_0801D150
-sub_0801D150: @ 0x0801d150
-        .incbin "frog_us_baserom.gba", 0x1d150, 0x118
-        thumb_func_end sub_0801D150
