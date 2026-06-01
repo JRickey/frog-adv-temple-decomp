@@ -11,7 +11,12 @@
         .global text_08033948
         .type   text_08033948, %object
 text_08033948:
-        .incbin "frog_us_baserom.gba", 0x00033948, 0x000001e0
+        .incbin "frog_us_baserom.gba", 0x00033948, 0x00000128
+        .thumb_func
+        .global sub_08033A70
+        .type   sub_08033A70, %function
+sub_08033A70:
+        .incbin "frog_us_baserom.gba", 0x00033a70, 0x000000b8
         .thumb_func
         .global sub_08033B28
         .type   sub_08033B28, %function
