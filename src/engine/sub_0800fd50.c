@@ -101,9 +101,7 @@ void sub_0800FE10(void)
         (u16)(x + (__extension__({
                   u32 y6 = (u32)(y << 6);
                   u32 r0v = (u32)0xffffe0a0;
-                  asm volatile(".syntax unified\n\t.thumb\n\t.inst.n 0x1c04\n\t.syntax divided\n"
-                               : "=r"(bk)
-                               : "r"(r0v));
+                  asm(".syntax unified\n\t.thumb\n\t.inst.n 0x1c04\n\t.syntax divided\n" : "=r"(bk) : "r"(r0v));
                   y6 + bk;
               })));
 
