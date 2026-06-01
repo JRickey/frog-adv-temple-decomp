@@ -6,6 +6,8 @@
 extern const u8 sSpriteAnimPermLut[16];
 
 extern u8 gIwram_53A0;
+extern u32 *sub_0800D070(u32 *out, s8 delta);
+extern u32 sub_0800CD88(u8 col, u8 row, s16 tileX, s16 tileY);
 extern void sub_0800D450(u32 a, u32 b);
 extern void sub_0800D0F8(void);
 extern u32 sub_0800DAB8(s32 bit);
@@ -64,4 +66,21 @@ u32 sub_0800DA70(u32 val)
     } while (bit <= 24);
 
     return result;
+}
+
+u32 sub_0800DAB8(s32 bit)
+{
+    u32 coord;
+    s16 tileX;
+    s16 tileY;
+    s8 tile;
+
+    sub_0800D070(&coord, (s8)bit);
+    tileX = (s16)coord;
+    tileY = (s16)(coord >> 16);
+    tile = (s8)sub_0800CD88(gIwram_35E0._field_18, gIwram_35E0._field_19, tileX, tileY);
+    if ((u8)(tile - 1) <= 1 || tile == 21 || tile == 20)
+        return 0;
+
+    return 1;
 }

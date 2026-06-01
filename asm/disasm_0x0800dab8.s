@@ -196,11 +196,6 @@
 @   0x0800dc38: bc02        pop	{r1}
 @   0x0800dc3a: 4708        bx	r1
 
-        thumb_func_start sub_0800DAB8
-sub_0800DAB8: @ 0x0800dab8
-        .incbin "frog_us_baserom.gba", 0xdab8, 0x4c
-        thumb_func_end sub_0800DAB8
-
         .global sub_0800DB04
         .thumb_func
 sub_0800DB04: @ 0x0800db04
