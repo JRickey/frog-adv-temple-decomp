@@ -15,14 +15,6 @@
  *   - Tail: sub_080059C4(&field_38).
  *
  * Matching notes (agbcc 2.x):
- *   - The full four-register pin set is load-bearing:
- *       `register u32 mask asm("r0")`  — scratch for both AND tests
- *       `register u16 t asm("r1")`    — caches *flags across both blocks
- *       `register u32 bit8 asm("r4")` — caches the constant 8 across blocks
- *       `register u16 fld asm("r5")`  — temporary for field_34 only
- *     Drop any one and agbcc shifts everything (base lands in r4/r5, the
- *     conditional stores fold into RMW on r1/r2, function shrinks to
- *     76 bytes and the pool alignment NOP at +0x46 vanishes).
  *   - `flags` (a `u16 *` local to gIwram_3720._field_6c) materialises
  *     the +0x6c offset (too large for Thumb-1 ldrh imm5) once into
  *     `adds r2, r3, #0 ; adds r2, #108`; both conditional stores and
@@ -30,11 +22,11 @@
  *   - First conditional store uses `newv = bit8; newv |= t; *flags = newv;`
  *     (not `*flags = bit8 | t`) to defeat agbcc's RMW-on-t fold and
  *     emit baserom's `adds r0, r4, #0 ; orrs r0, r1 ; strh r0, [r2]`.
- *   - Second conditional store walks through `mask` (already pinned to
- *     r0) — `mask = 0x7fff; mask &= t; mask |= bit8; *flags = mask`
+ *   - Second conditional store walks through `mask`:
+ *     `mask = 0x7fff; mask &= t; mask |= bit8; *flags = mask`
  *     emits `ldr r0, =0x7fff ; ands r0, r1 ; orrs r0, r4 ; strh r0`.
- *   - The re-read `t = *flags;` between the two if-blocks is
- *     load-bearing — baserom emits an explicit `ldrh r1, [r2, #0]` at
+ *   - `t` is still pinned to r1. The re-read `t = *flags;` between the two
+ *     if-blocks is load-bearing — baserom emits an explicit `ldrh r1, [r2, #0]` at
  *     0x0800a4f4 to refresh; without it agbcc reuses the cached t. */
 
 extern void sub_080059C4(void *p);
@@ -43,9 +35,9 @@ void sub_0800A4D0(void)
 {
     struct IwramAt3720 *base = &gIwram_3720;
     u16 *flags = &base->_field_6c;
-    register u32 mask asm("r0");
-    register u16 fld asm("r5");
-    register u32 bit8 asm("r4");
+    u32 mask;
+    u16 fld;
+    u32 bit8;
     register u16 t asm("r1");
     u16 newv;
 

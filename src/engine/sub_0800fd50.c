@@ -15,10 +15,10 @@ extern void sub_08006948(u8 *rec, u16 mask);
  * teardown path runs (caller observes transition completion).
  *
  * Matching notes (agbcc):
- *   - `register u16 z asm("r4")` pins the zero-value to r4 so the four
- *     window-register stores AND the DMA-source halfword all reuse the
- *     same `movs r4, #0; strh r4, ...` instead of re-materializing zero.
- *   - The `asm volatile("" : "+r"(z))` barrier after the BL keeps agbcc
+ *   - `z` is pinned to r4 so the four window-register stores and DMA source
+ *     halfword all reuse the same `movs r4, #0; strh r4, ...` instead of
+ *     re-materializing zero.
+ *   - The empty barrier after the BL keeps agbcc
  *     from re-emitting `movs r4, #0` — it relies on r4 being callee-saved
  *     across sub_0800EE94.
  *   - Extended-pool layout: the function's 10 pool literals don't all fit
@@ -84,7 +84,7 @@ void sub_0800FE10(void)
     u16 x;
     u16 y;
     u32 cnt;
-    register u32 base asm("r5");
+    u32 base;
     register u32 bk asm("r4");
     u16 t;
 
@@ -97,11 +97,10 @@ void sub_0800FE10(void)
     y = *(u16 *)(state + 50);
     base = *(u32 *)(state + 20);
 
-    /* y6 computed in r1, then pool load via r0, then copy to r4 */
     *(u16 *)((y << 7) + ((x << 1) + base)) =
         (u16)(x + (__extension__({
-                  register u32 y6 asm("r1") = (u32)(y << 6);
-                  register u32 r0v asm("r0") = (u32)0xffffe0a0;
+                  u32 y6 = (u32)(y << 6);
+                  u32 r0v = (u32)0xffffe0a0;
                   asm volatile(".syntax unified\n\t.thumb\n\t.inst.n 0x1c04\n\t.syntax divided\n"
                                : "=r"(bk)
                                : "r"(r0v));

@@ -14,7 +14,7 @@ struct SceneScrollState_F2F8 {
 
 void sub_0800F2F8(u8 direction, u8 channel)
 {
-    register u8 ch asm("r1") = channel;
+    u8 ch = channel;
 
     switch (ch) {
     case 0:
@@ -41,14 +41,14 @@ void sub_0800F2F8(u8 direction, u8 channel)
         break;
     case 2:
         if (direction == 0) {
-            register struct IwramAt3550 *r asm("r0") = (struct IwramAt3550 *)0x03003550;
-            register struct SceneScrollState_F2F8 *ss asm("r1") = (struct SceneScrollState_F2F8 *)0x030060A0;
+            struct IwramAt3550 *r = (struct IwramAt3550 *)0x03003550;
+            struct SceneScrollState_F2F8 *ss = (struct SceneScrollState_F2F8 *)0x030060A0;
             asm("" : "+r"(ss));
             ss += 2;
             r->_data[4] = ss->bgHofs;
         } else {
-            register struct IwramAt3550 *r asm("r0") = (struct IwramAt3550 *)0x03003550;
-            register struct SceneScrollState_F2F8 *ss asm("r1") = (struct SceneScrollState_F2F8 *)0x030060A0;
+            struct IwramAt3550 *r = (struct IwramAt3550 *)0x03003550;
+            struct SceneScrollState_F2F8 *ss = (struct SceneScrollState_F2F8 *)0x030060A0;
             asm("" : "+r"(ss));
             ss += 2;
             r->_data[5] = ss->bgVofs;

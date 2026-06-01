@@ -81,10 +81,10 @@ extern u8 gIwram_5330;
 void sub_0800A26C(void)
 {
     struct IwramAt6110 *s = &gIwram_6110;
-    register const GameProc *t1 asm("r1");
-    register GameStuff *base asm("r4");
-    register u8 idx asm("r2");
-    register u32 offset asm("r0");
+    const GameProc *t1;
+    GameStuff *base;
+    u8 idx;
+    u32 offset;
 
     s->_field_14 = -1;
     s->_field_1c = -1;
@@ -106,8 +106,8 @@ void sub_0800A26C(void)
     ((GameProc)(*(const u32 *)offset))();
 
     {
-        register const u8 *lut asm("r0");
-        register u32 lastidx asm("r4");
+        const u8 *lut;
+        u32 lastidx;
         lut = sEntitySubtypeLut;
         lastidx = base->pendingMode;
         sub_0800F24C(*(const u8 *)(lastidx + (u32)lut));
