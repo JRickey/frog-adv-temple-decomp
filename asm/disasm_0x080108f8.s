@@ -53,8 +53,3 @@
 @   0x08010952: 0600        lsls	r0, r0, #24
 @   0x08010954: 0090        lsls	r0, r2, #2
 @   0x08010956: 8000        strh	r0, [r0, #0]
-
-        thumb_func_start sub_080108F8
-sub_080108F8: @ 0x080108f8
-        .incbin "frog_us_baserom.gba", 0x108f8, 0x60
-        thumb_func_end sub_080108F8
