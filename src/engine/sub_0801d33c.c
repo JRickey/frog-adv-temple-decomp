@@ -1,4 +1,5 @@
 #include "gba/dma.h"
+#include "iwram.h"
 #include "types.h"
 
 #define sFrogObjPaletteSrc ((const void *const *)0x08308f3c)
@@ -73,4 +74,55 @@ void sub_0801D33C(u8 arg)
     REG_DMA3.dst = (void *)0x0600f901;
     REG_DMA3.cnt = DMA_ENABLE | 0x4;
     (void)REG_DMA3.cnt;
+}
+
+extern void sub_0802E13C(void);
+extern void sub_08020C78(u32 a);
+
+void sub_0801D438(u8 arg)
+{
+    u8 *state;
+    u32 tableBase;
+    const u32 *const *entry;
+    const u32 *base;
+    u16 zero;
+    vu16 fill;
+
+    state = (u8 *)0x03006440;
+    *(u32 *)(state + 20) = 0x0600FBC2;
+    *(u32 *)(state + 36) = 0x0600FBC2 + 0x80;
+
+    tableBase = 0x080C1254;
+    asm volatile("" ::"r"(tableBase));
+    entry = (const u32 *const *)(gIwram_34B0._data * 24 + tableBase);
+    base = entry[0];
+    *(u32 *)(state + 12) = *(const u32 *)((const u8 *)base + arg * 4 + 0x9C);
+
+    {
+        u8 byteZero = 0;
+        u16 halfZero = 0;
+        asm volatile("" : "+r"(byteZero), "+r"(halfZero));
+        state[8] = byteZero;
+        zero = halfZero;
+    }
+    *(u16 *)(state + 44) = zero;
+    *(u16 *)(state + 48) = zero;
+    *(u16 *)(state + 50) = zero;
+    state[11] = 8;
+
+    fill = zero;
+    REG_DMA3.src = (const void *)&fill;
+    REG_DMA3.dst = (void *)0x0600FBC0;
+    REG_DMA3.cnt = DMA_ENABLE | DMA_SRC_FIXED | 0xC0;
+    (void)REG_DMA3.cnt;
+
+    fill = zero;
+    REG_DMA3.src = (const void *)&fill;
+    REG_DMA3.dst = (void *)0x0600F800;
+    REG_DMA3.cnt = DMA_ENABLE | DMA_SRC_FIXED | 0xC0;
+    (void)REG_DMA3.cnt;
+
+    sub_0801D33C(arg);
+    sub_0802E13C();
+    sub_08020C78(0x4B);
 }
