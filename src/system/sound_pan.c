@@ -52,7 +52,7 @@ void sub_0802F2FC(void)
         step = SOUND_SLOT_PAN_STEP(slot);
         if (step == 0)
             continue;
-        sum = slot->panAcc + step;
+        sum = SOUND_SLOT_PAN_ACC(slot) + step;
         if (step > 0) {
             limQ = SOUND_SLOT_PAN_POS_LIMIT(slot) << 8;
             if (sum >= limQ) {
