@@ -18,13 +18,11 @@
  * (asm/disasm_0x08033cd8.s) — agbcc lowers a Thumb function-pointer
  * call to that helper rather than emitting `bx r0` inline.
  *
- * Shipped NAKED. The straight-line pure-C body (see NON_MATCHING
- * block below) compiles to byte_diff=7 — agbcc's register allocator
- * chains the index through r0 for all three table dispatches, while
- * the baserom uses separate scratch registers (r2, then r1, then r4
- * reusing the gGameStuff base register once it's last-use). Permuter
- * (1575 iterations) couldn't crack the difference; the readable form
- * is preserved here for the phase-3 PC port.
+ * Uses the same explicit table-offset idiom as sub_0800A26C: load the
+ * gGameStuff base through the linker-assigned IWRAM symbol, keep the
+ * table base separate from the index, then call the loaded function
+ * pointer. That gives agbcc the baserom's r2/r1/r4 pendingMode chain
+ * without register pins.
  */
 
 typedef void (*GameProc)(void);
@@ -42,54 +40,40 @@ extern void sub_0800FCC8(u8 arg);
 extern void sub_08005FC8(void);
 /* sub_0802D558 is a thin wrapper around BIOS SWI 12 (CpuFastSet) — see init.c. */
 extern void sub_0802D558(void *src, void *dst, u32 mode);
+extern u8 gIwram_5330;
 
-#ifdef NON_MATCHING
 void sub_0800A2D8(void)
 {
+    const GameProc *procs;
+    GameStuff *base;
+    u8 idx;
+    u32 offset;
+
     sub_0800A520();
-    sEntityProcB[gGameStuff.pendingMode]();
-    sub_0800F24C(sEntitySubtypeLut[gGameStuff.pendingMode]);
-    sEntityProcD[gGameStuff.pendingMode]();
+
+    procs = sEntityProcB;
+    base = (GameStuff *)&gIwram_5330;
+    idx = base->pendingMode;
+    offset = ((u32)idx << 2) + (u32)procs;
+    ((GameProc)(*(const u32 *)offset))();
+
+    {
+        const u8 *lut;
+        u32 subtype;
+
+        lut = sEntitySubtypeLut;
+        subtype = base->pendingMode;
+        sub_0800F24C(*(const u8 *)(subtype + (u32)lut));
+    }
+
+    procs = sEntityProcD;
+    idx = base->pendingMode;
+    offset = ((u32)idx << 2) + (u32)procs;
+    ((GameProc)(*(const u32 *)offset))();
+
     sub_08009A58();
     sub_08009188();
 }
-#else
-NAKED void sub_0800A2D8(void)
-{
-    asm(".syntax unified\n"
-        "    push    {r4, lr}\n"
-        "    bl      sub_0800A520\n"
-        "    ldr     r1, _pool_procB\n"
-        "    ldr     r4, _pool_gGameStuff\n"
-        "    ldrb    r2, [r4, #10]\n"
-        "    lsls    r0, r2, #2\n"
-        "    adds    r0, r0, r1\n"
-        "    ldr     r0, [r0, #0]\n"
-        "    bl      _call_via_r0\n"
-        "    ldr     r0, _pool_lut\n"
-        "    ldrb    r1, [r4, #10]\n"
-        "    adds    r0, r1, r0\n"
-        "    ldrb    r0, [r0, #0]\n"
-        "    bl      sub_0800F24C\n"
-        "    ldr     r1, _pool_procD\n"
-        "    ldrb    r4, [r4, #10]\n"
-        "    lsls    r0, r4, #2\n"
-        "    adds    r0, r0, r1\n"
-        "    ldr     r0, [r0, #0]\n"
-        "    bl      _call_via_r0\n"
-        "    bl      sub_08009A58\n"
-        "    bl      sub_08009188\n"
-        "    pop     {r4}\n"
-        "    pop     {r0}\n"
-        "    bx      r0\n"
-        "    .align  2, 0\n"
-        "_pool_procB:     .4byte sEntityProcB\n"
-        "_pool_gGameStuff: .4byte 0x03005330\n"
-        "_pool_lut:       .4byte sEntitySubtypeLut\n"
-        "_pool_procD:     .4byte sEntityProcD\n"
-        ".syntax divided\n");
-}
-#endif
 
 /* Synchronous "force-render-now" tail: temporarily masks the VBlank IRQ,
  * runs subsystem ticks (sub_0800FCC8 with the per-entity subtype byte +
@@ -111,8 +95,6 @@ NAKED void sub_0800A2D8(void)
  *   - `idx + (u32)lut` (index first, integer-space add) gives the
  *     `r1, r0` operand order; `lut[idx]` folds the pointer to the front
  *     and yields `adds r0, r0, r1` instead. */
-extern u8 gIwram_5330;
-
 void sub_0800A328(void)
 {
     const u8 *lut;
