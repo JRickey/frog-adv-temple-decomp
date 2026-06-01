@@ -48,6 +48,16 @@ extern struct IwramAt6540 gIwram_6540;
 extern struct IwramAt60A0 gIwram_60A0;
 
 extern void sub_08020C78(u32 arg);
+extern void sub_0800E85C(u8 arg);
+extern void sub_0800EB1C(void);
+extern void sub_0800F24C(u8 arg);
+extern void sub_0801310C(void);
+extern void sub_0800EBDC(u8 arg);
+extern void sub_08016A40(void);
+extern void sub_08012E2C(void);
+extern void sub_0800EE34(u8 layer);
+extern u8 gIwram_3610;
+extern u8 gIwram_6110;
 
 void sub_0801377C(void)
 {
@@ -95,4 +105,32 @@ void sub_0801377C(void)
     flags[0] = 0;
     flags[0xDC] = 0;
     flags[0xD4] = 0;
+}
+
+void sub_08013828(void)
+{
+    register u32 zero asm("r2");
+    u8 *flags;
+    u8 *control;
+
+    sub_0800E85C(3);
+    sub_0800EB1C();
+    sub_0800F24C(2);
+
+    flags = &gIwram_3610;
+    zero = 0;
+    flags[0] = zero;
+    flags[0xdc] = zero;
+    flags[0xd4] = zero;
+
+    control = (u8 *)&gIwram_6110;
+    *(u16 *)(control + 0x28) = zero;
+    control[0x2b] &= 0xf;
+
+    sub_0801310C();
+    sub_0801310C();
+    sub_0800EBDC(3);
+    sub_08016A40();
+    sub_08012E2C();
+    sub_0800EE34(2);
 }
