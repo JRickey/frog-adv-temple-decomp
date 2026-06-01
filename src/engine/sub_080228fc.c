@@ -19,6 +19,7 @@ extern const u32 sLevelLayout_310E14[12];
 extern const u32 sLevelLayout_310E44[12];
 extern const u32 sLevelLayout_310E74[8];
 extern const u32 sLevelLayout_310E94[8];
+extern const u32 sLevelLayout_310B54[4];
 
 void sub_08022920(void)
 {
@@ -91,4 +92,9 @@ void sub_08022A28(void)
 
     if (sub_0800D028(0x35) != 0)
         sub_08021EEC(sLevelLayout_310E94, 0x35);
+}
+
+void sub_08022A9C(void)
+{
+    sub_08021140(0x59, sLevelLayout_310B54, 0, 0x4c, 0x1c5, 13, 0);
 }
