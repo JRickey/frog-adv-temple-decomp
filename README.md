@@ -1,10 +1,10 @@
 # Frogger's Adventures: Temple of the Frog — Decompilation
 
-A work-in-progress matching decompilation of *Frogger's Adventures: Temple of the Frog* (Game Boy Advance, USA region) by Konami. 
+A work-in-progress matching decompilation of *Frogger's Adventures: Temple of the Frog* (Game Boy Advance, USA region) by Konami.
 
 Targets byte-identical output to the original ROM using **agbcc** (gcc 2.x for thumb/ARM) and `arm-none-eabi-binutils`.
 
-This decomp is not shiftable, thus it will not be suitable for developing rom hacks.
+This decomp is not shiftable yet, so it is not suitable for developing ROM hacks.
 
 > *"Shiftable" means you can add/remove/reorder code in the source and still
 > get a working ROM. This one isn't because matching is the only goal:
@@ -105,7 +105,7 @@ the distro with `wsl --set-version <DistroName> 2`.
 ## Build
 
 ```sh
-# Extract data blobs from the baserom (no-op until database.json is populated)
+# Extract data blobs from the baserom according to database.json
 python3 tools/extractor.py
 
 # Build (parallel-safe)
@@ -120,16 +120,31 @@ make tidy
 
 ## Progress
 
+Current `main` builds a byte-identical ROM: `make check` passes, the built
+SHA1 equals the baserom SHA1, and `tools/agent/progress.py --per-function`
+reports `0` ROM-diff bytes with no nonmatching functions.
+
+There is still decompilation work remaining. At the current checkpoint:
+
+- `218` functions remain in asm stubs or asm slices (`40,653` asm lines).
+- `28` compiled functions are still `NAKED` / `NON_MATCHING` asm fallbacks.
+  They byte-match the baserom, but are not yet true pure C.
+- Most non-code ROM bytes are still raw assets or data blobs.
+
+The generated estimate block below is the broader progress snapshot. The
+`peeled-but-still-asm` count is file/slice-based, so it can differ from the
+function count reported by `progress.py`.
+
 <!-- BEGIN PROGRESS (managed by tools/agent/progress_stats.py) -->
 
 **All figures are estimates** — the function-count denominator is a
 Thumb prologue scan, not a ground-truth disassembly. Treat ±20% as honest.
 Regenerate with `python3 tools/agent/progress_stats.py --update-readme`.
 
-- **Functions decompiled to C**: 395 / ~513 estimated total (**77.0%**)
-  - true pure-C matches: 351
-  - NAKED+NON_MATCHING (asm fallback, byte-matches but not pure C): 44
-  - peeled-but-still-asm: 210
+- **Functions decompiled to C**: 404 / ~513 estimated total (**78.8%**)
+  - true pure-C matches: 376
+  - NAKED+NON_MATCHING (asm fallback, byte-matches but not pure C): 28
+  - peeled-but-still-asm: 201
   - estimate range (lower / upper): 335 / 1140
 - **Data deblobbed**: 538.9 KiB of 4.00 MiB (**13.16%**)
   - raw INCBIN bytes: 3.47 MiB (86.8% of ROM)
