@@ -5,6 +5,9 @@
         .include "asm/macros.inc"
         .syntax unified
 
+        .global sub_0802D56C
+        .thumb_set sub_0802D56C, 0x0802D56D
+
 @ Disassembly preview (the bytes come from the INCBIN below):
 @   0x08017abc: b570        push	{r4, r5, r6, lr}
 @   0x08017abe: 4646        mov	r6, r8
@@ -159,7 +162,4 @@
 @   0x08017bf8: 3498        adds	r4, #152	@ 0x98
 @   0x08017bfa: 0300        lsls	r0, r0, #12
 
-        thumb_func_start sub_08017ABC
-sub_08017ABC: @ 0x08017abc
-        .incbin "frog_us_baserom.gba", 0x17abc, 0x140
-        thumb_func_end sub_08017ABC
+        .incbin "frog_us_baserom.gba", 0x17b68, 0x94
