@@ -107,6 +107,15 @@ src/engine/sub_0800f24c.s: CC = $(AGBCC_BIN)
 src/engine/sub_08012d40.s: CC = $(AGBCC_BIN)
 src/engine/sub_08013040.s: CC = $(AGBCC_BIN)
 src/engine/sub_0800d808.s: CC = $(OLD_AGBCC_BIN)
+# Matches the state-byte dispatcher prologue in the baserom.
+src/game/sub_08001214.s: CFLAGS += -fforce-addr -fno-expensive-optimizations
+src/game/sub_080019b4.s: CFLAGS += -fforce-addr -fno-expensive-optimizations -fno-gcse
+src/game/sub_08002184.s: CFLAGS += -fforce-addr -fno-expensive-optimizations -fno-gcse
+src/game/sub_08002524.s: CFLAGS += -fforce-addr -fno-expensive-optimizations -fno-gcse
+src/game/mode_15.s: CFLAGS += -fforce-addr -fno-expensive-optimizations -fno-gcse
+src/engine/sub_08012f00.s: CFLAGS += -fforce-addr -fno-expensive-optimizations -fno-gcse
+src/game/sub_08002b58.s: CFLAGS += -fforce-addr -fno-expensive-optimizations
+src/system/sub_08001508.s: CFLAGS += -fforce-addr -fno-expensive-optimizations
 src/game/sub_08003254.s: CFLAGS += -ffixed-r3
 src/game/sub_08006a0c.s: CFLAGS += -O1
 # Loop reverses to a `bge.n` countdown under strength reduction; the baserom
