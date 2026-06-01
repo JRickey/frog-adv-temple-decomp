@@ -45,11 +45,7 @@ u8 sub_08000764(u8 range)
  *   - *(u16*)0x03006148 = 1: "VBlank done" semaphore for the main-loop wait. */
 void sub_08000790(void)
 {
-    /* `register T *p asm("rN")` pins the agbcc register choice so the
-     * `ldr Rn, =&gGameStuff` lands on r1 first (target's instruction
-     * scheduling). Without these hints agbcc picks r2 and the entire
-     * function falls off the matching path. */
-    register GameStuff *g asm("r1");
+    GameStuff *g;
     u8 mode;
 
     sub_08035D7C();

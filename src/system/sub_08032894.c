@@ -205,9 +205,9 @@ NAKED void sub_08032904(s32 ch, u32 step, u32 pan, u32 ctrl, u16 hwCtrl)
 #else
 void sub_08032904(s32 ch, u32 step, u32 pan, u32 ctrl, u16 hwCtrl)
 {
-    register u32 savedStep asm("r8") = step;
-    register u32 savedCtrl asm("r9") = ctrl;
-    register SoundChannelSystem **pPool asm("r5");
+    u32 savedStep = step;
+    u32 savedCtrl = ctrl;
+    SoundChannelSystem **pPool;
     SoundChannelSystem *ss;
     SoundSlotInit *chState;
     u8 *chMode;
@@ -226,7 +226,7 @@ void sub_08032904(s32 ch, u32 step, u32 pan, u32 ctrl, u16 hwCtrl)
     ss->chDirty[savedCh] = 0;
     hwOff = 0xac;
     {
-        register u32 idx2 asm("r2") = (u32)savedCh * 2;
+        u32 idx2 = (u32)savedCh * 2;
         *(u16 *)((u8 *)ss + hwOff + idx2) = hwCtrl;
     }
 
@@ -240,7 +240,7 @@ void sub_08032904(s32 ch, u32 step, u32 pan, u32 ctrl, u16 hwCtrl)
         return;
 
     {
-        register u32 chOff asm("r1") = (ch8 + (u32)savedCh) * 4 + 0x20;
+        u32 chOff = (ch8 + (u32)savedCh) * 4 + 0x20;
         chState = (SoundSlotInit *)((u8 *)*pPool + chOff);
     }
 

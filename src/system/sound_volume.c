@@ -46,7 +46,7 @@ void sub_0802E684(s32 vol, s32 chIn)
     register s32 ch asm("r3");
     s32 oldCode;
     vu16 *reg;
-    register u16 regVal asm("r1");
+    u16 regVal;
 
     asm("" : "=r"(newCode) : "0"(vol)); /* mov r4, vol — fight agbcc's lsrs-fold */
     ch = chIn;

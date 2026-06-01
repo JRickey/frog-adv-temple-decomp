@@ -381,7 +381,7 @@ s32 sub_0803030C(s32 channel, u32 *state_ptr)
     } else {
         u32 *chFlagsPtr;
         u32 flags;
-        register u32 chOff asm("r0");
+        u32 chOff;
         chFlagsPtr = (u32 *)*gpss;
         chOff = (u32)ch << 2;
         chFlagsPtr = (u32 *)((u8 *)chFlagsPtr + 0x10);
