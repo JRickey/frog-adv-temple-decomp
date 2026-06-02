@@ -91,3 +91,71 @@ void sub_0800AC44(u8 tile)
 
     sub_08006600((u8 *)p6110, 8, 2);
 }
+
+extern s8 sub_0800D9FC(s8 idx);
+
+void sub_0800ACE8(u8 tile)
+{
+    struct IwramAt35E0 *p35E0;
+    register struct IwramAt6110 *base5 asm("r5");
+    register struct IwramAt6110 *base4 asm("r4");
+    register struct IwramAt6110 *base2 asm("r2");
+    register u16 flags asm("r1");
+    s8 result;
+
+    if (tile == 20) {
+        p35E0 = &gIwram_35E0;
+        result = (u8)sub_0800A7A8(20, p35E0->_field_8, p35E0->_field_A);
+
+        base5 = &gIwram_6110;
+        if (sub_0800679C((u8 *)base5, 5, (u8)result) == 0) {
+            sub_08006600((u8 *)base5, 5, (u8)result);
+            sub_08020C78(25);
+        }
+
+        flags = base5->selector5Flags;
+        if ((flags & 1) && (flags & 0x20)) {
+            if (sub_0800679C((u8 *)base5, 8, 4) == 0) {
+                sub_08006600((u8 *)base5, 8, 4);
+                sub_08020C78(52);
+            }
+        }
+
+        base4 = &gIwram_6110;
+        if ((base4->selector5Flags & 0x12) == 0x12) {
+            if (sub_0800679C((u8 *)base4, 8, 5) == 0) {
+                sub_08006600((u8 *)base4, 8, 5);
+                sub_08020C78(52);
+            }
+        }
+
+        base4 = &gIwram_6110;
+        if ((base4->selector5Flags & 0x84) == 0x84) {
+            if (sub_0800679C((u8 *)base4, 8, 6) == 0) {
+                sub_08006600((u8 *)base4, 8, 6);
+                sub_08020C78(52);
+            }
+        }
+
+        base4 = &gIwram_6110;
+        if ((base4->selector5Flags & 0x48) == 0x48) {
+            if (sub_0800679C((u8 *)base4, 8, 7) == 0) {
+                sub_08006600((u8 *)base4, 8, 7);
+                sub_08020C78(52);
+            }
+        }
+
+        base2 = &gIwram_6110;
+        if ((base2->byteFlags8 & 0xf0) == 0xf0)
+            sub_08006600((u8 *)base2, 8, 0);
+    }
+
+    if (tile == 22) {
+        p35E0 = &gIwram_35E0;
+        result = sub_0800A7A8(21, p35E0->_field_8, p35E0->_field_A);
+        result = sub_0800D9FC((s8)result);
+        gIwram_6110.spawnMask = (u8)result;
+        sub_08020C78(70);
+        sub_08006600((u8 *)&gIwram_6110, 8, 1);
+    }
+}
