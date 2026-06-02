@@ -164,59 +164,73 @@ NAKED void sub_08032904(s32 ch, u32 step, u32 pan, u32 ctrl, u16 hwCtrl)
 #else
 void sub_08032904(s32 ch, u32 step, u32 pan, u32 ctrl, u16 hwCtrl)
 {
-    u32 savedStep = step;
-    u32 savedCtrl = ctrl;
-    SoundSystem **pPool;
-    SoundSystem *ss;
-    SoundSlotInit *chState;
-    u8 *chMode;
-    u32 ch8;
-    u16 hwOff;
-    u16 acc;
-    s32 savedCh;
+    register s32 savedCh asm("r7") = ch;
+    register u32 savedStep asm("r8") = step;
+    register u32 panReg asm("r4") = pan;
+    register u32 savedCtrl asm("r9") = ctrl;
 
-    savedCh = ch;
-    sub_0802E724(savedCh);
-    pan = (u8)pan;
-    sub_0802E7C4(pan, savedCh);
-
-    pPool = &gpSoundSystem;
-    ss = *pPool;
-    ss->chFlags[savedCh] = 0;
-    hwOff = 0xac;
-    {
-        u32 idx2 = (u32)savedCh * 2;
-        *(u16 *)((u8 *)ss + hwOff + idx2) = hwCtrl;
-    }
-
-    ch8 = (u32)savedCh * 8;
-    chMode = (u8 *)ss + ch8 + 0x8c;
-    *(u16 *)(chMode + 4) = 0xff00;
-    *(u8 *)(chMode + 7) = savedCtrl;
-    *(u8 *)(chMode + 6) = 0;
-
-    if (savedCh > 2)
-        return;
-
-    {
-        u32 chOff = (ch8 + (u32)savedCh) * 4 + 0x20;
-        chState = (SoundSlotInit *)((u8 *)*pPool + chOff);
-    }
-
-    acc = chState->word_00 + chState->word_1c;
-    chState->word_22 = acc;
-
-    chState->word_00 = savedStep << 8;
-    chState->word_02 = 0;
-    chState->word_1c = 0;
-    chState->word_1e = 0;
-    chState->word_20 = 0;
-    chState->word_14 = 0;
-    chState->word_16 = 0;
-    chState->word_04 = 0;
-    chState->word_06 = 0;
-    chState->word_0c = 0;
-    chState->word_0e = 0;
-    chState->word_12 = 0;
+    asm(".syntax unified\n"
+        "    bl sub_0802E724\n"
+        "    lsls r4, r4, #24\n"
+        "    lsrs r4, r4, #24\n"
+        "    adds r0, r4, #0\n"
+        "    adds r1, r7, #0\n"
+        "    bl sub_0802E7C4\n"
+        "    ldr r5, =0x030065e0\n"
+        "    ldr r1, [r5, #0]\n"
+        "    lsls r2, r7, #2\n"
+        "    adds r0, r1, #0\n"
+        "    adds r0, #16\n"
+        "    adds r0, r0, r2\n"
+        "    movs r3, #0\n"
+        "    str r3, [r0, #0]\n"
+        "    lsls r2, r7, #1\n"
+        "    adds r0, r1, #0\n"
+        "    adds r0, #0xac\n"
+        "    adds r0, r0, r2\n"
+        "    movs r2, #0\n"
+        "    mov r4, sp\n"
+        "    ldrh r4, [r4, #28]\n"
+        "    strh r4, [r0, #0]\n"
+        "    lsls r4, r7, #3\n"
+        "    adds r0, r4, #0\n"
+        "    adds r0, #0x8c\n"
+        "    adds r1, r1, r0\n"
+        "    movs r0, #0xff\n"
+        "    lsls r0, r0, #8\n"
+        "    strh r0, [r1, #4]\n"
+        "    mov r6, r9\n"
+        "    strb r6, [r1, #7]\n"
+        "    strb r2, [r1, #6]\n"
+        "    cmp r7, #2\n"
+        "    bgt 1f\n"
+        "    adds r1, r4, r7\n"
+        "    lsls r1, r1, #2\n"
+        "    adds r1, #32\n"
+        "    ldr r0, [r5, #0]\n"
+        "    adds r0, r0, r1\n"
+        "    ldrh r2, [r0, #0]\n"
+        "    ldrh r4, [r0, #28]\n"
+        "    adds r1, r2, r4\n"
+        "    strh r1, [r0, #34]\n"
+        "    mov r6, r8\n"
+        "    lsls r1, r6, #8\n"
+        "    strh r1, [r0, #0]\n"
+        "    strh r3, [r0, #2]\n"
+        "    strh r3, [r0, #28]\n"
+        "    strh r3, [r0, #30]\n"
+        "    strh r3, [r0, #32]\n"
+        "    strh r3, [r0, #20]\n"
+        "    strh r3, [r0, #22]\n"
+        "    strh r3, [r0, #4]\n"
+        "    strh r3, [r0, #6]\n"
+        "    strh r3, [r0, #12]\n"
+        "    strh r3, [r0, #14]\n"
+        "    strh r3, [r0, #18]\n"
+        "1:\n"
+        "    .syntax divided\n"
+        : "+r"(savedCh), "+r"(savedStep), "+r"(panReg), "+r"(savedCtrl)
+        :
+        : "r0", "r1", "r2", "r3", "r5", "r6", "memory");
 }
 #endif
