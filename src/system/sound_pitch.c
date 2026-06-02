@@ -39,8 +39,8 @@
  * not preserve r7 across the libgcc divide because it knows __divsi3
  * does not clobber r7. Block-scoping sx_shifted, pinning ch/chOffset/
  * gpsp to r5/r6/r7, matching the entry normalization, and shaping the
- * fast path / cache / MMIO lookup brought the forced C branch down to
- * byte_diff 51, but the remaining structural
+ * wrap check / fast path / cache / MMIO lookup brought the forced C
+ * branch down to byte_diff 46, but the remaining structural
  * mismatch (5-reg push, register choice in wrap loop) resists further
  * source-level rearrangement. Same family as the other NAKED sound
  * functions in this cluster (sub_0802EC7C, sub_0802EDF0, sub_0802EA80).
@@ -94,11 +94,11 @@ wrap_up:
         goto wrap_up;
     goto check_high;
 wrap_down:
-    sx_shifted += (s32)0xffac0000;
+    sx_shifted = sy + (s32)0xffac0000;
     xNorm = (u16)((u32)sx_shifted >> 16);
 check_high:
-    sx_shifted = (s32)(xNorm << 16);
-    if (sx_shifted >> 16 > 83)
+    sy = (s32)(xNorm << 16);
+    if (sy >> 16 > 83)
         goto wrap_down;
 
     sy = yNorm >> 16;
@@ -114,8 +114,8 @@ check_high:
     {
         u16 *cache;
 
-        ss = *gpsp;
-        cache = (u16 *)((u8 *)ss + 0xb4 + chOffset);
+        ss = (SoundSystem *)((u8 *)*gpsp + 0xb4);
+        cache = (u16 *)((u8 *)ss + chOffset);
         if (*cache == freq)
             return;
         *cache = freq;
