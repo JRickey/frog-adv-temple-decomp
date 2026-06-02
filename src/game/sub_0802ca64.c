@@ -3,7 +3,7 @@
 #include "types.h"
 
 extern void sub_0802C200(u32 a0);
-extern void text_0802bdbc(void);
+extern void sub_0802BDBC(void);
 
 void sub_0802CA64(void)
 {
@@ -12,6 +12,6 @@ void sub_0802CA64(void)
 
 void sub_0802CA70(void)
 {
-    text_0802bdbc();
+    sub_0802BDBC();
     sub_0802C200(0x5B);
 }
