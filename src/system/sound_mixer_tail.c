@@ -69,8 +69,11 @@ typedef struct MixerTailDrainEntry {
     u8 _pad05[7];
 } MixerTailDrainEntry;
 
+typedef void (*MixerTailCommitFunc)(u32 request, u32 idx, u32 panOrMode, u32 countdown, u32 extra);
+
+#define MIXER_TAIL_COMMIT ((MixerTailCommitFunc)0x080323cd)
+
 extern void sub_0802F9F0(u32 idx);
-extern void sub_080323CC(u32 ss, u32 idx, u32 panOrMode, u32 countdown, u32 extra);
 extern u32 sub_08031DBC(void);
 
 void sub_080325B0(void)
@@ -188,14 +191,14 @@ void sub_080325B0(void)
                     u16 extra = *(u16 *)(cmd + 4);
 
                     if (extra != 0)
-                        sub_080323CC((u32)request, i, pitch, mode, extra);
+                        MIXER_TAIL_COMMIT((u32)request, i, pitch, mode, extra);
                     advance = 6;
                 } else {
                     u16 firstExtra = *(u16 *)(cmd + 4);
 
                     *startIndex = cmd[4];
                     if (firstExtra != 0)
-                        sub_080323CC((u32)request, i, pitch, mode & 0x7f, *(u16 *)(cmd + 6));
+                        MIXER_TAIL_COMMIT((u32)request, i, pitch, mode & 0x7f, *(u16 *)(cmd + 6));
                     advance = 8;
                 }
             } else if (pitch == 0) {
