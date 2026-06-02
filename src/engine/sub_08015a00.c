@@ -75,3 +75,28 @@ void sub_08015AB0(void)
     sub_0800EBDC(2);
     sub_08016A40();
 }
+
+extern void sub_0801585C(void);
+extern void sub_080155F0(void);
+extern void sub_08020C78(u32 arg);
+
+void sub_08015AD4(void)
+{
+    u8 *base;
+
+    sub_08017000();
+    sub_0801585C();
+
+    base = (u8 *)0x03003610;
+    switch (base[7]) {
+    case 0:
+        if ((gIwram_6110.selector5Flags & 0xf0) != (gIwram_6110.selector6Flags & 0xf0)) {
+            sub_08020C78(25);
+            base[7] = 1;
+        }
+        break;
+    case 1:
+        sub_080155F0();
+        break;
+    }
+}
