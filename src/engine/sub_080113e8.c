@@ -1,5 +1,6 @@
 #include "gba/io.h"
 #include "types.h"
+#include "iwram.h"
 
 extern int __modsi3(int num, int den);
 
@@ -57,4 +58,58 @@ u32 sub_080113E8(void)
     } while (i <= 3);
 
     return result;
+}
+
+void sub_08012BC4(u32 flags, u32 dstX, u32 dstY, u32 widthArg, u32 srcRowsArg, const u16 **srcTable, u32 srcIndex);
+
+struct BlitRecord {
+    u16 dstX;
+    u16 dstY;
+    u16 width;
+    u16 rows;
+    u8 flags;
+    u8 _pad9[7];
+    const u16 **srcTable;
+    u32 _pad14;
+};
+
+extern struct BlitRecord gBlitParamTable_08306b74[];
+struct BlitSrcEntry {
+    const u16 **srcTable;
+    u32 _pad04;
+    u8 _pad08[16];
+};
+
+extern struct BlitSrcEntry gBlitSrcTable_08306b84[];
+
+void sub_08011478(u8 count, struct BlitRecord *records, u8 srcIndex)
+{
+    register u32 limit asm("r8");
+    register u8 idx asm("sl") = srcIndex;
+    register struct BlitRecord *romTable asm("r9");
+    u8 i;
+    u32 stride;
+
+    i = 0;
+    if (i >= (u8)count)
+        return;
+
+    romTable = gBlitParamTable_08306b74;
+    do {
+        if ((gIwram_6110.selector5Flags >> i) & 1) {
+            struct BlitRecord *rec;
+
+            stride = (u32)i * 24;
+            rec = (struct BlitRecord *)(stride + (u32)records);
+            sub_08012BC4(rec->flags, rec->dstX, rec->dstY, rec->width, rec->rows, rec->srcTable, idx);
+            if (i != 3) {
+                struct BlitRecord *romRec = (struct BlitRecord *)(stride + (u32)romTable);
+                struct BlitSrcEntry *srcBase = gBlitSrcTable_08306b84;
+
+                sub_08012BC4(romRec->flags, romRec->dstX, romRec->dstY, romRec->width, romRec->rows,
+                             srcBase[i].srcTable, 3);
+            }
+        }
+        i = (u8)(i + 1);
+    } while (i < (u8)count);
 }
