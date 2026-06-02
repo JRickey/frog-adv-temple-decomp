@@ -127,6 +127,19 @@ src/engine/sub_0800f2f8.s: CFLAGS += -fno-strength-reduce
 # Keeps the duplicated window step value in the baserom's r6/sl allocation.
 src/engine/sub_0801a894.s: CFLAGS += -fno-rerun-cse-after-loop
 src/engine/sub_08022360.s: CFLAGS += -fno-gcse
+# Current forced-C lanes for split sound NON_MATCHING candidates.
+src/system/sound_pitch.s: CC = $(OLD_AGBCC_BIN)
+src/system/sound_pitch.s: CFLAGS += -fforce-addr -fno-gcse -fno-expensive-optimizations
+src/system/sound_channel_envelope_a.s: CC = $(OLD_AGBCC_BIN)
+src/system/sound_channel_stream.s: CC = $(OLD_AGBCC_BIN)
+src/system/sound_channel_stream.s: CFLAGS += -fforce-addr -fno-gcse -fno-cse-follow-jumps
+src/system/sound_envelope_dual.s: CFLAGS += -fforce-addr -fno-gcse -fno-expensive-optimizations
+src/system/sound_envelope_slide.s: CC = $(AGBCC_BIN)
+src/system/sound_envelope_slide.s: CFLAGS += -fforce-addr -fno-gcse
+src/system/sound_channel_state.s: CC = $(OLD_AGBCC_BIN)
+src/system/sound_mixer.s: CFLAGS += -fforce-addr -fno-gcse
+src/system/sound_mixer_tail.s: CC = $(OLD_AGBCC_BIN)
+src/system/sound_mixer_tail.s: CFLAGS += -fforce-addr -fno-gcse -fno-cse-follow-jumps
 
 
 # Enable verbose output

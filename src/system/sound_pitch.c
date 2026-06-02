@@ -32,18 +32,59 @@
  * for the same channels by the same mixer dispatch).
  *
  * Shipped as NAKED inline asm + a NON_MATCHING reference C body. The
- * baserom pins gpSoundSystem into r7 across the __divsi3 BL and uses
- * r0 (caller-saved) for the wrap-loop sx_shifted accumulator while r2
- * holds the +84/-84 constant. agbcc 2.x consistently chooses the
- * opposite shape — r2 for sx_shifted, r0 for the constant — and does
- * not preserve r7 across the libgcc divide because it knows __divsi3
- * does not clobber r7. Block-scoping sx_shifted, pinning ch/chOffset/
- * gpsp to r5/r6/r7, matching the entry normalization, and shaping the
- * wrap check / fast path / cache / MMIO lookup brought the forced C
- * branch down to byte_diff 46, but the remaining structural
- * mismatch (5-reg push, register choice in wrap loop) resists further
- * source-level rearrangement. Same family as the other NAKED sound
- * functions in this cluster (sub_0802EC7C, sub_0802EDF0, sub_0802EA80).
+ * baserom pins &gpSoundSystem into r7 across the __divsi3 BL and uses
+ * r4 first as the LUT base, then as the computed frequency. Expressing
+ * that r4 dataflow explicitly avoids the older NON_MATCHING branch's
+ * overlapping LUT/gpSoundSystem register request. The current C body brings
+ * the best isolated candidate to byte_diff 115 / insn_diff 38 with old_agbcc
+ * -O2 -fforce-addr -fno-gcse -fno-expensive-optimizations. It also preserves the target's
+ * top-level load order, keeps the interpolation pointer in r1, the
+ * post-divide interpolation sum in r0, and the pitch-cache pointer in r0.
+ * The remaining mismatch is structural: this agbcc Thumb backend reserves r7
+ * as FRAME_POINTER_REGNUM, so ordinary allocation skips r7 and an explicit r7
+ * register variable is not counted for the callee-save prologue. The compiler
+ * therefore omits the target's r7 save, then colors the LUT loads and final
+ * MMIO OR differently. Same family as the other NAKED sound functions in this
+ * cluster (sub_0802EC7C, sub_0802EDF0, sub_0802EA80).
+ *
+ * Negative experiments: removing the cache casts or assigning the final
+ * MMIO OR back through work destabilizes the literal pool/control flow;
+ * explicit r0 load temps for LUT values still fold into r4 loads. Retesting
+ * the older branch-local source shapes against the current split/header setup
+ * did not reproduce the historical byte_diff 83 note. The older pitch worker's
+ * lower score came from a stale `#ifdef NON_MATCHING` gate that did not compile
+ * the C body under the function-specific matrix define; once gate-corrected,
+ * the best older shape bottoms out at byte_diff 121, and it also used inline
+ * asm for argument normalization. Focused register-convention probes do not
+ * recover the target r7 save: agbcc rejects -fcall-saved-r7 / -fcall-used-r7
+ * because r7 is the frame pointer register, while -ffixed-r7 is neutral.
+ * Omitting -mthumb-interwork or spelling -mno-thumb-interwork shrinks the
+ * object but keeps the wrong prologue. A diagnostic temp compiler with
+ * FRAME_POINTER_REGNUM moved from r7 to r11 makes the prologue match and
+ * improves the forced-C lane only to byte_diff 116 / insn_diff 35, so the
+ * backend register model explains the first mismatch but is not a broad fix.
+ * Retesting the r7/gpSoundSystem source shape on the current branch:
+ * ordinary gpSoundSystem pointers and direct gpSoundSystem loads regress
+ * to byte_diff 145, delaying the r7 load until after wrap regressses to 121,
+ * and spelling the r7 value as a u32 address is neutral. Removing cache casts
+ * improves instruction diff but regresses byte_diff to 119; final-OR temp
+ * shapes regress to byte_diff 118 / insn_diff 44; removing the signed y temp
+ * regresses to 119.
+ * Introducing an explicit cached `freq` local is byte-neutral but improves the
+ * instruction diff to 35. Retesting a full-width `freq` alias lowered
+ * instruction diff but regressed byte_diff to 118+ and shrank the object;
+ * spelling the interpolation delta as `lut[1] - lut[0]` recovered a
+ * target-looking reload but likewise regressed byte_diff to 118+. Keeping the
+ * first LUT sample in a named local preserves byte_diff 117 and improves the
+ * instruction diff to 34 under old_agbcc -O2 -fforce-addr -fno-gcse. Comparing
+ * and storing the pitch cache from the live r4 `work` value instead of the
+ * `freq` alias lowers the byte score to 115 and moves the object to 154/168
+ * with old_agbcc -O2 -fforce-addr -fno-gcse -fno-expensive-optimizations, though
+ * the instruction diff worsens to 38. A tempting signed-y cast variant also
+ * scores in this range, but is semantically invalid because `yNorm` has already
+ * been shifted left by 16. A wider diagnostic flag pass found no ordinary flag
+ * lane below byte_diff 115; -fno-peephole is neutral, and the same missing-r7-save
+ * first mismatch remains.
  */
 
 /* ROM-resident data — defined in src/data/sound_tables.c and
@@ -51,33 +92,30 @@
 extern vu16 *const sChannelFreqRegTable[4];
 extern const u16 sPsgPitchLut[86];
 
-#ifdef NON_MATCHING
+#if defined(NON_MATCHING) || defined(NON_MATCHING_sub_0802E5D8)
 void sub_0802E5D8(s32 x, s32 y, s32 ch)
 {
-    const u16 *lut1;
+    register u32 work asm("r4");
     register SoundSystem **gpsp asm("r7");
     register s32 chReg asm("r5");
     register s32 chOffset asm("r6");
-    u16 freq;
     register s32 sx_shifted asm("r0");
     register s32 sy asm("r2");
     register s32 xNorm asm("r3");
     register s32 yNorm asm("r1");
     SoundSystem *ss;
+    u16 freq;
 
     chReg = ch;
-    yNorm = y;
-    asm("lsl r0, r0, #0x10\n\tlsr %0, r0, #0x10\n\tlsl %1, %1, #0x10\n\tlsr %1, %1, #0x10"
-        : "=r"(xNorm), "+r"(yNorm)
-        :
-        : "r0");
-    if (chReg > 2)
+    xNorm = (u16)x;
+    yNorm = (u16)y;
+    if (chReg > SOUND_PSG_MAX_TONE_CHANNEL)
         return;
 
     sx_shifted = (s32)(xNorm << 16);
-    lut1 = &sPsgPitchLut[1];
-    gpsp = &gpSoundSystem;
+    work = (u32)&sPsgPitchLut[SOUND_PSG_LUT_FIRST_SAMPLE];
     yNorm <<= 16;
+    gpsp = &gpSoundSystem;
     chOffset = chReg << 1;
 
     /* Wrap x into [0, 83] by +/-84. Negative branch is a do-while
@@ -87,38 +125,54 @@ void sub_0802E5D8(s32 x, s32 y, s32 ch)
     if (sx_shifted >= 0)
         goto check_high;
 wrap_up:
-    sx_shifted += 0x540000;
+    sx_shifted += SOUND_PSG_PITCH_WRAP_UP;
     xNorm = (u16)((u32)sx_shifted >> 16);
     sx_shifted = (s32)(xNorm << 16);
     if (sx_shifted < 0)
         goto wrap_up;
     goto check_high;
 wrap_down:
-    sx_shifted = sy + (s32)0xffac0000;
+    sx_shifted = sy + SOUND_PSG_PITCH_WRAP_DOWN;
     xNorm = (u16)((u32)sx_shifted >> 16);
 check_high:
     sy = (s32)(xNorm << 16);
-    if (sy >> 16 > 83)
+    if (sy >> 16 > SOUND_PSG_PITCH_MAX_INDEX)
         goto wrap_down;
 
     sy = yNorm >> 16;
     if (sy == 0) {
-        freq = lut1[(s16)xNorm];
+        register s32 lutOff asm("r0");
+
+        lutOff = (s32)(xNorm << 16);
+        lutOff >>= 15;
+        lutOff += work;
+        lutOff = *(u16 *)lutOff;
+        work = lutOff;
     } else {
-        s32 a = lut1[(s16)xNorm];
-        s32 b = lut1[(s16)xNorm + 1];
-        s32 delta = (s16)(b - a);
-        freq = (u16)(a + (delta * sy) / 255);
+        register u16 *lut asm("r1");
+        register u32 interp asm("r0");
+        s32 delta;
+
+        lut = (u16 *)((s16)xNorm * 2 + work);
+        {
+            u16 first = lut[0];
+
+            work = first;
+            delta = (s16)(lut[1] - first);
+        }
+        interp = work + (delta * sy) / SOUND_PSG_INTERP_DENOMINATOR;
+        work = (u16)interp;
     }
 
+    freq = (u16)work;
     {
-        u16 *cache;
+        register u16 *cache asm("r0");
 
-        ss = (SoundSystem *)((u8 *)*gpsp + 0xb4);
+        ss = SOUND_SYSTEM_PSG_PITCH_CACHE_BASE(*gpsp);
         cache = (u16 *)((u8 *)ss + chOffset);
-        if (*cache == freq)
+        if (*cache == (u16)work)
             return;
-        *cache = freq;
+        *cache = (u16)work;
     }
 
     {
@@ -133,7 +187,7 @@ check_high:
         reg = *(vu16 **)tableOffset;
 
         regval = *reg;
-        *reg = freq | (regval & 0x4000);
+        *reg = freq | (regval & SOUND_PSG_FREQ_LENGTH_ENABLE);
     }
 }
 #else

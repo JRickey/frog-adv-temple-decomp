@@ -63,40 +63,40 @@ void sub_0802E7C4(u8 pan, s32 ch)
     if (ch > 3)
         goto big_slot;
 
-    mask = (0x88u << 21) << ch >> 24;
+    mask = SOUND_PAN_BOTH_BITS_BASE << ch >> 24;
     pPool = &gpSoundSystem;
     (*pPool)->panBits &= ~mask;
-    muteByte = *((u8 *)*pPool + 0x010f);
-    maskTen = 0x10 & muteByte;
+    muteByte = *((u8 *)*pPool + SOUND_SYSTEM_MUTE_MASK_OFFSET);
+    maskTen = SOUND_PAN_MUTE_MASK & muteByte;
     gpsp = pPool;
     if (maskTen != 0)
         goto orr_phase;
-    maskTen = 0x10;
-    if (pan == 0xff)
+    maskTen = SOUND_PAN_MUTE_MASK;
+    if (pan == SOUND_PAN_MUTED)
         goto orr_phase;
-    if (pan <= 0x29) {
+    if (pan <= SOUND_PAN_LEFT_ONLY_MAX) {
         mask = (maskTen << ch) << 24 >> 24;
         goto orr_phase;
     }
-    if (pan > 0x55) {
+    if (pan > SOUND_PAN_RIGHT_ONLY_MIN) {
         mask = (0x80u << 17) << ch >> 24;
     }
     /* else: mask stays 0x11<<ch (centre — both bits) */
 orr_phase:
     (*gpsp)->panBits |= mask;
-    REG_SOUNDCNT_L = (REG_SOUNDCNT_L & 0xff) | ((*gpsp)->panBits << 8);
+    REG_SOUNDCNT_L = (REG_SOUNDCNT_L & SOUND_SOUNDCNT_L_LOW_MASK) | ((*gpsp)->panBits << 8);
     return;
 
 big_slot: {
     SoundSlot *slot;
     u8 oldPan;
 
-    slot = (SoundSlot *)((u8 *)gpSoundSystem->swSlots + (ch * 64 - 256));
-    oldPan = *((u8 *)slot + 0x3c);
-    *((u8 *)slot + 0x3c) = pan;
+    slot = SOUND_SYSTEM_SW_SLOT_FOR_CHANNEL(gpSoundSystem, ch);
+    oldPan = slot->panCache;
+    slot->panCache = pan;
     if (pan == oldPan)
         return;
-    slot->flags |= 0x80;
+    slot->flags |= SOUND_SLOT_FLAG_PAN_DIRTY;
 }
 }
 
@@ -137,37 +137,37 @@ void sub_0802E874(s8 delta, s32 ch)
     if (chReg > 3)
         goto big_slot;
 
-    chBit = (s32)((0x88u << 21) << chReg >> 24);
+    chBit = (s32)(SOUND_PAN_BOTH_BITS_BASE << chReg >> 24);
     ss = gpSoundSystem;
-    muteByte = *((u8 *)ss + 0x010f);
-    maskTen = 0x10 & muteByte;
+    muteByte = *((u8 *)ss + SOUND_SYSTEM_MUTE_MASK_OFFSET);
+    maskTen = SOUND_PAN_MUTE_MASK & muteByte;
     if (maskTen == 0) {
         register u8 *panBitsP asm("r1");
 
         panBitsP = (u8 *)ss;
-        panBitsP += 0xba;
+        panBitsP += SOUND_SYSTEM_PAN_BITS_OFFSET;
         extracted = chBit;
         asm("" : "+r"(extracted));
         extracted &= *panBitsP;
         extracted = (u8)((s32)extracted >> chReg);
 
-        newPan = 0x2a;
-        if (extracted != 0x10) {
-            newPan = 0x40;
+        newPan = SOUND_PAN_LEFT_DECODE_VALUE;
+        if (extracted != SOUND_PAN_MUTE_MASK) {
+            newPan = SOUND_PAN_CENTER_VALUE;
             if (extracted == 1)
-                newPan = 0x55;
+                newPan = SOUND_PAN_RIGHT_ONLY_MIN;
         }
         newPan += (s8)deltaU;
         if (newPan < 0) {
             newPan = 0;
             goto call_pan;
         }
-        if (newPan > 0x7f)
-            newPan = 0x7f;
+        if (newPan > SOUND_PAN_HIGH_MAX)
+            newPan = SOUND_PAN_HIGH_MAX;
         goto call_pan;
     }
 
-    newPan = 0x40;
+    newPan = SOUND_PAN_CENTER_VALUE;
 
 call_pan:
     sub_0802E7C4((u8)newPan, chReg);
@@ -181,24 +181,24 @@ big_slot: {
     u8 oldPan;
 
     fieldp = (u8 *)gpSoundSystem;
-    fieldp += 0xc8;
+    fieldp += SOUND_SYSTEM_SW_SLOTS_OFFSET;
     off = chReg << 6;
-    off += -0x100;
+    off += -(SOUND_SW_SLOT_STRIDE * 4);
     fieldp = *(u8 **)fieldp;
     slotp = fieldp + off;
     fieldp = slotp;
-    fieldp += 0x3c;
+    fieldp += SOUND_SLOT_PAN_CACHE_OFFSET;
     oldPan = *fieldp;
-    if (oldPan == 0xff)
+    if (oldPan == SOUND_PAN_MUTED)
         return;
     newPanB = (s32)fieldp;
     asm("ldrb %0, [%0]" : "+r"(newPanB));
     newPanB += deltaS;
     if (newPanB < 0)
         newPanB = 0;
-    else if (newPanB > 0x7f)
-        newPanB = 0x7f;
-    *(slotp + 0x3c) = (u8)newPanB;
-    *(u32 *)(slotp + 0x38) |= 0x80;
+    else if (newPanB > SOUND_PAN_HIGH_MAX)
+        newPanB = SOUND_PAN_HIGH_MAX;
+    *(slotp + SOUND_SLOT_PAN_CACHE_OFFSET) = (u8)newPanB;
+    *(u32 *)(slotp + SOUND_SLOT_FLAGS_OFFSET) |= SOUND_SLOT_FLAG_PAN_DIRTY;
 }
 }

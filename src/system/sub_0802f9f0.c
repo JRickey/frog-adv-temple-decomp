@@ -23,10 +23,10 @@
  *   - idx <= 3 (music channels): ss->chFlags[idx] at SoundSystem+0x10
  *     (stride 4).
  *   - idx >= 4 (dynamic SFX slots): swSlots[idx-4].flags at +0x38
- *     within the 64-byte SoundSlot. Phrased as
- *     `(SoundSlot *)((u8 *)swSlots + (idx*64 - 256))` so agbcc emits
- *     the same `lsls #6; add; subs #200` baserom sequence the sibling
- *     sub_0802E7C4 uses.
+     *     within the 64-byte SoundSlot. SOUND_SYSTEM_SW_SLOT_FOR_CHANNEL
+     *     preserves the `idx*64 - 256` arithmetic so agbcc emits the same
+     *     `lsls #6; add; subs #200` baserom sequence the sibling sub_0802E7C4
+     *     uses.
  *
  * Matching notes:
  *   - `if (idx <= 3) { small } else { big }` (not the reverse) — the
@@ -64,7 +64,7 @@ void sub_0802F9F0(s32 idx)
     if (idx <= 3) {
         pFlags = &ss->chFlags[idx];
     } else {
-        SoundSlot *slot = (SoundSlot *)((u8 *)ss->swSlots + (idx * 64 - 256));
+        SoundSlot *slot = SOUND_SYSTEM_SW_SLOT_FOR_CHANNEL(ss, idx);
         pFlags = &slot->flags;
     }
 
@@ -97,7 +97,7 @@ void sub_0802FA60(s32 idx)
     u32 sum;
 
     ss = gpSoundSystem;
-    slot = (SoundSlotAccs *)ss->slotPtrTable[idx];
+    slot = (SoundSlotAccs *)SOUND_SYSTEM_SLOT_PTR_TABLE(ss)[idx];
     if (slot == NULL)
         return;
 

@@ -1,10 +1,5 @@
 #include "sound.h"
 
-typedef struct SoundSlotPanAccView {
-    u8 _pad00[0xa];
-    s16 panAcc;
-} SoundSlotPanAccView;
-
 /* sub_0802F2FC — per-frame pan-envelope tick.
  *
  * Sister of sub_0802ED5C (envelope B at +0x2c) and sub_0802EC7C (envelope A
@@ -25,7 +20,11 @@ typedef struct SoundSlotPanAccView {
  *
  * Matching notes: the register pins keep the loop state in the same registers
  * as the baserom, while the two tiny inline-asm assists preserve agbcc's r6
- * choices for the pan-acc and negative-limit loads.
+ * choices for the pan-acc and negative-limit loads. Replacing those assists
+ * with plain C is semantically fine but leaves the linked function byte_diff 12
+ * (or 9 with autoReverseMask pinned to r7) because agbcc insists on r0 for
+ * those load temps. The empty stepCopy barriers are also required: removing
+ * them shrinks the function and shifts branches to byte_diff 97.
  */
 
 void sub_0802F2FC(void)
@@ -50,9 +49,9 @@ void sub_0802F2FC(void)
     if (i >= ss->count)
         return;
 
-    autoReverseMask = 0x2000;
+    autoReverseMask = SOUND_SLOT_FLAG_PAN_AUTO_REVERSE;
 body:
-    slot = (*gpsp)->slotPtrTable[i];
+    slot = SOUND_SYSTEM_SLOT_PTR_TABLE(*gpsp)[i];
     if (slot == NULL)
         goto advance;
     slotCache = slot;
@@ -99,7 +98,7 @@ write_acc:
         panCachep = &slot->panCache;
         if (newPan != *panCachep) {
             *panCachep = (u8)newPan;
-            slot->flags |= 0x80;
+            slot->flags |= SOUND_FLAG_UPDATE_DIRTY;
         }
     }
 advance:

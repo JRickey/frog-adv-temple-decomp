@@ -31,11 +31,6 @@
  *     otherwise emits the operands in the opposite order.
  */
 
-/* Mirror of the SoundSlot / SoundSystem layout used in sound_channel.c
- * (sub_0802EC7C / sub_0802ED5C). Envelope-A0 lives at +0x14 inside each
- * channel/slot; envelope-A at +0x1c and envelope-B at +0x2c are owned by
- * sound_channel.c. Promote to include/sound.h once a common header is
- * needed. */
 void sub_0802EA80(void)
 {
     register SoundSystem **gpsp asm("ip");
@@ -53,14 +48,14 @@ void sub_0802EA80(void)
     i = 0;
     gpsp = &gpSoundSystem;
     gpspMirror = gpsp;
-    offset = 32;
+    offset = SOUND_INLINE_CHANNEL_BASE_OFFSET;
 
     /* Stage 1: three inline channel envelopes embedded in SoundSystem
      * itself at ss+0x34, ss+0x58, ss+0x7c (stride 36, envelope at +0x14
      * inside each). */
     do {
         ss = *gpspMirror;
-        env = (SlotEnvelopeA0 *)((u8 *)ss + offset + 0x14);
+        env = SOUND_INLINE_CHANNEL_ENVELOPE_A0_AT(ss, offset);
         step = env->step;
         if (step != 0) {
             acc = env->acc;
@@ -69,7 +64,7 @@ void sub_0802EA80(void)
             ctr = env->countdown - 1;
             env->countdown = ctr;
             ctr = (u8)ctr;
-            if (ctr == 0xff) {
+            if (ctr == SOUND_ENVELOPE_COUNTDOWN_UNDERFLOW) {
                 env->countdown = env->reload;
                 env->step = -env->step;
             }
@@ -79,20 +74,20 @@ void sub_0802EA80(void)
 
                 flags = (u32 *)*gpspMirror;
                 flagOffset = i << 2;
-                flags = (u32 *)((u8 *)flags + 0x10);
+                flags = (u32 *)((u8 *)flags + SOUND_CH_FLAGS_OFFSET);
                 flags = (u32 *)((u8 *)flags + flagOffset);
-                *flags |= 0x40;
+                *flags |= SOUND_FLAG_ENV_DIRTY;
             }
         }
-        offset += 36;
+        offset += SOUND_INLINE_CHANNEL_STRIDE;
         i++;
-    } while (i <= 2);
+    } while (i <= SOUND_INLINE_CHANNEL_COUNT - 1);
 
     /* Stage 2: per-slot envelope-A0 bank, walked via slotPtrTable. */
     i = 0;
     goto count_check;
 body:
-    slot = (*gpCheck)->slotPtrTable[i];
+    slot = SOUND_SYSTEM_SLOT_PTR_TABLE(*gpCheck)[i];
     if (slot != NULL) {
         env = &slot->envelopeA0;
         step = env->step;
@@ -103,11 +98,11 @@ body:
             ctr = env->countdown - 1;
             env->countdown = ctr;
             ctr = (u8)ctr;
-            if (ctr == 0xff) {
+            if (ctr == SOUND_ENVELOPE_COUNTDOWN_UNDERFLOW) {
                 env->countdown = env->reload;
                 env->step = -env->step;
             }
-            slot->flags |= 0x40;
+            slot->flags |= SOUND_FLAG_ENV_DIRTY;
         }
     }
     i++;

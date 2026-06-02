@@ -36,7 +36,9 @@
  * sample-streaming mix entries.
  *
  * The divide result is kept live through r3 before the u16 return so agbcc
- * emits the same post-libgcc helper copy as the baserom.
+ * emits the same post-libgcc helper copy as the baserom. Removing the empty
+ * r3 barrier after __udivsi3 is semantically fine but drops the target's
+ * `adds r3, r0, #0` and leaves the linked function byte_diff 11.
  */
 
 /* ROM-resident pitch LUTs — defined in src/data/sound_pitch.c. */
@@ -213,7 +215,7 @@ s32 sub_0803030C(s32 channel, u32 *state_ptr)
         adj = ch - 4;
         gp4 = &gpSoundSystemAcc;
         ss = *gp4;
-        swSlotsPtr = (SoundSlotAcc **)((u8 *)ss + 0xc8);
+        swSlotsPtr = (SoundSlotAcc **)((u8 *)ss + SOUND_SYSTEM_SW_SLOTS_OFFSET);
         swSlots = *swSlotsPtr;
         adj <<= 6;
         *(u16 *)((u8 *)(adj + (s32)swSlots) + 0x34) = 0;
@@ -231,21 +233,21 @@ s32 sub_0803030C(s32 channel, u32 *state_ptr)
         register SoundSlotAcc *slot asm("r2");
         register s32 chShifted asm("r0");
         ss = *gpss;
-        swSlots = *(SoundSlotAcc **)((u8 *)ss + 0xc8);
+        swSlots = *(SoundSlotAcc **)((u8 *)ss + SOUND_SYSTEM_SW_SLOTS_OFFSET);
         chShifted = ch << 6;
         chShifted += (s32)swSlots;
         slot = (SoundSlotAcc *)(chShifted + 0xffffff00);
-        slot->flags |= 0x8000;
+        slot->flags |= SOUND_SLOT_FLAG_RETIRED;
     } else {
         u32 *chFlagsPtr;
         u32 flags;
         u32 chOff;
         chFlagsPtr = (u32 *)*gpss;
         chOff = (u32)ch << 2;
-        chFlagsPtr = (u32 *)((u8 *)chFlagsPtr + 0x10);
+        chFlagsPtr = (u32 *)((u8 *)chFlagsPtr + SOUND_CH_FLAGS_OFFSET);
         chFlagsPtr = (u32 *)((u8 *)chFlagsPtr + chOff);
         flags = *chFlagsPtr;
-        flags |= 0x8000;
+        flags |= SOUND_SLOT_FLAG_RETIRED;
         *chFlagsPtr = flags;
     }
     return 0;
@@ -277,11 +279,11 @@ s32 sub_0803038C(s32 channel, u32 *state_ptr)
 
         gp = &gpSoundSystemAcc;
         directOff = ch << 3;
-        directOff += 0x8c;
+        directOff += SOUND_DIRECT_CHANNEL_BASE;
         ss = *gp;
         direct = (DirectSoundChannel *)((u8 *)ss + directOff);
         flagOff = ch << 2;
-        flags = (u32 *)((u8 *)ss + 0x10);
+        flags = (u32 *)((u8 *)ss + SOUND_CH_FLAGS_OFFSET);
         flags = (u32 *)((u8 *)flags + flagOff);
         flagsVal = *flags;
         period = 0x10000;
@@ -299,9 +301,9 @@ s32 sub_0803038C(s32 channel, u32 *state_ptr)
         period *= cmd->arg;
         direct->period = period >> 8;
         gpDirty = gpss;
-        flagsDirty = (u32 *)((u8 *)*gpDirty + 0x10);
+        flagsDirty = (u32 *)((u8 *)*gpDirty + SOUND_CH_FLAGS_OFFSET);
         flagsDirty = (u32 *)((u8 *)flagsDirty + flagOff);
-        *flagsDirty |= 0x80;
+        *flagsDirty |= SOUND_FLAG_UPDATE_DIRTY;
     } else {
         register SoundSystemAcc **gp asm("r2");
         register SoundSystemAcc *ss asm("r3");
@@ -318,7 +320,7 @@ s32 sub_0803038C(s32 channel, u32 *state_ptr)
         ch -= 4;
         gp = &gpSoundSystemAcc;
         ss = *gp;
-        slot = (SoundSlotAcc *)((u8 *)ss->swSlots + (ch << 6));
+        slot = SOUND_SYSTEM_SW_SLOT(ss, ch);
         periodSlot = (u8 *)slot + 0x24;
         period = slot->flags & 0x10000;
         gpss = gp;
@@ -340,11 +342,11 @@ s32 sub_0803038C(s32 channel, u32 *state_ptr)
         }
         gpDirty = gpss;
         ssDirty = (u8 *)*gpDirty;
-        ssDirty += 0xc8;
+        ssDirty += SOUND_SYSTEM_SW_SLOTS_OFFSET;
         ssDirty = *(u8 **)ssDirty;
         chShift = ch << 6;
         slotDirty = (SoundSlotAcc *)(chShift + (u32)ssDirty);
-        slotDirty->flags |= 0x80;
+        slotDirty->flags |= SOUND_FLAG_UPDATE_DIRTY;
     }
 
     *sp += 2;
@@ -372,10 +374,10 @@ s32 sub_0803045C(s32 channel, u32 *state_ptr)
         u32 channelOff;
 
         gp = &gpSoundSystemAcc;
-        flagOff = (ch << 2) + 0x10;
+        flagOff = (ch << 2) + SOUND_CH_FLAGS_OFFSET;
         ss = *gp;
         flags = (u32 *)((u8 *)ss + flagOff);
-        channelOff = (ch << 3) + 0x8c;
+        channelOff = (ch << 3) + SOUND_DIRECT_CHANNEL_BASE;
         gateBase = (u8 *)ss + channelOff;
     } else {
         register SoundSystemAcc *ss asm("r1");
@@ -389,18 +391,18 @@ s32 sub_0803045C(s32 channel, u32 *state_ptr)
 
         gp = &gpSoundSystemAcc;
         ss = *gp;
-        stateBase = (u8 *)ss->slotPtrTable;
+        stateBase = (u8 *)SOUND_SYSTEM_SLOT_PTR_TABLE(ss);
         arrayOff = ch << 2;
         stateSlot = (u8 *)(arrayOff + (u32)stateBase);
         if (*(void **)(stateSlot - 0x10) == NULL)
             goto reset;
-        stateBase = (u8 *)ss->auxTable;
+        stateBase = (u8 *)SOUND_SYSTEM_STREAM_TABLE(ss);
         stateSlot = (u8 *)(arrayOff + (u32)stateBase);
         if (*(void **)(stateSlot - 0x10) == NULL)
             goto reset;
 
         slotPtr = (u8 **)ss;
-        slotPtr = (u8 **)((u8 *)slotPtr + 0xc8);
+        slotPtr = (u8 **)((u8 *)slotPtr + SOUND_SYSTEM_SW_SLOTS_OFFSET);
         slotOff = ch << 6;
         slotOff += -0x100;
         slot = *slotPtr + slotOff;

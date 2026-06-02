@@ -40,6 +40,29 @@
  * `docs/codegen-notes.md` "High registers — corpus-validated unmatchable".
  * Shipped as NAKED inline asm + NON_MATCHING reference C.
  *
+ * Current forced-C evidence: matching the target's store-then-halfword-load
+ * order in the mode-0x80 stream branch, checking the final sentinel halfwords
+ * in target order, and naming the samples-this-frame, drain, timer, and one
+ * stream-null store through SoundRequestSlot moves the matrix lane to
+ * byte_diff 640 / insn_diff 413. Pinning only the samples-this-frame delta to
+ * sl, matching the target's documented high-register lifetime, opens a better
+ * lane at byte_diff 633 / insn_diff 425 with old_agbcc -O2 -fforce-addr
+ * -fno-gcse -fno-cse-follow-jumps. Pinning the request pointer to r6 looked
+ * target-like but regressed to byte_diff 665+ by growing the stack frame to
+ * 0x10 and moving the samples-this-frame delta out of sl. Promoting the
+ * remaining request-block fields into SoundRequestSlot is useful shared
+ * structure, but using those typed fields in this body worsens the best lane,
+ * so the reference C keeps the older offset/cast shape where needed. Replacing
+ * the stream-timer and start-index casts with request->streams /
+ * request->streamStartIndex regresses to byte_diff 645+ by adding a larger
+ * frame. Pointer-shape helpers SOUND_REQUEST_STREAM_TIMER_AT and
+ * SOUND_REQUEST_START_INDEX_AT are codegen-neutral, so they document the request
+ * layout without triggering that typed-field frame growth. The stream-cursor
+ * halfword helpers are also neutral; the final sentinel check still spells
+ * value-before-countdown because that order is part of the current best lane.
+ * Retesting request->sequenceBase for the two base-table loads regresses the
+ * current lane to byte_diff 638, so those loads stay on the raw offset helper.
+ *
  * Sits at the Thumb HEAD of the ARM-interwork mixer cluster
  * [0x08032894, 0x08033910): the Thumb-mode dispatchers at
  * [0x08032894, 0x08032f68) call into ARM-mode inner DSP routines
@@ -53,25 +76,15 @@
  * removed; until then the BL halfwords stay encoded as part of the asm
  * body itself. */
 
-#ifdef NON_MATCHING
+#if defined(NON_MATCHING) || defined(NON_MATCHING_sub_080325B0)
 /* Reference body — describes the algorithm for the phase-3 PC port.
  * Does NOT byte-match; agbcc 2.x will never coerce sl/r9/r8 into loop
  * state from this shape. */
 
-typedef struct MixerTailTimer {
-    u32 *cursor;
-    s32 countdown;
-} MixerTailTimer;
-
-typedef struct MixerTailDrainEntry {
-    s32 countdown;
-    u8 live;
-    u8 _pad05[7];
-} MixerTailDrainEntry;
-
 typedef void (*MixerTailCommitFunc)(u32 request, u32 idx, u32 panOrMode, u32 countdown, u32 extra);
 
-#define MIXER_TAIL_COMMIT ((MixerTailCommitFunc)0x080323cd)
+/* Thumb-bit entry for the still-raw inner mixer commit routine. */
+#define MIXER_TAIL_COMMIT ((MixerTailCommitFunc)SOUND_MIXER_TAIL_COMMIT_THUMB)
 
 extern void sub_0802F9F0(u32 idx);
 extern u32 sub_08031DBC(void);
@@ -81,23 +94,23 @@ void sub_080325B0(void)
     SoundSystem *ss = gpSoundSystem;
     SoundRequestSlot *request = ss->slot;
     u8 *requestBytes = (u8 *)request;
-    MixerTailTimer *timers;
-    MixerTailDrainEntry *drainEntries;
+    SoundRequestTimer *timers;
+    SoundDrainEntry *drainEntries;
     u32 *cursor;
     u32 *base;
     u32 *table;
     u32 *oldCursor;
-    s32 samples;
+    register s32 samples asm("sl");
     s32 i;
 
-    if ((request->flags & 0x2) == 0)
+    if ((request->flags & SOUND_REQUEST_FLAG_ACTIVE) == 0)
         return;
 
-    samples = *(u16 *)(requestBytes + 0x14c);
-    drainEntries = (MixerTailDrainEntry *)request->nextRegion;
+    samples = request->samplesThisFrame;
+    drainEntries = SOUND_REQUEST_DRAIN_ENTRIES(request);
 
-    for (i = 0; i < (s32)gpSoundSystem->count + 4; i++) {
-        MixerTailDrainEntry *entry = &drainEntries[i];
+    for (i = 0; i < (s32)gpSoundSystem->count + SOUND_REQUEST_DRAIN_EXTRA_COUNT; i++) {
+        SoundDrainEntry *entry = &drainEntries[i];
 
         if (entry->live != 0) {
             entry->countdown -= samples;
@@ -108,9 +121,9 @@ void sub_080325B0(void)
         }
     }
 
-    timers = (MixerTailTimer *)requestBytes;
-    for (i = 0; i <= 16; i++) {
-        MixerTailTimer *timer = &timers[i];
+    timers = request->timers;
+    for (i = 0; i < SOUND_REQUEST_TIMER_COUNT; i++) {
+        SoundRequestTimer *timer = &timers[i];
 
         cursor = timer->cursor;
         if (cursor == NULL)
@@ -123,36 +136,38 @@ void sub_080325B0(void)
         for (;;) {
             s32 command = (s32)cursor[1];
 
-            if (command == -1) {
+            if (command == SOUND_STREAM_CMD_END) {
                 timer->cursor = NULL;
                 break;
             }
 
-            if (command == -2) {
+            if (command == SOUND_STREAM_CMD_JUMP) {
                 oldCursor = cursor;
                 timer->cursor = oldCursor + 2;
 
-                base = *(u32 **)(requestBytes + 0x114);
-                table = (u32 *)((u8 *)base + *(u32 *)((u8 *)base + 0x410) + 0x410);
-                table = (u32 *)((u8 *)base + table[i] + 0x410);
+                base = SOUND_REQUEST_BASE_TABLE(requestBytes);
+                table = (u32 *)((u8 *)base + *(u32 *)((u8 *)base + SOUND_REQUEST_SEQ_BASE_OFFSET) +
+                                SOUND_REQUEST_SEQ_BASE_OFFSET);
+                table = (u32 *)((u8 *)base + table[i] + SOUND_REQUEST_SEQ_BASE_OFFSET);
                 cursor = (u32 *)((u8 *)table + oldCursor[2]);
                 timer->cursor = cursor;
 
                 timer->countdown += (s32)(oldCursor[3] << 8);
             } else {
-                base = *(u32 **)(requestBytes + 0x114);
-                table = (u32 *)((u8 *)base + *(u32 *)((u8 *)base + 0x414) + 0x410);
-                cursor = (u32 *)((u8 *)base + table[command] + 0x410);
+                base = SOUND_REQUEST_BASE_TABLE(requestBytes);
+                table = (u32 *)((u8 *)base + *(u32 *)((u8 *)base + SOUND_REQUEST_STREAM_TABLE_OFFSET) +
+                                SOUND_REQUEST_SEQ_BASE_OFFSET);
+                cursor = (u32 *)((u8 *)base + table[command] + SOUND_REQUEST_SEQ_BASE_OFFSET);
 
-                if (*(u16 *)cursor == 0xffff && *(u16 *)((u8 *)cursor + 2) == 0xffff) {
-                    ((MixerTailTimer *)(requestBytes + 0x88))[i].cursor = NULL;
+                if (SOUND_STREAM_CURSOR_IS_SENTINEL(cursor)) {
+                    request->streams[i].cursor = NULL;
                 } else {
-                    MixerTailTimer *stream = &((MixerTailTimer *)(requestBytes + 0x88))[i];
+                    SoundRequestTimer *stream = SOUND_REQUEST_STREAM_TIMER_AT(requestBytes, i);
 
                     stream->cursor = cursor;
-                    stream->countdown = *(u16 *)cursor << 8;
-                    if (i <= 3)
-                        stream->countdown += *(u16 *)(requestBytes + 0x14e);
+                    stream->countdown = SOUND_STREAM_CURSOR_COUNTDOWN(cursor) << 8;
+                    if (i <= SOUND_REQUEST_LEADIN_CHANNEL_MAX)
+                        stream->countdown += SOUND_REQUEST_STREAM_LEADIN(requestBytes);
                 }
 
                 timer->cursor = cursor + 2;
@@ -168,9 +183,9 @@ void sub_080325B0(void)
         }
     }
 
-    for (i = 0; i < 16; i++) {
-        MixerTailTimer *stream = &((MixerTailTimer *)(requestBytes + 0x88))[i];
-        u8 *startIndex = requestBytes + 0x118 + i;
+    for (i = 0; i < SOUND_REQUEST_STREAM_COUNT; i++) {
+        SoundRequestTimer *stream = SOUND_REQUEST_STREAM_TIMER_AT(requestBytes, i);
+        u8 *startIndex = &SOUND_REQUEST_START_INDEX_AT(requestBytes, i);
 
         cursor = stream->cursor;
         if (cursor == NULL)
@@ -182,37 +197,39 @@ void sub_080325B0(void)
 
         for (;;) {
             u8 *cmd = (u8 *)cursor;
-            s8 pitch = *(s8 *)(cmd + 2);
-            u8 mode = cmd[3];
+            s8 pitch = *(s8 *)(cmd + SOUND_STREAM_CMD_PITCH_OFFSET);
+            u8 mode = cmd[SOUND_STREAM_CMD_MODE_OFFSET];
             s32 advance;
 
             if (pitch > 0) {
-                if ((mode & 0x80) == 0) {
-                    u16 extra = *(u16 *)(cmd + 4);
+                if ((mode & SOUND_STREAM_MODE_EXTENDED) == 0) {
+                    u16 extra = *(u16 *)(cmd + SOUND_STREAM_CMD_EXTRA_OFFSET);
 
                     if (extra != 0)
                         MIXER_TAIL_COMMIT((u32)request, i, pitch, mode, extra);
-                    advance = 6;
+                    advance = SOUND_STREAM_ADVANCE_NORMAL;
                 } else {
-                    u16 firstExtra = *(u16 *)(cmd + 4);
+                    u16 firstExtra;
 
-                    *startIndex = cmd[4];
+                    *startIndex = cmd[SOUND_STREAM_CMD_EXTENDED_INDEX_OFFSET];
+                    firstExtra = *(u16 *)(cmd + SOUND_STREAM_CMD_EXTRA_OFFSET);
                     if (firstExtra != 0)
-                        MIXER_TAIL_COMMIT((u32)request, i, pitch, mode & 0x7f, *(u16 *)(cmd + 6));
-                    advance = 8;
+                        MIXER_TAIL_COMMIT((u32)request, i, pitch, mode & SOUND_STREAM_MODE_MASK,
+                                          *(u16 *)(cmd + SOUND_STREAM_CMD_EXTENDED_EXTRA_OFFSET));
+                    advance = SOUND_STREAM_ADVANCE_EXTENDED;
                 }
             } else if (pitch == 0) {
-                if ((mode & 0x80) == 0) {
+                if ((mode & SOUND_STREAM_MODE_EXTENDED) == 0) {
                     *startIndex = mode;
                 } else {
-                    u8 idx = mode & 0x7f;
+                    u8 idx = mode & SOUND_STREAM_MODE_MASK;
 
                     ss = gpSoundSystem;
                     if (idx > ss->count)
                         idx = ss->count;
                     ss->startIndex = idx;
                 }
-                advance = 4;
+                advance = SOUND_STREAM_ADVANCE_CONTROL;
             } else {
                 stream->cursor = NULL;
                 break;
@@ -221,19 +238,19 @@ void sub_080325B0(void)
             cursor = (u32 *)((u8 *)stream->cursor + advance);
             stream->cursor = cursor;
 
-            if (*(u16 *)cursor == 0xffff && *(u16 *)((u8 *)cursor + 2) == 0xffff) {
+            if (SOUND_STREAM_CURSOR_IS_SENTINEL(cursor)) {
                 stream->countdown = 0;
                 stream->cursor = NULL;
                 break;
             }
 
-            stream->countdown += *(u16 *)cursor << 8;
+            stream->countdown += SOUND_STREAM_CURSOR_COUNTDOWN(cursor) << 8;
             if (stream->countdown > 0)
                 break;
         }
     }
 
-    timers = (MixerTailTimer *)(requestBytes + 0x108);
+    timers = SOUND_REQUEST_FINAL_TIMER(requestBytes);
     cursor = timers->cursor;
     if (cursor == NULL)
         return;
@@ -243,20 +260,21 @@ void sub_080325B0(void)
         return;
 
     do {
-        *(u16 *)(requestBytes + 0x14a) = *(u16 *)((u8 *)cursor + 2);
+        SOUND_REQUEST_FINAL_VALUE(requestBytes) = SOUND_STREAM_CURSOR_VALUE(cursor);
         sub_08031DBC();
 
         oldCursor = timers->cursor;
         cursor = oldCursor + 1;
         timers->cursor = cursor;
 
-        if (*(u16 *)cursor == 0xffff && *(u16 *)((u8 *)cursor + 2) == 0xffff) {
+        if (SOUND_STREAM_CURSOR_VALUE(cursor) == SOUND_STREAM_SENTINEL &&
+            SOUND_STREAM_CURSOR_COUNTDOWN(cursor) == SOUND_STREAM_SENTINEL) {
             timers->countdown = 0;
             timers->cursor = NULL;
             return;
         }
 
-        timers->countdown += *(u16 *)cursor << 8;
+        timers->countdown += SOUND_STREAM_CURSOR_COUNTDOWN(cursor) << 8;
     } while (timers->countdown <= 0);
 }
 

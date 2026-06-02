@@ -21,9 +21,10 @@
  * so an unchanged call short-circuits the MMIO write. A successful
  * write sets dirty bit 0x200 in ss->chDirty[ch].
  *
- * Struct shapes here are scaffold-grade — sized for the offsets this
- * function touches. Promote to include/sound.h once neighbouring
- * sub_0802F4B0 / sub_0802F054 / sub_0802F2FC land and confirm them.
+ * The cache offsets are named in sound.h, but spelling the generic channel
+ * cache as SOUND_SYSTEM_VOL_CACHE changes the target's add/load order here.
+ * Keep the raw address arithmetic until this function's register shape is
+ * ready to move.
  */
 
 /* ROM-resident data tables — defined in src/data/sound_tables.c. */
@@ -44,7 +45,7 @@ void sub_0802E684(s32 vol, s32 chIn)
 
     if (ch <= 1 || ch == 3) {
         SoundSystem *ss = gpSoundSystem;
-        u8 *cache = (u8 *)ss + ch * 8 + 0x92;
+        u8 *cache = (u8 *)ss + ch * 8 + SOUND_SYSTEM_VOL_CACHE_OFFSET;
         u32 *dirty;
 
         oldCode = *cache;
@@ -59,18 +60,18 @@ void sub_0802E684(s32 vol, s32 chIn)
         }
         regVal = *reg;
         {
-            u32 masked = regVal & 0x0fff;
+            u32 masked = regVal & SOUND_CHANNEL_VOL_ENV_LOW_MASK;
             register u32 shifted asm("r1");
             asm("" : "=r"(shifted) : "0"(newCode << 12));
             *reg = masked | shifted;
         }
 
-        dirty = (u32 *)((u8 *)gpSoundSystem + 16);
+        dirty = (u32 *)((u8 *)gpSoundSystem + SOUND_CH_FLAGS_OFFSET);
         dirty = (u32 *)((u8 *)dirty + ch);
-        *dirty |= 0x200;
+        *dirty |= SOUND_FLAG_PSG_REG_DIRTY;
     } else if (ch == 2) {
         SoundSystem *ss = gpSoundSystem;
-        u8 *cache = (u8 *)ss + 0xa2;
+        u8 *cache = (u8 *)ss + SOUND_SYSTEM_VOL_CACHE_OFFSET + 2 * 8;
         register const u8 *base asm("r0");
         const u8 *pOld;
         register const u8 *pNew asm("r3");
@@ -94,12 +95,12 @@ void sub_0802E684(s32 vol, s32 chIn)
         }
         regVal = *reg;
         {
-            u32 masked = regVal & 0x00ff;
+            u32 masked = regVal & SOUND_WAVE_VOL_LOW_MASK;
             u32 mappedNew = *pNew;
             u32 shifted = mappedNew << 8;
             *reg = masked | shifted;
         }
 
-        gpSoundSystem->chFlags[2] |= 0x200;
+        gpSoundSystem->chFlags[2] |= SOUND_FLAG_PSG_REG_DIRTY;
     }
 }
