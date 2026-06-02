@@ -10,11 +10,7 @@ asm(".global sub_08015EC4\n"
     ".global sub_0801629C\n"
     ".thumb_set sub_0801629C, 0x0801629D\n"
     ".global sub_080162FC\n"
-    ".thumb_set sub_080162FC, 0x080162FD\n"
-    ".global sub_080193D8\n"
-    ".thumb_set sub_080193D8, 0x080193D9\n"
-    ".global sub_08019420\n"
-    ".thumb_set sub_08019420, 0x08019421");
+    ".thumb_set sub_080162FC, 0x080162FD");
 
 extern u16 gIwram_5398;
 extern const void *const sUiAssetSlots[];
