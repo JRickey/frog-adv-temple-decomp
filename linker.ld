@@ -672,7 +672,7 @@ SECTIONS {
         src/system/sub_0802e7c4.o(.text);  /* 0x0802e7c4 - 0x0802e934, sub_0802E7C4 + sub_0802E874 */
         src/system/sound_envelope_dual.o(.text);  /* 0x0802e934 - 0x0802ea80, sub_0802E934 (NAKED+NON_MATCHING) + sub_0802EA2C */
         src/system/sound_envelope.o(.text);  /* 0x0802ea80 - 0x0802eb34, sub_0802EA80 */
-        asm/text/text_0x0802eb34.o(.text);  /* 0x0802eb34 - 0x0802ec7c, raw bytes */
+        asm/disasm_0x0802eb34.o(.text);  /* 0x0802eb34 - 0x0802ec7c, sub_0802EB34 (auto-peeled) */
         src/system/sound_channel.o(.text);  /* 0x0802ec7c - 0x0802eef8, sub_0802EC7C + sub_0802ED5C + sub_0802EDF0 (sub_0802EC7C and sub_0802EDF0 NAKED+NON_MATCHING) */
         asm/text/text_0x0802eef8.o(.text);  /* 0x0802eef8 - 0x0802f054, raw bytes */
         src/system/sound_envelope_slide.o(.text);  /* 0x0802f054 - 0x0802f2fc, sub_0802F054 (NAKED+NON_MATCHING) */
