@@ -65,3 +65,32 @@ void sub_08020BF0(void)
         sub_08031FDC(1);
     }
 }
+
+extern void sub_08031E24(u32 arg);
+
+/* Set bit 0 of gStructAt3003570.flags, then forward `arg` to sub_08031E24
+ * and SoundSlot_QueueRequest. The flag write is always followed by the call
+ * because setting bit 0 guarantees the subsequent `flags & 1` check is true.
+ *
+ * agbcc matching lever (same as sub_08020B88): register pins r1=pointer,
+ * r0=mask so the code emits: adds r2,r0,#0; ldr r1,[pc]; movs r0,#1;
+ * ldrb r3,[r1,#0]; orrs r0,r3; strb r0,[r1,#0]; movs r1,#1; ands r0,r1;
+ * cmp r0,#0; beq; adds r0,r2,#0; bl; bl; pop{r0}; bx r0.
+ */
+void sub_08020C14(u32 arg)
+{
+    register StructAt3003570 *p asm("r1");
+    register int mask asm("r0");
+    StructAt3003570 s;
+
+    p = &gStructAt3003570;
+    mask = 1;
+    s = *p;
+    mask = mask | s.flags;
+    p->flags = mask;
+    mask = mask & 1;
+    if (mask) {
+        sub_08031E24(arg);
+        SoundSlot_QueueRequest();
+    }
+}
