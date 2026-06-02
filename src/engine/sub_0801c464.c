@@ -63,3 +63,69 @@ void sub_0801C464(void)
         row = (u8)nextRow;
     } while (row <= 2);
 }
+
+extern void sub_0801BE7C(const u8 *str, int len, int x, int y, int a, int b, int c);
+
+/* UI string addresses (raw casts, matching the sibling style in
+ * sub_0801C2B4 / sub_0801C0xx). Both live in sWinLoseLabels at 0x081be008. */
+#define UI_DIGIT_GLYPH ((const u8 *)0x081BE040) /* "*" digit-fill glyph */
+#define UI_TIME_LABEL  ((const u8 *)0x081BE044) /* "TIME" label */
+
+/* Codepoints for the two 2x2 frame stamps that bracket the two score
+ * readouts on row 17 (TL/TR over BL/BR). */
+#define UI_STAMP_TL 0xc112
+#define UI_STAMP_TR 0xc113
+#define UI_STAMP_BL 0xc114
+#define UI_STAMP_BR 0xc115
+
+/* Paints the dual score panel on BG screenblock 31: two "*NN" readouts on
+ * row 17 (values b and a, each framed by a 2x2 stamp) plus a "TIME NN"
+ * readout (value c) on row 1. NN is rendered as two ASCII digits via the
+ * div/mod-10 helpers. a/b/c are byte values.
+ *
+ * rowBase (= row 17's byte offset, 17*64) is anchored in a register by the
+ * asm barrier so each stamp store keeps its full screenblock address as an
+ * independent pool literal instead of being CSE-folded into +2 increments. */
+void sub_0801C4F8(u8 a, u8 b, u8 c)
+{
+    u8 buf[4];
+    u8 tens;
+    u8 units;
+    u32 rowBase;
+
+    rowBase = 17 * 64;
+    asm volatile("" : "+r"(rowBase));
+    *(vu16 *)(rowBase + 0x0600f80aU) = UI_STAMP_TL;
+    *(vu16 *)(rowBase + 0x0600f80cU) = UI_STAMP_TR;
+    *(vu16 *)(rowBase + 0x0600f84aU) = UI_STAMP_BL;
+    *(vu16 *)(rowBase + 0x0600f84cU) = UI_STAMP_BR;
+
+    sub_0801BE7C(UI_DIGIT_GLYPH, 4, 7, 17, 278, 14, 3);
+
+    tens = (u8)(b / 10u);
+    units = (u8)(b % 10u);
+    buf[0] = tens + 0x30;
+    buf[1] = units + 0x30;
+    sub_0801BE7C(buf, 2, 9, 17, 278, 14, 3);
+
+    *(vu16 *)(rowBase + 0x0600f830U) = UI_STAMP_TL;
+    *(vu16 *)(rowBase + 0x0600f832U) = UI_STAMP_TR;
+    *(vu16 *)(rowBase + 0x0600f870U) = UI_STAMP_BL;
+    *(vu16 *)(rowBase + 0x0600f872U) = UI_STAMP_BR;
+
+    sub_0801BE7C(UI_DIGIT_GLYPH, 4, 26, 17, 278, 14, 3);
+
+    tens = (u8)(a / 10u);
+    units = (u8)(a % 10u);
+    buf[0] = tens + 0x30;
+    buf[1] = units + 0x30;
+    sub_0801BE7C(buf, 2, 28, 17, 278, 14, 3);
+
+    sub_0801BE7C(UI_TIME_LABEL, 4, 12, 1, 278, 14, 3);
+
+    tens = (u8)(c / 10u);
+    units = (u8)(c % 10u);
+    buf[0] = tens + 0x30;
+    buf[1] = units + 0x30;
+    sub_0801BE7C(buf, 2, 17, 1, 278, 14, 3);
+}
