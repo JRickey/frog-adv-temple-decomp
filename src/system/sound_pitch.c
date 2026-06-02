@@ -38,8 +38,8 @@
  * opposite shape — r2 for sx_shifted, r0 for the constant — and does
  * not preserve r7 across the libgcc divide because it knows __divsi3
  * does not clobber r7. Block-scoping sx_shifted, pinning ch/chOffset/
- * gpsp to r5/r6/r7, and pinning lut1/freq to a shared r4 each
- * brought byte_diff down from 162 to 109, but the remaining structural
+ * gpsp to r5/r6/r7, and matching the entry normalization brought the
+ * forced C branch down to byte_diff 78, but the remaining structural
  * mismatch (5-reg push, register choice in wrap loop) resists further
  * source-level rearrangement. Same family as the other NAKED sound
  * functions in this cluster (sub_0802EC7C, sub_0802EDF0, sub_0802EA80).
@@ -54,21 +54,29 @@ extern const u16 sPsgPitchLut[86];
 void sub_0802E5D8(s32 x, s32 y, s32 ch)
 {
     const u16 *lut1;
-    SoundSystem **gpsp;
-    s32 chOffset;
+    register SoundSystem **gpsp asm("r7");
+    register s32 chReg asm("r5");
+    register s32 chOffset asm("r6");
     u16 freq;
-    s32 sx_shifted;
-    s32 sy;
+    register s32 sx_shifted asm("r0");
+    register s32 sy asm("r2");
+    register s32 xNorm asm("r3");
+    register s32 yNorm asm("r1");
 
-    x = (u16)x;
-    y = (u16)y;
-    if (ch > 2)
+    chReg = ch;
+    yNorm = y;
+    asm("lsl r0, r0, #0x10\n\tlsr %0, r0, #0x10\n\tlsl %1, %1, #0x10\n\tlsr %1, %1, #0x10"
+        : "=r"(xNorm), "+r"(yNorm)
+        :
+        : "r0");
+    if (chReg > 2)
         return;
 
-    sx_shifted = (s32)(x << 16);
+    sx_shifted = (s32)(xNorm << 16);
     lut1 = &sPsgPitchLut[1];
     gpsp = &gpSoundSystem;
-    chOffset = ch << 1;
+    yNorm <<= 16;
+    chOffset = chReg << 1;
 
     /* Wrap x into [0, 83] by +/-84. Negative branch is a do-while
      * ahead of the shared exit check; positive branch is a back-edge
@@ -78,27 +86,27 @@ void sub_0802E5D8(s32 x, s32 y, s32 ch)
         goto check_high;
 wrap_up:
     sx_shifted += 0x540000;
-    x = (u16)((u32)sx_shifted >> 16);
-    sx_shifted = (s32)(x << 16);
+    xNorm = (u16)((u32)sx_shifted >> 16);
+    sx_shifted = (s32)(xNorm << 16);
     if (sx_shifted < 0)
         goto wrap_up;
     goto check_high;
 wrap_down:
     sx_shifted += (s32)0xffac0000;
-    x = (u16)((u32)sx_shifted >> 16);
+    xNorm = (u16)((u32)sx_shifted >> 16);
 check_high:
-    sx_shifted = (s32)(x << 16);
+    sx_shifted = (s32)(xNorm << 16);
     if (sx_shifted >> 16 > 83)
         goto wrap_down;
 
-    sy = (s32)(y << 16) >> 16;
+    sy = yNorm >> 16;
     if (sy != 0) {
-        s32 a = lut1[(s16)x];
-        s32 b = lut1[(s16)x + 1];
+        s32 a = lut1[(s16)xNorm];
+        s32 b = lut1[(s16)xNorm + 1];
         s32 delta = (s16)(b - a);
         freq = (u16)(a + (delta * sy) / 255);
     } else {
-        freq = lut1[(s16)x];
+        freq = lut1[(s16)xNorm];
     }
 
     {
@@ -109,7 +117,7 @@ check_high:
     }
 
     {
-        vu16 *reg = sChannelFreqRegTable[ch];
+        vu16 *reg = sChannelFreqRegTable[chReg];
         u16 regval = *reg;
         *reg = freq | (regval & 0x4000);
     }
