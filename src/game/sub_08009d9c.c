@@ -1,4 +1,5 @@
 #include "game.h"
+#include "gba/intr.h"
 #include "iwram.h"
 #include "macros.h"
 #include "types.h"
@@ -44,7 +45,7 @@
  * phase-3 PC port.
  */
 
-extern u32 sub_080004C4(u32 a);
+extern u16 sub_080004C4(void);
 extern void sub_080059C4(void *a);
 extern void sub_08009A58(void);
 extern void sub_08009188(void);
@@ -230,7 +231,7 @@ u32 sub_08009D9C(u8 *arg)
 {
     u8 *r7;
 
-    *(u16 *)0x03005398 = sub_080004C4((u32)arg);
+    *(u16 *)0x03005398 = sub_080004C4();
 
     if (*(s8 *)arg == 0) {
         /* First-time init */
@@ -288,3 +289,148 @@ u32 sub_08009D9C(u8 *arg)
     return 1;
 }
 #endif
+
+/* sub_08009EEC — per-tick mode-state advance (sibling of sub_08009D9C).
+ *
+ * Drives a small state byte at *arg. First refreshes the per-frame seed at
+ * gIwram_5398, then either runs a one-time init (when *arg == 0) or a
+ * flag-toggle (when gIwram_3720._field_34 has bit 0x8000 set). The shared
+ * tail dispatches two entity-handler tables (sEntityProcB/D) by
+ * gGameStuff.pendingMode, advances the subsystems, masks VBlank, commits the
+ * deferred OAM + BG-scroll state, then runs a late state-check.
+ *
+ * agbcc levers that carry the match (all load-bearing register pins below):
+ *   - gIwram_3720's base is pinned in a high register (r8) across the whole
+ *     tail of bl's, mirroring the baserom's `ldr r0; mov r8, r0` /
+ *     `mov r2, r8` reload. A plain local would be spilled/reloaded.
+ *   - The state byte is pinned to r3 so the unsigned read (kept for the
+ *     else-branch `+1`) and the signed `== 0` test stay separate loads.
+ *   - The handler dispatch reads gGameStuff through the linker-assigned
+ *     gIwram_5330 symbol with an explicit `(idx << 2) + table` so agbcc
+ *     emits the baserom's pendingMode chain (same idiom as sub_0800A2D8).
+ *   - The else-branch flag rewrite is staged through an r0-pinned temp
+ *     (`t = 2; t |= flags; t &= 0x7fff;`) so the mask result lands in r0
+ *     and `& 0x7fff` loads the pooled constant instead of a shift pair.
+ *   - The early `return 0` is reached via `goto ret0` to a shared bottom
+ *     label so agbcc places it after the return-1 path (baserom layout).
+ *
+ * Built with -fforce-addr -fno-expensive-optimizations -fno-gcse (the same
+ * state-byte-dispatcher flag combo as mode_15 / sub_080019B4).
+ */
+
+typedef void (*EntityProc)(void);
+
+extern const EntityProc sEntityProcB[17];
+extern const EntityProc sEntityProcD[17];
+extern const u8 sEntitySubtypeLut[20];
+
+extern void sub_0800F24C(u8 arg);
+extern void sub_0801D048(u8 value);
+extern void sub_0801D094(void);
+extern u8 gIwram_5330;
+extern u16 gIwram_5398;
+
+u32 sub_08009EEC(u8 *arg, u8 kind)
+{
+    register struct IwramAt3720 *e3720 asm("r8");
+    register GameStuff *initGs asm("r1");
+    register struct IwramAt3720 *e3720init asm("r0");
+    register struct IwramAt3720 *e3720else asm("r2");
+    register struct IwramAt3720 *e3720end asm("r2");
+    register GameStuff *gs asm("r5");
+    register const EntityProc *procs asm("r1");
+    const u8 *lut;
+    u8 idx;
+    u32 offset;
+    register u8 nextState asm("r0");
+    register u8 stateByte asm("r3");
+    register u16 flags asm("r1");
+    register vu16 *dst asm("r1");
+    u16 *src;
+
+    gIwram_5398 = sub_080004C4();
+    stateByte = arg[0];
+
+    if (*(s8 *)arg == 0) {
+        initGs = (GameStuff *)&gIwram_5330;
+        initGs->_unk14 = initGs->_unk00;
+        *arg = 1;
+        sub_0801D048(kind);
+        e3720init = &gIwram_3720;
+        e3720init->_field_1A += 29;
+        e3720init->_field_34 |= 2;
+    } else {
+        e3720else = &gIwram_3720;
+        flags = e3720else->_field_34;
+        if (flags & 0x8000) {
+            register u32 t asm("r0");
+            t = 2;
+            t |= flags;
+            t &= 0x7fff;
+            e3720else->_field_34 = t;
+            nextState = stateByte + 1;
+            *arg = nextState;
+        }
+    }
+
+    e3720 = &gIwram_3720;
+    sub_080059C4(&gIwram_3720);
+
+    procs = sEntityProcB;
+
+    gs = (GameStuff *)&gIwram_5330;
+    idx = gs->pendingMode;
+    offset = ((u32)idx << 2) + (u32)procs;
+    ((EntityProc)(*(const u32 *)offset))();
+
+    procs = sEntityProcD;
+    idx = gs->pendingMode;
+    offset = ((u32)idx << 2) + (u32)procs;
+    ((EntityProc)(*(const u32 *)offset))();
+
+    lut = sEntitySubtypeLut;
+    idx = gs->pendingMode;
+    sub_0800F24C(*(const u8 *)(idx + (u32)lut));
+
+    sub_08009A58();
+    sub_08009188();
+    sub_080008DC();
+
+    REG_IE &= ~IRQ_VBLANK;
+    sub_0800FCC8(*(const u8 *)(gs->pendingMode + (u32)lut));
+    sub_08005FC8();
+    sub_0802D558((void *)0x030054a0, (void *)0x07000000, 0x100);
+
+    dst = (vu16 *)0x04000010;
+    src = (u16 *)0x03003550;
+    *dst++ = src[0];
+    *dst++ = src[1];
+    *dst++ = src[2];
+    *dst++ = src[3];
+    *dst++ = src[4];
+    *dst = src[5];
+
+    REG_IE |= IRQ_VBLANK;
+
+    if (*arg == 8)
+        goto check3720;
+    if (gIwram_5398 == 0)
+        goto ret0;
+
+check3720:
+    e3720end = e3720;
+    if (e3720end->_field_1A > 28) {
+        e3720end->_field_1A -= 29;
+        e3720end->_field_34 |= 2;
+    }
+
+    if (gIwram_5398 != 0) {
+        gIwram_35E0._field_12 = gIwram_5398;
+    }
+
+    sub_0801D094();
+    return 1;
+
+ret0:
+    return 0;
+}

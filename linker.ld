@@ -294,8 +294,7 @@ SECTIONS {
         src/engine/sub_08009884.o(.text);  /* 0x08009884 - 0x08009984, sub_08009884 */
         src/game/sub_08009984.o(.text);  /* 0x08009984 - 0x08009ba0, sub_08009984 + sub_08009A58 */
         src/game/sub_08009ba0.o(.text);  /* 0x08009ba0 - 0x08009d9c, sub_08009BA0 + sub_08009C14 + sub_08009CBC */
-        src/game/sub_08009d9c.o(.text);  /* 0x08009d9c - 0x08009eec, sub_08009D9C (NAKED+NON_MATCHING) */
-        asm/disasm_0x08009eec.o(.text);  /* 0x08009eec - 0x0800a05c, sub_08009EEC (auto-peeled) */
+        src/game/sub_08009d9c.o(.text);  /* 0x08009d9c - 0x0800a05c, sub_08009D9C (NAKED+NON_MATCHING) + sub_08009EEC */
         src/engine/sub_0800a05c.o(.text);  /* 0x0800a05c - 0x0800a104, sub_0800A05C (NAKED+NON_MATCHING) */
         src/engine/sub_0800a104.o(.text);  /* 0x0800a104 - 0x0800a1c8, sub_0800A104 + sub_0800A158 */
         src/engine/sub_0800a1c8.o(.text);  /* 0x0800a1c8 - 0x0800a2d8, sub_0800A1C8, sub_0800A214, sub_0800A258, sub_0800A26C */
