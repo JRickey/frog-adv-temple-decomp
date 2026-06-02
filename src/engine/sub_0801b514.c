@@ -124,3 +124,67 @@ void sub_0801B620(u8 arg)
 
     sub_0801B430(arg);
 }
+
+extern void sub_08020C78(u32 arg);
+
+/* Sibling of sub_0801B620 and sub_0801D4CC: look up a value from the
+ * 0x081BDA70 ROM table at index arg+7 (pinned to r5 across function body),
+ * init the 0x03006440 state struct, then DMA3-clear OBJ-VRAM at 0x0600FBC0
+ * before chaining sub_0801B430(arg) and sub_08020C78(tableVal).
+ *
+ * tableVal pinned to r5; a barrier on the table pointer prevents agbcc
+ * from folding 7*4=28 into the pool constant. tableBase pinned to r4
+ * with an input barrier so 0x080C1254 loads before the gIwram_34B0 addr. */
+void sub_0801B694(u8 arg)
+{
+    register u32 tableVal asm("r5");
+    register u32 tableBase asm("r4");
+    const u32 *table;
+    u8 *state;
+    const u32 *const *entry;
+    const u32 *base;
+    u8 byteZero;
+    u16 halfZero;
+    vu16 fill;
+    vu32 *dma;
+
+    {
+        const u32 *p;
+        u32 idx;
+
+        p = (const u32 *)0x081BDA70;
+        asm volatile("" : "+r"(p));
+        idx = arg + 7;
+        tableVal = p[idx];
+    }
+    asm volatile("" : "+r"(tableVal), "+r"(arg));
+
+    state = (u8 *)0x03006440;
+    *(u32 *)(state + 20) = 0x0600F84C;
+    *(u32 *)(state + 36) = 0x0600F84C + 0x80;
+
+    tableBase = 0x080C1254;
+    asm volatile("" : "+r"(tableBase));
+    entry = (const u32 *const *)(gIwram_34B0._data * 24 + tableBase);
+    base = entry[0];
+    *(u32 *)(state + 12) = *(const u32 *)((const u8 *)base + arg * 4 + 0x20);
+
+    byteZero = 0;
+    halfZero = 0;
+    asm volatile("" : "+r"(byteZero), "+r"(halfZero));
+    state[8] = byteZero;
+    *(u16 *)(state + 44) = halfZero;
+    *(u16 *)(state + 48) = halfZero;
+    *(u16 *)(state + 50) = halfZero;
+    state[11] = 8;
+
+    fill = halfZero;
+    dma = (vu32 *)0x040000D4;
+    dma[0] = (u32)&fill;
+    dma[1] = 0x0600FBC0;
+    dma[2] = DMA_ENABLE | DMA_SRC_FIXED | 0xC0;
+    (void)dma[2];
+
+    sub_0801B430(arg);
+    sub_08020C78(tableVal);
+}
