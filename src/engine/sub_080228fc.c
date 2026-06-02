@@ -98,3 +98,8 @@ void sub_08022A9C(void)
 {
     sub_08021140(0x59, sLevelLayout_310B54, 0, 0x4c, 0x1c5, 13, 0);
 }
+
+void sub_08022AC8(void)
+{
+    sub_08021510(0x59, sLevelLayout_310B54, 0x4c, &gIwram_6110, 0);
+}
