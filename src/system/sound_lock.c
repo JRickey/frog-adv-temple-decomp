@@ -14,11 +14,32 @@
  * the sound engine to keep the per-VBlank tick from racing the audio
  * DMA. See docs/subsystems.md "Audio / sound" for the broader cluster
  * picture.
+ *
+ * The three slot-descriptor helpers below (sub_0802E43C / sub_0802E470 /
+ * sub_0802E4B4) take a packed descriptor word: bits 16..23 are a slot
+ * index, the low 16 bits a per-channel work index.
+ *   sub_0802E43C: point slotStateA[idx] at the slot's slice of mixTable.
+ *   sub_0802E470: tear that wiring back down (clear slotStateA[idx], the
+ *                 chanWork entry, and the slot's flags).
+ *   sub_0802E4B4: set a slot's pan byte and flag it dirty for the mixer.
  */
 
+typedef struct SoundSlot {
+    u8 _pad00[0x38];
+    u32 flags;   /* +0x38 — dirty/active bitfield */
+    u8 panCache; /* +0x3c — last emitted pan byte */
+} SoundSlot;
+
 typedef struct SoundSystem {
-    u8 _pad00[0xbb];
+    u8 _pad00[0xba];
+    u8 panBits;      /* +0xba — hi byte of REG_SOUNDCNT_L cache */
     u8 lockRefCount; /* +0xbb */
+    u8 _padbc[4];
+    u32 *mixTable;      /* +0xc0 — per-slot mix-state pool (28-byte stride) */
+    u32 *slotStateA;    /* +0xc4 — per-slot mix-state pointer table */
+    SoundSlot *swSlots; /* +0xc8 — software-mixed slot array (64-byte stride) */
+    u8 _padcc[0x58];
+    u32 chanWork[1]; /* +0x124 — per-channel work table */
 } SoundSystem;
 
 #define gpSoundSystem (*(SoundSystem **)0x030065e0)
@@ -45,4 +66,52 @@ void sub_0802E418(void)
     *p = v;
     if ((u8)v == 1)
         sub_08035D8C();
+}
+
+void sub_0802E43C(u32 desc)
+{
+    s32 idx;
+    SoundSystem *ss;
+
+    if (desc == 0)
+        return;
+
+    idx = (desc >> 16) & 0xff;
+    ss = gpSoundSystem;
+    ss->slotStateA[idx] = (u32)(ss->mixTable + idx * 7);
+}
+
+void sub_0802E470(u32 desc)
+{
+    s32 idx;
+    s32 lo;
+    SoundSystem *ss;
+
+    if (desc == 0)
+        return;
+
+    lo = desc & 0xffff;
+    idx = (desc >> 16) & 0xff;
+    ss = gpSoundSystem;
+    ss->slotStateA[idx] = 0;
+    ss->chanWork[lo] = 0;
+    ss->swSlots[idx].flags = 0;
+}
+
+/* `pPool` keeps &gpSoundSystem (not the deref'd base) so each
+ * `(*pPool)->swSlots[idx]` reloads the pool word — the baserom derefs
+ * gpSoundSystem twice. Caching the base in one local lets agbcc CSE the
+ * second reload away and breaks the match. */
+void sub_0802E4B4(u32 desc, u32 pan)
+{
+    SoundSystem **pPool;
+    s32 idx;
+
+    if (desc == 0)
+        return;
+
+    idx = (desc >> 16) & 0xff;
+    pPool = &gpSoundSystem;
+    (*pPool)->swSlots[idx].panCache = pan;
+    (*pPool)->swSlots[idx].flags |= 0x80;
 }
