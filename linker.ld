@@ -714,9 +714,7 @@ SECTIONS {
         src/system/sound_channel.o(.text);  /* 0x0802ec7c - 0x0802eef8, sub_0802EC7C + sub_0802ED5C + sub_0802EDF0 (sub_0802EC7C and sub_0802EDF0 NAKED+NON_MATCHING) */
         asm/disasm_0x0802eef8.o(.text);  /* 0x0802eef8 - 0x0802f054, sub_0802EEF8 (auto-peeled) */
         src/system/sound_envelope_slide.o(.text);  /* 0x0802f054 - 0x0802f2fc, sub_0802F054 (NAKED+NON_MATCHING) */
-        src/system/sound_pan.o(.text);  /* 0x0802f2fc - 0x0802f398, sub_0802F2FC (NAKED+NON_MATCHING) */
-        asm/disasm_0x0802f398.o(.text);  /* 0x0802f398 - 0x0802f47c, sub_0802F398 (auto-peeled) */
-        asm/text/text_0x0802f47c.o(.text);  /* 0x0802f47c - 0x0802f4b0, raw bytes */
+        src/system/sound_pan.o(.text);  /* 0x0802f2fc - 0x0802f4b0, sub_0802F2FC (NAKED+NON_MATCHING) + sub_0802F398 */
         src/system/sound_mixer.o(.text);  /* 0x0802f4b0 - 0x0802f8f0, sub_0802F4B0 + sub_0802F870 + sub_0802F884 + sub_0802F890 */
         asm/text/text_0x0802f8f0.o(.text);  /* 0x0802f8f0 - 0x0802f9f0, raw bytes */
         src/system/sub_0802f9f0.o(.text);  /* 0x0802f9f0 - 0x0802fab8, sub_0802F9F0 + sub_0802FA60 */
