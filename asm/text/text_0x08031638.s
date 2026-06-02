@@ -11,5 +11,5 @@
         .global text_08031638
         .type   text_08031638, %object
 text_08031638:
-        .incbin "frog_us_baserom.gba", 0x00031638, 0x00000784
+        .incbin "frog_us_baserom.gba", 0x00031638, 0x000000a4
         .size   text_08031638, . - text_08031638

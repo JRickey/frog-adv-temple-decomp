@@ -11,5 +11,10 @@
         .global text_0801b71c
         .type   text_0801b71c, %object
 text_0801b71c:
+        .thumb_func
+        .global sub_0801B71C
+        .type   sub_0801B71C, %function
+sub_0801B71C:
         .incbin "frog_us_baserom.gba", 0x0001b71c, 0x00000238
+        .size   sub_0801B71C, . - sub_0801B71C
         .size   text_0801b71c, . - text_0801b71c

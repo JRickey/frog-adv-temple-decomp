@@ -4,14 +4,8 @@
 
 asm(".global sub_08032C18\n"
     ".thumb_set sub_08032C18, 0x08032C19\n"
-    ".global sub_08032E04\n"
-    ".thumb_set sub_08032E04, 0x08032E05\n"
     ".global sub_0802D5EC\n"
-    ".thumb_set sub_0802D5EC, 0x0802D5ED\n"
-    ".global sub_0802E344\n"
-    ".thumb_set sub_0802E344, 0x0802E345\n"
-    ".global sub_0802E32C\n"
-    ".thumb_set sub_0802E32C, 0x0802E32D\n");
+    ".thumb_set sub_0802D5EC, 0x0802D5ED\n");
 
 /* Linker-assigned (docs/codegen-notes.md "Adjacent IWRAM bases"): keeping
  * the table opaque to agbcc holds its pool load ahead of the gIwram_3480
@@ -36,7 +30,7 @@ void sub_0801BE7C(const u8 *str, int len, int x, int y, int a, int b, int c);
 void sub_0801CF18(u8 value, int x, int y, int a, int b, int c);
 void sub_0802D99C(void);
 u32 sub_08032C18(void *a, void *b);
-void sub_08032E04(void *a, void *b, void *c);
+void sub_08032E04(u32 *src, u32 value, u32 *dst);
 void sub_0802D5EC(void *a, void *b);
 void sub_0802E344(u32 arg);
 void sub_0802E32C(u32 arg);
@@ -111,7 +105,7 @@ void sub_08020388(void)
         }
     }
 
-    sub_08032E04((void *)0x03000010, (void *)0x03000030, (void *)0x03000020);
+    sub_08032E04((u32 *)0x03000010, 0x03000030, (u32 *)0x03000020);
     sub_0802D5EC(&gIwram_0000, (void *)0x03000020);
     sub_0802E344(0xF5);
     sub_0802E32C(0xCD);

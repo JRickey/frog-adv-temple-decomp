@@ -64,3 +64,43 @@ void sub_0801932C(void)
 
     gIwram_34A0.dispatchIdx = ticker;
 }
+
+void sub_080193D8(void)
+{
+    register u8 *table asm("r0") = (u8 *)0x030053A0;
+    register u32 zero asm("r3") = 0;
+    register u32 value asm("r1") = 1;
+    register u8 *state asm("r1");
+    register u32 zero2 asm("r2");
+    register u32 mask asm("r0");
+
+    table[0] = value;
+    table[1] = value;
+    value = 2;
+    table[2] = value;
+    table[3] = value;
+    zero2 = 4;
+    table[4] = zero2;
+    value = 8;
+    table[5] = value;
+    table[6] = zero2;
+    table[7] = value;
+    zero2 = 0x20;
+    table[8] = zero2;
+    value = 0x10;
+    table[9] = value;
+    table[10] = zero2;
+    table[11] = value;
+
+    state = (u8 *)0x03005330;
+    zero2 = 0;
+    *(u16 *)(state + 0x22) = zero;
+    table = state;
+    table += 0x20;
+    *table = zero2;
+    state[0x10] = zero2;
+    mask = 0xfb;
+    zero2 = state[0x18];
+    mask &= zero2;
+    state[0x18] = mask;
+}

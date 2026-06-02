@@ -249,5 +249,5 @@
 
         thumb_func_start sub_08015CBC
 sub_08015CBC: @ 0x08015cbc
-        .incbin "frog_us_baserom.gba", 0x15cbc, 0x1ec
+        .incbin "frog_us_baserom.gba", 0x15cbc, 0x74
         thumb_func_end sub_08015CBC

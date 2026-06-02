@@ -144,3 +144,6 @@ int sub_080178FC(u16 *buf, u32 start, u32 count)
 fail:
     return 0;
 }
+
+void sub_08017938(void)
+{}

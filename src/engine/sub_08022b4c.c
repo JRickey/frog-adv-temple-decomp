@@ -1,3 +1,4 @@
+#include "gba/io.h"
 #include "iwram.h"
 #include "types.h"
 
@@ -13,6 +14,8 @@ extern void sub_08022434(void);
 extern void sub_08022160(void);
 extern void sub_08022920(void);
 extern void sub_08022AC8(void);
+extern void sub_08022958(void);
+extern void sub_080229A4(void);
 
 void sub_08022B4C(void)
 {
@@ -29,4 +32,11 @@ void sub_08022B4C(void)
     sub_08022160();
     sub_08022920();
     sub_08022AC8();
+}
+
+void sub_08022B90(void)
+{
+    REG_DISPCNT |= DISPCNT_OBJ_ON;
+    sub_08022958();
+    sub_080229A4();
 }

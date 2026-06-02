@@ -115,3 +115,28 @@ void sub_0802E4B4(u32 desc, u32 pan)
     (*pPool)->swSlots[idx].panCache = pan;
     (*pPool)->swSlots[idx].flags |= 0x80;
 }
+
+void sub_0802E4E8(u32 desc, u32 enable)
+{
+    register s32 idx asm("r1");
+    register SoundSystem *ss asm("r3");
+    register SoundSystem *mixBase asm("r2");
+    u8 *dst;
+    register u32 value asm("r0");
+    register u32 enableReg asm("r4") = enable;
+
+    if (desc == 0)
+        return;
+
+    idx = (desc >> 16) & 0xff;
+    ss = gpSoundSystem;
+    mixBase = ss;
+    dst = (u8 *)mixBase->mixTable + idx * 28;
+    if (enableReg != 0) {
+        mixBase = (SoundSystem *)((u8 *)ss + 0x10e);
+        value = *(u8 *)mixBase;
+    } else {
+        value = 0;
+    }
+    dst[27] = value;
+}
