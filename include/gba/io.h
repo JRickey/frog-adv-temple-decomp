@@ -8,6 +8,9 @@
 #define REG_DISPSTAT (*(volatile u16 *)0x04000004)
 #define REG_VCOUNT   (*(volatile u16 *)0x04000006)
 
+/* Background control registers (BG0-3). */
+#define REG_BG3CNT (*(volatile u16 *)0x0400000E)
+
 /* REG_DISPSTAT bits. The low 3 bits are status (VBlank/HBlank/VCount
  * flags), the next 3 are the matching IRQ enables, bits 8-15 are the
  * VCount-match threshold. */
