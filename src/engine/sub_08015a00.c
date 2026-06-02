@@ -100,3 +100,25 @@ void sub_08015AD4(void)
         break;
     }
 }
+
+void sub_08015B20(u8 arg)
+{
+    void *src;
+    void *dst;
+
+    switch (arg) {
+    case 0:
+        src = (void *)(0x80 << 18);
+        dst = (void *)0x0600e000;
+        break;
+    case 1:
+        src = (void *)0x02010000;
+        dst = (void *)0x0600e800;
+        break;
+    case 2:
+        src = (void *)0x02020000;
+        dst = (void *)0x0600f000;
+        break;
+    }
+    sub_080100E4(arg, src, dst);
+}
