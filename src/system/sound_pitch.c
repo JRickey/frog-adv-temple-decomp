@@ -38,8 +38,9 @@
  * opposite shape — r2 for sx_shifted, r0 for the constant — and does
  * not preserve r7 across the libgcc divide because it knows __divsi3
  * does not clobber r7. Block-scoping sx_shifted, pinning ch/chOffset/
- * gpsp to r5/r6/r7, and matching the entry normalization brought the
- * forced C branch down to byte_diff 78, but the remaining structural
+ * gpsp to r5/r6/r7, matching the entry normalization, and shaping the
+ * fast path / cache / MMIO lookup brought the forced C branch down to
+ * byte_diff 51, but the remaining structural
  * mismatch (5-reg push, register choice in wrap loop) resists further
  * source-level rearrangement. Same family as the other NAKED sound
  * functions in this cluster (sub_0802EC7C, sub_0802EDF0, sub_0802EA80).
@@ -62,6 +63,7 @@ void sub_0802E5D8(s32 x, s32 y, s32 ch)
     register s32 sy asm("r2");
     register s32 xNorm asm("r3");
     register s32 yNorm asm("r1");
+    SoundSystem *ss;
 
     chReg = ch;
     yNorm = y;
@@ -100,25 +102,37 @@ check_high:
         goto wrap_down;
 
     sy = yNorm >> 16;
-    if (sy != 0) {
+    if (sy == 0) {
+        freq = lut1[(s16)xNorm];
+    } else {
         s32 a = lut1[(s16)xNorm];
         s32 b = lut1[(s16)xNorm + 1];
         s32 delta = (s16)(b - a);
         freq = (u16)(a + (delta * sy) / 255);
-    } else {
-        freq = lut1[(s16)xNorm];
     }
 
     {
-        u16 *cache = (u16 *)((u8 *)(*gpsp) + 0xb4 + chOffset);
+        u16 *cache;
+
+        ss = *gpsp;
+        cache = (u16 *)((u8 *)ss + 0xb4 + chOffset);
         if (*cache == freq)
             return;
         *cache = freq;
     }
 
     {
-        vu16 *reg = sChannelFreqRegTable[chReg];
-        u16 regval = *reg;
+        register vu16 *const *regTable asm("r1");
+        register s32 tableOffset asm("r0");
+        vu16 *reg;
+        u16 regval;
+
+        regTable = sChannelFreqRegTable;
+        tableOffset = chReg << 2;
+        tableOffset += (u32)regTable;
+        reg = *(vu16 **)tableOffset;
+
+        regval = *reg;
         *reg = freq | (regval & 0x4000);
     }
 }
