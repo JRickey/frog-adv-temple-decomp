@@ -113,3 +113,58 @@ void sub_08011478(u8 count, struct BlitRecord *records, u8 srcIndex)
         i = (u8)(i + 1);
     } while (i < (u8)count);
 }
+
+struct IwramAt6480_sub11518 {
+    u8 _pad00[9];
+    u8 field_9; /* +0x09 */
+    u8 _pad0A;
+    u8 field_b; /* +0x0b */
+    u8 _pad0C[42];
+    s16 field_36; /* +0x36 */
+};
+
+struct IwramAt6540_sub11518 {
+    u8 _pad00[9];
+    u8 field_9; /* +0x09 */
+    u8 _pad0A;
+    u8 field_b; /* +0x0b */
+    u8 _pad0C[40];
+    s16 field_34; /* +0x34 */
+};
+
+struct IwramAt6580_sub11518 {
+    u8 _pad00[10];
+    u8 field_a; /* +0x0a */
+    u8 field_b; /* +0x0b */
+};
+
+extern u8 gIwram_3610;
+extern u8 gIwram_53A0;
+extern u8 gIwram_60A0[];
+extern struct IwramAt6480_sub11518 gIwram_6480;
+extern struct IwramAt6540_sub11518 gIwram_6540;
+extern struct IwramAt6580_sub11518 gIwram_6580;
+extern struct BlitRecord gBlitInitTable_08306AD4[];
+
+void sub_08011518(void)
+{
+    u8 *base = &gIwram_3610;
+    register struct IwramAt6480_sub11518 *p6480 asm("r1");
+    register struct IwramAt6540_sub11518 *p6540 asm("r3");
+    u8 zero;
+    /* zero=0 inline: agbcc emits movs r2,#0 after adds r0,#0xc8 */
+    base[0xC8] = (zero = 0);
+    gIwram_53A0 = zero;
+    gIwram_60A0[0] = zero;
+    p6540 = &gIwram_6540;
+    p6540->field_34 = zero;
+    p6480 = &gIwram_6480;
+    p6480->field_36 = zero;
+    p6540->field_b = 0;
+    p6480->field_b = 0;
+    p6540->field_9 = 0;
+    p6480->field_9 = 2;
+    gIwram_6580.field_b = 0x50;
+    gIwram_6580.field_a = 3;
+    sub_08011478(4, gBlitInitTable_08306AD4, 1);
+}

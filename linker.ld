@@ -51,6 +51,7 @@ sAnimDesc_6e28 = 0x08306e28;
  * symbols (base and base+16) so agbcc emits distinct pool entries — prevents
  * CSE-fold of the adjacent ROM addresses into a single base+offset load. */
 gBlitParamTable_08306b74 = 0x08306b74;
+gBlitInitTable_08306AD4 = 0x08306AD4;
 gBlitSrcTable_08306b84 = 0x08306b84;
 
 SECTIONS {
@@ -397,8 +398,7 @@ SECTIONS {
         src/engine/sub_0801129c.o(.text);  /* 0x0801129c - 0x080112c0, sub_0801129C */
         src/engine/sub_080112c0.o(.text);
         asm/disasm_0x080112c0.o(.text);  /* 0x080112c0 - 0x080113e8, sub_080112C0 (auto-peeled) */
-        src/engine/sub_080113e8.o(.text);  /* 0x080113e8 - 0x08011518, sub_080113E8 + sub_08011478 */
-        asm/disasm_0x08011518.o(.text);  /* 0x08011518 - 0x08011574, sub_08011518 (auto-peeled) */
+        src/engine/sub_080113e8.o(.text);  /* 0x080113e8 - 0x08011574, sub_080113E8 + sub_08011478 + sub_08011518 */
         asm/disasm_0x08011574.o(.text);  /* 0x08011574 - 0x080115f8, sub_08011574 (auto-peeled) */
         asm/disasm_0x080115f8.o(.text);  /* 0x080115f8 - 0x080116b8, sub_080115F8 (auto-peeled) */
         asm/disasm_0x080116b8.o(.text);  /* 0x080116b8 - 0x0801185c, sub_080116B8 (peeled) */
