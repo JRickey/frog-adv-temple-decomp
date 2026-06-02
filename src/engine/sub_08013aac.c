@@ -21,9 +21,15 @@ struct TransferDesc_13AE8 {
 
 extern void sub_08012BC4(u8 mode, u16 a, u16 b, u16 c, u16 d, void *tiles, u8 e);
 extern void sub_0800E7D4(void);
+extern void sub_0800EE34(u8 layer);
 extern void sub_08012CAC(void);
 extern void sub_08013C60(struct TransferDesc_13AE8 desc, u8 mode, void *buf);
 extern void sub_0801310C(void);
+extern u8 gIwram_6410[];
+extern u8 gIwram_6400[];
+extern u8 gIwram_6480[];
+extern u8 gIwram_6500[];
+extern u8 gIwram_60A0[];
 
 void sub_08013AAC(u8 idx)
 {
@@ -70,4 +76,55 @@ void sub_08013AE8(void)
     }
 
     sub_0801310C();
+}
+
+void sub_08013B54(void)
+{
+    register u32 zero asm("r2");
+    register u8 small asm("r3");
+
+    {
+        register u8 *ptr asm("r1");
+
+        ptr = gIwram_6410;
+        zero = 0;
+        small = 2;
+        ptr[12] = small;
+        ptr[0] = 3;
+        *(u32 *)(ptr + 4) = zero;
+    }
+
+    {
+        register u8 *ptr asm("r0");
+        register u8 sixteen asm("r1");
+
+        ptr = gIwram_6400;
+        *(u32 *)(ptr + 4) = zero;
+        sixteen = 16;
+        ptr[12] = sixteen;
+        ptr[0] = small;
+    }
+
+    {
+        register u8 *ptr asm("r1");
+
+        ptr = gIwram_6480;
+        small = 1;
+        ptr[0] = 1;
+    }
+
+    {
+        register u8 *ptr asm("r0");
+
+        ptr = gIwram_6500;
+        ptr[10] = zero;
+    }
+    {
+        register u8 val asm("r1");
+
+        val = gIwram_60A0[0x40];
+        val |= small;
+        gIwram_60A0[0x40] = val;
+    }
+    sub_0800EE34(2);
 }
