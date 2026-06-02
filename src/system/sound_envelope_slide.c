@@ -34,7 +34,8 @@
  * embedded in SoundSystem itself at ss+0x8c, ss+0x94, ss+0x9c, ss+0xa4
  * (stride 8). Walked i=3 down to 0 (loop counter in r8, decremented to
  * -1). Mode dispatch only fires if chFlags[i] & 1 is set; otherwise
- * dirty bit 0x80 is OR'd anyway if chFlags[i] & 0x20 is set.
+ * the inactive slide path runs if chFlags[i] & 0x20 is set, advancing
+ * the accumulator until it clamps and clears bit 0x20.
  *
  * Stage 2 (ss->count iterations): per-slot envelope-C bank, walked via
  * ss->slotPtrTable[i] with the same mode dispatch over slot->flags
@@ -57,6 +58,7 @@
  * laid out so the dispatch can index them by mode. */
 #ifdef NON_MATCHING
 static void envelope_c_tick(EnvelopeCBlock *blk, u32 *pFlags, u32 chFlagWord, u32 dirtyBit);
+static void envelope_c_inactive_tick(EnvelopeCBlock *blk, u32 *pFlags, u32 flags, u32 dirtyBit);
 
 void sub_0802F054(void)
 {
@@ -77,7 +79,8 @@ void sub_0802F054(void)
             blk = &((EnvelopeCBlock *)((u8 *)ss + 0x8c))[3 - i];
             envelope_c_tick(blk, pFlags, flags, 0x80);
         } else if (flags & 0x20) {
-            *pFlags = flags | 0x80;
+            blk = &((EnvelopeCBlock *)((u8 *)ss + 0x8c))[3 - i];
+            envelope_c_inactive_tick(blk, pFlags, flags, 0x80);
         }
     }
 
@@ -90,7 +93,7 @@ void sub_0802F054(void)
         if (flags & 1) {
             envelope_c_tick(&slot->envelopeC, &slot->flags, flags, 0x80);
         } else if (flags & 0x20) {
-            slot->flags = flags | 0x80;
+            envelope_c_inactive_tick(&slot->envelopeC, &slot->flags, flags, 0x80);
         }
     }
 }
@@ -109,7 +112,7 @@ static void envelope_c_tick(EnvelopeCBlock *blk, u32 *pFlags, u32 flags, u32 dir
     case 0: /* slide-up */
         sum = (s32)cfg->w0 + (s32)acc;
         if (sum > 0xfeff) {
-            *pFlags = (flags & ~7u) | 2u;
+            *pFlags = (flags & (u32)-7) | 2u;
             sum = 0xff00;
         }
         blk->acc = (u16)sum;
@@ -118,13 +121,13 @@ static void envelope_c_tick(EnvelopeCBlock *blk, u32 *pFlags, u32 flags, u32 dir
         sum = (s32)acc - (s32)cfg->w2;
         if (sum <= (s32)cfg->w4) {
             sum = cfg->w4;
-            *pFlags = (flags & ~7u) | 4u;
+            *pFlags = (flags & (u32)-7) | 4u;
         }
         blk->acc = (u16)sum;
         break;
     case 2: /* kickoff: maybe advance to mode 3 */
         if (flags & 0x10) {
-            flags = (flags & ~7u) | 6u; /* bits 1-2 = 11, i.e. mode 3 */
+            flags = (flags & (u32)-7) | 6u; /* bits 1-2 = 11, i.e. mode 3 */
             *pFlags = flags;
         }
         /* fall through */
@@ -139,6 +142,31 @@ static void envelope_c_tick(EnvelopeCBlock *blk, u32 *pFlags, u32 flags, u32 dir
     }
 
     if ((acc & 0xff00) != (prevAcc & 0xff00))
+        *pFlags = *pFlags | dirtyBit;
+}
+
+static void envelope_c_inactive_tick(EnvelopeCBlock *blk, u32 *pFlags, u32 flags, u32 dirtyBit)
+{
+    u16 prevAcc = blk->acc;
+    s32 delta = (s32)(u32)blk->cfg;
+    s32 sum = (s32)prevAcc + delta;
+
+    if (delta >= 0) {
+        if (sum > 0xfeff) {
+            flags &= (u32)-0x21;
+            *pFlags = flags;
+            sum = 0xff00;
+        }
+    } else {
+        if (sum <= 0x100) {
+            flags &= (u32)-0x21;
+            *pFlags = flags;
+            sum = 0;
+        }
+    }
+
+    blk->acc = (u16)sum;
+    if ((prevAcc & 0xff00) != (sum & 0xff00))
         *pFlags = *pFlags | dirtyBit;
 }
 #else
