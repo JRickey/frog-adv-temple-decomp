@@ -675,7 +675,7 @@ SECTIONS {
         src/system/sound_envelope.o(.text);  /* 0x0802ea80 - 0x0802eb34, sub_0802EA80 */
         asm/disasm_0x0802eb34.o(.text);  /* 0x0802eb34 - 0x0802ec7c, sub_0802EB34 (auto-peeled) */
         src/system/sound_channel.o(.text);  /* 0x0802ec7c - 0x0802eef8, sub_0802EC7C + sub_0802ED5C + sub_0802EDF0 (sub_0802EC7C and sub_0802EDF0 NAKED+NON_MATCHING) */
-        asm/text/text_0x0802eef8.o(.text);  /* 0x0802eef8 - 0x0802f054, raw bytes */
+        asm/disasm_0x0802eef8.o(.text);  /* 0x0802eef8 - 0x0802f054, sub_0802EEF8 (auto-peeled) */
         src/system/sound_envelope_slide.o(.text);  /* 0x0802f054 - 0x0802f2fc, sub_0802F054 (NAKED+NON_MATCHING) */
         src/system/sound_pan.o(.text);  /* 0x0802f2fc - 0x0802f398, sub_0802F2FC (NAKED+NON_MATCHING) */
         asm/disasm_0x0802f398.o(.text);  /* 0x0802f398 - 0x0802f47c, sub_0802F398 (auto-peeled) */
