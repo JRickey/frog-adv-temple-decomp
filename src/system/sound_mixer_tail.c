@@ -6,34 +6,31 @@
  * Called as the final step of sub_0802F4B0 (the per-VBlank mixer tick).
  * The mixer's earlier passes deal with fade requests, channel volume,
  * per-active-slot pitch/pan, and slot retire; this routine handles the
- * sample-streaming book-keeping that lives in the sound-system buffer
- * lists past the active-slot table.
+ * sample-streaming book-keeping that lives in the request/stream block
+ * pointed to by gpSoundSystem->slot.
  *
- * Structure: a guard byte at SoundSystem+0x151 (bit 0x2) gates the entire
- * routine. When set, the code walks three parallel buffer lists rooted at
- * SoundSystem+0x88 stride and SoundSystem+0x110 stride, advancing each
- * by a per-frame sample-count read from SoundSystem+0x14c (the half-word
- * cached into sl as the "samples this frame" delta):
+ * Structure: a guard byte at request+0x151 (bit 0x2) gates the entire
+ * routine. When set, the code walks several timer/cursor lists rooted in
+ * that request block, advancing each by the half-word at request+0x14c
+ * cached into sl as the "samples this frame" delta:
  *
- *   1. Drain pass for the 4-entry list at SoundSystem+0x110: subtract
- *      samples-this-frame from each entry's countdown field, and when it
- *      drops past zero, retire the buffer (forwards via the libgcc-style
- *      helper at 0x0802F9F0).
+ *   1. Drain pass for the external 12-byte entries pointed to by
+ *      request+0x110: subtract samples-this-frame from each entry's
+ *      countdown field, and when it drops past zero, retire the buffer
+ *      via sub_0802F9F0.
  *
- *   2. Up-to-16-entry main streaming-buffer pass: walks a parallel
- *      list of cursor structures, advances the next-frame pointer by
- *      reading two coefficient tables out of ROM (offsets +0x410 / +0x414
- *      into the buffer-base struct), pattern-matches the leading u16 pair
- *      against the 0xFFFF / 0xFFFF sentinel to detect end-of-stream, and
- *      either retires the buffer or stores back the advanced cursor.
+ *   2. Seventeen-entry main timer pass at request+0x00: walks cursor
+ *      structures, resolves -2/-1 stream commands through the tables at
+ *      request+0x114 plus offsets +0x410/+0x414, and seeds the parallel
+ *      streaming table at request+0x88.
  *
- *   3. Pan-LUT prefetch pass for active streaming slots: walks the same
- *      16-entry table, calling sub_080323CC with the per-slot pan and
- *      countdown halfwords to commit the channel mix LUT.
+ *   3. Pan-LUT prefetch pass for active streaming slots: walks the 16-entry
+ *      table at request+0x88, calling sub_080323CC with the per-slot mode,
+ *      pitch, and countdown halfwords to commit the channel mix LUT.
  *
- *   4. Final 16-entry sweep that calls sub_08031DBC for each non-NULL
- *      buffer pointer at SoundSystem+0x108, again advancing cursors by
- *      the half-word stride and clamping at 0xFFFF sentinels.
+ *   4. Final timer at request+0x108 that writes the half-word at
+ *      request+0x14a and calls sub_08031DBC until its countdown is positive
+ *      or it reaches a 0xFFFF/0xFFFF sentinel.
  *
  * Heavy use of high registers as concurrent loop state — r8 holds the
  * "current buffer +0x110 cursor", r9 is a zero constant cached across
@@ -61,6 +58,17 @@
  * Does NOT byte-match; agbcc 2.x will never coerce sl/r9/r8 into loop
  * state from this shape. */
 
+typedef struct MixerTailTimer {
+    u32 *cursor;
+    s32 countdown;
+} MixerTailTimer;
+
+typedef struct MixerTailDrainEntry {
+    s32 countdown;
+    u8 live;
+    u8 _pad05[7];
+} MixerTailDrainEntry;
+
 extern void sub_0802F9F0(u32 idx);
 extern void sub_080323CC(u32 ss, u32 idx, u32 panOrMode, u32 countdown, u32 extra);
 extern u32 sub_08031DBC(void);
@@ -68,37 +76,185 @@ extern u32 sub_08031DBC(void);
 void sub_080325B0(void)
 {
     SoundSystem *ss = gpSoundSystem;
+    SoundRequestSlot *request = ss->slot;
+    u8 *requestBytes = (u8 *)request;
+    MixerTailTimer *timers;
+    MixerTailDrainEntry *drainEntries;
+    u32 *cursor;
+    u32 *base;
+    u32 *table;
+    u32 *oldCursor;
     s32 samples;
     s32 i;
 
-    /* Stage 0 — gate */
-    if ((ss->enableFlags & 0x2) == 0)
+    if ((request->flags & 0x2) == 0)
         return;
 
-    samples = ss->samplesThisFrame;
+    samples = *(u16 *)(requestBytes + 0x14c);
+    drainEntries = (MixerTailDrainEntry *)request->nextRegion;
 
-    /* Stage 1 — drain 4-entry list at +0x110 (stride 12) */
-    for (i = 0; i < ss->count + 4; i++) {
-        /* Entries live at ss->_pad+0x110+i*12 with a "live" byte at +4. */
-        /* On underflow forward to sub_0802F9F0(i) and clear the live byte. */
+    for (i = 0; i < (s32)gpSoundSystem->count + 4; i++) {
+        MixerTailDrainEntry *entry = &drainEntries[i];
+
+        if (entry->live != 0) {
+            entry->countdown -= samples;
+            if (entry->countdown <= 0) {
+                sub_0802F9F0(i);
+                entry->live = 0;
+            }
+        }
     }
 
-    /* Stage 2 — up-to-16-entry buffer list at +0x110 with sentinel scan
-     * of the 0xFFFF/0xFFFF pair, using the +0x414/+0x410 ROM coefficient
-     * pointers and per-slot accumulator at +8. */
+    timers = (MixerTailTimer *)requestBytes;
+    for (i = 0; i <= 16; i++) {
+        MixerTailTimer *timer = &timers[i];
+
+        cursor = timer->cursor;
+        if (cursor == NULL)
+            continue;
+
+        timer->countdown -= samples;
+        if (timer->countdown > 0)
+            continue;
+
+        for (;;) {
+            s32 command = (s32)cursor[1];
+
+            if (command == -1) {
+                timer->cursor = NULL;
+                break;
+            }
+
+            if (command == -2) {
+                oldCursor = cursor;
+                timer->cursor = oldCursor + 2;
+
+                base = *(u32 **)(requestBytes + 0x114);
+                table = (u32 *)((u8 *)base + *(u32 *)((u8 *)base + 0x410) + 0x410);
+                table = (u32 *)((u8 *)base + table[i] + 0x410);
+                cursor = (u32 *)((u8 *)table + oldCursor[2]);
+                timer->cursor = cursor;
+
+                timer->countdown += (s32)(oldCursor[3] << 8);
+            } else {
+                base = *(u32 **)(requestBytes + 0x114);
+                table = (u32 *)((u8 *)base + *(u32 *)((u8 *)base + 0x414) + 0x410);
+                cursor = (u32 *)((u8 *)base + table[command] + 0x410);
+
+                if (*(u16 *)cursor == 0xffff && *(u16 *)((u8 *)cursor + 2) == 0xffff) {
+                    ((MixerTailTimer *)(requestBytes + 0x88))[i].cursor = NULL;
+                } else {
+                    MixerTailTimer *stream = &((MixerTailTimer *)(requestBytes + 0x88))[i];
+
+                    stream->cursor = cursor;
+                    stream->countdown = *(u16 *)cursor << 8;
+                    if (i <= 3)
+                        stream->countdown += *(u16 *)(requestBytes + 0x14e);
+                }
+
+                timer->cursor = cursor + 2;
+                timer->countdown += (s32)(cursor[2] << 8);
+            }
+
+            if (timer->countdown > 0)
+                break;
+
+            cursor = timer->cursor;
+            if (cursor == NULL)
+                break;
+        }
+    }
+
     for (i = 0; i < 16; i++) {
-        /* Advance cursor, sentinel-check, store back. */
+        MixerTailTimer *stream = &((MixerTailTimer *)(requestBytes + 0x88))[i];
+        u8 *startIndex = requestBytes + 0x118 + i;
+
+        cursor = stream->cursor;
+        if (cursor == NULL)
+            continue;
+
+        stream->countdown -= samples;
+        if (stream->countdown > 0)
+            continue;
+
+        for (;;) {
+            u8 *cmd = (u8 *)cursor;
+            s8 pitch = *(s8 *)(cmd + 2);
+            u8 mode = cmd[3];
+            s32 advance;
+
+            if (pitch > 0) {
+                if ((mode & 0x80) == 0) {
+                    u16 extra = *(u16 *)(cmd + 4);
+
+                    if (extra != 0)
+                        sub_080323CC((u32)request, i, pitch, mode, extra);
+                    advance = 6;
+                } else {
+                    u16 firstExtra = *(u16 *)(cmd + 4);
+
+                    *startIndex = cmd[4];
+                    if (firstExtra != 0)
+                        sub_080323CC((u32)request, i, pitch, mode & 0x7f, *(u16 *)(cmd + 6));
+                    advance = 8;
+                }
+            } else if (pitch == 0) {
+                if ((mode & 0x80) == 0) {
+                    *startIndex = mode;
+                } else {
+                    u8 idx = mode & 0x7f;
+
+                    ss = gpSoundSystem;
+                    if (idx > ss->count)
+                        idx = ss->count;
+                    ss->startIndex = idx;
+                }
+                advance = 4;
+            } else {
+                stream->cursor = NULL;
+                break;
+            }
+
+            cursor = (u32 *)((u8 *)stream->cursor + advance);
+            stream->cursor = cursor;
+
+            if (*(u16 *)cursor == 0xffff && *(u16 *)((u8 *)cursor + 2) == 0xffff) {
+                stream->countdown = 0;
+                stream->cursor = NULL;
+                break;
+            }
+
+            stream->countdown += *(u16 *)cursor << 8;
+            if (stream->countdown > 0)
+                break;
+        }
     }
 
-    /* Stage 3 — pan-LUT prefetch pass at +0x88 (stride 8). */
-    for (i = 0; i < 16; i++) {
-        /* Read pan bytes, conditionally call sub_080323CC. */
-    }
+    timers = (MixerTailTimer *)(requestBytes + 0x108);
+    cursor = timers->cursor;
+    if (cursor == NULL)
+        return;
 
-    /* Stage 4 — final sweep + sub_08031DBC commit. */
-    for (i = 0;; i++) {
-        /* Walk while pointer at +0x108 non-NULL, advance and clamp at sentinel. */
-    }
+    timers->countdown -= samples;
+    if (timers->countdown > 0)
+        return;
+
+    do {
+        *(u16 *)(requestBytes + 0x14a) = *(u16 *)((u8 *)cursor + 2);
+        sub_08031DBC();
+
+        oldCursor = timers->cursor;
+        cursor = oldCursor + 1;
+        timers->cursor = cursor;
+
+        if (*(u16 *)cursor == 0xffff && *(u16 *)((u8 *)cursor + 2) == 0xffff) {
+            timers->countdown = 0;
+            timers->cursor = NULL;
+            return;
+        }
+
+        timers->countdown += *(u16 *)cursor << 8;
+    } while (timers->countdown <= 0);
 }
 
 #else
