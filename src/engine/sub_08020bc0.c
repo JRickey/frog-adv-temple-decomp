@@ -94,3 +94,19 @@ void sub_08020C14(u32 arg)
         SoundSlot_QueueRequest();
     }
 }
+
+extern void sub_08020E98(u32 a);
+
+/* Clear bit 4 of gStructAt3003570.flags after calling sub_08020E98(0).
+ * Register pins: r1=pointer, r0=mask (same layout as sub_08020BC0). */
+void sub_08020C3C(void)
+{
+    register StructAt3003570 *p asm("r1");
+    register int mask asm("r0");
+
+    sub_08020E98(0);
+    p = &gStructAt3003570;
+    mask = 0xef;
+    mask = mask & p->flags;
+    p->flags = mask;
+}

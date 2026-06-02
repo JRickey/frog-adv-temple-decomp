@@ -619,8 +619,7 @@ SECTIONS {
         src/system/sub_08020b60.o(.text);  /* 0x08020b60 - 0x08020b88, sub_08020B60 + sub_08020B78 */
         src/engine/sub_08020b88.o(.text);  /* 0x08020b88 - 0x08020bac, sub_08020B88 */
         src/engine/sub_08020bac.o(.text);  /* 0x08020bac - 0x08020bc0, sub_08020BAC */
-        src/engine/sub_08020bc0.o(.text);  /* 0x08020bc0 - 0x08020c3c, sub_08020BC0 + sub_08020BE4 + sub_08020BF0 + sub_08020C14 */
-        asm/disasm_0x08020c3c.o(.text);  /* 0x08020c3c - 0x08020c58, sub_08020C3C (auto-peeled) */
+        src/engine/sub_08020bc0.o(.text);  /* 0x08020bc0 - 0x08020c58, sub_08020BC0 + sub_08020BE4 + sub_08020BF0 + sub_08020C14 + sub_08020C3C */
         asm/disasm_0x08020c58.o(.text);  /* 0x08020c58 - 0x08020c78, sub_08020C58 (auto-peeled) */
         src/engine/sub_08020c78.o(.text);  /* 0x08020c78 - 0x08020dc4, sub_08020C78 + sub_08020CA4 + sub_08020CDC + sub_08020D2C + sub_08020DA0 */
         src/engine/sub_08020dc4.o(.text);  /* 0x08020dc4 - 0x08020e7c, sub_08020DC4 + sub_08020E14 */
