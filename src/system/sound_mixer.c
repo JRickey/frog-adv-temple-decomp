@@ -123,7 +123,7 @@ void sub_0802F4B0(void)
         ss = gpSoundSystem;
         if (ss->chFlags[i] & 0x40) {
             ss->chFlags[i] &= ~0x40u;
-            slot = (SoundSlot *)((u8 *)ss + i * 36);
+            slot = (SoundSlot *)((u8 *)ss + i * 36 + 0x20);
             sum = SOUND_SLOT_ACC_SUM(slot);
             sub_0802E5D8(sum >> 8, (sum & 0xff0000) >> 16, i);
         }
