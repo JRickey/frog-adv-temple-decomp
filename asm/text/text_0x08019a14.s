@@ -11,5 +11,9 @@
         .global text_08019a14
         .type   text_08019a14, %object
 text_08019a14:
+        .thumb_func
+        .global sub_08019A14
+        .type   sub_08019A14, %function
+sub_08019A14:
         .incbin "frog_us_baserom.gba", 0x00019a14, 0x000000d8
         .size   text_08019a14, . - text_08019a14
