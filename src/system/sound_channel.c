@@ -54,14 +54,17 @@
  *
  * Shipped as NAKED inline asm + NON_MATCHING reference C. The baserom
  * pins &gpSoundSystem into r8 (and ip) for stage 1 and reloads it via r8
- * for stage 2; agbcc 2.x will not promote a value to a Thumb high register
- * for loop state, so the C never matches. See docs/codegen-notes.md
- * "High registers (sl/r10, sb/r9, r8) — corpus-validated unmatchable".
+ * for stage 2. The reference branch mirrors that cache and the stage-1
+ * do/while shape, which gets the forced C branch down to byte_diff 202,
+ * but agbcc still colors the envelope offset/limit temporaries differently.
+ * See docs/codegen-notes.md "High registers (sl/r10, sb/r9, r8) —
+ * corpus-validated unmatchable".
  */
 #ifdef NON_MATCHING
 void sub_0802EC7C(void)
 {
-    SoundSystem **gpsp;
+    register SoundSystem **gpsp asm("r8");
+    register SoundSystem **gpspReload asm("ip");
     SoundSystem *ss;
     s32 i;
     s32 offset;
@@ -71,13 +74,15 @@ void sub_0802EC7C(void)
     u16 acc;
     s16 limit;
 
+    i = 0;
     gpsp = &gpSoundSystem;
+    gpspReload = gpsp;
 
     /* Stage 1: three inline channel envelopes embedded in SoundSystem
      * at ss+0x20..ss+0x83, stride 36, envelope at +0x1c inside each. */
     offset = 32;
-    for (i = 0; i <= 2; i++) {
-        ss = *gpsp;
+    do {
+        ss = *gpspReload;
         env = (u8 *)ss + offset + 28;
         step = *(s16 *)(env + 2);
         if (step != 0) {
@@ -99,7 +104,8 @@ void sub_0802EC7C(void)
             *(u32 *)((u8 *)(*gpsp) + 0x10 + i * 4) |= 0x40;
         }
         offset += 36;
-    }
+        i++;
+    } while (i <= 2);
 
     /* Stage 2: per-slot envelope-A bank, walked via slotPtrTable. */
     for (i = 0; i < (*gpsp)->count; i++) {
