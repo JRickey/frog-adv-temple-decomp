@@ -1,3 +1,4 @@
+#include "game.h"
 #include "iwram.h"
 #include "macros.h"
 #include "types.h"
@@ -109,4 +110,21 @@ void sub_0801964C(void)
 void sub_08019668(void)
 {
     gIwram_3480._data[3]++;
+}
+
+/* Advances the status-bar dispatch sub-state (_data[3]++) and seeds the
+ * game-state machine into mode 4, clearing _data[0], once the fade-in
+ * ticker (sub_080106B8) finishes. Companion of sub_08019668 (no mode
+ * seed). r stores the ticker result so r3 holds 0 when we later clear
+ * _data[0], letting agbcc emit `strb r3,[r1,#0]` directly. */
+void sub_08019678(void)
+{
+    s32 r = sub_080106B8();
+
+    if (r != 0)
+        return;
+
+    gIwram_3480._data[3]++;
+    gGameStuff.mode = 4;
+    gIwram_3480._data[0] = r;
 }
