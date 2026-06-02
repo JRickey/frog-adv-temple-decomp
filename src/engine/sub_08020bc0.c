@@ -110,3 +110,17 @@ void sub_08020C3C(void)
     mask = mask & p->flags;
     p->flags = mask;
 }
+
+void sub_08020C58(void)
+{
+    register StructAt3003570 *p asm("r4");
+    register int mask asm("r0");
+
+    p = &gStructAt3003570;
+    mask = 0x7f;
+    mask = mask & p->c;
+    sub_08020E98(mask);
+    mask = 0x10;
+    mask = mask | p->flags;
+    p->flags = mask;
+}

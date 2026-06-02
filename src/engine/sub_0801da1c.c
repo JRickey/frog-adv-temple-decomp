@@ -1,1 +1,124 @@
+#include "game.h"
+#include "gba/dma.h"
 #include "types.h"
+
+extern void sub_0801D880(void);
+extern int sub_0801E1FC(u8 row, u8 col);
+extern void sub_0801E270(u8 arg);
+extern int sub_080106EC(int arg);
+extern int sub_08010710(void);
+extern void sub_08020B50(void);
+extern void sub_0801E078(void);
+
+#define BG_PAL_1E2 (*(vu16 *)0x050001E2)
+#define BG3VOFS    (*(vu16 *)0x0400001E)
+
+void sub_0801DA1C(void)
+{
+    u32 cols[12];
+    u16 zero;
+    u16 savedPal;
+    u8 byteZero;
+    register u32 a asm("r8");
+    register u32 d asm("r9");
+    register u32 e asm("sl");
+    u8 b;
+    u8 i;
+    u32 c;
+
+    {
+        register vu16 *palReg asm("r1") = (vu16 *)0x050001E2;
+        savedPal = *palReg;
+        *palReg = 0x3DF;
+    }
+
+    a = 0;
+    b = 0;
+    c = 0;
+    d = 1;
+    e = 6;
+    sub_0801D880();
+
+    i = 0;
+loop1:
+    if (i > 11) {
+        goto loop1_done;
+    }
+    {
+        u8 row = i;
+        u8 col = i;
+
+        if (sub_0801E1FC(row, col)) {
+            {
+                register u32 hi asm("r2") = 0x02000000;
+                u32 *slot = &cols[i];
+                *slot = (i << 11) + hi;
+            }
+            i = (u8)(i + 1);
+            goto loop1;
+        }
+    }
+    cols[i] = (i << 11) + 0x02000000;
+loop1_done:
+
+    REG_DMA3.src = (void *)cols[0];
+    REG_DMA3.dst = (void *)0x0600F800;
+    REG_DMA3.cnt = DMA_ENABLE | 0x400;
+    (void)REG_DMA3.cnt;
+    sub_080106EC(0xBF);
+
+    while (sub_08010710()) {
+        sub_0801E270(2);
+    }
+
+    for (;;) {
+        sub_0801E270(2);
+        c = (u8)(c + 1);
+        BG3VOFS = (u16)c;
+
+        if ((c & 7) == 0) {
+            if (a < i) {
+                REG_DMA3.src = (void *)(cols[a + 1] + (b << 6));
+                REG_DMA3.dst = (void *)((b << 6) + 0x0600F800);
+                REG_DMA3.cnt = DMA_ENABLE | 0x20;
+                (void)REG_DMA3.cnt;
+            } else if (e != 0) {
+                zero = 0;
+                REG_DMA3.src = &zero;
+                REG_DMA3.dst = (void *)((b << 6) + 0x0600F800);
+                REG_DMA3.cnt = DMA_ENABLE | DMA_SRC_FIXED | 0x20;
+                (void)REG_DMA3.cnt;
+                e = (u8)(e - 1);
+            } else {
+                d = 0;
+            }
+            b = (u8)(b + 1);
+        }
+
+        if (b > 31) {
+            if (a < i) {
+                a = (u8)(a + 1);
+            } else {
+                d = 0;
+            }
+            BG3VOFS = 0;
+            b = 0;
+            c = 0;
+        }
+
+        if (d == 0) {
+            break;
+        }
+    }
+
+    {
+        vu16 *vofs = (vu16 *)0x0400001E;
+        byteZero = 0;
+        *vofs = (u16)d;
+    }
+    sub_08020B50();
+    sub_0801E078();
+    BG_PAL_1E2 = savedPal;
+    gGameStuff.mode = 4;
+    *(u8 *)0x03003480 = byteZero;
+}
