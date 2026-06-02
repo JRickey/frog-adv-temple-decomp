@@ -1,6 +1,7 @@
 #include "types.h"
 
 extern u8 sub_0801ADA8(u8 arg);
+extern void sub_0801B30C(u8 arg0, u8 arg1);
 extern u16 gIwram_5398;
 
 struct Sub0801B154Bits {
@@ -108,3 +109,38 @@ u8 sub_0801B224(u8 arg)
 
 void sub_0801B274(void)
 {}
+
+void sub_0801B278(u8 count)
+{
+    vu32 *dma;
+    register const u8 *const *entries asm("r9");
+    u16 fill;
+    u8 i;
+    const u8 *entry;
+    u8 j;
+    u8 entryCount;
+
+    *(vu32 *)((u32)&fill + (fill = 0), 0x040000D4) = (u32)&fill;
+    dma = (vu32 *)0x040000D4;
+    dma[1] = 0x02010000;
+    dma[2] = 0x81008000;
+    dma[2];
+
+    dma[0] = (u32)&fill + (fill = 0);
+    dma[1] = 0x0600E800;
+    dma[2] = 0x81000400;
+    dma[2];
+
+    i = 0;
+    if (i <= count) {
+        entries = (const u8 *const *)0x08308124;
+        do {
+            entry = entries[i];
+            entryCount = entry[0];
+            for (j = 1; j <= entryCount; j++) {
+                sub_0801B30C(entry[j * 2], entry[j * 2 + 1]);
+            }
+            i++;
+        } while (i <= count);
+    }
+}
