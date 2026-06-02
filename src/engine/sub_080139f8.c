@@ -46,3 +46,18 @@ void sub_08013A34(u8 idx)
     sub_08012BC4(desc->flags, desc->dstX, desc->dstY, desc->width, desc->rows,
                  (srcTableArr = (const u16 ***)(offset + (u32)(base += 16)), *srcTableArr), 0);
 }
+
+void sub_08013A70(u8 idx)
+{
+    register const u8 *base asm("r6") = (const u8 *)sScaleAnimDescriptors2;
+    register u32 offset asm("r5");
+    register const struct ScaleAnimDesc *desc asm("r4");
+    register const u16 ***srcTableArr asm("r5");
+
+    offset = (u32)idx * 3;
+    offset <<= 3;
+    desc = (const struct ScaleAnimDesc *)(offset + (u32)base);
+
+    sub_08012BC4(desc->flags, desc->dstX, desc->dstY, desc->width, desc->rows,
+                 (srcTableArr = (const u16 ***)(offset + (u32)(base += 16)), *srcTableArr), 2);
+}
