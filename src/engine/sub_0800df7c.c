@@ -25,3 +25,29 @@ void sub_0800DF9C(void)
     sub_0800A05C();
     sub_08013880();
 }
+
+extern void sub_080008DC(void);
+extern void sub_0800A328(void);
+extern void sub_08009A58(void);
+extern void sub_08009188(void);
+extern int sub_08013694(void);
+extern u8 sub_0800A104(s8 *phase, u32 callbackTable);
+
+void sub_0800DFAC(void)
+{
+    u8 done = 0;
+    s8 state = done;
+
+    while (sub_0800A104(&state, 0x0800DF9D) == 0) {
+        sub_080008DC();
+    }
+
+    while (!(done & 1)) {
+        sub_080008DC();
+        if (sub_08013694() != 0)
+            done |= 1;
+        sub_08009A58();
+        sub_08009188();
+        sub_0800A328();
+    }
+}
