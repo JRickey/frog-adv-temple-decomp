@@ -74,7 +74,7 @@ void sub_0802F054(void)
         pFlags = &ss->chFlags[i];
         flags = *pFlags;
         if (flags & 1) {
-            blk = &ss->chEnvelopeC[3 - i]; /* walked down, but block is at fixed slot */
+            blk = &((EnvelopeCBlock *)((u8 *)ss + 0x8c))[3 - i];
             envelope_c_tick(blk, pFlags, flags, 0x80);
         } else if (flags & 0x20) {
             *pFlags = flags | 0x80;
