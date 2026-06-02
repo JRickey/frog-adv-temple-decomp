@@ -1,5 +1,8 @@
 #include "types.h"
 
+extern u8 sub_0801ADA8(u8 arg);
+extern u16 gIwram_5398;
+
 struct Sub0801B154Bits {
     u8 pad00[0x0C];
     u32 bits;
@@ -68,3 +71,40 @@ void sub_0801B1B4(u8 index)
     dma[2] = 0x80000010;
     dma[2];
 }
+
+struct Sub0801B224State {
+    u8 pad00[4];
+    u32 lastTime;
+    u8 pad08[3];
+    u8 delay;
+    u8 pad0c[36];
+    u16 gate;
+};
+
+u8 sub_0801B224(u8 arg)
+{
+    struct Sub0801B224State *state;
+    u32 *timer;
+    u8 result;
+
+    result = 1;
+    state = (struct Sub0801B224State *)0x03006440;
+    if (state->gate == 0) {
+        state->delay = 8;
+    }
+
+    timer = (u32 *)0x03005330;
+    if (*timer - state->lastTime >= state->delay) {
+        result = sub_0801ADA8(arg);
+        state->lastTime = *timer;
+    }
+
+    if (gIwram_5398 == 0x20) {
+        result = 0xFE;
+    }
+
+    return result;
+}
+
+void sub_0801B274(void)
+{}
