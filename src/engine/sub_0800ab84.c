@@ -1,12 +1,14 @@
 #include "iwram.h"
 #include "macros.h"
 #include "types.h"
+#include "game.h"
 
 extern s8 sub_0800A7A8(s8 a, s16 x, s16 y);
 extern u8 sub_0800679C(u8 *base, u32 selector, u32 bit);
 extern void sub_08006600(u8 *base, u32 selector, u32 bit);
 extern void sub_080066C4(u8 *base, u32 selector, u32 bit);
 extern u32 sub_08020C78(u32 sound);
+extern u8 sub_08000764(u8 range);
 
 void sub_0800AB84(u8 tile)
 {
@@ -158,4 +160,68 @@ void sub_0800ACE8(u8 tile)
         sub_08020C78(70);
         sub_08006600((u8 *)&gIwram_6110, 8, 1);
     }
+}
+
+void sub_0800AE3C(u8 tile)
+{
+    struct IwramAt35E0 *p35E0;
+    register u8 *spawn asm("r4");
+    register u8 *spawn5 asm("r5");
+    register struct IwramAt6110 *base6110 asm("r5");
+    u8 *base3720;
+    s8 result;
+    u8 rand;
+
+    if (tile != 20)
+        return;
+
+    p35E0 = &gIwram_35E0;
+    result = sub_0800A7A8(23, p35E0->_field_8, p35E0->_field_A);
+
+    if (result == -1)
+        return;
+
+    if (result == 4) {
+        spawn = (u8 *)0x03006110;
+        if (sub_0800679C(spawn, 5, 4) != 0)
+            return;
+        sub_08006600(spawn, 5, 4);
+
+        spawn += 0x33;
+        if (*spawn == 15) {
+            rand = 0;
+            goto write;
+        }
+
+        rand = (u8)sub_08000764(4);
+        if (((*spawn >> (s8)rand) & 1) == 0)
+            goto write;
+
+        spawn5 = spawn;
+        do {
+            rand = (u8)sub_08000764(4);
+        } while (((*spawn5 >> (s8)rand) & 1) != 0);
+
+    write:
+        gIwram_6110.gateByte = rand;
+
+        base3720 = (u8 *)&gIwram_3720;
+        *(u32 *)(base3720 + 0xb8c) = gGameStuff._unk00;
+        *(u16 *)(base3720 + 0xb70) = 1;
+        return;
+    }
+
+    /* Struct-pointer read (not a folded 0x0300613b literal) keeps the
+       0x03006110 base live in r5 across the call cluster. */
+    base6110 = (struct IwramAt6110 *)0x03006110;
+    if (sub_0800679C((u8 *)base6110, 5, 4) == 0)
+        return;
+    if (result != base6110->gateByte)
+        return;
+
+    sub_08006600((u8 *)base6110, 5, (u8)result);
+    result = (s8)(result + 8);
+    if (sub_0800679C((u8 *)base6110, 5, (u8)result) != 0)
+        return;
+    sub_08006600((u8 *)base6110, 5, (u8)result);
 }
