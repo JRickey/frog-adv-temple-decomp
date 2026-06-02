@@ -103,3 +103,56 @@ void sub_08022AC8(void)
 {
     sub_08021510(0x59, sLevelLayout_310B54, 0x4c, &gIwram_6110, 0);
 }
+
+typedef struct {
+    s32 fieldA;
+    u32 fieldB;
+} SoundChannelEntry;
+
+typedef struct {
+    u8 flags;
+    u8 b;
+    u8 c;
+    u8 d;
+    SoundChannelEntry entries[12];
+} SoundChannelTable;
+
+#define gSoundChannelTable (*(SoundChannelTable *)0x03003570)
+
+extern const SoundChannelEntry sLevelLayoutManifest_311450[7];
+
+extern void sub_08022730(void);
+extern void sub_080221FC(void);
+extern void sub_080222BC(void);
+extern void sub_08022884(void);
+extern void sub_080227B4(void);
+extern void sub_0802205C(void);
+extern void sub_08022838(void);
+extern void sub_080220C4(void);
+extern void sub_08022360(void);
+extern void sub_080228D0(void);
+extern void sub_08021F64(void);
+
+void sub_08022AEC(void)
+{
+    u8 i;
+
+    i = 0;
+    do {
+        gSoundChannelTable.entries[i] = sLevelLayoutManifest_311450[i];
+        i++;
+    } while (i <= 6);
+
+    sub_08022730();
+    sub_080221FC();
+    sub_080222BC();
+    sub_08022884();
+    sub_080227B4();
+    sub_0802205C();
+    sub_08022838();
+    sub_080220C4();
+    sub_08022360();
+    sub_080228D0();
+    sub_08021F64();
+    sub_08022A9C();
+}
