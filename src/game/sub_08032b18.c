@@ -116,3 +116,50 @@ u32 sub_08032BA0(u32 flag, u32 threshold, u32 idx)
         return 1;
     return 0;
 }
+
+/* sub_08032BC8 — initializes fields of a sound voice struct. Takes a pointer
+ * to the voice, a step value (stored shifted as step<<8 at +0x00), a flags
+ * byte (doubled and conditionally incremented at +0x2b), and a priority
+ * halfword (stored at +0x34). Also sets the secondary key to 0xC000 (+0x36),
+ * sets a byte at +0x3f to 1, and clears control bits in the u32 at +0x38.
+ * Finally, reads signed halfwords from +0x00 (old value) and +0x1c, sums
+ * them, and stores the result at +0x22 — before overwriting +0x00 with step<<8.
+ */
+typedef struct SoundVoice {
+    s16 field_00; /* +0x00 */
+    u8 _pad02[0x1a];
+    s16 field_1c; /* +0x1c */
+    u8 _pad1e[4];
+    u16 field_22; /* +0x22 */
+    u8 _pad24[7];
+    u8 field_2b; /* +0x2b */
+    u8 _pad2c[8];
+    u16 field_34; /* +0x34 */
+    u16 field_36; /* +0x36 */
+    u32 field_38; /* +0x38 */
+    u8 _pad3c[3];
+    u8 field_3f; /* +0x3f */
+} SoundVoice;
+
+void sub_08032BC8(SoundVoice *p, u32 a1, u32 a2, u32 a3)
+{
+    s16 f00;
+    s16 f1c;
+
+    p->field_36 = 0xC000;
+    p->field_3f = 1;
+    p->field_38 &= 0xffff7eef;
+
+    a2 <<= 1;
+    p->field_2b = (u8)a2;
+    if (a2 << 24)
+        p->field_2b = (u8)(a2 + 1);
+
+    p->field_34 = (u16)a3;
+
+    f00 = p->field_00;
+    f1c = p->field_1c;
+    p->field_22 = (u16)(f00 + f1c);
+
+    p->field_00 = (s16)((u16)(a1 << 8));
+}
