@@ -47,3 +47,102 @@ void sub_0800A540(void)
 
     Entity_Init(dst, 84, *(s16 *)(src + 2), (s16)(*(u16 *)(src + 4) - 24), 3, 992, 15, 2, 0, 32);
 }
+/* The same entity record sub_0800A540 seeds, viewed only through the four
+ * fields sub_0800A580 writes. Kept as a dedicated typed view (rather than a
+ * cast off the opaque ClusterA710) so each store derives its address from the
+ * base pointer in ip afresh, matching the baserom. */
+struct MotionDesc {
+    u8 _pad00[0x2a];
+    u8 sel;
+    u8 _pad2b[5];
+    u8 dx;
+    u8 dy;
+    u8 mode;
+};
+
+/* Records sel at offset 0x2a, then writes a 3-byte motion descriptor (mode at
+ * 0x32, delta-x at 0x30, delta-y at 0x31) selected by sel. Each case scales the
+ * two signed delta bytes a/b by a fixed per-case factor; sel outside 0..13
+ * leaves the deltas untouched.
+ *
+ * Built with -ffixed-r4..r7 (per-TU CFLAGS) so agbcc keeps a/b in their incoming
+ * r2/r3 and never spills into a callee-saved register: the function then needs no
+ * push/pop frame and caches the record pointer in ip the whole way. Cases run
+ * high-to-low to match the baserom's descending case-body layout. */
+void sub_0800A580(struct MotionDesc *m, u8 sel, u8 a, u8 b)
+{
+    m->sel = sel;
+
+    switch ((s8)sel) {
+    case 13:
+        m->mode = 2;
+        m->dx = a << 2;
+        m->dy = b << 2;
+        break;
+    case 12:
+        m->mode = 1;
+        m->dx = a;
+        m->dy = b;
+        break;
+    case 11:
+        m->mode = 1;
+        m->dx = a << 1;
+        m->dy = b << 1;
+        break;
+    case 10:
+        m->mode = 1;
+        m->dx = (s8)a * 5;
+        m->dy = (s8)b * 5;
+        break;
+    case 9:
+        m->mode = 1;
+        m->dx = a << 2;
+        m->dy = b << 2;
+        break;
+    case 8:
+        m->mode = 1;
+        m->dx = (s8)a * 3;
+        m->dy = (s8)b * 3;
+        break;
+    case 7:
+        m->mode = 2;
+        m->dx = (s8)a * 3;
+        m->dy = (s8)b * 3;
+        break;
+    case 6:
+        m->mode = 2;
+        m->dx = (s8)a * 3;
+        m->dy = (s8)b * 3;
+        break;
+    case 5:
+        m->mode = 2;
+        m->dx = a << 1;
+        m->dy = b << 1;
+        break;
+    case 4:
+        m->mode = 2;
+        m->dx = a;
+        m->dy = b;
+        break;
+    case 3:
+        m->mode = 3;
+        m->dx = a;
+        m->dy = b;
+        break;
+    case 2:
+        m->mode = 4;
+        m->dx = a;
+        m->dy = b;
+        break;
+    case 1:
+        m->mode = 5;
+        m->dx = a;
+        m->dy = b;
+        break;
+    case 0:
+        m->mode = 0xff;
+        m->dx = 0;
+        m->dy = 0;
+        break;
+    }
+}

@@ -118,6 +118,10 @@ src/engine/sub_08012f00.s: CFLAGS += -fforce-addr -fno-expensive-optimizations -
 src/game/sub_08002b58.s: CFLAGS += -fforce-addr -fno-expensive-optimizations
 src/system/sub_08001508.s: CFLAGS += -fforce-addr -fno-expensive-optimizations
 src/game/sub_08003254.s: CFLAGS += -ffixed-r3
+# sub_0800A580's dense motion-descriptor switch: free the callee-saved low regs
+# so agbcc keeps the two delta bytes in their incoming r2/r3 and emits the
+# baserom's frameless prologue (record pointer cached in ip, no push/pop).
+src/game/sub_0800a520.s: CFLAGS += -ffixed-r4 -ffixed-r5 -ffixed-r6 -ffixed-r7
 src/game/sub_08006a0c.s: CFLAGS += -O1
 # Loop reverses to a `bge.n` countdown under strength reduction; the baserom
 # keeps a signed count-up (`ble.n`). Disabling strength reduction restores it.
