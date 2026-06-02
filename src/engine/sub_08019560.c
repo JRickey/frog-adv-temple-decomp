@@ -128,3 +128,34 @@ void sub_08019678(void)
     gGameStuff.mode = 4;
     gIwram_3480._data[0] = r;
 }
+
+/* Sets the game-state mode to 4 and zeros the dispatch index and two
+ * related state bytes, once the fade-in ticker (sub_080106B8) finishes.
+ * r stores the ticker result so r2 holds 0 when agbcc emits the
+ * strb-of-register stores. Sibling of sub_080196C8 (mode=25 path). */
+void sub_080196A0(void)
+{
+    s32 r = sub_080106B8();
+
+    if (r != 0)
+        return;
+
+    gGameStuff.mode = 4;
+    gIwram_3480._data[3] = r;
+    gIwram_3480._data[0] = r;
+    gIwram_3480._data[5] = r;
+}
+
+/* Sets the game-state mode to 25 (0x19) and seeds the dispatch state:
+ * clears _data[0,5,4], sets _data[3]=2. Sibling of sub_080196A0. */
+void sub_080196C8(void)
+{
+    gGameStuff.mode = 25;
+    gIwram_3480._data[0] = 0;
+    gIwram_3480._data[5] = 0;
+    gIwram_3480._data[3] = 2;
+    gIwram_3480._data[4] = 0;
+}
+
+void sub_080196E8(void)
+{}
