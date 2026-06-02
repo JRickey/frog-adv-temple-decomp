@@ -114,3 +114,55 @@ u32 sub_0802E184(u32 handle)
 fail:
     return 0;
 }
+
+/* sub_0802E1C8 — get the period (pitch/rate byte) for a sound handle.
+ *
+ * Same handle layout: bits 16..23 carry the slot index.
+ * Returns -1 if handle is 0 or if the slot token no longer matches.
+ * For idx <= 3 (direct/hardware channels): reads channels[idx].period
+ *   from ss+0x8c (the DirectSoundChannel array, 8-byte stride, period at +7).
+ * For idx > 3 (software-mixed slots): reads swSlots[idx-4].period >> 1
+ *   from the SoundSlotAcc array at ss+0xc8 (64-byte stride, period at +0x2b).
+ *
+ * Matching notes: idx is s32 for signed bgt.n. Common result puts direct
+ * block first. Direct path: chanOff = (idx<<3)+0x8c computed as an
+ * intermediate, then ss+chanOff, producing adds r0, #0x8c; adds r0, r4, r0.
+ * SW-slot path: slotBase (ss+0xc8) computed before shift so agbcc schedules
+ * the lsl r1 between adds r0, #0xc8 and ldr r0.
+ */
+
+typedef struct DirectSoundChan {
+    u8 _pad00[6];
+    u8 gate;   /* +0x06 */
+    u8 period; /* +0x07 */
+} DirectSoundChan;
+
+s32 sub_0802E1C8(u32 handle)
+{
+    s32 idx;
+    SoundSystem *ss;
+    u32 *slotTable;
+    u8 *p;
+    u8 *slotBase;
+    s32 result;
+    s32 chanOff;
+
+    if (handle == 0)
+        return -1;
+    idx = (s32)((handle >> 16) & 0xff);
+    ss = gpSoundSystem;
+    slotTable = *(u32 **)((u8 *)ss + 0x120);
+    if (slotTable[idx] != handle)
+        return -1;
+
+    if (idx <= 3) {
+        chanOff = (idx << 3) + 0x8c;
+        result = ((u8 *)ss + chanOff)[7];
+    } else {
+        idx -= 4;
+        slotBase = (u8 *)ss + 0xc8;
+        p = *(u8 **)slotBase + (idx << 6) + 0x24;
+        result = p[7] >> 1;
+    }
+    return result;
+}
