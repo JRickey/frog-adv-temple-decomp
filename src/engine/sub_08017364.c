@@ -10,19 +10,20 @@
  *
  * NON_MATCHING: this C is *structurally* byte-exact — it compiles to 520
  * bytes with the identical instruction stream as the baserom; only the
- * register colouring of the validation field reads diverges (byte_diff 169).
- * The cause is a compiler-cut difference, proven by instrumenting agbcc:
+ * register colouring of the validation field reads diverges (byte_diff 169):
  *   - `header` lives in r8 (a high reg, forced by pressure); Thumb can't use
  *     a high reg as a memory base (REGNO_OK_FOR_BASE_P rejects r>=8), so each
  *     `header->field` read copies r8 into a low reg first.
  *   - local-alloc's find_free_reg (local-alloc.c:1947) picks the first free
  *     reg, r0 — and since each copy dies exactly where the `ldrb` result (r0)
- *     is born, r0 is free, so every copy funnels to r0. The baserom's agbcc
- *     cut spread these to r3/r4/r1/r2. reload's round-robin (which *would*
- *     spread) is not involved (only 6 reloads, none for the field reads).
- * No source shape steers find_free_reg's deterministic r0-first choice, so the
- * asm slice provides the matching bytes. Full analysis +
- * `tools/agent/agbcc_oracle.py` trail in docs/deferred-analysis/sub_08017364.md. */
+ *     is born, r0 is free, so every copy funnels to r0. The baserom spreads
+ *     these to r3/r4/r1/r2.
+ * This is a source-structure LOCAL MINIMUM, not a compiler cut: the two agbcc
+ * forks (pret, jiangzhengwenjz) have byte-identical allocators, and the Konami
+ * cvaos decomp spreads this idiom with that same allocator. The natural form of
+ * our pattern funnels (corpus-confirmed); the C shape that spreads it hasn't
+ * been found, so the asm slice provides the matching bytes. Full analysis in
+ * docs/deferred-analysis/sub_08017364.md. */
 #ifdef NON_MATCHING
 
 extern int sub_080172F4(void);
