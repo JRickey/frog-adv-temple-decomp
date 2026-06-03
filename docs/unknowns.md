@@ -436,3 +436,33 @@ the documented best-practice answer in the corpus for exactly this
 class of un-matchable agbcc function, gets the function into its
 semantic home in `src/system/sound_channel.c`, and unblocks any
 adjacent decomps in the same file.
+
+## `pendingMode` / `SetGameMode_NN` are misnamed (→ scene/entity-type)
+
+`gGameStuff.pendingMode` (offset 10) is **not** a queued game mode. It is a
+scene/entity-type id: the scene-engine handlers set it to `mode - 7` and
+`ModeControl_Init`/`sub_0800DE80` dispatch on it; `dispatch_helpers.c` uses it
+to index the `sEntityProc{A..E}` / `sEntitySubtypeLut` tables
+(`src/data/entity_dispatch.c`); `sub_08009ba0` indexes `sEntityProcA[pendingMode]`.
+The `SetGameMode_NN` family (`src/game/set_game_mode_*.c`, `game_mode.c`) and
+the `SetGameMode_*` rows in `memory-map.md` are therefore mislabelled — they
+set this scene id, not the dispatched `mode`.
+
+**To do:** rename `pendingMode` → `sceneType` (or similar) and `SetGameMode_NN`
+→ `SetSceneType_NN`, ideally as part of the entity-system structural pass (the
+scene-type id and the entity `+0x0A type` field are the same value). Hold until
+then so the rename lands with the entity re-model rather than piecemeal.
+
+## Game-mode screen identities (scene family 8–23)
+
+`enum GameMode` (`include/constants/game_mode.h`) names the confident modes
+(ROUTER/FILE_SELECT/OPTIONS/ATTRACT/WORLD_MAP/NO_HANDLER) but leaves modes
+8–23 as `GAME_MODE_SCENE_NN`, because they are 16 instances of one shared
+scene-engine template (see `subsystems.md` "Game-mode dispatcher") whose
+specific screen identities can't be pinned yet. To resolve: decompile the
+per-scene graphics installers (still in the `0x0801xxxx` asm blob) and the
+`0x082F99xx` config tables, then trace each scene-type's string/tilemap refs.
+Candidate hypotheses to confirm: `SCENE_08`≈world-scene entry, `SCENE_15`=core
+gameplay, `SCENE_19`=timed/bonus or results. `MENU_07/25/26/27` are
+title/menu/file-flow transition sub-machines — confirm which pane each is once
+the `0x0801E7xx–0x08020xxx` menu handlers are peeled to C.

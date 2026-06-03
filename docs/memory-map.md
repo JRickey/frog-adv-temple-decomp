@@ -79,3 +79,37 @@ line of context.
 | `0x0802F4B0` | `sub_0802F4B0` (TBD; sound mixer VBlank tick) | Called per frame from VBlank IRQ. 462 Thumb instructions across 8 internal updaters + per-channel fade/volume loops + per-active-sound mix loop. State at `*(void**)0x030065E0`. Body still in `asm/disasm_0x0802f4b0.s`; destination C scaffolded at `src/system/sound_mixer.c`. See `subsystems.md` Audio / sound, `unknowns.md` sub_0802F4B0. |
 | `0x0802E418` | `sub_0802E418` (sound critical-section lock) | Increments refcount at `(*gpSoundSystem)+0xbb`; on 0→1 transition calls ARM trampoline `sub_08035D8C` (presumed IRQ-disable). Paired with `sub_0802E3F8` (unlock). |
 | `0x0802D558` | `sub_0802D558` | Thumb BIOS-SWI-12 (CpuFastSet) wrapper. Used as a memcpy/memset primitive throughout boot. The writer for the SoundSystem pointer at `0x030065E0`. |
+
+## Entity pool — `0x03003720` (`gEntities`)
+
+`0x03003720` is a **`struct Entity[128]`, stride `0x38` (56 bytes)**, not the
+single ~0x696-byte `struct IwramAt3720` it is currently modelled as in
+`include/iwram.h`. Re-modelling it as an array is a pending structural pass —
+both a readability and a likely matching win (the `idx * 0x38` indexing is
+runtime-variable, so the wrong stride changes agbcc's codegen; see
+`codegen-notes.md` "Struct typing and matching").
+
+- Size proof: `sub_0800A05C` CpuFastSet-fills `0x700` words = `0x1C00` =
+  `128 * 0x38`, then loops `for (j = 0x7f; j >= 0; j--)` setting a status bit
+  at `+0x34`, stepping `+0x38`.
+- Indexing proof: `sub_0800D028` does `(u8 *)&gIwram_3720 + idx * 0x38`,
+  reading `s16 x` at `+0x02`, `s16 y` at `+0x04`. `sub_08009984` and
+  `sub_08021EEC` index the same way.
+- Per-slot fields seen: `+0x02 s16 x`, `+0x04 s16 y`, `+0x06 u8 activeId`,
+  `+0x0A u8 type` (= scene/entity-type id; keys the `sEntityProc*` tables),
+  `+0x1A u8 dispatchState`, `+0x1B u8 activeCount` (slot 0 only; per-frame
+  loop bound), `+0x34 u16 status` (flag bits).
+- `gIwram_6110` is the entity **manager** (`ModeControl`); `gIwram_35E0` is
+  the player/cursor move-resolver. See `subsystems.md` "Entity / actor".
+
+## `gGameStuff` field semantics (`0x03005330`)
+
+- `+9 mode` — top-level game-state selector; values are `enum GameMode`
+  (`include/constants/game_mode.h`). Hub-and-spoke; `GAME_MODE_ROUTER` (4) is
+  the hub. See `subsystems.md` "Game-mode dispatcher".
+- `+10 pendingMode` — **MISNAMED**: a scene/entity-type id (= `mode - 7` for
+  the scene family), *not* a queued game mode. The `SetGameMode_NN` helpers
+  set this scene id; it also keys the `sEntityProc*` tables. Rename pending
+  (→ `SetSceneType_NN`); see `unknowns.md`.
+- `+0x0C _unk0C` — unlocked-worlds bitmap (set by `sub_0800DD80`; read by
+  `sub_0801B154` to bound the world map).

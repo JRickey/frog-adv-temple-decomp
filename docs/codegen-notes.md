@@ -2433,3 +2433,40 @@ a loop reversed or a count strength-reduced → `loop.c`; a CSE/GCSE fold that c
 loads into one → `cse.c` / `gcse.c`. Once the trace shows the decision, the fix is still a
 *source-shape* change (or a per-TU `-fXXX`) that steers the pass — instrumenting is the
 microscope, not the cure.
+
+## Struct typing and matching: what flips bytes vs what's cosmetic
+
+When deciding whether a struct/typing cleanup can unblock a match (vs. being
+pure readability), only a narrow set of decisions actually change agbcc's
+output. Verified against the corpus git history (commits where a *type-only*
+change flipped a NONMATCHING `.inc` stub to byte-matching C).
+
+**Flips matches — invest here:**
+- **Signedness** of params/returns/locals (`s32`↔`u32`, `s8`↔`u8`): signed
+  shifts with `asr` and sign-extends with `sxtb/sxth`; unsigned uses
+  `lsr`/`uxtb`/`uxth`. (`tmc@a17cdd30` matched `sub_0801E49C` by changing one
+  `angle` from `s32`→`u32`.)
+- **Return width** (`u32`→`u16`): deletes the caller's `<< 0x10` truncation
+  workaround (`katam@47c44bd`).
+- **Array stride / element size** when indexed by a *runtime* variable: wrong
+  size picks the wrong `lsl`/`mul`. (This is exactly why re-modelling the
+  entity pool at `0x03003720` to `struct Entity[128]` stride 0x38 is a likely
+  matching win — see `memory-map.md`.)
+- **Halfword-vs-two-bytes store width**: one `strh` vs two `strb`.
+  (`tmc@3bac3833` matched 3 functions by reshaping a struct's `.HALF` fields
+  into separate bytes.)
+- **Absolute-address cast → a single typed base pointer / linker-assigned
+  symbol**: defeats agbcc's CSE re-materialization of the address. This is the
+  cvaos house style and our own Init1 fix (see "Adjacent IWRAM bases").
+
+**Cosmetic only — byte-identical, do for readability not matching:**
+- Renaming fields/structs/symbols at unchanged offsets.
+- Grouping flat fields into a nested sub-struct at the same offsets (cvaos
+  does this *after* matching; one such commit touched ~30 files, zero byte
+  change).
+
+Implication for a structural cleanup pass: a rename-only sweep yields **0** new
+matches; a sweep that *also* re-derives signedness/width/stride/base-pointer is
+where matches hide. The `enum GameMode` adoption (mode dispatcher) is in the
+cosmetic class — enum constants compile identically to the integer literals, so
+it's readability, verified byte-identical by `make check`.

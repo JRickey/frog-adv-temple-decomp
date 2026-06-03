@@ -552,3 +552,45 @@ Proposed semantic names (not yet applied via `apply_renames.py`):
 `SaveDetect`/`SaveLoad` (`sub_080172F4`/`sub_08017364`),
 `SaveReadHeader`/`SaveWriteHeader`, `SaveReadSlot`/`SaveWriteSlot`,
 `EepromReadBlocks`/`EepromWriteBlocks`.
+
+## Game-mode dispatcher (`AgbMain`)
+
+`gGameStuff.mode` (`enum GameMode`, `include/constants/game_mode.h`) drives a
+**hub-and-spoke** state machine in `src/system/agb_main.c`. `GAME_MODE_ROUTER`
+(4) is the central hub: it forwards to a screen mode based on the menu-select
+byte `gIwram_3480._data[5]` (1→FILE_SELECT, 2→OPTIONS, 3→MENU_07,
+4→ATTRACT); every screen handler runs and writes `mode` back to
+`GAME_MODE_ROUTER`. The title screen + main menu themselves live *inside* the
+router's sub-dispatch (`sub_08019500` → `gHandlerTable_0830806C`), not as
+distinct top-level modes.
+
+Confident identities: `ROUTER`=4, `FILE_SELECT`=5, `OPTIONS`=6, `ATTRACT`=24
+(demo; replays gameplay), `NO_HANDLER`=28 (no switch case), `WORLD_MAP`=29
+(node-select overworld; `_unk0C` = unlocked-worlds bitmap).
+
+**Scene-engine family (modes 8–23).** These 16 modes are *instances of one
+shared template*, not distinct screens. Each handler (`sub_08000918`,
+`sub_08000EB8`, … `sub_080054A8`) runs the same 9-state machine
+(intro → play → pause → clear → fade → return-to-hub), parameterized by a
+scene-type id (`= mode - 7`, stored in `pendingMode`) and a ROM config table
+installed via `ModeControl_Init`. Their specific screen names aren't pinned
+(per-scene gfx installers + config tables are still INCBIN). `SCENE_15` is the
+canonical/primary gameplay scene; `SCENE_19` is the timed/scored outlier (not
+attract-shared). Modes 7/25/26/27 (`MENU_*`) are title/menu/file-flow
+transition sub-machines. See `sibling-map.md` for the handler-class analysis.
+
+## Sound engine — identity (NOT m4a / MP2K)
+
+The `src/system/sound_*.c` cluster is a **custom Konami hardware-register
+PSG + DirectSound driver**, *not* Nintendo's m4a / MP2K ("Sappy"). Confirmed
+by structural comparison against the m4a layouts in the corpus
+(`testyourmine/cvaos` — also Konami+agbcc — and pret): zero offset alignment,
+none of the m4a magic (`0x68736D53`, `pcmDmaCounter`, the `0x3007FF0`
+pointer), and a fundamentally different architecture — ours drives the DMG/PSG
+registers directly with per-slot triangular-bounce envelopes advanced by 8
+per-VBlank ticks and a 54-opcode bytecode interpreter (`sSoundOpcodeHandlers`),
+rather than a MIDI-event PCM mixer. **Do not port m4a structs** (`SoundChannel`
+/`SoundInfo`/`MusicPlayerInfo`) — they would substitute wrong offsets/strides
+and *break* matches. Keep the project's own reconstructed structs in
+`include/sound.h`. The stuck sound functions are register-allocation problems,
+not struct-typing problems.
