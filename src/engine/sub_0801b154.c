@@ -1,8 +1,10 @@
 #include "types.h"
 
+extern const u16 sWinPoseScreenCoords[];
+
 extern u8 sub_0801ADA8(u8 arg);
-extern void sub_0801B30C(u8 arg0, u8 arg1);
 extern u16 gIwram_5398;
+void sub_0801B30C(u8 arg0, u8 arg1);
 
 struct Sub0801B154Bits {
     u8 pad00[0x0C];
@@ -142,5 +144,32 @@ void sub_0801B278(u8 count)
             }
             i++;
         } while (i <= count);
+    }
+}
+
+void sub_0801B30C(u8 arg0, u8 arg1)
+{
+    u32 found;
+    const u16 *coords;
+    u32 i;
+    /* half computed separately to avoid CSE with coords[i*2] address; also forces
+       the signed-divide pattern (/ 8 not >> 3) that emits ldrh r2 + adds r0, r2, #4. */
+    u32 half;
+
+    found = 0;
+    i = 0;
+    coords = sWinPoseScreenCoords;
+    do {
+        if (((s32)coords[i * 2] - 4) / 8 == arg0) {
+            half = (u32)(i * 2 + 1);
+            if (((s32)coords[half] + 4) / 8 == arg1) {
+                found = 1;
+            }
+        }
+        i = (u8)(i + 1);
+    } while (i <= 15);
+
+    if (found == 0) {
+        *(u16 *)(0x02010000 + (u32)arg1 * 128 + (u32)arg0 * 2) = 0xe307;
     }
 }
