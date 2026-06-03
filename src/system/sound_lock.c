@@ -1,4 +1,4 @@
-#include "types.h"
+#include "sound.h"
 
 /* Sound-system mutation lock — acquire (sub_0802E418) and release
  * (sub_0802E3F8).
@@ -23,26 +23,6 @@
  *                 chanWork entry, and the slot's flags).
  *   sub_0802E4B4: set a slot's pan byte and flag it dirty for the mixer.
  */
-
-typedef struct SoundSlot {
-    u8 _pad00[0x38];
-    u32 flags;   /* +0x38 — dirty/active bitfield */
-    u8 panCache; /* +0x3c — last emitted pan byte */
-} SoundSlot;
-
-typedef struct SoundSystem {
-    u8 _pad00[0xba];
-    u8 panBits;      /* +0xba — hi byte of REG_SOUNDCNT_L cache */
-    u8 lockRefCount; /* +0xbb */
-    u8 _padbc[4];
-    u32 *mixTable;      /* +0xc0 — per-slot mix-state pool (28-byte stride) */
-    u32 *slotStateA;    /* +0xc4 — per-slot mix-state pointer table */
-    SoundSlot *swSlots; /* +0xc8 — software-mixed slot array (64-byte stride) */
-    u8 _padcc[0x58];
-    u32 chanWork[1]; /* +0x124 — per-channel work table */
-} SoundSystem;
-
-#define gpSoundSystem (*(SoundSystem **)0x030065e0)
 
 /* Thumb-callable interwork veneers that branch to the ARM-mode
  * sound-IRQ toggle routines. Both are 8-byte `bx pc; nop; b TARGET`
@@ -71,13 +51,13 @@ void sub_0802E418(void)
 void sub_0802E43C(u32 desc)
 {
     s32 idx;
-    SoundSystem *ss;
+    SoundLockSystem *ss;
 
     if (desc == 0)
         return;
 
     idx = (desc >> 16) & 0xff;
-    ss = gpSoundSystem;
+    ss = gpSoundLockSystem;
     ss->slotStateA[idx] = (u32)(ss->mixTable + idx * 7);
 }
 
@@ -85,42 +65,42 @@ void sub_0802E470(u32 desc)
 {
     s32 idx;
     s32 lo;
-    SoundSystem *ss;
+    SoundLockSystem *ss;
 
     if (desc == 0)
         return;
 
     lo = desc & 0xffff;
     idx = (desc >> 16) & 0xff;
-    ss = gpSoundSystem;
+    ss = gpSoundLockSystem;
     ss->slotStateA[idx] = 0;
     ss->chanWork[lo] = 0;
     ss->swSlots[idx].flags = 0;
 }
 
-/* `pPool` keeps &gpSoundSystem (not the deref'd base) so each
+/* `pPool` keeps &gpSoundLockSystem (not the deref'd base) so each
  * `(*pPool)->swSlots[idx]` reloads the pool word — the baserom derefs
- * gpSoundSystem twice. Caching the base in one local lets agbcc CSE the
+ * gpSoundLockSystem twice. Caching the base in one local lets agbcc CSE the
  * second reload away and breaks the match. */
 void sub_0802E4B4(u32 desc, u32 pan)
 {
-    SoundSystem **pPool;
+    SoundLockSystem **pPool;
     s32 idx;
 
     if (desc == 0)
         return;
 
     idx = (desc >> 16) & 0xff;
-    pPool = &gpSoundSystem;
+    pPool = &gpSoundLockSystem;
     (*pPool)->swSlots[idx].panCache = pan;
-    (*pPool)->swSlots[idx].flags |= 0x80;
+    (*pPool)->swSlots[idx].flags |= SOUND_FLAG_UPDATE_DIRTY;
 }
 
 void sub_0802E4E8(u32 desc, u32 enable)
 {
     register s32 idx asm("r1");
-    register SoundSystem *ss asm("r3");
-    register SoundSystem *mixBase asm("r2");
+    register SoundLockSystem *ss asm("r3");
+    register SoundLockSystem *mixBase asm("r2");
     u8 *dst;
     register u32 value asm("r0");
     register u32 enableReg asm("r4") = enable;
@@ -129,11 +109,11 @@ void sub_0802E4E8(u32 desc, u32 enable)
         return;
 
     idx = (desc >> 16) & 0xff;
-    ss = gpSoundSystem;
+    ss = gpSoundLockSystem;
     mixBase = ss;
     dst = (u8 *)mixBase->mixTable + idx * 28;
     if (enableReg != 0) {
-        mixBase = (SoundSystem *)((u8 *)ss + 0x10e);
+        mixBase = (SoundLockSystem *)((u8 *)ss + 0x10e);
         value = *(u8 *)mixBase;
     } else {
         value = 0;

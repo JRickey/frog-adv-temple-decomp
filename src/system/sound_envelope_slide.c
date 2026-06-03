@@ -1,4 +1,4 @@
-#include "types.h"
+#include "sound.h"
 #include "macros.h"
 
 /* sub_0802F054 — per-frame multi-mode envelope tick (envelope-C).
@@ -14,27 +14,27 @@
  * The dispatcher consults `flags & 6` (two bits of mode at bits 1-2) on each
  * iteration and picks one of four behaviours:
  *
- *   mode 0 — slide-up:    sum = acc + cfg->w0; if sum > 0xfeff, clamp at
+ *   mode 0 — slide-up:    sum = acc + cfg->slideUpStep; if sum > 0xfeff, clamp at
  *                          0xff00 and set mode := 1 (bits 1-2 = 01).
- *   mode 1 — slide-down:  sum = acc - cfg->w2; if sum > cfg->w4, write sum;
- *                          else clamp at cfg->w4 and set mode := 2 (bits
- *                          1-2 = 10).
+ *   mode 1 — slide-down:  sum = acc - cfg->slideDownStep; if sum > cfg->slideDownClamp,
+ *                          write sum; else clamp at cfg->slideDownClamp and
+ *                          set mode := 2 (bits 1-2 = 10).
  *   mode 2 — kickoff:     if flags & 0x10, set bits 1-2 := 3 (= "stop"
  *                          phase) and fall through to mode 3.
- *   mode 3 — converge:    diff = (s32)w_acc - cfg->w6; if diff > 0xff, write
- *                          diff; else clear bits 0-2 of flags and pin acc
- *                          at 0.
+ *   mode 3 — converge:    diff = (s32)w_acc - cfg->convergeStep; if diff > 0xff,
+ *                          write diff; else clear bits 0-2 of flags and pin
+ *                          acc at 0.
  *
- * After each branch the channel-level acc and the upper-byte tracker
- * (acc & 0xff00 vs prev_acc & 0xff00) decide whether the channel-flags
- * dirty bit 0x80 is OR'd in: any upper-byte change marks the channel
- * dirty so the mixer reapplies the envelope value on the next mix step.
+ * After each branch the channel-level acc and change mask decide whether
+ * the channel-flags dirty bit SOUND_FLAG_UPDATE_DIRTY is OR'd in: stage 1 uses a 0xf000 mask,
+ * while the per-slot stage uses 0xff00.
  *
  * Stage 1 (4 iterations, fixed): four inline channel envelope blocks
  * embedded in SoundSystem itself at ss+0x8c, ss+0x94, ss+0x9c, ss+0xa4
  * (stride 8). Walked i=3 down to 0 (loop counter in r8, decremented to
  * -1). Mode dispatch only fires if chFlags[i] & 1 is set; otherwise
- * dirty bit 0x80 is OR'd anyway if chFlags[i] & 0x20 is set.
+ * the inactive slide path runs if SOUND_FLAG_ENVELOPE_C_INACTIVE is set,
+ * advancing the accumulator until it clamps and clears that bit.
  *
  * Stage 2 (ss->count iterations): per-slot envelope-C bank, walked via
  * ss->slotPtrTable[i] with the same mode dispatch over slot->flags
@@ -48,132 +48,259 @@
  *   ip  =  chFlags byte offset     (i*4)
  * agbcc 2.x will not promote any of these to high regs from C source —
  * see docs/codegen-notes.md "High registers (sl/r10, sb/r9, r8) —
- * corpus-validated unmatchable". The readable C is preserved behind
- * NON_MATCHING for the phase-3 PC port; the NAKED form ships the
- * baserom bytes.
+ * corpus-validated unmatchable". The current reference body uses the target's
+ * stage-1 block/flag pairing (blocks +0x8c..+0xa4 paired with chFlags
+ * 0..3, not reversed). Register-shaping the active tick block around the
+ * target's r5/r6/r7/r4 roles, then using a stage-1-only active macro so the
+ * 0xf000 mask can stay in sl, and routing the stage-1 gpSoundSystem load
+ * through a scoped r5 pointer drops the best isolated C candidate. Leaving the
+ * active dispatcher to reload blk_->param.cfg at each use, instead of caching a cfg_
+ * local, gives the current best forced-C lane. Splitting the stage-1 flag
+ * base from the `ip` add and keeping the loaded SoundSystem in r2 improves
+ * the current exact-size lane to byte_diff 585 / diff_count 395 with agbcc
+ * -O2 -fforce-addr -fno-gcse. The readable C is preserved behind
+ * NON_MATCHING for the phase-3 PC port; the NAKED form ships the baserom
+ * bytes.
+ *
+ * Negative experiments: removing the active tick's mask/dirty temporaries
+ * regressed to byte_diff 604, and applying the same register shape to the
+ * inactive path regressed to byte_diff 605. Pinning the stage-2 active mask
+ * to r6, to mirror the target's per-slot mask role, regressed the best lane
+ * to byte_diff 594. Rewriting the stage-2 `for` loop as an explicit loop with
+ * an r1 initializer was codegen-neutral and is not kept. Pinning the inactive
+ * sum temp to r3 moved one local pattern closer but regressed the best lane to
+ * byte_diff 606+ by displacing the flags register. Retesting `(flags & 6) >> 1`
+ * after the stage-1 r5 reload still regressed byte_diff to 596, and pinning a
+ * stage-2 gpSoundSystem pointer to r1 regressed the best lane to 580. Replacing
+ * the stage-1 switch with an explicit target-looking if ladder regressed
+ * byte_diff to 589, and pinning the stage-1 flags value to r1 regressed to 566.
+ * Rewriting the mode extraction and clamp/mask literals through named
+ * envelope-C constants changed expression shape and regressed the best lane
+ * to byte_diff 599; pure macro names that expand back to the same literals are
+ * codegen-neutral and retained.
+ * Retesting stage-1 gpSoundSystem register shaping on the current branch:
+ * forcing the loaded SoundSystem through r2 is only helpful after the flag-base
+ * address expression is split; wrapping the whole stage-1 active/inactive block
+ * in that scoped load regresses to byte_diff 597, pinning the initial loop value
+ * to r3 is neutral, and pinning the pFlags pointer globally to r6 regresses by
+ * one byte.
+ * Second-pass current-branch retests: target-looking mode extraction
+ * `(flags & 6) >> 1` regresses when applied to stage 1, but applying it only
+ * to the generic slot macro and pairing it with a scoped stage-2
+ * gpSoundSystem reload loop improves the raw forced-C byte lane to 557.
+ * Pinning the generic slot tick's previous-accumulator temp to r3 improves that to 552
+ * without changing object size.
+ * Pinning stage-1 flags to r1 regresses to 566, stage-1 acc to r3 regresses to
+ * 600, a target-looking stage-1 if ladder regresses to 622, and inactive-path
+ * u32/r4 variants regress to 584+. These failures point at the whole macro
+ * expansion/control-flow shape rather than one visible expression.
+ * Fixed-r2 and fixed-r3 compiler lanes can lower byte_diff into the 540s, but
+ * they remove registers the baserom uses in the opening dispatcher and worsen
+ * instruction alignment, so they are not encoded in the Makefile. Naming the
+ * envelope-C first word as a cfg/delta union and naming the stage-1 channel
+ * union owner are codegen-neutral in the current exact-size lane, but preserve
+ * the two real data shapes used by the active and inactive paths.
  */
 
-/* Per-mode configuration block referenced by ch_block->cfg. Halfwords
- * laid out so the dispatch can index them by mode. */
-typedef struct EnvelopeCConfig {
-    u16 w0; /* +0 — slide-up limit (mode 0) */
-    u16 w2; /* +2 — slide-down step (mode 1) */
-    u16 w4; /* +4 — slide-down floor (mode 1) */
-    u16 w6; /* +6 — converge step (mode 3) */
-} EnvelopeCConfig;
+/* Per-mode configuration block referenced by ch_block->param.cfg. Halfwords
+ * laid out so the dispatch can index them by mode. Inactive slides reuse the
+ * same first word as a signed delta. */
+#if defined(NON_MATCHING) || defined(NON_MATCHING_sub_0802F054)
+#define ENVELOPE_C_TICK(blkExpr, pFlagsExpr, flagsExpr, maskExpr, dirtyExpr)                                           \
+    do {                                                                                                               \
+        register EnvelopeCBlock *blk_ asm("r5") = (blkExpr);                                                           \
+        register u32 *pFlags_ asm("r6") = (pFlagsExpr);                                                                \
+        register u16 *accp_ asm("r7") = &blk_->acc;                                                                    \
+        u32 flags_ = (flagsExpr);                                                                                      \
+        u32 mask_ = (maskExpr);                                                                                        \
+        u32 dirty_ = (dirtyExpr);                                                                                      \
+        register u16 prevAcc_ asm("r3") = *accp_;                                                                      \
+        u16 acc_ = prevAcc_;                                                                                           \
+        s32 sum_;                                                                                                      \
+        s32 mode_ = (flags_ & SOUND_ENVELOPE_C_MODE_BITS) >> 1;                                                        \
+                                                                                                                       \
+        switch (mode_) {                                                                                               \
+        case 0:                                                                                                        \
+            sum_ = (s32)blk_->param.cfg->slideUpStep + (s32)acc_;                                                      \
+            if (sum_ > SOUND_ENVELOPE_C_HIGH_LIMIT) {                                                                  \
+                *pFlags_ = (flags_ & SOUND_ENVELOPE_C_CLEAR_MODE) | SOUND_ENVELOPE_C_MODE_SLIDE_DOWN;                  \
+                sum_ = SOUND_ENVELOPE_C_HIGH_CLAMP;                                                                    \
+            }                                                                                                          \
+            blk_->acc = (u16)sum_;                                                                                     \
+            break;                                                                                                     \
+        case 1:                                                                                                        \
+            sum_ = (s32)acc_ - (s32)blk_->param.cfg->slideDownStep;                                                    \
+            if (sum_ <= (s32)blk_->param.cfg->slideDownClamp) {                                                        \
+                sum_ = blk_->param.cfg->slideDownClamp;                                                                \
+                *pFlags_ = (flags_ & SOUND_ENVELOPE_C_CLEAR_MODE) | SOUND_ENVELOPE_C_MODE_KICKOFF;                     \
+            }                                                                                                          \
+            blk_->acc = (u16)sum_;                                                                                     \
+            break;                                                                                                     \
+        case 2:                                                                                                        \
+            if (flags_ & SOUND_ENVELOPE_C_FLAG_KICKOFF) {                                                              \
+                flags_ = (flags_ & SOUND_ENVELOPE_C_CLEAR_MODE) | SOUND_ENVELOPE_C_MODE_STOP;                          \
+                *pFlags_ = flags_;                                                                                     \
+            }                                                                                                          \
+        case 3:                                                                                                        \
+            sum_ = (s32)acc_ - (s32)blk_->param.cfg->convergeStep;                                                     \
+            if (sum_ <= SOUND_ENVELOPE_C_CONVERGE_LIMIT) {                                                             \
+                sum_ = 0;                                                                                              \
+                *pFlags_ = *pFlags_ & ~7u;                                                                             \
+            }                                                                                                          \
+            blk_->acc = (u16)sum_;                                                                                     \
+            break;                                                                                                     \
+        }                                                                                                              \
+                                                                                                                       \
+        if ((blk_->acc & mask_) != (prevAcc_ & mask_))                                                                 \
+            *pFlags_ = *pFlags_ | dirty_;                                                                              \
+    } while (0)
 
-/* The 8-byte channel block embedded at ss+0x8c (stride 8) and again at
- * slot+0x24 (stride 8 for the pair). */
-typedef struct EnvelopeCBlock {
-    EnvelopeCConfig *cfg; /* +0 */
-    u16 acc;              /* +4 — current envelope position */
-    u8 _pad6[2];
-} EnvelopeCBlock;
+#define ENVELOPE_C_STAGE1_TICK(blkExpr, pFlagsExpr, flagsExpr, maskExpr)                                               \
+    do {                                                                                                               \
+        register EnvelopeCBlock *blk_ asm("r5") = (blkExpr);                                                           \
+        register u32 *pFlags_ asm("r6") = (pFlagsExpr);                                                                \
+        register u16 *accp_ asm("r7") = &blk_->acc;                                                                    \
+        u32 flags_ = (flagsExpr);                                                                                      \
+        register u16 prevAcc_ asm("r4") = *accp_;                                                                      \
+        u16 acc_ = prevAcc_;                                                                                           \
+        s32 sum_;                                                                                                      \
+        register s32 mode_ asm("r0") = (flags_ >> 1) & SOUND_ENVELOPE_C_MODE_MASK;                                     \
+                                                                                                                       \
+        switch (mode_) {                                                                                               \
+        case 0:                                                                                                        \
+            sum_ = (s32)blk_->param.cfg->slideUpStep + (s32)acc_;                                                      \
+            if (sum_ > SOUND_ENVELOPE_C_HIGH_LIMIT) {                                                                  \
+                *pFlags_ = (flags_ & SOUND_ENVELOPE_C_CLEAR_MODE) | SOUND_ENVELOPE_C_MODE_SLIDE_DOWN;                  \
+                sum_ = SOUND_ENVELOPE_C_HIGH_CLAMP;                                                                    \
+            }                                                                                                          \
+            blk_->acc = (u16)sum_;                                                                                     \
+            break;                                                                                                     \
+        case 1:                                                                                                        \
+            sum_ = (s32)acc_ - (s32)blk_->param.cfg->slideDownStep;                                                    \
+            if (sum_ <= (s32)blk_->param.cfg->slideDownClamp) {                                                        \
+                sum_ = blk_->param.cfg->slideDownClamp;                                                                \
+                *pFlags_ = (flags_ & SOUND_ENVELOPE_C_CLEAR_MODE) | SOUND_ENVELOPE_C_MODE_KICKOFF;                     \
+            }                                                                                                          \
+            blk_->acc = (u16)sum_;                                                                                     \
+            break;                                                                                                     \
+        case 2:                                                                                                        \
+            if (flags_ & SOUND_ENVELOPE_C_FLAG_KICKOFF) {                                                              \
+                flags_ = (flags_ & SOUND_ENVELOPE_C_CLEAR_MODE) | SOUND_ENVELOPE_C_MODE_STOP;                          \
+                *pFlags_ = flags_;                                                                                     \
+            }                                                                                                          \
+        case 3:                                                                                                        \
+            sum_ = (s32)acc_ - (s32)blk_->param.cfg->convergeStep;                                                     \
+            if (sum_ <= SOUND_ENVELOPE_C_CONVERGE_LIMIT) {                                                             \
+                sum_ = 0;                                                                                              \
+                *pFlags_ = *pFlags_ & ~7u;                                                                             \
+            }                                                                                                          \
+            blk_->acc = (u16)sum_;                                                                                     \
+            break;                                                                                                     \
+        }                                                                                                              \
+                                                                                                                       \
+        if ((blk_->acc & (maskExpr)) != (prevAcc_ & (maskExpr)))                                                       \
+            *pFlags_ = *pFlags_ | SOUND_FLAG_UPDATE_DIRTY;                                                             \
+    } while (0)
 
-typedef struct SoundSlot {
-    u8 _pad00[0x24];
-    EnvelopeCBlock envelopeC; /* +0x24 */
-    u8 _pad2c[0x0c];
-    u32 flags; /* +0x38 */
-} SoundSlot;
-
-typedef struct SoundSystem {
-    u8 count; /* +0x00 */
-    u8 _pad01[0xf];
-    u32 chFlags[4]; /* +0x10 — per-channel dirty-flag word */
-    u8 _pad20[0x6c];
-    EnvelopeCBlock chEnvelopeC[4]; /* +0x8c, stride 8 */
-    u8 _pad_acTail[0x24];
-    SoundSlot **slotPtrTable; /* +0xcc */
-} SoundSystem;
-
-#define gpSoundSystem (*(SoundSystem **)0x030065e0)
-
-#ifdef NON_MATCHING
-static void envelope_c_tick(EnvelopeCBlock *blk, u32 *pFlags, u32 chFlagWord, u32 dirtyBit);
+#define ENVELOPE_C_INACTIVE_TICK(blkExpr, pFlagsExpr, flagsExpr, maskExpr, dirtyExpr)                                  \
+    do {                                                                                                               \
+        EnvelopeCBlock *blk_ = (blkExpr);                                                                              \
+        u32 *pFlags_ = (pFlagsExpr);                                                                                   \
+        u32 flags_ = (flagsExpr);                                                                                      \
+        u32 mask_ = (maskExpr);                                                                                        \
+        u32 dirty_ = (dirtyExpr);                                                                                      \
+        u16 prevAcc_ = blk_->acc;                                                                                      \
+        s32 delta_ = blk_->param.inactiveDelta;                                                                        \
+        s32 sum_ = (s32)prevAcc_ + delta_;                                                                             \
+                                                                                                                       \
+        if (delta_ >= 0) {                                                                                             \
+            if (sum_ > SOUND_ENVELOPE_C_HIGH_LIMIT) {                                                                  \
+                flags_ &= ~SOUND_FLAG_ENVELOPE_C_INACTIVE;                                                             \
+                *pFlags_ = flags_;                                                                                     \
+                sum_ = SOUND_ENVELOPE_C_HIGH_CLAMP;                                                                    \
+            }                                                                                                          \
+        } else {                                                                                                       \
+            if (sum_ <= SOUND_ENVELOPE_C_LOW_LIMIT) {                                                                  \
+                flags_ &= ~SOUND_FLAG_ENVELOPE_C_INACTIVE;                                                             \
+                *pFlags_ = flags_;                                                                                     \
+                sum_ = 0;                                                                                              \
+            }                                                                                                          \
+        }                                                                                                              \
+                                                                                                                       \
+        blk_->acc = (u16)sum_;                                                                                         \
+        if ((blk_->acc & mask_) != (prevAcc_ & mask_))                                                                 \
+            *pFlags_ = *pFlags_ | dirty_;                                                                              \
+    } while (0)
 
 void sub_0802F054(void)
 {
     SoundSystem *ss;
     SoundSlot *slot;
-    s32 i;
+    register s32 i asm("r8");
+    register s32 blockOff asm("r9");
+    register s32 flagOff asm("ip");
+    register u32 stageMask asm("sl");
     u32 flags;
     u32 *pFlags;
     EnvelopeCBlock *blk;
+    SoundEnvelopeCChannel *channel;
 
     /* Stage 1: 4 inline channel envelope blocks at ss+0x8c, +0x94, +0x9c,
      * +0xa4 (stride 8). Loop counter walks down 3 -> 0. */
-    for (i = 3; i >= 0; i--) {
-        ss = gpSoundSystem;
-        pFlags = &ss->chFlags[i];
-        flags = *pFlags;
-        if (flags & 1) {
-            blk = &ss->chEnvelopeC[3 - i]; /* walked down, but block is at fixed slot */
-            envelope_c_tick(blk, pFlags, flags, 0x80);
-        } else if (flags & 0x20) {
-            *pFlags = flags | 0x80;
+    stageMask = SOUND_ENVELOPE_C_STAGE1_MASK;
+    blockOff = SOUND_ENVELOPE_C_CHANNEL_BASE;
+    flagOff = 0;
+    i = SOUND_ENVELOPE_C_CHANNEL_COUNT - 1;
+    do {
+        {
+            register SoundSystem **gpsp asm("r5");
+            register SoundSystem *ssStage asm("r2");
+            u8 *flagBase;
+
+            gpsp = &gpSoundSystem;
+            ssStage = *gpsp;
+            ss = ssStage;
+            flagBase = (u8 *)ssStage + SOUND_CH_FLAGS_OFFSET;
+            pFlags = (u32 *)(flagBase + flagOff);
         }
-    }
+        flags = *pFlags;
+        if (flags & SOUND_FLAG_ENVELOPE_C_ACTIVE) {
+            channel = SOUND_SYSTEM_ENVELOPE_C_CHANNEL_AT(ss, blockOff);
+            blk = &channel->envelopeC;
+            ENVELOPE_C_STAGE1_TICK(blk, pFlags, flags, stageMask);
+        } else if (flags & SOUND_FLAG_ENVELOPE_C_INACTIVE) {
+            channel = SOUND_SYSTEM_ENVELOPE_C_CHANNEL_AT(ss, blockOff);
+            blk = &channel->envelopeC;
+            ENVELOPE_C_INACTIVE_TICK(blk, pFlags, flags, stageMask, SOUND_FLAG_UPDATE_DIRTY);
+        }
+        blockOff += SOUND_ENVELOPE_C_CHANNEL_STRIDE;
+        flagOff += SOUND_CH_FLAGS_STRIDE;
+        i--;
+    } while (i >= 0);
 
     /* Stage 2: per-slot envelope-C, walked via slotPtrTable[0..count). */
-    for (i = 0; i < gpSoundSystem->count; i++) {
-        slot = gpSoundSystem->slotPtrTable[i];
-        if (slot == NULL)
-            continue;
-        flags = slot->flags;
-        if (flags & 1) {
-            envelope_c_tick(&slot->envelopeC, &slot->flags, flags, 0x80);
-        } else if (flags & 0x20) {
-            slot->flags = flags | 0x80;
+    i = 0;
+    for (;;) {
+        register SoundSystem **gpsp2 asm("r1");
+        SoundSystem *ss2;
+
+        gpsp2 = &gpSoundSystem;
+        ss2 = *gpsp2;
+        if (i >= ss2->count)
+            break;
+        slot = SOUND_SYSTEM_SLOT_PTR_TABLE(ss2)[i];
+        if (slot != NULL) {
+            flags = slot->flags;
+            if (flags & SOUND_FLAG_ENVELOPE_C_ACTIVE) {
+                ENVELOPE_C_TICK(SOUND_SLOT_ENVELOPE_C(slot), &slot->flags, flags, SOUND_ENVELOPE_C_SLOT_MASK,
+                                SOUND_FLAG_UPDATE_DIRTY);
+            } else if (flags & SOUND_FLAG_ENVELOPE_C_INACTIVE) {
+                ENVELOPE_C_INACTIVE_TICK(SOUND_SLOT_ENVELOPE_C(slot), &slot->flags, flags, SOUND_ENVELOPE_C_SLOT_MASK,
+                                         SOUND_FLAG_UPDATE_DIRTY);
+            }
         }
+        i++;
     }
-}
-
-/* Shared mode dispatcher for stage 1 / stage 2. The baserom inlines this
- * twice (once per stage) but the structure is identical. */
-static void envelope_c_tick(EnvelopeCBlock *blk, u32 *pFlags, u32 flags, u32 dirtyBit)
-{
-    u16 acc = blk->acc;
-    u16 prevAcc = acc;
-    s32 sum;
-    EnvelopeCConfig *cfg = blk->cfg;
-    s32 mode = (flags >> 1) & 3;
-
-    switch (mode) {
-    case 0: /* slide-up */
-        sum = (s32)cfg->w0 + (s32)acc;
-        if (sum > 0xfeff) {
-            *pFlags = (flags & ~7u) | 2u;
-            sum = 0xff00;
-        }
-        blk->acc = (u16)sum;
-        break;
-    case 1: /* slide-down */
-        sum = (s32)acc - (s32)cfg->w2;
-        if (sum <= (s32)cfg->w4) {
-            sum = cfg->w4;
-            *pFlags = (flags & ~7u) | 4u;
-        }
-        blk->acc = (u16)sum;
-        break;
-    case 2: /* kickoff: maybe advance to mode 3 */
-        if (flags & 0x10) {
-            flags = (flags & ~7u) | 6u; /* bits 1-2 = 11, i.e. mode 3 */
-            *pFlags = flags;
-        }
-        /* fall through */
-    case 3: /* converge */
-        sum = (s32)acc - (s32)cfg->w6;
-        if (sum <= 0xff) {
-            sum = 0;
-            *pFlags = *pFlags & ~7u;
-        }
-        blk->acc = (u16)sum;
-        break;
-    }
-
-    if ((acc & 0xff00) != (prevAcc & 0xff00))
-        *pFlags = *pFlags | dirtyBit;
 }
 #else
 NAKED

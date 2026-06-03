@@ -1,5 +1,4 @@
-#include "types.h"
-#include "macros.h"
+#include "sound.h"
 
 /* sub_080315D8 — per-frame sound opcode-script dispatcher.
  *
@@ -21,44 +20,24 @@
  * (peeled into asm/disasm_0x08033cd8.s as the canonical 14-entry
  * `_call_via_rX` helper block).
  *
- * Shipped as NAKED inline asm + NON_MATCHING reference C. The baserom
- * keeps `sSoundOpcodeHandlers` cached in the callee-save register r7
- * across every handler BL inside the inner loop, while reloading
- * `&gpSoundSystem` PC-relative each iteration in caller-save registers
- * r0/r1. agbcc 2.x will not pick r7 as a stable LUT-base across a
- * function-pointer BL — it either drops the cache (and reloads from
- * the pool every inner-loop iteration, missing the r7 push), or
- * promotes the value to r8 (corpus-validated unmatchable). Same class
- * as the MPlayMain/MP2KPlayerMain dispatchers in every pret/cvaos
- * m4a decomp, which all ship as asm. See docs/codegen-notes.md
- * "High registers (sl/r10, sb/r9, r8) — corpus-validated unmatchable"
- * and "Opcode-dispatch iterator: callee-save LUT base around a BL —
- * corpus-validated unmatchable".
+ * Matching notes:
+ *   - `i` and `byteOffset` are pinned because the ROM keeps them in r5/r4
+ *     across each handler call.
+ *   - The scoped r1 locals keep `&gpSoundSystem`, the first-pass index
+ *     offset, and the inner-loop sequence address in the same transient
+ *     register choices as the baserom.
  */
 
-typedef struct SoundChannelSeq {
-    u8 *opPtr; /* +0x00 — current opcode pointer (handlers may advance) */
-    u8 _pad04[12];
-} SoundChannelSeq; /* sizeof == 16 */
-
-typedef struct SoundSystem {
-    u8 count; /* +0x00 — number of dynamic SFX slots */
-    u8 _pad01[0x113];
-    SoundChannelSeq channelSeqs[1]; /* +0x114 — flexible array, ss->count + 4 valid entries */
-} SoundSystem;
-
-#define gpSoundSystem (*(SoundSystem **)0x030065e0)
-
-typedef u32 (*SoundOpcodeHandler)(s32 channelIndex, u8 *opPtr);
+typedef u32 (*SoundOpcodeHandler)(s32 channelIndex, SoundChannelSeq *seq);
 extern const SoundOpcodeHandler sSoundOpcodeHandlers[54];
 
-#ifdef NON_MATCHING
 void sub_080315D8(void)
 {
     const SoundOpcodeHandler *handlers;
-    s32 i;
-    s32 byteOffset;
+    register s32 i asm("r5");
+    register s32 byteOffset asm("r4");
     s32 next;
+    register SoundSystem **gpsp asm("r1");
     SoundChannelSeq *seq;
     u8 *opPtr;
     SoundOpcodeHandler handler;
@@ -68,82 +47,38 @@ void sub_080315D8(void)
 
 body:
     /* r1 = &gpSoundSystem is live here from count_check. */
-    seq = &gpSoundSystem->channelSeqs[i];
-    byteOffset = i << 4;
+    {
+        u32 seqBase;
+        register s32 idxOffset asm("r1");
+
+        seqBase = (u32)(*gpsp)->channelSeqs;
+        idxOffset = i << 4;
+        opPtr = *(u8 **)(idxOffset + seqBase);
+        byteOffset = idxOffset;
+    }
     next = i + 1;
-    opPtr = seq->opPtr;
     if (opPtr == NULL)
         goto advance;
 
     handlers = sSoundOpcodeHandlers;
 inner:
     /* Re-fetch opPtr each pass — handlers mutate it. */
-    seq = (SoundChannelSeq *)((u8 *)gpSoundSystem + 0x114 + byteOffset);
-    opPtr = seq->opPtr;
+    {
+        register u32 seqAddr asm("r1");
+
+        seqAddr = (u32)gpSoundSystem->channelSeqs;
+        seqAddr = byteOffset + seqAddr;
+        opPtr = *(u8 **)seqAddr;
+        seq = (SoundChannelSeq *)seqAddr;
+    }
     handler = handlers[*opPtr];
-    if (handler(i, opPtr) != 0)
+    if (handler(i, seq) != 0)
         goto inner;
 
 advance:
     i = next;
 count_check:
-    if (i < (s32)gpSoundSystem->count + 4)
+    gpsp = &gpSoundSystem;
+    if (i < (s32)(*gpsp)->count + 4)
         goto body;
 }
-#else
-NAKED
-void sub_080315D8(void)
-{
-    asm(".syntax unified\n"
-        "    push    {r4, r5, r6, r7, lr}\n"
-        "    movs    r5, #0\n"
-        "    b       _080315D8_count_check\n"
-        "_080315D8_body:\n"
-        "    ldr     r0, [r1, #0]\n"
-        "    movs    r1, #0x8a\n"
-        "    lsls    r1, r1, #1\n"
-        "    adds    r0, r0, r1\n"
-        "    ldr     r0, [r0, #0]\n"
-        "    lsls    r1, r5, #4\n"
-        "    adds    r0, r1, r0\n"
-        "    ldr     r0, [r0, #0]\n"
-        "    adds    r4, r1, #0\n"
-        "    adds    r6, r5, #1\n"
-        "    cmp     r0, #0\n"
-        "    beq     _080315D8_advance\n"
-        "    ldr     r7, _080315D8_pool_handlers       @ =sSoundOpcodeHandlers\n"
-        "_080315D8_inner:\n"
-        "    ldr     r0, _080315D8_pool_gpsp           @ =gpSoundSystem (0x030065e0)\n"
-        "    ldr     r0, [r0, #0]\n"
-        "    movs    r1, #0x8a\n"
-        "    lsls    r1, r1, #1\n"
-        "    adds    r0, r0, r1\n"
-        "    ldr     r1, [r0, #0]\n"
-        "    adds    r1, r4, r1\n"
-        "    ldr     r0, [r1, #0]\n"
-        "    ldrb    r0, [r0, #0]\n"
-        "    lsls    r0, r0, #2\n"
-        "    adds    r0, r0, r7\n"
-        "    ldr     r2, [r0, #0]\n"
-        "    adds    r0, r5, #0\n"
-        "    bl      _call_via_r2\n"
-        "    cmp     r0, #0\n"
-        "    bne     _080315D8_inner\n"
-        "_080315D8_advance:\n"
-        "    adds    r5, r6, #0\n"
-        "_080315D8_count_check:\n"
-        "    ldr     r1, _080315D8_pool_gpsp           @ =gpSoundSystem (0x030065e0)\n"
-        "    ldr     r0, [r1, #0]\n"
-        "    ldrb    r0, [r0, #0]\n"
-        "    adds    r0, #4\n"
-        "    cmp     r5, r0\n"
-        "    blt     _080315D8_body\n"
-        "    pop     {r4, r5, r6, r7}\n"
-        "    pop     {r0}\n"
-        "    bx      r0\n"
-        "    .align  2, 0\n"
-        "_080315D8_pool_handlers: .4byte sSoundOpcodeHandlers\n"
-        "_080315D8_pool_gpsp:     .4byte 0x030065e0\n"
-        "    .syntax divided\n");
-}
-#endif

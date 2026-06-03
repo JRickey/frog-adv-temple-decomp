@@ -1,4 +1,4 @@
-#include "types.h"
+#include "sound.h"
 #include "macros.h"
 
 /* sub_0802E7C4 — per-channel pan apply.
@@ -26,31 +26,10 @@
  *     slot.flags bit 0x80 (mixer reapplies on next tick).
  *
  * Companion sub_0802E874 (delta-pan, externally called from 0x08031148)
- * stays in asm/disasm_0x0802e874.s — its small-channel path needs old_agbcc
- * to spill ss into a caller-save scratch (r1) while keeping ch in r3, and
- * agbcc 2.x's natural choice is to put ss in r4 (callee-save). Decomp
- * deferred until that idiom can be matched.
+ * shares the same pan-bit decode and slot dirtying paths.
  */
 
 #define REG_SOUNDCNT_L (*(vu16 *)0x04000080)
-
-typedef struct SoundSlot {
-    u8 _pad00[0x38];
-    u32 flags; /* +0x38 — 0x80 = "dirty, reapply pan/vol on mix" */
-    u8 _pad3c[4];
-    u8 panCache; /* +0x3c — last emitted pan byte (shared with sound_pan.c) */
-} SoundSlot;
-
-typedef struct SoundSystem {
-    u8 _pad00[0xba];
-    u8 panBits; /* +0xba — hi byte of REG_SOUNDCNT_L cache */
-    u8 _padbb[0xc];
-    SoundSlot *swSlots; /* +0xc8 — software-mixed slot array (64-byte stride) */
-    u8 _padcc[0x43];
-    u8 muteMask; /* +0x010f — per-channel mute bits (0x10 = ch muted) */
-} SoundSystem;
-
-#define gpSoundSystem (*(SoundSystem **)0x030065e0)
 
 /* Matching notes:
  *   - `(0x88 << 21) << ch >> 24` reproduces the baserom's three-shift
@@ -84,40 +63,40 @@ void sub_0802E7C4(u8 pan, s32 ch)
     if (ch > 3)
         goto big_slot;
 
-    mask = (0x88u << 21) << ch >> 24;
+    mask = SOUND_PAN_BOTH_BITS_BASE << ch >> 24;
     pPool = &gpSoundSystem;
     (*pPool)->panBits &= ~mask;
-    muteByte = *((u8 *)*pPool + 0x010f);
-    maskTen = 0x10 & muteByte;
+    muteByte = *((u8 *)*pPool + SOUND_SYSTEM_MUTE_MASK_OFFSET);
+    maskTen = SOUND_PAN_MUTE_MASK & muteByte;
     gpsp = pPool;
     if (maskTen != 0)
         goto orr_phase;
-    maskTen = 0x10;
-    if (pan == 0xff)
+    maskTen = SOUND_PAN_MUTE_MASK;
+    if (pan == SOUND_PAN_MUTED)
         goto orr_phase;
-    if (pan <= 0x29) {
+    if (pan <= SOUND_PAN_LEFT_ONLY_MAX) {
         mask = (maskTen << ch) << 24 >> 24;
         goto orr_phase;
     }
-    if (pan > 0x55) {
+    if (pan > SOUND_PAN_RIGHT_ONLY_MIN) {
         mask = (0x80u << 17) << ch >> 24;
     }
     /* else: mask stays 0x11<<ch (centre — both bits) */
 orr_phase:
     (*gpsp)->panBits |= mask;
-    REG_SOUNDCNT_L = (REG_SOUNDCNT_L & 0xff) | ((*gpsp)->panBits << 8);
+    REG_SOUNDCNT_L = (REG_SOUNDCNT_L & SOUND_SOUNDCNT_L_LOW_MASK) | ((*gpsp)->panBits << 8);
     return;
 
 big_slot: {
     SoundSlot *slot;
     u8 oldPan;
 
-    slot = (SoundSlot *)((u8 *)gpSoundSystem->swSlots + (ch * 64 - 256));
-    oldPan = *((u8 *)slot + 0x3c);
-    *((u8 *)slot + 0x3c) = pan;
+    slot = SOUND_SYSTEM_SW_SLOT_FOR_CHANNEL(gpSoundSystem, ch);
+    oldPan = slot->panCache;
+    slot->panCache = pan;
     if (pan == oldPan)
         return;
-    slot->flags |= 0x80;
+    slot->flags |= SOUND_SLOT_FLAG_PAN_DIRTY;
 }
 }
 
@@ -132,194 +111,94 @@ big_slot: {
  *   ch >= 4 (big slot): read swSlots[ch-4].pan, abort if 0xff, otherwise
  *     add delta, clamp, write back, set the dirty bit.
  *
- * Shipped NAKED + #ifdef NON_MATCHING — 5th-class register-coloring drift.
- * Baserom keeps the gpSoundSystem deref in r1 (caller-save scratch) across
- * the muteByte read and the panBits read; agbcc 2.x's natural allocator
- * picks r2 (or r4 callee-save depending on surrounding code), and the
- * 1-register shift cascades through every subsequent instruction (147
- * byte diff). Permuter ran 3300+ iter with no candidate beating the
- * baseline byte_diff. Documented as the same class as sub_08006B94 /
- * sub_080090B0 — agbcc can't be coerced into the baserom's allocation
- * by any source-level rearrangement.
- *
- * Reference C body below (NON_MATCHING side) mirrors sister sub_0802E7C4
- * tricks: `pPool/gpsp` split, `(0x88u << 21) << ch >> 24` for chBit kept
- * as s32 so `>> ch` lowers to `asrs`, and two-copy delta handling (signed
- * for the early cmp, u8 preserved for late re-derivation after r4 gets
- * reused as chBit).
+ * The small-channel path keeps the pan-bit extraction in r0 and the
+ * big-slot path reloads the pan byte destructively through r1 so agbcc
+ * follows the baserom's register lifetimes.
  */
 
-#ifdef NON_MATCHING
 void sub_0802E874(s8 delta, s32 ch)
 {
-    SoundSystem **pPool;
-    SoundSystem **gpsp;
-    s32 newPan;
+    register SoundSystem *ss asm("r1");
+    register s32 newPan asm("r1");
+    register s32 deltaS asm("r4");
+    register s32 chReg asm("r3");
     s32 chBit;
     u32 maskTen;
     u8 muteByte;
     u8 deltaU;
-    u32 extracted;
+    register u32 extracted asm("r0");
 
+    chReg = ch;
     deltaU = (u8)delta;
-    if (delta == 0)
+    deltaS = delta;
+    if (deltaS == 0)
         return;
 
-    if (ch > 3)
+    if (chReg > 3)
         goto big_slot;
 
-    chBit = (s32)((0x88u << 21) << ch >> 24);
-    pPool = &gpSoundSystem;
-    muteByte = *((u8 *)*pPool + 0x010f);
-    maskTen = 0x10 & muteByte;
-    gpsp = pPool;
-    if (maskTen != 0) {
-        newPan = 0x40;
+    chBit = (s32)(SOUND_PAN_BOTH_BITS_BASE << chReg >> 24);
+    ss = gpSoundSystem;
+    muteByte = *((u8 *)ss + SOUND_SYSTEM_MUTE_MASK_OFFSET);
+    maskTen = SOUND_PAN_MUTE_MASK & muteByte;
+    if (maskTen == 0) {
+        register u8 *panBitsP asm("r1");
+
+        panBitsP = (u8 *)ss;
+        panBitsP += SOUND_SYSTEM_PAN_BITS_OFFSET;
+        extracted = chBit;
+        asm("" : "+r"(extracted));
+        extracted &= *panBitsP;
+        extracted = (u8)((s32)extracted >> chReg);
+
+        newPan = SOUND_PAN_LEFT_DECODE_VALUE;
+        if (extracted != SOUND_PAN_MUTE_MASK) {
+            newPan = SOUND_PAN_CENTER_VALUE;
+            if (extracted == 1)
+                newPan = SOUND_PAN_RIGHT_ONLY_MIN;
+        }
+        newPan += (s8)deltaU;
+        if (newPan < 0) {
+            newPan = 0;
+            goto call_pan;
+        }
+        if (newPan > SOUND_PAN_HIGH_MAX)
+            newPan = SOUND_PAN_HIGH_MAX;
         goto call_pan;
     }
 
-    extracted = ((u32)(((s32)(*gpsp)->panBits & chBit) >> ch)) & 0xff;
-
-    newPan = 0x2a;
-    if (extracted != 0x10) {
-        newPan = 0x40;
-        if (extracted == 1)
-            newPan = 0x55;
-    }
-    newPan += (s8)deltaU;
-    if (newPan < 0) {
-        newPan = 0;
-        goto call_pan;
-    }
-    if (newPan > 0x7f)
-        newPan = 0x7f;
+    newPan = SOUND_PAN_CENTER_VALUE;
 
 call_pan:
-    sub_0802E7C4((u8)newPan, ch);
+    sub_0802E7C4((u8)newPan, chReg);
     return;
 
 big_slot: {
-    SoundSlot *slot;
-    s32 newPanB;
+    register u8 *fieldp asm("r1");
+    register s32 off asm("r0");
+    register u8 *slotp asm("r2");
+    register s32 newPanB asm("r1");
     u8 oldPan;
 
-    slot = (SoundSlot *)((u8 *)gpSoundSystem->swSlots + (ch * 64 - 256));
-    oldPan = *((u8 *)slot + 0x3c);
-    if (oldPan == 0xff)
+    fieldp = (u8 *)gpSoundSystem;
+    fieldp += SOUND_SYSTEM_SW_SLOTS_OFFSET;
+    off = chReg << 6;
+    off += -(SOUND_SW_SLOT_STRIDE * 4);
+    fieldp = *(u8 **)fieldp;
+    slotp = fieldp + off;
+    fieldp = slotp;
+    fieldp += SOUND_SLOT_PAN_CACHE_OFFSET;
+    oldPan = *fieldp;
+    if (oldPan == SOUND_PAN_MUTED)
         return;
-    newPanB = oldPan + delta;
+    newPanB = (s32)fieldp;
+    asm("ldrb %0, [%0]" : "+r"(newPanB));
+    newPanB += deltaS;
     if (newPanB < 0)
         newPanB = 0;
-    else if (newPanB > 0x7f)
-        newPanB = 0x7f;
-    *((u8 *)slot + 0x3c) = (u8)newPanB;
-    slot->flags |= 0x80;
+    else if (newPanB > SOUND_PAN_HIGH_MAX)
+        newPanB = SOUND_PAN_HIGH_MAX;
+    *(slotp + SOUND_SLOT_PAN_CACHE_OFFSET) = (u8)newPanB;
+    *(u32 *)(slotp + SOUND_SLOT_FLAGS_OFFSET) |= SOUND_SLOT_FLAG_PAN_DIRTY;
 }
 }
-#else
-NAKED
-void sub_0802E874(void)
-{
-    asm(".syntax unified\n"
-        "    push    {r4, r5, lr}\n"
-        "    adds    r3, r1, #0\n"
-        "    lsls    r0, r0, #24\n"
-        "    lsrs    r5, r0, #24\n"
-        "    asrs    r4, r0, #24\n"
-        "    cmp     r4, #0\n"
-        "    beq     _0802E92C\n"
-        "    cmp     r3, #3\n"
-        "    bgt     _0802E8EA\n"
-        "    movs    r0, #0x88\n"
-        "    lsls    r0, r0, #21\n"
-        "    lsls    r0, r3\n"
-        "    lsrs    r4, r0, #24\n"
-        "    ldr     r0, _0802E8CC\n"
-        "    ldr     r1, [r0, #0]\n"
-        "    ldr     r0, _0802E8D0\n"
-        "    adds    r2, r1, r0\n"
-        "    movs    r0, #0x10\n"
-        "    ldrb    r2, [r2, #0]\n"
-        "    ands    r0, r2\n"
-        "    cmp     r0, #0\n"
-        "    bne     _0802E8DC\n"
-        "    adds    r1, #0xba\n"
-        "    adds    r0, r4, #0\n"
-        "    ldrb    r1, [r1, #0]\n"
-        "    ands    r0, r1\n"
-        "    asrs    r0, r3\n"
-        "    lsls    r0, r0, #24\n"
-        "    lsrs    r0, r0, #24\n"
-        "    movs    r1, #0x2a\n"
-        "    cmp     r0, #0x10\n"
-        "    beq     _0802E8BC\n"
-        "    movs    r1, #0x40\n"
-        "    cmp     r0, #1\n"
-        "    bne     _0802E8BC\n"
-        "    movs    r1, #0x55\n"
-        "_0802E8BC:\n"
-        "    lsls    r0, r5, #24\n"
-        "    asrs    r0, r0, #24\n"
-        "    adds    r1, r1, r0\n"
-        "    cmp     r1, #0\n"
-        "    bge     _0802E8D4\n"
-        "    movs    r1, #0\n"
-        "    b       _0802E8DE\n"
-        "    .align  2, 0\n"
-        "_0802E8CC: .word 0x030065e0\n"
-        "_0802E8D0: .word 0x0000010f\n"
-        "_0802E8D4:\n"
-        "    cmp     r1, #0x7f\n"
-        "    ble     _0802E8DE\n"
-        "    movs    r1, #0x7f\n"
-        "    b       _0802E8DE\n"
-        "_0802E8DC:\n"
-        "    movs    r1, #0x40\n"
-        "_0802E8DE:\n"
-        "    lsls    r0, r1, #24\n"
-        "    lsrs    r0, r0, #24\n"
-        "    adds    r1, r3, #0\n"
-        "    bl      sub_0802E7C4\n"
-        "    b       _0802E92C\n"
-        "_0802E8EA:\n"
-        "    ldr     r0, _0802E910\n"
-        "    ldr     r1, [r0, #0]\n"
-        "    adds    r1, #0xc8\n"
-        "    lsls    r0, r3, #6\n"
-        "    ldr     r2, _0802E914\n"
-        "    adds    r0, r0, r2\n"
-        "    ldr     r1, [r1, #0]\n"
-        "    adds    r2, r1, r0\n"
-        "    adds    r1, r2, #0\n"
-        "    adds    r1, #0x3c\n"
-        "    ldrb    r0, [r1, #0]\n"
-        "    cmp     r0, #0xff\n"
-        "    beq     _0802E92C\n"
-        "    ldrb    r1, [r1, #0]\n"
-        "    adds    r1, r1, r4\n"
-        "    cmp     r1, #0\n"
-        "    bge     _0802E918\n"
-        "    movs    r1, #0\n"
-        "    b       _0802E91E\n"
-        "    .align  2, 0\n"
-        "_0802E910: .word 0x030065e0\n"
-        "_0802E914: .word 0xffffff00\n"
-        "_0802E918:\n"
-        "    cmp     r1, #0x7f\n"
-        "    ble     _0802E91E\n"
-        "    movs    r1, #0x7f\n"
-        "_0802E91E:\n"
-        "    adds    r0, r2, #0\n"
-        "    adds    r0, #0x3c\n"
-        "    strb    r1, [r0, #0]\n"
-        "    ldr     r0, [r2, #0x38]\n"
-        "    movs    r1, #0x80\n"
-        "    orrs    r0, r1\n"
-        "    str     r0, [r2, #0x38]\n"
-        "_0802E92C:\n"
-        "    pop     {r4, r5}\n"
-        "    pop     {r0}\n"
-        "    bx      r0\n"
-        "    .syntax divided\n");
-}
-#endif

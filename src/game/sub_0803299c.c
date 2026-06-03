@@ -1,4 +1,4 @@
-#include "types.h"
+#include "sound.h"
 
 /* SoundChannel_Init — per-channel sound-state primer (sibling of the high-register
  * variant sub_08032904 at 0x08032904). Clears the channel's "playing" dirty
@@ -27,34 +27,6 @@
  *     order — folding the add straight into `ch->acc =` re-swaps the loads.
  */
 
-typedef struct ChannelState {
-    u8 _pad00[0x20];
-    /* 0x20 */ u16 step;
-    u8 _pad22[0x1a];
-    /* 0x3c */ u16 delta;
-    u8 _pad3e[4];
-    /* 0x42 */ u16 acc;
-} ChannelState;
-
-typedef struct SoundSlot {
-    u8 _pad000[0x110];
-    /* 0x110 */ u8 *nextRegion;
-    u8 _pad114[0x34];
-    /* 0x148 */ u16 pendingId;
-    u8 _pad14a[0x7];
-    /* 0x151 */ u8 flags;
-    /* 0x152 */ u8 numChannels;
-} SoundSlot;
-
-typedef struct SoundSystem {
-    u8 _pad00[0x10];
-    /* 0x10 */ u32 chDirty[4];
-    u8 _pad20[0xf8];
-    /* 0x118 */ SoundSlot *slot;
-} SoundSystem;
-
-#define gpSoundSystem (*(SoundSystem **)0x030065e0)
-
 void SoundChannel_Init(u32 index, u32 step, u32 mode, u32 ctrl)
 {
     u32 index8;
@@ -67,7 +39,7 @@ void SoundChannel_Init(u32 index, u32 step, u32 mode, u32 ctrl)
     u32 idxCopy;
     u16 hwOff;
 
-    ((SoundSystem *)p)->chDirty[index] &= 0xffff7eef;
+    ((SoundSystem *)p)->chFlags[index] &= 0xffff7eef;
 
     index8 = index * 8;
     p += index8;
@@ -103,7 +75,7 @@ void SoundChannel_Init(u32 index, u32 step, u32 mode, u32 ctrl)
  * to `bne` and drifts. */
 u32 SoundSlot_QueueRequest(void)
 {
-    SoundSlot *slot = gpSoundSystem->slot;
+    SoundRequestSlot *slot = gpSoundSystem->slot;
 
     if (slot->flags == 1) {
         slot->flags |= 2;
@@ -126,7 +98,7 @@ u32 SoundSlot_QueueRequest(void)
  * branch direction. */
 u32 SoundSlot_ClearInProgress(void)
 {
-    SoundSlot *slot = gpSoundSystem->slot;
+    SoundRequestSlot *slot = gpSoundSystem->slot;
     u8 flags = slot->flags;
     u32 newFlags;
 
@@ -158,7 +130,7 @@ extern void sub_08031DBC(void);
 u32 SoundSlot_QueueId(u16 idArg)
 {
     u16 id = idArg;
-    SoundSlot *slot = gpSoundSystem->slot;
+    SoundRequestSlot *slot = gpSoundSystem->slot;
 
     if (id == 0)
         return 0;
@@ -208,20 +180,20 @@ u32 sub_08032AA0(u8 *arg0, u8 *arg1)
     u8 *addrHi;
     u8 v;
 
-    (*pPool)->slot = (SoundSlot *)buf;
+    (*pPool)->slot = (SoundRequestSlot *)buf;
     sz = 0x154;
     sub_0802E380(buf, sz);
 
     {
         SoundSystem *ssTmp;
         register SoundSystem **r2pPool asm("r2");
-        register SoundSlot **slotField asm("r1");
+        register SoundRequestSlot **slotField asm("r1");
         u32 nextOff;
 
         sz = (u32)buf + sz;
-        r2pPool = pPool;                                 /* mov r2, r8 */
-        ssTmp = *r2pPool;                                /* ldr r1, [r2, #0] */
-        slotField = (SoundSlot **)((u8 *)ssTmp + 0x118); /* adds r1, r1, r6 */
+        r2pPool = pPool;                                        /* mov r2, r8 */
+        ssTmp = *r2pPool;                                       /* ldr r1, [r2, #0] */
+        slotField = (SoundRequestSlot **)((u8 *)ssTmp + 0x118); /* adds r1, r1, r6 */
         nextOff = 0x110;
         (*slotField)->nextRegion = (u8 *)sz;
         sub_0802E380((*slotField)->nextRegion, ((u32)arg0[2] + 4) * 12);

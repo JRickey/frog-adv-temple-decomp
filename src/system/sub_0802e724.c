@@ -1,4 +1,4 @@
-#include "types.h"
+#include "sound.h"
 
 /* sub_0802E724 — per-channel silence/reset.
  *
@@ -13,32 +13,16 @@
  *   ch in {0,1,3}: clear bits 0x21 from chDirty[ch], write 0x800 (reset env)
  *                  to sChannelRegTable[ch], write 0x8000 (key-off) to
  *                  sChannelFreqRegTable[ch]. (ch in {0,1} also clears the
- *                  per-channel half-word at +0xB4 + ch*2.)
- *   ch == 2:       clear bits 0x21 from chDirty[2], clear the +0xB8 half-word,
+ *                  cached PSG pitch halfword at +0xB4 + ch*2.)
+ *   ch == 2:       clear bits 0x21 from chDirty[2], clear cached PSG pitch[2],
  *                  write 0 to sChannelRegTable[2] (the wave channel uses a
  *                  separate volume code, not the env bits), write 0x8000 to
  *                  sChannelFreqRegTable[2].
  *   ch >= 4:       idx = ch - 4. Clear the idx-th word in the +0xC4 pointer
- *                  array. Walk the slot array at +0xC8 to slot[idx] (64-byte
- *                  stride) and clear bit 0x200 in slot->flags (+0x38).
+     *                  array. Walk the slot array at +0xC8 to slot[idx]
+     *                  (SOUND_SW_SLOT_STRIDE bytes) and clear bit 0x200 in
+     *                  slot->flags (+0x38).
  */
-
-typedef struct SoundSlot {
-    u8 _pad00[0x38];
-    u32 flags; /* +0x38 — 0x200 = "active" */
-} SoundSlot;
-
-typedef struct SoundSystem {
-    u8 _pad00[0x10];
-    u32 chDirty[4]; /* +0x10 — per-channel dirty flags */
-    u8 _pad20[0x94];
-    u16 chWaveBuf[4]; /* +0xB4 — per-channel halfword scratch (ch 0..2) */
-    u8 _padBC[0x8];
-    u32 *swSlotResetTab; /* +0xC4 — pointer table cleared for software slots */
-    SoundSlot *swSlots;  /* +0xC8 — base of the 64-byte software slot array */
-} SoundSystem;
-
-#define gpSoundSystem (*(SoundSystem **)0x030065e0)
 
 extern vu16 *const sChannelFreqRegTable[4];
 extern vu16 *const sChannelRegTable[4];
@@ -62,22 +46,22 @@ void sub_0802E724(s32 ch)
         goto big_slot;
 
     ss = gpSoundSystem;
-    ss->chDirty[ch] &= ~0x21;
+    ss->chFlags[ch] &= SOUND_FLAG_CLEAR_ENVELOPE_C_STATE;
 
     if (ch > 2)
         goto write_env_default;
 
-    ss->chWaveBuf[ch] = 0;
+    ss->psgPitchCache[ch] = 0;
     if (ch == 2)
         goto write_wave;
 
 write_env_default:
-    *sChannelRegTable[ch] = 0x800;
+    *sChannelRegTable[ch] = SOUND_CHANNEL_ENV_RESET;
     goto write_freq;
 write_wave:
     *sChannelRegTable[2] = 0;
 write_freq:
-    *sChannelFreqRegTable[ch] = 0x8000;
+    *sChannelFreqRegTable[ch] = SOUND_MIXER_FREQ_RESTART;
     return;
 
 big_slot: {
@@ -87,10 +71,10 @@ big_slot: {
     s32 offset;
     ch -= 4;
     bigSs = gpSoundSystem;
-    bigSs->swSlotResetTab[ch] = 0;
-    slots = bigSs->swSlots;
-    offset = ch * 64;
+    SOUND_SYSTEM_RESET_TABLE(bigSs)[ch] = 0;
+    slots = (SoundSlot *)bigSs->swSlots;
+    offset = ch * SOUND_SW_SLOT_STRIDE;
     bigSlot = (SoundSlot *)(offset + (u32)slots);
-    bigSlot->flags &= ~0x200;
+    bigSlot->flags &= SOUND_SLOT_FLAG_CLEAR_RETIRE;
 }
 }

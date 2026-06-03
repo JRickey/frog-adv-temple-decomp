@@ -1,4 +1,4 @@
-#include "types.h"
+#include "sound.h"
 #include "macros.h"
 
 /* sub_0802F4B0 — sound-system per-VBlank mixer tick.
@@ -30,8 +30,10 @@
  *      at +0x93 (mix scale), and either reads pan-base from +0xbc
  *      (normal) or +0xbe (high-bit pan-override) before forwarding to
  *      sub_0802E684 (per-channel volume setter). Also clears flag
- *      0xfffffdff (== ~0x200) on bit 0x200 set, OR-ing 0x8000 into
- *      *(ss->mixerRegs + 12).
+ *      0xfffffdff (== ~0x200) on bit 0x200 set, restarting the PSG
+ *      frequency register through sChannelFreqRegTable. Channels 0-2
+ *      reuse the cached pitch at ss+0xb4; channel 3 restarts the existing
+ *      noise register value.
  *
  *   4. Stage 3 — per-active-slot mixer pass (ss->slotPtrTable[0..count)):
  *      For each non-NULL slot:
@@ -55,7 +57,7 @@
  *
  *   5. Stage 4 — post-mixer slot-retire pass: walk the slot table again,
  *      clearing flag bit 0x500 from slot.flags entries that have both
- *      flag 0x200 and any of the 0xa00 bits set; writes a pointer (the
+ *      flag 0x200 and any of the 0x1400 bits set; writes a pointer (the
  *      ss-relative byte offset cached in r4) into a parallel table at
  *      ss+0xc4. Then bracketed by sub_0802E418 / sub_0802E3F8 again, and
  *      finally calls sub_080325B0 (sound-system tail).
@@ -71,6 +73,30 @@
  *     any prior sound-cluster NAKED function.
  * The readable C body lives behind NON_MATCHING for the phase-3 PC port;
  * the NAKED form ships the baserom bytes.
+ *
+ * Current forced-C evidence: filling in the stage-3 pitch/pan LUT path and
+ * period-commit side effect improved the isolated candidate to byte_diff 813 /
+ * insn_diff 345. Spelling the stage-1 sub_0802E5D8 arguments as the target's
+ * `sum << 16` byte extraction, preserving the stage-1 masked arithmetic shift,
+ * mirroring the stage-3 period-commit byte extraction, and correcting the final
+ * retire-pass mask to 0x1400 drops the current best to byte_diff 743 /
+ * insn_diff 366 with old_agbcc -O2 -fforce-addr -fno-gcse. Routing the two
+ * six-halfword accumulator sums through the local target-shaped helper improves
+ * that lane to byte_diff 733 / insn_diff 354. Modeling the stage-2
+ * retire-pending restart through sChannelFreqRegTable, including the cached
+ * PSG pitch at ss+0xb4 for channels 0-2, improves the lane to byte_diff 729 /
+ * insn_diff 345 and grows the forced-C body from 828 to 856 bytes. Routing the
+ * stage-3 slot-table loads/stores through SOUND_SYSTEM_SLOT_PTR_TABLE improves
+ * the byte lane to 725 and grows the body to 858 bytes, while preserving the
+ * raw ss+0xcc table shape. The remaining size gap is still large, but the
+ * reference body now expresses the major side effects from 0x0802f53e..0x0802f7ae
+ * in C. Naming the inline channel accumulator owner through
+ * SOUND_SYSTEM_INLINE_SLOT_VIEW is codegen-neutral and preserves the current
+ * pointer-arithmetic shape. The pan-override selector helper is also neutral when
+ * the original SoundSystem base expressions are preserved at each call site.
+ * Retesting a direct `ss->psgPitchCache[i]` read for the PSG restart path
+ * regresses the current lane to byte_diff 737, so the raw cache-base helper stays
+ * for now.
  *
  * See docs/subsystems.md "Sound" for the cluster overview and
  * docs/unknowns.md (sub_0802F4B0 section) for blocker history.
@@ -92,48 +118,38 @@ extern void sub_0802E5D8(u32 hi16, u32 lo16, u32 channelIdx);
 extern void sub_0802E684(u32 panBase, u32 channelIdx);
 extern void sub_0802E418(void);
 extern void sub_0802E3F8(void);
-extern u32 sub_080301C4(u32 hi, u32 mid, u32 lo);
+extern u32 sub_080301C4(u32 entry, u32 mid, u32 lo);
 extern void sub_080325B0(void);
+extern vu16 *const sChannelFreqRegTable[4];
 
-#ifdef NON_MATCHING
+#define SOUND_PAN_COEFF_RISE   0x4ac8
+#define SOUND_PAN_COEFF_CENTER 0xb538
+#define SOUND_PAN_COEFF_FALL   0xb818
+
+#if defined(NON_MATCHING) || defined(NON_MATCHING_sub_0802F4B0)
+#define SOUND_MIXER_ACC_SUM_TARGET(slotExpr, outExpr)                                                                  \
+    do {                                                                                                               \
+        u8 *slotBytes_ = (u8 *)(slotExpr);                                                                             \
+        register u32 first_ asm("r3");                                                                                 \
+        register u32 second_ asm("r1");                                                                                \
+        register u32 total_ asm("r2");                                                                                 \
+                                                                                                                       \
+        first_ = *(u16 *)(slotBytes_ + SOUND_ACC_SUM_0_OFFSET);                                                        \
+        second_ = *(u16 *)(slotBytes_ + SOUND_ACC_SUM_1_OFFSET);                                                       \
+        total_ = first_ + second_;                                                                                     \
+        first_ = *(u16 *)(slotBytes_ + SOUND_ACC_SUM_2_OFFSET);                                                        \
+        total_ = first_ + total_;                                                                                      \
+        second_ = *(u16 *)(slotBytes_ + SOUND_ACC_SUM_3_OFFSET);                                                       \
+        total_ = second_ + total_;                                                                                     \
+        first_ = *(u16 *)(slotBytes_ + SOUND_ACC_SUM_4_OFFSET);                                                        \
+        total_ = first_ + total_;                                                                                      \
+        first_ = *(u16 *)(slotBytes_ + SOUND_ACC_SUM_5_OFFSET);                                                        \
+        (outExpr) = first_ + total_;                                                                                   \
+    } while (0)
+
 /* Reference body — readable shape for the phase-3 PC port. Does NOT
  * byte-match; agbcc 2.x's allocator picks low-reg shapes from any
  * plausible C input and the baserom uses sl/r9/r8 for loop state. */
-
-typedef struct SoundSystem {
-    u8 count; /* +0x00 */
-    u8 _pad01[0x0a];
-    u8 lockRefCount; /* +0xbb */
-    u8 _pad0c[4];
-    u32 chFlags[4]; /* +0x10 — per-channel dirty word */
-    u8 _pad20[0x70];
-    u16 channelVolume[4][4]; /* +0x90 stride 8; only [i][0] holds the volume halfword */
-    u8 _padb0[4];
-    u16 panBase[2]; /* +0xb4 stride 4 */
-    u8 _padb8[4];
-    u16 panOverride1;    /* +0xbc */
-    u16 panOverride2;    /* +0xbe */
-    u32 *mixTablePtr;    /* +0xc0 */
-    u32 *retireTablePtr; /* +0xc4 */
-    u8 _padc8[4];
-    struct SoundSlot **slotPtrTable; /* +0xcc */
-} SoundSystem;
-
-typedef struct SoundSlot {
-    u16 acc[6];
-    u8 _pad2c[0x2c - 12];
-    u16 envelope_step; /* +0x28 */
-    u8 envelope_scale; /* +0x2b */
-    u8 _pad2c2[0x36 - 0x2c];
-    u16 countdown; /* +0x36 */
-    u32 flags;     /* +0x38 */
-    u8 _pad3c;
-    u8 pan_in; /* +0x3c */
-    u8 _pad3e;
-    u8 countdown_step; /* +0x3f */
-} SoundSlot;
-
-#define gpSoundSystem (*(SoundSystem **)0x030065e0)
 
 void sub_0802F4B0(void)
 {
@@ -154,66 +170,129 @@ void sub_0802F4B0(void)
     sub_0802F054();
     sub_0802F2FC();
 
-    for (i = 0; i <= 2; i++) {
+    for (i = 0; i <= SOUND_INLINE_CHANNEL_COUNT - 1; i++) {
         ss = gpSoundSystem;
-        if (ss->chFlags[i] & 0x40) {
-            ss->chFlags[i] &= ~0x40u;
-            slot = (SoundSlot *)((u8 *)ss + i * 36);
-            sum = slot->acc[0] + slot->acc[1] + slot->acc[2] + slot->acc[3] + slot->acc[4] + slot->acc[5];
-            sub_0802E5D8(sum >> 8, (sum & 0xff0000) >> 16, i);
+        if (ss->chFlags[i] & SOUND_FLAG_ENV_DIRTY) {
+            ss->chFlags[i] &= ~SOUND_FLAG_ENV_DIRTY;
+            slot = SOUND_SYSTEM_INLINE_SLOT_VIEW(ss, i);
+            SOUND_MIXER_ACC_SUM_TARGET(slot, sum);
+            {
+                u32 sumShift = sum << 16;
+
+                sub_0802E5D8(sumShift >> 24, (s32)(sumShift & 0x00ff0000) >> 16, i);
+            }
         }
     }
 
-    for (i = 0; i <= 3; i++) {
+    for (i = 0; i <= SOUND_ENVELOPE_C_CHANNEL_COUNT - 1; i++) {
         ss = gpSoundSystem;
-        if (ss->chFlags[i] & 0x80) {
-            ss->chFlags[i] &= ~0x80u;
-            b = ss->channelVolume[i][0];
+        if (ss->chFlags[i] & SOUND_FLAG_UPDATE_DIRTY) {
+            ss->chFlags[i] &= ~SOUND_FLAG_UPDATE_DIRTY;
+            b = SOUND_SYSTEM_CHANNEL_VOLUME(ss)[i][0];
             c = (b >> 8) ? (b >> 8) + 1 : 0;
-            stride = ((u8 *)ss)[i * 8 + 0x93] * c << 8 >> 16;
-            panBase = (ss->chFlags[i] & 0x10000) ? ss->panOverride2 : ss->panOverride1;
+            stride = SOUND_SYSTEM_CHANNEL_SCALE(ss, i) * c << 8 >> 16;
+            panBase = SOUND_SYSTEM_PAN_OVERRIDE_VALUE(ss, ss->chFlags[i]);
             sub_0802E684((panBase * stride << 8) >> 16, i);
         }
-        if (gpSoundSystem->chFlags[i] & 0x200) {
-            *(u16 *)(ss->mixTablePtr + 3) |= 0x8000;
-            ss->chFlags[i] &= 0xfffffdff;
+        if (gpSoundSystem->chFlags[i] & SOUND_SLOT_FLAG_RETIRE_PENDING) {
+            vu16 *reg;
+
+            if (i == SOUND_ENVELOPE_C_CHANNEL_COUNT - 1) {
+                reg = sChannelFreqRegTable[i];
+                *reg |= SOUND_MIXER_FREQ_RESTART;
+            } else {
+                reg = sChannelFreqRegTable[i];
+                *reg = ((u16 *)SOUND_SYSTEM_PSG_PITCH_CACHE_BASE(ss))[i] | SOUND_MIXER_FREQ_RESTART;
+            }
+            ss->chFlags[i] &= SOUND_SLOT_FLAG_CLEAR_RETIRE;
         }
     }
 
     for (i = 0; i < gpSoundSystem->count; i++) {
-        slot = gpSoundSystem->slotPtrTable[i];
+        slot = SOUND_SYSTEM_SLOT_PTR_TABLE(gpSoundSystem)[i];
         if (slot == NULL)
             continue;
-        if (slot->countdown != 0) {
-            s32 d = (s32)slot->countdown - slot->countdown_step;
+        if (SOUND_SLOT_COUNTDOWN(slot) != 0) {
+            s32 d = (s32)SOUND_SLOT_COUNTDOWN(slot) - SOUND_SLOT_COUNTDOWN_STEP(slot);
             if (d < 0)
                 d = 0;
-            slot->countdown = (u16)d;
+            SOUND_SLOT_COUNTDOWN(slot) = (u16)d;
         }
-        if (slot->flags & 0x80) {
-            slot->flags &= ~0x80u;
-            /* pitch + pan LUT path — see baserom bytes for exact math */
+        if (slot->flags & SOUND_FLAG_UPDATE_DIRTY) {
+            SoundMixEntry *entry;
+            EnvelopeCBlock *envC;
+            u32 scaledPitch;
+            u32 pan;
+            u32 left;
+            u32 right;
+            u32 panMode;
+            u32 panScale;
+
+            slot->flags &= ~SOUND_FLAG_UPDATE_DIRTY;
+            envC = SOUND_SLOT_ENVELOPE_C(slot);
+            scaledPitch = envC->acc >> 8;
+            if (scaledPitch != 0)
+                scaledPitch++;
+
+            scaledPitch = (envC->pitchScale * scaledPitch << 8) >> 16;
+            envC->scaledPitch = (u8)scaledPitch;
+
+            entry = SOUND_SYSTEM_MIX_ENTRY(gpSoundSystem, i);
+            pan = slot->panCache;
+            if (pan <= SOUND_PAN_LOW_MAX) {
+                left = ((((SOUND_PAN_CENTER_VALUE - pan) * SOUND_PAN_COEFF_RISE) >> 6) + SOUND_PAN_COEFF_CENTER) *
+                       scaledPitch;
+                left = (left >> 16) & SOUND_MIX_BYTE_MASK;
+                right = (((pan * SOUND_PAN_COEFF_FALL) >> 6) * scaledPitch) >> 16;
+                right &= SOUND_MIX_BYTE_MASK;
+                panMode = 0;
+            } else if ((s8)pan >= 0) {
+                left = ((((SOUND_PAN_HIGH_MAX - pan) * SOUND_PAN_COEFF_FALL) >> 6) * scaledPitch) >> 16;
+                left &= SOUND_MIX_BYTE_MASK;
+                right =
+                    ((((pan - SOUND_PAN_LOW_MAX) * SOUND_PAN_COEFF_RISE) >> 6) + SOUND_PAN_COEFF_CENTER) * scaledPitch;
+                right = (right >> 16) & SOUND_MIX_BYTE_MASK;
+                panMode = 0;
+            } else {
+                right = (SOUND_PAN_COEFF_CENTER * scaledPitch) >> 16;
+                right &= SOUND_MIX_BYTE_MASK;
+                left = right;
+                panMode = 1;
+            }
+
+            panScale = SOUND_SYSTEM_PAN_OVERRIDE_VALUE(gpSoundSystem, slot->flags);
             sub_0802E418();
+            entry->panLeft = (left * panScale) >> 8;
+            entry->panRight = (right * panScale) >> 8;
+            entry->panMode = (u8)panMode;
             sub_0802E3F8();
         }
-        if (slot->flags & 0x40) {
-            slot->flags &= ~0x40u;
-            if (slot->flags & 0x1400) {
-                sum = slot->acc[0] + slot->acc[1] + slot->acc[2] + slot->acc[3] + slot->acc[4] + slot->acc[5];
-                sub_080301C4(0, ((sum << 16) >> 16) >> 8, (sum << 24) >> 24);
+        if (slot->flags & SOUND_FLAG_ENV_DIRTY) {
+            slot->flags &= ~SOUND_FLAG_ENV_DIRTY;
+            if (slot->flags & SOUND_SLOT_FLAG_PERIOD_ACTIVE) {
+                SoundPeriodEntry *entry;
+
+                entry = (SoundPeriodEntry *)SOUND_SYSTEM_MIX_ENTRY(gpSoundSystem, i);
+                SOUND_MIXER_ACC_SUM_TARGET(slot, sum);
+                {
+                    u32 sum16 = (sum << 16) >> 16;
+
+                    entry->period = (u16)sub_080301C4(entry->base, sum16 >> 8, (sum16 << 24) >> 24);
+                }
             }
         }
-        if (slot->flags & 0x8000) {
-            gpSoundSystem->slotPtrTable[i] = NULL;
+        if (slot->flags & SOUND_SLOT_FLAG_RETIRED) {
+            SOUND_SYSTEM_SLOT_PTR_TABLE(gpSoundSystem)[i] = NULL;
         }
     }
 
     sub_0802E418();
     for (i = 0; i < gpSoundSystem->count; i++) {
-        slot = gpSoundSystem->slotPtrTable[i];
-        if (slot != NULL && (slot->flags & 0x200) && (slot->flags & 0xa00)) {
-            slot->flags &= 0xfffffdff;
-            gpSoundSystem->retireTablePtr[i] = (u32)((u8 *)gpSoundSystem->mixTablePtr + i * 28);
+        slot = SOUND_SYSTEM_SLOT_PTR_TABLE(gpSoundSystem)[i];
+        if (slot != NULL && (slot->flags & SOUND_SLOT_FLAG_RETIRE_PENDING) &&
+            (slot->flags & SOUND_SLOT_FLAG_PERIOD_ACTIVE)) {
+            slot->flags &= SOUND_SLOT_FLAG_CLEAR_RETIRE;
+            SOUND_SYSTEM_RETIRE_TABLE(gpSoundSystem)[i] = (u32)SOUND_SYSTEM_MIX_ENTRY(gpSoundSystem, i);
         }
     }
     sub_0802E3F8();
@@ -728,16 +807,6 @@ void sub_0802F884(u8 value)
     *((u8 *)sChannelFreqRegTable[3]) = value;
 }
 
-typedef struct SoundMixerSys {
-    u8 count;
-    u8 _pad01[10];
-    u8 lockRefCount;
-    u8 _pad0c[4];
-    u32 chFlags[4]; /* +0x10 */
-} SoundMixerSys;
-
-#define gpSoundMixerSys (*(SoundMixerSys **)0x030065e0)
-
 /* sub_0802F890 — update a PSG channel's duty/envelope register and mark dirty.
  *
  * If bit 3 of value is clear: reads the current halfword, masks with
@@ -759,7 +828,7 @@ void sub_0802F890(u8 value, u32 channelIdx)
 {
     register u8 val asm("r4");
     u32 byteOff;
-    SoundMixerSys *ss;
+    SoundSystem *ss;
     u32 flags;
     u32 *pF;
     vu16 *reg;
@@ -790,11 +859,11 @@ set_path: {
 }
 
 common_tail:
-    ss = gpSoundMixerSys;
-    ss = (SoundMixerSys *)((u8 *)ss + 0x10);
+    ss = gpSoundSystem;
+    ss = (SoundSystem *)((u8 *)ss + SOUND_CH_FLAGS_OFFSET);
     pF = (u32 *)((u8 *)ss + byteOff);
     flags = *pF;
-    flags &= (u32)-0xa2;
-    flags |= 0x200;
+    flags &= SOUND_FLAG_CLEAR_PSG_REG_UPDATE;
+    flags |= SOUND_FLAG_PSG_REG_DIRTY;
     *pF = flags;
 }

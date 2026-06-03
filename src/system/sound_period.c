@@ -1,4 +1,4 @@
-#include "types.h"
+#include "sound.h"
 #include "macros.h"
 
 /* sub_080301C4 — per-mix-entry pitch-ratio scaler + period divide.
@@ -35,29 +35,11 @@
  * path uses the slot-local sNoteRatioTable/sInversePitchTable for the
  * sample-streaming mix entries.
  *
- * Shipped as NAKED + #ifdef NON_MATCHING. The function BLs the libgcc
- * __udivsi3 helper, which puts it in the "push {r4-r7, lr} + libgcc
- * helper BL" class flagged in docs/codegen-notes.md as a third
- * unmatchable shape for agbcc 2.x — even a clean pure-C body with the
- * exact same control flow emits one extra `.short 0x0000` pad before
- * the trailing pool word and shifts every subsequent relative offset
- * by 4 bytes. Iter 9 shipped a pure-C version that briefly appeared
- * to match (cached frog_us.gba from in-flight build state); a clean
- * rebuild revealed byte_diff 136. See docs/decisions.md "Iter-9
- * false-positive verification".
+ * The divide result is kept live through r3 before the u16 return so agbcc
+ * emits the same post-libgcc helper copy as the baserom. Removing the empty
+ * r3 barrier after __udivsi3 is semantically fine but drops the target's
+ * `adds r3, r0, #0` and leaves the linked function byte_diff 11.
  */
-
-#ifdef NON_MATCHING
-/* Reference body — describes the algorithm for the phase-3 PC port.
- * Does NOT byte-match; agbcc 2.x inserts an extra short pad before
- * the trailing pool word for this prologue shape. */
-
-typedef struct SoundSystem {
-    u8 _pad00[2];
-    u16 divisor; /* +0x02 — global sample-rate divisor (period denominator) */
-} SoundSystem;
-
-#define gpSoundSystem (*(SoundSystem **)0x030065e0)
 
 /* ROM-resident pitch LUTs — defined in src/data/sound_pitch.c. */
 extern const u16 sNoteRatioTable[128];    /* 0x083ddadc — *2^(n/12) up */
@@ -66,164 +48,69 @@ extern const u16 sInversePitchTable[128]; /* 0x083ddbdc — /2^(n/12) down */
 /* libgcc unsigned-int division helper (0x08033ee4). */
 extern u32 __udivsi3(u32 num, u32 den);
 
-typedef struct MixEntry {
-    u8 _pad00[8];
-    u16 basePeriod; /* +0x08 — slot's nominal period in 4.12 fixed-point */
-    u8 anchor;      /* +0x0a — anchor semitone index */
-} MixEntry;
-
 u32 sub_080301C4(MixEntry *entry, u8 b, u8 c)
 {
     u32 a = entry->anchor;
-    u32 r3;
+    register u32 r3 asm("r3");
 
     if (c == 0) {
-        if (b == a) {
-            r3 = entry->basePeriod << 12;
+        u32 s;
+        u16 ratio;
+
+        if (b == a)
+            goto same_note;
+
+        s = entry->basePeriod;
+        if (a < b) {
+            ratio = sNoteRatioTable[b - a];
         } else {
-            u32 s = entry->basePeriod;
-            u16 ratio;
-            if (a < b) {
-                ratio = sNoteRatioTable[b - a];
-            } else {
-                ratio = sInversePitchTable[a - b];
-            }
-            r3 = ratio * s;
+            ratio = sInversePitchTable[a - b];
         }
+        r3 = ratio * s;
+        goto divide;
+
+    same_note:
+        r3 = entry->basePeriod << 12;
     } else {
-        u32 d;
-        u16 lo, hi;
+        register const u16 *table asm("r2");
+        register u32 d asm("r1");
+        u16 hi;
         s32 delta;
-        u32 ratio;
         if (b >= a) {
+            table = sNoteRatioTable;
             d = b - a;
-            lo = sNoteRatioTable[d];
-            hi = sNoteRatioTable[d + 1];
-            delta = (s32)hi - (s32)lo;
+            r3 = table[d];
+            d++;
+            hi = table[d];
+            delta = (s32)hi - (s32)r3;
         } else {
+            table = sInversePitchTable;
             d = a - b;
-            lo = sInversePitchTable[d];
-            hi = sInversePitchTable[d + 1];
-            delta = (s32)lo - (s32)hi;
+            r3 = table[d];
+            d++;
+            hi = table[d];
+            delta = (s32)r3 - (s32)hi;
         }
-        ratio = lo + (((u32)delta * c) >> 8);
-        r3 = entry->basePeriod * ratio;
+        {
+            register u32 ratio asm("r0");
+
+            ratio = r3 + (((u32)delta * c) >> 8);
+            r3 = entry->basePeriod;
+            r3 *= ratio;
+        }
     }
 
-    return (u16)__udivsi3(r3, gpSoundSystem->divisor);
+divide:
+    r3 = __udivsi3(r3, gpSoundSystem->divisor);
+    asm("" : "+r"(r3));
+    return (u16)r3;
 }
-
-#else
-NAKED
-void sub_080301C4(void)
-{
-    asm(".syntax unified\n"
-        "    push    {r4, r5, lr}\n"
-        "    adds    r4, r0, #0\n"
-        "    lsls    r1, r1, #24\n"
-        "    lsrs    r3, r1, #24\n"
-        "    adds    r1, r3, #0\n"
-        "    lsls    r2, r2, #24\n"
-        "    lsrs    r5, r2, #24\n"
-        "    ldrb    r0, [r4, #0xa]\n"
-        "    cmp     r5, #0\n"
-        "    bne     _08030206\n"
-        "    cmp     r3, r0\n"
-        "    beq     _08030200\n"
-        "    ldrh    r2, [r4, #8]\n"
-        "    cmp     r0, r3\n"
-        "    bcs     _080301EC\n"
-        "    ldr     r1, _080301E8            @ =sNoteRatioTable\n"
-        "    subs    r0, r3, r0\n"
-        "    b       _080301F0\n"
-        "_080301E8: .4byte sNoteRatioTable\n"
-        "_080301EC:\n"
-        "    ldr     r1, _080301FC            @ =sInversePitchTable\n"
-        "    subs    r0, r0, r3\n"
-        "_080301F0:\n"
-        "    lsls    r0, r0, #1\n"
-        "    adds    r0, r0, r1\n"
-        "    ldrh    r0, [r0, #0]\n"
-        "    adds    r3, r0, #0\n"
-        "    muls    r3, r2\n"
-        "    b       _08030244\n"
-        "_080301FC: .4byte sInversePitchTable\n"
-        "_08030200:\n"
-        "    ldrh    r4, [r4, #8]\n"
-        "    lsls    r3, r4, #12\n"
-        "    b       _08030244\n"
-        "_08030206:\n"
-        "    cmp     r3, r0\n"
-        "    bcc     _08030224\n"
-        "    ldr     r2, _08030220            @ =sNoteRatioTable\n"
-        "    subs    r1, r3, r0\n"
-        "    lsls    r0, r1, #1\n"
-        "    adds    r0, r0, r2\n"
-        "    ldrh    r3, [r0, #0]\n"
-        "    adds    r1, #1\n"
-        "    lsls    r1, r1, #1\n"
-        "    adds    r1, r1, r2\n"
-        "    ldrh    r1, [r1, #0]\n"
-        "    subs    r0, r1, r3\n"
-        "    b       _08030238\n"
-        "_08030220: .4byte sNoteRatioTable\n"
-        "_08030224:\n"
-        "    ldr     r2, _0803025C            @ =sInversePitchTable\n"
-        "    subs    r1, r0, r1\n"
-        "    lsls    r0, r1, #1\n"
-        "    adds    r0, r0, r2\n"
-        "    ldrh    r3, [r0, #0]\n"
-        "    adds    r1, #1\n"
-        "    lsls    r1, r1, #1\n"
-        "    adds    r1, r1, r2\n"
-        "    ldrh    r1, [r1, #0]\n"
-        "    subs    r0, r3, r1\n"
-        "_08030238:\n"
-        "    muls    r0, r5\n"
-        "    lsrs    r0, r0, #8\n"
-        "    adds    r0, r3, r0\n"
-        "    ldrh    r4, [r4, #8]\n"
-        "    adds    r3, r4, #0\n"
-        "    muls    r3, r0\n"
-        "_08030244:\n"
-        "    ldr     r0, _08030260            @ =gpSoundSystem (0x030065e0)\n"
-        "    ldr     r0, [r0, #0]\n"
-        "    ldrh    r1, [r0, #2]\n"
-        "    adds    r0, r3, #0\n"
-        "    bl      __udivsi3\n"
-        "    adds    r3, r0, #0\n"
-        "    lsls    r0, r3, #16\n"
-        "    lsrs    r0, r0, #16\n"
-        "    pop     {r4, r5}\n"
-        "    pop     {r1}\n"
-        "    bx      r1\n"
-        "_0803025C: .4byte sInversePitchTable\n"
-        "_08030260: .4byte 0x030065e0\n"
-        "    .syntax divided\n");
-}
-#endif
-
-typedef struct PeriodState {
-    u8 *bufStart; /* +0x00 */
-    u32 active;   /* +0x04 */
-    u8 _pad08[8]; /* +0x08 */
-    u8 *bufEnd;   /* +0x10 */
-    u8 _pad14[6]; /* +0x14 */
-    u8 flag;      /* +0x1a */
-} PeriodState;
-
-typedef struct SoundSystem2 {
-    u8 _pad00[0xf4];    /* +0x00 */
-    PeriodState period; /* +0xf4 */
-} SoundSystem2;
-
-#define gpSoundSystem2 (*(SoundSystem2 **)0x030065e0)
 
 extern void sub_0802E380(u8 *ptr, u32 count);
 
 void sub_08030264(void)
 {
-    PeriodState *ps = &gpSoundSystem2->period;
+    PeriodState *ps = SOUND_SYSTEM_PERIOD_STATE(gpSoundSystem);
     u8 flag;
 
     if (ps->active == 0)
@@ -273,20 +160,12 @@ void sub_08030264(void)
 
 /* The SoundSystem base + 0xd0 is held in r4 across the lock BLs, with the
  * two PCM ring-buffer pointers reached at +0x14 / +0x18 from there. */
-typedef struct DmaSrcBlock {
-    u8 _pad00[0x14];
-    const void *pcmBufA; /* +0x14 (abs +0xe4) — DMA1 source */
-    const void *pcmBufB; /* +0x18 (abs +0xe8) — DMA2 source */
-} DmaSrcBlock;
-
-#define gpSoundSystem3 (*(u8 **)0x030065e0)
-
 extern void sub_0802E418(void);
 extern void sub_0802E3F8(void);
 
 void sub_08030290(void)
 {
-    DmaSrcBlock *ss = (DmaSrcBlock *)(gpSoundSystem3 + 0xd0);
+    DmaSrcBlock *ss = SOUND_SYSTEM_DMA_SRC(gpSoundSystem);
     vu8 *cnt;
 
     sub_0802E418();
@@ -313,44 +192,6 @@ void sub_08030290(void)
     sub_0802E3F8();
 }
 
-typedef struct SoundSlotAcc {
-    u8 _pad00[0x2a];
-    u8 gate;      /* +0x2a */
-    u8 period;    /* +0x2b */
-    u8 _pad2c[8]; /* +0x2c */
-    u16 accA;     /* +0x34 */
-    u16 accB;     /* +0x36 */
-    u32 flags;    /* +0x38 */
-} SoundSlotAcc;
-
-typedef struct DirectSoundChannel {
-    u8 _pad00[6];
-    u8 gate;   /* +0x06 */
-    u8 period; /* +0x07 */
-} DirectSoundChannel;
-
-typedef struct SoundCommandBytes {
-    u8 op;
-    u8 arg;
-} SoundCommandBytes;
-
-typedef struct SoundSystemAcc {
-    u8 count;       /* +0x00 */
-    u8 _pad01[0xb]; /* +0x01 */
-    u16 periodA;    /* +0x0c */
-    u16 periodB;    /* +0x0e */
-    u32 chFlags[4]; /* +0x10 */
-    u8 _pad20[0x6c];
-    DirectSoundChannel channels[4]; /* +0x8c */
-    u16 chanAcc[4];                 /* +0xac */
-    u8 _padb4[0x10];
-    void **slotStateA;     /* +0xc4 */
-    SoundSlotAcc *swSlots; /* +0xc8 */
-    void **slotStateB;     /* +0xcc */
-} SoundSystemAcc;
-
-#define gpSoundSystemAcc (*(SoundSystemAcc **)0x030065e0)
-
 s32 sub_0803030C(s32 channel, u32 *state_ptr)
 {
     s32 ch;
@@ -374,7 +215,7 @@ s32 sub_0803030C(s32 channel, u32 *state_ptr)
         adj = ch - 4;
         gp4 = &gpSoundSystemAcc;
         ss = *gp4;
-        swSlotsPtr = (SoundSlotAcc **)((u8 *)ss + 0xc8);
+        swSlotsPtr = (SoundSlotAcc **)((u8 *)ss + SOUND_SYSTEM_SW_SLOTS_OFFSET);
         swSlots = *swSlotsPtr;
         adj <<= 6;
         *(u16 *)((u8 *)(adj + (s32)swSlots) + 0x34) = 0;
@@ -392,21 +233,21 @@ s32 sub_0803030C(s32 channel, u32 *state_ptr)
         register SoundSlotAcc *slot asm("r2");
         register s32 chShifted asm("r0");
         ss = *gpss;
-        swSlots = *(SoundSlotAcc **)((u8 *)ss + 0xc8);
+        swSlots = *(SoundSlotAcc **)((u8 *)ss + SOUND_SYSTEM_SW_SLOTS_OFFSET);
         chShifted = ch << 6;
         chShifted += (s32)swSlots;
         slot = (SoundSlotAcc *)(chShifted + 0xffffff00);
-        slot->flags |= 0x8000;
+        slot->flags |= SOUND_SLOT_FLAG_RETIRED;
     } else {
         u32 *chFlagsPtr;
         u32 flags;
         u32 chOff;
         chFlagsPtr = (u32 *)*gpss;
         chOff = (u32)ch << 2;
-        chFlagsPtr = (u32 *)((u8 *)chFlagsPtr + 0x10);
+        chFlagsPtr = (u32 *)((u8 *)chFlagsPtr + SOUND_CH_FLAGS_OFFSET);
         chFlagsPtr = (u32 *)((u8 *)chFlagsPtr + chOff);
         flags = *chFlagsPtr;
-        flags |= 0x8000;
+        flags |= SOUND_SLOT_FLAG_RETIRED;
         *chFlagsPtr = flags;
     }
     return 0;
@@ -438,11 +279,11 @@ s32 sub_0803038C(s32 channel, u32 *state_ptr)
 
         gp = &gpSoundSystemAcc;
         directOff = ch << 3;
-        directOff += 0x8c;
+        directOff += SOUND_DIRECT_CHANNEL_BASE;
         ss = *gp;
         direct = (DirectSoundChannel *)((u8 *)ss + directOff);
         flagOff = ch << 2;
-        flags = (u32 *)((u8 *)ss + 0x10);
+        flags = (u32 *)((u8 *)ss + SOUND_CH_FLAGS_OFFSET);
         flags = (u32 *)((u8 *)flags + flagOff);
         flagsVal = *flags;
         period = 0x10000;
@@ -460,9 +301,9 @@ s32 sub_0803038C(s32 channel, u32 *state_ptr)
         period *= cmd->arg;
         direct->period = period >> 8;
         gpDirty = gpss;
-        flagsDirty = (u32 *)((u8 *)*gpDirty + 0x10);
+        flagsDirty = (u32 *)((u8 *)*gpDirty + SOUND_CH_FLAGS_OFFSET);
         flagsDirty = (u32 *)((u8 *)flagsDirty + flagOff);
-        *flagsDirty |= 0x80;
+        *flagsDirty |= SOUND_FLAG_UPDATE_DIRTY;
     } else {
         register SoundSystemAcc **gp asm("r2");
         register SoundSystemAcc *ss asm("r3");
@@ -479,7 +320,7 @@ s32 sub_0803038C(s32 channel, u32 *state_ptr)
         ch -= 4;
         gp = &gpSoundSystemAcc;
         ss = *gp;
-        slot = (SoundSlotAcc *)((u8 *)ss->swSlots + (ch << 6));
+        slot = SOUND_SYSTEM_SW_SLOT(ss, ch);
         periodSlot = (u8 *)slot + 0x24;
         period = slot->flags & 0x10000;
         gpss = gp;
@@ -501,11 +342,11 @@ s32 sub_0803038C(s32 channel, u32 *state_ptr)
         }
         gpDirty = gpss;
         ssDirty = (u8 *)*gpDirty;
-        ssDirty += 0xc8;
+        ssDirty += SOUND_SYSTEM_SW_SLOTS_OFFSET;
         ssDirty = *(u8 **)ssDirty;
         chShift = ch << 6;
         slotDirty = (SoundSlotAcc *)(chShift + (u32)ssDirty);
-        slotDirty->flags |= 0x80;
+        slotDirty->flags |= SOUND_FLAG_UPDATE_DIRTY;
     }
 
     *sp += 2;
@@ -533,10 +374,10 @@ s32 sub_0803045C(s32 channel, u32 *state_ptr)
         u32 channelOff;
 
         gp = &gpSoundSystemAcc;
-        flagOff = (ch << 2) + 0x10;
+        flagOff = (ch << 2) + SOUND_CH_FLAGS_OFFSET;
         ss = *gp;
         flags = (u32 *)((u8 *)ss + flagOff);
-        channelOff = (ch << 3) + 0x8c;
+        channelOff = (ch << 3) + SOUND_DIRECT_CHANNEL_BASE;
         gateBase = (u8 *)ss + channelOff;
     } else {
         register SoundSystemAcc *ss asm("r1");
@@ -550,18 +391,18 @@ s32 sub_0803045C(s32 channel, u32 *state_ptr)
 
         gp = &gpSoundSystemAcc;
         ss = *gp;
-        stateBase = (u8 *)ss->slotStateB;
+        stateBase = (u8 *)SOUND_SYSTEM_SLOT_PTR_TABLE(ss);
         arrayOff = ch << 2;
         stateSlot = (u8 *)(arrayOff + (u32)stateBase);
         if (*(void **)(stateSlot - 0x10) == NULL)
             goto reset;
-        stateBase = (u8 *)ss->slotStateA;
+        stateBase = (u8 *)SOUND_SYSTEM_STREAM_TABLE(ss);
         stateSlot = (u8 *)(arrayOff + (u32)stateBase);
         if (*(void **)(stateSlot - 0x10) == NULL)
             goto reset;
 
         slotPtr = (u8 **)ss;
-        slotPtr = (u8 **)((u8 *)slotPtr + 0xc8);
+        slotPtr = (u8 **)((u8 *)slotPtr + SOUND_SYSTEM_SW_SLOTS_OFFSET);
         slotOff = ch << 6;
         slotOff += -0x100;
         slot = *slotPtr + slotOff;

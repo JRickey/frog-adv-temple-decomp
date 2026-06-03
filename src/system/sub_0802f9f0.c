@@ -1,4 +1,4 @@
-#include "types.h"
+#include "sound.h"
 
 /* sub_0802F9F0 — channel-flags STOP transition + queued-program swap.
  *
@@ -23,10 +23,10 @@
  *   - idx <= 3 (music channels): ss->chFlags[idx] at SoundSystem+0x10
  *     (stride 4).
  *   - idx >= 4 (dynamic SFX slots): swSlots[idx-4].flags at +0x38
- *     within the 64-byte SoundSlot. Phrased as
- *     `(SoundSlot *)((u8 *)swSlots + (idx*64 - 256))` so agbcc emits
- *     the same `lsls #6; add; subs #200` baserom sequence the sibling
- *     sub_0802E7C4 uses.
+     *     within the 64-byte SoundSlot. SOUND_SYSTEM_SW_SLOT_FOR_CHANNEL
+     *     preserves the `idx*64 - 256` arithmetic so agbcc emits the same
+     *     `lsls #6; add; subs #200` baserom sequence the sibling sub_0802E7C4
+     *     uses.
  *
  * Matching notes:
  *   - `if (idx <= 3) { small } else { big }` (not the reverse) — the
@@ -48,55 +48,6 @@
  *     the pre-OR `flags` (r3 vs r2 in the baserom).
  */
 
-typedef struct SoundChannelSeq {
-    u32 *opPtr;       /* +0x00 — current opcode pointer */
-    u32 *queuedOpPtr; /* +0x04 — queued opcode pointer (swap-on-retire) */
-    u8 _pad08[2];
-    u16 cursor; /* +0x0a — opcode cursor counter */
-    u8 _pad0c[4];
-} SoundChannelSeq; /* sizeof == 16 */
-
-typedef struct SoundSlot {
-    u8 _pad00[0x38];
-    u32 flags; /* +0x38 — channel flag word (shared with sound_envelope.c) */
-} SoundSlot;
-
-/* Per-slot accumulator view: 6 envelope-channel accumulators at offsets
- * 0, 2, 4, 12, 20, 28. Pointed to by SoundSystem.slotPtrTable[i]. */
-typedef struct SoundSlotAccs {
-    u16 acc0; /* +0x00 */
-    u16 acc1; /* +0x02 */
-    u16 acc2; /* +0x04 */
-    u8 _pad06[6];
-    u16 acc3; /* +0x0c */
-    u8 _pad0e[6];
-    u16 acc4; /* +0x14 */
-    u8 _pad16[6];
-    u16 acc5; /* +0x1c */
-} SoundSlotAccs;
-
-/* Mix-table entry view: base oscillator value at +0, period result at +0x14. */
-typedef struct SoundPeriodEntry {
-    u32 base; /* +0x00 */
-    u8 _pad04[16];
-    u16 period; /* +0x14 */
-} SoundPeriodEntry;
-
-typedef struct SoundSystem {
-    u8 count; /* +0x00 */
-    u8 _pad01[0xf];
-    u32 chFlags[4]; /* +0x10 — per-music-channel flag word */
-    u8 _pad20[0xa0];
-    u32 *mixTable; /* +0xc0 */
-    u8 _padc4[4];
-    SoundSlot *swSlots;           /* +0xc8 — software-mixed slot array (64-byte stride) */
-    SoundSlotAccs **slotPtrTable; /* +0xcc */
-    u8 _padd0[0x44];
-    SoundChannelSeq *channelSeqs; /* +0x114 — channel sequencer array (16-byte stride) */
-} SoundSystem;
-
-#define gpSoundSystem (*(SoundSystem **)0x030065e0)
-
 extern u32 sub_080301C4(u32 base, u32 hi, u32 lo);
 
 void sub_0802F9F0(s32 idx)
@@ -113,7 +64,7 @@ void sub_0802F9F0(s32 idx)
     if (idx <= 3) {
         pFlags = &ss->chFlags[idx];
     } else {
-        SoundSlot *slot = (SoundSlot *)((u8 *)ss->swSlots + (idx * 64 - 256));
+        SoundSlot *slot = SOUND_SYSTEM_SW_SLOT_FOR_CHANNEL(ss, idx);
         pFlags = &slot->flags;
     }
 
@@ -146,7 +97,7 @@ void sub_0802FA60(s32 idx)
     u32 sum;
 
     ss = gpSoundSystem;
-    slot = ss->slotPtrTable[idx];
+    slot = (SoundSlotAccs *)SOUND_SYSTEM_SLOT_PTR_TABLE(ss)[idx];
     if (slot == NULL)
         return;
 

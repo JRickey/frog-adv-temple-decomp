@@ -1,4 +1,4 @@
-#include "types.h"
+#include "sound.h"
 
 /* SoundSlot_PickByPriority — slot arbitration for the sound system. Given a
  * candidate priority and a slot index (or 0xFF to scan), decides which sound
@@ -29,21 +29,6 @@
  *     one short-circuit so the null test feeds the same fall-through to
  *     `return idx` that the baserom's `beq` does.
  */
-
-typedef struct SoundSlot {
-    u8 _pad00[0x34];
-    u16 priority;  /* +0x34 */
-    u16 secondary; /* +0x36 */
-} SoundSlot;
-
-typedef struct SoundSystem {
-    u8 count;      /* +0x00 */
-    u8 startIndex; /* +0x01 */
-    u8 _pad02[0xca];
-    SoundSlot **slotPtrTable; /* +0xcc */
-} SoundSystem;
-
-#define gpSoundSystem (*(SoundSystem **)0x030065e0)
 
 s32 SoundSlot_PickByPriority(s32 a0, u32 priority, s32 a2, s32 idx)
 {
@@ -85,13 +70,6 @@ s32 SoundSlot_PickByPriority(s32 a0, u32 priority, s32 a2, s32 idx)
     return bestIdx;
 }
 
-typedef struct SoundHwSystem {
-    u8 _pad00[0xac];
-    u16 chHwCtrl[4]; /* +0xac */
-} SoundHwSystem;
-
-#define gpSoundHw (*(SoundHwSystem **)0x030065e0)
-
 /* sub_08032BA0 — hardware-channel volume gate. Compares the stored hw control
  * halfword for channel idx against an adjusted threshold (threshold + 0x100 if
  * flag is set). Returns 1 if the stored value is <= the threshold (channel is
@@ -112,7 +90,7 @@ u32 sub_08032BA0(u32 flag, u32 threshold, u32 idx)
     if (flag != 0)
         adj += 0x100;
 
-    if (gpSoundHw->chHwCtrl[idx] <= adj)
+    if (gpSoundSystem->chanAcc[idx] <= adj)
         return 1;
     return 0;
 }

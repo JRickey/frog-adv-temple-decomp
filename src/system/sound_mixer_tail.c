@@ -1,4 +1,4 @@
-#include "types.h"
+#include "sound.h"
 #include "macros.h"
 
 /* sub_080325B0 — sound-mixer tail pass (per-VBlank streaming-buffer drain).
@@ -6,34 +6,31 @@
  * Called as the final step of sub_0802F4B0 (the per-VBlank mixer tick).
  * The mixer's earlier passes deal with fade requests, channel volume,
  * per-active-slot pitch/pan, and slot retire; this routine handles the
- * sample-streaming book-keeping that lives in the sound-system buffer
- * lists past the active-slot table.
+ * sample-streaming book-keeping that lives in the request/stream block
+ * pointed to by gpSoundSystem->slot.
  *
- * Structure: a guard byte at SoundSystem+0x151 (bit 0x2) gates the entire
- * routine. When set, the code walks three parallel buffer lists rooted at
- * SoundSystem+0x88 stride and SoundSystem+0x110 stride, advancing each
- * by a per-frame sample-count read from SoundSystem+0x14c (the half-word
- * cached into sl as the "samples this frame" delta):
+ * Structure: a guard byte at request+0x151 (bit 0x2) gates the entire
+ * routine. When set, the code walks several timer/cursor lists rooted in
+ * that request block, advancing each by the half-word at request+0x14c
+ * cached into sl as the "samples this frame" delta:
  *
- *   1. Drain pass for the 4-entry list at SoundSystem+0x110: subtract
- *      samples-this-frame from each entry's countdown field, and when it
- *      drops past zero, retire the buffer (forwards via the libgcc-style
- *      helper at 0x0802F9F0).
+ *   1. Drain pass for the external 12-byte entries pointed to by
+ *      request+0x110: subtract samples-this-frame from each entry's
+ *      countdown field, and when it drops past zero, retire the buffer
+ *      via sub_0802F9F0.
  *
- *   2. Up-to-16-entry main streaming-buffer pass: walks a parallel
- *      list of cursor structures, advances the next-frame pointer by
- *      reading two coefficient tables out of ROM (offsets +0x410 / +0x414
- *      into the buffer-base struct), pattern-matches the leading u16 pair
- *      against the 0xFFFF / 0xFFFF sentinel to detect end-of-stream, and
- *      either retires the buffer or stores back the advanced cursor.
+ *   2. Seventeen-entry main timer pass at request+0x00: walks cursor
+ *      structures, resolves -2/-1 stream commands through the tables at
+ *      request+0x114 plus offsets +0x410/+0x414, and seeds the parallel
+ *      streaming table at request+0x88.
  *
- *   3. Pan-LUT prefetch pass for active streaming slots: walks the same
- *      16-entry table, calling sub_080323CC with the per-slot pan and
- *      countdown halfwords to commit the channel mix LUT.
+ *   3. Pan-LUT prefetch pass for active streaming slots: walks the 16-entry
+ *      table at request+0x88, calling sub_080323CC with the per-slot mode,
+ *      pitch, and countdown halfwords to commit the channel mix LUT.
  *
- *   4. Final 16-entry sweep that calls sub_08031DBC for each non-NULL
- *      buffer pointer at SoundSystem+0x108, again advancing cursors by
- *      the half-word stride and clamping at 0xFFFF sentinels.
+ *   4. Final timer at request+0x108 that writes the half-word at
+ *      request+0x14a and calls sub_08031DBC until its countdown is positive
+ *      or it reaches a 0xFFFF/0xFFFF sentinel.
  *
  * Heavy use of high registers as concurrent loop state — r8 holds the
  * "current buffer +0x110 cursor", r9 is a zero constant cached across
@@ -42,6 +39,29 @@
  * is the established NAKED+NON_MATCHING trigger from
  * `docs/codegen-notes.md` "High registers — corpus-validated unmatchable".
  * Shipped as NAKED inline asm + NON_MATCHING reference C.
+ *
+ * Current forced-C evidence: matching the target's store-then-halfword-load
+ * order in the mode-0x80 stream branch, checking the final sentinel halfwords
+ * in target order, and naming the samples-this-frame, drain, timer, and one
+ * stream-null store through SoundRequestSlot moves the matrix lane to
+ * byte_diff 640 / insn_diff 413. Pinning only the samples-this-frame delta to
+ * sl, matching the target's documented high-register lifetime, opens a better
+ * lane at byte_diff 633 / insn_diff 425 with old_agbcc -O2 -fforce-addr
+ * -fno-gcse -fno-cse-follow-jumps. Pinning the request pointer to r6 looked
+ * target-like but regressed to byte_diff 665+ by growing the stack frame to
+ * 0x10 and moving the samples-this-frame delta out of sl. Promoting the
+ * remaining request-block fields into SoundRequestSlot is useful shared
+ * structure, but using those typed fields in this body worsens the best lane,
+ * so the reference C keeps the older offset/cast shape where needed. Replacing
+ * the stream-timer and start-index casts with request->streams /
+ * request->streamStartIndex regresses to byte_diff 645+ by adding a larger
+ * frame. Pointer-shape helpers SOUND_REQUEST_STREAM_TIMER_AT and
+ * SOUND_REQUEST_START_INDEX_AT are codegen-neutral, so they document the request
+ * layout without triggering that typed-field frame growth. The stream-cursor
+ * halfword helpers are also neutral; the final sentinel check still spells
+ * value-before-countdown because that order is part of the current best lane.
+ * Retesting request->sequenceBase for the two base-table loads regresses the
+ * current lane to byte_diff 638, so those loads stay on the raw offset helper.
  *
  * Sits at the Thumb HEAD of the ARM-interwork mixer cluster
  * [0x08032894, 0x08033910): the Thumb-mode dispatchers at
@@ -56,68 +76,206 @@
  * removed; until then the BL halfwords stay encoded as part of the asm
  * body itself. */
 
-#ifdef NON_MATCHING
+#if defined(NON_MATCHING) || defined(NON_MATCHING_sub_080325B0)
 /* Reference body — describes the algorithm for the phase-3 PC port.
  * Does NOT byte-match; agbcc 2.x will never coerce sl/r9/r8 into loop
  * state from this shape. */
 
-typedef struct StreamSlot {
-    u32 *cursor;   /* +0x00 */
-    s32 countdown; /* +0x04 */
-    u32 acc;       /* +0x08 */
-} StreamSlot;
+typedef void (*MixerTailCommitFunc)(u32 request, u32 idx, u32 panOrMode, u32 countdown, u32 extra);
 
-typedef struct SoundSystem {
-    u8 count; /* +0x00 */
-    u8 _pad01[0x108 - 1];
-    /* +0x108: parallel arrays of stream-buffer pointers */
-    StreamSlot streamA[16]; /* +0x110, stride 8 */
-    u8 _pad190[0x14c - 0x190];
-    u16 samplesThisFrame; /* +0x14c */
-    u8 _pad14e[0x151 - 0x14e];
-    u8 enableFlags; /* +0x151, bit 0x2 gates the whole routine */
-} SoundSystem;
-
-#define gpSoundSystem (*(SoundSystem **)0x030065e0)
+/* Thumb-bit entry for the still-raw inner mixer commit routine. */
+#define MIXER_TAIL_COMMIT ((MixerTailCommitFunc)SOUND_MIXER_TAIL_COMMIT_THUMB)
 
 extern void sub_0802F9F0(u32 idx);
-extern void sub_080323CC(u32 ss, u32 idx, u32 panOrMode, u32 countdown, u32 extra);
 extern u32 sub_08031DBC(void);
 
 void sub_080325B0(void)
 {
     SoundSystem *ss = gpSoundSystem;
-    s32 samples;
+    SoundRequestSlot *request = ss->slot;
+    u8 *requestBytes = (u8 *)request;
+    SoundRequestTimer *timers;
+    SoundDrainEntry *drainEntries;
+    u32 *cursor;
+    u32 *base;
+    u32 *table;
+    u32 *oldCursor;
+    register s32 samples asm("sl");
     s32 i;
 
-    /* Stage 0 — gate */
-    if ((ss->enableFlags & 0x2) == 0)
+    if ((request->flags & SOUND_REQUEST_FLAG_ACTIVE) == 0)
         return;
 
-    samples = ss->samplesThisFrame;
+    samples = request->samplesThisFrame;
+    drainEntries = SOUND_REQUEST_DRAIN_ENTRIES(request);
 
-    /* Stage 1 — drain 4-entry list at +0x110 (stride 12) */
-    for (i = 0; i < ss->count + 4; i++) {
-        /* Entries live at ss->_pad+0x110+i*12 with a "live" byte at +4. */
-        /* On underflow forward to sub_0802F9F0(i) and clear the live byte. */
+    for (i = 0; i < (s32)gpSoundSystem->count + SOUND_REQUEST_DRAIN_EXTRA_COUNT; i++) {
+        SoundDrainEntry *entry = &drainEntries[i];
+
+        if (entry->live != 0) {
+            entry->countdown -= samples;
+            if (entry->countdown <= 0) {
+                sub_0802F9F0(i);
+                entry->live = 0;
+            }
+        }
     }
 
-    /* Stage 2 — up-to-16-entry buffer list at +0x110 with sentinel scan
-     * of the 0xFFFF/0xFFFF pair, using the +0x414/+0x410 ROM coefficient
-     * pointers and per-slot accumulator at +8. */
-    for (i = 0; i < 16; i++) {
-        /* Advance cursor, sentinel-check, store back. */
+    timers = request->timers;
+    for (i = 0; i < SOUND_REQUEST_TIMER_COUNT; i++) {
+        SoundRequestTimer *timer = &timers[i];
+
+        cursor = timer->cursor;
+        if (cursor == NULL)
+            continue;
+
+        timer->countdown -= samples;
+        if (timer->countdown > 0)
+            continue;
+
+        for (;;) {
+            s32 command = (s32)cursor[1];
+
+            if (command == SOUND_STREAM_CMD_END) {
+                timer->cursor = NULL;
+                break;
+            }
+
+            if (command == SOUND_STREAM_CMD_JUMP) {
+                oldCursor = cursor;
+                timer->cursor = oldCursor + 2;
+
+                base = SOUND_REQUEST_BASE_TABLE(requestBytes);
+                table = (u32 *)((u8 *)base + *(u32 *)((u8 *)base + SOUND_REQUEST_SEQ_BASE_OFFSET) +
+                                SOUND_REQUEST_SEQ_BASE_OFFSET);
+                table = (u32 *)((u8 *)base + table[i] + SOUND_REQUEST_SEQ_BASE_OFFSET);
+                cursor = (u32 *)((u8 *)table + oldCursor[2]);
+                timer->cursor = cursor;
+
+                timer->countdown += (s32)(oldCursor[3] << 8);
+            } else {
+                base = SOUND_REQUEST_BASE_TABLE(requestBytes);
+                table = (u32 *)((u8 *)base + *(u32 *)((u8 *)base + SOUND_REQUEST_STREAM_TABLE_OFFSET) +
+                                SOUND_REQUEST_SEQ_BASE_OFFSET);
+                cursor = (u32 *)((u8 *)base + table[command] + SOUND_REQUEST_SEQ_BASE_OFFSET);
+
+                if (SOUND_STREAM_CURSOR_IS_SENTINEL(cursor)) {
+                    request->streams[i].cursor = NULL;
+                } else {
+                    SoundRequestTimer *stream = SOUND_REQUEST_STREAM_TIMER_AT(requestBytes, i);
+
+                    stream->cursor = cursor;
+                    stream->countdown = SOUND_STREAM_CURSOR_COUNTDOWN(cursor) << 8;
+                    if (i <= SOUND_REQUEST_LEADIN_CHANNEL_MAX)
+                        stream->countdown += SOUND_REQUEST_STREAM_LEADIN(requestBytes);
+                }
+
+                timer->cursor = cursor + 2;
+                timer->countdown += (s32)(cursor[2] << 8);
+            }
+
+            if (timer->countdown > 0)
+                break;
+
+            cursor = timer->cursor;
+            if (cursor == NULL)
+                break;
+        }
     }
 
-    /* Stage 3 — pan-LUT prefetch pass at +0x88 (stride 8). */
-    for (i = 0; i < 16; i++) {
-        /* Read pan bytes, conditionally call sub_080323CC. */
+    for (i = 0; i < SOUND_REQUEST_STREAM_COUNT; i++) {
+        SoundRequestTimer *stream = SOUND_REQUEST_STREAM_TIMER_AT(requestBytes, i);
+        u8 *startIndex = &SOUND_REQUEST_START_INDEX_AT(requestBytes, i);
+
+        cursor = stream->cursor;
+        if (cursor == NULL)
+            continue;
+
+        stream->countdown -= samples;
+        if (stream->countdown > 0)
+            continue;
+
+        for (;;) {
+            u8 *cmd = (u8 *)cursor;
+            s8 pitch = *(s8 *)(cmd + SOUND_STREAM_CMD_PITCH_OFFSET);
+            u8 mode = cmd[SOUND_STREAM_CMD_MODE_OFFSET];
+            s32 advance;
+
+            if (pitch > 0) {
+                if ((mode & SOUND_STREAM_MODE_EXTENDED) == 0) {
+                    u16 extra = *(u16 *)(cmd + SOUND_STREAM_CMD_EXTRA_OFFSET);
+
+                    if (extra != 0)
+                        MIXER_TAIL_COMMIT((u32)request, i, pitch, mode, extra);
+                    advance = SOUND_STREAM_ADVANCE_NORMAL;
+                } else {
+                    u16 firstExtra;
+
+                    *startIndex = cmd[SOUND_STREAM_CMD_EXTENDED_INDEX_OFFSET];
+                    firstExtra = *(u16 *)(cmd + SOUND_STREAM_CMD_EXTRA_OFFSET);
+                    if (firstExtra != 0)
+                        MIXER_TAIL_COMMIT((u32)request, i, pitch, mode & SOUND_STREAM_MODE_MASK,
+                                          *(u16 *)(cmd + SOUND_STREAM_CMD_EXTENDED_EXTRA_OFFSET));
+                    advance = SOUND_STREAM_ADVANCE_EXTENDED;
+                }
+            } else if (pitch == 0) {
+                if ((mode & SOUND_STREAM_MODE_EXTENDED) == 0) {
+                    *startIndex = mode;
+                } else {
+                    u8 idx = mode & SOUND_STREAM_MODE_MASK;
+
+                    ss = gpSoundSystem;
+                    if (idx > ss->count)
+                        idx = ss->count;
+                    ss->startIndex = idx;
+                }
+                advance = SOUND_STREAM_ADVANCE_CONTROL;
+            } else {
+                stream->cursor = NULL;
+                break;
+            }
+
+            cursor = (u32 *)((u8 *)stream->cursor + advance);
+            stream->cursor = cursor;
+
+            if (SOUND_STREAM_CURSOR_IS_SENTINEL(cursor)) {
+                stream->countdown = 0;
+                stream->cursor = NULL;
+                break;
+            }
+
+            stream->countdown += SOUND_STREAM_CURSOR_COUNTDOWN(cursor) << 8;
+            if (stream->countdown > 0)
+                break;
+        }
     }
 
-    /* Stage 4 — final sweep + sub_08031DBC commit. */
-    for (i = 0;; i++) {
-        /* Walk while pointer at +0x108 non-NULL, advance and clamp at sentinel. */
-    }
+    timers = SOUND_REQUEST_FINAL_TIMER(requestBytes);
+    cursor = timers->cursor;
+    if (cursor == NULL)
+        return;
+
+    timers->countdown -= samples;
+    if (timers->countdown > 0)
+        return;
+
+    do {
+        SOUND_REQUEST_FINAL_VALUE(requestBytes) = SOUND_STREAM_CURSOR_VALUE(cursor);
+        sub_08031DBC();
+
+        oldCursor = timers->cursor;
+        cursor = oldCursor + 1;
+        timers->cursor = cursor;
+
+        if (SOUND_STREAM_CURSOR_VALUE(cursor) == SOUND_STREAM_SENTINEL &&
+            SOUND_STREAM_CURSOR_COUNTDOWN(cursor) == SOUND_STREAM_SENTINEL) {
+            timers->countdown = 0;
+            timers->cursor = NULL;
+            return;
+        }
+
+        timers->countdown += SOUND_STREAM_CURSOR_COUNTDOWN(cursor) << 8;
+    } while (timers->countdown <= 0);
 }
 
 #else

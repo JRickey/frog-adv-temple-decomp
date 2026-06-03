@@ -1,5 +1,4 @@
-#include "types.h"
-#include "macros.h"
+#include "sound.h"
 
 /* sub_0802EA80 — per-frame countdown-bounce envelope tick (envelope-A0).
  *
@@ -25,211 +24,90 @@
  * tick the slot flags get 0x40 ORd in (whenever the slot is present and
  * step is non-zero).
  *
- * Shipped as NAKED inline asm + NON_MATCHING reference C. The baserom
- * pattern `ldr r0, [pc, #N]; mov ip, r0; mov r6, ip` keeps gpSoundSystem
- * cached across both stages — r6 active in stage 1 and ip live across
- * both for the count-check reload. agbcc 2.x picks a different register
- * allocation here regardless of source structure: it spills *gpsp into a
- * callee-saved low register (r5) during stage 1 and reuses that across
- * the stage transition, but no pinning idiom recovered the baserom shape.
- * 500+ permuter iterations converged at score ~1015 (vs 0 = match) with
- * register-allocation drift alone. Like sub_0802EC7C / sub_0802EDF0, the
- * readable C is preserved behind NON_MATCHING; the NAKED form ships the
- * baserom bytes.
+ * Matching notes:
+ *   - `i`, `offset`, and the gpSoundSystem mirror are pinned to match the
+ *     baserom's two-stage loop lifetime.
+ *   - The inline `add` preserves the ROM's commutative Thumb encoding; agbcc
+ *     otherwise emits the operands in the opposite order.
  */
 
-/* Mirror of the SoundSlot / SoundSystem layout used in sound_channel.c
- * (sub_0802EC7C / sub_0802ED5C). Envelope-A0 lives at +0x14 inside each
- * channel/slot; envelope-A at +0x1c and envelope-B at +0x2c are owned by
- * sound_channel.c. Promote to include/sound.h once a common header is
- * needed. */
-typedef struct SlotEnvelopeA0 {
-    u16 acc;      /* +0x14 — accumulator */
-    s16 step;     /* +0x16 — per-frame step */
-    u8 countdown; /* +0x18 — frames remaining until bounce */
-    u8 reload;    /* +0x19 — reload value when countdown wraps */
-} SlotEnvelopeA0;
-
-typedef struct SoundSlot {
-    u8 _pad00[0x14];
-    SlotEnvelopeA0 envelopeA0; /* +0x14, sizeof rounded to 8 */
-    u8 _pad1c[0x1c];
-    u32 flags; /* +0x38 */
-} SoundSlot;
-
-typedef struct SoundSystem {
-    u8 count; /* +0x00 */
-    u8 _pad01[0xf];
-    u32 chFlags[4]; /* +0x10 — per-channel dirty-flag word */
-    u8 _pad20[0xac];
-    SoundSlot **slotPtrTable; /* +0xcc */
-} SoundSystem;
-
-#define gpSoundSystem (*(SoundSystem **)0x030065e0)
-
-#ifdef NON_MATCHING
 void sub_0802EA80(void)
 {
-    SoundSystem **gpsp;
+    register SoundSystem **gpsp asm("ip");
+    register SoundSystem **gpspMirror asm("r6");
+    register SoundSystem **gpCheck asm("r1");
     SoundSystem *ss;
     SoundSlot *slot;
     SlotEnvelopeA0 *env;
-    s32 i;
-    s32 offset;
+    register s32 i asm("r4");
+    register s32 offset asm("r5");
     s16 step;
     u16 acc;
-    u8 ctr;
+    s32 ctr;
 
     i = 0;
     gpsp = &gpSoundSystem;
-    offset = 32;
+    gpspMirror = gpsp;
+    offset = SOUND_INLINE_CHANNEL_BASE_OFFSET;
 
     /* Stage 1: three inline channel envelopes embedded in SoundSystem
      * itself at ss+0x34, ss+0x58, ss+0x7c (stride 36, envelope at +0x14
      * inside each). */
     do {
-        ss = *gpsp;
-        env = (SlotEnvelopeA0 *)((u8 *)ss + offset + 0x14);
+        ss = *gpspMirror;
+        env = SOUND_INLINE_CHANNEL_ENVELOPE_A0_AT(ss, offset);
         step = env->step;
         if (step != 0) {
-            acc = (u16)(env->acc + step);
+            acc = env->acc;
+            asm("add %0, %1, %2" : "=r"(acc) : "r"(step), "r"(acc));
             env->acc = acc;
             ctr = env->countdown - 1;
             env->countdown = ctr;
-            if (ctr == 0xff) {
+            ctr = (u8)ctr;
+            if (ctr == SOUND_ENVELOPE_COUNTDOWN_UNDERFLOW) {
                 env->countdown = env->reload;
                 env->step = -env->step;
             }
-            ((u32 *)((u8 *)(*gpsp) + 0x10))[i] |= 0x40;
+            {
+                s32 flagOffset;
+                register u32 *flags asm("r2");
+
+                flags = (u32 *)*gpspMirror;
+                flagOffset = i << 2;
+                flags = (u32 *)((u8 *)flags + SOUND_CH_FLAGS_OFFSET);
+                flags = (u32 *)((u8 *)flags + flagOffset);
+                *flags |= SOUND_FLAG_ENV_DIRTY;
+            }
         }
-        offset += 36;
+        offset += SOUND_INLINE_CHANNEL_STRIDE;
         i++;
-    } while (i <= 2);
+    } while (i <= SOUND_INLINE_CHANNEL_COUNT - 1);
 
     /* Stage 2: per-slot envelope-A0 bank, walked via slotPtrTable. */
     i = 0;
-    while (i < (*gpsp)->count) {
-        slot = (*gpsp)->slotPtrTable[i];
-        if (slot != NULL) {
-            env = &slot->envelopeA0;
-            step = env->step;
-            if (step != 0) {
-                acc = (u16)(env->acc + step);
-                env->acc = acc;
-                ctr = env->countdown - 1;
-                env->countdown = ctr;
-                if (ctr == 0xff) {
-                    env->countdown = env->reload;
-                    env->step = -env->step;
-                }
-                slot->flags |= 0x40;
+    goto count_check;
+body:
+    slot = SOUND_SYSTEM_SLOT_PTR_TABLE(*gpCheck)[i];
+    if (slot != NULL) {
+        env = &slot->envelopeA0;
+        step = env->step;
+        if (step != 0) {
+            acc = env->acc;
+            asm("add %0, %1, %2" : "=r"(acc) : "r"(step), "r"(acc));
+            env->acc = acc;
+            ctr = env->countdown - 1;
+            env->countdown = ctr;
+            ctr = (u8)ctr;
+            if (ctr == SOUND_ENVELOPE_COUNTDOWN_UNDERFLOW) {
+                env->countdown = env->reload;
+                env->step = -env->step;
             }
+            slot->flags |= SOUND_FLAG_ENV_DIRTY;
         }
-        i++;
     }
+    i++;
+count_check:
+    gpCheck = gpsp;
+    if (i < (*gpCheck)->count)
+        goto body;
 }
-#else
-NAKED
-void sub_0802EA80(void)
-{
-    asm(".syntax unified\n"
-        "    push    {r4, r5, r6, r7, lr}\n"
-        "    movs    r4, #0\n"
-        "    ldr     r0, _0802EAD8            @ =gpSoundSystem (0x030065e0)\n"
-        "    mov     ip, r0\n"
-        "    mov     r6, ip\n"
-        "    movs    r5, #0x20\n"
-        "_0802EA8C:\n"
-        "    ldr     r0, [r6, #0]\n"
-        "    adds    r2, r0, r5\n"
-        "    adds    r1, r2, #0\n"
-        "    adds    r1, #0x14\n"
-        "    ldrh    r3, [r1, #2]\n"
-        "    movs    r7, #2\n"
-        "    ldrsh   r0, [r1, r7]\n"
-        "    cmp     r0, #0\n"
-        "    beq     _0802EACC\n"
-        "    ldrh    r7, [r2, #0x14]\n"
-        "    adds    r0, r3, r7\n"
-        "    strh    r0, [r2, #0x14]\n"
-        "    ldrb    r0, [r1, #4]\n"
-        "    subs    r0, #1\n"
-        "    strb    r0, [r1, #4]\n"
-        "    lsls    r0, r0, #0x18\n"
-        "    lsrs    r0, r0, #0x18\n"
-        "    cmp     r0, #0xff\n"
-        "    bne     _0802EABC\n"
-        "    ldrb    r0, [r1, #5]\n"
-        "    strb    r0, [r1, #4]\n"
-        "    ldrh    r2, [r1, #2]\n"
-        "    negs    r0, r2\n"
-        "    strh    r0, [r1, #2]\n"
-        "_0802EABC:\n"
-        "    ldr     r2, [r6, #0]\n"
-        "    lsls    r0, r4, #2\n"
-        "    adds    r2, #0x10\n"
-        "    adds    r2, r2, r0\n"
-        "    ldr     r0, [r2, #0]\n"
-        "    movs    r1, #0x40\n"
-        "    orrs    r0, r1\n"
-        "    str     r0, [r2, #0]\n"
-        "_0802EACC:\n"
-        "    adds    r5, #0x24\n"
-        "    adds    r4, #1\n"
-        "    cmp     r4, #2\n"
-        "    ble     _0802EA8C\n"
-        "    movs    r4, #0\n"
-        "    b       _0802EB22\n"
-        "    .align  2, 0\n"
-        "_0802EAD8: .4byte 0x030065e0\n"
-        "_0802EADC:\n"
-        "    ldr     r0, [r1, #0]\n"
-        "    adds    r0, #0xcc\n"
-        "    ldr     r1, [r0, #0]\n"
-        "    lsls    r0, r4, #2\n"
-        "    adds    r0, r0, r1\n"
-        "    ldr     r2, [r0, #0]\n"
-        "    cmp     r2, #0\n"
-        "    beq     _0802EB20\n"
-        "    adds    r1, r2, #0\n"
-        "    adds    r1, #0x14\n"
-        "    ldrh    r3, [r1, #2]\n"
-        "    movs    r5, #2\n"
-        "    ldrsh   r0, [r1, r5]\n"
-        "    cmp     r0, #0\n"
-        "    beq     _0802EB20\n"
-        "    ldrh    r7, [r2, #0x14]\n"
-        "    adds    r0, r3, r7\n"
-        "    strh    r0, [r2, #0x14]\n"
-        "    ldrb    r0, [r1, #4]\n"
-        "    subs    r0, #1\n"
-        "    strb    r0, [r1, #4]\n"
-        "    lsls    r0, r0, #0x18\n"
-        "    lsrs    r0, r0, #0x18\n"
-        "    cmp     r0, #0xff\n"
-        "    bne     _0802EB18\n"
-        "    ldrb    r0, [r1, #5]\n"
-        "    strb    r0, [r1, #4]\n"
-        "    ldrh    r3, [r1, #2]\n"
-        "    negs    r0, r3\n"
-        "    strh    r0, [r1, #2]\n"
-        "_0802EB18:\n"
-        "    ldr     r0, [r2, #0x38]\n"
-        "    movs    r1, #0x40\n"
-        "    orrs    r0, r1\n"
-        "    str     r0, [r2, #0x38]\n"
-        "_0802EB20:\n"
-        "    adds    r4, #1\n"
-        "_0802EB22:\n"
-        "    mov     r1, ip\n"
-        "    ldr     r0, [r1, #0]\n"
-        "    ldrb    r0, [r0, #0]\n"
-        "    cmp     r4, r0\n"
-        "    blt     _0802EADC\n"
-        "    pop     {r4, r5, r6, r7}\n"
-        "    pop     {r0}\n"
-        "    bx      r0\n"
-        "    .hword  0x0000\n"
-        "    .syntax divided\n");
-}
-#endif

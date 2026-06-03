@@ -1,4 +1,4 @@
-#include "types.h"
+#include "sound.h"
 
 /* sub_0802E13C — drain all active dynamic-SFX/music slots.
  *
@@ -28,22 +28,6 @@
  *     newer agbcc prologue inserts an extra `push {lr}` on sub_0802E184
  *     even though it's a leaf, breaking the 140-byte total slice.
  */
-
-typedef struct SoundChannelSeq {
-    u32 *opPtr; /* +0x00 — current opcode pointer */
-    u8 _pad04[12];
-} SoundChannelSeq; /* sizeof == 16 */
-
-typedef struct SlotTableBase {
-    u8 _pad00[4];        /* +0x00 — preceding field at ss+0x11c */
-    void **slotPtrTable; /* +0x04 — slot pointer array at ss+0x120 */
-} SlotTableBase;
-
-typedef struct SoundSystem {
-    u8 count; /* +0x00 — number of dynamic SFX slots */
-} SoundSystem;
-
-#define gpSoundSystem (*(SoundSystem **)0x030065e0)
 
 extern void sub_0802F9F0(s32 idx);
 
@@ -104,10 +88,10 @@ u32 sub_0802E184(u32 handle)
         return 0;
     idx = (handle >> 16) & 0xff;
     ss = gpSoundSystem;
-    slotTable = *(void ***)((u8 *)ss + 0x120);
+    slotTable = SOUND_SYSTEM_SLOT_HANDLE_TABLE(ss);
     if ((u32)slotTable[idx] != handle)
         goto fail;
-    seqs = *(SoundChannelSeq **)((u8 *)ss + 0x114);
+    seqs = ss->channelSeqs;
     if (seqs[idx].opPtr == NULL)
         goto fail;
     return 1;
