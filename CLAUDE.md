@@ -437,7 +437,9 @@ For each decomp target:
    can't reproduce):
    1. Reduce the *target* asm idiom to a **register-agnostic** regex over
       asm lines (use char classes for regs: `r[0-7]`, `(r8|r9|sl)`). E.g.
-      the funnel/spread case is `mov\s+r[0-7],\s*(r8|r9|sl)`.
+      the funnel/spread case is `mov\s+r[0-7],\s*(r8|r9|sl)`. (`\s`/`\d`/`\w`/
+      `\b` are auto-translated to POSIX ERE for the git pickaxe, so either the
+      `\s` form or literal-space `mov +r[0-7], *(r8|r9|sl)` works.)
    2. `search --asm '<regex>' --require-c` — this hits **all 23 mirrors**
       by default (all agbcc, so any repo's C is usable) and sweeps them
       most-complete-first, so pret pokeemerald/firered/ruby and the big

@@ -24,7 +24,8 @@ THE ANALYSIS STEP (do this when stuck on agbcc codegen you can't match)
   1. Take the target asm idiom you can't reproduce, e.g. the baserom spreads
      `mov rLOW, r8; ldrb` across distinct low regs but agbcc funnels them all
      to r0.
-  2. Reduce it to a register-agnostic regex over asm lines:
+  2. Reduce it to a register-agnostic regex over asm lines (\\s/\\d/\\w/\\b are
+     auto-translated for the git pickaxe, so either form works):
          corpus_asm_search.py search --asm 'mov\\s+r[0-7],\\s*(r8|r9|sl)'
   3. Read the hits: each prints repo, sha, subject, the removed-asm snippet,
      and the C files the same commit added.
@@ -79,6 +80,23 @@ IDIOMS = {
         r"\bmov\s+(r[0-7]|ip),\s*(r8|r9|sb|r10|sl|fp)\b",
     ),
 }
+
+
+def ere_pickaxe(pat: str) -> str:
+    """Translate Python-regex shorthands to POSIX ERE for the `git log -G`
+    pickaxe. git's -G uses ERE, which does NOT understand \\s/\\S/\\d/\\w/\\b —
+    passing them silently matches NOTHING (the dry-zero-candidates trap that
+    burns agents who paste a Python asm regex straight in). The pickaxe is only
+    a coarse pre-filter; the precise Python `asm_pat` (which keeps the
+    shorthands) does the real filtering, so widening here (e.g. dropping \\b)
+    never drops a real hit."""
+    return (
+        pat.replace(r"\s", "[[:space:]]")
+        .replace(r"\S", "[^[:space:]]")
+        .replace(r"\d", "[0-9]")
+        .replace(r"\w", "[[:alnum:]_]")
+        .replace(r"\b", "")
+    )
 
 
 def die(msg: str, code: int = 1) -> None:
@@ -224,7 +242,10 @@ def cmd_search(a: argparse.Namespace) -> None:
             die(f"unknown idiom {a.idiom!r}; known: {', '.join(IDIOMS)}")
         pickaxe, asm_pat = IDIOMS[a.idiom]
     elif a.asm:
-        pickaxe, asm_pat = a.asm, a.asm
+        # asm_pat is the precise Python filter (keeps \s/\b/\d); the git -G
+        # pickaxe needs POSIX ERE, where those shorthands match nothing.
+        asm_pat = a.asm
+        pickaxe = ere_pickaxe(a.asm)
     else:
         die("give --asm REGEX or --idiom NAME (known: " + ", ".join(IDIOMS) + ")")
     asm_re = re.compile(asm_pat, re.I)
