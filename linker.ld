@@ -84,6 +84,7 @@ SECTIONS {
         . = 0x000034B4; gIwram_34B4 = .;
         . = 0x000034B8; gIwram_34B8 = .;
         . = 0x000034C0; gIwram_34C0 = .;
+        . = 0x00003500; gSaveData = .;
         . = 0x00003550; gIwram_3550 = .;
         . = 0x00003570; gIwram_3570 = .;
         . = 0x00003574; gIwram_3574 = .;

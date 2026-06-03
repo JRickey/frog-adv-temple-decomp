@@ -513,3 +513,42 @@ Decomp priority: the four walkers + two dispatchers (sub_0802C780,
 sub_0802C8C8) form the entry-point cluster for typed `struct
 LevelLayoutSubTable` promotion. Once one of these lands, ALL
 sLevelLayout_* placeholders across iters 15, 16, 19, 20 can promote.
+
+## EEPROM save system
+
+Typed model in `include/save.h` (`struct SaveHeader` / `SaveSlot` /
+`SaveData`); RAM working copy `gSaveData` at `0x03003500`.
+
+On-chip layout — EEPROM is addressed in 8-byte blocks (4 `u16`):
+
+| Block(s) | Contents |
+|---|---|
+| 0 | `SaveHeader` (8 B) |
+| `i*3+1 .. i*3+2` | slot `i` record (16 B read, 12 retained) |
+| 20 | EEPROM-presence signature/probe |
+
+Call graph (all callees already decompiled):
+
+- **`sub_080172F4`** — detect EEPROM, set size via `sub_080338A8`
+  (arg 4 = 4 Kbit, 0x40 = 64 Kbit), then verify by reading+writing the
+  signature block (20). Returns 1 if a usable EEPROM with a valid sig.
+- **`sub_080177A0` / `sub_080177D8`** — read / write `SaveHeader` (block 0).
+- **`sub_08017814` / `sub_08017858`** — read / write one `SaveSlot`.
+- **`sub_080178FC` / `sub_0801789C`** — read / write+verify N raw blocks,
+  over per-block `sub_08033A70` (read) / `sub_08033B28` (write) /
+  `sub_08033C0C` (verify).
+- **`sub_08017364`** — load entry point: seed `gSaveData` defaults, probe
+  via `sub_080172F4`, read+validate the header (rebuild it from current
+  game state on a failed field check), then load each populated slot (an
+  empty slot defaults to initials `"AAA"`). On success restores
+  `gIwram_34B0` (level) from `SaveHeader.level` and re-seeds
+  `gIwram_34B4` to `{1,1,5,5}`. Still in asm; matching in progress (the
+  back-half register dance keeps `&gSaveData` in `sl` across the copy
+  loop).
+- **`sub_0801756C`** — paired save/commit routine (sibling in the same
+  asm slice); `sub_0800DD80` dispatches it with `gSaveData.cursor`.
+
+Proposed semantic names (not yet applied via `apply_renames.py`):
+`SaveDetect`/`SaveLoad` (`sub_080172F4`/`sub_08017364`),
+`SaveReadHeader`/`SaveWriteHeader`, `SaveReadSlot`/`SaveWriteSlot`,
+`EepromReadBlocks`/`EepromWriteBlocks`.

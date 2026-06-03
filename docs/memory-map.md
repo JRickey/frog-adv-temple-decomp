@@ -14,8 +14,9 @@ line of context.
 |---|---|---|---|
 | `0x03003480` | (TBD) | EWRAM/IWRAM ptr in AgbMain pool | AgbMain literal pool 2 |
 | `0x030034A0` | (TBD) | EWRAM/IWRAM ptr in AgbMain pool | AgbMain literal pool 2 |
-| `0x030034B0` | (TBD) | EWRAM/IWRAM ptr in AgbMain pool | AgbMain literal pool 2 |
-| `0x030034B4` | (TBD) | EWRAM/IWRAM ptr in AgbMain pool | AgbMain literal pool 2 |
+| `0x030034B0` | `gIwram_34B0` | Current level/scene index. Restored from `SaveHeader.level` by `sub_08017364`; used everywhere as a 24-byte-stride table index (`sub_0801d4cc`, `sub_0800e600`, …). | AgbMain literal pool 2 |
+| `0x030034B4` | `gIwram_34B4` | 4-byte game-state tuple seeded to `{1,1,5,5}` by Init1 and again by `sub_08017364` on save-load; `[2]` (==5) read across the engine (`sub_0801793c`, `sub_080202a8`). Also mirrored into `SaveHeader._field4` (u32) when the header is rebuilt. | AgbMain literal pool 2 |
+| `0x03003500` | `gSaveData` (`struct SaveData`, `include/save.h`) | In-RAM working copy of the EEPROM save file (64 B): `header` + `slots[4]` + `cursor`@0x38 + `valid`@0x3c. Populated by `sub_08017364`. | `sub_08017364` |
 | `0x03003550` | (TBD) | EWRAM/IWRAM ptr in AgbMain pool | AgbMain literal pool 2 |
 | `0x03003570` | `gStructAt3003570` (placeholder) | 4-byte struct (or larger); `sub_08020B30` sets bits 0+1 of byte[0] and writes 0xCD/0xF5/0xF5 to bytes 1..3. Likely a hardware-config/state block initialized once during Init1. | `sub_08020B30` |
 | `0x03005330` | `gGameStuff` (base) | Game-state struct (`include/game.h`) | `src/game/game_mode.c` |
