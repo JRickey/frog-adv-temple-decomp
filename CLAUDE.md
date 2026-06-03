@@ -193,6 +193,15 @@ python3 tools/agent/lint_hex_literals.py
 # full surface.
 python3 tools/agent/corpus.py grep '<regex>' --c
 python3 tools/agent/corpus.py decomps --name <prefix>
+
+# When stuck on an asm IDIOM you can't reproduce (a fold, a register
+# spread/funnel, an addressing mode), search the corpus *git history*:
+# the match commit DELETES the asm and ADDS the C, so history pairs the
+# exact asm with its known-good C. Needs the full mirrors (blobs) at
+# tools/agent/corpus-mirrors/ (gitignored). See Agent workflow step 7.
+python3 tools/agent/corpus_asm_search.py search --asm '<asm-line-regex>' --require-c
+python3 tools/agent/corpus_asm_search.py search --idiom highreg-spread   # preset
+python3 tools/agent/corpus_asm_search.py show <repo>@<sha>               # the C
 ```
 
 See `docs/tooling.md` for the full tool inventory, including the
@@ -404,18 +413,42 @@ For each decomp target:
    ```
    **Stuck on a fold? Search the corpus FIRST, permuter LAST.** Other
    agbcc decomps have almost certainly solved the same idiom — and the
-   asm-as-incbin form usually gets deleted when they match, so the
-   pattern only lives in git history:
+   asm-as-incbin form gets deleted when they match, so the pattern only
+   lives in git history. Two complementary searches:
 
    ```sh
-   # Once-per-machine: clone the curated corpus (~5 min, ~350 MB).
-   python3 tools/agent/corpus.py sync
-
-   # Search for prior art on the specific fold/idiom you hit.
+   # (a) CURRENT-tree grep — fast, for C patterns / similar fn names.
+   #     blob:none clones at ~/.cache/decomp-corpus (corpus.py sync once).
    python3 tools/agent/corpus.py grep '<regex>' --c       # C patterns
    python3 tools/agent/corpus.py decomps --name <prefix>  # similar fn names
-   python3 tools/agent/corpus.py show REPO@COMMIT         # one commit's diff
+
+   # (b) HISTORY search — THE asm-idiom analysis step. Finds the commit
+   #     that REMOVED asm matching your idiom and shows the C it ADDED in
+   #     the same commit (the exact asm<->C pairing). Operates on FULL
+   #     mirrors (blobs) at tools/agent/corpus-mirrors/ (gitignored, ~1.4G;
+   #     `corpus_asm_search.py sync --from <src>` to (re)populate).
+   python3 tools/agent/corpus_asm_search.py search --asm '<asm-line-regex>' --require-c
+   python3 tools/agent/corpus_asm_search.py search --idiom highreg-spread   # presets
+   python3 tools/agent/corpus_asm_search.py show <repo>@<sha>               # read the C
    ```
+
+   **How to run the (b) history search** (do it whenever agbcc emits a
+   shape — a fold, a register spread/funnel, an addressing mode — you
+   can't reproduce):
+   1. Reduce the *target* asm idiom to a **register-agnostic** regex over
+      asm lines (use char classes for regs: `r[0-7]`, `(r8|r9|sl)`). E.g.
+      the funnel/spread case is `mov\s+r[0-7],\s*(r8|r9|sl)`.
+   2. `search --asm '<regex>' --require-c` — this hits **all 23 mirrors**
+      by default (all agbcc, so any repo's C is usable) and sweeps them
+      most-complete-first, so pret pokeemerald/firered/ruby and the big
+      metroid/FE/tmc decomps (the most matched code = most idiom coverage)
+      surface before the `--limit` runs out. Don't `--repo`-scope unless
+      you have a reason — completeness, not publisher, is the leverage. (A
+      same-publisher repo like cvaos = Konami can help with publisher
+      conventions, but cvaos is incomplete, so it's a tiebreaker, not the
+      primary.)
+   3. For the most relevant hit, `show <repo>@<sha>` and read how their C
+      produced that asm — then adapt that structure to your function.
 
    Worked example: `sub_08000430` (Init1) was blocked for two sessions
    on agbcc's adjacent-IWRAM-base CSE-fold. Manual variations got to
@@ -427,9 +460,13 @@ For each decomp target:
    re-implementation. See `docs/codegen-notes.md` "Adjacent IWRAM
    bases — defeat CSE-fold via linker-assigned symbols".
 
-   Only fall back to `vendor/decomp-permuter` for **register-coloring
-   drift** from a near-matching base. Permuter mutates statement
-   ordering and variable scope; it doesn't invent new idioms.
+   Caveat (from `sub_08017364`): the history search proves what's
+   *reachable* (the spread idiom IS reproducible from plain unpinned C),
+   but a near-match can still be a sharp register-coloring local minimum
+   no single source shape escapes. When corpus + manual both stall on
+   pure coloring, fall back to `vendor/decomp-permuter` from the
+   near-matching base. Permuter mutates statement ordering and variable
+   scope; it doesn't invent new idioms.
 
 8. **Verify.** `make check` must exit 0 for a clean match. If it
    doesn't but per-function diff for your target is 0 and total

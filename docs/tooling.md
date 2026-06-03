@@ -92,8 +92,11 @@ make -j8 && make check
 When agbcc throws a matching problem at us, it's almost certainly been
 solved in another agbcc decomp already. Phase D caches a curated set of
 those repos locally so we can grep their C and walk their commit
-history. Castlevania: Aria of Sorrow (same publisher + era) and the
-pret pokemon family are the highest-leverage references.
+history. The pret pokemon family (pokeemerald/firered/ruby) are the
+highest-leverage references — they're the most *complete* agbcc decomps,
+so they cover the most codegen idioms. Castlevania: Aria of Sorrow is
+same-publisher (Konami) and worth a look for publisher conventions, but
+it's incomplete, so it's a tiebreaker rather than the first stop.
 
 The cache lives at `~/.cache/decomp-corpus/` (override with
 `DECOMP_CORPUS_DIR`). Clones use `--filter=blob:none` so commit history
@@ -114,6 +117,53 @@ A direct fix doesn't exist in the local tree — but cvaos and the
 Pokemon family ran into the same compiler the same way, and their
 solutions live in git history. The first thing to try when stuck on
 agbcc codegen is now `corpus.py grep` and `corpus.py decomps`.
+
+### Asm-idiom history search (`corpus_asm_search.py`)
+
+`corpus.py grep` searches the CURRENT tree of the blob:none clones — it
+cannot read historical diffs (the blobs aren't fetched). But the most
+valuable signal is in history: an agbcc decomp lands a function as
+disassembled asm, then the commit that MATCHES it DELETES the asm and
+ADDS the C. So every match commit is an exact **(asm, known-good C)**
+pair. `corpus_asm_search.py` walks that history.
+
+It needs FULL mirror clones (blobs present), kept at
+`tools/agent/corpus-mirrors/<owner>__<repo>.git` — ~1.4G, gitignored,
+**never committed**. Override the location with `--mirrors PATH` or
+`$CORPUS_MIRRORS`. Populate / refresh from an existing set of bare
+mirrors with `corpus_asm_search.py sync --from <src-mirrors-dir>`
+(default source `~/dev/aida/corpus/git-mirrors`).
+
+| Subcommand | What it does |
+|---|---|
+| `search --asm REGEX [--require-c] [--repo R] [--min-hits N] [--limit N]` | Pickaxe every mirror for commits whose diff removes asm lines matching REGEX; for each, print the removed-asm snippet + the C files the same commit added, with a ready-to-run `show` line. `--require-c` drops asm-only moves; `--clean` keeps only single-function decompiles. |
+| `search --idiom NAME` | Named presets with tuned detection. `highreg-spread`: a struct pointer in a high reg (r8/r9/sl) copied to distinct low regs and dereferenced field-by-field — counts the *distinct* low regs so `--min-distinct 2` finds a spread, not a funnel. |
+| `show REPO@SHA` | Full `git show` of one hit (REPO is a substring, e.g. `cvaos@1a2b3c4`). Read how their C produced that asm. |
+| `list [--repo R]` | Mirrors + commit counts + HEAD subject. |
+| `sync --from PATH` | Copy bare `*.git` mirrors from PATH into the gitignored corpus dir. |
+
+The analysis step, end to end:
+1. Reduce the *target* asm idiom you can't match to a register-agnostic
+   regex over asm lines (char classes for regs: `r[0-7]`, `(r8|r9|sl)`).
+2. `search --asm '<regex>' --require-c` — searches **all** mirrors by
+   default and sweeps them most-complete-first (by on-disk size), so the
+   highest-leverage repos surface first. Every mirror is agbcc (verified
+   via corpus-sync metadata), so any repo's C is usable; **completeness,
+   not publisher, is what gives leverage** — pret pokeemerald/firered/ruby
+   and the large metroid/FE/tmc decomps have the most matched code and
+   thus the most idiom coverage. `--repo SUB` only narrows for speed.
+   cvaos is same-publisher (Konami) and useful for publisher conventions,
+   but it's incomplete (~4.8M, ~118 commits) so it's a tiebreaker, not the
+   first place to look.
+3. `show <repo>@<sha>` on the best hit; adapt its C structure to yours.
+
+Worked example (`sub_08017364` funnel↔spread): `search --idiom
+highreg-spread --require-c --clean` surfaces commits across the corpus
+(cvaos, FE, metroid, pret) where an unpinned struct pointer in a high
+reg spreads its field reads across distinct low regs — proving the
+spread is reachable from plain C (no `register asm()` pins), which is
+what four corpus agents converged on independently. See
+`docs/deferred-analysis/sub_08017364.md`.
 
 ## Existing Python tooling (still primary for the agent loop)
 
