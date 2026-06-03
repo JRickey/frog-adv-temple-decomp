@@ -68,7 +68,9 @@ struct BlitRecord {
     u16 width;
     u16 rows;
     u8 flags;
-    u8 _pad9[7];
+    u8 _pad9[3];
+    u8 delay;
+    u8 _padD[3];
     const u16 **srcTable;
     u32 _pad14;
 };
@@ -133,7 +135,9 @@ struct IwramAt6540_sub11518 {
 };
 
 struct IwramAt6580_sub11518 {
-    u8 _pad00[10];
+    u8 _pad00[4];
+    u32 lastTime;
+    u8 _pad08[2];
     u8 field_a; /* +0x0a */
     u8 field_b; /* +0x0b */
 };

@@ -4,7 +4,11 @@
 #include "types.h"
 
 extern void sub_080100E4(u32, void *, void *);
+extern void sub_0800A05C(void);
 extern void sub_08019A14(void);
+extern void sub_08020B88(u32);
+extern void sub_08020BAC(void);
+extern const u8 sRoomDmaTable_080C1254[];
 
 struct ScrollData {
     u32 f0;
@@ -127,4 +131,57 @@ void sub_08019F70(u8 arg)
         dst++;
         i++;
     } while (i <= 0x3FF);
+}
+
+void sub_08019FD8(void)
+{
+    u16 zero;
+    vu32 *dma;
+    u16 *win;
+    u32 idx24;
+    u32 tableBase;
+
+    sub_0800A05C();
+
+    *(u16 *)&zero = 0;
+
+    dma = (vu32 *)0x040000D4;
+    dma[0] = (u32)&zero;
+    dma[1] = 0x06000000;
+    dma[2] = DMA_ENABLE | DMA_SRC_FIXED | 0x8000;
+    (void)dma[2];
+
+    REG_BG3CNT = 0x1F08;
+
+    win = (u16 *)0x04000040;
+    *win = 0;
+    win += 2;
+    *win = 0;
+    win += 2;
+    *win = 0;
+    win += 1;
+    *win = 0;
+
+    REG_DISPCNT = REG_DISPCNT & ~DISPCNT_WIN0_ON;
+    REG_DISPCNT = REG_DISPCNT & ~DISPCNT_WIN1_ON;
+
+    gIwram_3550._data[6] = 0;
+    gIwram_3550._data[7] = 0;
+
+    tableBase = (u32)sRoomDmaTable_080C1254;
+    idx24 = gIwram_34B0._data * 24;
+    tableBase += 4;
+    dma[0] = *(const u32 *)(idx24 + tableBase);
+    dma[1] = 0x06008000;
+    dma[2] = DMA_ENABLE | 0x2000;
+    (void)dma[2];
+
+    gIwram_34C0.cursor = 0;
+    gIwram_34C0.delay = 0;
+    gIwram_34C0.holdFlag = 0;
+
+    gIwram_6110.inputFlags ^= 8;
+
+    sub_08020BAC();
+    sub_08020B88(15);
 }
