@@ -1,4 +1,5 @@
 #include "game.h"
+#include "gba/dma.h"
 #include "gba/io.h"
 #include "iwram.h"
 #include "types.h"
@@ -47,4 +48,46 @@ u32 sub_08012098(void)
     t1 = (u16)((u8)t1 << 8);
     *(vu16 *)0x04000052 = t1 + t2;
     return 0;
+}
+
+extern u8 gIwram_53A0[];
+extern u8 gEntities_03003720[];
+
+struct IwramAt6480_12100 {
+    u8 _pad00[54];
+    s16 field_36;
+};
+
+struct IwramAt6540_12100 {
+    u8 _pad00[10];
+    u8 field_a;
+};
+
+extern struct IwramAt6480_12100 gIwram_6480;
+extern struct IwramAt6540_12100 gIwram_6540;
+
+void sub_08012100(void)
+{
+    u16 zero;
+    struct IwramAt6110 *ctrl;
+
+    ctrl = &gIwram_6110;
+    ctrl->byteFlags8 = ctrl->byteFlags8 & 0xf0;
+    ctrl->gateByte = ctrl->gateByte & 0xf0;
+
+    gIwram_53A0[1] = 0;
+    gIwram_53A0[0xff] = 0;
+    gEntities_03003720[0x1a5b] = 0;
+
+    gIwram_6480.field_36 = 0;
+    *(u8 *)&gIwram_6480 = 0;
+    *((u8 *)&gIwram_6480 + 2) = 0;
+
+    gIwram_6540.field_a = 0;
+
+    zero = 0;
+    REG_DMA3.src = &zero;
+    REG_DMA3.dst = (void *)0x02020000;
+    REG_DMA3.cnt = DMA_ENABLE | DMA_SRC_FIXED | 0x8000;
+    (void)REG_DMA3.cnt;
 }
