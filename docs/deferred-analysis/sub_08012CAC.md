@@ -216,3 +216,133 @@ copy insn flips the coloring, then craft a copy in C that biases it; or (b) wait
 a permuter pass that mutates register-preference hints (current permuter does not).
 Do NOT ship NAKED — the corpus says this game-logic function matches in pure C; the
 right coloring just hasn't been forced yet. v22 below is the resume base (byte 58).
+
+
+---
+
+## Corpus sweep (2026-06-03)
+
+### The exact asm idiom that diverges
+sub_08012CAC [0x12cac,0x12d40), 148B, pure leaf, two near-identical phases (V then H scroll) over the SHARED global base `gIwram_3550` (bg), accessed DIRECTLY (no carried pointer). The baserom register coloring:
+- **bg** (gIwram_3550 base): pool-loaded into `r3` in phase A, copied to the spill home `r7` (`adds r7, r3, #0` @12cca), then in phase B moved `r7 -> r6` (`adds r6, r7, #0` @12cfc) and used as the phase-B working base. So bg lives r3(A) -> r7(spill) -> r6(B), with the case-4 store using r7.
+- **newCur** (the accumulator `oldCur+delta`, store/re-read/conditional-restore): `r6` in phase A (callee-saved), `r3` in phase B (scratch). The two phases SWAP which reg holds bg vs newCur.
+- **anim0/anim1** (gIwram_6400/6410): `r2` scratch in both phases. **anchor**: `r1`. **oldCur/gs**: `r4`. **scrollState**: `r5`.
+
+My agbcc build of the v22 base reproduces this structure EXACTLY (148B, spill present, `adds r7,...`, `adds r6,r7,#0` recopy) but with a register PERMUTATION: bg gets `r0` (lowest free) instead of `r3`, and the prev/delta scratch gets `r3` instead of `r0`. All diffs are ARGUMENT_MISMATCH (pure rN renames) — zero structural diffs.
+
+### NEW result this run: 58 -> 25 via scratch pins + symmetric goto (the deferred doc was wrong that pins disrupt the spill)
+The deferred doc asserted "EVERY pin DISRUPTS the spill and regresses to 107-140 bytes." That is only true for pins on the phase-A SCRATCH TEMP (prev/delta/a single carried `tmp`) and on bg itself — those each kill the spill (-> 144B, byte 107). But pins on the SCRATCH OPERANDS that the target also keeps in scratch are fully compatible with the spill:
+- `register u32 anchor asm("r1")` : 58 -> 57.
+- `register u8 *anim0/anim1 asm("r2")` (both phases) on top of anchor pin : 57 -> 47.
+- Rewriting phase B's `if/else if` into the SAME deferred-body goto layout phase A uses (cmp#3/beq, cmp#4/beq, b.skip, then case bodies) : 47 -> 25. (The asymmetric if/else-if inlined the case bodies and mis-laid the branch table.)
+Final base "v25" = byte_diff 25, diff_count 20, 148B, spill intact. This is a materially better permuter seed than the doc's 58 and is preserved verbatim in nearMatchBase (no per-TU CFLAGS — all pins are in-source).
+
+### Every regex searched + hit count
+- `adds\s+r[0-7],\s*r[0-7],\s*#0` --require-c : **0 candidate commits** across all 23 mirrors. CAUSE: corpus_asm_search passes the regex straight to `git log -G` (POSIX ERE) where `\s` matches literal `s`, not whitespace. Use ` +`/literal forms in --asm.
+- `adds +r[0-7], r[0-7], #0` --require-c : emerald 12, firered 1, ruby 0, mzm 110, ... — register-copy is ubiquitous, useless as a discriminator.
+- `adds r7, r[0-7], #0` (spill home) across mirrors: present in 19 repos, hundreds of commits each (emerald 1, e8u 406, katam 539, tmc 149, ...). Too broad.
+- spill+unspill double-copy (removed asm has BOTH `^-adds r7,rN,#0` AND `^-adds rM,r7,#0`): **1149 commits**. Restricting to commits that ALSO add a .c: 30 — ALL are mzm bulk "Link <file>.c" commits (whole-file, the idiom is incidental, not a clean per-function pairing).
+- single-function filter (removed asm 20-120 insns, exactly 1 added .c) with spill+recopy, swept across metroidret__mf, jiangzhengwenjz__katam, mmzret__rmz3, testyourmine__cvaos : **0 hits**.
+
+### Top corpus hits examined
+- metroidret__mzm@{6acb166158, a2816952fd "Link scroll.c and block.c", e72df6b7d7 "Split and link projectile.c", ...}: bulk file-link commits; removed asm contains the spill+recopy but it is NOT isolated to one function, so no usable asm<->C pairing.
+- testyourmine__cvaos@388128d194 "Decompile agb_multi_sio_sync": single-fn with `adds r7`/`adds rM,r7` — but it is an MMIO-setup function (SIO regs, CpuSet), `r7` holds a long-lived MMIO base, NOT a two-phase accumulator. Wrong shape.
+- testyourmine__cvaos@36764cbf0f (GameModeSoundTestMenu): bulk, multiple fns. No clean pairing.
+
+### Whether/why the trick transferred: it did NOT — and why
+The corpus contains the spill+recopy ASM constantly (it's how agbcc carries any long-lived value when registers are tight), but NO single-function decomp commit isolates the SPECIFIC coloring decision we need (long-lived global base spilled to r7 + accumulator winning the callee-saved slot, base direct-accessed). The corpus methodology assumes a discrete C-shape produces the idiom; here the idiom is produced by the GLOBAL ALLOCATOR's register-preference coloring over the conflict graph, which the C source cannot steer once the (already-correct) structure is fixed. So there is nothing to transfer.
+
+### agbcc pass implicated (register-coloring)
+`tools/agbcc-src/gcc_arm/local-alloc.c` priority `QTY_CMP_PRI(q) = floor_log2(refs)*refs*size / (death-birth)` (line 1488) and the tie-break in `qty_compare_1` (line 1500: ties broken by qty number = birth order). bg has the LONGEST life (spans both phases) -> LOWEST priority -> should be allocated LAST -> should land on a leftover reg (r3, as the target shows). In my build agbcc instead gives bg `r0` (it is born first and the allocator does not deprioritize it enough), and the short scratch temp lands on r3. The final coloring is fixed by `global.c` preference propagation over copy insns — none of which the C controls once structure is right. CRITICAL constraint discovered empirically: the spill ONLY emerges with DIRECT global access AND an UNPINNED bg + UNPINNED scratch temp; pinning bg (-> carried pointer, 140B no spill) or pinning the prev/delta scratch (-> 144B no spill, byte 107) both destroy it. The residual is therefore a single irreducible bg<->scratch tie in {r0,r3} that no in-source lever can flip without collapsing the spill.
+
+### byte_diff progression
+asm-only -> 58 (doc v22 reproduced) -> 57 (anchor->r1) -> 47 (+anim->r2) -> **25 (+symmetric phase-B goto)** = best. (Detours that regressed and were discarded: if/else-if no-pins 117/144B no-spill; operand reorder so prev/delta born before oldCur 39B (delays bg pool load, breaks pool order); -ffixed-r0 80B; prev/delta/tmp pinned r0 107B/144B no-spill; bg pinned r3 carried pointer 105B/140B no-spill; leading dead read of anim0 -> CSE'd away, still 25.)
+
+### RECOMMENDED NEXT ANGLE
+1. Run vendor/decomp-permuter from the v25 (byte 25) base in nearMatchBase — it is structurally much closer than the doc's 58 base the two prior failed runs used (residual is now a single coloring tie, not a branch-layout problem). Low confidence it cracks pure register-preference (permuter mutates statement/scope, not allocator coloring; and the spill is destroyed by exactly the kind of extra assignment the permuter would add), but it is the cheapest remaining shot and the better seed has never been tried.
+2. If permuter fails: the only known path is the doc's option (a) — build agbcc with instrumentation in `gcc_arm/global.c` `find_reg`/preference order to see WHICH copy insn flips bg from r3 to r0, then craft a C copy that biases it (or add a targeted source-level live-range adjustment that survives CSE). 
+3. Do NOT ship NAKED — this is game-logic and structurally matchable to byte 25 with zero structural diffs; it is one allocator-coloring permutation away.
+
+### Near-match C base (permuter seed) — byte_diff 58->25, CFLAGS: (default -O2)
+
+```c
+#include "macros.h"
+#include "types.h"
+#include "iwram.h"
+#include "game.h"
+
+extern u8 gIwram_6400[];
+extern u8 gIwram_6410[];
+extern u8 gIwram_60A0[];
+
+void sub_08012CAC(void)
+{
+    register u8 *scrollState asm("r5");
+    register GameStuff *gs asm("r4");
+    register u32 anchor asm("r1");
+    u32 prev;
+    s32 delta;
+    u32 oldCur;
+    u32 newCur;
+    u8 maxFrames;
+    u8 state;
+
+    oldCur = gIwram_3550._data[5];
+    scrollState = gIwram_60A0;
+    anchor = *(u32 *)(scrollState + 16);
+    {
+        register u8 *anim0 asm("r2") = gIwram_6400;
+        prev = *(u32 *)(anim0 + 4);
+        delta = anchor - prev;
+        newCur = oldCur + delta;
+        gIwram_3550._data[5] = newCur;
+        *(u32 *)(anim0 + 4) = anchor;
+        gs = &gGameStuff;
+        maxFrames = anim0[12];
+        if (gs->_unk00 - *(u32 *)(anim0 + 8) >= maxFrames) {
+            state = anim0[0];
+            if (state == 1)
+                goto case1;
+            if (state == 2)
+                goto case2;
+            goto skip1;
+case1:
+            gIwram_3550._data[5] = newCur + 1;
+            goto done1;
+case2:
+            gIwram_3550._data[5] = newCur - 1;
+done1:
+skip1:
+            *(u32 *)(anim0 + 8) = gs->_unk00;
+        }
+    }
+
+    anchor = *(u32 *)(scrollState + 12);
+    {
+        register u8 *anim1 asm("r2") = gIwram_6410;
+        prev = *(u32 *)(anim1 + 4);
+        delta = anchor - prev;
+        oldCur = gIwram_3550._data[4];
+        newCur = oldCur + delta;
+        gIwram_3550._data[4] = newCur;
+        *(u32 *)(anim1 + 4) = anchor;
+        maxFrames = anim1[12];
+        if (gs->_unk00 - *(u32 *)(anim1 + 8) >= maxFrames) {
+            state = anim1[0];
+            if (state == 3)
+                goto case3;
+            if (state == 4)
+                goto case4;
+            goto skip2;
+case3:
+            gIwram_3550._data[4] = newCur + 1;
+            goto done2;
+case4:
+            gIwram_3550._data[4] = newCur - 1;
+done2:
+skip2:
+            *(u32 *)(anim1 + 8) = gs->_unk00;
+        }
+    }
+}
+```

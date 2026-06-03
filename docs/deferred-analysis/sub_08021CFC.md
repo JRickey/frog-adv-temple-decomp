@@ -145,3 +145,46 @@ tail:
     sub_080059C4((u8 *)&gIwram_3720 + ((idx8 - idx) << 3));
 }
 ```
+
+
+---
+
+## Corpus sweep (2026-06-03)
+
+**Outcome: deferred.** Confirmed the deferred-analysis doc's diagnosis with the actual baserom base, isolated the cascade root one level deeper than the doc had, located the exact agbcc mechanism responsible, and ran a 9-regex corpus sweep that found NO transferable trick. byte_diff floor stays at **196** (start 196 → best 196). Pristine tree restored, `make check` == 0, git status clean, no commits.
+
+### The exact asm idiom that diverges
+The function is a 6-arg actor-array angular updater: `void sub_08021CFC(u8 idx, u16 baseX, u16 baseY, s8 mag, u8 mode, u8 delta)`. The structure/logic is fully correct (whole sine/cosine tail, two `sub_0800DFFC` calls, field_D mirror, epilogue all match). The residual is pure **prologue register coloring of the byte args**, NOT the doc's originally-claimed idx→r8-vs-r9 (with the current base, idx IS already in r8). The real cascade root is narrower:
+
+- Baserom prologue: `mag` **stays in r3** for its whole short life; `mode`→**r6** (`adds r6, r4, #0`); `delta`→**r2** (`adds r2, r5, #0`). In the mode==1 branch idx8 is computed into r1 and immediately `mov r9, r1` (idx8 cached in the callee-saved high reg r9); the tail reads it back via `mov r1, r9`.
+- agbcc build: at +0x26 it emits **`mov ip, r3`** (spills `mag` to ip/r12), frees r3, then assigns `mode`→**r3** and `delta`→**r7**. Because delta is no longer in r2, the branch computes idx8 into the now-free low reg **r2** and keeps it there; the tail then has to shuffle idx8 r2→r9 plus `mov sl, r1`, and the mag use needs an extra `mov r2, ip` round-trip before the s8 sign-extend. Every one of the 92 diff instructions flows from this one `mag`→`ip` eviction.
+
+### agbcc pass implicated (register coloring — confirmed in source)
+`tools/agbcc-src/gcc_arm/local-alloc.c` (`find_free_reg` / `qty_sugg_compare` / `block_alloc`), driven by `REG_ALLOC_ORDER` in `tools/agbcc-src/gcc_arm/config/arm/arm.h:833` = `{3, 2, 1, 0, 12(ip), 14, 4, 5, 6, 7, ...}`. The allocator tries the caller-saved low regs r3,r2,r1,r0 and then **ip (r12) BEFORE callee-saved r4–r7**. So when it needs to free r3 for the next quantity (mode), the cheapest home for mag's pseudo is ip — exactly what we see. The baserom binary was produced by an agbcc whose global/local-alloc instead colored mode→r6 and delta→r2, leaving mag in r3. That coloring is not reachable from C source shape with our agbcc.
+
+### Every regex searched + hit interpretation (all dry for the trick)
+1. `--idiom highreg-spread` (preset) → pokeemerald 772 commits; all generic librfu/m4a mass-match copies of `mov rLOW, r8/r9` — the spread idiom, not our funnel-to-ip. Not applicable.
+2. `lsls\s+...#3` (with `#`) → 0 hits (corpus asm has no `#` on immediates; format is `lsls r2, r5, 3`). Refined.
+3. `lsls r[0-7], r[0-7], 3` → 580+ pokeemerald (berry_crush, dodrio). The ×56 stride multiply already matches structurally; not the divergence.
+4. `subs r[0-7], r[0-7], r[0-7]` + `lsls ... 3` (OR'd, not AND'd) → same berry_crush hits. No isolation.
+5. `mov ip, r[0-7]` --require-c → mzm/pokeemerald ~84 commits — but every hit is a case where the BASEROM deliberately uses ip and the C reproduces it (the OPPOSITE of our problem: we must PREVENT the ip spill).
+6. `mov r8, r0` + `adds r[0-7], r[0-7], 0` → pokeemerald 1459 mass-match commits, generic.
+7. `adds r6, r[0-7], 0` scoped to cvaos (Konami) → **0 hits** (cvaos is incomplete).
+8. `mov r[0-7], ip` + `asrs r[0-7], r[0-7], 24` → pokeemerald 126 (mystery_gift/union_room) — again baserom-uses-ip cases.
+9. `ldr r[0-7], \[sp, (0x28|40)\]` → pokeemerald 122 (main_menu/party_menu) — stacked-arg functions, but none isolate the keep-arg-in-r3 trick.
+
+The corpus is full of `mov rN, ip` and stacked-byte-arg functions, but they are all cases where the matching C *reproduces* a deliberate baserom ip-use. There is no commit demonstrating a C structure that *suppresses* an agbcc ip-spill of a byte arg in a fixed coloring — because that is an emergent allocator result, not a writable idiom.
+
+### Whether the trick transferred and why not
+It did not transfer because there is no trick to transfer. The divergence is a `REG_ALLOC_ORDER`-driven local-alloc coloring decision, invariant to source structure. Confirmed by exhaustive levers (all == 196 unless noted):
+- **CFLAGS** (all 196): `-fcaller-saves`, `-fno-cse-follow-jumps`, `-fno-peephole`, `-fno-defer-pop`, `-fomit-frame-pointer`, `-frerun-cse-after-loop`, `-fno-schedule-insns`, `-fno-schedule-insns2`, `-fno-strength-reduce`, `-fno-force-mem`, `-fforce-mem`, `-fno-function-cse`, `-fno-inline`, `-fno-thread-jumps`, `-fno-cse-skip-blocks`, `-ffixed-ip`, `-ffixed-r12`, `-ffixed-sl`, `-ffixed-r9`, `-ffixed-ip -ffixed-sl`. Notably `-ffixed-ip` did NOT remove `mov ip, r3` (agbcc uses ip as a hardwired scratch independent of -ffixed). `OLD_AGBCC_BIN` also == 196 (identical coloring).
+- **Register pins** (all worse): mag→r3 (272, also breaks the 8-byte stack frame to 4), delta→r2 (248), mode→r6 (223), mode→r6+delta→r2 (261), mode→r6+delta→r2+mag→r3 (261), idx8→r9 (254). Every `register asm("rN")` forces an extra prologue copy from the incoming arg reg, destroying the prologue match — pins generate DIFFERENT code than the natural `adds rN, rM, #0` narrow-copy.
+- **Structure** (all worse than 196): single slot ptr computed once (268 bytes/237 — agbcc CSEs the pointer; baserom re-derives, so this is structurally wrong); idx8 once-at-top + slot per-use (230); else-if instead of goto (≈196 same); inline DFFC results into strh removing temps (220); anchor mag as an early local (257). The doc's existing **goto-tail + lazy-per-path-idx8 + explicit sinComp/cosComp temps** remains the unique floor at 196.
+
+### byte_diff progression
+asm-only → first C (doc seed) = 196 → all 25+ variants/flags tried this session ≥ 196 → best reached **196** (unchanged). Not "improved" because nothing beat the documented floor; the 196 near-match C already lives verbatim in `docs/deferred-analysis/sub_08021CFC.md` ("Best-effort C"), so there is no new near-match base to preserve.
+
+### RECOMMENDED NEXT ANGLE
+1. **decomp-permuter from the 196 seed — but only after infra exists.** This worktree has no permuter venv (`vendor/decomp-permuter/.venv` absent) and the repo has no `nonmatchings/` scratch convention. Someone must (a) `scripts/setup-*.sh` the permuter venv, (b) hand-build a `target.s` glabel from the baserom bytes 0x21cfc–0x21e34, and (c) seed from the doc's 196 C. Permuter mutates statement order / var scope, which is *exactly* the lever that could perturb `qty_sugg_compare` ordering enough to flip mode off r3. Caveat: 196 is ~8× permuter's typical effective range, so success odds are modest — but this is a pure-coloring case, permuter's home turf, and it is the ONE method not yet attempted.
+2. **Toolchain hypothesis.** Because OLD_AGBCC and new agbcc both give 196 and no `-fXXX` moves it, the baserom's mode→r6/mag→r3 coloring may have come from a DIFFERENT agbcc point-release with a different global-alloc or a patched `REG_ALLOC_ORDER`. Worth checking whether any sibling function in this TU also shows an un-reproducible "byte-arg kept in r3 while later args take r6/r2" coloring; if a cluster shares it, a per-TU compiler swap (like the existing `OLD_AGBCC_BIN`/`AGBCC_BIN` overrides) may be the real key rather than source structure.
+3. **Do NOT** spend more time on register pins or `-fXXX` flags for this function — the sweep above is exhaustive for the levers available; they are a dead end. Keep the asm slice in place (current pristine state) until permuter infra is stood up.
