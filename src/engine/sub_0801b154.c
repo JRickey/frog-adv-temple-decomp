@@ -1,4 +1,5 @@
 #include "types.h"
+#include "iwram.h"
 
 extern const u16 sWinPoseScreenCoords[];
 
@@ -43,9 +44,9 @@ u8 sub_0801B188(u32 bits)
 void sub_0801B1B4(u8 index)
 {
     vu32 *dma;
-    register const u32 *tiles asm("r4");
+    const u32 *tiles;
     const u32 *palette;
-    register u32 offset asm("r0");
+    u32 offset;
 
     offset = (u32)index << 24;
     dma = (vu32 *)0x040000D4;
@@ -172,4 +173,65 @@ void sub_0801B30C(u8 arg0, u8 arg1)
     if (found == 0) {
         *(u16 *)(0x02010000 + (u32)arg1 * 128 + (u32)arg0 * 2) = 0xe307;
     }
+}
+
+void sub_0801B374(u8 index)
+{
+    vu32 *dma;
+    u16 zero;
+    u16 *zptr;
+    u32 tableBase;
+    u32 idx24;
+    u32 entry;
+    const u32 *tiles;
+    const u32 *palette;
+    u32 offset;
+
+    offset = (u32)index << 24;
+
+    tableBase = 0x080C1254;
+    /* anchor the table literal before the gIwram_34B0 address so agbcc keeps
+       the +4 add on the table base (not folded into the index multiply). */
+    asm volatile("" : "+r"(tableBase));
+    idx24 = gIwram_34B0._data * 24;
+    tableBase += 4;
+    entry = *(const u32 *)(idx24 + tableBase);
+
+    zptr = &zero;
+    *zptr = 0;
+    dma = (vu32 *)0x040000D4;
+    dma[0] = (u32)zptr;
+    dma[1] = 0x0600F800;
+    dma[2] = 0x81000400;
+    dma[2];
+
+    dma[0] = entry;
+    dma[1] = 0x06008000;
+    dma[2] = 0x80002000;
+    dma[2];
+
+    tiles = (const u32 *)0x08308F08;
+    offset = offset >> 22;
+    offset += 28;
+
+    dma[0] = *(const u32 *)(offset + (u32)tiles);
+    dma[1] = 0x06008020;
+    dma[2] = 0x80000100;
+    dma[2];
+
+    dma[0] = tiles[0];
+    dma[1] = 0x06008220;
+    dma[2] = 0x80000100;
+    dma[2];
+
+    palette = (const u32 *)0x08308F3C;
+    dma[0] = palette[0];
+    dma[1] = 0x050001A0;
+    dma[2] = 0x80000010;
+    dma[2];
+
+    dma[0] = *(const u32 *)((u32)palette + offset);
+    dma[1] = 0x050001E0;
+    dma[2] = 0x80000010;
+    dma[2];
 }
