@@ -1,3 +1,5 @@
+#include "gba/dma.h"
+#include "gba/io.h"
 #include "macros.h"
 #include "types.h"
 
@@ -128,4 +130,47 @@ void sub_0801C4F8(u8 a, u8 b, u8 c)
     buf[0] = tens + 0x30;
     buf[1] = units + 0x30;
     sub_0801BE7C(buf, 2, 17, 1, 278, 14, 3);
+}
+
+/* Tear down the bonus/score panel: turn off WIN0 in DISPCNT, blank the
+ * window clip registers and palette entry 0, then DMA3-clear BG screenblock
+ * 31 (2048 bytes) before turning off BG3. The state value `a` the callers
+ * pass (always via `adds r0, r5, #0`) is unused by this clear path, but the
+ * function still takes it as a u8.
+ *
+ * The two empty asm barriers reproduce the baserom's register/CSE profile:
+ *   - the barrier on `dispcnt` keeps 0x04000000 opaque so the WIN0 clear
+ *     consumes that register and the final BG3 clear re-materializes the
+ *     DISPCNT base (movs #128; lsls #19) instead of CSE-ing the first load.
+ *   - the barrier on `a` references the otherwise-dead parameter so agbcc
+ *     keeps its u8 narrow (lsl #24; lsr #24) in r0; without a use the narrow
+ *     is eliminated and the whole allocation shifts.
+ * Writing the fill value through `*p` (staged: address, then a fresh `zero`)
+ * lands `mov r1,sp; movs r0,#0` in baserom order rather than reusing the
+ * palette-write zero already sitting in r2. */
+void sub_0801C69C(u8 a)
+{
+    vu16 local;
+    vu16 *p;
+    u32 dispcnt;
+    u32 zero;
+
+    dispcnt = (u32)128 << 19;
+    asm volatile("" : "+r"(dispcnt));
+    *(vu16 *)dispcnt &= ~DISPCNT_WIN0_ON;
+    *(vu16 *)0x04000040 = 0;
+    *(vu16 *)0x04000044 = 0;
+    *(vu16 *)0x05000000 = 0;
+
+    asm volatile("" : : "r"(a));
+    p = &local;
+    zero = 0;
+    *p = zero;
+
+    REG_DMA3.src = (void *)&local;
+    REG_DMA3.dst = (void *)0x0600F800;
+    REG_DMA3.cnt = DMA_ENABLE | DMA_SRC_FIXED | 0x400;
+    (void)REG_DMA3.cnt;
+
+    REG_DISPCNT &= ~DISPCNT_BG3_ON;
 }
