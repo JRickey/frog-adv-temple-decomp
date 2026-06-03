@@ -25,7 +25,7 @@ void sub_080201E8(void)
  * clears dispatcher state bytes, and sets _data[20] = 2. */
 void sub_08020208(void)
 {
-    gGameStuff.mode = 4;
+    gGameStuff.mode = GAME_MODE_ROUTER;
     gIwram_3480._data[0] = 8;
     gIwram_3480._unk14 = 2;
     gIwram_5398 = 0;
@@ -41,7 +41,7 @@ void sub_08020208(void)
  * gIwram_34A0.dispatchIdx. */
 void sub_0802023C(void)
 {
-    gGameStuff.mode = 4;
+    gGameStuff.mode = GAME_MODE_ROUTER;
     gIwram_3480._data[0] = 8;
     gIwram_3480._unk14 = 1;
     gIwram_5398 = 0;
@@ -54,7 +54,7 @@ extern u16 sub_08010694(u16 arg);
 
 void sub_08020270(void)
 {
-    gGameStuff.mode = 4;
+    gGameStuff.mode = GAME_MODE_ROUTER;
 
     gIwram_3480._data[0] = 4;
     gIwram_3480._data[5] = 0;

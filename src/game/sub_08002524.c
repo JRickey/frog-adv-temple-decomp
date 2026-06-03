@@ -149,7 +149,7 @@ loop:
             goto tail;
         gIwram_3480._data[0] = 4;
         gIwram_3480._data[6] = counter;
-        gGameStuff.mode = 4;
+        gGameStuff.mode = GAME_MODE_ROUTER;
         break;
     }
     case 7:
@@ -168,7 +168,7 @@ loop:
     }
 
 tail:
-    if (gGameStuff.mode == 14 || gGameStuff.mode == 24)
+    if (gGameStuff.mode == GAME_MODE_SCENE_14 || gGameStuff.mode == GAME_MODE_ATTRACT)
         goto loop;
 
 epilogue:;

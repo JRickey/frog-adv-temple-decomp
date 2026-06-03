@@ -125,7 +125,7 @@ void sub_08019678(void)
         return;
 
     gIwram_3480._data[3]++;
-    gGameStuff.mode = 4;
+    gGameStuff.mode = GAME_MODE_ROUTER;
     gIwram_3480._data[0] = r;
 }
 
@@ -140,7 +140,7 @@ void sub_080196A0(void)
     if (r != 0)
         return;
 
-    gGameStuff.mode = 4;
+    gGameStuff.mode = GAME_MODE_ROUTER;
     gIwram_3480._data[3] = r;
     gIwram_3480._data[0] = r;
     gIwram_3480._data[5] = r;
@@ -150,7 +150,7 @@ void sub_080196A0(void)
  * clears _data[0,5,4], sets _data[3]=2. Sibling of sub_080196A0. */
 void sub_080196C8(void)
 {
-    gGameStuff.mode = 25;
+    gGameStuff.mode = GAME_MODE_MENU_25;
     gIwram_3480._data[0] = 0;
     gIwram_3480._data[5] = 0;
     gIwram_3480._data[3] = 2;

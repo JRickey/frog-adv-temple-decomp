@@ -48,7 +48,7 @@ void sub_0800336C(void)
     state = 0;
     hw = 0x87;
 
-    while (gGameStuff.mode == 17 || gGameStuff.mode == 24) {
+    while (gGameStuff.mode == GAME_MODE_SCENE_17 || gGameStuff.mode == GAME_MODE_ATTRACT) {
         sub_08020BC0();
         if (state > 8)
             continue;
@@ -131,7 +131,7 @@ void sub_0800336C(void)
                 break;
             gIwram_3480._data[0] = 4;
             gIwram_3480._data[6] = c;
-            gGameStuff.mode = 4;
+            gGameStuff.mode = GAME_MODE_ROUTER;
             break;
         }
         case 7:

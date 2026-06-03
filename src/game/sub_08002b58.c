@@ -38,7 +38,7 @@ void sub_08002B58(void)
     u32 r6;
 
     state = 0;
-    if (gGameStuff.mode != 16)
+    if (gGameStuff.mode != GAME_MODE_SCENE_16)
         return;
 
     do {
@@ -137,7 +137,7 @@ void sub_08002B58(void)
                 goto tail;
             gIwram_3480._data[0] = 4;
             gIwram_3480._data[6] = counter;
-            gGameStuff.mode = 4;
+            gGameStuff.mode = GAME_MODE_ROUTER;
             goto tail;
         }
         case 9:
@@ -160,5 +160,5 @@ void sub_08002B58(void)
         }
 
     tail:;
-    } while (gGameStuff.mode == 16);
+    } while (gGameStuff.mode == GAME_MODE_SCENE_16);
 }

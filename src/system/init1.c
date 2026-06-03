@@ -123,12 +123,12 @@ u32 sub_080004C4(void)
     {
         register GameStuff *gs asm("r0");
         gs = &gGameStuff;
-        if (gs->mode != 24) {
+        if (gs->mode != GAME_MODE_ATTRACT) {
             return mapped;
         }
 
         if (mapped != 0) {
-            gs->mode = 4;
+            gs->mode = GAME_MODE_ROUTER;
             gIwram_3480._data[0] = 4;
             return 0;
         }
@@ -179,7 +179,7 @@ u32 sub_080005D8(void)
     {
         register GameStuff *gs asm("r0");
         gs = &gGameStuff;
-        if (gs->mode != 24) {
+        if (gs->mode != GAME_MODE_ATTRACT) {
             return mapped;
         }
 
@@ -192,7 +192,7 @@ u32 sub_080005D8(void)
             return 0;
         }
 
-        gs->mode = 4;
+        gs->mode = GAME_MODE_ROUTER;
         gIwram_3480._data[0] = 4;
         return 0;
     }
@@ -241,7 +241,7 @@ u32 sub_08000678(void)
         mapped |= (1 << 13);
 
     gs = &gGameStuff;
-    if (gs->mode != 24) {
+    if (gs->mode != GAME_MODE_ATTRACT) {
         return mapped;
     }
 
@@ -249,7 +249,7 @@ u32 sub_08000678(void)
         return (u16)sub_080179B8();
     }
 
-    gs->mode = 4;
+    gs->mode = GAME_MODE_ROUTER;
     return 0;
 }
 

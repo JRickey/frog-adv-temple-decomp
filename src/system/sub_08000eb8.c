@@ -214,7 +214,7 @@ void sub_08000EB8(void)
                 break;
             gIwram_3480_bytes[0] = 4;
             gIwram_3480_bytes[6] = counter;
-            gGameStuff.mode = 4;
+            gGameStuff.mode = GAME_MODE_ROUTER;
             break;
         }
         case 7:
@@ -232,7 +232,7 @@ void sub_08000EB8(void)
         }
 
     tail:;
-    } while (gGameStuff.mode == 9 || gGameStuff.mode == 24);
+    } while (gGameStuff.mode == GAME_MODE_SCENE_09 || gGameStuff.mode == GAME_MODE_ATTRACT);
 }
 
 #else

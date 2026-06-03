@@ -155,7 +155,7 @@ void sub_080019B4(void)
                 break;
             gIwram_3480._data[0] = 4;
             gIwram_3480._data[6] = counter;
-            gGameStuff.mode = 4;
+            gGameStuff.mode = GAME_MODE_ROUTER;
             break;
         }
         case 7:
@@ -174,7 +174,7 @@ void sub_080019B4(void)
         }
 
     tail:;
-    } while (gGameStuff.mode == 12 || gGameStuff.mode == 24);
+    } while (gGameStuff.mode == GAME_MODE_SCENE_12 || gGameStuff.mode == GAME_MODE_ATTRACT);
 }
 
 void sub_08001CEC(void *buf, void *r4_obj, u32 kind)

@@ -70,9 +70,9 @@ void sub_0800DD80(void)
     {
         GameStuff *g2 = &gGameStuff;
         if (g2->pendingMode == 15) {
-            g2->mode = 23;
+            g2->mode = GAME_MODE_SCENE_23;
         } else {
-            g2->mode = 29;
+            g2->mode = GAME_MODE_WORLD_MAP;
         }
     }
 }

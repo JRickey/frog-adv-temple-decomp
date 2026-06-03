@@ -56,7 +56,7 @@ void sub_08002184(void)
         game = &gGameStuff;
         statep = statepInit;
         asm("" : "+r"(game));
-        if (game->mode == 13)
+        if (game->mode == GAME_MODE_SCENE_13)
             goto loop;
         goto epilogue;
     }
@@ -200,7 +200,7 @@ loop:
             goto tail;
         gIwram_3480._data[0] = 4;
         gIwram_3480._data[6] = counter;
-        gGameStuff.mode = 4;
+        gGameStuff.mode = GAME_MODE_ROUTER;
         break;
     }
     case 8: {

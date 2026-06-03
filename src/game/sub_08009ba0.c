@@ -94,7 +94,7 @@ u8 sub_08009C14(u8 *flag)
             return 1;
         }
         sub_0802D8F8();
-        gGameStuff.mode = 25;
+        gGameStuff.mode = GAME_MODE_MENU_25;
         return 0;
     }
 
@@ -102,8 +102,8 @@ u8 sub_08009C14(u8 *flag)
         sub_08006ADC(&gIwram_35E0);
     sub_08007874(gIwram_35E0._field_5);
     ((void (*)(void))sEntityProcA[gGameStuff.pendingMode])();
-    if (gGameStuff.mode == 24) {
-        gGameStuff.mode = 4;
+    if (gGameStuff.mode == GAME_MODE_ATTRACT) {
+        gGameStuff.mode = GAME_MODE_ROUTER;
         gGameStuff.pendingMode = 0;
         gIwram_3480._data[0] = 4;
         return 0;

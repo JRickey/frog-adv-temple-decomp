@@ -79,7 +79,7 @@ int sub_080179B8(void)
         return op;
     }
 
-    gs->mode = 4;
+    gs->mode = GAME_MODE_ROUTER;
     gIwram_3480._data[0] = 4;
     goto ret_op_zero;
 

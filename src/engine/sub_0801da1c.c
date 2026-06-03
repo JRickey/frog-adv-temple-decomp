@@ -119,6 +119,6 @@ loop1_done:
     sub_08020B50();
     sub_0801E078();
     BG_PAL_1E2 = savedPal;
-    gGameStuff.mode = 4;
+    gGameStuff.mode = GAME_MODE_ROUTER;
     *(u8 *)0x03003480 = byteZero;
 }

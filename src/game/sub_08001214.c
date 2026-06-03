@@ -36,7 +36,7 @@ void sub_08001214(void)
 
     substate = 0;
 
-    if (gGameStuff.mode != 10)
+    if (gGameStuff.mode != GAME_MODE_SCENE_10)
         return;
 
     do {
@@ -120,7 +120,7 @@ void sub_08001214(void)
                 goto tail;
             gIwram_3480._data[0] = 4;
             gIwram_3480._data[6] = counter;
-            gGameStuff.mode = 4;
+            gGameStuff.mode = GAME_MODE_ROUTER;
             break;
         }
         case 8:
@@ -142,5 +142,5 @@ void sub_08001214(void)
         }
 
     tail:;
-    } while (gGameStuff.mode == 10);
+    } while (gGameStuff.mode == GAME_MODE_SCENE_10);
 }

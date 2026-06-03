@@ -3,17 +3,27 @@
 
 #include "types.h"
 
+#include "constants/game_mode.h"
+
 /* Game-state structure at 0x03005330 in IWRAM. Layout is being discovered
  * incrementally — fields named `_unkNN` are inferred from access width by
  * tools/agent/struct_grow.py; rename as their purpose is identified.
  *
- *  offset 9   `mode`         - AgbMain dispatches its 26-case switch on this byte.
- *                              AgbMain itself initializes it to 4 in its prologue
- *                              (mode 4 == "title screen" or similar, TBD).
- *  offset 10  `pendingMode`  - Written by Set*Mode_NN helpers (despite the name).
- *                              Purpose TBD; not directly dispatched. Hypothesis:
- *                              a queued / requested mode that propagates to
- *                              `mode` later via code we haven't decompiled yet.
+ *  offset 9   `mode`         - AgbMain dispatches its switch on this byte; the
+ *                              values are `enum GameMode`. AgbMain initializes
+ *                              it to GAME_MODE_ROUTER (4), the central hub that
+ *                              every screen returns to. See
+ *                              include/constants/game_mode.h.
+ *  offset 10  `pendingMode`  - MISNAMED. Not a queued game mode: it is a
+ *                              scene/entity-type id (the scene handlers set it
+ *                              to `mode - 7` and ModeControl/sub_0800DE80
+ *                              dispatch on it; it also keys the sEntityProc*
+ *                              tables in src/data/entity_dispatch.c). The
+ *                              Set*Mode_NN helpers actually set this scene id.
+ *                              Rename pending (-> SetSceneType_NN); see
+ *                              docs/unknowns.md.
+ *  offset 12  `_unk0C`       - unlocked-worlds bitmap (set by sub_0800DD80;
+ *                              read by sub_0801B154 to bound the world map).
  *  offset 28  `rngSeed`      - LCG state stepped by sub_08000764
  *                              (seed = seed * 109 + 1021).
  *  offset 34  `_unk22`       - halfword; written by sub_0801932C.

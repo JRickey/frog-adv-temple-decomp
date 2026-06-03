@@ -51,7 +51,7 @@ void sub_080202A8(void)
  * game back to mode 4 and clears the dispatcher state bytes. */
 void sub_080202C8(void)
 {
-    gGameStuff.mode = 4;
+    gGameStuff.mode = GAME_MODE_ROUTER;
     gIwram_3480._data[0] = 8;
     gIwram_3480._unk14 = 0;
     gIwram_5398 = 0;

@@ -39,7 +39,7 @@ void sub_08001508(void)
 
     frame.localState = 0;
 
-    if (gGameStuff.mode != 11 && gGameStuff.mode != 24)
+    if (gGameStuff.mode != GAME_MODE_SCENE_11 && gGameStuff.mode != GAME_MODE_ATTRACT)
         return;
 
     do {
@@ -143,7 +143,7 @@ void sub_08001508(void)
                 break;
             gIwram_3480._data[0] = 4;
             gIwram_3480._data[6] = counter;
-            gGameStuff.mode = 4;
+            gGameStuff.mode = GAME_MODE_ROUTER;
             break;
         }
         case 7:
@@ -162,7 +162,7 @@ void sub_08001508(void)
         }
 
     tail:;
-    } while (gGameStuff.mode == 11 || gGameStuff.mode == 24);
+    } while (gGameStuff.mode == GAME_MODE_SCENE_11 || gGameStuff.mode == GAME_MODE_ATTRACT);
 }
 
 /* Mode-4 re-arm thunk: queues pendingMode = 4, then forwards its two

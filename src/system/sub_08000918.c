@@ -66,7 +66,7 @@ void sub_08000918(void)
 
     spByte = 0;
     localState = 0;
-    if (gGameStuff.mode != 8 && gGameStuff.mode != 24)
+    if (gGameStuff.mode != GAME_MODE_SCENE_08 && gGameStuff.mode != GAME_MODE_ATTRACT)
         return;
 
     do {
@@ -151,7 +151,7 @@ void sub_08000918(void)
                 goto tail;
             gIwram_3480_data0 = 4;
             (&gIwram_3480_data0)[6] = 0;
-            gGameStuff.mode = 4;
+            gGameStuff.mode = GAME_MODE_ROUTER;
             goto tail;
         case 8:
             if (sub_0800A104(&spByte, 0x0800A26D) == 0)
@@ -169,7 +169,7 @@ void sub_08000918(void)
         }
 
     tail:;
-    } while (gGameStuff.mode == 8 || gGameStuff.mode == 24);
+    } while (gGameStuff.mode == GAME_MODE_SCENE_08 || gGameStuff.mode == GAME_MODE_ATTRACT);
 }
 
 #else

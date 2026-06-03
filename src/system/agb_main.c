@@ -41,100 +41,100 @@ void AgbMain(void)
 {
     REG_WAITCNT = 0x4014;
     sub_08000430(); /* Init1 */
-    gGameStuff.mode = 4;
+    gGameStuff.mode = GAME_MODE_ROUTER;
 
     for (;;) {
         sub_08020BC0(); /* per-frame tick / VBlank wait */
         /* Agbcc sorts the jump table by case value, but emits bodies in source order. */
         switch (gGameStuff.mode) {
-        case 4: {
+        case GAME_MODE_ROUTER: {
             gIwram_5398 = sub_080004C4();
             sub_08019500();
             /* Read gIwram_3480._data[5] twice in baserom — the second load
              * is used for the {3, 2, 4} compares. */
             if (gIwram_3480._data[5] == 1)
-                gGameStuff.mode = 5;
+                gGameStuff.mode = GAME_MODE_FILE_SELECT;
             if (gIwram_3480._data[5] == 3)
-                gGameStuff.mode = 7;
+                gGameStuff.mode = GAME_MODE_MENU_07;
             if (gIwram_3480._data[5] == 2)
-                gGameStuff.mode = 6;
+                gGameStuff.mode = GAME_MODE_OPTIONS;
             if (gIwram_3480._data[5] == 4)
-                gGameStuff.mode = 24;
+                gGameStuff.mode = GAME_MODE_ATTRACT;
             break;
         }
-        case 24:
+        case GAME_MODE_ATTRACT:
             sub_0801793C();
             break;
-        case 8:
+        case GAME_MODE_SCENE_08:
             sub_08000918();
             break;
-        case 9:
+        case GAME_MODE_SCENE_09:
             sub_08000EB8();
             break;
-        case 10:
+        case GAME_MODE_SCENE_10:
             sub_08001214();
             break;
-        case 11:
+        case GAME_MODE_SCENE_11:
             sub_08001508();
             break;
-        case 12:
+        case GAME_MODE_SCENE_12:
             sub_080019B4();
             break;
-        case 13:
+        case GAME_MODE_SCENE_13:
             sub_08002184();
             break;
-        case 14:
+        case GAME_MODE_SCENE_14:
             sub_08002524();
             break;
-        case 15:
+        case GAME_MODE_SCENE_15:
             sub_08002844();
             break;
-        case 16:
+        case GAME_MODE_SCENE_16:
             sub_08002B58();
             break;
-        case 17:
+        case GAME_MODE_SCENE_17:
             sub_0800336C();
             break;
-        case 18:
+        case GAME_MODE_SCENE_18:
             sub_08003864();
             break;
-        case 19:
+        case GAME_MODE_SCENE_19:
             sub_08003CA8();
             break;
-        case 20:
+        case GAME_MODE_SCENE_20:
             sub_0800411C();
             break;
-        case 21:
+        case GAME_MODE_SCENE_21:
             sub_08004938();
             break;
-        case 22:
+        case GAME_MODE_SCENE_22:
             sub_08004FAC();
             break;
-        case 23:
+        case GAME_MODE_SCENE_23:
             sub_080054A8();
             break;
-        case 25:
+        case GAME_MODE_MENU_25:
             sub_08019560();
             break;
-        case 7:
+        case GAME_MODE_MENU_07:
             sub_080201C8();
             break;
-        case 6:
+        case GAME_MODE_OPTIONS:
             sub_080201A8();
             break;
-        case 26:
+        case GAME_MODE_MENU_26:
             sub_08019540();
             break;
-        case 27:
+        case GAME_MODE_MENU_27:
             sub_080201E8();
             break;
-        case 5:
+        case GAME_MODE_FILE_SELECT:
             sub_080202A8();
             break;
-        case 29:
+        case GAME_MODE_WORLD_MAP:
             sub_0801A268(gIwram_3540);
             break;
-        case 28: /* shared-tail fallthrough — no per-mode handler */
+        case GAME_MODE_NO_HANDLER: /* shared-tail fallthrough — no per-mode handler */
             break;
         default:
             break; /* mode out of range -> straight to tail */
