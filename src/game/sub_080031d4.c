@@ -30,28 +30,18 @@
  *     the `movs #0x80; lsls #5` mask setup, while CSE still copies the base
  *     into r3 for the second `& 0x2000` re-test. */
 
-struct Entity {
-    u8 _pad00[2];
-    s16 _field_2; /* +2: X sub-coordinate */
-    u8 _pad04[0x30];
-    u16 _field_34; /* +0x34: flag halfword; bit 4 = inactive */
-    u8 _pad36[2];
-};
-
 extern u16 gIwram_5398;
-
-#define gEntities_03003720 ((struct Entity *)0x03003720)
 
 void sub_080031D4(void)
 {
     register u32 mask asm("r0");
-    register struct Entity *p asm("r1") = gEntities_03003720;
+    register struct Entity *p asm("r1") = gEntities;
     struct Entity *e;
     u16 *btn;
     int x;
 
     mask = 4;
-    mask &= p->_field_34;
+    mask &= p->status;
     e = p;
     if (mask != 0)
         return;
@@ -60,20 +50,20 @@ void sub_080031D4(void)
     mask = 0x1000;
     mask &= *btn;
     if (mask != 0) {
-        x = (s16)e->_field_2;
+        x = (s16)e->x;
         if (x > 3) {
-            e[gIwram_35E0._field_E]._field_2 -= 3;
-            e->_field_2 -= 3;
+            e[gIwram_35E0._field_E].x -= 3;
+            e->x -= 3;
         }
     }
 
     mask = 0x2000;
     mask &= gIwram_5398;
     if (mask != 0) {
-        x = (s16)e->_field_2;
+        x = (s16)e->x;
         if (x <= 236) {
-            e[gIwram_35E0._field_E]._field_2 += 3;
-            e->_field_2 += 3;
+            e[gIwram_35E0._field_E].x += 3;
+            e->x += 3;
         }
     }
 }

@@ -18,12 +18,6 @@ extern const void *const sLevelLayoutPtrs_317E6C[2];
 extern const u32 sLevelLayout_317DDC[4];
 extern const u32 sLevelLayout_317E74[12];
 
-struct Entity {
-    u8 _pad00[0x34];
-    u16 _field_34; /* +0x34: flag halfword */
-    u8 _pad36[2];
-};
-
 extern struct Entity gEntities_03003720[];
 
 void sub_0802AB64(void)
@@ -52,10 +46,10 @@ void sub_0802ABDC(void)
         sub_0802A394();
     } else {
         for (i = 0; i <= 1; i++) {
-            gEntities_03003720[i + 14]._field_34 |= 8;
+            gEntities_03003720[i + 14].status |= 8;
         }
         for (i = 0; i <= 0; i++) {
-            gEntities_03003720[i + 16]._field_34 |= 8;
+            gEntities_03003720[i + 16].status |= 8;
         }
     }
 

@@ -9,12 +9,6 @@ extern void sub_080210A0(u16 a0, const void *a1, u16 a2, u8 a3, u16 a4, u8 a5, u
 
 extern const u32 sLevelLayout_31805C[8];
 
-struct Entity {
-    u8 _pad00[0x34];
-    u16 _field_34; /* +0x34: flag halfword */
-    u8 _pad36[2];
-};
-
 extern struct Entity gEntities_03003720[];
 
 void sub_0802CA64(void)
@@ -53,7 +47,7 @@ u8 sub_0802CAC0(void)
     e = (struct Entity *)(p + 0x1c0);
     i = 13;
     do {
-        if (e->_field_34 & bitmask)
+        if (e->status & bitmask)
             count = (u8)(count + 1);
         e++;
         i--;

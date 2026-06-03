@@ -61,17 +61,6 @@ void sub_080087B4(void)
  * record (kind 11) whose centre falls strictly inside the box, latches it
  * (record+0x34 |= 0x84) and returns 1. */
 
-struct Entity {
-    u8 _b0; /* +0: kind; the hit only latches records with kind 11 */
-    u8 _pad01;
-    s16 _h2; /* +2 */
-    s16 _h4; /* +4 */
-    u8 _b6;  /* +6: must match the player header byte */
-    u8 _pad07[0x2D];
-    u16 _h34; /* +0x34: bit 0x04 = inactive; 0x84 latched on a hit */
-    u8 _pad36[2];
-};
-
 struct IndexEntry {
     u8 id;
     u8 _pad[7];
@@ -120,26 +109,26 @@ u8 sub_0800885C(u8 arg0, u8 arg1)
 
         base = (u8 *)gEntities_03003720;
         e = (struct Entity *)(id * sizeof(struct Entity) + (u32)base);
-        flags = e->_h34;
+        flags = e->status;
         if (flags & 4)
             continue;
-        if (((struct Entity *)base)->_b6 != e->_b6)
+        if (((struct Entity *)base)->field_06 != e->field_06)
             continue;
-        if (e->_h2 <= yLo)
+        if (e->x <= yLo)
             continue;
-        if (e->_h2 >= yHi)
+        if (e->x >= yHi)
             continue;
-        if (e->_h4 <= xLo)
+        if (e->y <= xLo)
             continue;
-        if (e->_h4 >= xHi)
+        if (e->y >= xHi)
             continue;
-        if (e->_b0 == 11) {
+        if (e->field_00 == 11) {
             /* The latch is `0x80 | flags | 4`. Pinning the accumulator to r0
              * keeps it a fresh 0x80 (not a reuse of flags' callee-saved reg),
              * which both stops agbcc folding 0x80|4 into 0x84 and lets flags
              * stay read-only in r5 — reproducing the baserom's r4/r5 colouring. */
             register u16 v asm("r0") = 0x80 | flags;
-            e->_h34 = v | 4;
+            e->status = v | 4;
             return 1;
         }
     }

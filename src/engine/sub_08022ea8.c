@@ -5,12 +5,6 @@ extern void sub_080210A0(u16 a0, const void *a1, u16 a2, u8 a3, u16 a4, u8 a5, u
 
 extern const u32 sLevelLayoutPtrs_311C80[12];
 
-struct Entity {
-    u8 _pad00[6];
-    u8 _b6; /* +6 */
-    u8 _pad07[0x31];
-};
-
 extern struct Entity gEntities_03003720[];
 
 void sub_08022EA8(void)
@@ -26,6 +20,6 @@ void sub_08022EA8(void)
                          3);
 
         if (i <= 2)
-            gEntities_03003720[i + 0x32]._b6 = 2;
+            gEntities_03003720[i + 0x32].field_06 = 2;
     }
 }

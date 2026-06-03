@@ -10,19 +10,6 @@
  * into gIwram_35E0+0x1A, then commits the tile delta into gIwram_35E0+0x1C/+0x1E
  * per the cardinal direction and hop length encoded in the opcode. */
 
-struct Entity {
-    u8 _pad00;
-    u8 _b1;  /* +1: kind; a blocker is kind 2 */
-    s16 _h2; /* +2 */
-    s16 _h4; /* +4 */
-    u8 _b6;  /* +6: must match the player header byte */
-    u8 _pad07[0x13];
-    u8 _opcode; /* +0x1A: record 0 holds the pending move opcode */
-    u8 _pad1B[0x19];
-    u16 _h34; /* +0x34: bit 0x04 = inactive */
-    u8 _pad36[2];
-};
-
 struct IndexEntry {
     u8 id;
     u8 _pad[7];
@@ -68,7 +55,7 @@ u8 sub_08008570(void)
         break;
     }
 
-    if (gEntities_03003720[0]._opcode <= 7) {
+    if (gEntities_03003720[0].field_1A <= 7) {
         for (i = 0; i < gIwram_6110.liveCount; i++) {
             u8 id = gEntityIndex_03006160[i].id;
             struct Entity *e;
@@ -80,19 +67,19 @@ u8 sub_08008570(void)
             ep = (u8 *)gEntities_03003720;
             e = (struct Entity *)(ep + id * sizeof(struct Entity));
 
-            if (e->_h34 & 4)
+            if (e->status & 4)
                 continue;
-            if (gEntities_03003720[0]._b6 != e->_b6)
+            if (gEntities_03003720[0].field_06 != e->field_06)
                 continue;
-            if (e->_h2 <= yLo)
+            if (e->x <= yLo)
                 continue;
-            if (e->_h2 >= yHi)
+            if (e->x >= yHi)
                 continue;
-            if (e->_h4 <= xLo)
+            if (e->y <= xLo)
                 continue;
-            if (e->_h4 >= xHi)
+            if (e->y >= xHi)
                 continue;
-            if (e->_b1 != 2)
+            if (e->field_01 != 2)
                 continue;
 
             gIwram_35E0._field_1A = id;
@@ -103,7 +90,7 @@ u8 sub_08008570(void)
     gIwram_35E0._field_1A = 0;
 
 commit:
-    switch (gEntities_03003720[0]._opcode) {
+    switch (gEntities_03003720[0].field_1A) {
     case 4:
         gIwram_35E0._field_1C = gIwram_35E0._field_8;
         gIwram_35E0._field_1E = gIwram_35E0._field_A - 1;

@@ -28,21 +28,6 @@
  * intent for the phase-3 PC port. */
 
 #ifdef NON_MATCHING
-struct Entity {
-    u8 _pad00;
-    u8 _b1;  /* +1: kind; latch only happens when this is 2 */
-    s16 _h2; /* +2 */
-    s16 _h4; /* +4 */
-    u8 _b6;  /* +6: must match the player header byte */
-    u8 _pad07[0x1D];
-    s16 _h24; /* +0x24 */
-    s16 _h26; /* +0x26 */
-    u8 _b28;  /* +0x28 */
-    u8 _b29;  /* +0x29 */
-    u8 _pad2A[0xA];
-    u16 _h34; /* +0x34: bit 0x04 = inactive */
-    u8 _pad36[2];
-};
 
 struct IndexEntry {
     s8 id;
@@ -70,15 +55,15 @@ void sub_08008F98(void)
 
         e = &gEntities_03003720[id];
 
-        if (e->_h34 & 4)
+        if (e->status & 4)
             continue;
-        if (gIwram_3720._pad06[0] != e->_b6)
+        if (gEntities[0].field_06 != e->field_06)
             continue;
 
-        right = (u16)(e->_h4 + e->_h26);
-        left = (u16)((e->_h4 + e->_h26) - e->_b29);
-        bottom = (u16)((e->_h2 + e->_h24) + (e->_b28 >> 1));
-        top = (e->_h2 + e->_h24) - (e->_b28 >> 1);
+        right = (u16)(e->y + e->field_26);
+        left = (u16)((e->y + e->field_26) - e->field_29);
+        bottom = (u16)((e->x + e->field_24) + (e->field_28 >> 1));
+        top = (e->x + e->field_24) - (e->field_28 >> 1);
 
         if (headerY < top)
             continue;
@@ -88,7 +73,7 @@ void sub_08008F98(void)
             continue;
         if (headerX > right)
             continue;
-        if (e->_b1 != 2)
+        if (e->field_01 != 2)
             continue;
 
         gIwram_35E0._field_1A = rawId;

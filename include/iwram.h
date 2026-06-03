@@ -90,6 +90,44 @@ struct IwramAt3720 {
     u16 _field_694;
 };
 
+/* Entity pool slot (0x03003720 + slot*0x38; 128 slots). Replaces the flat
+ * struct IwramAt3720, which incorrectly modelled the whole pool as one struct
+ * (its _field_38 was slot 1's +0x00, _field_692/_694 slot 30's x/y, etc.).
+ * Fields stay offset-named except the established x/y/status; semantic naming
+ * is a later pass. See docs/memory-map.md "Entity pool". */
+struct Entity {
+    u8 field_00;    /* +0x00: kind/type byte */
+    u8 field_01;    /* +0x01 */
+    s16 x;          /* +0x02: X sub-coordinate (signed; /24 -> tile X) */
+    s16 y;          /* +0x04: Y sub-coordinate (signed; /24 -> tile Y) */
+    u8 field_06;    /* +0x06: active actor id (matched against entry+8 by sub_08006FEC) */
+    u8 field_07[3]; /* +0x07..+0x09 */
+    u8 field_0A;    /* +0x0A: scene/entity-type id (keys sEntityProc* tables) */
+    u8 field_0B[5]; /* +0x0B..+0x0F */
+    u16 field_10;   /* +0x10 */
+    u16 field_12;   /* +0x12 */
+    u16 field_14;   /* +0x14 */
+    u8 field_16;    /* +0x16 */
+    u8 field_17;    /* +0x17: tile-class result (sub_08009984) */
+    u8 field_18[2]; /* +0x18..+0x19 */
+    u8 field_1A;    /* +0x1A: dispatch state read often (also a move-opcode in slot 0) */
+    u8 field_1B;    /* +0x1B: active-entity count, loop bound (<= 4); slot 0 only */
+    u8 field_1C[8]; /* +0x1C..+0x23 */
+    s16 field_24;   /* +0x24: signed half-extent (AABB collision probes) */
+    s16 field_26;   /* +0x26: signed half-extent */
+    u8 field_28;    /* +0x28 */
+    u8 field_29;    /* +0x29 */
+    u8 field_2A;    /* +0x2A: MotionDesc.sel (pool slot ptr in sub_0800A580) */
+    u8 field_2B[5]; /* +0x2B..+0x2F */
+    u8 field_30;    /* +0x30: MotionDesc.dx */
+    u8 field_31;    /* +0x31: MotionDesc.dy */
+    u8 field_32;    /* +0x32: MotionDesc.mode */
+    u8 field_33;    /* +0x33 */
+    u16 status;     /* +0x34: flag halfword (bits 0x04 / 0x08 / 0x40 / 0x8000 tested) */
+    u8 field_36[2]; /* +0x36..+0x37 */
+};
+typedef char _entity_size_check[sizeof(struct Entity) == 0x38 ? 1 : -1];
+
 struct IwramAt34C0 {
     /* Subsystem TBD. sub_080004C4 reads a u32 at +8 (used as a tick
      * timestamp for the mode-24 attract advance). */
@@ -171,6 +209,7 @@ extern struct IwramAt35E0 gIwram_35E0;
 extern struct IwramAt3608 gIwram_3608;
 extern struct IwramAt3710 gIwram_3710;
 extern struct IwramAt3720 gIwram_3720;
+extern struct Entity gEntities[128];
 extern struct IwramAt5358 gIwram_5358;
 extern struct IwramAt6110 gIwram_6110;
 

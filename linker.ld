@@ -96,7 +96,7 @@ SECTIONS {
         . = 0x00003608; gIwram_3608 = .;
         . = 0x00003610; gIwram_3610 = .;
         . = 0x00003710; gIwram_3710 = .;
-        . = 0x00003720; gIwram_3720 = .; gEntities_03003720 = .;
+        . = 0x00003720; gIwram_3720 = .; gEntities_03003720 = .; gEntities = .;
         . = 0x00005328; gIwram_5328 = .;
         . = 0x00005330; gIwram_5330 = .;
         . = 0x00005358; gIwram_5358 = .;
