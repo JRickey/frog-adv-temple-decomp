@@ -38,16 +38,20 @@
 #define SAVE_NAME_DEFAULT    0x41 /* 'A' — empty-slot initials "AAA"   */
 
 /* 8-byte save header (EEPROM block 0). Validated on load by sub_08017364;
- * a failed field check rebuilds the header from current game state. */
+ * a failed field check rebuilds the header from current game state.
+ *
+ * Bytes [4..7] are accessed both per-byte (validation) and as one u32 (the
+ * header rebuild copies the whole word from gIwram_34B4), so they live in a
+ * union — the u32 member lets the rebuild store fold its offset into `str`. */
 struct SaveHeader {
     u8 slotMask; /* +0: bit i set => slot i is populated. valid: <= 0x0F (4 bits) */
     u8 level;    /* +1: saved level/scene index; restored into gIwram_34B0. valid: <= 4 */
     u8 _field2;  /* +2: zeroed when the header is rebuilt */
     u8 version;  /* +3: format tag; valid: == 0 */
-    u8 _field4;  /* +4: bytes [4..7] also load/store as one u32, mirrored from gIwram_34B4 */
-    u8 _field5;  /* +5 */
-    u8 _field6;  /* +6: ranged enum, valid: (u8)(v - 3) <= 6  => [3..9] */
-    u8 _field7;  /* +7: ranged enum, valid: (u8)(v - 3) <= 6  => [3..9] */
+    union {
+        u32 word;   /* +4: rebuilt as one word from gIwram_34B4 */
+        u8 byte[4]; /* +4..7: byte[2] (+6) and byte[3] (+7) are ranged enums, valid (u8)(v-3) <= 6 => [3..9] */
+    } tail;
 };
 
 /* 12-byte save slot record. An empty slot defaults to initials "AAA",
