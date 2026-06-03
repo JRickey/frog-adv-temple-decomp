@@ -550,7 +550,6 @@ SECTIONS {
         asm/text/text_0x0801b71c.o(.text);  /* 0x0801b71c - 0x0801b954, raw bytes (shrunk for sub_0801B954 peel) */
         src/engine/sub_0801b954.o(.text);
         src/engine/sub_0801b9e4.o(.text);
-        asm/disasm_0x0801ba34.o(.text);  /* 0x0801ba34 - 0x0801bac8, sub_0801BA34 (peeled) */
         src/engine/sub_0801bac8.o(.text);
         src/engine/sub_0801badc.o(.text);
         src/engine/sub_0801bb1c.o(.text);
@@ -943,6 +942,7 @@ SECTIONS {
         src/game/sub_08002b58.o(.rodata)
         src/engine/sub_08012f00.o(.rodata)
         src/system/sub_08001508.o(.rodata)
+        src/engine/sub_0801b9e4.o(.rodata)
         *(.ARM.attributes)
         *(.comment)
         *(.note*)
