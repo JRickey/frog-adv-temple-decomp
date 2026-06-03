@@ -80,8 +80,3 @@
 @   0x08012d3a: bcf0        pop	{r4, r5, r6, r7}
 @   0x08012d3c: bc01        pop	{r0}
 @   0x08012d3e: 4700        bx	r0
-
-        thumb_func_start sub_08012CAC
-sub_08012CAC: @ 0x08012cac
-        .incbin "frog_us_baserom.gba", 0x12cac, 0x94
-        thumb_func_end sub_08012CAC
