@@ -25,8 +25,3 @@
 @   0x08023216: 0000        movs	r0, r0
 @   0x08023218: 1498        asrs	r0, r3, #18
 @   0x0802321a: 0831        lsrs	r1, r6, #32
-
-        thumb_func_start sub_080231F4
-sub_080231F4: @ 0x080231f4
-        .incbin "frog_us_baserom.gba", 0x231f4, 0x28
-        thumb_func_end sub_080231F4
