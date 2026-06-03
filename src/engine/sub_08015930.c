@@ -1,6 +1,7 @@
 #include "macros.h"
 #include "types.h"
 #include "iwram.h"
+#include "gba/io.h"
 
 struct TilemapTableEntry {
     u16 unk00;
@@ -40,4 +41,54 @@ void sub_08015930(void)
         }
         i = (u8)(i + 1);
     } while (i <= 3);
+}
+
+/* Minimal struct views for the sub_080159B0 init pass. */
+struct IwramInited6480 {
+    u8 base; /* +0 */
+    u8 _pad[7];
+    u8 flag; /* +8 */
+};
+
+struct IwramInited6540 {
+    u8 base; /* +0 */
+    u8 _pad[7];
+    u8 flag; /* +8 */
+};
+
+struct IwramInited3610 {
+    u8 base; /* +0 */
+    u8 _pad[5];
+    u8 field6; /* +6 */
+    u8 field7; /* +7 */
+    u8 _pad2[2];
+    u8 fielda; /* +10 */
+    u8 fieldb; /* +11 */
+};
+
+extern struct IwramInited6480 gIwram_6480;
+extern struct IwramInited6540 gIwram_6540;
+extern u8 gIwram_6500;
+extern u8 gIwram_6580;
+extern struct IwramInited3610 gIwram_3610;
+
+void sub_080159B0(void)
+{
+    /* r2 holds &gIwram_6540 throughout the paired init writes;
+     * without the pin, agbcc assigns the wrong register. */
+    register struct IwramInited6540 *p6540 asm("r2") = &gIwram_6540;
+
+    p6540->flag = 0;
+    gIwram_6480.flag = 0;
+    p6540->base = 0;
+    gIwram_6480.base = 0;
+    gIwram_6500 = 0;
+    gIwram_6580 = 0;
+    gIwram_3610.base = 0;
+    gIwram_3610.field6 = 0;
+    gIwram_3610.field7 = 0;
+    gIwram_3610.fielda = 0;
+    gIwram_3610.fieldb = 0;
+    sub_08015930();
+    REG_BG2CNT = 0x1e0d;
 }
