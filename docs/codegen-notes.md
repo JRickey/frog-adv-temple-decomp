@@ -2315,14 +2315,47 @@ you what does NOT work — RE-DERIVE the structure from scratch rather than twea
 near-match (tweaking stays in the same basin). Grind across several *distinct*
 structures (codex spends ~200-330k tokens / 10-15 min doing exactly this) before defer.
 
+## agbcc RTL dumps — the no-rebuild oracle (try this FIRST)
+
+agbcc is gcc 2.x, which ships **built-in RTL pass dumps**. For most
+register-*colouring* questions ("why did the loop index land in r6 not r5?",
+"why does this block-move pick {r2,r3,r7} not {r4,r6,r7}?") you do **not** need
+to rebuild anything — just pass `-da` to `old_agbcc` and read the dumps. This
+is strictly cheaper than the private-debug-compiler rebuild below; escalate to
+that only when you need to probe a decision the dumps don't already expose.
+
+`-da` writes one file per pass next to the input: `<input>.{rtl,jump,cse,loop,
+gcse,cse2,flow,combine,regmove,lreg,greg,mach,jump2}`. The money dump is
+**`.greg`** (global allocation), which contains:
+- *"Registers to be allocated in sorted order"* — the allocation **priority**
+  (by `refs * live_length`). Earlier = first pick of a register. A pseudo low
+  in this list is coloured late and gets whatever's left.
+- *";; Register dispositions:"* — the final **pseudo → hard reg** map
+  (`27 in 6` = pseudo 27 got r6; `28 in 10` = r10/sl; reg 13 = sp).
+- *";; Hard regs used:"* — confirms whether sl/r9/r8 got used at all.
+
+Pseudos are anonymous in the RTL (source names don't survive), so **map by
+structure**: a pseudo's defining insn / its operands tell you which source
+value it is (e.g. the pseudo that appears in `(mult (reg N) (const 12))` is the
+loop index). The fix is then a *source-shape* change that raises that pseudo's
+priority or cuts contention for the register you want — NOT a register pin.
+
+Wrapper: `tools/agent/agbcc_oracle.py <fn>` runs the whole pipeline and prints
+the priority order + dispositions; `--pass greg` dumps one pass for the
+function, `--trace <pseudo>` follows a pseudo across passes. Dumps land in
+`/tmp/agbcc-oracle/`. Worked use: `sub_08017364`'s loop index was pseudo 27
+(low priority) → r6, while the baserom wants r5 — pointing straight at the
+`saveBase` local as the perturbing pseudo, no rebuild required.
+
 ## Instrumenting agbcc itself — build a private debug compiler
 
-Reading the agbcc pass tells you *what the algorithm does*; instrumenting it tells you
-*what it actually decided on YOUR function*. When a register choice / fold / branch
-diverges and reading `local-alloc.c` / `cse.c` / `loop.c` is not enough to see WHY,
-add an `fprintf(stderr, …)` at the decision site, rebuild agbcc, and compile only your
-TU with the instrumented binary to watch the choice. This has cracked matches that
-pure source-reading could not.
+This is the SECOND rung — use it only when the `-da` dumps above don't expose
+the decision (e.g. you need to watch a `reload.c` choice mid-pass, or a
+conditional the dump format flattens). Reading the agbcc pass tells you *what
+the algorithm does*; instrumenting it tells you *what it actually decided on
+YOUR function*. Add an `fprintf(stderr, …)` at the decision site, rebuild
+agbcc, and compile only your TU with the instrumented binary to watch the
+choice. This has cracked matches that pure source-reading could not.
 
 **SAFETY INVARIANT (load-bearing in the parallel loop).** In a worktree, `tools/agbcc`
 (installed binaries) and `tools/agbcc-src` (compiler source) are **symlinks to MAIN**.
