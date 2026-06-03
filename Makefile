@@ -126,6 +126,9 @@ src/game/sub_08006a0c.s: CFLAGS += -O1
 # Loop reverses to a `bge.n` countdown under strength reduction; the baserom
 # keeps a signed count-up (`ble.n`). Disabling strength reduction restores it.
 src/game/sub_08003b8c.s: CFLAGS += -fno-strength-reduce
+# Keeps the loop-invariant gIwram_6110 base in r7 across the loop instead of
+# GCSE-reloading it from the constant pool each iteration (matches baserom).
+src/engine/sub_08015930.s: CFLAGS += -fno-gcse
 # Keeps the scroll-object address arithmetic in the baserom's non-hoisted form.
 src/engine/sub_0800f24c.s: CFLAGS += -fno-strength-reduce
 src/engine/sub_0800f2f8.s: CFLAGS += -fno-strength-reduce
