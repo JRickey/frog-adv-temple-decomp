@@ -1,0 +1,6 @@
+#include "game.h"
+#include "iwram.h"
+#include "macros.h"
+#include "types.h"
+#include "gba/dma.h"
+#include "gba/io.h"
