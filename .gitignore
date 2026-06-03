@@ -82,4 +82,7 @@ decomp-corpus/
 # Full git mirrors (blobs present) for corpus_asm_search.py's history search.
 # ~1.4G of other agbcc-era decomp repos — NEVER committed. Populate with
 # `python3 tools/agent/corpus_asm_search.py sync --from <path-to-mirrors>`.
-tools/agent/corpus-mirrors/
+# No trailing slash: worktree bootstraps SYMLINK this path, and a dir-only
+# pattern ("…/") wouldn't match the symlink, leaving it as untracked noise
+# that trips the workflow's clean-tree check.
+tools/agent/corpus-mirrors
