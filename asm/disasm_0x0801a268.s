@@ -452,5 +452,5 @@
 
         thumb_func_start sub_0801A268
 sub_0801A268: @ 0x0801a268
-        .incbin "frog_us_baserom.gba", 0x1a268, 0x3ac
+        .incbin "frog_us_baserom.gba", 0x1a268, 0x3bc
         thumb_func_end sub_0801A268

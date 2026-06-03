@@ -26,6 +26,8 @@ MEMORY {
  * table base into r1 before the index shift, matching baserom pool order. */
 gHandlerTable_08308028 = 0x08308028;
 gScriptPtrTable_08307fec = 0x08307FEC;
+gScriptPtrTable_08308164 = 0x08308164;
+gScriptPtrTable_083081A0 = 0x083081A0;
 sLevelLayoutPtrs_308698 = 0x08308698;
 
 /* State-handler dispatch table, currently inside the sSpriteAnimBlock_07104
@@ -529,7 +531,6 @@ SECTIONS {
         src/engine/sub_0801a268.o(.text);
         asm/disasm_0x0801a268.o(.text);  /* 0x0801a268 - 0x0801a614, sub_0801A268 (auto-peeled) */
         src/engine/sub_0801a614.o(.text);
-        asm/disasm_0x0801a614.o(.text);  /* 0x0801a614 - 0x0801a6d4, sub_0801A614 (auto-peeled) */
         src/engine/sub_0801a6d4.o(.text);
         src/engine/sub_0801a774.o(.text);
         asm/disasm_0x0801a774.o(.text);  /* 0x0801a774 - 0x0801a894, sub_0801A774 (auto-peeled) */
