@@ -54,3 +54,95 @@ void sub_080087B4(void)
     num = ref + *(u16 *)(gA + 2);
     *(u16 *)(gA + 2) = num;
 }
+
+/* sub_0800885C — directional area attack. Switches on the dispatch state
+ * gIwram_3720._field_1A (cases 12..15) to fill an axis-aligned box via
+ * sub_080089A4, then walks the active-entity index table for the first
+ * record (kind 11) whose centre falls strictly inside the box, latches it
+ * (record+0x34 |= 0x84) and returns 1. */
+
+struct Entity {
+    u8 _b0; /* +0: kind; the hit only latches records with kind 11 */
+    u8 _pad01;
+    s16 _h2; /* +2 */
+    s16 _h4; /* +4 */
+    u8 _b6;  /* +6: must match the player header byte */
+    u8 _pad07[0x2D];
+    u16 _h34; /* +0x34: bit 0x04 = inactive; 0x84 latched on a hit */
+    u8 _pad36[2];
+};
+
+struct IndexEntry {
+    u8 id;
+    u8 _pad[7];
+};
+
+extern struct Entity gEntities_03003720[];
+extern struct IndexEntry gEntityIndex_03006160[];
+extern void sub_080089A4(u8 sel, s8 d1, s8 d2, s8 d3, s16 *x0, s16 *x1, s16 *y0, s16 *y1);
+
+u8 sub_0800885C(u8 arg0, u8 arg1)
+{
+    s8 a = (s8)arg0;
+    s8 b = (s8)arg1;
+    s16 xLo;
+    s16 xHi;
+    s16 yLo;
+    s16 yHi;
+    s32 i;
+
+    switch (gIwram_3720._field_1A) {
+    case 12:
+        sub_080089A4(0, b, a, b, &xLo, &xHi, &yLo, &yHi);
+        break;
+    case 13:
+        sub_080089A4(1, b, a, b, &xLo, &xHi, &yLo, &yHi);
+        break;
+    case 14:
+        sub_080089A4(2, a, a, b, &xLo, &xHi, &yLo, &yHi);
+        break;
+    case 15:
+        sub_080089A4(3, a, a, b, &xLo, &xHi, &yLo, &yHi);
+        break;
+    }
+
+    for (i = 0; i < gIwram_6110.liveCount; i++) {
+        u8 id = gEntityIndex_03006160[i].id;
+        struct Entity *e;
+        /* base pinned to r3 (a caller-saved scratch the box-coord ldrsh reads
+         * reuse as their index) so the record-array base materialises into the
+         * same register the baserom recomputes each iteration. */
+        register u8 *base asm("r3");
+        u16 flags;
+
+        if (id == 0)
+            continue;
+
+        base = (u8 *)gEntities_03003720;
+        e = (struct Entity *)(id * sizeof(struct Entity) + (u32)base);
+        flags = e->_h34;
+        if (flags & 4)
+            continue;
+        if (((struct Entity *)base)->_b6 != e->_b6)
+            continue;
+        if (e->_h2 <= yLo)
+            continue;
+        if (e->_h2 >= yHi)
+            continue;
+        if (e->_h4 <= xLo)
+            continue;
+        if (e->_h4 >= xHi)
+            continue;
+        if (e->_b0 == 11) {
+            /* The latch is `0x80 | flags | 4`. Pinning the accumulator to r0
+             * keeps it a fresh 0x80 (not a reuse of flags' callee-saved reg),
+             * which both stops agbcc folding 0x80|4 into 0x84 and lets flags
+             * stay read-only in r5 — reproducing the baserom's r4/r5 colouring. */
+            register u16 v asm("r0") = 0x80 | flags;
+            e->_h34 = v | 4;
+            return 1;
+        }
+    }
+
+    return 0;
+}
