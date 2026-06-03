@@ -1,5 +1,7 @@
 #include "macros.h"
 #include "types.h"
+#include "game.h"
+#include "gba/dma.h"
 
 struct TilemapTableEntry {
     u16 unk00;
@@ -19,12 +21,31 @@ struct TransferDesc_13AE8 {
     u32 wordC;
 };
 
+struct DmaJob_13BA4 {
+    u16 count;
+    u16 _hw02;
+    void *table;
+    void *dest;
+    u16 xferCount;
+    u16 _hw0E;
+};
+
+struct Queue_64C0 {
+    u8 _field_00;
+    u8 _pad01[3];
+    u32 _seed;
+    u8 _pad08[2];
+    u8 _cursor;
+};
+
 extern void sub_08012BC4(u8 mode, u16 a, u16 b, u16 c, u16 d, void *tiles, u8 e);
 extern void sub_0800E7D4(void);
 extern void sub_0800EE34(u8 layer);
+extern void sub_0800EE94(u8 layer);
 extern void sub_08012CAC(void);
 extern void sub_08013C60(struct TransferDesc_13AE8 desc, u8 mode, void *buf);
 extern void sub_0801310C(void);
+extern void sub_08017000(void);
 extern u8 gIwram_6410[];
 extern u8 gIwram_6400[];
 extern u8 gIwram_6480[];
@@ -127,4 +148,64 @@ void sub_08013B54(void)
         gIwram_60A0[0x40] = val;
     }
     sub_0800EE34(2);
+}
+
+void sub_08013BA4(void)
+{
+    const struct DmaJob_13BA4 *src;
+    struct DmaJob_13BA4 job;
+    register struct Queue_64C0 *queue asm("r4");
+    register GameStuff *gs asm("r5");
+    u8 mode;
+    register u32 seed asm("r3");
+    register u32 oldSeed asm("r1");
+
+    if ((gIwram_60A0[0x40] & 1) != 0) {
+        *(u16 *)0x04000050 = 0x1744;
+        *(u16 *)0x04000052 = 0x030D;
+        gIwram_60A0[0x40] &= 0xFE;
+        sub_0800EE94(2);
+    }
+
+    sub_08012CAC();
+
+    src = (const struct DmaJob_13BA4 *)0x08307220;
+    mode = ((const u8 *)src)[2];
+    queue = (struct Queue_64C0 *)0x030064C0;
+    job = *src;
+
+    gs = &gGameStuff;
+    seed = gs->_unk00;
+    oldSeed = queue->_seed;
+    if ((u32)(seed - oldSeed) >= mode || seed == oldSeed) {
+        const void *source;
+
+        {
+            register u8 cursor asm("r0");
+
+            cursor = queue->_cursor;
+            queue->_cursor = cursor + 1;
+            source = ((const void *const *)job.table)[cursor];
+        }
+
+        REG_DMA3.src = source;
+        REG_DMA3.dst = job.dest;
+        REG_DMA3.cnt = DMA_ENABLE | (job.xferCount >> 1);
+        (void)REG_DMA3.cnt;
+
+        {
+            register struct DmaJob_13BA4 *jobPtr asm("r0");
+            register u8 wrapCursor asm("r6");
+
+            jobPtr = &job;
+            wrapCursor = queue->_cursor;
+            if (wrapCursor >= jobPtr->count) {
+                queue->_cursor = 0;
+            }
+        }
+
+        queue->_seed = gs->_unk00;
+    }
+
+    sub_08017000();
 }
