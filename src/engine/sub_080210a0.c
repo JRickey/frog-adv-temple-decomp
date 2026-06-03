@@ -69,7 +69,7 @@ void sub_080210A0(u32 idx, const void *record, u32 flags, u32 kind, u32 field14,
     idxReg = (u16)idx;
     state = recVol->state;
     rec = (const SpawnRecord *)recVol;
-    base = (u32)&gIwram_3720;
+    base = (u32)gEntities;
     offset = idxReg * sizeof(EntitySlot);
     entity = (EntitySlot *)(offset + base);
     entity->flags = flags;

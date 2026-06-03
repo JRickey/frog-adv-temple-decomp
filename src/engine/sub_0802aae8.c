@@ -30,7 +30,7 @@ void sub_0802AB14(void)
     register u32 offset asm("r0");
 
     offset = 0xfb;
-    flags = (u16 *)((u8 *)&gIwram_3720 + (offset << 2));
+    flags = (u16 *)((u8 *)gEntities + (offset << 2));
     offset = 8;
     if ((*flags & offset) != 0)
         return;

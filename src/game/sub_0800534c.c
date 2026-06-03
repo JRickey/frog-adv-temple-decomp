@@ -18,7 +18,7 @@ void sub_0800534C(void)
 
     {
         u32 *g = (u32 *)0x03005330;
-        u8 *base3720 = (u8 *)&gIwram_3720;
+        u8 *base3720 = (u8 *)gEntities;
 
         if (*g - *(u32 *)(base3720 + 0xb10) <= 120)
             return;
@@ -83,7 +83,7 @@ void sub_08005404(void *arg0)
         /* gs anchors the gGameStuff pointer load ahead of the +0xb8c constant
          * (so 0xb8c lands in r1); the deref is deferred until after slot. */
         u32 *gs = &gGameStuff._unk00;
-        u8 *base3720 = (u8 *)&gIwram_3720;
+        u8 *base3720 = (u8 *)gEntities;
         u32 *slot = (u32 *)(base3720 + 0xb8c);
         u32 cur = *gs;
 

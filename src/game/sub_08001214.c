@@ -77,7 +77,7 @@ void sub_08001214(void)
                 sub_0800E060();
                 goto tail;
             }
-            if ((gIwram_3720._field_34 & 8) != 0) {
+            if ((gEntities[0].status & 8) != 0) {
                 substate = 5;
                 goto tail;
             }

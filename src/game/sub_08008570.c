@@ -25,10 +25,10 @@ u8 sub_08008570(void)
     s16 xLo, xHi, yLo, yHi;
     s32 i;
 
-    if (gIwram_3720._field_34 & 4)
+    if (gEntities[0].status & 4)
         return 0;
 
-    switch (gIwram_3720._field_1A) {
+    switch (gEntities[0].field_1A) {
     case 4:
         sub_080089A4(0, 24, 24, 24, &xLo, &xHi, &yLo, &yHi);
         break;

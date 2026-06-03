@@ -82,7 +82,7 @@ u32 sub_0800C978(u8 col, u8 row, s16 tileX, s16 tileY, u8 dir)
     }
 
     case DIR_AUTO:
-        switch (gIwram_3720._field_1A) {
+        switch (gEntities[0].field_1A) {
         case 0:
             if ((s16)tileY - 2 < 0) {
                 return 0;

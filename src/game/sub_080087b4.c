@@ -6,7 +6,7 @@ extern int __divsi3(int num, int den);
 
 void sub_080087B4(void)
 {
-    u8 *gA0 = (u8 *)&gIwram_3720;
+    u8 *gA0 = (u8 *)gEntities;
     s32 hi = gA0[0x1c];
     s32 lo = gA0[0x1b];
     u8 *gB0 = (u8 *)&gIwram_35E0;
@@ -56,7 +56,7 @@ void sub_080087B4(void)
 }
 
 /* sub_0800885C — directional area attack. Switches on the dispatch state
- * gIwram_3720._field_1A (cases 12..15) to fill an axis-aligned box via
+ * gEntities[0].field_1A (cases 12..15) to fill an axis-aligned box via
  * sub_080089A4, then walks the active-entity index table for the first
  * record (kind 11) whose centre falls strictly inside the box, latches it
  * (record+0x34 |= 0x84) and returns 1. */
@@ -80,7 +80,7 @@ u8 sub_0800885C(u8 arg0, u8 arg1)
     s16 yHi;
     s32 i;
 
-    switch (gIwram_3720._field_1A) {
+    switch (gEntities[0].field_1A) {
     case 12:
         sub_080089A4(0, b, a, b, &xLo, &xHi, &yLo, &yHi);
         break;

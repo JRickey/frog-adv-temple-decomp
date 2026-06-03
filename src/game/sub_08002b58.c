@@ -79,7 +79,7 @@ void sub_08002B58(void)
                 sub_0800E060();
                 goto tail;
             }
-            if ((gIwram_3720._field_34 & 8) != 0) {
+            if ((gEntities[0].status & 8) != 0) {
                 state = 5;
                 goto tail;
             }
@@ -110,7 +110,7 @@ void sub_08002B58(void)
             goto tail;
         case 6:
             sub_08002AE8();
-            gIwram_3720._field_6c |= 8;
+            gEntities[1].status |= 8;
             sub_0800A540();
             state = 4;
             gGameStuff._unk14 = 0;

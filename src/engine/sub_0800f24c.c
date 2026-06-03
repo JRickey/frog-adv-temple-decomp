@@ -49,7 +49,7 @@ void sub_0800F24C(u8 countArg)
         return;
     }
     scrollStates = SCROLL_STATE_BASE;
-    cameraTarget = (struct ScrollCameraTarget *)&gIwram_3720;
+    cameraTarget = (struct ScrollCameraTarget *)gEntities;
     do {
         u32 scrollXBase;
         u32 scrollYBase;

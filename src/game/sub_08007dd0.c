@@ -11,7 +11,7 @@
  * Bit map (tested against gIwram_35E0._field_10):
  *   0x0100 -> OR 0x08 into *(u16 *)(0x03006110 + 0x2e); set bit 0x01;
  *             clear bits 0x100, 0x10.
- *   0x0080 -> gIwram_3720._field_1A += 0x24; gIwram_3720._field_34 |= 0x02;
+ *   0x0080 -> gEntities[0].field_1A += 0x24; gEntities[0].status |= 0x02;
  *             clear bit 0x80.
  *   0x0800 -> sub_0802090C(); set _field_1A = 22, _field_34 = 6.
  *   0x0400 -> sub_0802090C(); set _field_1A = 20, _field_34 = 22.
@@ -64,7 +64,7 @@ void sub_08007DD0(void)
     }
 
     if ((u8)sub_08006BA4(p35E0, 0x80) != 0) {
-        u8 *base3720 = (u8 *)&gIwram_3720;
+        u8 *base3720 = (u8 *)gEntities;
         u16 t;
         *(u8 *)(base3720 + 0x1A) += 0x24;
         t = 2;
@@ -75,32 +75,32 @@ void sub_08007DD0(void)
 
     if ((u8)sub_08006BA4(p35E0, 0x800) != 0) {
         sub_0802090C();
-        gIwram_3720._field_1A = 22;
-        gIwram_3720._field_34 = 6;
+        gEntities[0].field_1A = 22;
+        gEntities[0].status = 6;
         sub_08006B94(p35E0, 0x800);
         sub_08006B94(p35E0, 2);
     }
 
     if ((u8)sub_08006BA4(p35E0, 0x400) != 0) {
         sub_0802090C();
-        gIwram_3720._field_1A = 20;
-        gIwram_3720._field_34 = 22;
+        gEntities[0].field_1A = 20;
+        gEntities[0].status = 22;
         sub_08006B94(p35E0, 0x400);
         sub_08006B94(p35E0, 2);
     }
 
     if ((u8)sub_08006BA4(p35E0, 0x200) != 0) {
         sub_0802090C();
-        gIwram_3720._field_1A = 20;
-        gIwram_3720._field_34 = 6;
+        gEntities[0].field_1A = 20;
+        gEntities[0].status = 6;
         sub_08006B94(p35E0, 0x200);
         sub_08006B94(p35E0, 2);
     }
 
     if ((u8)sub_08006BA4(p35E0, 0x2000) != 0) {
         sub_0802090C();
-        gIwram_3720._field_1A = 23;
-        gIwram_3720._field_34 = 54;
+        gEntities[0].field_1A = 23;
+        gEntities[0].status = 54;
         sub_08006B94(p35E0, 0x2000);
         sub_08006B94(p35E0, 2);
     }
@@ -108,11 +108,11 @@ void sub_08007DD0(void)
     if ((u8)sub_08006BA4(p35E0, 0x4000) != 0) {
         u16 t;
         sub_0802090C();
-        gIwram_3720._field_1A = 33;
+        gEntities[0].field_1A = 33;
         t = 2;
-        t |= gIwram_3720._field_34;
+        t |= gEntities[0].status;
         t |= 4;
-        gIwram_3720._field_34 = t;
+        gEntities[0].status = t;
         sub_08006B94(p35E0, 0x4000);
         sub_08006B94(p35E0, 2);
     }
@@ -120,11 +120,11 @@ void sub_08007DD0(void)
     if ((u8)sub_08006BA4(p35E0, 0x8000) != 0) {
         u16 t;
         sub_0802090C();
-        gIwram_3720._field_1A = 34;
+        gEntities[0].field_1A = 34;
         t = 2;
-        t |= gIwram_3720._field_34;
+        t |= gEntities[0].status;
         t |= 4;
-        gIwram_3720._field_34 = t;
+        gEntities[0].status = t;
         sub_08006B94(p35E0, 0x8000);
         sub_08006B94(p35E0, 2);
     }
@@ -147,10 +147,10 @@ u8 sub_08007F88(void)
             goto tile_test;
     }
     {
-        s16 x = gIwram_3720._field_2;
-        s16 y = gIwram_3720._field_4;
+        s16 x = gEntities[0].x;
+        s16 y = gEntities[0].y;
         u8 entryIndex = p35E0->_field_D;
-#define ACTOR_RECORD ((struct ActorRecord *)((u8 *)&gIwram_3720 + entryIndex * 56))
+#define ACTOR_RECORD ((struct ActorRecord *)((u8 *)gEntities + entryIndex * 56))
         if (sub_0800803C(x, y, (s16)(ACTOR_RECORD->_h2 + ACTOR_RECORD->_h24),
                          (s16)(ACTOR_RECORD->_h4 + ACTOR_RECORD->_h26 - (ACTOR_RECORD->_b29 >> 1))) != 0) {
             return 1;
@@ -164,8 +164,7 @@ tile_test:
         return 1;
     }
 
-    if (sub_0800803C(gIwram_3720._field_2, gIwram_3720._field_4, p35E0->_field_8 * 24 + 11,
-                     p35E0->_field_A * 24 + 11) != 0) {
+    if (sub_0800803C(gEntities[0].x, gEntities[0].y, p35E0->_field_8 * 24 + 11, p35E0->_field_A * 24 + 11) != 0) {
         return 1;
     }
 

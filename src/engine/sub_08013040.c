@@ -15,7 +15,7 @@ struct ScaleAnimDescriptor {
 };
 
 extern u8 gIwram_3610;
-extern u8 gIwram_3720;
+extern u8 gEntities[]; /* entity pool as a raw u8 byte-base (this TU uses byte offsets, not slots) */
 extern const struct ScaleAnimDescriptor sScaleAnimDescriptors2[];
 
 extern void sub_0801025C(u8 arg0, u8 arg1, u16 arg2, u16 arg3, u32 arg4, u32 arg5, u32 dst);
@@ -23,7 +23,7 @@ extern void sub_0801025C(u8 arg0, u8 arg1, u16 arg2, u16 arg3, u32 arg4, u32 arg
 void sub_08013040(void)
 {
     GameStuff *gs = &gGameStuff;
-    u8 *base = &gIwram_3720;
+    u8 *base = gEntities;
     u32 *lastTick = (u32 *)(base + 0x1a60);
     u8 *counter;
     register u8 *counterRef asm("r8");
@@ -118,7 +118,7 @@ void sub_08013040(void)
         u32 endOffset;
         u32 endValue;
 
-        endCounter = &gIwram_3720;
+        endCounter = gEntities;
         endOffset = 0x1a5b;
         asm volatile("" : "+r"(endOffset));
         endCounter += endOffset;

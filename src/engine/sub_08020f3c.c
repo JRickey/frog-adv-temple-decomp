@@ -33,7 +33,7 @@ void sub_08020F3C(u8 arg)
         return;
 
     gsLo = &gGameStuff;
-    base = (EntityMover *)&gIwram_3720;
+    base = (EntityMover *)gEntities;
     arg8 = argReg << 3;
     off = (arg8 - argReg) << 3;
 

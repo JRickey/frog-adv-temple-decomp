@@ -23,7 +23,7 @@ extern void sub_0800A580(EntitySlot *e, s8 param, s8 deltaX, s8 deltaY);
 
 void sub_08022360(void)
 {
-    u8 *base = (u8 *)&gIwram_3720;
+    u8 *base = (u8 *)gEntities;
     EntitySlot *slot;
     s32 offset;
     u8 *addr;

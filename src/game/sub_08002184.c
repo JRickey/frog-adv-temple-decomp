@@ -109,7 +109,7 @@ loop:
             u8 *base;
             u32 offset;
             u32 value;
-            base = (u8 *)&gIwram_3720;
+            base = (u8 *)gEntities;
             offset = 0xb54;
             *(u32 *)(base + offset) = gGameStuff._unk00;
             value = gGameStuff._unk00;
@@ -125,7 +125,7 @@ loop:
             sub_0800E060();
             goto tail;
         }
-        if ((gIwram_3720._field_34 & 8) != 0) {
+        if ((gEntities[0].status & 8) != 0) {
             *statep = 5;
             goto tail;
         }

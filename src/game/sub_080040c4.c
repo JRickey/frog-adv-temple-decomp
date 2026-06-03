@@ -28,7 +28,7 @@ void sub_080040EC(u8 *state)
 
 void sub_08004104(void)
 {
-    gIwram_3720._field_17 = 2;
+    gEntities[0].field_17 = 2;
     sub_08013FA0();
     sub_0800DE80();
 }

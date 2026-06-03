@@ -48,7 +48,7 @@ void sub_0800D0F8(void)
 
     j = (s8)x;
     if (j <= 19) {
-        tb = (u8 *)&gIwram_3720;
+        tb = (u8 *)gEntities;
         ep = (u8 *)((u32)tb + (u32)((s8)x + 3) * 56);
         t = *(u16 *)(ep + 0x34);
         mask = 8;
@@ -65,7 +65,7 @@ void sub_0800D0F8(void)
 
     j = (s8)y;
     if (j <= 9) {
-        tb = (u8 *)&gIwram_3720;
+        tb = (u8 *)gEntities;
         ep = (u8 *)((u32)tb + (u32)((s8)y + 23) * 56);
         t = *(u16 *)(ep + 0x34);
         mask = 8;

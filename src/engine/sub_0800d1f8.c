@@ -23,7 +23,7 @@ void sub_0800D1F8(void)
 
     if (sub_0800679C((u8 *)&gIwram_6110, 3, 0) != 0) {
         gs = &gGameStuff;
-        base = (u8 *)&gIwram_3720;
+        base = (u8 *)gEntities;
         counter = (u32 *)(base + 0xB1C);
         diff = gs->_unk00 - *counter;
         threshold = *(u8 *)(base + 0xB22);

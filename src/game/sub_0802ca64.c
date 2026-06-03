@@ -28,7 +28,7 @@ void sub_0802CA80(void)
     u32 off;
 
     sub_080210A0(22, sLevelLayout_31805C, 0x10, 0x60, 0x245, 4, 3, 1);
-    base = (u8 *)&gIwram_3720;
+    base = (u8 *)gEntities;
     off = 0x0b7a;
     base[off] = 3;
 }
@@ -42,7 +42,7 @@ u8 sub_0802CAC0(void)
     s32 i;
 
     count = 0;
-    p = (u8 *)&gIwram_3720;
+    p = (u8 *)gEntities;
     bitmask = 8;
     e = (struct Entity *)(p + 0x1c0);
     i = 13;

@@ -205,7 +205,7 @@ void sub_0800AE3C(u8 tile)
     write:
         gIwram_6110.gateByte = rand;
 
-        base3720 = (u8 *)&gIwram_3720;
+        base3720 = (u8 *)gEntities;
         *(u32 *)(base3720 + 0xb8c) = gGameStuff._unk00;
         *(u16 *)(base3720 + 0xb70) = 1;
         return;

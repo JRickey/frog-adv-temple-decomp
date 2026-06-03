@@ -16,7 +16,7 @@ void sub_08009884(u8 arg)
     u8 cls;
     s32 t;
 
-    if (gIwram_3720._field_34 & 4)
+    if (gEntities[0].status & 4)
         return;
 
     cls = sub_0800CE10(gIwram_35E0._field_18, gIwram_35E0._field_19, gIwram_35E0._field_8, gIwram_35E0._field_A);

@@ -35,7 +35,7 @@ void sub_0800DA10(void)
     sub_0800D450(20, 10);
     sub_0800D0F8();
 
-    base = (u8 *)&gIwram_3720;
+    base = (u8 *)gEntities;
     *(u32 *)(base + 0xB1C) = gGameStuff._unk00;
     p = base + 0xB22;
     zero = 0;

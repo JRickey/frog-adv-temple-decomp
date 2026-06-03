@@ -53,7 +53,7 @@ void sub_0801A6D4(u8 countArg)
         return;
     }
     scrollStates = (struct SceneScrollState_A6D4 *)0x030060A0;
-    cameraTarget = (struct ScrollCameraTarget_A6D4 *)&gIwram_3720;
+    cameraTarget = (struct ScrollCameraTarget_A6D4 *)gEntities;
     do {
         u32 scrollXBase;
         u32 scrollYBase;
