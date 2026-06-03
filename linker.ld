@@ -56,6 +56,7 @@ sAnimDesc_6e28 = 0x08306e28;
 gBlitParamTable_08306b74 = 0x08306b74;
 gBlitInitTable_08306AD4 = 0x08306AD4;
 gBlitSrcTable_08306b84 = 0x08306b84;
+gTileBlitTable_08306840 = 0x08306840;
 
 SECTIONS {
     ewram (NOLOAD) : ALIGN(4) {
