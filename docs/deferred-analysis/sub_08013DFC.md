@@ -2,147 +2,150 @@
 
 **Range**: 0x08013DFC–0x08013E94 (152 bytes, Thumb)
 **Classifier**: ATTEMPT_MATCH — advisory: 3 high regs (r8/r9/sl) across bl (class-1 advisory only)
-**Best byte_diff**: 110 (40 instruction-level mismatches), 3 high-reg pins + -fno-gcse
+**Best byte_diff (this round, Opus + agbcc instrumentation)**: 99 (clean, NO pins, `i` correctly in r4)
 
-## Algorithm
+## Algorithm (draw-without-replacement shuffle; confirmed)
 
-Outer loop (`n` iterations):
-1. Pick a random index `rnd` in `[0, arr[0xff])` via `sub_0801185C(arr[0xff])`
-2. Set `arr[rnd] = 1`
-3. Copy `gIwram_3610[rnd]` to `arr[(*writeIdx) + 100]`; increment `*writeIdx`
-4. If `rnd < arr[0xff]`: left-shift `gIwram_3610[rnd..limit-1]` (remove slot `rnd`)
-5. Decrement `arr[0xff]`
+`arr = gIwram_53A0` (256-byte buffer), `table = gIwram_3610` (deck being compacted):
+- `arr[0xff]` = remaining size (decrements each iteration)
+- `arr[0xfe]` = write-index counter (increments each iteration)
+- For `n` outer iterations: pick `rnd = sub_0801185C(*size)`, mark `arr[rnd]=1`,
+  copy `arr[wi+100] = table[rnd]`, `wi++`; if `rnd < *size` left-shift
+  `table[rnd .. 0x549f-1]` (remove slot rnd); `(*size)--`.
 
-IWRAM addresses:
-- `sl = arr = 0x030053A0` (256-byte buffer, indices 0–255)
-- `arr[0xff]` = limit/size sentinel (decrements each iteration)
-- `arr[0xfe]` = write-index counter (incremented each iteration; stored in r9)
-- `r9 = writeIdx = arr + 0xfe`
-- `gIwram_3610 = 0x03003610` = source table for copy + shift
+Companion functions: sub_08019984 (compares gIwram_53A0 vs gIwram_3610), sub_08012100
+(zeroes gIwram_53A0[1], [0xff]). The shuffle/compaction reading is solid.
 
-## Register map (baserom)
+## Register map (baserom — ground truth)
 
-| reg | variable | notes |
-|-----|----------|-------|
-| r4 | outer loop index `i` | u8, updated via lsl/lsr zero-extension |
-| r5 | `nextI` temp (i+1 save) | unrestricted u32 before truncation to r4 |
-| r6 | inner loop limit ptr `lim2` (&gIwram_549F = arr+0xff addr) | loaded from 3rd pool entry |
-| r7 | outer loop limit ptr `limit` (arr+0xff) | computed as `mov r7, sl; adds r7, #255` ONCE before loop |
-| r8 | `count` (parameter n, u8) | high reg across bl |
-| r9 | `writeIdx` (arr+0xfe) | high reg across bl |
-| sl | `arr` base (0x030053A0) | high reg across bl |
-| r2 | table address (gIwram_3610) | FRESH pool load inside loop each iteration, NOT hoisted |
-| r3 | `rnd` result (from bl, zero-extended) | also starting `j` in inner loop |
-| r4 | inner loop tbl base (REUSED from outer index) | `adds r4, r2, #0` copies r2 to r4 inside inner if |
+| reg | var | note |
+|-----|-----|------|
+| r4 | `i` (outer idx) | ALSO reused as inner `tbl` base after `i` dies (`adds r4,r2,#0`) |
+| r5 | `nextI` (i+1 saved before inner loop) | callee-saved |
+| r6 | `lim2` = `&gIwram_549F` | loaded INSIDE the inner-if (0x13e54), pool 0x0300549f |
+| r7 | `limit` = `arr+0xff` | `mov r7,sl; adds r7,#0xff` once before loop |
+| r8 | `count` (param n) | high reg |
+| r9 | `writeIdx` = `arr+0xfe` | high reg |
+| sl | `arr` = `&gIwram_53A0` | high reg |
+| r2 | `table` = `&gIwram_3610` | **loaded FRESH each outer iter (NOT hoisted)**, then copied to r4 |
+| r3 | `rnd` | bl result, zero-extended |
 
-## Pool entries (3 entries)
+## ROOT CAUSE (new this round — instrumented agbcc, definitive)
 
-1. `gIwram_53A0` → sl (arr base)
-2. `gIwram_3610` → r2, loaded INSIDE the outer loop body (NOT hoisted), fresh each iteration
-3. `gIwram_549F` (= arr+0xff addr) → r6, loaded inside inner if (lim2)
+Built a private debug `old_agbcc` (probes in `gcc/loop.c` move_movables + `gcc/global.c`
+find_reg). The function is **structurally 1:1** with the baserom in pure C; the ENTIRE
+diff is one register-coloring divergence that cascades:
 
-## Drift and root cause
+**agbcc unconditionally HOISTS the `&gIwram_3610` load out of the outer loop into a
+callee-saved register (r9), but the baserom keeps it in scratch r2, reloaded each
+iteration.**
 
-With 3 high-reg pins (`r8 = count`, `r9 = writeIdx`, `sl = arr`):
-- agbcc puts `limit` in r4 (highest priority: more references, longer lifetime) and `i` in r5
-- The baserom needs r4=i and r7=limit
-- Priority formula: `refs * log(refs) / live_length`. `limit` wins because it has more dereferences.
-- Attempted: named limit vs loop-local, all variations of -ffixed-rN, 5-pin approach (r4=i + r7=limit),
-  -fno-gcse, -fno-strength-reduce, inline table vs named variable, raw address vs symbol.
-- None resolved the r4/r5 swap.
-- The 5-pin approach (r4=i + r7=limit explicit pins) violates ARM ABI (r7 not saved in prologue).
+- loop.c hoist test: `threshold(=13) * savings(=1) * lifetime(=15) >= insn_count(=46)`
+  → 195 ≥ 46 → ALWAYS hoists. `threshold = 1 + n_non_fixed_regs` is a per-FILE constant
+  (~13 for thumb), so it cannot be lowered per-function. `savings` and `lifetime` are
+  already minimal. No `-fXXX` (gcse, move-all-movables, strength-reduce, caller-saves,
+  force-addr, expensive-opt) changes the hoist.
+- Why the baserom does NOT hoist: its table-holding register (r2) is **reused as an
+  address scratch inside the inner loop** (`adds r2,r3,r4`). That makes `set_in_loop[r2]
+  != 1`, so loop.c never treats the load as a single-set movable. This is a
+  REGISTER-level property that emerges from the baserom allocator's scratch reuse — and
+  agbcc's CSE/GCSE collapses every `&gIwram_3610` reference to ONE value BEFORE loop.c
+  runs, so the load is always single-set from any C I can write. I could not induce the
+  scratch-reuse from source.
 
-Additionally: the table (gIwram_3610) is ALWAYS hoisted before the loop by loop.c's invariant
-motion, even with -fno-gcse. The baserom loads it fresh each iteration in r2. Loop.c hoists it
-because the unconditional outer copy makes its savings ≥ 1.
+Once the table eats a callee-saved reg, the 3 high-reg vars permute:
+mine `count→r6 arr→r8 writeIdx→r7 limit→r5 table→r9 lim2→sl`; baserom needs
+`count→r8 arr→sl writeIdx→r9 limit→r7 lim2→r6` with table in scratch r2.
+Critically, in the clean no-pin version **`i` is ALREADY correctly in r4** (priority
+`log2(8)*8/66 = 0.36` > limit `0.28`); the prior round's claim that limit steals r4 was
+an artifact of its pins. The sole defect is the table hoist.
 
--fno-gcse helps by preventing the count-pre-shifting (`lsl r8, count, #24`) but doesn't stop
-loop.c's table hoisting.
+## Levers tried this round (all fail)
 
-## Levers tried
+- Clean no-pin C: **byte_diff 99**, i→r4 correct, table hoisted to r9 (BEST, readable).
+- Held `lim2 = &gIwram_549F` pointer (NEW linker symbol `gIwram_549F = 0x549F`, added to
+  linker.ld between gIwram_53A0 and gIwram_60A0): raises pressure, byte_diff 99.
+  Without it (inner reads `(&gIwram_53A0)[0xff]` fresh): byte_diff 104.
+- 3 high-reg pins (r8/r9/sl): byte_diff 117–123, grows fn (pins emit extra movs + flip
+  i/limit priority by shortening limit's live range 98→55).
+- `register u8 *table asm("r2")` (scratch pin): DEFEATS the hoist (HOIST:NONE) but
+  prevents `i`↔`tbl` r4 coalescing and reschedules → byte_diff 117–128. Combining with
+  3 high pins → 117 with i↔limit swap.
+- Table set twice / reassigned in inner loop / walking pointer: CSE folds or adds insns
+  → 99–123, never un-hoists cleanly.
+- `-ffixed-r8/-r9/-sl`: 129 (can't place high vars). `-fno-gcse/-fno-caller-saves/
+  -fno-move-all-movables/-fforce-addr/-fno-strength-reduce`: no change (99).
+- decomp-permuter, ~2430 iters from the clean-99 base: base score 3345, best 1120
+  (plateau, never approaches 0). Its "best" mutations are garbage (`long long`
+  aliases). Statement reordering does not reach the scratch-reuse the match needs.
 
-- 3 high-reg pins (r8/r9/sl): best match, byte_diff 110
-- -fno-gcse: removes count pre-shifting, keeps byte_diff at 110
-- -fno-gcse + -fno-strength-reduce: no change
-- -fno-gcse + -fno-cse-follow-jumps: no change
-- -ffixed-r5, -ffixed-r5 -ffixed-r6: wrong allocation (still limit before i)
-- 5-pin (r4=i, r7=limit + 3 high): ABI violation, byte_diff 139
-- No named limit (arr[0xff] inline): prologue wrong ({r4-r6} not {r4-r7})
-- Loop-local limit declaration: same allocation, table still hoisted
+## Next-agent strategy (DIFFERENT levers — the above are exhausted)
 
-## Best-effort C
+1. The match hinges on getting `&gIwram_3610` into a SCRATCH register that is ALSO used
+   as an address scratch in the inner loop (so `set_in_loop>1` blocks the hoist), WITHOUT
+   the `asm("r2")` pin's rescheduling cost. Investigate whether a SINGLE-pointer inner
+   loop that genuinely reuses the table pointer's storage as the `&table[j]` address (a
+   union/aliasing trick, or computing `&table[j]` INTO `table` then restoring) can make
+   agbcc reuse r2 the way the baserom does — the earlier attempts added an extra insn;
+   find one that nets zero extra insns.
+2. Instrument `gcc/cse.c`/`gcse.c` to see exactly where the two `&gIwram_3610` refs are
+   merged into one pseudo, and whether a source shape keeps them as two pseudos (one of
+   which the inner loop overwrites) past loop.c.
+3. If a clean un-hoist is found, the rest should fall into place (i→r4 already correct;
+   only 6 vars remain for r5–sl with the table out of the pool).
+
+## Best-effort C (byte_diff 99, clean, NO pins — RESUME FROM HERE)
+
+Requires NEW linker symbol: `        . = 0x0000549F; gIwram_549F = .;` in linker.ld
+(IWRAM block, between gIwram_53A0 and gIwram_60A0). The `extern u8 gIwram_549F;` makes
+the inner-loop limit a distinct pool constant 0x0300549f (matches the baserom's 3rd pool
+entry), instead of CSE-merging with `arr+0xff`.
 
 ```c
-/* 3 high-reg pins + -fno-gcse: closest match (byte_diff 110, 40 mismatches).
- * i ends up in r5 (need r4), limit ends up in r4 (need r7).
- * Table (gIwram_3610) is hoisted before loop (need it fresh in r2 each iteration). */
 extern u8 gIwram_53A0;
-extern u8 gIwram_549F;
 extern u8 gIwram_3610;
+extern u8 gIwram_549F;
 extern u8 sub_0801185C(u8 range);
 
 void sub_08013DFC(u8 n)
 {
-    register u8 count asm("r8");
-    register u8 *arr asm("sl");
-    register u8 *writeIdx asm("r9");
-    u8 i;
+    u8 *arr;
     u8 *limit;
+    u8 *writeIdx;
+    u8 *lim2;
+    u8 i;
 
-    count = n;
     i = 0;
-    if (i >= count)
+    if (i >= n)
         return;
 
     arr = &gIwram_53A0;
     limit = arr + 0xff;
     writeIdx = arr + 0xfe;
+    lim2 = &gIwram_549F;
 
     do {
         u8 rnd;
-        u32 nextI;
+        u8 nextI;
 
         rnd = sub_0801185C(*limit);
         arr[rnd] = 1;
-
-        {
-            u8 wi = *writeIdx;
-            arr[wi + 100] = (&gIwram_3610)[rnd];
-        }
+        arr[*writeIdx + 100] = (&gIwram_3610)[rnd];
         (*writeIdx)++;
 
         nextI = i + 1;
 
         if (rnd < *limit) {
-            u8 *tbl2 = &gIwram_3610;
-            u8 *lim2 = &gIwram_549F;
+            u8 *tbl = &gIwram_3610;
             u8 j = rnd;
             do {
-                u8 *dst = tbl2 + j;
-                u8 next = j + 1;
-                *dst = tbl2[next];
-                j = (u8)next;
+                tbl[j] = tbl[j + 1];
+                j++;
             } while (j < *lim2);
         }
 
         i = nextI;
         (*limit)--;
-    } while (i < count);
+    } while (i < n);
 }
 ```
-
-Required Makefile flag: `src/engine/sub_08013d1c.s: CFLAGS += -fno-gcse`
-
-## Next-agent strategy
-
-The key to matching: force `i` into r4 and `limit` into r7 WITHOUT explicit register pins. Options:
-1. Find a C structure where `i` has HIGHER priority than `limit` in agbcc's local-alloc.
-   This requires `i` to have more refs/live_length ratio. One approach: reduce limit's
-   live_length by putting it in a VERY narrow scope that local-alloc processes separately.
-2. Instrument agbcc (see codegen-notes.md "Instrumenting agbcc itself") to understand
-   exactly WHY limit gets r4 over i. Then structure C to flip the decision.
-3. Use the permuter AFTER getting byte_diff ≤ 40 through structural work.
-4. Also need: table (gIwram_3610) NOT hoisted before loop. The only reliable way seems to
-   be making the table's use loop-VARIANT somehow, or preventing loop.c from seeing it as
-   profitable to hoist. The loop body has ~35 instructions; the heuristic threshold might
-   be beatable by restructuring the loop to be larger.
