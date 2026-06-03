@@ -33,8 +33,8 @@ extern void sub_080059C4(void *p);
 
 void sub_0800A4D0(void)
 {
-    struct IwramAt3720 *base = &gIwram_3720;
-    u16 *flags = &base->_field_6c;
+    struct Entity *base = gEntities;
+    u16 *flags = (u16 *)((u8 *)base + 0x6c); /* slot 1 status (+0x6c); kept as base+offset to match */
     u32 mask;
     u16 fld;
     u32 bit8;
@@ -49,7 +49,7 @@ void sub_0800A4D0(void)
         return;
 
     mask = 4;
-    fld = base->_field_34;
+    fld = base->status;
     mask &= fld;
     if (mask != 0) {
         newv = (u16)bit8;
@@ -67,5 +67,5 @@ void sub_0800A4D0(void)
         *flags = (u16)mask;
     }
 
-    sub_080059C4(&base->_field_38);
+    sub_080059C4((u8 *)base + 0x38); /* slot 1 head (+0x38) */
 }

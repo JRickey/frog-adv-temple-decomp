@@ -3,7 +3,7 @@
 
 extern void sub_08022980(void);
 extern void sub_080229CC(void);
-extern void sub_08020E14(struct IwramAt3720 *s, u8 idx, u8 halfW, u8 halfH);
+extern void sub_08020E14(struct Entity *s, u8 idx, u8 halfW, u8 halfH);
 extern void sub_08020E7C(u8 idx);
 extern void sub_08020DC4(u8 idx);
 extern void sub_080219BC(const void *a0, s32 slot);
@@ -29,20 +29,20 @@ void sub_08022BB0(void)
 void sub_08022BCC(void)
 {
     u8 i;
-    struct IwramAt3720 *entity;
+    struct Entity *entity;
 
     for (i = 0; i < 4; i++) {
-        entity = (struct IwramAt3720 *)(i * 56 + 0x70 + (s32)&gIwram_3720);
-        if (entity->_field_1A == 0) {
-            if (entity->_field_1B == 1) {
+        entity = (struct Entity *)(i * 56 + 0x70 + (s32)gEntities);
+        if (entity->field_1A == 0) {
+            if (entity->field_1B == 1) {
                 sub_08020E14(entity, 6, 2, 2);
-            } else if (entity->_field_1B == 7) {
+            } else if (entity->field_1B == 7) {
                 sub_08020E14(entity, 7, 2, 2);
             }
-        } else if (entity->_field_1A == 1) {
-            if (entity->_field_1B == 3) {
+        } else if (entity->field_1A == 1) {
+            if (entity->field_1B == 3) {
                 sub_08020E14(entity, 6, 2, 2);
-            } else if (entity->_field_1B == 9) {
+            } else if (entity->field_1B == 9) {
                 sub_08020E14(entity, 7, 2, 2);
             }
         }
@@ -54,26 +54,26 @@ void sub_08022BCC(void)
 void sub_08022C44(void)
 {
     u8 i;
-    struct IwramAt3720 *entity;
+    struct Entity *entity;
 
     for (i = 0; i < 6; i++) {
-        entity = (struct IwramAt3720 *)(i * 56 + 0x150 + (s32)&gIwram_3720);
-        if (entity->_field_1A == 2) {
-            if (entity->_field_1B == 3) {
+        entity = (struct Entity *)(i * 56 + 0x150 + (s32)gEntities);
+        if (entity->field_1A == 2) {
+            if (entity->field_1B == 3) {
                 sub_08020E14(entity, 9, 2, 2);
-            } else if (entity->_field_1B == 8) {
+            } else if (entity->field_1B == 8) {
                 sub_08020E7C(9);
             }
-        } else if (entity->_field_1A == 3) {
-            if (entity->_field_1B == 5) {
+        } else if (entity->field_1A == 3) {
+            if (entity->field_1B == 5) {
                 sub_08020E14(entity, 8, 2, 2);
-            } else if (entity->_field_1B == 10) {
+            } else if (entity->field_1B == 10) {
                 sub_08020E7C(8);
             }
-        } else if (entity->_field_1A == 4) {
-            if (entity->_field_1B == 3) {
+        } else if (entity->field_1A == 4) {
+            if (entity->field_1B == 3) {
                 sub_08020E14(entity, 8, 2, 2);
-            } else if (entity->_field_1B == 10) {
+            } else if (entity->field_1B == 10) {
                 sub_08020E7C(8);
             }
         }
@@ -86,8 +86,8 @@ void sub_08022CD4(void)
 {
     u8 i;
     u32 slot;
-    register struct IwramAt3720 *base asm("r5");
-    register struct IwramAt3720 *baseCopy asm("r3");
+    register struct Entity *base asm("r5");
+    register struct Entity *baseCopy asm("r3");
     register u32 value asm("r2");
     register u8 *ptr asm("r1");
 
@@ -96,13 +96,13 @@ void sub_08022CD4(void)
     }
 
     i = 0;
-    base = &gIwram_3720;
+    base = gEntities;
     baseCopy = base;
     value = 2;
     for (; i < 6; i++) {
         slot = i;
         slot += 12;
-        ((struct IwramAt3720 *)(slot * 56 + (s32)baseCopy))->_field_6 = value;
+        ((struct Entity *)(slot * 56 + (s32)baseCopy))->field_06 = value;
     }
 
     ptr = (u8 *)base + 0x57e;
@@ -127,36 +127,36 @@ void sub_08022D4C(void)
 void sub_08022DDC(void)
 {
     u8 i;
-    struct IwramAt3720 *base;
-    struct IwramAt3720 *entity;
+    struct Entity *base;
+    struct Entity *entity;
 
-    if (gIwram_3720._field_4 > 0x168)
+    if (gEntities[0].y > 0x168)
         return;
 
-    if (gIwram_3720._field_4 <= 0xD7 && gIwram_3720._field_2 > 0xA8 && gIwram_3720._field_2 <= 0x167)
+    if (gEntities[0].y <= 0xD7 && gEntities[0].x > 0xA8 && gEntities[0].x <= 0x167)
         sub_08020DC4(5);
     else
         sub_08020E7C(5);
 
     i = 0;
-    base = &gIwram_3720;
+    base = gEntities;
     for (; i < 8; i++) {
         sub_080219BC((const void *)sLevelLayoutPtrs_3117F0[i], i + 26);
         sub_080219BC((const void *)sLevelLayoutPtrs_311910[i], i + 34);
         sub_080219BC((const void *)sLevelLayoutPtrs_311A30[i], i + 42);
 
         if (i <= 3) {
-            entity = (struct IwramAt3720 *)((i + 42) * 56 + (s32)base);
-            if (entity->_field_1A == 1)
-                entity->_field_6 = 2;
+            entity = (struct Entity *)((i + 42) * 56 + (s32)base);
+            if (entity->field_1A == 1)
+                entity->field_06 = 2;
             else
-                entity->_field_6 = 3;
+                entity->field_06 = 3;
         } else {
-            entity = (struct IwramAt3720 *)((i + 42) * 56 + (s32)base);
-            if (entity->_field_1A == 1)
-                entity->_field_6 = 3;
+            entity = (struct Entity *)((i + 42) * 56 + (s32)base);
+            if (entity->field_1A == 1)
+                entity->field_06 = 3;
             else
-                entity->_field_6 = 2;
+                entity->field_06 = 2;
         }
     }
 

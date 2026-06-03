@@ -32,7 +32,7 @@ void sub_0800D8A0(void)
     if (c != 0) {
         new_var2 = saved6110;
         i = 0;
-        base3720 = (u8 *)&gIwram_3720;
+        base3720 = (u8 *)gEntities;
         asm("" ::"r"(base3720));
         mask = 8;
         new_var = base3720;
@@ -135,7 +135,7 @@ test:
 
 u32 sub_0800D9C8(void)
 {
-    register struct IwramAt3720 *dst asm("r2");
+    register struct Entity *dst asm("r2");
     register struct IwramAt35E0 *src asm("r4");
     register u32 offset asm("r5");
     register u32 offset2 asm("r3");
@@ -144,7 +144,7 @@ u32 sub_0800D9C8(void)
     register u32 y asm("r1");
 
     sub_080113E8();
-    dst = &gIwram_3720;
+    dst = gEntities;
     src = &gIwram_35E0;
     x = (u16)src->_field_8;
     offset = 0x692;
@@ -154,7 +154,7 @@ u32 sub_0800D9C8(void)
     y = (u16)src->_field_A;
     offset2 = 0x694;
     asm("" : "+r"(offset2));
-    dst = (struct IwramAt3720 *)((u8 *)dst + offset2);
+    dst = (struct Entity *)((u8 *)dst + offset2);
     *(u16 *)dst = y;
     return sub_0800DA70();
 }
