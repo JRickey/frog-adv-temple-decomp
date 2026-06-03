@@ -152,9 +152,9 @@ void sub_08003254(void *arg)
         sub_08009984();
 
         {
-            struct IwramAt3720 *p3720 = &gIwram_3720;
+            struct Entity *p3720 = gEntities;
 
-            if ((p3720->_field_34 & 4) != 0)
+            if ((p3720->status & 4) != 0)
                 goto inc_timer;
         }
 

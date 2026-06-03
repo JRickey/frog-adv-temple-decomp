@@ -77,16 +77,16 @@ loop:
         break;
     case 3: {
         register u32 nextState asm("r3");
-        struct IwramAt3720 *p3720;
+        struct Entity *p3720;
         gIwram_5398 = sub_080004C4();
         if (gIwram_5398 == 0x40) {
             *statep = 5;
             sub_0800E060();
             goto tail;
         }
-        p3720 = &gIwram_3720;
+        p3720 = gEntities;
         nextState = 8;
-        if ((p3720->_field_34 & 8) != 0) {
+        if ((p3720->status & 8) != 0) {
             *statep = 4;
             sub_0800EF90();
             goto tail;

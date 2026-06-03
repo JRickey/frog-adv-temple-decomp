@@ -5,7 +5,7 @@
 
 /* Input/state gate that fans out into three independent subsystem pokes:
  *
- *   1. If gIwram_3720._field_34 & 4 is set, raise a single flag via
+ *   1. If gEntities[0].status & 4 is set, raise a single flag via
  *      sub_080066C4(0x03006110, 8, 1) and skip the rest of the function.
  *   2. Otherwise call the predicate sub_0800679C(0x03006110, 5, 15); when
  *      it returns nonzero, OR bit 8 into the halfword at 0x03006110[+0x2e].
@@ -13,7 +13,7 @@
  *      coords (gIwram_35E0._field_18/19/8/A), run sub_0800CD88 to map
  *      them to a tile id, and hand the (u8)tile to sub_0800AB84.
  *
- * Same gIwram_3720._field_34 & 4 gate appears in sub_08000B6C /
+ * Same gEntities[0].status & 4 gate appears in sub_08000B6C /
  * sub_08000E0C — this function looks like another per-entity probe in
  * the same family, with a lighter (single sub_0800CD88 / sub_0800AB84)
  * tail instead of the &0x10 dispatch + bit-test guard those siblings
@@ -45,13 +45,13 @@ void sub_080011A4(void)
 {
     register u32 mask asm("r0");
     register u16 field asm("r4");
-    struct IwramAt3720 *p3720 = &gIwram_3720;
+    struct Entity *p3720 = gEntities;
     struct IwramAt35E0 *p35E0;
     u8 *base6110;
     u8 tile;
 
     mask = 4;
-    mask &= p3720->_field_34;
+    mask &= p3720->status;
     if (mask != 0) {
         sub_080066C4(0x03006110, 8, 1);
         return;

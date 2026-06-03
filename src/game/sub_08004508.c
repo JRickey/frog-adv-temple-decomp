@@ -8,7 +8,7 @@ extern void sub_0800B7B0(u32 a, u32 b, u8 c);
 
 /* Two-entity variant of the sub_080011A4 / sub_080018F8 tile-cache probe:
  * enqueues both entity pairs (kind 11 and 16), then — gated on the shared
- * gIwram_3720._field_34 & 4 counter — maps the cached tile coords through
+ * gEntities[0].status & 4 counter — maps the cached tile coords through
  * sub_0800CD88 and, when gIwram_35E0._field_10 & 0x10 is set, re-enqueues
  * both pairs with the resolved tile and pokes sub_0800A9D4.
  *
@@ -30,15 +30,15 @@ void sub_08004508(u32 arg0, u32 arg1, u32 arg2, u32 arg3)
     register u32 mask asm("r0");
     register struct IwramAt35E0 *p35E0 asm("r4");
     register u16 field asm("r4");
-    struct IwramAt3720 *p3720;
+    struct Entity *p3720;
     u8 tile;
 
     sub_0800B918((void *)arg0, arg1, 11);
     sub_0800B918((void *)arg2, arg3, 16);
 
-    p3720 = &gIwram_3720;
+    p3720 = gEntities;
     mask = 4;
-    mask &= p3720->_field_34;
+    mask &= p3720->status;
     if (mask != 0)
         return;
 

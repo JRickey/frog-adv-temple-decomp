@@ -84,8 +84,8 @@ void sub_0800336C(void)
                 break;
             }
             {
-                struct IwramAt3720 *p3720 = &gIwram_3720;
-                if ((p3720->_field_34 & 8) != 0) {
+                struct Entity *p3720 = gEntities;
+                if ((p3720->status & 8) != 0) {
                     state = 4;
                     break;
                 }
@@ -193,7 +193,7 @@ void sub_08003604(void)
     struct IwramAt35E0 *p;
     u8 tile;
 
-    if ((gIwram_3720._field_34 & 4) != 0)
+    if ((gEntities[0].status & 4) != 0)
         return;
 
     if (gIwram_6110.scenePhase != 2)

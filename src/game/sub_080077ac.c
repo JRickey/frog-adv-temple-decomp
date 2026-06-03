@@ -4,7 +4,7 @@
 #include "types.h"
 
 extern void sub_08006A74(struct IwramAt35E0 *p, s8 a, s16 b, s8 c, s8 e);
-extern void Entity_Init(struct IwramAt3720 *p, u8 a, s16 b, s16 c, u8 d, u16 e, u8 f, u8 g, u8 h, u16 i);
+extern void Entity_Init(struct Entity *p, u8 a, s16 b, s16 c, u8 d, u16 e, u8 f, u8 g, u8 h, u16 i);
 
 struct SpawnRec {
     s16 _h0;
@@ -43,5 +43,5 @@ void sub_080077AC(s8 a, s16 b, s8 c)
 
     sub_08006A74(&gIwram_35E0, a, b, c, 0);
 
-    Entity_Init(&gIwram_3720, 0, px, py, b5, 1, 0, b6, b4, 16);
+    Entity_Init(gEntities, 0, px, py, b5, 1, 0, b6, b4, 16);
 }

@@ -5,13 +5,13 @@
 
 /* Three-entity-pair variant of the sub_08004508 tile-cache probe (kinds 6, 7
  * and 22 instead of 11 and 16). Enqueues all three pairs, then — gated on
- * gIwram_3720._field_34 & 4 — maps the cached tile coords through sub_0800CD88
+ * gEntities[0].status & 4 — maps the cached tile coords through sub_0800CD88
  * and re-enqueues them with the resolved tile when gIwram_35E0._field_10 has
  * bit 0x10 set, also poking sub_0800C444.
  *
  * The tail does two coordinate-driven dispatches. The first, gated on
  * sub_08006BA4(&gIwram_35E0, 0x40), reads the packed tile coordinate
- * (*(u32 *)&gIwram_35E0._field_8) and stamps gIwram_3720._field_6 with a
+ * (*(u32 *)&gIwram_35E0._field_8) and stamps gEntities[0].field_06 with a
  * scenery class (2 or 3) for a fixed set of coords. The second, gated on
  * gGameStuff._unk10 & 1 being clear, OR-bits 0x200 into gIwram_35E0 via
  * sub_08006B88 for another fixed coord set.
@@ -38,7 +38,7 @@ extern void sub_08006B88(struct IwramAt35E0 *p, u32 mask);
 
 void sub_08003668(u32 arg0, u32 arg1, u32 arg2, u32 arg3, void *arg4, void *arg5)
 {
-    struct IwramAt3720 *p3720;
+    struct Entity *p3720;
     struct IwramAt35E0 *p35E0;
     register struct IwramAt35E0 *q asm("r4");
     register GameStuff *gs asm("r1");
@@ -52,9 +52,9 @@ void sub_08003668(u32 arg0, u32 arg1, u32 arg2, u32 arg3, void *arg4, void *arg5
     sub_0800B918((void *)arg2, arg3, 7);
     sub_0800BF24(arg4, arg5, 22);
 
-    p3720 = &gIwram_3720;
+    p3720 = gEntities;
     mask = 4;
-    mask &= p3720->_field_34;
+    mask &= p3720->status;
     if (mask != 0)
         return;
 
@@ -78,19 +78,19 @@ void sub_08003668(u32 arg0, u32 arg1, u32 arg2, u32 arg3, void *arg4, void *arg5
         k0 = 0x005e0002;
         c = coord;
         if (c == k0)
-            p3720->_field_6 = 2;
+            p3720->field_06 = 2;
         if (c == 0x00590000)
-            p3720->_field_6 = 2;
+            p3720->field_06 = 2;
         if (c == 0x00590001)
-            p3720->_field_6 = 2;
+            p3720->field_06 = 2;
         if (c == 0x005d0002)
-            p3720->_field_6 = 3;
+            p3720->field_06 = 3;
         if (c == 0x005e0003)
-            p3720->_field_6 = 3;
+            p3720->field_06 = 3;
         if (c == 0x005f0002)
-            p3720->_field_6 = 3;
+            p3720->field_06 = 3;
         if (coord == 0x00580002)
-            p3720->_field_6 = 3;
+            p3720->field_06 = 3;
     }
 
     gs = &gGameStuff;

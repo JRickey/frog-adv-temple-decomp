@@ -10,7 +10,7 @@ extern void sub_08007874(s8 id);
 extern u8 sub_0800A104(u8 *state, u32 callbackTable);
 
 /* Mode entry that seeds the entity-dispatch state, ticks the per-frame
- * entity loop until its active-entity count (gIwram_3720._field_1B) falls
+ * entity loop until its active-entity count (gEntities[0].field_1B) falls
  * to <= 4, then runs a one-shot spawn + waits on the sub_0800A104 gesture
  * gate (the 0x0800A26D callback table, same one the other mode handlers
  * pass for their final-confirmation step). */
@@ -18,24 +18,24 @@ void sub_08002AE8(void)
 {
     /* Pin the base to r1 (agbcc otherwise colours r2, which propagates into
      * every dependent load/store and the r4 loop-anchor copy). */
-    register struct IwramAt3720 *p asm("r1") = &gIwram_3720;
+    register struct Entity *p asm("r1") = gEntities;
     u8 state;
     u16 flags;
 
-    p->_field_1A = 21;
+    p->field_1A = 21;
     /* split into three statements so agbcc emits movs/ldrh/orrs/strh
      * instead of folding to ldrh/orrs/strh */
     flags = 2;
-    flags |= p->_field_34;
-    p->_field_34 = flags;
+    flags |= p->status;
+    p->status = flags;
 
-    if (gIwram_3720._field_1B <= 4) {
+    if (gEntities[0].field_1B <= 4) {
         register u32 count asm("r2");
         do {
             sub_0800A2D8();
             sub_080008DC();
             sub_0800A328();
-            count = gIwram_3720._field_1B;
+            count = gEntities[0].field_1B;
         } while (count <= 4);
     }
 

@@ -14,7 +14,7 @@
  *        tile == 21 → sub_08006600(0x03006110, 8, 1)
  *   3. Re-probe the tile unconditionally; if (gIwram_35E0._field_10 &
  *      0x10), call sub_0800B8A8(arg0, arg1, 5, tile).
- *   4. If (gIwram_3720._field_34 & 4) == 0 and (u16)(_field_2 - 0xa9)
+ *   4. If (gEntities[0].status & 4) == 0 and (u16)(_field_2 - 0xa9)
  *      <= 0xa6 and (s16)_field_4 < ((s16)*(0x03006480+0x36)) << 3,
  *      raise bit 0x800 on gIwram_35E0 via sub_08006B88.
  *
@@ -38,7 +38,7 @@ void sub_080018F8(u32 arg0, u32 arg1)
 {
     u32 mask;
     struct IwramAt35E0 *p35E0;
-    struct IwramAt3720 *p3720;
+    struct Entity *p3720;
     u8 tile;
 
     sub_0800B918((void *)arg0, arg1, 5);
@@ -63,17 +63,17 @@ void sub_080018F8(u32 arg0, u32 arg1)
     if (mask != 0)
         sub_0800B8A8((void *)arg0, arg1, 5, tile);
 
-    p3720 = &gIwram_3720;
+    p3720 = gEntities;
     mask = 4;
-    mask &= p3720->_field_34;
+    mask &= p3720->status;
     if (mask != 0)
         return;
 
-    if ((u16)(p3720->_field_2 - 0xa9) > 0xa6)
+    if ((u16)(p3720->x - 0xa9) > 0xa6)
         return;
 
     {
-        s32 lhs = (s16)p3720->_field_4;
+        s32 lhs = (s16)p3720->y;
         struct {
             u8 _pad[0x36];
             s16 _field_36;

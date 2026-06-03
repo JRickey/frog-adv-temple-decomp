@@ -32,14 +32,14 @@ void sub_080017A8(void)
 /* Single-entity-pair (kind 4) variant of the sub_08004508 tile-cache probe,
  * preceded by the five per-frame setup calls and trailed by the
  * gGameStuff._unk14 frame counter bump. Enqueues the pair, then — gated on
- * gIwram_3720._field_34 & 4 — maps the cached tile coords through sub_0800CD88
+ * gEntities[0].status & 4 — maps the cached tile coords through sub_0800CD88
  * and re-enqueues with the resolved tile when gIwram_35E0._field_10 & 0x10. */
 void sub_080017DC(u32 arg0, u32 arg1)
 {
     register u32 mask asm("r0");
     struct IwramAt35E0 *p35E0;
     u16 field;
-    struct IwramAt3720 *p3720;
+    struct Entity *p3720;
     u8 tile;
 
     sub_0800A2D8();
@@ -50,9 +50,9 @@ void sub_080017DC(u32 arg0, u32 arg1)
 
     sub_0800B918((void *)arg0, arg1, 4);
 
-    p3720 = &gIwram_3720;
+    p3720 = gEntities;
     mask = 4;
-    mask &= p3720->_field_34;
+    mask &= p3720->status;
     if (mask != 0)
         goto done;
 
@@ -99,14 +99,14 @@ void sub_080018A8(u32 arg0, u32 arg1)
     register u32 mask asm("r0");
     struct IwramAt35E0 *p35E0;
     u16 field;
-    struct IwramAt3720 *p3720;
+    struct Entity *p3720;
     u8 tile;
 
     sub_0800B918((void *)arg0, arg1, 4);
 
-    p3720 = &gIwram_3720;
+    p3720 = gEntities;
     mask = 4;
-    mask &= p3720->_field_34;
+    mask &= p3720->status;
     if (mask != 0)
         goto done;
 

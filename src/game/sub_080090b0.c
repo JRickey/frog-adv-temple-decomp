@@ -25,8 +25,8 @@ extern u16 sub_08006B88(void *p, u16 v); /* OR-into-u16-at-offset-16 */
 void sub_080090B0(void)
 {
     register u16 cached asm("r1");
-    u16 newX = (u16)(gIwram_3720._field_2 / 24);
-    u16 newY = (u16)(gIwram_3720._field_4 / 24);
+    u16 newX = (u16)(gEntities[0].x / 24);
+    u16 newY = (u16)(gEntities[0].y / 24);
 
     cached = (u16)gIwram_35E0._field_8;
     if (cached == newX) {
@@ -40,11 +40,11 @@ void sub_080090B0(void)
     gIwram_35E0._field_A = newY;
 }
 
-extern void Entity_Init(struct IwramAt3720 *p, u8 a, s16 b, s16 c, u8 d, u16 e, u8 f, u8 g, u8 h, u16 i);
+extern void Entity_Init(struct Entity *p, u8 a, s16 b, s16 c, u8 d, u16 e, u8 f, u8 g, u8 h, u16 i);
 
 void sub_080090FC(u16 x, u16 y, u8 g, u8 h)
 {
-    Entity_Init(&gIwram_3720, 0, (s16)x, (s16)y, 3, 1, 0, g, h, 16);
+    Entity_Init(gEntities, 0, (s16)x, (s16)y, 3, 1, 0, g, h, 16);
 }
 
 extern void sub_080059C4(void *p);
@@ -61,24 +61,24 @@ extern void sub_080059C4(void *p);
  * pinned to r1 so the flag ANDs accumulate mask-first into the r0 scratch. */
 void sub_08009140(void)
 {
-    register struct IwramAt3720 *src asm("r0") = &gIwram_3720;
-    struct IwramAt3720 *base;
+    register struct Entity *src asm("r0") = gEntities;
+    struct Entity *base;
     register u16 f asm("r1");
 
     asm("" : "+r"(src));
     base = src;
 
-    if (base->_field_1A != 0x23)
+    if (base->field_1A != 0x23)
         goto do_call;
 
-    f = base->_field_34;
+    f = base->status;
     if (f & 2) {
-        base->_field_34 = f & 0x7fff;
+        base->status = f & 0x7fff;
         goto do_call;
     }
     if (!(f & 0x8000))
         goto do_call;
-    base->_field_34 = (f & 0x7fff) | 2;
+    base->status = (f & 0x7fff) | 2;
 
 do_call:
     sub_080059C4(base);

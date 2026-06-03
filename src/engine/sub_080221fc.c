@@ -19,8 +19,8 @@ void sub_080221FC(void)
 
     i = 5;
     do {
-        struct IwramAt3720 *elt = (struct IwramAt3720 *)((i + 0x36) * 56 + (s32)&gIwram_3720);
-        elt->_field_6 = 2;
+        struct Entity *elt = (struct Entity *)((i + 0x36) * 56 + (s32)gEntities);
+        elt->field_06 = 2;
         i++;
     } while (i <= 7);
 }

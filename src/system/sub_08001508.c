@@ -72,7 +72,7 @@ void sub_08001508(void)
             goto tail;
         case 3: {
             register u32 nextState asm("r3");
-            struct IwramAt3720 *p3720;
+            struct Entity *p3720;
             void *obj;
             gIwram_5398 = sub_080004C4();
             if (gIwram_5398 == 0x40) {
@@ -80,9 +80,9 @@ void sub_08001508(void)
                 sub_0800E060();
                 break;
             }
-            p3720 = &gIwram_3720;
+            p3720 = gEntities;
             nextState = 8;
-            if ((p3720->_field_34 & 8) != 0) {
+            if ((p3720->status & 8) != 0) {
                 frame.localState = 4;
                 break;
             }
@@ -97,7 +97,7 @@ void sub_08001508(void)
             sub_080094F8();
             sub_08009984();
             sub_0800B918(frame.sp_buf, obj, 4);
-            if ((p3720->_field_34 & 4) == 0) {
+            if ((p3720->status & 4) == 0) {
                 u8 tile = (u8)sub_0800CD88(gIwram_35E0._field_18, gIwram_35E0._field_19, gIwram_35E0._field_8,
                                            gIwram_35E0._field_A);
                 if ((gIwram_35E0._field_10 & 0x10) != 0)
