@@ -14,13 +14,6 @@ struct TilemapTableEntry {
     u8 pad14[4];
 };
 
-struct TransferDesc_13AE8 {
-    u32 word0;
-    u32 word4;
-    u32 word8;
-    u32 wordC;
-};
-
 struct DmaJob_13BA4 {
     u16 count;
     u16 _hw02;
@@ -43,7 +36,7 @@ extern void sub_0800E7D4(void);
 extern void sub_0800EE34(u8 layer);
 extern void sub_0800EE94(u8 layer);
 extern void sub_08012CAC(void);
-extern void sub_08013C60(struct TransferDesc_13AE8 desc, u8 mode, void *buf);
+extern u8 sub_08013C60(struct DmaJob_13BA4 job, u8 mode, struct Queue_64C0 *queue);
 extern void sub_0801310C(void);
 extern void sub_08017000(void);
 extern u8 gIwram_6410[];
@@ -80,20 +73,20 @@ void sub_08013AE8(void)
         *statePtr = 1;
         break;
     case 1: {
-        struct TransferDesc_13AE8 *desc0;
+        struct DmaJob_13BA4 *desc0;
 
         sub_0800E7D4();
         sub_08012CAC();
-        desc0 = (struct TransferDesc_13AE8 *)0x08306f08;
-        sub_08013C60(*desc0, ((u8 *)desc0)[2], (void *)0x030064c0);
+        desc0 = (struct DmaJob_13BA4 *)0x08306f08;
+        sub_08013C60(*desc0, ((u8 *)desc0)[2], (struct Queue_64C0 *)0x030064c0);
         break;
     }
     }
 
     {
-        struct TransferDesc_13AE8 *desc1 = (struct TransferDesc_13AE8 *)0x08306f50;
+        struct DmaJob_13BA4 *desc1 = (struct DmaJob_13BA4 *)0x08306f50;
 
-        sub_08013C60(*desc1, ((u8 *)desc1)[2], (void *)0x03006580);
+        sub_08013C60(*desc1, ((u8 *)desc1)[2], (struct Queue_64C0 *)0x03006580);
     }
 
     sub_0801310C();
@@ -181,6 +174,8 @@ void sub_08013BA4(void)
         const void *source;
 
         {
+            /* cursor pinned to r0 (as in sub_08013BA4): forces agbcc to keep the
+               pre-increment cursor live for the `<<24 >>22` fused u8*4 table index. */
             register u8 cursor asm("r0");
 
             cursor = queue->_cursor;
@@ -208,4 +203,73 @@ void sub_08013BA4(void)
     }
 
     sub_08017000();
+}
+
+u8 sub_08013C60(struct DmaJob_13BA4 job, u8 mode, struct Queue_64C0 *queue)
+{
+    u32 seed;
+    u32 oldSeed;
+    u8 wrapped;
+
+    wrapped = 0;
+    seed = gGameStuff._unk00;
+    oldSeed = queue->_seed;
+    if ((u32)(seed - oldSeed) >= mode || seed == oldSeed) {
+        const void *source;
+
+        {
+            /* cursor pinned to r0 (as in sub_08013BA4): forces agbcc to keep the
+               pre-increment cursor live for the `<<24 >>22` fused u8*4 table index. */
+            register u8 cursor asm("r0");
+
+            cursor = queue->_cursor;
+            queue->_cursor = cursor + 1;
+            source = ((const void *const *)job.table)[cursor];
+        }
+
+        REG_DMA3.src = source;
+        REG_DMA3.dst = job.dest;
+        REG_DMA3.cnt = DMA_ENABLE | (job.xferCount >> 1);
+        (void)REG_DMA3.cnt;
+
+        if (queue->_cursor >= job.count) {
+            queue->_cursor = 0;
+            wrapped = 1;
+        }
+
+        queue->_seed = gGameStuff._unk00;
+    }
+
+    return wrapped;
+}
+
+/* Unreferenced variant of sub_08013C60 (no callers in ROM): gates on the same
+   seed window, but only wraps the cursor — no cursor advance, no DMA. The 24-byte
+   by-value struct is load-bearing: agbcc homes the first 16 bytes as pretend args
+   (sub sp / push order, struct at sp+16), which is how the baserom prologue looks. */
+struct DmaJob2_13CD4 {
+    u8 _pad00[10];
+    u16 count;
+    u8 _pad0C[12];
+};
+
+u8 sub_08013CD4(struct DmaJob2_13CD4 job, u8 mode, struct Queue_64C0 *queue)
+{
+    u32 seed;
+    u32 oldSeed;
+    u8 wrapped;
+
+    wrapped = 0;
+    seed = gGameStuff._unk00;
+    oldSeed = queue->_seed;
+    if ((u32)(seed - oldSeed) >= mode || seed == oldSeed) {
+        if (queue->_cursor >= job.count) {
+            queue->_cursor = 0;
+            wrapped = 1;
+        }
+
+        queue->_seed = gGameStuff._unk00;
+    }
+
+    return wrapped;
 }
