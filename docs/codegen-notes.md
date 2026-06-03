@@ -927,15 +927,20 @@ If both present, this rule applies.
 
 A function whose target prologue is `push {r4-r7, lr}` AND whose body calls
 a libgcc helper (`__divsi3`, `__umodsi3`, `__umulsi3`, etc.) can't be
-matched in pure C. agbcc 2.x knows libgcc helpers in
-`tools/agbcc/lib/libgcc.a` don't actually clobber r4-r7, so it emits only
-the registers it itself uses (typically `push {r4, lr}` or `push {r4, r5,
-lr}`) and lazy-loads pool literals after the BL.
+matched in pure C with this toolchain. agbcc 2.x knows libgcc helpers in
+`tools/agbcc/lib/libgcc.a` don't actually clobber r4-r7, and this Thumb
+backend reserves r7 as `FRAME_POINTER_REGNUM`, so ordinary allocation walks
+r4/r5/r6 and then high registers (r8/r9/sl) instead of naturally using r7.
+It therefore emits only the low registers it itself uses (typically
+`push {r4, lr}` or `push {r4, r5, lr}`) and lazy-loads pool literals after
+the BL.
 
 Target ROMs written against a different agbcc cut consistently push the
 full r4-r7 set anyway. There's no source-level lever to force the extra
 register save: even `register T x asm("r7")` pinning a local that lives
-across the BL fails to influence the prologue.
+across the BL fails to influence the prologue, and both shipped compiler
+frontends reject `-fcall-saved-r7` / `-fcall-used-r7` because r7 is the
+frame pointer register in this backend.
 
 Detection heuristic: in the refined asm, look for `push {r4, r5, r6,
 r7, lr}` (encoding `b5f0`) at the function entry AND any `bl 0x080339xx /
@@ -943,8 +948,16 @@ r7, lr}` (encoding `b5f0`) at the function entry AND any `bl 0x080339xx /
 NON_MATCHING on first attempt.
 
 Worked example: `sub_0802E5D8` (PSG pitch interpolation). Best pure-C
-attempt with the playbook's full pin/fence/permuter battery converged at
-byte_diff 109/172 (63% mismatch). NAKED+NON_MATCHING ships byte-perfect.
+attempt with the current split/header setup bottoms out at byte_diff 115 /
+insn_diff 38 under `old_agbcc -O2 -fforce-addr -fno-gcse
+-fno-expensive-optimizations`; the first drift is the missing r7 save
+(`push {r4, r5, r6, r7, lr}` vs `push {r4, r5, r6, lr}`).
+A diagnostic temp build that changed `FRAME_POINTER_REGNUM` from 7 to 11
+made a simple pressure harness allocate/save r7 naturally and moved
+`sub_0802E5D8` to byte_diff 116 / insn_diff 35, proving the prologue drift is
+backend register-model related, but it did not solve the function and
+worsened several other sound candidates. NAKED+NON_MATCHING still ships
+byte-perfect.
 
 This joins:
 1. "High registers (sl/r10, sb/r9, r8) — corpus-validated unmatchable"
@@ -954,6 +967,31 @@ This joins:
 Pattern across all three: agbcc 2.x's register allocator makes a choice
 that no source-level shape coerces. The right call is NAKED+NON_MATCHING
 + codegen-notes documentation, not a 60-minute permuter run.
+
+## Fixed stack arguments are preloaded before calls
+
+For a normal fixed-argument Thumb C function, both shipped compiler fronts
+eagerly load the fifth argument from the caller's stack before any early BL if
+the value is used after those calls. This holds across ordinary pointer
+spelling, post-call pointer calculation, cast stores, extra callee-saved
+pressure, and empty `asm("")` / `asm volatile("")` barriers. Address-taking the
+argument or using varargs can delay the final read, but only by copying the
+argument into a new local stack slot or changing the prologue shape.
+
+The target pattern:
+
+```asm
+mov rN, sp
+ldrh rN, [rN, #imm]
+```
+
+immediately before the store of a fifth fixed argument appears to be a different
+compiler codegen choice, not a source-ordering problem. Worked example:
+`sub_08032904` (sound channel state primer). Its pure-C lane is byte_diff 62 /
+insn_diff 20 with old_agbcc `-O2`; the first drift is the compiler's early
+`ldr r6, [sp, #28]` preload. Direct C probes (`u16` vs `u32` parameter,
+post-call temporaries, pointer/cast stores, K&R spelling) stay in the same
+basin; varargs and `volatile` stack copies regress by adding a frame.
 
 ## In-ROM libgcc helpers (`__divsi3`, `__umodsi3`, `__umulsi3`)
 
