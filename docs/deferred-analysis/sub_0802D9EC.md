@@ -295,3 +295,246 @@ u32 sub_0802D9EC(u32 id, u32 vol, u32 pan, u32 pitch)
     return handle;
 }
 ```
+
+
+---
+
+## Corpus sweep (2026-06-03)
+
+**Outcome: deferred at byte_diff 272 / diff_count 78 (no improvement over the documented baseline).** The corpus does NOT contain a transferable "trick", and the single highest-EV untried lever (linker-assigned symbol, recommendation #1 in the deferred doc) is now **disproven** both empirically and by reading the agbcc source. This is a genuine register-coloring local minimum driven by register pressure, not a missing idiom.
+
+### The exact asm idiom that diverges
+At entry the baserom does `ldr r1,[pc]` (r1 = `&gpSoundSystem`), `ldr r6,[r1]` (r6 = `ss = *gpSoundSystem`), then crucially **`adds r3, r1, #0`** at 0x2da12 — it copies the *address* `&gpSoundSystem` into a callee-saved register (r3) and keeps it live across each straight-line no-BL span, re-derefing via `ldr r0,[r3]` (panScale at 0x2da54) and `ldr r3,[r3]` (chSeq reload at 0x2dbbc). It keeps BOTH the address (r3) and the deref `ss` (r6) simultaneously in the first region. agbcc instead assigns `ss` to r3 (callee-saved) and **discards the address**, rematerializing the pool literal `.word 0x030065e0` with a fresh `ldr rX,[pc]` at every later use (0x68, 0x98 in our build). Each extra pool literal shifts the pool, producing the recurring `movs #N; lsls` (inline-offset) <-> `.word`/`ldr` mnemonic diffs through the tail. Concretely: baserom spreads the anchor into r3 and keeps r6=ss; agbcc funnels into r3=ss and reloads the constant.
+
+### Every regex searched + hit counts
+NB: corpus mirror asm uses pret style (immediate `0` not `#0`; zero offset omitted, i.e. `ldr r0, [r0]`; `\s` is unsupported by the git pickaxe — use literal spaces).
+- `adds\s+r[0-7],\s*r[0-7],\s*#0` (require-c, min-hits 5): **0 hits** (the `\s` + `#0` style does not exist in mirrors).
+- `ldr\s+r[0-7],\s*\[r[0-7],\s*#0\]` (min-hits 6): **0 hits** (same `\s`/`#0` issue).
+- `idiom highreg-spread` (preset, calibration): pokeemerald 772 commits — confirmed tool works and mirrors use real mnemonics.
+- `adds r4, r0, 0` (literal, require-c, min-hits 1): pokeemerald **803 commits** — too noisy (universal "save arg0 to r4").
+- `adds r3, r1, 0` (require-c, min-hits 1): pokeemerald **226 commits** — top hit `46b00b11d4` (librfu, "match all the functions").
+- `ldr r3, [r3]` (self re-deref of a held address, require-c, min-hits 2): pokeemerald **48 commits** — ubiquitous "deref a pointer in place"; not specific.
+
+### Top corpus hits examined
+- **pret__pokeemerald@46b00b11d4** (librfu) — declares `gRfuStatic`/`gRfuLinkStatus`/`gRfuFixed` as real `struct Foo *` global pointer variables and accesses `gRfuStatic->flags` etc.; agbcc keeps `&gGlobal` in a callee-saved reg and re-derefs naturally. This is the *same* shape as our linker-symbol switch, and its functions have far fewer call-live values than ours.
+- **pret__pokeemerald@416d67c832 / @94b47c0686** (field_effect / overworld batches) — `ldr r3,[r3]` arises from ordinary `gGlobalPtr->field` C; multi-function commits, not isolable, no special trick.
+- **pret__pokeemerald@50c48d7ef6 / @c3733f4b95** (berry_crush) — `adds r3, r1, 0` is just a saved-arg copy, unrelated.
+
+### Whether/why the trick transferred — it did NOT
+The corpus shows the "keep `&gGlobalPtr` in a callee-saved register, re-deref within a region" pattern is **everywhere and arises automatically from `gGlobalPtr->field` C** in those decomps — there is no documented idiom because for them it Just Works. The reason it works there and not here is **register pressure**, not C shape: this function has 4 args kept live (id->r5, vol->r9, pan->r7, pitch->r8) plus `sub` pinned to `sl` and `entry` pinned to `r5`, leaving no free callee-saved register for the anchor, so reload rematerializes it.
+
+### agbcc pass implicated (register-coloring)
+- `tools/agbcc-src/gcc_arm/local-alloc.c::update_equiv_regs` (lines ~755-872) promotes a `function_invariant_p` value to a REG_EQUIV. `function_invariant_p` (line 635) returns 1 for any `CONSTANT_P(x)` — and **a `SYMBOL_REF` (a linker symbol address) IS `CONSTANT_P`**, identical to the absolute `CONST_INT 0x030065e0`. So the linker-symbol switch cannot change the REG_EQUIV decision.
+- `tools/agbcc-src/gcc_arm/reload1.c` (lines ~697-735): when a pseudo has a REG_EQUIV to a `function_invariant_p` constant, `reg_equiv_constant[i] = x` marks it eliminable; reload then **rematerializes the constant inline wherever no free register exists** rather than spilling. So the divergence is reload choosing rematerialization under pressure — exactly because our pinned regs (sl, r5) + 4 live args leave no callee-saved slot for the anchor, whereas the baserom compiler had one free.
+
+### Levers tried this session (byte_diff)
+- **Linker-assigned symbol `gpSoundSystem_sym`** (rec #1): **272, UNCHANGED**. `adds r3, r1, #0` still DELETED. Disproven (see agbcc analysis above). REVERTED the linker.ld pin.
+- **mov-fence** `asm("" : "=r"(pPool) : "0"(&gpSoundSystem_sym))` to launder the address: **488, WORSE** — forced an extra live value, spilled vol to stack (`sub sp,#8; str r1,[sp,#4]`).
+- **CFLAGS sweep** (`-ffixed-r6`, `-ffixed-r4`, `-fno-cse-follow-jumps`, `-fno-schedule-insns`, `-fno-schedule-insns2`, `-fcaller-saves`, `-fno-function-cse`, and `CC=old_agbcc`): **all neutral at 272**.
+- **No register pins**: 502 (worse — confirms `entry asm("r5")` + `sub asm("sl")` are load-bearing).
+- **Second anchor alias** for panScale: 513 (worse — more pressure).
+
+Byte_diff progression: **272 -> 272** (no improvement; matches the deferred doc's documented floor). The captured nearMatchBase is the clean, linker.ld-independent 272 base (doc's best-effort C plus the proven `(*pPool)->globalSeq` / `swSys = *pPool` refinements).
+
+### RECOMMENDED NEXT ANGLE
+The blocker is now precisely characterized: it is NOT an idiom, it is reload rematerializing a `function_invariant_p` constant under register pressure that the baserom compiler avoided because it had a free callee-saved register. Two concrete directions:
+1. **Reduce register pressure so a callee-saved reg is free for the anchor.** The 4 incoming args (id/vol/pan/pitch) are the pressure source. Investigate whether any arg can be consumed earlier (e.g. `id` is dead after `entry`/`sub` are computed — verify it actually frees r5 before panScale) or whether dropping the `entry asm("r5")` pin in favor of letting agbcc reuse the freed `id` register changes the coloring enough to let the anchor survive. The high-value experiment is: free exactly ONE callee-saved register at the panScale point and see if reload keeps the anchor instead of rematerializing.
+2. **Permuter from the captured 272 base** — but diff_count 78 is ~2x above its ~40 sweet spot, so this is low-EV until (1) gets the structure closer. If pursued, the permuter must be checked out (the vendor submodule was not present in this worktree) and a reassembleable target.s built (awkward due to PC-relative pool loads, as the doc noted). Defer permuter until a structural change drops diff_count under ~40.
+3. **Accept NON_MATCHING** only as a last resort — the classifier returns ATTEMPT_MATCH and the structure is fully correct, so a NAKED ship would be premature per the raised-bar policy; this function belongs in the "register-coloring local minimum" bucket, not the genuinely-unmatchable classes.
+
+### Near-match C base (permuter seed) — byte_diff 272->272, CFLAGS: (default -O2)
+
+```c
+#include "types.h"
+
+typedef struct SoundDescTable {
+    u32 count;
+    struct SoundDesc *entries; /* inline array at +4, stride 8 */
+} SoundDescTable;
+
+typedef struct SoundDesc {
+    u16 subIndex; /* +0 */
+    u8 priority;  /* +2 */
+    u8 _pad3;
+    u8 altId;  /* +4 */
+    u8 pan;    /* +5 */
+    u8 pitch;  /* +6 */
+    u8 volume; /* +7 */
+} SoundDesc;
+
+typedef struct SoundSubRecord {
+    u8 kind;  /* +0  0..3 = channel kind, 0xff = software slot */
+    u8 flags; /* +1  bit 0x80 = high-channel variant */
+} SoundSubRecord;
+
+typedef struct SoundBank {
+    u32 subTableOff;  /* +0 */
+    u8 _pad4[8];
+    u32 descTableOff; /* +0xc */
+} SoundBank;
+
+typedef struct ChannelRecord {
+    u8 _pad0[4];
+    u8 field4; /* +4 */
+    u8 field5; /* +5 */
+    u8 pan6;   /* +6 */
+    u8 vol7;   /* +7 */
+    u8 pan8;   /* +8 */
+} ChannelRecord;
+
+typedef struct ChannelSeq {
+    SoundSubRecord *cursor; /* +0 */
+    u32 field4;             /* +4 */
+    u16 field8;             /* +8 */
+    u16 fielda;             /* +10 */
+    u16 subIndex;           /* +12 */
+} ChannelSeq;
+
+typedef struct SoundSystem {
+    u8 count; /* +0 */
+    u8 _pad01[3];
+    u32 rng; /* +4 */
+    u8 _pad08[6];
+    u16 panScale; /* +0xe */
+    u32 chDirty[4]; /* +0x10 */
+    u8 _pad20[0x18];
+    u32 field38;    /* +0x38 */
+    u8 _pad3c[0x8c];
+    u8 *swSlotBase; /* +0xc8 */
+    ChannelRecord **swHandleTable; /* +0xcc */
+    u8 _padD0[0x40];
+    u8 *bankPtr;             /* +0x110 */
+    u8 *chSeqTableBase;        /* +0x114 */
+    u8 *chRecHolder;           /* +0x118 */
+    u16 globalSeq;             /* +0x11c */
+    u8 _pad11e[2];
+    u32 **handleTable;         /* +0x120 */
+} SoundSystem;
+
+#define gpSoundSystem (*(SoundSystem **)0x030065e0)
+
+extern u32 sub_08032BA0(u32 flag, u32 priority, u32 kind);
+extern void sub_08032904(s32 ch, u32 step, u32 pan, u32 ctrl, u16 hwCtrl);
+extern void SoundChannel_Init(u32 index, u32 step, u32 mode, u32 ctrl);
+extern s32 SoundSlot_PickByPriority(s32 a0, u32 priority, s32 a2, s32 idx);
+extern void sub_08032894(void *slot, u32 a1, u32 a2, u32 a3, u32 a4);
+extern void sub_08032BC8(void *slot, u32 a1, u32 a2, u32 a3);
+
+u32 sub_0802D9EC(u32 id, u32 vol, u32 pan, u32 pitch)
+{
+    register SoundSubRecord *sub asm("sl");
+    u32 rVol = vol;
+    u32 rPan = pan;
+    u32 rPitch = pitch;
+    SoundSystem *ss;
+    SoundSystem **pPool = &gpSoundSystem;
+    u8 *bank;
+    SoundDescTable *desc;
+    register SoundDesc *entry asm("r5");
+    s32 kind;
+    u32 handle;
+    u32 rng;
+
+    ss = *pPool;
+    bank = ss->bankPtr;
+    desc = (SoundDescTable *)(bank + ((SoundBank *)bank)->descTableOff);
+
+    if (id >= desc->count)
+        return 0;
+
+    entry = (SoundDesc *)((u8 *)&desc->entries + id * 8);
+    sub = (SoundSubRecord *)(bank + *(u32 *)(bank + entry->subIndex * 4 + *(u32 *)bank));
+    kind = sub->kind;
+
+    if (kind != 0xff || entry->altId != 0xff) {
+        if (kind >= (s32)(ss->count + 4))
+            return 0;
+    }
+
+    if ((s32)rVol > 0x7f)
+        rVol = entry->volume;
+    if ((s32)rPan > 0x7f)
+        rPan = entry->pan;
+
+    rPan = (s32)((*pPool)->panScale * rPan) >> 8;
+
+    if ((s32)rPitch > 0x80)
+        rPitch = entry->pitch;
+    if (rPitch == 0x80)
+        rPitch = 0xff;
+
+    if (kind <= 3) {
+        if (sub_08032BA0(1, entry->priority, kind) == 0)
+            return 0;
+
+        {
+            u16 *seq = &(*pPool)->globalSeq;
+            if (++*seq == 0)
+                *seq = 1;
+        }
+
+        if ((sub->flags & 0x80) == 0)
+            sub_08032904(kind, rVol, rPitch, rPan, 0x100 | entry->priority);
+        else
+            SoundChannel_Init(kind, rVol, rPan, 0x100 | entry->priority);
+
+        (*pPool)->chDirty[kind] |= 0x10000;
+    } else {
+        ChannelRecord *swSlot;
+
+        if (kind != 0xff)
+            kind -= 4;
+
+        kind = SoundSlot_PickByPriority(1, entry->priority, 0xff, kind);
+        if (kind < 0)
+            return 0;
+
+        {
+            SoundSystem *swSys = *pPool;
+
+            swSlot = (ChannelRecord *)(swSys->swSlotBase + (kind << 6));
+
+            if (++swSys->globalSeq == 0)
+                swSys->globalSeq = 1;
+        }
+
+        if ((sub->flags & 0x80) == 0)
+            sub_08032894(swSlot, rVol, rPitch, rPan, 0x100 | entry->priority);
+        else
+            sub_08032BC8(swSlot, rVol, rPan, 0x100 | entry->priority);
+
+        *(u32 *)((u8 *)swSlot + 0x38) |= 0x10000;
+        (*pPool)->swHandleTable[kind] = swSlot;
+        kind += 4;
+    }
+
+    ss = *pPool;
+    {
+        ChannelRecord *rec = (ChannelRecord *)(*(u8 **)(ss->chRecHolder + 0x110) + kind * 12);
+
+        rec->field4 = 0;
+        rec->field5 = 0xff;
+        rec->pan6 = entry->pan;
+        rec->pan8 = entry->pan;
+        rec->vol7 = entry->volume;
+    }
+
+    ss = *pPool;
+    {
+        ChannelSeq *rec2 = (ChannelSeq *)(ss->chSeqTableBase + kind * 16);
+
+        rec2->field8 = 0;
+        rec2->fielda = 0;
+        rec2->field4 = 0;
+        rec2->cursor = sub + 4;
+        rec2->subIndex = entry->subIndex;
+    }
+
+    ss->rng *= 0xa8351d63;
+    rng = (ss->rng << 11) >> 17;
+    handle = (kind << 16) | ss->globalSeq | (rng << 24);
+    ss->handleTable[kind] = (u32 *)handle;
+
+    return handle;
+}
+```
