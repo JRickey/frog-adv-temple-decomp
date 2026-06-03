@@ -583,6 +583,41 @@ Worked example: `sub_08000790`'s BG-scroll commit loop, target wants
 agbcc emits `strh [r1, #2]` for the last iter and combines the dead
 `adds`. Volatile dst: exact match.
 
+### Pinning a callee-saved low reg can rematerialise a stack address as `movs #const`
+
+A `register asm("rN")` pin reserves rN for the **whole function**, not just
+the pinned var's live range. If rN is a callee-saved LOW reg (r4–r7) and a
+later loop needs that reg, the pin starves the loop's allocator. agbcc then
+compensates by **rematerialising a stack-buffer address as an absolute
+constant** — `movs r0, #52` instead of `add r0, sp, #52` — at each use,
+because it can't afford to keep the address live in a register under the
+extra pressure.
+
+This is not just suboptimal — it's a **miscompile**: `&buf` becomes the
+integer offset (`52`), so `buf->field_at_1` folds to `movs r0,#53; ldrb
+[r0,#0]` — a load from absolute address `0x35`, reading garbage. The build
+"matches its own intent" only because the field happens to never be the
+deciding byte, but it is provably wrong.
+
+Found on `sub_08017364`: pinning `register int ok asm("r7")` (to reproduce
+the baserom's `cmp r7,#0`) reserved r7 globally; the slot loop couldn't
+reuse r7 (the baserom DOES — `ok` is dead by the loop, so its r7 is recycled
+as scratch via `mov r7, sl`), and the address of the on-stack `SaveHeader`
+buffer const-folded. Bisecting the pins (compile, grep for `movs rN,#52` vs
+`add rN,sp,#52`) isolated the culprit: of `{header r8, savedIe r9, ok r7,
+zero r2, fullByte r0}`, only the `ok r7` pin triggered the fold. Caller-saved
+pins (r0/r2) and high-reg pins (r9) were inert; the callee-saved low-reg pin
+was the poison.
+
+Implication: when the baserom recycles a register across a value's death (a
+long-lived local whose live range ENDS before a loop that reuses its reg),
+you cannot reproduce that with `register asm()` — the pin is sticky for the
+whole function. You need the value to land there via natural allocation
+(register pressure shaping), which pins fight against. `-fno-rerun-cse-after-loop`
+removes the fold but overshoots (keeps the address in a low reg for the whole
+function, eliminating the high-reg promotion the baserom wants). See
+`docs/deferred-analysis/sub_08017364.md`.
+
 ## Thumb boundary detector mis-fires on pool words that decode as push-lr
 
 `tools/agent/ts/cmds/detect-fn-boundary.ts` scans forward for a
