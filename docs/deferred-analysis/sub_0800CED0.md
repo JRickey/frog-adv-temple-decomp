@@ -321,3 +321,97 @@ sub_0800CED0 slice, scaffold `src/engine/sub_0800ced0.c`, wire linker.ld as
 `src/engine/sub_0800ced0.o(.text)` then `asm/disasm_0x0800cf9c.o(.text)` between
 sub_0800ce98.o and sub_0800cfdc.o. (This Opus run prototyped that split and verified
 it builds, then reverted it with the rest.)
+
+
+---
+
+## Corpus sweep (2026-06-03)
+
+**Outcome: deferred.** No transferable corpus trick exists; a new lever (`-ffixed-r3` + `|`-operand-flip + a non-invariant `lomask` derivation) improved the near-match from the prior best of byte_diff 167/diff 96 to **byte_diff 143, diff_count 84** (and a parallel variant reaches diff 99 *with `s`→ip and the full prologue both correct*), but no variant reaches a byte match. Reverted to pristine (`make check` exits 0, clean `git status`).
+
+### The exact asm idiom that diverges
+sub_0800CED0 is a point-in-expanded-rect test on two packed 16.16 (s16x2) values. The baserom keeps **SIX callee-saved values resident simultaneously** plus the pointer in ip:
+- `a`→r4, `b`→r5 (packed accumulators), `lomask`(0x0000ffff)→**r7 resident** (loaded once `ldr r7,[pc]` at cf1a, reused via `adds r1,r7,#0` / `adds r3,r7,#0` / `adds r2,r7,#0`), `himask`(0xffff0000)→**r8 resident** (`mov r8,r1` at cef2, reused via `mov r2,r8`/`mov r0,r8`/`mov r1,r8`), `ee`(sign-ext e)→r9, `cc`((u16)c)→r3 transient, **`s`→ip the whole function** (`mov ip,r0` at ced8; copied `mov r7,ip` at cf56 only at the field reads, *after* lomask-in-r7 has died), r6 = pure scratch.
+- The lane writes are explicit 32-bit `(packed & himask) | (u16)lo` / `(packed & lomask) | (hi<<16)` — `ands`+`orrs` with the **resident** mask registers, NOT strh/union writes.
+
+agbcc's divergence: it **rematerializes both mask constants** (reloads `ldr [pc]` at each use, or splits the lomask pseudo into per-basic-block 2-ref fragments) instead of keeping them resident, so it never needs 6 callee-saved homes — it uses only 4 (r4-r7)+ip — and the `mov r7,r9; mov r6,r8; push {r6,r7}` high-reg prologue is therefore absent. When pins force the high-reg push, the freed low callee-saved reg goes to `s` (→r6/r7), so `s` leaves ip.
+
+### Why (the implicated agbcc pass — register coloring + rematerialization)
+- `tools/agbcc-src/gcc_arm/local-alloc.c` `update_equiv_regs()`: a pseudo set once to a `function_invariant_p` constant gets a `REG_EQUIV` note and then **`REG_LIVE_LENGTH(regno) *= 2`** (line ~852). This is the killer. It also *shatters* the constant — for refs==2 it sets `reg_equiv_replace` and deletes the init insn; for refs>2 it leaves a low-priority pseudo that reload happily rematerializes.
+- `tools/agbcc-src/gcc_arm/global.c` `allocno_compare()` (line ~794): priority = `floor_log2(n_refs)*n_refs / live_length * 10000 * size`. The doubled live_length **halves** the mask's priority, so `s` (the pointer pseudo, refs=3, "pref LO_REGS; pointer" in the `.greg` dump) out-prioritizes the rematerialized mask fragments and claims a low reg whenever one is free. Confirmed directly with `old_agbcc -dg`: in Horn-B reg 22 (`s`) = `add r6,r0,#0`; lomask never survives as one pseudo.
+
+### Levers tried this run (byte_diff / diff_count), all DISTINCT from the prior doc:
+- Horn-A plain locals (no pins): 147/115 — `s`→ip ✓, masks rematerialized, no high push.
+- Horn-B himask=r8/ee=r9 pins: 154/105 — high push ✓, `s`→r6.
+- **Non-invariant lomask `lomask=(u16)(a|~a)`** + himask/ee pins (Horn-C): **147/96** — high push ✓ AND lomask resident (in r3, call-used) ✓, only `s`→r6 wrong. This is the key discovery: `(u16)(a|~a)` always equals 0xffff but agbcc does NOT attach a REG_EQUIV note (source isn't `function_invariant_p`), so the live-length doubling never fires and lomask stays resident in ONE register. It folds the value to the 0xffff pool word at emit but keeps it resident.
+- Quad-pin (lomask=r7 added, non-invariant): 154/92 and 151/92 — but `s`→r7 *clobbers* the lomask pin (the `asm("r7")` is only a hint; global-alloc gives r7 to `s`). diff 92 is a BROKEN path, do not chase (same trap the doc flagged for the invariant quad-pin).
+- `register Rect2 *sp asm("ip")`: 159/137 — `s`→ip ✓ but spills, only r4-r6 pushed.
+- **`-ffixed-r3`** (Konami already uses this on src/game/sub_08003254.s) + himask/ee pins + non-invariant lomask: **146/99 with `s`→ip ✓ AND full r4-r7 prologue ✓** — the only variant nailing BOTH hard features at once. Banning r3 changes pressure so `s` falls through to ip and lomask goes to r6 (target: r7). Residual is then pure mask-application ORDERING + lomask-r6-vs-r7.
+- `-ffixed-r3` + **`|`-operand-flip** (write `(u16)(a-ee) | (a & himask)` instead of `(a & himask) | (u16)(a-ee)` to match the target's right-operand-first evaluation): **143/84 — best clean result.** But the flip perturbs pressure enough that `s` drifts back to r7. The s↔ip placement is a knife-edge that flips with ANY statement reorder.
+- Distinct `va`/`vb` locals (don't reuse a/b) + flip + ffixed-r3: 161/86 (worse — extra pressure pushes `s` off ip).
+
+### Corpus search — every regex and its hit count
+History-search tool (`corpus_asm_search.py`, all 23 mirrors): `orrs\s+r[0-7],\s*r[0-7]` → **0** candidate commits (pret repos store function bodies as macro-asm/NONMATCHING, not removable `orrs`-mnemonic Thumb, so the asm↔C pairing the tool needs is absent for arithmetic idioms); `ands\s+r[0-7],\s*r[0-7]\b` → 0 useful; `adds\s+r[0-7],\s*r[0-7],\s*#0` → 0; `--idiom highreg-spread` → 772 commits in pokeemerald but the top hit (pret/pokeemerald@46b00b11d4, librfu.s→agb_flash.c/librfu_rfu.c) is a *struct-pointer-held-in-r8 spread for field access* — structurally the OPPOSITE of this function (here the pointer stays in ip and the MASKS occupy the high regs). Not transferable.
+Direct C-tree greps across all mirror default branches: `& *0x[fF]{4}0000\) *\|` (packed-lane mask write) → **0 hits in any repo**; functions co-using `0xffff0000` AND `0x0000ffff`/`0xffffXXXX` in one file → only `arthurtilly/rhythmtengoku@src/memory_heap.c` and `jellees/mksc@src/dmaQueue.c`, both DMA/heap pointer arithmetic, neither a packed-coordinate lane clamp; `>>16` lane-extraction co-occurring with `PointIn|InRect|RectContains` → **0**. Conclusion: the hand-bit-twiddled packed-16.16 point-in-expanded-rect idiom is **unique to Frogger**; no other agbcc decomp in the curated corpus contains it, so there is no historical asm↔C pairing to copy.
+
+### byte_diff progression
+167/96 (prior doc best) → 147/96 (non-invariant lomask, resident, high push) → 146/99 (+ `-ffixed-r3`, `s`→ip AND full prologue both correct) → **143/84** (+ `|`-flip, best diff_count but `s`→r7). Two genuinely-new, doc-unrecorded levers landed: (1) **`lomask=(u16)(a|~a)`** keeps the constant resident by dodging the REG_EQUIV live-length-doubling — this is the answer to the doc's stated open question "make agbcc keep 0x0000ffff RESIDENT"; (2) **`-ffixed-r3`** is the single lever that gets `s`→ip AND the high-reg push simultaneously.
+
+### RECOMMENDED NEXT ANGLE
+The two hard features (resident masks via `(u16)(a|~a)`; `s`→ip + full prologue via `-ffixed-r3`) are now individually solved — the wall is that they don't *co-occur* with the correct mask-application instruction order, and `s`↔ip flips on any reorder. Concrete next steps, in priority order:
+1. **Start from the `-ffixed-r3` + himask=r8/ee=r9 + non-invariant-lomask base that gives `s`→ip + full prologue (146/99), and run decomp-permuter from THERE.** That base is structurally correct on every hard feature; the residual 99 is now genuinely local statement-scheduling / operand-order drift in the mask block — exactly permuter's domain — and 99 diff over a 184-byte function is within reach once the structure is pinned. (The bootstrap must `ln -s` the main repo's `vendor/decomp-permuter/.venv`, which this worktree lacks.) Do NOT permute the 143/84 base — its `s`→r7 is structurally wrong.
+2. Make `lomask` resident in **r7 specifically** (target) rather than r6/r3: try a *second* non-invariant mask source whose live range extends to the last `b & lomask` so the allocator prefers a callee-saved reg, while leaving r3 free for `cc` (do not pin — pins lose to global `s`).
+3. Reproduce the target's **separate-accumulator copy** (`adds r4,r2,#0` between lane writes): the original C almost certainly computed the high-masked sub-expression into a *fresh temp* and OR'd, rather than reassigning the packed local in place — try `t = a & himask; a = (u16)(a-ee) | t;` two-statement form per lane.
+4. Investigate whether the baserom was built with an agbcc variant lacking the aggressive `update_equiv_regs` constant-rematerialization (the resident-constant behavior is the era-tell); if a second agbcc build exists in `tools/agbcc`, diff its `local-alloc.o`. This is the only path to a clean pure-C match without the `(u16)(a|~a)` synthetic — but that synthetic is acceptable project-style (matching trick, comment it).
+
+### Near-match C base (permuter seed, recovered from worktree before revert)
+
+```c
+#include "game.h"
+#include "iwram.h"
+#include "macros.h"
+#include "types.h"
+
+struct Rect2 {
+    u16 _field_0;
+    s16 _field_2;
+    s16 _field_4;
+};
+
+u32 sub_0800CED0(struct Rect2 *s, s32 a, s32 b, u16 c, s16 e)
+{
+    register s32 himask asm("r8");
+    register s32 ee asm("r9");
+    s32 lomask;
+    s16 cc;
+    s16 rx;
+    s16 ry;
+
+    ee = e;
+    himask = 0xffff0000;
+    lomask = (u16)(a | ~a);
+
+    a = (a & himask) | (u16)(a - ee);
+    if ((s16)a < 0)
+        a = a & himask;
+    cc = c;
+    a = (a & lomask) | (((s16)(a >> 16) - cc) << 16);
+    if ((s16)(a >> 16) < 0)
+        a = a & lomask;
+
+    b = (b & himask) | (u16)(b + 2 * cc);
+    b = (b & lomask) | (((s16)(b >> 16) + 2 * ee) << 16);
+
+    rx = s->_field_2;
+    if (rx < (s16)(a >> 16))
+        return 0;
+    if (rx > (s16)(a >> 16) + (s16)b)
+        return 0;
+    ry = s->_field_4;
+    if (ry < (s16)a)
+        return 0;
+    if (ry > (s16)a + (s16)(b >> 16))
+        return 0;
+    return 1;
+}
+```
