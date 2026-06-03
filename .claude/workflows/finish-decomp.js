@@ -359,7 +359,14 @@ hard-tier uses; it is the house style now.)
   private prefix, read the trace, then \`rm -rf\` the sandbox. Full recipe in codegen-notes
   "Instrumenting agbcc itself — build a private debug compiler".
 - Corpus FIRST, permuter LAST: python3 tools/agent/corpus.py grep '<the specific idiom>' --c for
-  pure-C prior art before mutating. Permuter ONLY if you are NEAR a match (byte_diff <= ~40) and the
+  pure-C prior art before mutating.
+  HISTORY search (THE asm-idiom step) when grep finds the idiom in NO current-tree C and you are
+  blocked on a fold / register spread or funnel / addressing mode: it finds the commit that DELETED
+  asm matching your idiom and shows the C that REPLACED it in the same commit (the exact asm<->C
+  pairing) — python3 tools/agent/corpus_asm_search.py search --asm '<register-AGNOSTIC asm regex;
+  use char classes r[0-7] and (r8|r9|sl) for regs>' --require-c (or a preset, e.g.
+  --idiom highreg-spread), then corpus_asm_search.py show <repo>@<sha> to read the C and adapt its
+  STRUCTURE. Do this BEFORE permuter. Permuter ONLY if you are NEAR a match (byte_diff <= ~40) and the
   function is NOT corpus-confirmed-unmatchable: bounded ~2000 iters (~30-45s), process-GROUP kill
   (\`set -m; vendor/decomp-permuter/.venv/bin/python vendor/decomp-permuter/permuter.py
   nonmatchings/<fn>-<id> -j4 --stop-on-zero --better-only > /tmp/perm-<fn>.log 2>&1 & PGID=\$!;
@@ -387,6 +394,7 @@ Ship NAKED+NON_MATCHING ONLY if classify_unmatchable.py returned STRONG_UNMATCHA
 AND the corpus confirms the idiom lives ONLY in hand-asm:
     python3 tools/agent/corpus.py grep '<exact idiom regex>' --asm   (expect MANY hits)
     python3 tools/agent/corpus.py grep '<related C construct>'  --c   (expect NONE matched to C)
+    python3 tools/agent/corpus_asm_search.py search --asm '<idiom regex>' --require-c   (HISTORY pairing — if EVEN ONE repo replaced this exact asm with C, it is MATCHABLE: do NOT NAKED)
 "All corpus hits are NAKED" is NOT proof of impossibility — it is circular (everyone NAKED'd for the
 same wrong reason, as the movpc cluster proved). A direct compile probe beats a corpus census. If you
 DO ship NAKED: readable C under #ifdef NON_MATCHING, hand-asm NAKED under #else, and EVERY NAKED asm()
