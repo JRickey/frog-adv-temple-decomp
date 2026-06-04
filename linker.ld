@@ -774,8 +774,7 @@ SECTIONS {
         asm/text/text_0x08035d84.o(.text);  /* 0x08035d84 - 0x08035d8c, one Thumb-to-ARM veneer */
         src/game/sub_08035d8c.o(.text);
         asm/disasm_0x08035d8c.o(.text);  /* 0x08035d8c - 0x08035d94, sub_08035D8C (Thumb-to-ARM veneer, sound-IRQ disable) */
-        src/game/sub_08035d94.o(.text);
-        asm/disasm_0x08035d94.o(.text);  /* 0x08035d94 - 0x08035d9c, sub_08035D94 (Thumb-to-ARM veneer, sound-IRQ enable) */
+        src/game/sub_08035d94.o(.text);  /* 0x08035d94 - 0x08035d9c, sub_08035D94 (NAKED interwork veneer) */
         src/data/irq_handler_table.o(.rodata);  /* 0x08035d9c - 0x08035dd0, sIrqHandlerTable */
         asm/text/text_0x08035dd0.o(.text);  /* 0x08035dd0 - 0x08040000, raw bytes */
         asm/text/text_0x08040000.o(.text);  /* 0x08040000 - 0x08050000, raw bytes */
