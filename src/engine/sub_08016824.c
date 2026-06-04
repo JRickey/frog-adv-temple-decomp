@@ -2,6 +2,7 @@
 #include "types.h"
 #include "gba/dma.h"
 #include "iwram.h"
+#include "game.h"
 
 struct TileBlitRecord {
     u16 colStart;
@@ -152,4 +153,116 @@ cont:
     (void)dma[2];
 
     sub_08016824(idx);
+}
+
+/* DMA descriptor table at 0x08306888 with richer entry layout:
+ * +0: u16 maxCount, +2: u8 threshold, +4: ptr to ptr array,
+ * +8: u32 destAddr, +12: u16 count */
+struct DmaDesc2Entry {
+    u16 maxCount;
+    u8 threshold;
+    u8 _pad3;
+    u32 *srcPtrTable;
+    u32 destAddr;
+    u16 count;
+    u16 _pad0e;
+};
+
+void sub_08016928(void)
+{
+    /* ip holds the gGameStuff base across the whole function; used to
+     * produce 'mov r1, ip; ldr r0, [r1, #0]' at the end. */
+    register u32 idx asm("r2");
+    register u32 gs asm("ip");
+    volatile u32 *dma;
+
+    {
+        register u32 r1val asm("r1");
+        u8 mode;
+
+        r1val = 15;
+        mode = gIwram_6110.threshold;
+        if (mode == 3)
+            goto case3;
+        if (mode == 5)
+            goto case5;
+        goto cont;
+    case3:
+        r1val = 0;
+        goto cont;
+    case5:
+        r1val = 1;
+    cont:
+        idx = r1val;
+    }
+
+    if (idx == 15)
+        return;
+
+    gs = (u32)&gGameStuff;
+
+    {
+        /* tableBase left unpinned so agbcc allocates it to r7 and includes
+         * r7 in the push/pop (explicit asm(r7) pins bypass callee-save). */
+        register struct IwramAt5320 *s asm("r6");
+        struct DmaDesc2Entry *tableBase;
+        register struct DmaDesc2Entry *entry asm("r5");
+        register u32 stride asm("r4");
+        u32 diff;
+
+        s = &gIwram_5320;
+        diff = *(u32 *)gs - s->field4;
+        tableBase = (struct DmaDesc2Entry *)gDmaDescTable_08306888;
+        stride = idx << 4;
+        entry = (struct DmaDesc2Entry *)((u32)tableBase + stride);
+
+        if (diff < entry->threshold)
+            return;
+
+        if (s->byte0 >= entry->maxCount)
+            s->byte0 = 0;
+
+        {
+            /* r0 is the address register; r3 receives the loaded pointer.
+             * Two-step "(r0 << 24) >> 22" prevents agbcc folding to "<< 2". */
+            register u32 r0r asm("r0");
+            register u32 r3r asm("r3");
+
+            r0r = (u32)tableBase + 4;
+            r0r = stride + r0r;
+            r3r = *(u32 *)r0r;
+            dma = (volatile u32 *)0x040000D4;
+            r0r = s->byte0;
+            s->byte0 = (u8)(r0r + 1);
+            r0r <<= 24;
+            r0r >>= 22;
+            r0r = r0r + r3r;
+            r0r = *(u32 *)r0r;
+            dma[0] = r0r;
+
+            r0r = (u32)tableBase;
+            r0r += 8;
+            r0r = stride + r0r;
+            r0r = *(u32 *)r0r;
+            dma[1] = r0r;
+
+            {
+                register u32 r5r asm("r5");
+                r5r = entry->count;
+                r0r = r5r >> 1;
+            }
+            r0r |= 0x80000000U;
+            dma[2] = r0r;
+            (void)dma[2];
+        }
+
+        {
+            /* Must go through r1 to match "mov r1, ip; ldr r0, [r1, #0]". */
+            register u32 r1r asm("r1");
+            register u32 r0r asm("r0");
+            r1r = gs;
+            r0r = *(u32 *)r1r;
+            s->field4 = r0r;
+        }
+    }
 }
