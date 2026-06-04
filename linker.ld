@@ -26,6 +26,7 @@ MEMORY {
  * table base into r1 before the index shift, matching baserom pool order. */
 gHandlerTable_08308028 = 0x08308028;
 gScriptPtrTable_08307fec = 0x08307FEC;
+gFrameCellTable_08307EAC = 0x08307EAC;
 gScriptPtrTable_08308164 = 0x08308164;
 gScriptPtrTable_083081A0 = 0x083081A0;
 sLevelLayoutPtrs_308698 = 0x08308698;
@@ -398,8 +399,7 @@ SECTIONS {
         asm/disasm_0x08010f64.o(.text);  /* 0x08010f64 - 0x08011288, sub_08010F64 (auto-peeled) */
         asm/text/text_0x08011288.o(.text);  /* 0x08011288 - 0x0801129c, raw bytes */
         src/engine/sub_0801129c.o(.text);  /* 0x0801129c - 0x080112c0, sub_0801129C */
-        src/engine/sub_080112c0.o(.text);
-        asm/disasm_0x080112c0.o(.text);  /* 0x080112c0 - 0x080113e8, sub_080112C0 (auto-peeled) */
+        src/engine/sub_080112c0.o(.text);  /* 0x080112c0 - 0x080113e8, sub_080112C0 */
         src/engine/sub_080113e8.o(.text);  /* 0x080113e8 - 0x08011574, sub_080113E8 + sub_08011478 + sub_08011518 */
         src/engine/sub_08011574.o(.text);  /* 0x08011574 - 0x080115f8, sub_08011574 */
         asm/disasm_0x080115f8.o(.text);  /* 0x080115f8 - 0x080116b8, sub_080115F8 (auto-peeled) */
