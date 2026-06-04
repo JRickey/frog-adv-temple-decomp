@@ -25,17 +25,11 @@ echo "Installing decomp-permuter dependencies..."
 # which was removed in pycparser 3.0 (PLY rewrite).
 .venv/bin/pip install --quiet 'pycparser<3' toml Levenshtein
 
-# Apply the project-local preprocess patch so base.c can be the real source file
-# (#include "game.h" etc.) — preprocess.py runs base.c through the project
-# pipeline with -Iinclude. Idempotent: skip if already applied.
-PATCH="$SCRIPT_DIR/../tools/permuter-preprocess-iinclude.patch"
-if [ -f "$PATCH" ]; then
-  if git apply --check -p1 "$PATCH" >/dev/null 2>&1; then
-    git apply -p1 "$PATCH" && echo "Applied permuter preprocess -Iinclude patch."
-  else
-    echo "permuter preprocess patch already applied (or conflicts) — skipping."
-  fi
-fi
+# NOTE: the submodule points at our fork (JRickey/decomp-permuter, branch
+# frog-permuter-patches), which already carries the preprocess.py change that
+# lets base.c be a real source file (#include "game.h" etc.) via
+# PERMUTER_PROJECT_ROOT. No patch step needed — `git submodule update --init`
+# checks out the patched commit directly.
 
 echo "decomp-permuter setup complete. Test with:"
 echo "  vendor/decomp-permuter/.venv/bin/python vendor/decomp-permuter/permuter.py --help"
