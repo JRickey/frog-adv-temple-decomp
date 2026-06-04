@@ -82,12 +82,26 @@ near-matching C into `src/.../<fn>.c` first). Then:
    If it errors (can't compile base, can't read target, 0 iters/sec) the scratch is
    misconfigured — fix it or skip the permuter. Do NOT burn time on a broken scratch.
 
-## Run it — the BUDGET RULE (hard discipline)
+## Run it — the BUDGET RULE (REVISED 2026-06-03)
 
-The permuter is FAST: ~2000 iterations in ~30 seconds on this machine. **That is the
-whole budget.** Past ~2000 iterations / ~30–45 s with no score-0, you are either wasting
-time or the base/config is wrong — STOP and rewrite the C approach; do not let it grind
-for minutes.
+**The old "~2000 iterations / 30 s is the whole budget" rule was WRONG and cost real
+matches.** sub_080112C0 matched only after the search reached ~15k iterations (and
+that was AFTER the tooling bugs were fixed — see docs/tooling.md; before the fixes it
+could never match at any iteration count, having burned >150k total across attempts).
+A register-coloring tail can need a specific rare mutation chain.
+
+Revised budget: **let it run for many minutes / tens of thousands of iterations**,
+not 30 seconds. With `--stop-on-zero` it exits the instant it matches, so a long
+cap is free on success — set it to 15–30 min and walk away. Run **several functions
+in parallel at `-j2`** rather than one at `-j6`; throughput across functions beats
+hammering one. Only give up early if the base score is plateaued AND the structure is
+clearly wrong (huge byte_diff, not a coloring tail).
+
+**base.c can be the real source file.** `vendor/decomp-permuter/src/preprocess.py` is
+patched to run base.c through the project pipeline (`tools/preproc/preproc | cpp-15
+-Iinclude -DREGION_US`), so base.c may `#include "game.h"` etc. directly — no need to
+hand-inline a self-contained copy. Set `PERMUTER_PROJECT_ROOT=$PWD` when running.
+`tools/agent/setup_permuter.py <fn>` scaffolds the whole scratch dir.
 
 **Time-boxing — use EXACTLY this recipe (a process-group kill).** There is NO
 `timeout`/`gtimeout` on macOS, and the naive `cmd & PID=$!; kill $PID` LEAKS: the permuter

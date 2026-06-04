@@ -1,0 +1,60 @@
+diff --git a/src/preprocess.py b/src/preprocess.py
+index 8447a80..d8b15d9 100644
+--- a/src/preprocess.py
++++ b/src/preprocess.py
+@@ -1,10 +1,52 @@
+ from typing import List
++import os
+ import subprocess
+ 
++# Project-local patch (Frogger decomp): preprocess base.c through the SAME pipeline
++# the real build uses — tools/preproc/preproc (charmap) | cpp-15 -Iinclude -DREGION_US
++# — so base.c can be the real source file with its #includes instead of a
++# hand-inlined self-contained copy. Falls back to the upstream bare-cpp behavior
++# when the project root / include dir aren't present (so the tool still works
++# elsewhere). Set PERMUTER_PROJECT_ROOT to the repo root (default: cwd).
++
++
++def _have(prog: str) -> bool:
++    from shutil import which
++
++    return which(prog) is not None
++
+ 
+ def preprocess(filename: str, cpp_args: List[str] = []) -> str:
+-    return subprocess.check_output(
+-        ["cpp"] + cpp_args + ["-P", "-nostdinc", "-DPERMUTER", filename],
++    root = os.environ.get("PERMUTER_PROJECT_ROOT", os.getcwd())
++    include_dir = os.path.join(root, "include")
++    preproc = os.path.join(root, "tools/preproc/preproc")
++    charmap = os.path.join(root, "charmap.txt")
++    cpp = "cpp-15" if _have("cpp-15") else "cpp"
++
++    if not os.path.isdir(include_dir):
++        # upstream behavior (base.c must be self-contained)
++        return subprocess.check_output(
++            ["cpp"] + cpp_args + ["-P", "-nostdinc", "-DPERMUTER", filename],
++            universal_newlines=True,
++            encoding="utf-8",
++        )
++
++    # charmap pass (pass-through for files without _("...") strings)
++    if os.path.exists(preproc) and os.path.exists(charmap):
++        src = subprocess.check_output(
++            [preproc, filename, charmap], universal_newlines=True, encoding="utf-8"
++        )
++    else:
++        with open(filename, encoding="utf-8") as f:
++            src = f.read()
++
++    return subprocess.run(
++        [cpp, "-P", "-nostdinc", f"-I{include_dir}", "-DREGION_US", "-DPERMUTER"]
++        + cpp_args
++        + ["-"],
++        input=src,
++        capture_output=True,
++        check=True,
+         universal_newlines=True,
+         encoding="utf-8",
+-    )
++    ).stdout

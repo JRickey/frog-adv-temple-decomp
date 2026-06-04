@@ -111,11 +111,14 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("fn")
     ap.add_argument("--out", help="output dir (default nonmatchings/<fn>/)")
+    ap.add_argument("--candidate", help="explicit candidate .o for the $t/$d + reloc "
+                    "layout (default: search src/**/*.o for the symbol)")
+    ap.add_argument("--addr", help="function baserom address, hex (default: frog_us.map)")
     args = ap.parse_args()
     fn = args.fn
 
-    cand = find_candidate_o(fn)
-    addr = func_address(fn)
+    cand = Path(args.candidate) if args.candidate else find_candidate_o(fn)
+    addr = int(args.addr, 16) if args.addr else func_address(fn)
     size = text_size(cand)
     file_off = addr - ROM_BASE
     data = BASEROM.read_bytes()[file_off:file_off + size]
