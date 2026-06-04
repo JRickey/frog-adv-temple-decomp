@@ -368,6 +368,72 @@ void sub_0802EDF0(void)
         "    mov     sl, r5\n"
         "    pop     {r4, r5, r6, r7}\n"
         "    pop     {r0}\n"
-        "    bx      r0\n");
+        "    bx      r0\n"
+        "    .syntax divided\n");
 }
 #endif
+
+/* sub_0802EEF8 — kick off envelope-C on a channel.
+ *
+ * Resets the envelope-C state bits in the channel's flags word (clearing
+ * the active bit, the 2-bit mode field and the inactive bit), then re-arms
+ * envelope-C: ACTIVE plus, when `setMode` is non-zero, the kickoff mode bit
+ * (0x8 == SOUND_ENVELOPE_C_MODE_KICKOFF << 1). The per-channel envelope-C
+ * accumulator is zeroed and the supplied config pointer is stored.
+ *
+ * Channels 0..3 are the inline/direct channels: the flags live in
+ * ss->chFlags[channel] and the envelope-C block in ss->channels[channel].
+ * Channels >= 4 are the software-mixed slots reached through
+ * SOUND_SYSTEM_SW_SLOT_FOR_CHANNEL, with flags at slot+0x38 and the
+ * envelope-C block at slot+0x24.
+ */
+void sub_0802EEF8(EnvelopeCConfig *cfg, u8 setMode, s32 channel)
+{
+    SoundSystem *ss;
+    SoundSlot *slot;
+    EnvelopeCBlock *block;
+    u32 flags;
+    u32 kickoff;
+    EnvelopeCConfig **paramBase;
+
+    if (channel > 3)
+        goto sw_slot;
+
+    ss = gpSoundSystem;
+    {
+        /* A path-local flags value (distinct from the sw-slot `flags`)
+         * colours to r1 here, leaving r3 for the &chFlags[channel]
+         * address temp — the baserom's inline-channel register shape. */
+        u32 chFlags;
+
+        chFlags = ss->chFlags[channel];
+        chFlags &= ~(SOUND_ENVELOPE_C_MODE_BITS | SOUND_FLAG_ENVELOPE_C_INACTIVE);
+        ss->chFlags[channel] = chFlags;
+        kickoff = (SOUND_ENVELOPE_C_MODE_KICKOFF << 1) | SOUND_FLAG_ENVELOPE_C_ACTIVE;
+        if (setMode == 0)
+            kickoff = SOUND_FLAG_ENVELOPE_C_ACTIVE;
+        chFlags |= kickoff;
+        ss->chFlags[channel] = chFlags;
+    }
+    /* acc (+0x90) and param (+0x8c) are the same envelope-C block, but the
+     * baserom addresses them through two separate ss-relative bases; a
+     * distinct paramBase pointer keeps agbcc from CSE-folding them into one. */
+    *(u16 *)((u8 *)ss + (channel << 3) + SOUND_SYSTEM_CHANNEL_VOLUME_OFFSET) = 0;
+    paramBase = (EnvelopeCConfig **)((u8 *)ss + SOUND_ENVELOPE_C_CHANNEL_BASE);
+    *(EnvelopeCConfig **)((u8 *)paramBase + (channel << 3)) = cfg;
+    return;
+
+sw_slot:
+    slot = SOUND_SYSTEM_SW_SLOT_FOR_CHANNEL(gpSoundSystem, channel);
+    flags = slot->flags;
+    flags &= ~(SOUND_ENVELOPE_C_MODE_BITS | SOUND_FLAG_ENVELOPE_C_INACTIVE);
+    slot->flags = flags;
+    kickoff = (SOUND_ENVELOPE_C_MODE_KICKOFF << 1) | SOUND_FLAG_ENVELOPE_C_ACTIVE;
+    if (setMode == 0)
+        kickoff = SOUND_FLAG_ENVELOPE_C_ACTIVE;
+    flags |= kickoff;
+    slot->flags = flags;
+    block = SOUND_SLOT_ENVELOPE_C(slot);
+    block->acc = 0;
+    block->param.cfg = cfg;
+}
