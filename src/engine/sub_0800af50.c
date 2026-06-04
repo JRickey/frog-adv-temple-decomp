@@ -1,5 +1,6 @@
 #include "iwram.h"
 #include "types.h"
+#include "game.h"
 
 typedef struct EntityHitbox {
     u32 count;
@@ -143,5 +144,72 @@ void sub_0800AF50(EntitySlot *slots)
             *(u8 *)(stride + base) = 0;
             i = (u16)(idx + 1);
         } while ((s16)i <= 13);
+    }
+}
+
+extern u8 sub_0800679C(u8 *base, u32 selector, u32 bit);
+extern void sub_080066C4(u8 *base, u32 selector, u32 bit);
+extern void sub_08020C78(u32 sound);
+
+void sub_0800B07C(EntitySlot *slots)
+{
+    s32 result;
+    u8 *base3720;
+    s32 counter;
+
+    /* 0xff is the "no slot" sentinel; read back as (s8) it is -1. Initialising
+     * to 0xff (not -1) emits `movs #255` and keeps the (s8) narrowing live. */
+    result = 0xff;
+
+    if ((u8)sub_0800679C((u8 *)&gIwram_6110, 5, 8)) {
+        base3720 = (u8 *)gEntities;
+        result = (*(s16 *)(base3720 + 0xb70) != 0);
+        sub_080066C4((u8 *)&gIwram_6110, 5, 8);
+    }
+
+    if ((u8)sub_0800679C((u8 *)&gIwram_6110, 5, 9)) {
+        base3720 = (u8 *)gEntities;
+        counter = *(s16 *)(base3720 + 0xb70);
+        result = 1;
+        if (counter != 0)
+            result = 2;
+        sub_080066C4((u8 *)&gIwram_6110, 5, 9);
+    }
+
+    if ((u8)sub_0800679C((u8 *)&gIwram_6110, 5, 10)) {
+        base3720 = (u8 *)gEntities;
+        counter = *(s16 *)(base3720 + 0xb70);
+        result = 2;
+        if (counter != 0)
+            result = 3;
+        sub_080066C4((u8 *)&gIwram_6110, 5, 10);
+    }
+
+    if ((u8)sub_0800679C((u8 *)&gIwram_6110, 5, 11)) {
+        base3720 = (u8 *)gEntities;
+        counter = *(s16 *)(base3720 + 0xb70);
+        result = 3;
+        if (counter != 0)
+            result = 0;
+        sub_080066C4((u8 *)&gIwram_6110, 5, 11);
+    }
+
+    {
+        s32 type = (s8)result;
+        EntitySlot *slot;
+
+        if (type == -1)
+            return;
+
+        /* index-first add so the `type * 8` lands as the lead `adds` operand. */
+        slot = (EntitySlot *)((type << 3) + (u32)slots);
+
+        if (slot->field4 != 0)
+            return;
+
+        slot->field5 = 0;
+        slot->field4 = 1;
+        slot->field0 = gGameStuff._unk00;
+        sub_08020C78(0x6c);
     }
 }
