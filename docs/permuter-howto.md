@@ -1,5 +1,25 @@
 # decomp-permuter runbook (for stuck-but-matchable functions)
 
+> ## ⚠️ Two setup bugs make the steps below UNRELIABLE — fix first (2026-06-03)
+>
+> The flow as originally written silently mis-scores by ~100× and/or optimizes the
+> wrong compiler. Until the scripts are fixed, override two things:
+>
+> 1. **target.o must carry `$t`/`$d` mapping symbols.** The
+>    `extract-function-bytes.ts` target uses `.inst.n` for the whole function, so
+>    objdump disassembles the literal pool as garbage Thumb → ~100 pts per phantom
+>    insert/delete (sub_080112C0 scored 2545 for byte_diff 8). Use instead:
+>    `python3 tools/agent/make_permuter_target.py <fn>` (writes a correct
+>    `nonmatchings/<fn>/target.{s,o}` with `$t`/`$d` + matching relocations).
+> 2. **Compile candidates with the SAME agbcc as the real build.** The Makefile
+>    default is `old_agbcc`; new and old agbcc differ for some functions.
+>    `tools/permuter_compile.sh` now defaults to old_agbcc — for the ~4
+>    agbcc-exception TUs, prefix `AGBCC=tools/agbcc/bin/agbcc`.
+>
+> Sanity check before trusting a run: base score should be ≈ `5 ×` the
+> `agbcc_oracle.py` instruction-diff count, and a *matching* function must score 0.
+> See docs/tooling.md "CRITICAL".
+
 The permuter brute-forces *register-coloring / instruction-scheduling* drift — the
 last-mile case where your C is structurally right and **near** a byte match but agbcc
 colours registers or schedules instructions differently than the baserom. It does NOT

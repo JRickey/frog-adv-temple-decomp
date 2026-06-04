@@ -2405,6 +2405,10 @@ Recipe (run from your worktree root; `$$` keeps it unique per worker):
 ```sh
 PRIV=/tmp/agbcc-instr-$$                       # outside the worktree + repo
 cp -RL tools/agbcc-src "$PRIV"                 # -L derefs the symlink → a REAL private copy
+( cd "$PRIV/gcc_arm" && rm -f *.o )           # GOTCHA: agbcc-src may carry stale .o; without
+                                              # this, make skips recompiling your probed file and
+                                              # the probe silently never fires (check: `strings
+                                              # <built old_agbcc> | grep AGBCC-DBG` must be >0).
 
 # 1. Add a probe at the decision site. Example: trace hard-reg assignment in local-alloc.c.
 #    Read the pass first to find the exact spot; fprintf to STDERR (stdout is the .s output).
