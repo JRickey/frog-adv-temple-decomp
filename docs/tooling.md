@@ -237,6 +237,37 @@ pyenv: pin via `.python-version` or set `PYENV_VERSION` before running.
 Both wrappers (`tools/agent/ts/shared/{m2c,decomp-permuter}.ts`) call the
 venv'd interpreter directly — no need to `source .venv/bin/activate`.
 
+### CRITICAL: the permuter `target.o` must carry `$t`/`$d` mapping symbols
+
+decomp-permuter scores a candidate by disassembling **both** `target.o` and the
+candidate `.o` with `arm-none-eabi-objdump -drz` and diffing the instruction
+streams (`vendor/decomp-permuter/src/{scorer,objdump}.py`). objdump tells Thumb
+code from the literal pool using the ELF `$t`/`$d` mapping symbols.
+
+The old `nonmatchings/*/target.s` files emit the **whole** function with
+`.inst.n` (no `$d` markers), so objdump disassembles the literal pool as garbage
+Thumb. The candidate (agbcc) *does* mark its pool `$d`, so the two streams
+misalign in every pool region — each phantom insertion/deletion costs 100
+(`PENALTY_INSERTION/DELETION`). Result: base scores inflated ~100× (sub_080112C0
+byte_diff 8 scored **2545** instead of 40; sub_08014140 scored **3675**),
+score-0 unreachable, permuter chasing noise. This silently wasted multiple
+"deferred" sessions — the function was fine; the target.o was broken.
+
+**Always (re)build target.o with the dedicated tool before a permuter run:**
+
+```sh
+make -j8                                              # candidate .o is the layout reference
+python3 tools/agent/make_permuter_target.py <Fn>     # writes nonmatchings/<Fn>/{target.s,target.o}
+```
+
+It mirrors the candidate's `$t`/`$d` mapping **and** its relocations (so
+`bl sub_X` / `.word gSym` match symbolically) from baserom bytes, so a true
+byte-match scores exactly **0**. `build_expected.py` also emits correct `$t`/`$d`
+but uses absolute pool words (no relocs) → a small constant residual on
+reloc-bearing functions; `make_permuter_target.py` is the clean choice.
+A healthy base score is ~`5 × (Thumb instr diffs)`; anything in the thousands for
+a near-match means the target.o is the buggy `.inst.n`-only format — regenerate it.
+
 ## Adding a Node-side tool
 
 ```sh
