@@ -38,6 +38,17 @@ struct IwramAt34B4 {
     u8 _data[4]; /* writes at +0, +1, +2, +3 */
 };
 
+struct IwramAt34D0 {
+    u16 _field_00; /* +0x00: tilemap-cell X coord (sWinPoseSpriteCoords[idx*2] - 16) */
+    u16 _field_02; /* +0x02: tilemap-cell Y coord (sWinPoseSpriteCoords[idx*2+1] - 24) */
+    u8 _field_04;  /* +0x04: low byte of _field_00 source (pre-subtract) */
+    u8 _field_05;  /* +0x05: low byte of _field_02 source */
+    u8 _pad06[10];
+    u32 _field_10; /* +0x10: word cleared on entry */
+    u8 _pad14[9];
+    u8 _field_1D; /* +0x1D: phase byte (set to 3) */
+};
+
 struct IwramAt3550 {
     u16 _data[8]; /* 8 halfword zero-fill */
 };
@@ -189,6 +200,7 @@ extern struct IwramAt34B0 gIwram_34B0;
 extern struct IwramAt34B4 gIwram_34B4;
 extern struct IwramAt34B4 gIwram_34B8;
 extern struct IwramAt34C0 gIwram_34C0;
+extern struct IwramAt34D0 gIwram_34D0;
 extern struct IwramAt3550 gIwram_3550;
 extern struct IwramAt35E0 gIwram_35E0;
 extern struct IwramAt3608 gIwram_3608;
