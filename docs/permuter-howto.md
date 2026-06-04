@@ -11,9 +11,10 @@
 >    insert/delete (sub_080112C0 scored 2545 for byte_diff 8). Use instead:
 >    `python3 tools/agent/make_permuter_target.py <fn>` (writes a correct
 >    `nonmatchings/<fn>/target.{s,o}` with `$t`/`$d` + matching relocations).
-> 2. **Compile candidates with the SAME agbcc as the real build.** Default is
->    `old_agbcc`; `tools/permuter_compile.sh` uses agbcc-new. For the default/majority
->    of TUs, the per-dir `compile.sh` must call `tools/permuter_compile_old.sh`.
+> 2. **Compile candidates with the SAME agbcc as the real build.** The Makefile
+>    default is `old_agbcc`; new and old agbcc differ for some functions.
+>    `tools/permuter_compile.sh` now defaults to old_agbcc — for the ~4
+>    agbcc-exception TUs, prefix `AGBCC=tools/agbcc/bin/agbcc`.
 >
 > Sanity check before trusting a run: base score should be ≈ `5 ×` the
 > `agbcc_oracle.py` instruction-diff count, and a *matching* function must score 0.

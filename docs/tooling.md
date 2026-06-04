@@ -271,23 +271,25 @@ a near-match means the target.o is the buggy `.inst.n`-only format — regenerat
 ### CRITICAL #2: the permuter must use the SAME compiler as the real build
 
 The Makefile default is `CC = old_agbcc` (only ~4 exception TUs use the newer
-`agbcc`). But `tools/permuter_compile.sh` builds candidates with **agbcc (new)**;
-`tools/permuter_compile_old.sh` uses **old_agbcc**. agbcc-new and old_agbcc emit
-*different* code, so permuting an old_agbcc TU with agbcc-new optimizes the wrong
-compiler — a "match" it finds may not match the real ROM. The per-dir
-`nonmatchings/<fn>/compile.sh` MUST call the variant matching that TU's real CC:
+`agbcc`). agbcc-new and old_agbcc emit *different* code for some functions
+(sub_08012664: byte_diff 8 vs 14), so permuting a TU with the wrong agbcc
+optimizes codegen that won't match the real ROM. **`tools/permuter_compile.sh`
+now defaults to old_agbcc** (the Makefile default); for the agbcc-exception TUs,
+override it:
 
 ```sh
-# default / majority of TUs (old_agbcc):
-tools/permuter_compile_old.sh -DREGION_US -nostdinc -Iinclude/ "$INPUT" -o "$OUTPUT"
-# only the agbcc-exception TUs:
-tools/permuter_compile.sh     -DREGION_US -nostdinc -Iinclude/ "$INPUT" -o "$OUTPUT"
+# default (old_agbcc) — most TUs, nothing to do
+tools/permuter_compile.sh -DREGION_US -nostdinc -Iinclude/ "$INPUT" -o "$OUTPUT"
+# agbcc-exception TUs:
+AGBCC=tools/agbcc/bin/agbcc tools/permuter_compile.sh -DREGION_US -nostdinc -Iinclude/ "$INPUT" -o "$OUTPUT"
 ```
 
 To tell which a TU uses: build it (`make`) and check, or grep the Makefile for a
-per-TU `CC :=` override. `agbcc_oracle.py` already uses old_agbcc, so its base
-score is the ground truth — if the permuter's base score disagrees with the
-oracle's instruction-diff count, the compile.sh is on the wrong compiler.
+per-TU `CC :=` override. `agbcc_oracle.py` uses old_agbcc, so its base score is
+ground truth — if the permuter's base score disagrees with the oracle's
+instruction-diff count, the compile.sh is on the wrong compiler. (When comparing
+old-vs-new agbcc output yourself, diff the `.text` **bytes** via objcopy —
+`objdump -d` prints the filename first, so a naive `cmp` shows a false diff.)
 
 ## Adding a Node-side tool
 
