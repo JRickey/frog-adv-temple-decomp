@@ -7,6 +7,15 @@ extern void sub_0802B3B0(void);
 extern void sub_0802B4B8(void);
 extern void sub_0800DA10(void);
 extern void sub_0800D1F8(void);
+extern u8 sub_0800679C(void *base, u32 selector, u32 bit);
+extern void sub_080066C4(void *base, u32 selector, u32 bit);
+extern void sub_08006600(void *base, u32 selector, u32 bit);
+extern void sub_08015D30(void);
+extern void sub_08020DC4(u32 arg0);
+extern void sub_08020E7C(u32 arg0);
+extern void sub_08020C78(u32 arg0);
+extern u8 sub_080142D4(void);
+extern void sub_08006B88(void *p, u16 mask);
 
 extern const u32 sLevelLayout_317FD0[];
 
@@ -43,4 +52,71 @@ void sub_0802BC84(void)
 {
     sub_0802B4B8();
     sub_0800D1F8();
+}
+
+void sub_0802BC94(void)
+{
+    struct IwramAt6110 *ctrl = &gIwram_6110;
+    u8 gate;
+    s32 delta;
+    s32 y;
+
+    gate = ctrl->gateByte;
+    if (gate != 0)
+        return;
+
+    if (sub_0800679C(ctrl, 3, 5)) {
+        sub_08015D30();
+        gEntities[22].field_1A = gate;
+        gEntities[22].status |= 2;
+        sub_080066C4(ctrl, 3, 5);
+        return;
+    }
+
+    {
+        register u32 p6540 asm("r1");
+        register u32 pent asm("r0");
+
+        p6540 = 0x03006540;
+        pent = (u32)gEntities;
+        asm("ldrh\t%1, [%1, #0x36]\n\tldrh\t%0, [%0, #0x4]\n\tsub\t%0, %1, %0" : "+r"(pent), "+r"(p6540));
+        delta = (s16)pent;
+    }
+    if (delta < 0)
+        delta = -delta;
+    if ((s16)delta <= 71)
+        sub_08020DC4(2);
+    else
+        sub_08020E7C(2);
+
+    if (sub_080142D4()) {
+        sub_08020E7C(2);
+        if (++gIwram_6110.gateByte == 1)
+            sub_08006600(&gIwram_6110, 3, 6);
+        else
+            sub_08006600(&gIwram_6110, 3, 5);
+    }
+
+    if (gGameStuff._unk10 & 1)
+        return;
+    if (gEntities[0].status & 4)
+        return;
+
+    y = gEntities[0].y;
+    {
+        struct {
+            u8 _pad[0x36];
+            s16 _field_36;
+        } *p6540 = (void *)0x03006540;
+        if (y <= p6540->_field_36 - 22)
+            return;
+        if (y >= p6540->_field_36 - 10)
+            return;
+    }
+
+    if ((u8)(gEntities[0].field_1A - 8) <= 3)
+        return;
+
+    sub_08020C78(0x5b);
+    sub_08006B88(&gIwram_35E0, 0x4000);
 }
