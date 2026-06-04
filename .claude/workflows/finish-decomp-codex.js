@@ -235,7 +235,7 @@ Steps:
 1. git status --short  — if NON-empty, set mainDirty=true and STOP (report it; the
    loop will halt for safety).
 2. python3 tools/agent/progress.py --human  — record asm_funcs_remaining.
-3. python3 tools/agent/pick_target.py --json  — JSON list of decomp candidates, now
+3. python3 tools/agent/pick_target.py --json --limit 500  — JSON list of decomp candidates, now
    PRE-SORTED smallest-first. Each row has: name, file (asm slice), destination (.c),
    addr, byte_size (TRUE function span in bytes), instr_count (real estimate), legal,
    legality_note. NOTE: \`line_count\` is the INCBIN-stub line count (~4 for every
@@ -710,9 +710,10 @@ ${BOOTSTRAP}
 Do these in order, then stop:
 
 PART A — SCAFFOLD blocked peeled slices (PRIMARY; build-safe, high value, low risk):
-1. python3 tools/agent/pick_target.py --all  — rows flagged "blocked: needs new C
+1. python3 tools/agent/pick_target.py --all --limit 500  — rows flagged "blocked: needs new C
    file" / "no src/*.c adjacent" are PEELED slices waiting only for a scaffold.
-2. For up to 4 such blocked slices (vary which ones across rounds):
+2. For up to 10 such blocked slices (vary which ones across rounds; the blocked
+   backlog is deep — drain it aggressively so the rolling pool never starves):
      python3 tools/agent/scaffold_cluster.py --asm asm/disasm_0x<addr>.s <fnname> --apply
      # add --dest src/{game,engine}/<name>.c when neither linker.ld neighbour is a C file
    Scaffolding adds an empty src .o(.text) + linker.ld entry; the asm slice still
@@ -841,7 +842,7 @@ PROCEDURE:
      python3 tools/agent/function_status.py --status deferred --json  (the tier authority):
        next_tier=="opus" deferrals → ESCALATION targets (tag nextTier:"opus", pick FIRST);
        next_tier=="codex" → firm-defers → codexQueue, do NOT pick.
-     python3 tools/agent/pick_target.py --json  (rows PRE-SORTED smallest-first; rank by
+     python3 tools/agent/pick_target.py --json --limit 500  (rows PRE-SORTED smallest-first; rank by
        byte_size, NOT line_count) → escalation-first then fresh smallest-first, up to ${K + 3}
        DISJOINT legal targets (distinct asmFile AND distinct destC), EXCLUDING any name in the
        skip list (parked / firm-defer): ${skipList} and any next_tier=="codex" name. Emit each
@@ -1007,7 +1008,7 @@ ${bres.worktreePath}. Integrate its peels, then RE-SCOUT so the rolling pool get
    the pre-pick HEAD and set mainDirty=true).
 3. Clean the builder worktree: git worktree unlock ${bres.worktreePath} 2>/dev/null;
    git worktree remove --force ${bres.worktreePath} 2>/dev/null; git worktree prune.
-4. RE-SCOUT like the scout: python3 tools/agent/pick_target.py --json and
+4. RE-SCOUT like the scout: python3 tools/agent/pick_target.py --json --limit 500 and
    python3 tools/agent/function_status.py --status deferred --json. Choose up to ${QUEUE_DEPTH}
    DISJOINT legal targets, firm-defers (next_tier=="codex") FIRST, then opus-escalations, then
    fresh smallest-first (no upper size cap — large fresh is fine, it routes to codex). Tag each
