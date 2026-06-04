@@ -33,7 +33,7 @@ extern void sub_08006B88(void *p, u16 mask);
 extern void sub_08006B94(void *p, u16 mask);
 extern u8 sub_08006BA4(void *p, u16 mask);
 extern u32 sub_0800CD88(u8 col, u8 row, s16 tileX, s16 tileY);
-extern u8 sub_0800803C(s16 x0, s16 y0, s16 x1, s16 y1);
+u8 sub_0800803C(s16 x, s16 y, s16 targetX, s16 targetY);
 
 struct ActorRecord {
     u8 _pad00[2];
@@ -168,5 +168,96 @@ tile_test:
         return 1;
     }
 
+    return 0;
+}
+
+/* Steps gEntities[0]'s (x,y) sub-coords toward the target (targetX, targetY),
+ * at most 4 units per axis per call (clamped to the remaining distance: 1, 2,
+ * 3, else 4). Returns 1 once both axes have reached the target this call, else
+ * 0. Called from sub_08007F88.
+ *
+ * The tail re-reads the stepped coords back into the x/y parameters (rather
+ * than into fresh locals) on purpose: agbcc coalesces each re-read with the
+ * incoming parameter, which gives x and y a 4th reference apiece. That extra
+ * reference is what lifts their global-allocator priority above the
+ * gEntities base pointer, so x/y win the low callee-saved registers (r4 for
+ * y, r6 for x) ahead of the pointer (r5) - the baserom's allocation. Reading
+ * the fields into separate locals leaves x/y at two references each, the
+ * pointer outranks them, and the whole r4-r7 file rotates by one. */
+u8 sub_0800803C(s16 x, s16 y, s16 targetX, s16 targetY)
+{
+    if (x > targetX) {
+        switch ((s16)(x - targetX)) {
+        case 1:
+            gEntities[0].x -= 1;
+            break;
+        case 2:
+            gEntities[0].x -= 2;
+            break;
+        case 3:
+            gEntities[0].x -= 3;
+            break;
+        default:
+            gEntities[0].x -= 4;
+            break;
+        }
+    }
+    if (x < targetX) {
+        switch ((s16)(targetX - x)) {
+        case 1:
+            gEntities[0].x += 1;
+            break;
+        case 2:
+            gEntities[0].x += 2;
+            break;
+        case 3:
+            gEntities[0].x += 3;
+            break;
+        default:
+            gEntities[0].x += 4;
+            break;
+        }
+    }
+    if (y > targetY) {
+        switch ((s16)(y - targetY)) {
+        case 1:
+            gEntities[0].y -= 1;
+            break;
+        case 2:
+            gEntities[0].y -= 2;
+            break;
+        case 3:
+            gEntities[0].y -= 3;
+            break;
+        default:
+            gEntities[0].y -= 4;
+            break;
+        }
+    }
+    if (y < targetY) {
+        switch ((s16)(targetY - y)) {
+        case 1:
+            gEntities[0].y += 1;
+            break;
+        case 2:
+            gEntities[0].y += 2;
+            break;
+        case 3:
+            gEntities[0].y += 3;
+            break;
+        default:
+            gEntities[0].y += 4;
+            break;
+        }
+    }
+
+    y = gEntities[0].y;
+    x = gEntities[0].x;
+    if (x != targetX) {
+        return 0;
+    }
+    if (y == targetY) {
+        return 1;
+    }
     return 0;
 }
