@@ -200,3 +200,51 @@ void sub_080196EC(u8 *attr, const u16 *src, u8 mode)
         dst += 0x20;
     }
 }
+
+/* Copies the overlapping rectangle between two tilemap descriptors into a BG
+ * screenblock via DMA3. Both descriptors share the [0]=x, [1]=y, [2]=halfwords
+ * per row, [3]=row count layout (see sub_080196EC); the copied rectangle uses
+ * the per-field minimum of the two, so the smaller of source/destination wins.
+ * src is read from base (biased by the source descriptor's tile offset); dst is
+ * the mode-selected screenblock (28..31 at 0x0600E000 + mode*0x800), biased by
+ * the destination descriptor's tile offset. Sibling of sub_080196EC. */
+void sub_0801977C(const u8 *dstAttr, const u8 *srcAttr, const u16 *base, u8 mode)
+{
+    const u16 *src;
+    u16 *dst;
+    u8 rows;
+    u8 width;
+    u8 row;
+
+    rows = (dstAttr[3] <= srcAttr[3]) ? dstAttr[3] : srcAttr[3];
+    width = (dstAttr[2] <= srcAttr[2]) ? dstAttr[2] : srcAttr[2];
+
+    src = base + (srcAttr[0] + (srcAttr[1] << 5));
+
+    switch (mode) {
+    case 0:
+        dst = (u16 *)0x0600E000;
+        break;
+    case 1:
+        dst = (u16 *)0x0600E800;
+        break;
+    case 2:
+        dst = (u16 *)0x0600F000;
+        break;
+    case 3:
+        dst = (u16 *)0x0600F800;
+        break;
+    }
+
+    dst += dstAttr[0] + (dstAttr[1] << 5);
+
+    for (row = 0; row < rows; row++) {
+        REG_DMA3.src = src;
+        REG_DMA3.dst = dst;
+        REG_DMA3.cnt = DMA_ENABLE | width;
+        (void)REG_DMA3.cnt;
+
+        src += 0x20;
+        dst += 0x20;
+    }
+}
