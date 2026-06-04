@@ -235,3 +235,70 @@ void sub_0801B374(u8 index)
     dma[2] = 0x80000010;
     dma[2];
 }
+
+void sub_0801B430(u8 index)
+{
+    vu32 *dma;
+    const u32 *sourceB;
+    const u32 *sourceA;
+    const u32 *palette;
+    u32 offset;
+
+    offset = (u32)index << 24;
+    sourceA = (const u32 *)0x081DAB78;
+    sourceB = (const u32 *)0x081DAB58;
+    dma = (vu32 *)0x040000D4;
+
+    palette = (const u32 *)0x08308F3C;
+    dma[0] = palette[0];
+    dma[1] = 0x050001E0;
+    dma[2] = 0x80000010;
+    dma[2];
+
+    dma[0] = (u32)sourceB;
+    dma[1] = 0x0600FBF4;
+    dma[2] = 0x80000004;
+    dma[2];
+
+    dma[0] = (u32)sourceB + 8;
+    dma[1] = 0x0600FC34;
+    dma[2] = 0x80000004;
+    dma[2];
+
+    dma[0] = (u32)sourceB + 16;
+    dma[1] = 0x0600FC74;
+    dma[2] = 0x80000004;
+    dma[2];
+
+    dma[0] = (u32)sourceB + 24;
+    dma[1] = 0x0600FCB4;
+    dma[2] = 0x80000004;
+    dma[2];
+
+    offset = offset >> 22;
+    offset += 28;
+    dma[0] = *(const u32 *)(offset + (u32)palette);
+    dma[1] = 0x050001E0;
+    dma[2] = 0x80000010;
+    dma[2];
+
+    dma[0] = (u32)sourceA;
+    dma[1] = 0x0600F841;
+    dma[2] = 0x80000004;
+    dma[2];
+
+    dma[0] = (u32)sourceA + 8;
+    dma[1] = 0x0600F881;
+    dma[2] = 0x80000004;
+    dma[2];
+
+    dma[0] = (u32)sourceA + 16;
+    dma[1] = 0x0600F8C1;
+    dma[2] = 0x80000004;
+    dma[2];
+
+    dma[0] = (u32)sourceA + 24;
+    dma[1] = 0x0600F901;
+    dma[2] = 0x80000004;
+    dma[2];
+}
