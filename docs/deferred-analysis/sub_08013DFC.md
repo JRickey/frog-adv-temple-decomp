@@ -1,147 +1,161 @@
 # Deferred analysis: sub_08013DFC
 
 **Range**: 0x08013DFC–0x08013E94 (152 bytes, Thumb)
-**Classifier**: ATTEMPT_MATCH — advisory: 3 high regs (r8/r9/sl) across bl (class-1 advisory only). NOT STRONG_UNMATCHABLE → must NOT ship NAKED.
-**Best byte_diff**: 99 (prior Opus round, clean) / 103 (this round, for-loop form, cleaner & 1 closer in diff_count)
+**Classifier**: ATTEMPT_MATCH — advisory: 3 high regs (r8/r9/sl) across bl (class-1
+advisory only). NOT STRONG_UNMATCHABLE → must NOT ship NAKED.
+**Best byte_diff this round (Opus retry): 35, diff_count 23, size 152 (EXACT)** —
+a 3x improvement over the prior plateau (99/103). Pure C, no pins/asm/flags.
+RESUME FROM THE "## Best-effort C (byte_diff 35)" BLOCK BELOW, not the prior 103 form.
 
-## Algorithm (draw-without-replacement shuffle; confirmed, re-derived from asm this round)
+## What changed this round vs prior rounds (the plateau escape that worked)
+
+The prior rounds' root-cause was INVERTED. Re-tracing the baserom asm directly:
+- `&gIwram_53A0` (arr) IS hoisted to sl — correct, expected (arr/limit/writeIdx all
+  derive from it and are used every outer iteration).
+- `&gIwram_3610` (table) is NOT hoisted — it is reloaded via `ldr r2,[pc]` at 0x13e3a
+  INSIDE the outer loop body, every iteration. The prior note claimed loop.c hoists it;
+  it does not. The prior C used `u8 *tbl = gIwram_3610` (a hoistable/walkable local),
+  which IS what got hoisted+walked. Using the literal `(&gIwram_3610)[...]` at every use
+  site stops both the hoist AND the walking-pointer merge — this is the key escape and
+  what drops byte_diff from 103 to 35.
+
+Two more structural fixes that mattered:
+1. Compute `arr`/`limit`/`writeIdx` INSIDE the outer-loop body (not before the loop).
+   This makes loop.c place the invariant load AFTER the `cmp i,n; bcs end` entry guard
+   (baserom only loads arr if the loop runs >= once), fixing the top-of-function diff.
+2. `for (i=0;i<n;i++)` (NOT a while with explicit i++). The for-loop lets agbcc split the
+   induction-var update (`nextI=i+1` early, `(u8)` truncation at the bottom) like baserom.
+
+## Remaining drift at byte_diff 35 (ONE root cause + its coloring cascade)
+
+The 35-form is structurally PERFECT: dual-index inner loop, correct hoist placement,
+correct algorithm, EXACT 152-byte size, 68 instructions (same count as baserom). All 23
+remaining diffs are a SINGLE CSE decision plus the register coloring it forces:
+
+**ROOT CAUSE (confirmed by direct agbcc RTL instrumentation this round, `-dc -ds`):**
+In the inner copy `(&gIwram_3610)[j] = (&gIwram_3610)[j+1]`, CSE materializes the SRC
+address as `(&gIwram_3610 + 1) + j` — i.e. it creates a `const (plus (symbol_ref G)
+(const_int 1))` pseudo (the `.cse` dump shows `REG_EQUAL (const:SI (plus (symbol_ref
+"G") (const_int 1)))`). The baserom instead computes `j+1` ONCE and reuses it for BOTH
+the src address (`(j+1)+G`) AND the new loop value (`j = (u8)(j+1)`) — the unmerged
+dual-index form with a single G base.
+
+So: baserom keeps ONE table base (G) + a live `j+1`; agbcc-35 keeps TWO bases (G and
+G+1) + a separate `j+1` for the increment. Same instruction count, different factoring.
+This cascades into the register coloring: agbcc colors {rnd/j=r2, table=r3}; baserom
+colors {rnd/j=r3, table-outer=r2, table-inner=r4 (reuses freed i-reg)}.
+
+**Why the obvious fix fails:** writing `u8 t = j+1; (&G)[j]=(&G)[t]; j=t;` produces the
+EXACT baserom `j+1`-reuse form in a MINIMAL repro (verified: even with an outer for-loop
+and an outer `(&G)[k]` read present). But in the FULL function it regresses to byte_diff
+~119-132 (the named temp `t` adds register pressure that tips the allocator into a
+walking-pointer merge). The `(&G)[j+1]` literal form (no temp) is the lower-pressure
+choice and gives 35, but CSE then folds `G+1`. There is a register-pressure cliff: the
+full function's live set (arr/sl, writeIdx/r9, n/r8, limit/r7 + i + table) is just dense
+enough that CSE prefers the `G+1` const over a live `j+1`, while the minimal repro is not.
+
+## Levers tried this round (ALL stall at >= 35; everything else regresses)
+
+- Loop forms: for / while+i++ (51) / do-while inner / `++j` in cond — for-loop = 35.
+- arr/limit/writeIdx inside vs outside loop — INSIDE = 35 (fixes top), outside = 55.
+- Inner copy variants: `[j+1];j++` = 35 (best); `u8 k=j+1` = 130; `int t=j+1;j=t` = 133;
+  `u8 t=j+1;j=t` = 119-132; `dst=j;j++;[dst]=[j]` = 130; `v=[j+1];[j]=v` = 59;
+  `[j]=[1+j]` = 35 (commutative no-op); `(&G+j)[1]` walks; explicit `(u32)&G + j` cast = 127.
+- Table access: `(&gIwram_3610)[...]` literal = 35 (REQUIRED); `extern u8 g[]; g[...]` = 134
+  (hoists base); `u8 *table=&g` local = 129 (walks); `u8 *p=&g` inside the if = 103 (walks).
+- writeIdx line `arr[*writeIdx+0x64]`: `(arr+0x64)[*writeIdx]` = 35 (agbcc reassociates
+  `+sl` before `+0x64` regardless — minor 1-2 byte diff, not fixable from source);
+  `int wpos=...` temp = 84 (regresses).
+- Reorder `arr[rnd]=1` vs table-read = 48; read table into `picked` temp = 84.
+- Register pins: rnd asm("r3") = 113; rnd+j asm("r3") = 118 (pins force a mov from r0).
+- Flags (per-TU, OLD_AGBCC default): -fno-strength-reduce / -fno-gcse / -fforce-addr /
+  -fno-expensive-optimizations / -fno-schedule-insns / -fno-schedule-insns2 /
+  -fno-cse-follow-jumps / -ffixed-r2 / -ffixed-r3 — ALL = 35 (no effect; the fold is core
+  -O2 CSE, no `-fno-cse` granularity reaches it). -O1 / -fno-force-mem / -fno-peephole = 125
+  (regress). NEW agbcc (AGBCC_BIN) + flag combos = 35 or worse.
+- Inner bound via `*limit` (r7) instead of the `gIwram_549F` constant = 126 (the distinct
+  0x0300549f pool literal IS required — needs the linker symbol below).
+- Permuter: base score 640 (for byte_diff 35 — the scorer weights the cascade heavily),
+  ~6 min / >1000 iters, plateaued at best 475. Only cosmetic mutations (do/while(0) wrap,
+  side-effect assign); NO structural escape. The minimum is unreachable by mutation.
+
+## Next-agent strategy (genuinely DIFFERENT from anything tried)
+
+The minimal-repro proof is the lead: the `u8 t=j+1; ...[t]; j=t;` form gives the EXACT
+baserom dual-index IN ISOLATION; the full function only fails it on register PRESSURE.
+So the path is to REDUCE inner-loop pressure so `j+1` stays live instead of CSE folding
+`G+1`. Untried pressure-reduction ideas:
+1. Free a low register during the inner loop. The baserom holds arr=sl, writeIdx=r9,
+   n=r8 in HIGH regs across the inner loop, and reuses the freed i-register (r4) for the
+   inner table base. Try `-ffixed-r2` or `-ffixed-r3` COMBINED with the `u8 t=j+1;j=t`
+   form (this round tested -ffixed only with the 35-form, where it was a no-op — NOT with
+   the t-form, where freeing a reg might let `j+1` survive).
+2. Force the OUTER table read and the INNER table base to be the SAME pseudo held in a
+   callee-saved reg across the inner loop (baserom's r4). A `register u8 *tbl asm("r4")`
+   pin on a table local — but only if it does not re-trigger the walk. Untested combo.
+3. Instrument agbcc's CSE (`cse.c` fold_rtx / the const-materialization of
+   `plus(symbol,const)`) in a PRIVATE sandbox to find the pressure threshold, then shed
+   exactly one live value (e.g. recompute `*limit`/`*writeIdx` instead of caching the
+   pointers) to drop under it WITHOUT growing the function past 152 bytes.
+
+If pressure cannot be shed without growing the function, this is a genuine
+register-pressure-dependent CSE minimum — keep DEFERRED (do NOT NAKED; ATTEMPT_MATCH).
+
+## Prerequisites for the best-effort C
+
+Requires a NEW linker symbol in linker.ld's IWRAM block, between gIwram_53A0 and
+gIwram_60A0, so the inner-loop bound is the distinct pool constant 0x0300549f the baserom
+uses (3rd pool entry), instead of CSE-merging with arr+0xff (r7):
+
+    . = 0x000053A0; gIwram_53A0 = .;
+    . = 0x0000549F; gIwram_549F = .;
+    . = 0x000060A0; gIwram_60A0 = .;
+
+And this function in its OWN TU `src/engine/sub_08013dfc.c`, wired in linker.ld AFTER
+`src/engine/sub_08013d1c.o(.text)` (replacing the `asm/disasm_0x08013dfc.o(.text)` line),
+so per-TU CFLAGS/compiler-swap experiments do not disturb the 3 matching functions in
+sub_08013d1c.c.
+
+## Algorithm (draw-without-replacement shuffle / left-shift deck compaction)
 
 `arr = gIwram_53A0` (256-byte buffer), `table = gIwram_3610` (deck being compacted):
-- `arr[0xff]` = remaining size (`limit`, decremented each outer iter); also reachable as `gIwram_549F` (0x53A0+0xFF == 0x549F)
-- `arr[0xfe]` = write-index counter (`writeIdx`, incremented each outer iter)
-- For `n` outer iterations: `rnd = sub_0801185C(*limit)`; mark `arr[rnd]=1`;
-  copy `arr[*writeIdx + 100] = table[rnd]`; `(*writeIdx)++`; if `rnd < *limit`
-  left-shift `table[rnd .. *lim2-1]` by one (remove slot rnd); `(*limit)--`.
-  The inner-loop limit `*lim2` reads the SAME byte as `*limit` but via a distinct
-  pool literal 0x0300549f (so it needs a separate `gIwram_549F` linker symbol to
-  avoid CSE-merging with `arr+0xff`).
+- `arr[0xff]` (= gIwram_549F) = remaining deck size (`*limit`, decremented each outer iter)
+- `arr[0xfe]` = output write-index (`*writeIdx`, incremented each outer iter)
+- For `n` outer iterations: `rnd = sub_0801185C(*limit)` (random in [0,*limit));
+  mark `arr[rnd]=1`; emit `arr[*writeIdx+0x64] = table[rnd]`; `(*writeIdx)++`;
+  if `rnd < *limit` shift `table[rnd..*limit-1]` left by one (remove slot rnd);
+  `(*limit)--`.
 
-`nextI = i+1` is saved before the inner loop because the inner loop reuses `i`'s
-register (r4) as the table base — a register-pressure artifact, not semantics.
-
-## ROOT CAUSE — definitive this round (DIRECT compiler instrumentation, gated patch)
-
-The divergence is TWO agbcc -O2 optimizations the baserom does NOT have, and
-**defeating either from source is impossible; defeating the hoist in the compiler
-makes the match WORSE.**
-
-1. **loop.c hoists the `&gIwram_3610` constant-address load out of the outer loop**
-   into a callee-saved reg (sl). It is a single-set loop-invariant; agbcc's CSE
-   merges every `&gIwram_3610` reference to ONE pseudo before loop.c, so it is
-   always single-set → always hoisted. No source shape, flag, or pin avoids this.
-
-2. **combine merges `&tbl[j]` and `&tbl[j+1]` into a walking pointer** (`adds r0,
-   base,j; ldrb [r0,#1]; strb [r0,#0]`). The baserom instead computes BOTH
-   addresses as separate `index+base` sums (`adds r2,j,base; adds r1,j,#1;
-   adds r0,r1,base`) — the UNMERGED dual-index form. agbcc's combine merges them
-   regardless of how the C splits the load/store or names j+1. There is no
-   `-fno-combine` in gcc 2.x.
-
-### Instrumentation proof (this round)
-Built a private debug `old_agbcc` from `tools/agbcc-src/gcc/loop.c` (NOT gcc_arm/ —
-old_agbcc/agbcc come from `gcc/`, only cc1=agbcc_arm comes from `gcc_arm/`) with an
-env-gated patch (`AGBCC_NOHOIST`) that skips treating SYMBOL_REF/CONST+PLUS loads as
-movable. Result with hoist removed: **byte_diff 131, size 144** (vs 152 baserom) —
-WORSE than the hoisted 103. The function loses 8 bytes because the inner loop is
-still the walking-pointer form (shorter), and removing the hoist reshuffles the
-register file into a different non-matching layout. So the hoist is NOT the sole
-defect; the dual-index inner loop is independently unreachable. Sandbox deleted.
-
-## Levers tried (ALL fail — exhausted across two Opus rounds)
-
-Prior round: clean no-pin C 99; lim2-held pointer 99; 3 high-reg pins 117-123;
-`register table asm("r2")` 117-128; double-assign / walking / reassign 99-123;
-`-ffixed-r8/r9/sl` 129; `-fno-gcse/-fno-caller-saves/-fno-move-all-movables/
--fforce-addr/-fno-strength-reduce` no change (99); permuter 2430 iters base 3345
-best 1120 (plateau).
-
-This round (sub_08013DFC moved to its OWN TU `src/engine/sub_08013dfc.c` so per-TU
-CFLAGS/compiler-swap are SAFE — they no longer disturb the 3 matching functions in
-sub_08013d1c.c):
-- for-loop + plain `i++` form: **byte_diff 103, diff_count 51** (BEST diff_count, cleanest C).
-- array-index globals (no table ptr cache): 118.
-- tbl/lim2 declared inside the if (un-hoists lim2 via single-use deletion, table
-  still hoisted): 104.
-- double-assign `tbl=&g; ...; tbl=&g`: CSE folds the second → 131.
-- `tbl2 = tbl` copy in inner: copy-prop folds → 104.
-- separate load temp `v = tbl[j+1]; tbl[j]=v`: combine still merges to walking ptr.
-- explicit `k=j+1; tbl[j]=tbl[k]; j=k`: +1 insn (156 bytes), 133.
-- scratch-reg pins table `asm("r1"/"r2"/"r3")`: 127 each (defeats hoist but pin reg is
-  caller-saved → reloaded after the bl anyway + reschedule).
-- high-reg pins n=r8/writeIdx=r9/arr=sl: 123 (pins emit extra movs, grow fn to 164).
-- FULL flag sweep on OLD_AGBCC: `-fno-strength-reduce`, `-fno-gcse`, both, `-fno-force-mem`(121),
-  `-fforce-addr`(121), `-fno-expensive-optimizations`, `-fcaller-saves`,
-  `-fno-omit-frame-pointer`(103), `-O1`(103), `-O3` — none below 103.
-- NEW agbcc (AGBCC_BIN) + flag combos: 104-121.
-
-## Corpus
-`testyourmine/cvaos` (Konami, same agbcc) `code_08039340.c:3351` does the SAME
-draw-without-replacement compaction `subroutine_arg0[var_r3] = subroutine_arg0[var_r3+1]`
-in pure C — BUT its base is a PARAMETER pointer (already in a register, not hoisted,
-and addressed differently). Our base is a CONSTANT global → hoisted + merged. The
-prior art does not transfer; it confirms the constant-global is the discriminator.
-
-## Next-agent strategy (genuinely DIFFERENT levers — everything above is exhausted)
-
-The baserom's UNMERGED dual-index inner loop + non-hoisted constant load together
-are characteristic of a compiler that did neither optimization. Hypotheses to test
-that this round did NOT try:
-1. **A different agbcc revision / a `gcc/loop.c`+`combine.c` behavior probe**: the
-   baserom may have been built by an agbcc whose combine does not merge adjacent
-   byte addresses. Instrument `combine.c` (try_combine / the address +1 fold) to
-   confirm whether ANY -fXXX or a small source change keeps the two addresses
-   separate. If a source shape keeps `&tbl[j]` and `&tbl[j+1]` as two pseudos past
-   combine, the dual-index emerges and only the hoist remains.
-2. **Make `table` genuinely NON-invariant** so loop.c never hoists AND combine sees
-   two addresses: e.g. derive the table base from a value that changes per outer
-   iteration but algebraically equals `&gIwram_3610` WITHOUT agbcc simplifying it
-   back (a volatile-laundered base, or a base read from a memory slot the loop
-   writes). Risk: extra insns. Net-zero-insn version is the bar.
-3. If both remain unreachable, this is a true "compiler built differently" case —
-   keep DEFERRED (do NOT NAKED: classifier is ATTEMPT_MATCH, not STRONG_UNMATCHABLE).
-
-## Best-effort C (byte_diff 103, clean, NO pins/asm/flags — RESUME FROM HERE)
-
-Requires NEW linker symbol `        . = 0x0000549F; gIwram_549F = .;` in linker.ld
-(IWRAM block, between gIwram_53A0 and gIwram_60A0) so the inner-loop limit is a
-distinct pool constant 0x0300549f (matches the baserom's 3rd pool entry). Best to
-put this function in its OWN TU `src/engine/sub_08013dfc.c` (wired in linker.ld after
-`src/engine/sub_08013d1c.o(.text)`) so any per-TU flag/compiler experiment does not
-disturb the 3 already-matching functions in sub_08013d1c.c.
+## Best-effort C (byte_diff 35) — RESUME FROM HERE
 
 ```c
+#include "types.h"
+
 extern u8 gIwram_53A0;
-extern u8 gIwram_3610[];
+extern u8 gIwram_3610;
 extern u8 gIwram_549F;
 extern u8 sub_0801185C(u8 range);
 
 void sub_08013DFC(u8 n)
 {
-    u8 *arr;
-    u8 *limit;
-    u8 *writeIdx;
     u8 i;
 
-    arr = &gIwram_53A0;
-    limit = arr + 0xff;
-    writeIdx = arr + 0xfe;
-
     for (i = 0; i < n; i++) {
-        u8 rnd;
+        u8 *arr = &gIwram_53A0;
+        u8 *limit = arr + 0xFF;
+        u8 *writeIdx = arr + 0xFE;
+        u8 rnd = sub_0801185C(*limit);
 
-        rnd = sub_0801185C(*limit);
         arr[rnd] = 1;
-        arr[*writeIdx + 100] = gIwram_3610[rnd];
+        arr[*writeIdx + 0x64] = (&gIwram_3610)[rnd];
         (*writeIdx)++;
 
         if (rnd < *limit) {
-            u8 *tbl = gIwram_3610;
-            u8 *lim2 = &gIwram_549F;
             u8 j = rnd;
             do {
-                tbl[j] = tbl[j + 1];
+                (&gIwram_3610)[j] = (&gIwram_3610)[j + 1];
                 j++;
-            } while (j < *lim2);
+            } while (j < gIwram_549F);
         }
 
         (*limit)--;
