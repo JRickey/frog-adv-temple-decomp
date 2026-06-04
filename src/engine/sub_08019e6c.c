@@ -1,3 +1,4 @@
+#include "game.h"
 #include "gba/dma.h"
 #include "gba/io.h"
 #include "iwram.h"
@@ -184,4 +185,93 @@ void sub_08019FD8(void)
 
     sub_08020BAC();
     sub_08020B88(15);
+}
+
+typedef void (*GameProc)(void);
+
+extern const u32 sEntityProcB[17];
+extern const u32 sEntityProcC[17];
+extern const u16 sWinPoseScreenCoords[];
+extern const u8 sUnkPtrPair_82F998C[];
+
+extern u8 sub_0801B154(void);
+extern void sub_0801B278(u8 count);
+extern void sub_0801BADC(void);
+/* Declared with s32 coordinate params so the s16 x/y are sign-extended at
+ * the call site (lsls #16 / asrs #16), matching the baserom. */
+extern void sub_080090FC(s32 x, s32 y, u8 g, u8 h);
+extern void sub_0800EBDC(u8 arg);
+extern void sub_08008174(void);
+extern void sub_08009A58(void);
+extern void sub_08009188(void);
+extern void sub_0800A328(void);
+
+/* Win-pose / level-transition entry. Reads the transition state byte at
+ * 0x03003540: state 0 drives the win-pose camera from gGameStuff.pendingMode,
+ * state 2 from the highest live world flag (sub_0801B154). Seeds the player
+ * sprite at the chosen screen coords, primes the gIwram_6110 mode-control
+ * block (the two flagBank words are set to 0xFFFFFFFF, not -1, so each pair
+ * loads the 0xffffffff/0 pool constants), then runs the per-frame entity
+ * dispatch tail. */
+void sub_0801A0A4(void)
+{
+    u8 idx;
+    u8 idx2;
+    s16 x;
+    s16 y;
+    const u16 *coords;
+
+    sub_0800A05C();
+
+    switch (*(u8 *)0x03003540) {
+    case 0:
+        idx = gGameStuff.pendingMode;
+        break;
+    case 2:
+        idx = (u8)(sub_0801B154() + 1);
+        if (idx > 15)
+            idx = 15;
+        break;
+    }
+
+    idx2 = sub_0801B154();
+    if (idx2 > 14)
+        idx2 = 15;
+
+    /* Each sWinPoseScreenCoords entry is a packed (u16 x, u16 y). The y read
+     * uses an explicit byte offset so agbcc recomputes the address from idx
+     * instead of CSE-folding it into `[x_addr, #2]` — the baserom shifts the
+     * index twice for y. */
+    coords = sWinPoseScreenCoords;
+    x = coords[idx * 2];
+    y = *(const u16 *)((u32)coords + ((idx * 2 + 1) << 1));
+
+    gGameStuff.pendingMode = 0;
+    ModeControl_Init(&gIwram_6110, 20, 2, sUnkPtrPair_82F998C, 1, 0);
+
+    sub_0800A05C();
+    sub_080090FC(x, y, 1, 0x23);
+
+    ((GameProc)sEntityProcC[0])();
+
+    if (*(u8 *)0x03003540 == 0) {
+        if (idx2 > idx)
+            sub_0801B278((u8)(idx2 + 1));
+        else
+            sub_0801B278(idx);
+    } else if (*(u8 *)0x03003540 == 2) {
+        sub_0801B278((u8)(idx2 + 1));
+    }
+
+    sub_0800EBDC(2);
+    sub_0801BADC();
+
+    gIwram_6110.flagBank0 = 0xFFFFFFFFLL;
+    gIwram_6110.flagBank1 = 0xFFFFFFFFLL;
+
+    sub_08008174();
+    ((GameProc)sEntityProcB[0])();
+    sub_08009A58();
+    sub_08009188();
+    sub_0800A328();
 }
