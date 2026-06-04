@@ -275,3 +275,42 @@ void sub_0801A0A4(void)
     sub_08009188();
     sub_0800A328();
 }
+
+void sub_0801B30C(u8 tileX, u8 tileY);
+void sub_0801B0AC(void);
+int sub_0801A614(u8 index, int useTableA);
+
+u8 sub_0801A1C4(u8 index, u8 noSnap, int useTableA, int skipAdvance)
+{
+    u8 flags;
+
+    flags = 0;
+
+    if (noSnap == 0) {
+        sub_0801B30C((gEntities[0].x - 4) / 8, (gEntities[0].y + 4) / 8);
+    }
+
+    if (skipAdvance == 0) {
+        flags = sub_0801A614(index, useTableA);
+    }
+
+    if (flags & 8) {
+        gEntities[0].x += 2;
+    }
+    if (flags & 2) {
+        gEntities[0].y += 2;
+    }
+    if (flags & 4) {
+        gEntities[0].x -= 2;
+    }
+    if (flags & 1) {
+        gEntities[0].y -= 2;
+    }
+
+    sub_0801B0AC();
+
+    if (flags == 0xFF) {
+        return 0;
+    }
+    return 1;
+}
