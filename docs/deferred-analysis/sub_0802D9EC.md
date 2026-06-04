@@ -538,3 +538,64 @@ u32 sub_0802D9EC(u32 id, u32 vol, u32 pan, u32 pitch)
     return handle;
 }
 ```
+
+---
+
+## Round-15 Opus re-derivation (escalation): plateau CONFIRMED at 272
+
+Re-derived from scratch and re-confirmed the deferred best (byte_diff 272 /
+diff_count 77) is a genuine register-coloring local minimum, not a structural
+miss. The single root cause is unchanged and now precisely localized.
+
+### Root cause (refined): cross-basic-block constant rematerialization
+The baserom loads `&gpSoundSystem` ONCE at entry (`ldr r1,[pc]`), derefs it to
+`ss` in callee-saved **r6**, and COPIES the address into callee-saved **r3**
+(`adds r3, r1, #0` at 0x0802da12) so the SAME pool load also serves the panScale
+deref at 0x0802da54 — *across* the bound-check branch and the vol/pan `if`s.
+
+This agbcc (`update_equiv_regs` in `gcc_arm/local-alloc.c`) marks the address
+`CONSTANT_P` → REG_EQUIV and rematerializes it per **basic block**: it keeps a
+constant in a register only within straight-line code / loops, never across the
+BB boundaries the early-returns + `if`s introduce here. So my build emits a fresh
+`ldr [pc]` (or `.word gpSoundSystem` with the linker-symbol variant) at panScale
+instead of reusing the entry anchor — and the whole entry recolors (`ss`→r3 not
+r6, `&gp`→r0 not r1, no `adds r3,r1,#0`), which cascades into ~30 of the 77 diffs.
+
+### NEW levers tried this round (all FAILED — pick something else)
+- **Linker-assigned symbol for gpSoundSystem** (deferred's #1 "most promising"):
+  added `. = 0x000065E0; gpSoundSystem = .;` to linker.ld's iwram block +
+  `extern SoundSystem *gpSoundSystem;`. Result: **identical 272**. Confirmed via
+  the .s: agbcc emits 4× `.word gpSoundSystem` (one rematerialization per region)
+  — `CONSTANT_ADDRESS_P` in thumb.h only covers pool-address SYMBOL_REFs, so a
+  general extern symbol is NOT `LEGITIMATE_CONSTANT_P`, but `update_equiv_regs`
+  still REG_EQUIVs it (force_const_mem path) and reloads per BB. The Init1 win
+  doesn't transfer: Init1's fold was *adjacent distinct bases CSE'd into one*;
+  here it's *one base rematerialized across BBs*. Different mechanism. RETRACT #1.
+- **Cache panScale early** (`u16 panScaleV = (*pPool)->panScale;` right after
+  `ss=*pPool`, to put both address uses in the entry BB): 487, worse — the cached
+  value survives into the wrong register and shifts the tail.
+- **panScale via cached `ss`** (`ss->panScale` instead of `(*pPool)->panScale`):
+  512, worse — baserom genuinely re-derefs the anchor for a fresh ss.
+- **kind via a plain temp before the `sub=sl` assign** (to drop the `mov r0,sl`
+  before `ldrb kind`): 513, worse (re-confirms deferred #3).
+- **`sub` unpinned** (let agbcc pick sl naturally): 512 — it does NOT land in sl,
+  the `asm("sl")` pin is load-bearing, keep it.
+- **anchor pinned `pPool asm("r3")` / `asm("r4")`**: 489 both — global pin
+  clobbers across the BLs where the baserom intentionally reloads.
+- **new agbcc (`CC=$(AGBCC_BIN)`)**: 284, worse than old's 272. Old stays best.
+- **Permuter** (~4300 iters, -j4, 3 min, base score 3140): best **2660**, never
+  approached 0. Statement/scope mutation cannot flip the cross-BB anchor-keeping
+  decision. Distance (272) is far above the ~40 sweet spot anyway.
+
+### What to try NEXT (genuinely untried)
+1. **INSTRUMENT agbcc** (codegen-notes "Instrumenting agbcc itself"): probe
+   `update_equiv_regs` / the reload path in `reload1.c` (~line 716, the
+   `function_invariant_p` branch) to see exactly why the anchor pseudo is NOT
+   kept in a callee-saved reg across the BBs. The cure is then a source-shape or
+   `-fXXX` that steers that one decision. This is the only microscope not yet used.
+2. A `-fXXX` that suppresses the per-BB rematerialization of equivalent regs
+   (look for one gating `update_equiv_regs`/the reload-inheritance pass — none of
+   the cse/gcse/strength-reduce flags touched it; needs source reading first).
+3. Accept as a firm defer for a NON_MATCHING ship ONLY if a human signs off — the
+   classifier says ATTEMPT_MATCH and the body is 100% correct C, so a NAKED ship
+   would be a premature regression per the asymmetric-cost rule.
