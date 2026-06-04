@@ -87,3 +87,83 @@ void sub_0802AC60(void)
     off = 0x0b48;
     *(u32 *)(base + off) = gGameStuff._unk00;
 }
+
+extern void sub_0800696C(void *p, s32 bits);
+extern u32 sub_0800679C(void *base, u32 selector, u32 bit);
+extern void sub_080066C4(void *base, u32 selector, u32 bit);
+extern void sub_08020C78(u32 sound);
+extern void sub_080219BC(const void *a0, s32 slot);
+extern void sub_08020FE4(s32 a0, s32 a1);
+extern void sub_08005D10(s32 a0, s32 a1);
+
+extern const u32 sLevelLayoutPtrs_317ED4[1];
+
+void sub_0802ACB4(void)
+{
+    s16 tileX;
+    s16 tileY;
+    u8 i;
+
+    tileX = (u16)(gEntities[2].x / 24);
+    tileY = (u16)(gEntities[2].y / 24);
+
+    sub_0800696C(&gIwram_6110, 2);
+
+    if (tileX == 5 && tileY == 3) {
+        if (!(u8)sub_0800679C(&gIwram_6110, 8, 4) && (u8)sub_0800679C(&gIwram_6110, 5, 0)) {
+            sub_080066C4(&gIwram_6110, 5, 0);
+            sub_08020C78(0x75);
+        }
+    }
+    if (tileX == 6 && tileY == 3) {
+        if (!(u8)sub_0800679C(&gIwram_6110, 8, 5) && (u8)sub_0800679C(&gIwram_6110, 5, 1)) {
+            sub_080066C4(&gIwram_6110, 5, 1);
+            sub_08020C78(0x75);
+        }
+    }
+    if (tileX == 8 && tileY == 5) {
+        if (!(u8)sub_0800679C(&gIwram_6110, 8, 6) && (u8)sub_0800679C(&gIwram_6110, 5, 2)) {
+            sub_080066C4(&gIwram_6110, 5, 2);
+            sub_08020C78(0x75);
+        }
+    }
+    if (tileX == 8 && tileY == 6) {
+        if (!(u8)sub_0800679C(&gIwram_6110, 8, 7) && (u8)sub_0800679C(&gIwram_6110, 5, 3)) {
+            sub_080066C4(&gIwram_6110, 5, 3);
+            sub_08020C78(0x75);
+        }
+    }
+    if (tileX == 6 && tileY == 8) {
+        if (!(u8)sub_0800679C(&gIwram_6110, 8, 5) && (u8)sub_0800679C(&gIwram_6110, 5, 4)) {
+            sub_080066C4(&gIwram_6110, 5, 4);
+            sub_08020C78(0x75);
+        }
+    }
+    if (tileX == 5 && tileY == 8) {
+        if (!(u8)sub_0800679C(&gIwram_6110, 8, 4) && (u8)sub_0800679C(&gIwram_6110, 5, 5)) {
+            sub_080066C4(&gIwram_6110, 5, 5);
+            sub_08020C78(0x75);
+        }
+    }
+    if (tileX == 3 && tileY == 6) {
+        if (!(u8)sub_0800679C(&gIwram_6110, 8, 7) && (u8)sub_0800679C(&gIwram_6110, 5, 6)) {
+            sub_080066C4(&gIwram_6110, 5, 6);
+            sub_08020C78(0x75);
+        }
+    }
+    if (tileX == 3 && tileY == 5) {
+        if (!(u8)sub_0800679C(&gIwram_6110, 8, 6) && (u8)sub_0800679C(&gIwram_6110, 5, 7)) {
+            sub_080066C4(&gIwram_6110, 5, 7);
+            sub_08020C78(0x75);
+        }
+    }
+
+    i = 0;
+    do {
+        sub_080219BC((const void *)sLevelLayoutPtrs_317ED4[i], i + 2);
+        i++;
+    } while (i <= 0);
+
+    sub_08020FE4(2, 2);
+    sub_08005D10(2, 2);
+}
