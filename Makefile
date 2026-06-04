@@ -113,6 +113,7 @@ src/game/sub_080019b4.s: CFLAGS += -fforce-addr -fno-expensive-optimizations -fn
 src/game/sub_08002184.s: CFLAGS += -fforce-addr -fno-expensive-optimizations -fno-gcse
 src/game/sub_08002524.s: CFLAGS += -fforce-addr -fno-expensive-optimizations -fno-gcse
 src/game/mode_15.s: CFLAGS += -fforce-addr -fno-expensive-optimizations -fno-gcse
+src/game/sub_08004938.s: CFLAGS += -fforce-addr -fno-expensive-optimizations -fno-gcse
 src/game/sub_08009d9c.s: CFLAGS += -fno-gcse
 src/engine/sub_08012f00.s: CFLAGS += -fforce-addr -fno-expensive-optimizations -fno-gcse
 src/engine/sub_0801621c.s: CFLAGS += -fno-expensive-optimizations
