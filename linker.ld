@@ -387,6 +387,7 @@ SECTIONS {
         src/engine/sub_0800fd50.o(.text);  /* 0x0800fd50 - 0x0800fe10, sub_0800FD50 (extended-pool range; 7 trailing words land in .o pool) */
         src/engine/sub_0800fe88.o(.text);
         asm/disasm_0x0800fe88.o(.text);  /* 0x0800fe88 - 0x080100e4, sub_0800FE88 (auto-peeled) */
+        src/engine/sub_080100e4.o(.text);
         asm/disasm_0x080100e4.o(.text);  /* 0x080100e4 - 0x0801025c, sub_080100E4 (auto-peeled) */
         asm/disasm_0x0801025c.o(.text);  /* 0x0801025c - 0x080105b0, sub_0801025C (auto-peeled) */
         src/engine/sub_080105b0.o(.text);
