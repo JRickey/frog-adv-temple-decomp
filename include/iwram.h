@@ -122,6 +122,12 @@ struct IwramAt3710 {
     u16 prevKeys; /* +0: previous-frame raw key bitmask (active-high) */
 };
 
+struct IwramAt5320 {
+    u8 byte0; /* +0: cleared by sub_080168A0 / written by sub_08016928 / sub_08017000 */
+    u8 _pad1[3];
+    u32 field4; /* +4: r/w by sub_08016928 / sub_08017000 */
+};
+
 struct IwramAt5358 {
     u16 justPressed; /* +0: just-pressed raw key bitmask (active-high) */
 };
@@ -188,6 +194,7 @@ extern struct IwramAt35E0 gIwram_35E0;
 extern struct IwramAt3608 gIwram_3608;
 extern struct IwramAt3710 gIwram_3710;
 extern struct Entity gEntities[128];
+extern struct IwramAt5320 gIwram_5320;
 extern struct IwramAt5358 gIwram_5358;
 extern struct IwramAt6110 gIwram_6110;
 

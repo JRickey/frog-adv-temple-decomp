@@ -59,6 +59,7 @@ gBlitParamTable_08306b74 = 0x08306b74;
 gBlitInitTable_08306AD4 = 0x08306AD4;
 gBlitSrcTable_08306b84 = 0x08306b84;
 gTileBlitTable_08306840 = 0x08306840;
+gDmaDescTable_08306888 = 0x08306888;
 
 SECTIONS {
     ewram (NOLOAD) : ALIGN(4) {
@@ -98,6 +99,7 @@ SECTIONS {
         . = 0x00003610; gIwram_3610 = .;
         . = 0x00003710; gIwram_3710 = .;
         . = 0x00003720; gEntities_03003720 = .; gEntities = .;
+        . = 0x00005320; gIwram_5320 = .;
         . = 0x00005328; gIwram_5328 = .;
         . = 0x00005330; gIwram_5330 = .;
         . = 0x00005358; gIwram_5358 = .;
@@ -481,7 +483,6 @@ SECTIONS {
         asm/disasm_0x08016404.o(.text);  /* 0x08016404 - 0x08016650, sub_08016404 (auto-peeled) */
         asm/disasm_0x08016650.o(.text);  /* 0x08016650 - 0x08016824, sub_08016650 (auto-peeled) */
         src/engine/sub_08016824.o(.text);
-        asm/disasm_0x080168a0.o(.text);  /* 0x080168a0 - 0x08016928, sub_080168A0 (auto-peeled) */
         asm/disasm_0x08016928.o(.text);  /* 0x08016928 - 0x080169bc, sub_08016928 (auto-peeled) */
         asm/disasm_0x080169bc.o(.text);  /* 0x080169bc - 0x08016a38, sub_080169BC (force-peeled) */
         asm/text/text_0x08016a38.o(.text);  /* 0x08016a38 - 0x08016a40, raw bytes (pool) */
