@@ -1,1 +1,174 @@
 #include "types.h"
+#include "iwram.h"
+#include "game.h"
+
+extern void sub_08020C78(u32 effect);
+extern void sub_08016A40(void);
+extern int __divsi3(int num, int den);
+extern void sub_0800D2C0(s16 tileX, s16 tileY);
+extern void sub_0800696C(void *unused, s32 bit);
+extern void sub_08005D10(s32 first, s32 last);
+
+void sub_08021510(u8 baseSlot, u8 *pCount, u8 kind, u8 unused, u8 bitBase)
+{
+    u8 i;
+    s32 firstSlot;
+    u16 new_var;
+    u32 count;
+    s32 slot;
+    register s32 idx asm("r0");
+    struct Entity *base;
+    struct Entity *entity;
+    register u16 status asm("r2");
+    u16 blocked;
+    u16 st;
+    struct IwramAt6110 *ctrl;
+
+    firstSlot = 0;
+    count = *pCount;
+
+    for (i = 0; i < count; i++) {
+        base = gEntities;
+        ctrl = &gIwram_6110;
+
+        idx = baseSlot + i;
+        entity = &base[idx];
+        status = entity->status;
+        blocked = status & 0x08;
+        slot = idx;
+        if (blocked) {
+            continue;
+        }
+
+        if (status & 0x80) {
+            switch (kind) {
+            case 3:
+                sub_08020C78(6);
+                st = 8;
+                st |= entity->status;
+                entity->status = st | 4;
+                {
+                    struct IwramAt35E0 *p35 = &gIwram_35E0;
+                    u16 value = ((u16 *)p35->_data)[1];
+                    if (((s16 *)p35->_data)[1] <= 998) {
+                        goto case3_increment;
+                    }
+                    goto call_effect;
+                case3_increment:
+                    ((u16 *)p35->_data)[1] = value + 1;
+                }
+                asm(".space 0");
+                goto call_effect;
+            case 12:
+                sub_08020C78(13);
+                st = 8;
+                st |= entity->status;
+                entity->status = st | 4;
+                {
+                    struct IwramAt35E0 *p35 = &gIwram_35E0;
+                    u8 value = p35->_data[0];
+                    if ((s8)p35->_data[0] > 98) {
+                        goto call_effect;
+                    }
+                    p35->_data[0] = value + 1;
+                }
+                asm(".space 0");
+                goto call_effect;
+            case 2:
+                sub_08020C78(6);
+                st = 8;
+                st |= entity->status;
+                entity->status = st | 4;
+                ctrl->flags64 |= (s64)(s32)(1 << (bitBase + i));
+                {
+                    struct IwramAt35E0 *p35 = &gIwram_35E0;
+                    if (*(s16 *)&p35->_data[2] <= 998) {
+                        *(u16 *)&p35->_data[2] = *(u16 *)&p35->_data[2] + 1;
+                    }
+                }
+                goto call_effect;
+            case 11:
+                sub_08020C78(13);
+                st = 8;
+                st |= entity->status;
+                entity->status = st | 4;
+                {
+                    register u32 mask asm("r0");
+                    register u32 shift asm("r1");
+                    shift = bitBase + i;
+                    mask = 1;
+                    mask <<= shift;
+                    ctrl->flags2 |= mask;
+                }
+                {
+                    struct IwramAt35E0 *p35 = &gIwram_35E0;
+                    if ((s8)p35->_data[0] <= 98) {
+                        p35->_data[0]++;
+                    }
+                }
+                goto call_effect;
+            case 4:
+                if (gGameStuff.pendingMode == 15) {
+                    sub_08020C78(123);
+                } else {
+                    sub_08020C78(7);
+                }
+                {
+                    register s32 caseSlot asm("r0");
+                    register struct Entity *caseEntity asm("r0");
+                    register u16 caseStatus asm("r1");
+                    caseSlot = slot;
+                    caseEntity = (struct Entity *)(((caseSlot << 3) - caseSlot) * 8 + (s32)base);
+                    caseStatus = 8;
+                    caseStatus |= caseEntity->status;
+                    caseEntity->status = caseStatus | 4;
+                }
+                ctrl->flags0 |= (1 << (bitBase + i));
+                {
+                    struct IwramAt35E0 *p35 = &gIwram_35E0;
+                    p35->_data[4]++;
+                }
+                goto call_effect;
+            call_effect:
+                sub_08016A40();
+                goto tail;
+            case 86:
+                sub_08020C78(0x3a);
+                sub_0800D2C0((s16)__divsi3(entity->x, 24), (s16)__divsi3(entity->y, 24));
+                base->field_10++;
+                goto call_effect;
+            case 87:
+                sub_08020C78(0x40);
+                sub_0800D2C0((s16)__divsi3(entity->x, 24), (s16)__divsi3(entity->y, 24));
+                if ((s16)base->field_10 > 0) {
+                    base->field_10--;
+                }
+                sub_08016A40();
+                goto tail;
+            default:
+                goto tail;
+            }
+        }
+
+    tail:
+        if (firstSlot == 0) {
+            firstSlot = (u8)slot;
+        }
+        sub_0800696C((void *)0x03006110, slot);
+        if (base[slot].status & 2) {
+            break;
+        }
+        if (base[slot].status & 0x8000) {
+            register u16 tailStatus asm("r0");
+            new_var = base[slot].status;
+            tailStatus = new_var;
+            tailStatus |= 2;
+            asm("mov\tr1, #0\n\torr\tr0, r1");
+            base[slot].status = tailStatus & 0x7fff;
+        }
+    }
+
+    if (firstSlot != 0) {
+        sub_08005D10(firstSlot, baseSlot + count - 1);
+    }
+}
