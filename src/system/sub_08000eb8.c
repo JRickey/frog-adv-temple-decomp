@@ -26,7 +26,7 @@
  *        gGameStuff._unk14.
  *   3 -> sub_080004C4 -> gIwram_5398; if == 0x40 substate = 5 + sub_0800E060;
  *        else falls through to the gIwram_3720 / gIwram_6110 keypad gate:
- *          (gIwram_3720._field_34 & 8) -> substate = 4
+ *          (gEntities[0].status & 8) -> substate = 4
  *          (gIwram_6110.inputFlags & 8) -> substate = 8
  *          neither -> sub_0800A2D8 + sub_080008DC + sub_0800A328 +
  *                     sub_080094F8 + sub_08009984 + sub_08000E0C(sp_buf,
@@ -170,7 +170,7 @@ void sub_08000EB8(void)
                 sub_0800E060();
                 break;
             }
-            if ((gIwram_3720._field_34 & 8) != 0) {
+            if ((gEntities[0].status & 8) != 0) {
                 localState = 4;
                 break;
             }

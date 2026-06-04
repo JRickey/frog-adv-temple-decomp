@@ -671,25 +671,25 @@ void sub_08006E8C(struct GridEntry *entries, s8 first, s8 last)
             continue;
 
         if ((gIwram_35E0._field_10 & 2) != 0 && (e->flags & 2) != 0) {
-            s16 tileX = __divsi3(gIwram_3720._field_2 + e->deltaX * 4, 24);
-            s16 tileY = __divsi3(gIwram_3720._field_4 + e->deltaY * 4, 24);
+            s16 tileX = __divsi3(gEntities[0].x + e->deltaX * 4, 24);
+            s16 tileY = __divsi3(gEntities[0].y + e->deltaY * 4, 24);
 
             if ((u8)sub_0800CD88(gIwram_35E0._field_18, gIwram_35E0._field_19, tileX, tileY) != 2) {
-                gIwram_3720._field_2 += e->deltaX;
-                gIwram_3720._field_4 += e->deltaY;
+                gEntities[0].x += e->deltaX;
+                gEntities[0].y += e->deltaY;
 
                 if (e->deltaX != 0) {
-                    if ((s16)gIwram_3720._field_4 > e->limit)
-                        gIwram_3720._field_4--;
-                    if ((s16)gIwram_3720._field_4 < e->limit)
-                        gIwram_3720._field_4++;
+                    if ((s16)gEntities[0].y > e->limit)
+                        gEntities[0].y--;
+                    if ((s16)gEntities[0].y < e->limit)
+                        gEntities[0].y++;
                 }
 
                 if (entries[i].deltaY != 0) {
-                    if (gIwram_3720._field_2 > entries[i].limit)
-                        gIwram_3720._field_2--;
-                    if (gIwram_3720._field_2 < entries[i].limit)
-                        gIwram_3720._field_2++;
+                    if (gEntities[0].x > entries[i].limit)
+                        gEntities[0].x--;
+                    if (gEntities[0].x < entries[i].limit)
+                        gEntities[0].x++;
                 }
             }
         }
@@ -890,13 +890,13 @@ NAKED void sub_08006E8C(void *entries, s8 first, s8 last)
  * +0x34 has bit 0x04 set. Otherwise each entry's transient bit 0x02 at +26 is
  * cleared up front; entries whose bit 0x01 (at +26) is set are skipped. A
  * candidate must also match the active id (gIwram_3720+6 == entry+8) and pass
- * sub_080076A4(&gIwram_3720, entry). A passing entry additionally requires, when
+ * sub_080076A4(gEntities, entry). A passing entry additionally requires, when
  * the gIwram_3720 dispatch state at +0x1A is > 3, that the gIwram_35E0 flags
  * halfword at +0x10 have bit 0x10 set. Every fully-qualifying entry gets bit
  * 0x02 raised on both its +26 byte and the gIwram_35E0 +0x10 halfword, and the
  * routine records a hit (return value becomes 1) while scanning the rest. */
 
-extern s32 sub_080076A4(struct IwramAt3720 *actor, void *entry);
+extern s32 sub_080076A4(struct Entity *actor, void *entry);
 
 struct EngageEntry {
     u8 _pad00[8];
@@ -911,7 +911,7 @@ u8 sub_08006FEC(struct EngageEntry *entries, s8 count)
     u8 hit = 0;
     s8 i;
 
-    if ((gIwram_3720._field_34 & 4) != 0)
+    if ((gEntities[0].status & 4) != 0)
         return 0;
 
     for (i = 0; i < count; i++) {
@@ -924,13 +924,13 @@ u8 sub_08006FEC(struct EngageEntry *entries, s8 count)
         if ((e->state & 1) != 0)
             continue;
 
-        if (gIwram_3720._field_6 != e->matchId)
+        if (gEntities[0].field_06 != e->matchId)
             continue;
 
-        if (!sub_080076A4(&gIwram_3720, e))
+        if (!sub_080076A4(gEntities, e))
             continue;
 
-        if (gIwram_3720._field_1A > 3 && (gIwram_35E0._field_10 & 0x10) == 0)
+        if (gEntities[0].field_1A > 3 && (gIwram_35E0._field_10 & 0x10) == 0)
             continue;
 
         e->state |= 2;

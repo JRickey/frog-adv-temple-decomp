@@ -197,7 +197,7 @@ extern void sub_08006B88(void *p, u16 mask);
 /* Looks up the per-script header in sEntityScriptIndex[b], hands it (plus the
  * caller's a/c) to sub_0800736C, then for scripts that pass the sub_08007138
  * gate raises the dirty-flag mask from sEntityScriptIndexExt[a] on gIwram_35E0.
- * Script id 1 takes an extra branch guarding on gIwram_3720._field_1A and reads
+ * Script id 1 takes an extra branch guarding on gEntities[0].field_1A and reads
  * the dirty-flag mask from the constant entry sEntityScriptIndexExt[1]. */
 
 void sub_080072E0(s8 a, s8 b, s32 c)
@@ -220,7 +220,7 @@ void sub_080072E0(s8 a, s8 b, s32 c)
     sub_0800736C(a, c, 0, count - 1, entry->_b2);
 
     if (a == 1) {
-        if (gIwram_3720._field_1A > 3)
+        if (gEntities[0].field_1A > 3)
             return;
         if (!sub_08007138(c, count))
             return;

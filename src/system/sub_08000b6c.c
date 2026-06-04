@@ -10,7 +10,7 @@
  * function:
  *
  *   1. Calls sub_0800B918(ent, arg1, 18) — enqueue with kind=18.
- *   2. If gIwram_3720._field_34 has bit 4 set, returns immediately
+ *   2. If gEntities[0].status has bit 4 set, returns immediately
  *      (the mode is already locked).
  *   3. Probes the tile under the current entity by calling
  *      sub_0800CD88(col, row, tileX, tileY) reading the cache at
@@ -21,12 +21,12 @@
  *      returns nonzero as u8, toggles a two-slot state pair:
  *        - first-time   (gIwram_35E0._field_18 == 0):
  *            _field_18=1, _field_19=1, gIwram_3720[+6]=2,
- *            gIwram_3720._field_17=2
+ *            gEntities[0].field_17=2
  *        - second-time  (gIwram_35E0._field_18 != 0):
  *            _field_18=0, _field_19=0, gIwram_3720[+6]=3,
- *            gIwram_3720._field_17=3
+ *            gEntities[0].field_17=3
  *   6. If gGameStuff._unk10 has bit 1 set, returns.
- *   7. Counter gates on gIwram_3720._field_2 against the bands {408,
+ *   7. Counter gates on gEntities[0].x against the bands {408,
  *      0xaa..0xaa+24, 0xfefc..0xfefc+24}, raising bit 0x800 (via
  *      sub_08006B88) or clearing bit 2 (via sub_08006B94) at
  *      gIwram_35E0._field_10 accordingly, and ±1-stepping the counter.
@@ -35,7 +35,7 @@
  *   - `mov sl, r1` — arg1 spilled into sl for one cross-block reuse
  *     (forwarded into sub_0800B8A8 as arg2 after sub_0800CD88 returns).
  *   - `mov r8, r0` then `mov r1, r8` / `mov r7, r8` — pool literal
- *     0x03003720 (= &gIwram_3720) cached in r8 and re-emitted into
+ *     0x03003720 (= gEntities) cached in r8 and re-emitted into
  *     low regs as needed.
  *   - `mov r9, r0` then `mov r3, r9` — the (u8)tile result of
  *     sub_0800CD88 spilled into r9 to survive sub_0800B8A8 and the
@@ -56,7 +56,7 @@
  *   2. Entry pin of `arg1_hi` to sl —
  *      ignored by agbcc for high regs (corpus-validated; only r4-r7
  *      respected, per the fixed-register local note in codegen-notes).
- *   3. Local-pointer-shadow `IwramAt3720 *gp = &gIwram_3720;` —
+ *   3. Local-pointer-shadow `IwramAt3720 *gp = gEntities;` —
  *      anchors the address load early but agbcc keeps it in r4/r5,
  *      not r8.
  *   4. Splitting the gIwram_3720-+6 / +0x17 writes into a static
@@ -82,13 +82,13 @@ extern void sub_08006B94(void *p, u16 mask);
 #ifdef NON_MATCHING
 void sub_08000B6C(void *ent, u32 arg1)
 {
-    u8 *gp3720 = (u8 *)&gIwram_3720;
+    u8 *gp3720 = (u8 *)gEntities;
     u8 tile;
     u16 ctr;
 
     sub_0800B918(ent, arg1, 18);
 
-    if ((gIwram_3720._field_34 & 4) != 0)
+    if ((gEntities[0].status & 4) != 0)
         return;
 
     tile = (u8)sub_0800CD88(gIwram_35E0._field_18, gIwram_35E0._field_19, gIwram_35E0._field_8, gIwram_35E0._field_A);
@@ -103,12 +103,12 @@ void sub_08000B6C(void *ent, u32 arg1)
                 gIwram_35E0._field_18 = 1;
                 gIwram_35E0._field_19 = 1;
                 gp3720[6] = 2;
-                gIwram_3720._field_17 = 2;
+                gEntities[0].field_17 = 2;
             } else {
                 gIwram_35E0._field_18 = 0;
                 gIwram_35E0._field_19 = 0;
                 gp3720[6] = 3;
-                gIwram_3720._field_17 = 3;
+                gEntities[0].field_17 = 3;
             }
         }
     }
@@ -116,25 +116,25 @@ void sub_08000B6C(void *ent, u32 arg1)
     if ((*(u8 *)((u8 *)&gGameStuff + 0x10) & 1) != 0)
         return;
 
-    if (gIwram_3720._field_2 > 408) {
+    if (gEntities[0].x > 408) {
         sub_08006B88(&gIwram_35E0, 0x800);
     }
 
     if (tile != 7)
         return;
 
-    if ((s16)gIwram_3720._field_4 > 1000) {
-        ctr = gIwram_3720._field_2;
+    if ((s16)gEntities[0].y > 1000) {
+        ctr = gEntities[0].x;
         if ((u16)(ctr - 0xaa) <= 24) {
             sub_08006B94(&gIwram_35E0, 2);
-            gIwram_3720._field_2 = ctr - 1;
+            gEntities[0].x = ctr - 1;
         }
     }
 
-    ctr = gIwram_3720._field_2;
+    ctr = gEntities[0].x;
     if ((u16)(ctr + 0xfefc) <= 24) {
         sub_08006B94(&gIwram_35E0, 2);
-        gIwram_3720._field_2 = ctr + 1;
+        gEntities[0].x = ctr + 1;
     }
 }
 #else
@@ -209,7 +209,7 @@ NAKED void sub_08000B6C(void *ent, u32 arg1)
         "    strb    r0, [r7, #23]\n"
         "    b       _sub_08000B6C_after_gate\n"
         "    .align  2, 0\n"
-        "_sub_08000B6C_pool_iwram_3720_a: .4byte gIwram_3720\n"
+        "_sub_08000B6C_pool_iwram_3720_a: .4byte gEntities_03003720\n"
         "_sub_08000B6C_pool_iwram_35E0_a: .4byte gIwram_35E0\n"
         "_sub_08000B6C_branchB:\n"
         "    strb    r5, [r4, #24]\n"
@@ -282,7 +282,7 @@ NAKED void sub_08000B6C(void *ent, u32 arg1)
         "    bx      r0\n"
         "    movs    r0, r0\n"
         "_sub_08000B6C_pool_gGameStuff:    .4byte 0x03005330\n"
-        "_sub_08000B6C_pool_iwram_3720_b:  .4byte gIwram_3720\n"
+        "_sub_08000B6C_pool_iwram_3720_b:  .4byte gEntities_03003720\n"
         "_sub_08000B6C_pool_iwram_35E0_b:  .4byte gIwram_35E0\n"
         "_sub_08000B6C_pool_neg_0x104:     .4byte 0xfffffefc\n"
         ".syntax divided\n");

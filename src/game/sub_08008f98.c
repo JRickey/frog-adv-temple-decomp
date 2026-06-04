@@ -39,8 +39,8 @@ extern struct IndexEntry gEntityIndex_03006160[];
 
 void sub_08008F98(void)
 {
-    s16 headerY = gIwram_3720._field_2;
-    s16 headerX = gIwram_3720._field_4;
+    s16 headerY = gEntities[0].x;
+    s16 headerX = gEntities[0].y;
     s32 i;
 
     for (i = 0; i < (s8)gIwram_6110.liveCount; i++) {

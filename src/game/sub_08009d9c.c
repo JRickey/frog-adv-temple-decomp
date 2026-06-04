@@ -294,7 +294,7 @@ u32 sub_08009D9C(u8 *arg)
  *
  * Drives a small state byte at *arg. First refreshes the per-frame seed at
  * gIwram_5398, then either runs a one-time init (when *arg == 0) or a
- * flag-toggle (when gIwram_3720._field_34 has bit 0x8000 set). The shared
+ * flag-toggle (when gEntities[0].status has bit 0x8000 set). The shared
  * tail dispatches two entity-handler tables (sEntityProcB/D) by
  * gGameStuff.pendingMode, advances the subsystems, masks VBlank, commits the
  * deferred OAM + BG-scroll state, then runs a late state-check.
@@ -332,11 +332,11 @@ extern u16 gIwram_5398;
 
 u32 sub_08009EEC(u8 *arg, u8 kind)
 {
-    register struct IwramAt3720 *e3720 asm("r8");
+    register struct Entity *e3720 asm("r8");
     register GameStuff *initGs asm("r1");
-    register struct IwramAt3720 *e3720init asm("r0");
-    register struct IwramAt3720 *e3720else asm("r2");
-    register struct IwramAt3720 *e3720end asm("r2");
+    register struct Entity *e3720init asm("r0");
+    register struct Entity *e3720else asm("r2");
+    register struct Entity *e3720end asm("r2");
     register GameStuff *gs asm("r5");
     register const EntityProc *procs asm("r1");
     const u8 *lut;
@@ -356,25 +356,25 @@ u32 sub_08009EEC(u8 *arg, u8 kind)
         initGs->_unk14 = initGs->_unk00;
         *arg = 1;
         sub_0801D048(kind);
-        e3720init = &gIwram_3720;
-        e3720init->_field_1A += 29;
-        e3720init->_field_34 |= 2;
+        e3720init = gEntities;
+        e3720init->field_1A += 29;
+        e3720init->status |= 2;
     } else {
-        e3720else = &gIwram_3720;
-        flags = e3720else->_field_34;
+        e3720else = gEntities;
+        flags = e3720else->status;
         if (flags & 0x8000) {
             register u32 t asm("r0");
             t = 2;
             t |= flags;
             t &= 0x7fff;
-            e3720else->_field_34 = t;
+            e3720else->status = t;
             nextState = stateByte + 1;
             *arg = nextState;
         }
     }
 
-    e3720 = &gIwram_3720;
-    sub_080059C4(&gIwram_3720);
+    e3720 = gEntities;
+    sub_080059C4(gEntities);
 
     procs = sEntityProcB;
 
@@ -419,9 +419,9 @@ u32 sub_08009EEC(u8 *arg, u8 kind)
 
 check3720:
     e3720end = e3720;
-    if (e3720end->_field_1A > 28) {
-        e3720end->_field_1A -= 29;
-        e3720end->_field_34 |= 2;
+    if (e3720end->field_1A > 28) {
+        e3720end->field_1A -= 29;
+        e3720end->status |= 2;
     }
 
     if (gIwram_5398 != 0) {

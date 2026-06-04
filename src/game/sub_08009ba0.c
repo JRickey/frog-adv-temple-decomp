@@ -85,7 +85,7 @@ u8 sub_08009C14(u8 *flag)
     sub_0800A05C();
 
     if (gIwram_35E0._data[0] == 1) {
-        gIwram_3720._field_34 = 0;
+        gEntities[0].status = 0;
         if (sub_0801E28C() != 0) {
             gIwram_35E0._data[0] = gIwram_34B4._data[2];
             gIwram_35E0._field_5 = 0;
@@ -140,7 +140,7 @@ NAKED u8 sub_08009C14(u8 *flag)
         "    b       _sub_08009C14_epilogue\n"
         "    .align  2, 0\n"
         "_pool_iwram_35E0_a: .4byte gIwram_35E0\n"
-        "_pool_iwram_3720:   .4byte gIwram_3720\n"
+        "_pool_iwram_3720:   .4byte gEntities_03003720\n"
         "_pool_iwram_34B4:   .4byte gIwram_34B4\n"
         "_sub_08009C14_set_mode_25:\n"
         "    bl      sub_0802D8F8\n"

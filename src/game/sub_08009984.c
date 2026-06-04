@@ -15,7 +15,7 @@
  *   - sub_06B88(gIwram_35E0, 0x800)  if tile == 7
  *   - sub_06B88(gIwram_35E0, 0x2000) if tile == 8 || tile == 11
  *
- * Entry-guard: if bit 4 of gIwram_3720._field_34 is set, the function
+ * Entry-guard: if bit 4 of gEntities[0].status is set, the function
  * is a no-op. (That bit appears to be a "transition in progress" flag
  * raised by sub_080090B0's caller.)
  */
@@ -32,7 +32,7 @@ void sub_08009984(void)
     u8 tile;
     u8 tile2;
 
-    if ((gIwram_3720._field_34 & 4) != 0)
+    if ((gEntities[0].status & 4) != 0)
         return;
 
     tile = (u8)sub_0800CD88(gIwram_35E0._field_18, gIwram_35E0._field_19, gIwram_35E0._field_8, gIwram_35E0._field_A);
@@ -45,17 +45,17 @@ void sub_08009984(void)
         tile2 =
             (u8)sub_0800CE54(gIwram_35E0._field_18, gIwram_35E0._field_19, gIwram_35E0._field_8, gIwram_35E0._field_A);
         if (tile2 == 1)
-            gIwram_3720._field_17 = tile2;
+            gEntities[0].field_17 = tile2;
         if (tile2 == 2)
-            gIwram_3720._field_17 = tile2;
+            gEntities[0].field_17 = tile2;
         if (tile2 == 3)
-            gIwram_3720._field_17 = tile2;
+            gEntities[0].field_17 = tile2;
     }
 
     if (tile == 7) {
         if ((gIwram_35E0._field_C & 2) != 0)
             goto check8or11;
-        if (gIwram_3720._field_1A > 3)
+        if (gEntities[0].field_1A > 3)
             goto check8or11;
         sub_08006B88(&gIwram_35E0, 0x800);
         return;
@@ -65,7 +65,7 @@ check8or11:
         return;
     if ((gIwram_35E0._field_C & 2) != 0)
         return;
-    if (gIwram_3720._field_1A > 3)
+    if (gEntities[0].field_1A > 3)
         return;
     sub_08006B88(&gIwram_35E0, 0x2000);
 }

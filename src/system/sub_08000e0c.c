@@ -7,10 +7,10 @@
  *
  * Same shape as iter-34's sub_08000B6C: per-entity probe-then-dispatch
  * structured around the same gIwram_3720 / gIwram_35E0 bases, with a
- * gIwram_3720._field_34 & 4 early-out gate followed by sub_0800CD88
+ * gEntities[0].status & 4 early-out gate followed by sub_0800CD88
  * tile-probe, a gIwram_35E0._field_10 & 0x10 secondary-dispatch gate,
  * and a sub_08006BA4 bit-test guard before four (coord, value) writes
- * to gIwram_3720._field_6.
+ * to gEntities[0].field_06.
  *
  * Distinguishing features vs sub_08000B6C:
  *   - Kind constant is 3 (not 18).
@@ -36,7 +36,7 @@
  *      high regs (corpus-validated).
  *   3. Re-order the early-out check before sub_0800B918 — wrong semantics
  *      (baserom always calls sub_0800B918 first).
- *   4. Cache &gIwram_3720 in a `volatile` local — agbcc still chooses r6,
+ *   4. Cache gEntities in a `volatile` local — agbcc still chooses r6,
  *      not r8 — but the spurious volatile read reorders the ldrh.
  *   5. Pull the 4-way coord-compare into a switch over u32 — agbcc emits
  *      a chain of cmp/beq the same way as the if/if/if/if form, but
@@ -59,7 +59,7 @@ void sub_08000E0C(void *ent, u32 arg1)
 
     sub_0800B918(ent, arg1, 3);
 
-    if ((gIwram_3720._field_34 & 4) != 0)
+    if ((gEntities[0].status & 4) != 0)
         return;
 
     tile = (u8)sub_0800CD88(gIwram_35E0._field_18, gIwram_35E0._field_19, gIwram_35E0._field_8, gIwram_35E0._field_A);
@@ -74,13 +74,13 @@ void sub_08000E0C(void *ent, u32 arg1)
 
     coord = *(u32 *)((u8 *)&gIwram_35E0 + 8);
     if (coord == 0x001c0006)
-        *((u8 *)&gIwram_3720 + 6) = 2;
+        *((u8 *)gEntities + 6) = 2;
     if (coord == 0x001c0007)
-        *((u8 *)&gIwram_3720 + 6) = 3;
+        *((u8 *)gEntities + 6) = 3;
     if (coord == 0x001c000d)
-        *((u8 *)&gIwram_3720 + 6) = 3;
+        *((u8 *)gEntities + 6) = 3;
     if (coord == 0x001c000e)
-        *((u8 *)&gIwram_3720 + 6) = 2;
+        *((u8 *)gEntities + 6) = 2;
 }
 #else
 NAKED void sub_08000E0C(void *ent, u32 arg1)
@@ -160,7 +160,7 @@ NAKED void sub_08000E0C(void *ent, u32 arg1)
         "    pop     {r0}\n"
         "    bx      r0\n"
         "    .align  2, 0\n"
-        "_sub_08000E0C_pool_iwram_3720: .4byte gIwram_3720\n"
+        "_sub_08000E0C_pool_iwram_3720: .4byte gEntities_03003720\n"
         "_sub_08000E0C_pool_iwram_35E0: .4byte gIwram_35E0\n"
         "_sub_08000E0C_pool_coord_a:    .4byte 0x001c0006\n"
         "_sub_08000E0C_pool_coord_b:    .4byte 0x001c0007\n"

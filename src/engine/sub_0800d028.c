@@ -13,8 +13,8 @@ u32 sub_0800D028(s32 idx)
     u8 *entity;
     s32 delta;
 
-    refX = gIwram_3720._field_2;
-    entity = (u8 *)&gIwram_3720 + idx * 0x38;
+    refX = gEntities[0].x;
+    entity = (u8 *)gEntities + idx * 0x38;
 
     delta = refX - *(s16 *)(entity + 2);
     if (delta < 0)
@@ -22,9 +22,9 @@ u32 sub_0800D028(s32 idx)
     if (delta > 0x104)
         return 0;
 
-    delta = gIwram_3720._field_4 - *(s16 *)(entity + 4);
+    delta = gEntities[0].y - *(s16 *)(entity + 4);
     if (delta < 0)
-        delta = *(s16 *)(entity + 4) - gIwram_3720._field_4;
+        delta = *(s16 *)(entity + 4) - gEntities[0].y;
     if (delta > 0xb4)
         return 0;
 
@@ -49,7 +49,7 @@ u32 sub_0800D028(s32 idx)
 #ifdef NON_MATCHING
 u32 *sub_0800D070(u32 *out, s8 delta)
 {
-    u8 *base = (u8 *)&gIwram_3720;
+    u8 *base = (u8 *)gEntities;
     s16 lo = *(u16 *)(base + 0x692) - 2;
     s16 hi = *(u16 *)(base + 0x694) - 2;
 
