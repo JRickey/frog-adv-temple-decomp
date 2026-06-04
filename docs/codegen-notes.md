@@ -2470,3 +2470,31 @@ matches; a sweep that *also* re-derives signedness/width/stride/base-pointer is
 where matches hide. The `enum GameMode` adoption (mode dispatcher) is in the
 cosmetic class — enum constants compile identically to the integer literals, so
 it's readability, verified byte-identical by `make check`.
+
+## The Makefile does NOT track header dependencies
+
+There is no `-MMD`/`.d` include in the Makefile, so editing a header
+(`include/*.h`) does **not** trigger a recompile of the `.c` files that include
+it. After a header change, an incremental `make -j8 && make check` rebuilds
+only the `.c` files you edited and links them against **stale** `.o` files for
+everyone else — so `make check` can falsely pass (or falsely fail) on header
+work. Always validate a header change with `make tidy && make -j8 && make check`
+(a full rebuild). `.c`-only changes are fine to validate incrementally.
+
+This bit the entity-pool re-model: adding `struct Entity` to `iwram.h` appeared
+to pass `make check` while 8 files with a colliding local `struct Entity`
+silently kept stale objects; a clean build surfaced the collisions.
+
+## Two distinct symbols for one address = two pool loads (CSE)
+
+agbcc CSE-folds repeated loads of the *same* symbol into a single pool literal,
+but treats two *different* symbol names as independent even when the linker
+resolves both to the same address. Some baserom functions load one IWRAM
+address twice via two names (e.g. `gIwram_3720` for the slot-0 flat access and
+`gEntities_03003720` for the array view) specifically to get two separate
+`ldr =sym` pool loads. When migrating such a function, preserve the *count and
+identity* of distinct 0x3720-symbols: converting only one of two flat accesses
+introduced a third symbol and shifted 373 bytes of `sub_08008570`; converting
+both (so the function uses `gEntities` + `gEntities_03003720`, two names, like
+the baserom's two) restored the match. Rule: convert a function's pool-base
+references all-at-once, never split across a partial edit.

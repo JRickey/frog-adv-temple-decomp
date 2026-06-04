@@ -82,12 +82,13 @@ line of context.
 
 ## Entity pool — `0x03003720` (`gEntities`)
 
-`0x03003720` is a **`struct Entity[128]`, stride `0x38` (56 bytes)**, not the
-single ~0x696-byte `struct IwramAt3720` it is currently modelled as in
-`include/iwram.h`. Re-modelling it as an array is a pending structural pass —
-both a readability and a likely matching win (the `idx * 0x38` indexing is
-runtime-variable, so the wrong stride changes agbcc's codegen; see
-`codegen-notes.md` "Struct typing and matching").
+`0x03003720` is **`struct Entity gEntities[128]`, stride `0x38` (56 bytes)**
+(`include/iwram.h`). It was previously mis-modelled as a single ~0x696-byte
+`struct IwramAt3720` that flattened ~30 slots into one struct; that type and
+the `gIwram_3720` symbol were removed in the entity-pool re-model (the
+`gEntities` / `gEntities_03003720` linker symbols at 0x3720 remain). The
+re-model was byte-neutral (correctness + readability), not a matching change —
+the already-matching accessors already used the correct `idx * 0x38` stride.
 
 - Size proof: `sub_0800A05C` CpuFastSet-fills `0x700` words = `0x1C00` =
   `128 * 0x38`, then loops `for (j = 0x7f; j >= 0; j--)` setting a status bit
