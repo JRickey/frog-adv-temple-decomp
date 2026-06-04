@@ -1,80 +1,11 @@
 @ Auto-emitted by tools/disasm/peel.py — do not hand-edit this header.
-@ Range:  [0x080196ec, 0x08019834)  (328 bytes, thumb mode)
-@ Re-peel:  python3 tools/disasm/peel.py --start 0x80196ec --end 0x8019834 --mode thumb
+@ Range:  [0x0801977c, 0x08019834)  (184 bytes, thumb mode)
+@ Re-peel:  python3 tools/disasm/peel.py --start 0x801977c --end 0x8019834 --mode thumb
 
         .include "asm/macros.inc"
         .syntax unified
 
 @ Disassembly preview (the bytes come from the INCBIN below):
-@   0x080196ec: b5f0        push	{r4, r5, r6, r7, lr}
-@   0x080196ee: 1c04        adds	r4, r0, #0
-@   0x080196f0: 0612        lsls	r2, r2, #24
-@   0x080196f2: 0e12        lsrs	r2, r2, #24
-@   0x080196f4: 1c13        adds	r3, r2, #0
-@   0x080196f6: 7866        ldrb	r6, [r4, #1]
-@   0x080196f8: 0170        lsls	r0, r6, #5
-@   0x080196fa: 7827        ldrb	r7, [r4, #0]
-@   0x080196fc: 1838        adds	r0, r7, r0
-@   0x080196fe: 0040        lsls	r0, r0, #1
-@   0x08019700: 1809        adds	r1, r1, r0
-@   0x08019702: 2a01        cmp	r2, #1
-@   0x08019704: d00e        beq.n	0x19724
-@   0x08019706: 2a01        cmp	r2, #1
-@   0x08019708: dc02        bgt.n	0x19710
-@   0x0801970a: 2a00        cmp	r2, #0
-@   0x0801970c: d005        beq.n	0x1971a
-@   0x0801970e: e012        b.n	0x19736
-@   0x08019710: 2b02        cmp	r3, #2
-@   0x08019712: d00b        beq.n	0x1972c
-@   0x08019714: 2b03        cmp	r3, #3
-@   0x08019716: d00d        beq.n	0x19734
-@   0x08019718: e00d        b.n	0x19736
-@   0x0801971a: 4d01        ldr	r5, [pc, #4]	@ (0x19720)
-@   0x0801971c: e00b        b.n	0x19736
-@   0x0801971e: 0000        movs	r0, r0
-@   0x08019720: e000        b.n	0x19724
-@   0x08019722: 0600        lsls	r0, r0, #24
-@   0x08019724: 4d00        ldr	r5, [pc, #0]	@ (0x19728)
-@   0x08019726: e006        b.n	0x19736
-@   0x08019728: e800        0600 			@ <UNDEFINED> instruction: 0xe8000600
-@   0x0801972c: 4d00        ldr	r5, [pc, #0]	@ (0x19730)
-@   0x0801972e: e002        b.n	0x19736
-@   0x08019730: f000        0600 	and.w	r6, r0, #0
-@   0x08019734: 4d0f        ldr	r5, [pc, #60]	@ (0x19774)
-@   0x08019736: 7862        ldrb	r2, [r4, #1]
-@   0x08019738: 0150        lsls	r0, r2, #5
-@   0x0801973a: 7826        ldrb	r6, [r4, #0]
-@   0x0801973c: 1830        adds	r0, r6, r0
-@   0x0801973e: 0040        lsls	r0, r0, #1
-@   0x08019740: 182d        adds	r5, r5, r0
-@   0x08019742: 2300        movs	r3, #0
-@   0x08019744: 78e7        ldrb	r7, [r4, #3]
-@   0x08019746: 42bb        cmp	r3, r7
-@   0x08019748: d211        bcs.n	0x1976e
-@   0x0801974a: 4a0b        ldr	r2, [pc, #44]	@ (0x19778)
-@   0x0801974c: 2680        movs	r6, #128	@ 0x80
-@   0x0801974e: 0636        lsls	r6, r6, #24
-@   0x08019750: 6011        str	r1, [r2, #0]
-@   0x08019752: 6055        str	r5, [r2, #4]
-@   0x08019754: 1c30        adds	r0, r6, #0
-@   0x08019756: 78a7        ldrb	r7, [r4, #2]
-@   0x08019758: 4338        orrs	r0, r7
-@   0x0801975a: 6090        str	r0, [r2, #8]
-@   0x0801975c: 6890        ldr	r0, [r2, #8]
-@   0x0801975e: 3140        adds	r1, #64	@ 0x40
-@   0x08019760: 3540        adds	r5, #64	@ 0x40
-@   0x08019762: 1c58        adds	r0, r3, #1
-@   0x08019764: 0600        lsls	r0, r0, #24
-@   0x08019766: 0e03        lsrs	r3, r0, #24
-@   0x08019768: 78e0        ldrb	r0, [r4, #3]
-@   0x0801976a: 4283        cmp	r3, r0
-@   0x0801976c: d3f0        bcc.n	0x19750
-@   0x0801976e: bcf0        pop	{r4, r5, r6, r7}
-@   0x08019770: bc01        pop	{r0}
-@   0x08019772: 4700        bx	r0
-@   0x08019774: f800        0600 	strb.w	r0, [r0, <undefined>]
-@   0x08019778: 00d4        lsls	r4, r2, #3
-@   0x0801977a: 0400        lsls	r0, r0, #16
 @   0x0801977c: b5f0        push	{r4, r5, r6, r7, lr}
 @   0x0801977e: 4647        mov	r7, r8
 @   0x08019780: b480        push	{r7}
@@ -165,7 +96,7 @@
 @   0x08019830: 00d4        lsls	r4, r2, #3
 @   0x08019832: 0400        lsls	r0, r0, #16
 
-        thumb_func_start sub_080196EC
-sub_080196EC: @ 0x080196ec
-        .incbin "frog_us_baserom.gba", 0x196ec, 0x148
-        thumb_func_end sub_080196EC
+        thumb_func_start sub_0801977C
+sub_0801977C: @ 0x0801977c
+        .incbin "frog_us_baserom.gba", 0x1977c, 0xb8
+        thumb_func_end sub_0801977C

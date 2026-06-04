@@ -159,3 +159,44 @@ void sub_080196C8(void)
 
 void sub_080196E8(void)
 {}
+
+/* Rectangular tilemap blit into a BG screenblock via DMA3. The descriptor's
+ * four bytes are [0]=x, [1]=y (tile coords), [2]=halfwords per row, [3]=row
+ * count. mode picks the destination screenblock (28..31 at 0x0600E000 +
+ * mode*0x800); src and dst are both biased by the (x + y*32) tile offset and
+ * advance one screenblock row (0x40 bytes) per iteration. Called from
+ * sub_0801F8BC. */
+void sub_080196EC(u8 *attr, const u16 *src, u8 mode)
+{
+    u16 *dst;
+    u8 row;
+
+    src += attr[0] + (attr[1] << 5);
+
+    switch (mode) {
+    case 0:
+        dst = (u16 *)0x0600E000;
+        break;
+    case 1:
+        dst = (u16 *)0x0600E800;
+        break;
+    case 2:
+        dst = (u16 *)0x0600F000;
+        break;
+    case 3:
+        dst = (u16 *)0x0600F800;
+        break;
+    }
+
+    dst += attr[0] + (attr[1] << 5);
+
+    for (row = 0; row < attr[3]; row++) {
+        REG_DMA3.src = src;
+        REG_DMA3.dst = dst;
+        REG_DMA3.cnt = DMA_ENABLE | attr[2];
+        (void)REG_DMA3.cnt;
+
+        src += 0x20;
+        dst += 0x20;
+    }
+}
