@@ -61,9 +61,9 @@ u32 sub_08020CA4(u32 sound)
 
 #include "iwram.h"
 
-extern u8 sub_08021E34(struct IwramAt3720 *s, u8 halfW, u8 halfH);
+extern u8 sub_08021E34(struct Entity *s, u8 halfW, u8 halfH);
 
-u32 sub_08020CDC(struct IwramAt3720 *entity, u32 sound, u8 halfW, u8 halfH)
+u32 sub_08020CDC(struct Entity *entity, u32 sound, u8 halfW, u8 halfH)
 {
     u32 result;
     u32 handle;
@@ -91,7 +91,7 @@ u32 sub_08020CDC(struct IwramAt3720 *entity, u32 sound, u8 halfW, u8 halfH)
     return result;
 }
 
-u32 sub_08020D2C(struct IwramAt3720 *entity, u32 sound, u8 halfW, u8 halfH)
+u32 sub_08020D2C(struct Entity *entity, u32 sound, u8 halfW, u8 halfH)
 {
     u32 r;
     u32 result;
@@ -104,7 +104,7 @@ u32 sub_08020D2C(struct IwramAt3720 *entity, u32 sound, u8 halfW, u8 halfH)
     r = sub_08021E34(entity, halfW, halfH);
     r <<= 24;
     if (r) {
-        f34 = entity->_field_34;
+        f34 = entity->status;
         bit = 0x80;
         bit <<= 6;
         r = bit;
@@ -114,7 +114,7 @@ u32 sub_08020D2C(struct IwramAt3720 *entity, u32 sound, u8 halfW, u8 halfH)
 
         r = bit;
         r = r | f34;
-        entity->_field_34 = r;
+        entity->status = r;
         result = -1;
         p = &gStructAt3003570;
         handle = 0x10;
@@ -130,9 +130,9 @@ u32 sub_08020D2C(struct IwramAt3720 *entity, u32 sound, u8 halfW, u8 halfH)
         return result;
     }
     r = 0x0000dfff;
-    f34 = entity->_field_34;
+    f34 = entity->status;
     r &= f34;
-    entity->_field_34 = r;
+    entity->status = r;
     return r;
 }
 

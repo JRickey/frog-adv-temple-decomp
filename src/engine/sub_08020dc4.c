@@ -39,9 +39,9 @@ void sub_08020DC4(u8 idx)
     p->entries[idx].fieldB = handle;
 }
 
-extern u8 sub_08021E34(struct IwramAt3720 *s, u8 halfW, u8 halfH);
+extern u8 sub_08021E34(struct Entity *s, u8 halfW, u8 halfH);
 
-void sub_08020E14(struct IwramAt3720 *s, u8 idx, u8 halfW, u8 halfH)
+void sub_08020E14(struct Entity *s, u8 idx, u8 halfW, u8 halfH)
 {
     StructAt3003570 *p;
     u32 sound;

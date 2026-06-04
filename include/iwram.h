@@ -69,27 +69,6 @@ struct IwramAt3608 {
     u8 _field_5; /* +0x5: byte accessed by sub_0800E85C and sub_0800F814 */
 };
 
-struct IwramAt3720 {
-    u8 _pad00[2];
-    s16 _field_2;    /* +2: signed sub-coord (X?), divided by 24 to get tile X */
-    s16 _field_4;    /* +4: signed sub-coord (Y?), divided by 24 to get tile Y */
-    u8 _field_6;     /* +6: active actor id (matched against entry+8 by sub_08006FEC) */
-    u8 _pad07[0x10]; /* +7..+0x16 */
-    u8 _field_17;    /* +0x17: u8 written by sub_08009984 (tile-class result) */
-    u8 _pad18[2];    /* +0x18..+0x19 */
-    u8 _field_1A;    /* +0x1A: dispatch state read often */
-    u8 _field_1B;    /* +0x1B: active-entity count; loop bound (<= 4) for the per-frame entity tick */
-    u8 _pad1C[0x18]; /* +0x1C..+0x33 */
-    u16 _field_34;   /* +0x34: halfword written zero before entity-dispatch */
-    u8 _pad36[2];    /* +0x36..+0x37 */
-    u8 _field_38;    /* +0x38: sub-struct head passed by pointer to sub_080059C4 */
-    u8 _pad39[0x33]; /* +0x39..+0x6b */
-    u16 _field_6c;   /* +0x6c: flag halfword (bits 0x08, 0x4 / 0x8000 / 0x7fff tested) */
-    u8 _pad6e[0x624];
-    u16 _field_692;
-    u16 _field_694;
-};
-
 /* Entity pool slot (0x03003720 + slot*0x38; 128 slots). Replaces the flat
  * struct IwramAt3720, which incorrectly modelled the whole pool as one struct
  * (its _field_38 was slot 1's +0x00, _field_692/_694 slot 30's x/y, etc.).
@@ -208,7 +187,6 @@ extern struct IwramAt3550 gIwram_3550;
 extern struct IwramAt35E0 gIwram_35E0;
 extern struct IwramAt3608 gIwram_3608;
 extern struct IwramAt3710 gIwram_3710;
-extern struct IwramAt3720 gIwram_3720;
 extern struct Entity gEntities[128];
 extern struct IwramAt5358 gIwram_5358;
 extern struct IwramAt6110 gIwram_6110;

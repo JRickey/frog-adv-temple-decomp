@@ -15,10 +15,10 @@
  * pure C. See docs/codegen-notes.md "Third unmatchable class". */
 
 #ifdef NON_MATCHING
-u8 sub_08021E34(struct IwramAt3720 *s, u8 halfW, u8 halfH)
+u8 sub_08021E34(struct Entity *s, u8 halfW, u8 halfH)
 {
-    s16 tileX = (s16)((s16)s->_field_2 / 24);
-    s16 tileY = (s16)((s16)s->_field_4 / 24);
+    s16 tileX = (s16)((s16)s->x / 24);
+    s16 tileY = (s16)((s16)s->y / 24);
     u16 dx;
     u16 dy;
 
@@ -39,7 +39,7 @@ u8 sub_08021E34(struct IwramAt3720 *s, u8 halfW, u8 halfH)
     return 1;
 }
 #else
-NAKED u8 sub_08021E34(struct IwramAt3720 *s, u8 halfW, u8 halfH)
+NAKED u8 sub_08021E34(struct Entity *s, u8 halfW, u8 halfH)
 {
     asm(".syntax unified\n"
         "    push    {r4, r5, r6, r7, lr}\n"

@@ -27,15 +27,15 @@ extern u32 sub_0802D9EC(u32 sound, u32 a, u32 b, u32 c);
 extern void sub_0802DC1C(u32 handle, u8 val);
 extern u32 sub_0802E100(u32 handle);
 extern u32 sub_0802E184(u32 handle);
-extern u8 sub_08021E34(struct IwramAt3720 *s, u8 halfW, u8 halfH);
+extern u8 sub_08021E34(struct Entity *s, u8 halfW, u8 halfH);
 
-void sub_08020414(struct IwramAt3720 *entity, u8 channel, u8 halfW, u8 halfH)
+void sub_08020414(struct Entity *entity, u8 channel, u8 halfW, u8 halfH)
 {
     if (sub_08021E34(entity, halfW, halfH) != 0) {
-        if ((entity->_field_34 & 0x2000) != 0)
+        if ((entity->status & 0x2000) != 0)
             return;
 
-        entity->_field_34 |= 0x2000;
+        entity->status |= 0x2000;
 
         {
             StructAt3003570 *p;
@@ -66,7 +66,7 @@ void sub_08020414(struct IwramAt3720 *entity, u8 channel, u8 halfW, u8 halfH)
         return;
     }
 
-    entity->_field_34 &= 0xdfff;
+    entity->status &= 0xdfff;
 }
 
 void sub_080204A4(u8 tile)
