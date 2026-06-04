@@ -268,6 +268,27 @@ reloc-bearing functions; `make_permuter_target.py` is the clean choice.
 A healthy base score is ~`5 × (Thumb instr diffs)`; anything in the thousands for
 a near-match means the target.o is the buggy `.inst.n`-only format — regenerate it.
 
+### CRITICAL #2: the permuter must use the SAME compiler as the real build
+
+The Makefile default is `CC = old_agbcc` (only ~4 exception TUs use the newer
+`agbcc`). But `tools/permuter_compile.sh` builds candidates with **agbcc (new)**;
+`tools/permuter_compile_old.sh` uses **old_agbcc**. agbcc-new and old_agbcc emit
+*different* code, so permuting an old_agbcc TU with agbcc-new optimizes the wrong
+compiler — a "match" it finds may not match the real ROM. The per-dir
+`nonmatchings/<fn>/compile.sh` MUST call the variant matching that TU's real CC:
+
+```sh
+# default / majority of TUs (old_agbcc):
+tools/permuter_compile_old.sh -DREGION_US -nostdinc -Iinclude/ "$INPUT" -o "$OUTPUT"
+# only the agbcc-exception TUs:
+tools/permuter_compile.sh     -DREGION_US -nostdinc -Iinclude/ "$INPUT" -o "$OUTPUT"
+```
+
+To tell which a TU uses: build it (`make`) and check, or grep the Makefile for a
+per-TU `CC :=` override. `agbcc_oracle.py` already uses old_agbcc, so its base
+score is the ground truth — if the permuter's base score disagrees with the
+oracle's instruction-diff count, the compile.sh is on the wrong compiler.
+
 ## Adding a Node-side tool
 
 ```sh
