@@ -1,8 +1,8 @@
 diff --git a/src/preprocess.py b/src/preprocess.py
-index 8447a80..d8b15d9 100644
+index 8447a80..825921a 100644
 --- a/src/preprocess.py
 +++ b/src/preprocess.py
-@@ -1,10 +1,52 @@
+@@ -1,10 +1,53 @@
  from typing import List
 +import os
  import subprocess
@@ -48,7 +48,8 @@ index 8447a80..d8b15d9 100644
 +            src = f.read()
 +
 +    return subprocess.run(
-+        [cpp, "-P", "-nostdinc", f"-I{include_dir}", "-DREGION_US", "-DPERMUTER"]
++        [cpp, "-P", "-nostdinc", f"-I{include_dir}", "-DREGION_US", "-DNON_MATCHING",
++         "-DPERMUTER"]
 +        + cpp_args
 +        + ["-"],
 +        input=src,

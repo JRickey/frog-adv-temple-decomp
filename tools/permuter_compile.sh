@@ -56,7 +56,9 @@ fi
 # default CC); override with AGBCC= for the agbcc-exception TUs.
 AGBCC="${AGBCC:-tools/agbcc/bin/old_agbcc}"
 CFLAGS="-Werror -O2 -mthumb-interwork -fhex-asm"
-CPPFLAGS="-P -DREGION_US -nostdinc -Iinclude/"
+# -DNON_MATCHING: permute the readable C branch of #ifdef NON_MATCHING / #else asm
+# functions (never the real build; harmless for files without that ifdef).
+CPPFLAGS="-P -DREGION_US -DNON_MATCHING -nostdinc -Iinclude/"
 
 TMP_S="$(mktemp -t permuter_compile.XXXXXX.s)"
 trap "rm -f '$TMP_S'" EXIT
