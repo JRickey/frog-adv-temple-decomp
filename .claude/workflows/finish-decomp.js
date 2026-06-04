@@ -1,12 +1,13 @@
 export const meta = {
   name: 'finish-decomp',
   description:
-    "Drive Frogger's Adventures: Temple of the Frog decomp toward completion. Each round: scaffold/peel to refill the queue (builder, worktree) + decomp K disjoint targets in parallel worktrees (true byte-match, or corpus-gated NAKED+NON_MATCHING), then integrate onto main one commit at a time with a make-check safety net. Loops until dry (no slices left + frontier exhausted) or 3 consecutive 0-commit rounds.",
+    "Drive Frogger's Adventures: Temple of the Frog decomp toward completion. Each round: scaffold/peel to refill the queue (builder, worktree) + decomp K disjoint targets in parallel worktrees (true byte-match, or corpus-gated NAKED+NON_MATCHING), then integrate onto main one commit at a time with a make-check safety net. When ANY Claude agent (Sonnet or Opus) defers a target, it escalates IN-PASS to codex (GPT-5.5-high) via the codex plugin runtime as the top rung of the ladder. Loops until dry (no slices left + frontier exhausted) or 3 consecutive 0-commit rounds.",
   whenToUse:
     'Resume/advance the matching decompilation. Commits land on main; make check guards every cherry-pick. Re-run to continue across invocations.',
   phases: [
     { title: 'Scout', detail: 'scout a deep target queue with escalation tiers (read-only on main)', model: 'sonnet' },
     { title: 'Decomp', detail: 'rolling pool of K workers: true-match or corpus-gated NAKED; Sonnet <=160B + escalation->Opus' },
+    { title: 'Codex', detail: 'in-pass escalation: any Claude defer -> codex GPT-5.5-high via the plugin (Sonnet driver shell)', model: 'sonnet' },
     { title: 'Integrate', detail: 'per-result: cherry-pick onto main (serialized lock), make check, revert breakers', model: 'sonnet' },
     { title: 'Finalize', detail: 'once after the pool drains: regen scoreboard + prune worktrees', model: 'sonnet' },
   ],
@@ -50,9 +51,21 @@ const BUDGET_FLOOR = 80_000 // stop if a token target was set and we're near it
 // already sized by the scout) go to Sonnet; larger/harder ones stay on Opus, where the
 // match-rate risk actually lives. Override via args.models / args.sonnetMaxBytes.
 const MODELS = Object.assign(
-  { scout: 'sonnet', build: 'sonnet', integrate: 'sonnet', decompSmall: 'sonnet', decompLarge: 'opus' },
+  // codexDriver is the Sonnet "shell" agent for the codex rung — it bootstraps the worktree,
+  // shells the codex plugin, verifies, and commits. The expensive reasoning is codex's, not
+  // this agent's, so it stays on Sonnet.
+  { scout: 'sonnet', build: 'sonnet', integrate: 'sonnet', decompSmall: 'sonnet', decompLarge: 'opus', codexDriver: 'sonnet' },
   A.models || {},
 )
+// Codex escalation (the NEW top rung). When ANY Claude decomp agent returns status="deferred",
+// the same worker hands that target IN-PASS to codex (GPT-5.5-high) via the codex plugin's
+// `codex-companion.mjs task` runtime — wrapped by a thin Sonnet "driver" (codexDriverPrompt) that
+// bootstraps the worktree, shells the plugin, INDEPENDENTLY verifies, and reports the normal
+// DECOMP_SCHEMA so the codex attempt tracks in /workflows exactly like a Claude decomp. codex is
+// the END of the ladder (Sonnet -> Opus -> codex); a codex defer is terminal for the run. The
+// firm-defer BACKLOG (prior-run next_tier=='codex') stays parked in codexQueue as before — only
+// defers that happen DURING this run escalate. Override model/effort via args.codex.
+const CODEX = Object.assign({ model: 'gpt-5.5', effort: 'high' }, A.codex || {})
 // Threshold in BYTES. The project's tractability line is ~80 *instructions*; Thumb is
 // 2 bytes/instr, so that's ~160 bytes. (80 was a units bug — 40 instr — and routed the
 // entire current queue, which starts at ~120B, to Opus, making the routing a no-op.)
@@ -61,7 +74,10 @@ const SONNET_MAX_BYTES = A.sonnetMaxBytes || 160 // decomp targets with byteSize
 // deferred carries nextTier='opus' from the scout and is routed to Opus regardless of
 // size — the cheap tier had its shot. Opus-deferred targets (nextTier='codex' = firm-defer)
 // are excluded by the scout entirely and surfaced in the codex queue. Fresh targets route
-// by size as before.
+// by size as before. NEW: codex (GPT-5.5-high) is a live rung ABOVE Opus, but it is driven by
+// RESULT, not by the scout tag — whenever the dispatched Claude agent (any tier) returns
+// status="deferred", the worker escalates that same target IN-PASS to the codex driver (see
+// CODEX / codexDriverPrompt / worker()). decompModel below still only routes Sonnet vs Opus.
 const decompModel = (t) => {
   if (t.nextTier === 'opus') return MODELS.decompLarge
   return (t.byteSize || 0) <= SONNET_MAX_BYTES ? MODELS.decompSmall : MODELS.decompLarge
@@ -152,7 +168,7 @@ const PLAN_SCHEMA = {
     codexQueue: {
       type: 'array',
       items: { type: 'string' },
-      description: 'firm-defers: functions Opus already deferred (function_status --next-tier codex). NOT auto-dispatched — the human feeds these to codex one at a time.',
+      description: 'firm-defers: functions Opus already deferred in PRIOR runs (function_status --next-tier codex). This BACKLOG stays parked (not auto-dispatched) — the human feeds it to codex separately. (Distinct from the in-pass codex rung, which escalates defers that happen DURING this run.)',
     },
     note: { type: 'string' },
   },
@@ -449,6 +465,246 @@ Return the structured object: target="${t.name}", status, worktreePath, commits 
 notes (what you did / why reverted).`
 }
 
+// --- CODEX RUNG: the prompt codex (GPT-5.5-high) itself runs (fed on stdin via the plugin's
+// `task --prompt-file`), then a thin Sonnet driver that launches it + independently verifies.
+// codexDecompBody is the same four-phase decomp contract a Claude agent follows; codexDriverPrompt
+// is the harness-visible shell that makes a codex attempt look like a normal decomp result.
+function codexDecompBody(t) {
+  return `You are a DECOMP agent powered by GPT-5.5 (high reasoning, goal mode) driving ONE
+function to a MATCHING decompilation: ${t.name}, for Frogger's Adventures: Temple of the Frog
+(Game Boy Advance, agbcc 2.x). You run via the codex plugin runtime inside an isolated git
+worktree — the directory you were launched in (your cwd). Target: asm slice ${t.asmFile} -> C file
+${t.destC}, addr ${t.addr}, ~${t.byteSize ?? '?'} bytes. Decompile EXACTLY this one function.
+
+ENVIRONMENT RULES (critical):
+- STAY in your cwd (this worktree). Do NOT cd to ${MAIN} — it is only the symlink source for
+  gitignored deps (tools/agbcc, baserom, vendor, node_modules). All edits + commits land HERE.
+- The worktree is already bootstrapped. Verify ONCE before touching anything: git status --short
+  is clean AND make -j4 && make check exits 0. If not, do nothing and report that.
+- macOS has NO timeout command; never use it.
+- COST: do not re-read full build logs each turn; keep only byte_diff / diff-count lines.
+
+Read once: ${MAIN}/CLAUDE.md sections "Agent workflow — peel-first, then decomp" and "C style",
+plus docs/codegen-notes.md (the agbcc 2.x matching idioms — your Phase 2 toolkit).
+
+Work in FOUR EXPLICIT PHASES. Do NOT jump straight to byte-forcing. The point of this prompt is
+that you satisfy "match the bytes" THROUGH readable source, not by accumulating pins/asm/volatile.
+
+== PHASE 0 — UNDERSTAND (no C edits yet) ==
+- python3 tools/agent/decomp_brief.py ${t.name}  (range, callees+peel-status, pool labels with
+  resolved addrs, struct xref, m2c seed C, dest hint).
+- python3 tools/agent/classify_unmatchable.py ${t.name}  (reads baserom bytes = ground truth;
+  note the VERDICT and any advisory). ONLY class3-libgcc is STRONG_UNMATCHABLE (and it has no
+  confirmed instance on this ROM). EVERYTHING ELSE is ATTEMPT: a \`mov pc, rN\` computed jump is the
+  SIGNATURE OF A C \`switch\` (the old "class4-movpc" wall is RETRACTED — 7 mode-X dispatchers that
+  shipped NAKED were promoted to true-C as plain switches); high regs across a \`bl\` are advisory.
+- cat docs/deferred-analysis/${t.name}.md 2>/dev/null  — a Claude agent JUST deferred this target
+  and stashed "## Drift" + "## Best-effort C" here (already landed on main, so present in your
+  worktree). READ it: those tried levers/structures are what does NOT work. Treat the near-match as
+  a LOCAL PLATEAU to ESCAPE by re-deriving from scratch, NOT a base to tweak.
+- Read the destination file ${t.destC} end-to-end (reuse its types/conventions); dump_pool.py
+  ${t.name} for resolved literals; struct_grow.py / struct_xref.py any raw IWRAM/EWRAM base so the
+  C has typed offsets, not [rN,#imm] magic.
+- PREREQUISITES (do these regardless of which path you take): peel every callee tagged
+  "UNPEELED" (python3 tools/agent/auto_peel.py --addr 0x<callee> --apply; commit "Peel sub_XYZ"),
+  and if the target is "blocked: needs new C file" scaffold it first
+  (python3 tools/agent/scaffold_cluster.py --asm ${t.asmFile} ${t.name} --apply; commit
+  "Scaffold ${t.destC}").
+- Write a SHORT model (a few lines, for yourself): params, the structs/fields touched, the
+  control-flow shape, and the compiler drift you anticipate. For drift you expect, name the
+  responsible agbcc pass in tools/agbcc-src/gcc_arm/ ({local-alloc,regclass,reload}=register
+  choice; loop.c=loop-reversal/strength-reduce; cse.c/gcse.c=folds) and READ it.
+
+== PHASE 1 — CLEAN C FIRST ==
+- Write a HUMAN-READABLE first implementation into ${t.destC}: named constants/enums (add the
+  enum to the right include/ header if it is missing — no bare 0x29 for a thing that has a name),
+  early-return with NO else, u8 booleans, no intermediate locals that only cache one field read.
+- HARD CONSTRAINT for this phase: NO inline asm, NO NAKED, NO volatile-for-matching, and ideally
+  NO register pins. This is the readable reference you keep.
+- If it does not match, your FIRST round of fixes MUST be SOURCE-LEVEL — control-flow shape,
+  types, expression structure, statement order — informed by the agbcc pass you read. RE-DERIVE a
+  different structure; do NOT yet reach for pins/barriers. A near-match is a local minimum, and
+  tweaking one structure that will not converge is wasted; a fundamentally different structure
+  resets the budget. When a register CHOICE is wrong, coerce it by rewriting the C SHAPE, not by
+  pinning — a pin means the shape is still wrong.
+- COMPILER FIRST, BEFORE ANY PIN: the default is now OLD_AGBCC (\`CC = $(OLD_AGBCC_BIN)\` is the
+  Makefile default — the correct model for this title; only 4 named TUs use the newer agbcc). Most
+  pin/asm debt came from C written against the WRONG compiler. If a fresh decomp drifts on register
+  coloring, a redundant \`push {lr}; pop {r1}; bx r1\` epilogue at joins, or AND-operand ordering, add
+  a per-TU CC override (the .s target matching ${t.destC}, e.g. \`src/game/foo.s: CC = $(AGBCC_BIN)\`)
+  and re-check BEFORE pinning. Swapping the compiler matches more functions than pins do.
+- DISPATCHER RECIPE (mov pc / mode-X): write the dense \`switch\` over the state index, then (a) order
+  the case BODIES in baserom PHYSICAL order, not numeric (codegen-notes "Case-number ≠
+  source-block-order"); (b) share epilogues via fallthrough / \`goto tail\`; (c) add \`<that .s>:
+  CFLAGS += -fforce-addr -fno-expensive-optimizations -fno-gcse\` and \`/DISCARD/\` the stray
+  \`.rodata\`. This matched the whole mode-X cluster.
+
+== PHASE 2 — DIFF DOWN (only after a clean attempt exists) ==
+- NOW the matching levers are allowed: register T x asm("rN") pins (INCLUDING high regs
+  r8/r9/sl — these are usually matchable and are NOT a NAKED trigger); a local base-ptr anchor
+  (T *p=&gThing;); cast a now-dead pointer to an index to force its register reuse; an asm("")
+  mov-fence to block a tail-merge or CSE; a void-return epilogue; linker-assigned IWRAM symbols
+  to defeat a CSE-fold; per-TU CFLAGS (-ffixed-rN, -fno-strength-reduce, -fno-gcse,
+  -fno-schedule-insns) and/or CC=\$(OLD_AGBCC_BIN); statement/scope reorder. A pin is the LAST
+  resort and the loudest "shape is wrong" signal — prefer a shape rewrite that needs none.
+- INSTRUMENT AGBCC when you cannot tell WHY a pass diverges (proven technique): build a PRIVATE debug
+  copy of agbcc with an \`fprintf(stderr,…)\` at the decision site, compile only your TU with it to
+  watch the choice. SAFETY: never edit/rebuild the SHARED symlinked tools/agbcc or tools/agbcc-src
+  (it races siblings) — private copy, private prefix, rm after. Recipe in codegen-notes
+  "Instrumenting agbcc itself — build a private debug compiler".
+- Corpus FIRST, permuter LAST: python3 tools/agent/corpus.py grep '<the specific idiom>' --c for
+  prior pure-C art before mutating.
+  HISTORY search (THE asm-idiom step) when grep finds the idiom in NO current-tree C and you are
+  blocked on a fold / register spread or funnel / addressing mode: it finds the commit that DELETED
+  asm matching your idiom and shows the C that REPLACED it in the same commit (exact asm<->C
+  pairing) — python3 tools/agent/corpus_asm_search.py search --asm '<register-AGNOSTIC asm regex;
+  use char classes r[0-7] and (r8|r9|sl) for regs>' --require-c (or a preset, e.g.
+  --idiom highreg-spread), then corpus_asm_search.py show <repo>@<sha> to read the C and adapt its
+  STRUCTURE. Do this BEFORE permuter. Permuter only if you are NEAR a match (byte_diff <= ~40):
+  bounded ~2000 iters (~30-45s), process-GROUP kill (set -m; kill -- -\$PGID), per
+  ${MAIN}/docs/permuter-howto.md — never pipe it, redirect to a file, and verify there are no
+  leaked workers afterward (pgrep -f the scratch dir is empty).
+- EVERY pin / asm("") / volatile / -fXXX you keep gets a ONE-LINE comment stating WHY it is
+  necessary, tied to the SPECIFIC diff instruction it fixes. An unexplained lever is debt.
+
+== PHASE 3 — READABILITY PASS (after byte_diff hits 0) ==
+- If the match required 3+ register pins, ANY asm(""), a suspicious volatile, or contorted
+  locals: do a SECOND pass that REDUCES that debt while PRESERVING the match. Remove each lever
+  that is NOT actually load-bearing and re-verify byte_diff 0 after every removal (fast path:
+  python3 tools/agent/build_expected.py --fn ${t.name} then objdiff-cli on expected/src/<rel>.o
+  vs src/<rel>.o). Keep ONLY genuinely-required levers, each with its WHY note. The deliverable
+  is readable C that happens to match — NOT matched bytes that happen to be C.
+
+== NAKED IS EXCEPTIONAL ==
+Ship NAKED+NON_MATCHING ONLY if classify_unmatchable.py returns STRONG_UNMATCHABLE
+(class3-libgcc ONLY — class4-movpc is RETRACTED; a computed jump is a switch, write it) AND the
+corpus confirms the idiom lives ONLY in hand-asm:
+  python3 tools/agent/corpus.py grep '<exact idiom regex>' --asm   (expect MANY hits)
+  python3 tools/agent/corpus.py grep '<related C construct>'  --c   (expect NONE matched to C)
+  python3 tools/agent/corpus_asm_search.py search --asm '<idiom regex>' --require-c   (HISTORY pairing — if EVEN ONE repo replaced this exact asm with C, it is MATCHABLE: do NOT NAKED)
+"All corpus hits are NAKED" is NOT proof of impossibility — it is circular (everyone NAKED'd for the
+same wrong reason, as the movpc cluster proved); a direct compile probe beats a census.
+High registers ALONE are NOT a fast path to NAKED — attempt them in Phase 2. Asymmetric-cost
+rule: a wrongly-NAKED function is a PERMANENT regression (it will not survive the phase-3 PC
+port); wasted match tokens are cheap and recoverable. When unsure -> ATTEMPT. If you DO ship
+NAKED: readable C under #ifdef NON_MATCHING, hand-asm NAKED under #else, and EVERY NAKED asm()
+block ends with the literal "    .syntax divided\\n".
+
+== DEFINITION OF DONE (structural, NOT byte_diff) ==
+byte_diff 0 alone does NOT mean matched — a NAKED ship is also byte_diff 0 by construction.
+- matched: the committed ${t.destC} body for ${t.name} has NO NAKED, NO inline asm(, NO
+  #ifdef NON_MATCHING — AND byte_diff 0 / make check passes. (A register T x asm("rN") pin
+  DECLARATION is PURE C, not inline asm — it does NOT make the function naked.)
+- naked: the body uses NAKED / inline asm / #ifdef NON_MATCHING (matches via the asm path).
+Never call a NAKED ship a "true match".
+
+== ON A MATCH OR A CLEAN NAKED SHIP ==
+- rm the consumed asm slice ${t.asmFile} (if its whole slice is now in C); collapse the
+  scaffold+asm pair in linker.ld into the single src .o(.text) entry (follow the preceding
+  sibling's pattern); if a stale docs/deferred-analysis/${t.name}.md exists, git rm it.
+- make -j4 && make check (MUST exit 0).
+- Commit with the subject matching your status (the driver re-verifies this):
+    matched: git commit -m "Decompile ${t.name}"
+    naked:   git commit -m "Decompile ${t.name} (NAKED + NON_MATCHING)"
+  Body: the structure + agbcc tricks; for NAKED include class + corpus hit counts + levers tried.
+
+== IF YOU CANNOT MATCH (after SEVERAL fundamentally-different structural approaches) ==
+Do NOT ship NAKED for a non-STRONG function — an honest un-decompiled asm slice beats a fake
+match. DEFER, updating the existing analysis so a future attempt resumes instead of restarting:
+  1. mkdir -p docs/deferred-analysis ; OVERWRITE docs/deferred-analysis/${t.name}.md with a
+     "## Drift" section (best byte_diff, WHICH register/fold/schedule diverged, levers + permuter
+     score tried — ADD what you newly ruled out) and a "## Best-effort C" section (your
+     most-correct readable C inside a fenced code block opened with three backticks then c).
+  2. git add docs/deferred-analysis/${t.name}.md ; git commit -m "Stash deferred analysis: ${t.name}"
+     (docs-only; never compiled, so make check stays green). (If the file is byte-identical to what
+     is already on main there is nothing to commit — that is fine.)
+  3. git checkout -- ${t.destC} (restore the stub); LEAVE the asm slice ${t.asmFile} and
+     linker.ld untouched.
+
+Finish with a CLEAN tree (everything committed or reverted) and print a final line exactly:
+STATUS=<matched|naked|deferred|reverted> ${t.name}
+The driver computes the commit SHAs itself — you just need correct commits and a clean tree.`
+}
+
+function codexDriverPrompt(t, round) {
+  return `You are the CODEX DRIVER (running on Sonnet) for decomp target ${t.name} (asm
+${t.asmFile} -> C ${t.destC}, addr ${t.addr}, ~${t.byteSize ?? '?'} bytes) in an isolated git
+worktree of ${MAIN}. Round ${round}.
+
+This target was JUST DEFERRED by a Claude decomp agent in THIS run — codex (GPT-5.5-high) is the
+top rung of the ladder and its last in-pass shot. The prior agent's drift note
+docs/deferred-analysis/${t.name}.md was already landed on main, so it IS present in your fresh
+worktree; the codex prompt tells codex to READ it and ESCAPE that plateau (re-derive, don't tweak).
+
+You DO NOT decompile the function yourself. Your job: (a) bootstrap the worktree, (b) hand the
+decomp to GPT-5.5-high via the codex PLUGIN runtime (codex-companion.mjs task), (c) INDEPENDENTLY
+verify the result, (d) report the structured object. The expensive reasoning is codex's; you are
+the harness-visible shell + verifier, so this tracks in /workflows exactly like a normal decomp.
+${BOOTSTRAP}
+${WORKTREE_RULES}
+
+PROCEDURE:
+1. BASE=\$(git rev-parse HEAD)   # record before anything; the SHAs you report are \$BASE..HEAD.
+2. Resolve the codex plugin companion + the codex CLI via BASH (the plugin env var
+   CLAUDE_PLUGIN_ROOT is NOT set inside a workflow agent, so glob the versioned install):
+\`\`\`sh
+COMPANION="\$(ls -d "\$HOME"/.claude/plugins/cache/openai-codex/codex/*/scripts/codex-companion.mjs 2>/dev/null | sort -V | tail -1)"
+command -v codex >/dev/null 2>&1 || export PATH="/Applications/Codex.app/Contents/Resources:\$PATH"
+[ -n "\$COMPANION" ] && command -v codex >/dev/null 2>&1 && node "\$COMPANION" setup --json | grep -q '"ready": true' && echo CODEX_READY
+\`\`\`
+   If that does NOT print CODEX_READY: set status="deferred" (the Claude deferral already landed its
+   stash note on main — leave it as the resume point), note "codex plugin/CLI not ready — run
+   /codex:setup", commits=[], and STOP.
+3. Write the codex task prompt to codex-task.md with a QUOTED heredoc (so \$ and backticks stay
+   literal). Use BASH ONLY (Edit/Write resolve to main and corrupt it):
+\`\`\`sh
+cat > codex-task.md <<'CODEXEOF'
+${codexDecompBody(t)}
+CODEXEOF
+\`\`\`
+   Confirm: wc -l codex-task.md (many lines) and grep -c '${t.name}' codex-task.md (>0).
+4. Launch codex via the PLUGIN task runtime in the BACKGROUND — hard decomps run many minutes and
+   a foreground Bash call would hit the 10-minute cap and kill the work. Run EXACTLY this with
+   run_in_background=true; you are re-invoked when it exits:
+\`\`\`sh
+node "\$COMPANION" task --write --cwd "\$PWD" --model ${CODEX.model} --effort ${CODEX.effort} \\
+  --prompt-file codex-task.md > codex-run.log 2>&1
+\`\`\`
+   (--write gives codex a workspace-write sandbox with approvalPolicy=never, so it edits + commits
+   inside THIS worktree without approval prompts; --cwd "\$PWD" pins the codex thread to your
+   worktree's git root. The plugin renders codex's final message + touched files to codex-run.log.)
+5. When it exits, read the OUTCOME compactly (do NOT paste whole logs into your reasoning):
+   tail -n 60 codex-run.log
+6. VERIFY INDEPENDENTLY — do NOT trust codex's printed summary. Derive the truth from the tree:
+   a. make -j4 && make check — if it does NOT exit 0 the tree is broken: git reset --hard \$BASE
+      && git clean -fd (drops codex-task.md/codex-run.log + anything codex left untracked),
+      status="reverted", note the failure, then go to step 7.
+   b. python3 tools/agent/compile_and_view_assembly.py ${t.name} --human — confirm byte_diff 0.
+   c. COMMIT SAFETY NET: codex sometimes finishes the edits but does NOT commit. If byte_diff is 0
+      and make check passes BUT \`git log --oneline \$BASE..HEAD\` has no "Decompile ${t.name}"
+      commit: first \`rm -f codex-task.md codex-run.log\` so scratch is excluded, then check
+      \`git status --short\` shows ONLY the decomp's own files (${t.destC}, the removed asm slice,
+      linker.ld, any header/peel) — if so \`git add -A && git commit -m "Decompile ${t.name}"\`
+      (the structural grep in (d) decides whether to re-tag it NAKED).
+      If byte_diff != 0: codex did not land a match. If a "Decompile ${t.name}" commit exists it is
+      a non-match — git reset --hard \$BASE && git clean -fd, status="reverted". If only a "Stash
+      deferred analysis" commit (or nothing) exists -> status="deferred".
+   d. STRUCTURAL matched-vs-naked (this OVERRIDES any codex claim): grep -nE 'NON_MATCHING|\\bNAKED\\b'
+      ${t.destC} scoped to ${t.name}'s body — a register-pin asm("rN") DECLARATION is PURE C, NOT
+      naked, never flag it. If NAKED / inline asm / #ifdef NON_MATCHING is present -> status="naked";
+      ensure the commit subject says "(NAKED + NON_MATCHING)" — if the just-committed commit is HEAD
+      and lacks it, git commit --amend -m "Decompile ${t.name} (NAKED + NON_MATCHING)" (keep the
+      body). Otherwise -> status="matched".
+7. CLEAN UP scratch so the tree is clean for the integrator: rm -f codex-task.md codex-run.log
+   (untracked; never commit them). Confirm git status --short is empty (everything committed or
+   reverted).
+8. SHAs: git rev-list --reverse \$BASE..HEAD -> commits (apply order).
+
+Return the structured object: target="${t.name}", status (YOUR structural verdict, not codex's),
+worktreePath (pwd), commits (the \$BASE..HEAD SHAs in apply order), nakedClass/corpusEvidence if
+naked, and notes — keep notes SHORT: what codex did + any caveat.`
+}
+
 function builderPrompt(round) {
   return `You are the QUEUE-BUILDER in an isolated git worktree of ${MAIN}
 (Frogger's Adventures: Temple of the Frog — GBA, agbcc). Round ${round}.
@@ -708,6 +964,7 @@ log(`Rolling pool: ${K} workers over a ${queue.length}-target queue (${queue.fil
 const results = []
 let halt = false
 let dispatched = 0
+let codexDispatched = 0 // codex escalations fired (in-pass, on a Claude defer)
 
 // Async mutex: integrations serialize on main (decomp stays fully parallel).
 let integLock = Promise.resolve()
@@ -721,6 +978,33 @@ async function withIntegrateLock(fn) {
   } finally {
     release()
   }
+}
+
+// Integrate ONE decomp result onto main under the serialized lock and return the INTEG1 object
+// (or null on a null integrator / halt). Does NOT push to `results` — the caller records the
+// target's FINAL outcome exactly once, so an escalated target is counted by its codex result
+// rather than twice. `tierLabel` (e.g. "[codex]") just annotates the log line.
+async function integrateResult(t, dres, tierLabel) {
+  return withIntegrateLock(async () => {
+    if (halt) return null
+    const integ = await agent(integrateOnePrompt(t, dres), {
+      schema: INTEG1_SCHEMA,
+      phase: 'Integrate',
+      model: MODELS.integrate,
+      label: `integ ${t.name}${tierLabel ? ' ' + tierLabel : ''}`,
+    })
+    if (!integ) {
+      log(`integ ${t.name}${tierLabel ? ' ' + tierLabel : ''}: integrator returned null — HALTING new dispatches (inspect main).`)
+      halt = true
+      return null
+    }
+    log(`+ ${t.name}${tierLabel ? ' ' + tierLabel : ''}: decomp=${dres.status} integ=${integ.status} landed=[${(integ.integrated || []).join(', ') || '-'}] sha1Match=${integ.sha1Match} (${results.length} integrated, ${queue.length} queued)`)
+    if (integ.mainHealthy === false || integ.sha1Match === false) {
+      log(`main NON-MATCHING after ${t.name}${tierLabel ? ' ' + tierLabel : ''} (mainHealthy=${integ.mainHealthy}, sha1Match=${integ.sha1Match}). HALTING — inspect make check on main.`)
+      halt = true
+    }
+    return integ
+  })
 }
 
 // --- Low-watermark builder refill: keep the queue fed on long/overnight runs ---
@@ -817,26 +1101,37 @@ async function worker(wid) {
       label: `decomp ${tag}`,
     })
     if (!dres) continue
-    await withIntegrateLock(async () => {
-      if (halt) return
-      const integ = await agent(integrateOnePrompt(t, dres), {
-        schema: INTEG1_SCHEMA,
-        phase: 'Integrate',
-        model: MODELS.integrate,
-        label: `integ ${t.name}`,
+
+    // Integrate the Claude attempt. For a deferral this lands ONLY its docs-only "Stash deferred
+    // analysis" commit, which puts the prior-drift .md on main BEFORE the codex worktree forks —
+    // so codex reads the same analysis and escapes the plateau instead of starting cold.
+    let integ = await integrateResult(t, dres)
+    let finalStatus = dres.status
+    let viaCodex = false
+
+    // ESCALATION (in-pass, top rung): ANY Claude defer (Sonnet OR Opus) hands the SAME target to
+    // codex GPT-5.5-high via the plugin runtime before this worker slot is freed. The Sonnet driver
+    // does the shelling + verification; codex does the reasoning. codex is the END of the ladder —
+    // its result (matched/naked/deferred/reverted) is the target's terminal outcome for this run.
+    if (!halt && dres.status === 'deferred') {
+      codexDispatched += 1
+      log(`↑ ${t.name}: ${m} deferred — escalating in-pass to codex ${CODEX.model} (${CODEX.effort}).`)
+      const cres = await agent(codexDriverPrompt(t, dispatched), {
+        schema: DECOMP_SCHEMA,
+        isolation: 'worktree',
+        phase: 'Codex',
+        model: MODELS.codexDriver,
+        label: `codex ${t.name}`,
       })
-      if (!integ) {
-        log(`integ ${t.name}: integrator returned null — HALTING new dispatches (inspect main).`)
-        halt = true
-        return
+      if (cres) {
+        const integ2 = await integrateResult(t, cres, '[codex]')
+        if (integ2) integ = integ2
+        finalStatus = cres.status
+        viaCodex = cres.status === 'matched' || cres.status === 'naked'
       }
-      results.push({ target: t.name, decompStatus: dres.status, ...integ })
-      log(`+ ${t.name}: decomp=${dres.status} integ=${integ.status} landed=[${(integ.integrated || []).join(', ') || '-'}] sha1Match=${integ.sha1Match} (${results.length} integrated, ${queue.length} queued)`)
-      if (integ.mainHealthy === false || integ.sha1Match === false) {
-        log(`main NON-MATCHING after ${t.name} (mainHealthy=${integ.mainHealthy}, sha1Match=${integ.sha1Match}). HALTING — inspect make check on main.`)
-        halt = true
-      }
-    })
+    }
+
+    results.push({ target: t.name, decompStatus: finalStatus, viaCodex, ...(integ || {}) })
   }
 }
 
@@ -882,13 +1177,17 @@ const nakedShips = results.filter((r) => r.decompStatus === 'naked' && !r.revert
 const deferredFns = results.filter((r) => r.decompStatus === 'deferred').map((r) => r.target)
 const revertedFns = results.filter((r) => r.reverted).map((r) => r.target)
 const landed = results.flatMap((r) => r.integrated || [])
+// Targets a Claude agent deferred that codex then landed (matched or naked) — the payoff of the rung.
+const codexRescued = results.filter((r) => r.viaCodex && !r.reverted).map((r) => r.target)
 
-log(`finish-decomp finished: ${dispatched} decomp agents -> ${trueMatches.length} true-C, ${nakedShips.length} NAKED, ${deferredFns.length} deferred, ${revertedFns.length} reverted; asm_funcs_remaining now ${fin ? fin.asmFuncsRemaining : '?'}${halt ? ' (HALTED on non-matching main)' : ''}.`)
+log(`finish-decomp finished: ${dispatched} Claude decomp agents + ${codexDispatched} codex escalations -> ${trueMatches.length} true-C, ${nakedShips.length} NAKED (${codexRescued.length} rescued by codex), ${deferredFns.length} deferred, ${revertedFns.length} reverted; asm_funcs_remaining now ${fin ? fin.asmFuncsRemaining : '?'}${halt ? ' (HALTED on non-matching main)' : ''}.`)
 
 return {
   decompAgents: dispatched,
+  codexEscalations: codexDispatched,
   trueMatches,
   nakedShips,
+  codexRescued,
   deferred: deferredFns,
   reverted: revertedFns,
   landed,
