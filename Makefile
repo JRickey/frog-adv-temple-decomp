@@ -279,3 +279,6 @@ $(LD_SCRIPT): linker.ld
 .PHONY: us
 us:
 	$(MAKE) REGION=us
+# Matches the baserom epilogue (pop {r4,r5,pc} instead of bx r1);
+# the TU was compiled without -mthumb-interwork.
+src/game/sub_0803578c.s: CFLAGS = -Werror -O2 -fhex-asm
