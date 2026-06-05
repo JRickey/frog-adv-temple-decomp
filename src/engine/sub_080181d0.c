@@ -41,3 +41,23 @@ void sub_080181D0(void)
 
     sub_080184DC(&attr, 5, 4, 2);
 }
+
+extern u32 sub_08000900(void);
+extern u16 sub_080106EC(u16 arg);
+
+void sub_08018284(void)
+{
+    gIwram_3480._unk0C = sub_08000900();
+    sub_080106EC(0xBF);
+
+    gIwram_3470[0] = 0;
+    gIwram_3470[1] = 0;
+    gIwram_3470[3] = 0xA0;
+    gIwram_3470[2] = 0xF0;
+
+    gIwram_3550._data[0] = 0;
+    gIwram_3550._data[1] = 0;
+
+    gIwram_3480._data[3]++;
+    gIwram_34A0.dispatchIdx = 0;
+}
