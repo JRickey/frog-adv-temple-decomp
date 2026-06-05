@@ -26,7 +26,7 @@ void sub_0801288C(void)
 {
     const struct TileBlit_1288C *desc;
     const u8 *flagPtr;
-    register u32 entityBase asm("r1");
+    register u32 entityBase;
     u32 xOffset;
     register u32 yOffset asm("r0");
     register u32 hold5 asm("r5");
@@ -60,7 +60,7 @@ void sub_0801288C(void)
     xWork = xCoord * 3 + xOffset - xOffset + hold5 - hold5 + hold6 - hold6;
     xWork <<= 16;
     yOffset = 0x694;
-    entityBase += yOffset;
+    entityBase -= -yOffset;
     /* Keep yOffset live through the signed load for matching. */
     if (yOffset)
         yCoord = *(s16 *)entityBase;
