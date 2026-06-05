@@ -738,8 +738,7 @@ SECTIONS {
         src/system/sub_0802e724.o(.text);  /* 0x0802e724 - 0x0802e7c4, sub_0802E724 */
         src/system/sub_0802e7c4.o(.text);  /* 0x0802e7c4 - 0x0802e934, sub_0802E7C4 + sub_0802E874 */
         src/system/sound_envelope_dual.o(.text);  /* 0x0802e934 - 0x0802ea80, sub_0802E934 (NAKED+NON_MATCHING) + sub_0802EA2C */
-        src/system/sound_envelope.o(.text);  /* 0x0802ea80 - 0x0802ebf8, sub_0802EA80 + sub_0802EB34 (NAKED+NON_MATCHING) */
-        asm/disasm_0x0802ebf8.o(.text);  /* 0x0802ebf8 - 0x0802ec7c, sub_0802EBF8 (auto-peeled) */
+        src/system/sound_envelope.o(.text);  /* 0x0802ea80 - 0x0802ec7c, sub_0802EA80 + sub_0802EB34 (NAKED+NON_MATCHING) + sub_0802EBF8 (NAKED+NON_MATCHING) */
         src/system/sound_channel_envelope_a.o(.text);  /* 0x0802ec7c - 0x0802ed5c, sub_0802EC7C (NAKED+NON_MATCHING) */
         src/system/sound_channel.o(.text);  /* 0x0802ed5c - 0x0802edf0, sub_0802ED5C */
         src/system/sound_channel_stream.o(.text);  /* 0x0802edf0 - 0x0802f054, sub_0802EDF0 (NAKED+NON_MATCHING) + sub_0802EEF8 + sub_0802EF7C */

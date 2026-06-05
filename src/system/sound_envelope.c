@@ -279,3 +279,131 @@ void sub_0802EB34(u8 absolute, u16 target, u16 frames, s32 mode)
         "    .syntax divided\n");
 }
 #endif
+
+/* sub_0802EBF8 configures the clamp envelope-A (at +0x1c) for one channel,
+ * initializing it from a SoundDrainEntry baseline value. Shipped NAKED +
+ * NON_MATCHING: classify_unmatchable reports class3-libgcc (wide r4-r7
+ * prologue plus a lone __divsi3 BL — agbcc emits a narrower prologue
+ * because it knows libgcc helpers don't clobber r4-r7).
+ *
+ * Parameters: target (s16) in r0, frames (u16) in r1, mode (s32) in r2.
+ * mode==3 → early return; mode 0..2 → inline channels; mode>=4 → sw slots.
+ *
+ * Logic: finds the SlotClampEnvelope, reads the SoundDrainEntry byte at
+ * mode*12+7 from slot->nextRegion, computes
+ *   env->limit = (s16)target + drainByte*256 - env->_pad06
+ *   env->step  = env->limit / frames
+ * and copies env->_pad06 to channel[0] (acc field).
+ */
+#if defined(NON_MATCHING) || defined(NON_MATCHING_sub_0802EBF8)
+void sub_0802EBF8(s16 target, u16 frames, s32 mode)
+{
+    SoundSystem *ss;
+    SoundDrainEntry *drain;
+    void *channel;
+    SlotClampEnvelope *env;
+    u16 pad06;
+    s32 limit;
+    u8 drainByte;
+
+    if (mode == SOUND_INLINE_CHANNEL_COUNT)
+        return;
+
+    ss = gpSoundSystem;
+    drain = &SOUND_REQUEST_DRAIN_ENTRIES(ss->slot)[mode];
+
+    if (mode <= SOUND_INLINE_CHANNEL_COUNT - 1) {
+        s32 off = mode * SOUND_INLINE_CHANNEL_STRIDE + SOUND_INLINE_CHANNEL_BASE_OFFSET;
+        channel = (u8 *)ss + off;
+    } else {
+        channel = (u8 *)ss->swSlots + mode * SOUND_SW_SLOT_STRIDE - SOUND_SW_SLOT_STRIDE * 4;
+    }
+
+    env = SOUND_SLOT_ENVELOPE_A((SoundSlot *)channel);
+    if (env == NULL)
+        return;
+
+    env->acc = 0;
+    drainByte = ((u8 *)drain)[7];
+    pad06 = *(u16 *)((u8 *)env + 6);
+    limit = (s16)target + (drainByte << 8) - pad06;
+    env->limit = limit;
+    env->step = env->limit / frames;
+    *(u16 *)channel = pad06;
+}
+#else
+NAKED
+void sub_0802EBF8(s16 target, u16 frames, s32 mode)
+{
+    asm(".syntax unified\n"
+        "    push    {r4, r5, r6, r7, lr}\n"
+        "    lsls    r0, r0, #16\n"
+        "    lsrs    r7, r0, #16\n"
+        "    lsls    r1, r1, #16\n"
+        "    lsrs    r1, r1, #16\n"
+        "    mov     ip, r1\n"
+        "    cmp     r2, #3\n"
+        "    beq     _0802EC70\n"
+        "    ldr     r0, _0802EC34            @ =gpSoundSystem (0x030065e0)\n"
+        "    ldr     r3, [r0, #0]\n"
+        "    movs    r1, #0x8c\n"
+        "    lsls    r1, r1, #1\n"
+        "    adds    r0, r3, r1\n"
+        "    ldr     r1, [r0, #0]\n"
+        "    movs    r0, #0x88\n"
+        "    lsls    r0, r0, #1\n"
+        "    adds    r1, r1, r0\n"
+        "    lsls    r0, r2, #1\n"
+        "    adds    r0, r0, r2\n"
+        "    lsls    r0, r0, #2\n"
+        "    ldr     r1, [r1, #0]\n"
+        "    adds    r4, r1, r0\n"
+        "    cmp     r2, #2\n"
+        "    bgt     _0802EC38\n"
+        "    lsls    r0, r2, #3\n"
+        "    adds    r0, r0, r2\n"
+        "    lsls    r0, r0, #2\n"
+        "    adds    r0, #0x20\n"
+        "    adds    r6, r3, r0\n"
+        "    b       _0802EC46\n"
+        "    .align  2, 0\n"
+        "_0802EC34: .4byte 0x030065e0\n"
+        "_0802EC38:\n"
+        "    adds    r0, r3, #0\n"
+        "    adds    r0, #0xc8\n"
+        "    lsls    r1, r2, #6\n"
+        "    ldr     r2, _0802EC78            @ =0xffffff00\n"
+        "    adds    r1, r1, r2\n"
+        "    ldr     r0, [r0, #0]\n"
+        "    adds    r6, r0, r1\n"
+        "_0802EC46:\n"
+        "    adds    r5, r6, #0\n"
+        "    adds    r5, #0x1c\n"
+        "    cmp     r5, #0\n"
+        "    beq     _0802EC70\n"
+        "    movs    r0, #0\n"
+        "    strh    r0, [r5, #0]\n"
+        "    ldrb    r4, [r4, #7]\n"
+        "    lsls    r1, r4, #8\n"
+        "    lsls    r0, r7, #16\n"
+        "    asrs    r0, r0, #16\n"
+        "    adds    r0, r0, r1\n"
+        "    ldrh    r4, [r5, #6]\n"
+        "    subs    r0, r0, r4\n"
+        "    strh    r0, [r5, #4]\n"
+        "    movs    r1, #4\n"
+        "    ldrsh   r0, [r5, r1]\n"
+        "    mov     r1, ip\n"
+        "    bl      __divsi3\n"
+        "    strh    r0, [r5, #2]\n"
+        "    strh    r4, [r6, #0]\n"
+        "_0802EC70:\n"
+        "    pop     {r4, r5, r6, r7}\n"
+        "    pop     {r0}\n"
+        "    bx      r0\n"
+        "    .hword  0x0000\n"
+        "    .align  2, 0\n"
+        "_0802EC78: .4byte 0xffffff00\n"
+        "    .syntax divided\n");
+}
+#endif
