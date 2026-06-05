@@ -80,6 +80,7 @@ gTileBlitTable_08306840 = 0x08306840;
 gDmaDescTable_08306888 = 0x08306888;
 gDmaJob_08307D98 = 0x08307D98;
 gDmaJobTable_08307DA8 = 0x08307DA8;
+gPaletteSrcTable_08307E78 = 0x08307E78;
 
 SECTIONS {
     ewram (NOLOAD) : ALIGN(4) {
@@ -501,7 +502,6 @@ SECTIONS {
         src/engine/sub_08015194.o(.text);
         asm/disasm_0x08015194.o(.text);  /* 0x08015194 - 0x080152b0, sub_08015194 (auto-peeled) */
         src/engine/sub_080152b0.o(.text);
-        asm/disasm_0x080152b0.o(.text);  /* 0x080152b0 - 0x0801549c, sub_080152B0 (auto-peeled) */
         src/engine/sub_0801549c.o(.text);
         src/engine/sub_080155f0.o(.text);
         asm/disasm_0x080155f0.o(.text);  /* 0x080155f0 - 0x0801585c, sub_080155F0 (auto-peeled) */
