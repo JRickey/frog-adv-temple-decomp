@@ -411,6 +411,7 @@ typedef struct SoundLockSystem {
 #define SOUND_REQUEST_FINAL_VALUE_OFFSET      0x14a
 #define SOUND_REQUEST_STREAM_LEADIN_OFFSET    0x14e
 #define SOUND_REQUEST_FLAG_ACTIVE             0x2
+#define SOUND_REQUEST_FLAG_READY_MASK         0x3
 #define SOUND_REQUEST_DRAIN_EXTRA_COUNT       4
 #define SOUND_REQUEST_TIMER_COUNT             17
 #define SOUND_REQUEST_STREAM_COUNT            16
