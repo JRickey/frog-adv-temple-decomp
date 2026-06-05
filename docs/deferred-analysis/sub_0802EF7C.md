@@ -96,14 +96,71 @@ Permuter is NOT appropriate (byte_diff 124 >> the ~40 threshold;
 docs/permuter-howto.md forbids it for non-near matches). The prior round's
 permuter run from the 121 lane scored 90 (worse).
 
+## Round 7 (Codex) — additional drift ruled out
+
+Re-attempted in-place in `src/system/sound_channel_stream.c` with the target
+asm slice removed from `linker.ld`. Baseline and all probes were built with
+the existing TU override: `old_agbcc -O2 -fforce-addr -fno-gcse
+-fno-cse-follow-jumps`.
+
+New semantic correction: the flag update is `(flags & ~7) | 0x20`, not the
+existing `SOUND_ENVELOPE_C_CLEAR_MODE` macro (`(u32)-7`). A future active
+attempt should add a named macro such as `SOUND_ENVELOPE_C_CLEAR_ACTIVE_MODE
+((u32)-8)` in `include/sound.h`; do not reuse `SOUND_ENVELOPE_C_CLEAR_MODE`
+for this function.
+
+Best in this round: exact 216-byte size, `byte_diff 126 / diff_count 59`.
+Shape: prior Round-6 one-pin lane, plus corrected `~7` mask and a single
+`clearAcc asm("r6")` pin. This fixes the clear parameter color and improves
+instruction diff, but leaves the same coupled allocator root:
+
+- `channel` still colors to r3 (target r4).
+- `value` colors to ip (target r7) unless r4/r6 pressure is changed.
+- `&gpSoundSystem` colors to r8 but is copied too early (`ldr r0; mov r8,r0`)
+  instead of target `ldr r3; ... and; mov r8,r3`.
+- The first `SoundSystem *` colors to r7 in the best exact-size lane (target
+  r5), so the inline accumulator reset and subsequent flag path drift.
+
+Additional shapes tried and ruled out:
+
+- Pinning only `clearAcc` to r6: keeps exact size and improves diff_count
+  64 -> 59, but does not move `channel` or `value` into target regs.
+- Pinning `channel` to r4 (with clear r6): gets the visible `adds r4,r2,#0`
+  but drops the high-register `gpsp` cache entirely; object shrinks to 200
+  bytes and regresses to `byte_diff 183`.
+- Delayed `gpsp asm("r8")` via a separate `pool = &gpSoundSystem` local after
+  the first flag load: still places the copy too early or over-pressures the
+  function; best combined lane was 208 bytes / `byte_diff 184`.
+- Splitting `pool` while keeping `gpsp` plain introduced r9 and regressed to
+  224 bytes / `byte_diff 214`.
+- Removing the `flagBase` local and using direct `((u8 *)ss + 0x10 + off)`
+  addressing lets `channel` take r4 but loses r8 and shrinks to 192 bytes.
+- Scoped `register u8 *flagBase1 asm("r0")` gets `channel` to r4 while
+  preserving separate base-add addressing, but still loses r8 and shrinks to
+  200 bytes. Adding `gpsp asm("r8")` on top is ignored by allocation in that
+  shape and remains 200 bytes / `byte_diff 184`.
+- Pinning `value` to r7 is harmful: agbcc spills/reconstructs it from `sp`
+  in this TU and regresses to 220 bytes / `byte_diff 169`.
+
+Corpus status: current-tree corpus grep only surfaced `mov r8` in inline asm
+or NAKED bodies. The required history search could not run in this worktree
+because `tools/agent/corpus-mirrors/` is not populated.
+
+`agbcc_oracle.py --pass greg` on the best exact-size lane confirms this is a
+local/global allocation problem. `channel` is pseudo 32 (`refs=5,
+live_length=20`) and allocates after short-lived pointer pseudo 38
+(`refs=5, live_length=10`), which takes r4. Removing or pinning that pointer
+fixes r4 only by destroying the r8 cache, so the next useful step is still a
+private debug compiler probe around `find_free_reg` / allocation order to see
+whether the target's `ldr r3, =gpSoundSystem` can be made live at the right
+decision point from C.
+
 ## Best-effort C
 
-Best lane this round: isolated TU `src/system/sub_0802ef7c.c`,
-`old_agbcc -O2 -fforce-addr`, byte_diff 124 / diff_count 60 / size 212.
-Correct clearAcc(r6)/value(r7)/gpsp(r8) coloring; only `channel -> r3` (want
-r4) and the consequent flagOffset/chOffset spill to ip remain, plus the folded
-3rd ss reload (the 4-byte size shortfall). Only one register pin
-(`flagOffset asm("r2")`).
+Best lane overall remains non-near and should not be permuted. The latest
+in-place best is exact-size with `byte_diff 126 / diff_count 59`; it uses two
+register pins (`flagOffset asm("r2")`, `clear asm("r6")`) and requires adding
+`SOUND_ENVELOPE_C_CLEAR_ACTIVE_MODE ((u32)-8)` if reactivated.
 
 ```c
 #include "sound.h"
@@ -112,16 +169,18 @@ r4) and the consequent flagOffset/chOffset spill to ip remain, plus the folded
 void sub_0802EF7C(u8 clearAcc, u16 value, s32 channel)
 {
     SoundSystem **gpsp;
-    register u32 flagOffset asm("r2");
-    s32 chOffset;
     SoundSystem *ss1;
     SoundSystem *ss2;
     SoundSystem *ss3;
     SoundSlot *slot;
     u8 *flagBase;
     u32 flags;
+    register u32 flagOffset asm("r2");
+    s32 chOffset;
+    register u8 clear asm("r6");
     u16 accReset;
 
+    clear = clearAcc;
     if (channel > 3)
         goto sw_slot;
 
@@ -133,7 +192,7 @@ void sub_0802EF7C(u8 clearAcc, u16 value, s32 channel)
     chOffset = channel << 3;
     if ((flags & (SOUND_FLAG_ENVELOPE_C_ACTIVE | SOUND_FLAG_ENVELOPE_C_INACTIVE)) == 0) {
         accReset = 0;
-        if (clearAcc == 0)
+        if (clear == 0)
             accReset = SOUND_ENVELOPE_C_HIGH_CLAMP;
         *(u16 *)((u8 *)ss1 + chOffset + SOUND_SYSTEM_CHANNEL_VOLUME_OFFSET) = accReset;
     }
@@ -141,15 +200,15 @@ void sub_0802EF7C(u8 clearAcc, u16 value, s32 channel)
     ss2 = *gpsp;
     flagBase = (u8 *)ss2 + SOUND_CH_FLAGS_OFFSET;
     flags = *(u32 *)(flagBase + flagOffset);
-    flags = (flags & ~(SOUND_FLAG_ENVELOPE_C_ACTIVE | SOUND_ENVELOPE_C_MODE_BITS)) | SOUND_FLAG_ENVELOPE_C_INACTIVE;
+    flags = (flags & SOUND_ENVELOPE_C_CLEAR_ACTIVE_MODE) | SOUND_FLAG_ENVELOPE_C_INACTIVE;
     *(u32 *)(flagBase + flagOffset) = flags;
     *(s32 *)((u8 *)ss2 + SOUND_ENVELOPE_C_CHANNEL_BASE + chOffset) = value;
-    if (clearAcc == 0)
+    if (clear == 0)
         *(s32 *)((u8 *)ss2 + SOUND_ENVELOPE_C_CHANNEL_BASE + chOffset) = -(s32)value;
 
     ss3 = *gpsp;
     accReset = 0;
-    if (clearAcc == 0)
+    if (clear == 0)
         accReset = SOUND_ENVELOPE_C_HIGH_CLAMP;
     *(u16 *)((u8 *)ss3 + chOffset + SOUND_SYSTEM_CHANNEL_VOLUME_OFFSET) = accReset;
     return;
@@ -159,22 +218,16 @@ sw_slot:
     flags = slot->flags;
     if ((flags & (SOUND_FLAG_ENVELOPE_C_ACTIVE | SOUND_FLAG_ENVELOPE_C_INACTIVE)) == 0) {
         accReset = 0;
-        if (clearAcc == 0)
+        if (clear == 0)
             accReset = SOUND_ENVELOPE_C_HIGH_CLAMP;
         SOUND_SLOT_ENVELOPE_C(slot)->acc = accReset;
     }
 
     flags = slot->flags;
-    flags = (flags & ~(SOUND_FLAG_ENVELOPE_C_ACTIVE | SOUND_ENVELOPE_C_MODE_BITS)) | SOUND_FLAG_ENVELOPE_C_INACTIVE;
+    flags = (flags & SOUND_ENVELOPE_C_CLEAR_ACTIVE_MODE) | SOUND_FLAG_ENVELOPE_C_INACTIVE;
     slot->flags = flags;
     SOUND_SLOT_ENVELOPE_C(slot)->param.inactiveDelta = value;
-    if (clearAcc == 0)
+    if (clear == 0)
         SOUND_SLOT_ENVELOPE_C(slot)->param.inactiveDelta = -(s32)value;
 }
 ```
-
-Build wiring for the next attempt (isolated TU):
-- `linker.ld`: split `sound_channel_stream.o` slice at 0x0802ef7c and add
-  `src/system/sub_0802ef7c.o(.text);  /* 0x0802ef7c - 0x0802f054, sub_0802EF7C */`.
-- `Makefile`: `src/system/sub_0802ef7c.s: CC = $(OLD_AGBCC_BIN)` and
-  `src/system/sub_0802ef7c.s: CFLAGS += -fforce-addr`.
