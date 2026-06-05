@@ -43,7 +43,9 @@ struct IwramAt34D0 {
     u16 _field_02; /* +0x02: tilemap-cell Y coord (sWinPoseSpriteCoords[idx*2+1] - 24) */
     u8 _field_04;  /* +0x04: low byte of _field_00 source (pre-subtract) */
     u8 _field_05;  /* +0x05: low byte of _field_02 source */
-    u8 _pad06[10];
+    u8 _pad06[2];
+    u32 _field_08; /* +0x08: word written alongside _field_10 by sub_0801FE68 */
+    u8 _pad0C[4];
     u32 _field_10; /* +0x10: word cleared on entry */
     u8 _pad14[9];
     u8 _field_1D; /* +0x1D: phase byte (set to 3) */

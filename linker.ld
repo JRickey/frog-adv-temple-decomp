@@ -131,6 +131,7 @@ SECTIONS {
         . = 0x00005398; gIwram_5398 = .;
         . = 0x000053A0; gIwram_53A0 = .;
         . = 0x0000549F; gIwram_549F = .;
+        . = 0x000054A0; gOamShadow_54A0 = .;
         . = 0x000060A0; gIwram_60A0 = .;
         . = 0x00006110; gIwram_6110 = .;
         . = 0x00006150; gIwram_6150 = .;
@@ -620,8 +621,7 @@ SECTIONS {
         asm/disasm_0x0801f684.o(.text);  /* 0x0801f684 - 0x0801f8bc, sub_0801F684 (auto-peeled) */
         src/engine/sub_0801f8bc.o(.text);
         asm/disasm_0x0801f970.o(.text);  /* 0x0801f970 - 0x0801fd0c, sub_0801F970 (auto-peeled) */
-        src/engine/sub_0801fd0c.o(.text);  /* 0x0801fd0c - 0x0801fe68, sub_0801FD0C */
-        asm/disasm_0x0801fe68.o(.text);  /* 0x0801fe68 - 0x080200b4, sub_0801FE68 (auto-peeled) */
+        src/engine/sub_0801fd0c.o(.text);  /* 0x0801fd0c - 0x080200b4, sub_0801FD0C + sub_0801FE68 */
         src/engine/sub_080200b4.o(.text);  /* 0x080200b4 - 0x080201a8, sub_080200B4 */
 
         src/engine/sub_080201a8.o(.text);  /* 0x080201a8 - 0x080201c8, sub_080201A8 */
