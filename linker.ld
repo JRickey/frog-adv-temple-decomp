@@ -653,6 +653,7 @@ SECTIONS {
         src/engine/sub_0802349c.o(.text);
         src/engine/sub_080234e8.o(.text);
         asm/text/text_0x08023514.o(.text);  /* 0x08023514 - 0x0802a2f0, raw bytes */
+        src/engine/sub_0802a2f0.o(.text);
         asm/disasm_0x0802a2f0.o(.text);  /* 0x0802a2f0 - 0x0802a394, sub_0802A2F0 (auto-peeled) */
         src/engine/sub_0802a394.o(.text);
         src/engine/sub_0802a42c.o(.text);
