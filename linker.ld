@@ -519,8 +519,7 @@ SECTIONS {
         src/engine/sub_08017bfc.o(.text);
         asm/disasm_0x08017f00.o(.text);  /* 0x08017f00 - 0x080181d0, sub_08017F00 (auto-peeled) */
         src/engine/sub_080181d0.o(.text);
-        src/engine/sub_080182cc.o(.text);  /* 0x080182cc - 0x0801844c, sub_080182CC, sub_08018348, sub_080183D0 */
-        asm/disasm_0x080182cc.o(.text);  /* 0x0801844c - 0x080184dc, sub_0801844C */
+        src/engine/sub_080182cc.o(.text);  /* 0x080182cc - 0x080184dc, sub_080182CC, sub_08018348, sub_080183D0, sub_0801844C */
         src/engine/sub_080184dc.o(.text);  /* 0x080184dc - 0x080185c0, sub_080184DC */
         src/engine/sub_080185c0.o(.text);
         asm/disasm_0x080185c0.o(.text);  /* 0x080185c0 - 0x0801932c, sub_080185C0 (auto-peeled) */
@@ -693,7 +692,6 @@ SECTIONS {
         src/engine/sub_080242ac.o(.text);
         src/engine/sub_080242d8.o(.text);
         src/engine/sub_08024304.o(.text);
-        asm/disasm_0x08024328.o(.text);  /* 0x08024328 - 0x08024390, sub_08024328 (auto-peeled) */
         asm/disasm_0x08024390.o(.text);  /* 0x08024390 - 0x080243d4, sub_08024390 (auto-peeled) */
         asm/disasm_0x080243d4.o(.text);  /* 0x080243d4 - 0x08024444, sub_080243D4 (auto-peeled) */
         asm/disasm_0x08024444.o(.text);  /* 0x08024444 - 0x08024470, sub_08024444 (auto-peeled) */
@@ -769,8 +767,7 @@ SECTIONS {
         src/system/sound_channel_stream.o(.text);  /* 0x0802edf0 - 0x0802f054, sub_0802EDF0 (NAKED+NON_MATCHING) + sub_0802EEF8 + sub_0802EF7C */
         src/system/sound_envelope_slide.o(.text);  /* 0x0802f054 - 0x0802f2fc, sub_0802F054 (NAKED+NON_MATCHING) */
         src/system/sound_pan.o(.text);  /* 0x0802f2fc - 0x0802f4b0, sub_0802F2FC (NAKED+NON_MATCHING) + sub_0802F398 */
-        src/system/sound_mixer.o(.text);  /* 0x0802f4b0 - 0x0802f8f0, sub_0802F4B0 + sub_0802F870 + sub_0802F884 + sub_0802F890 */
-        asm/disasm_0x0802f8f0.o(.text);  /* 0x0802f8f0 - 0x0802f930, sub_0802F8F0 (auto-peeled) */
+        src/system/sound_mixer.o(.text);  /* 0x0802f4b0 - 0x0802f930, sub_0802F4B0 + sub_0802F870 + sub_0802F884 + sub_0802F890 + sub_0802F8F0 */
         asm/text/text_0x0802f930.o(.text);  /* 0x0802f930 - 0x0802f9f0, raw bytes */
         src/system/sub_0802f9f0.o(.text);  /* 0x0802f9f0 - 0x0802fab8, sub_0802F9F0 + sub_0802FA60 */
         asm/disasm_0x0802fab8.o(.text);  /* 0x0802fab8 - 0x08030158, sub_0802FAB8 (auto-peeled) */

@@ -867,3 +867,23 @@ common_tail:
     flags |= SOUND_FLAG_PSG_REG_DIRTY;
     *pF = flags;
 }
+
+void sub_0802F8F0(int channelIdx)
+{
+    if (channelIdx <= 3) {
+        SoundSystem *ss = gpSoundSystem;
+        ss->chFlags[channelIdx] |= SOUND_FLAG_PSG_REG_DIRTY | SOUND_FLAG_UPDATE_DIRTY | SOUND_FLAG_ENV_DIRTY;
+        return;
+    }
+
+    channelIdx -= 4;
+    {
+        u8 *swSlotsBase;
+        u8 *slot;
+
+        swSlotsBase = (u8 *)gpSoundSystem + SOUND_SYSTEM_SW_SLOTS_OFFSET;
+        swSlotsBase = *(u8 **)swSlotsBase;
+        slot = (u8 *)(channelIdx * SOUND_SW_SLOT_STRIDE) + (u32)swSlotsBase;
+        ((SoundSlotAcc *)slot)->flags |= SOUND_SLOT_FLAG_RETIRE_PENDING;
+    }
+}

@@ -108,3 +108,42 @@ void sub_080183D0(void)
     gIwram_3480._data[4]++;
     sub_08010694(0xBF);
 }
+
+/* Clears screenblock 28 via DMA3 from a stack zero, then sets up
+ * DISPCNT + BGxCNT and zeroes the BG scroll-offset shadow and MMIO. */
+void sub_0801844C(void)
+{
+    volatile DmaChannel *dma;
+    volatile u16 zero; /* volatile prevents r2 from surviving as a live zero register,
+                        * freeing it for the BGxCNT value walk (r2 = 0x1c03..0x1f00) */
+
+    zero = 0;
+    dma = &REG_DMA3;
+    dma->src = (const void *)&zero;
+    dma->dst = (void *)0x0600e000;
+    dma->cnt = DMA_ENABLE | DMA_SRC_FIXED | 0x1000;
+    (void)dma->cnt;
+
+    REG_DISPCNT = DISPCNT_BG0_ON | DISPCNT_BG2_ON;
+
+    REG_BG0CNT = 0x1c03;
+    REG_BG1CNT = 0x1d02;
+    REG_BG2CNT = 0x1e01;
+    REG_BG3CNT = 0x1f00;
+
+    gIwram_3550._data[0] = 0;
+    gIwram_3550._data[1] = 0;
+    gIwram_3550._data[2] = 0;
+    gIwram_3550._data[3] = 0;
+    gIwram_3550._data[4] = 0;
+    gIwram_3550._data[5] = 0;
+
+    *(vu16 *)0x04000010 = 0;
+    *(vu16 *)0x04000012 = 0;
+    *(vu16 *)0x04000014 = 0;
+    *(vu16 *)0x04000016 = 0;
+    *(vu16 *)0x04000018 = 0;
+    *(vu16 *)0x0400001a = 0;
+    *(vu16 *)0x0400001c = 0;
+    *(vu16 *)0x0400001e = 0;
+}
