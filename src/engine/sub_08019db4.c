@@ -32,3 +32,21 @@ void sub_08019DB4(void)
 
     gUnk03006420.active = 0;
 }
+
+void sub_08019E28(s32 bg)
+{
+    switch (bg) {
+    case 0:
+        REG_DISPCNT = DISPCNT_BG0_ON;
+        break;
+    case 1:
+        REG_DISPCNT = DISPCNT_BG1_ON;
+        break;
+    case 2:
+        REG_DISPCNT = DISPCNT_BG2_ON;
+        break;
+    case 3:
+        REG_DISPCNT = DISPCNT_BG3_ON;
+        break;
+    }
+}
