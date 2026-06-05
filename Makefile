@@ -141,6 +141,7 @@ src/engine/sub_0801a6d4.s: CC = $(AGBCC_BIN)
 src/engine/sub_0801a6d4.s: CFLAGS += -fno-strength-reduce
 # Keeps the duplicated window step value in the baserom's r6/sl allocation.
 src/engine/sub_0801a894.s: CFLAGS += -fno-rerun-cse-after-loop
+src/engine/sub_0801c078.s: CFLAGS += -fno-caller-saves
 src/engine/sub_08022360.s: CFLAGS += -fno-gcse
 # Current forced-C lanes for split sound NON_MATCHING candidates.
 src/system/sound_pitch.s: CC = $(OLD_AGBCC_BIN)
