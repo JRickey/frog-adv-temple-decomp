@@ -41,7 +41,7 @@ void sub_0801288C(void)
     u32 width;
     register u32 height asm("r9");
     const u16 *const *srcBase;
-    register const u16 *src asm("r1");
+    register const u16 *r1Work asm("r1");
     u32 bank;
     void *flushSrc;
     void *flushDst;
@@ -76,12 +76,11 @@ void sub_0801288C(void)
     flags = *flagPtr >> 4;
 
     {
-        register u32 one asm("r1");
         u32 flagBit;
 
-        one = 1;
+        r1Work = (const u16 *)1;
         flagBit = flags;
-        flagBit &= one;
+        flagBit &= (u32)r1Work;
         r2Work = 0x80 << 18;
         if (flagBit)
             r2Work = 0x02010000;
@@ -90,7 +89,7 @@ void sub_0801288C(void)
     state = (u16 *)0x030060A0;
     stride = state[13];
     r2Work += (stride * ipWork + x) << 1;
-    src = srcBase[1];
+    r1Work = srcBase[1];
     row = 0;
     bank = flags;
     if (row < height) {
@@ -101,7 +100,7 @@ void sub_0801288C(void)
             nextRow = row + 1;
             if (col < width) {
                 do {
-                    *(u16 *)r2Work = *src++;
+                    *(u16 *)r2Work = *r1Work++;
                     r2Work += 2;
                     col++;
                 } while (col < width);
@@ -121,10 +120,8 @@ void sub_0801288C(void)
     }
 
     {
-        register u32 one asm("r1");
-
-        one = 1;
-        if (bank & one) {
+        r1Work = (const u16 *)1;
+        if (bank & (u32)r1Work) {
             flushSrc = (void *)0x02010000;
             flushDst = (void *)0x0600E800;
         } else {
