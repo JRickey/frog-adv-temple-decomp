@@ -42,6 +42,24 @@ sRoomDmaTable_080C1254 = 0x080C1254;
  * a real extracted array when the dispatcher cluster is named. */
 gStateHandlers_0830804C = 0x0830804C;
 
+/* Per-frame palette/tile sources for the animated-icon DMA in sub_08016650.
+ * Declared as linker-assigned ROM symbols (not absolute casts) so agbcc
+ * treats each as an independent relocation: this defeats the CSE fold that
+ * would otherwise derive each frame's palette from its tiles (palette =
+ * tiles - 32) and cross-merge the per-case tile DMAs. See docs/codegen-notes
+ * "Adjacent IWRAM bases — defeat CSE-fold via linker-assigned symbols". The
+ * five frames live in sIconAnimFrames (src/data/icon_anim_frames.c). */
+sIconFramePal0 = 0x081736F8;
+sIconFrameTiles0 = 0x08173718;
+sIconFramePal1 = 0x081737B8;
+sIconFrameTiles1 = 0x081737D8;
+sIconFramePal2 = 0x08173878;
+sIconFrameTiles2 = 0x08173898;
+sIconFramePal3 = 0x08173938;
+sIconFrameTiles3 = 0x08173958;
+sIconFramePal4 = 0x081739F8;
+sIconFrameTiles4 = 0x08173A18;
+
 
 /* Sprite animation descriptor instances within the sSpriteAnimBlock_06838 blob.
  * Both at offset 0x5d0 / 0x5f0 into the block (addresses 0x08306e08 / 0x08306e28).
@@ -502,8 +520,7 @@ SECTIONS {
         src/engine/sub_08016360.o(.text);  /* 0x08016360 - 0x08016404, sub_08016360 */
         src/engine/sub_08016404.o(.text);
         asm/disasm_0x08016404.o(.text);  /* 0x08016404 - 0x08016650, sub_08016404 (auto-peeled) */
-        src/engine/sub_08016650.o(.text);
-        asm/disasm_0x08016650.o(.text);  /* 0x08016650 - 0x08016824, sub_08016650 (auto-peeled) */
+        src/engine/sub_08016650.o(.text);  /* 0x08016650 - 0x08016824, sub_08016650 */
         src/engine/sub_08016824.o(.text);
         src/engine/sub_080169bc.o(.text);
         src/engine/sub_08016a40.o(.text);

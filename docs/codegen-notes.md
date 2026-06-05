@@ -2575,3 +2575,35 @@ to the callee-saved register the reuse needs. Run the permuter from the CLEANEST
 near-match base before declaring a coalescing tie irreducible — it mutates
 expression structure into shapes (like `(x = a + x)`) that manual derivation
 overlooks.
+
+## Per-case DMA loaders: inline BOTH transfers + `return`, let cross-jump build the tail
+
+`sub_08016650` (the animated-icon palette+tile DMA loader, the consumer
+named in "Icon-animator pattern" above) is a dense `switch` where each
+case DMA-loads a frame's tiles to VRAM then its palette to PAL_RAM. The
+baserom has each case do the FULL two-DMA sequence inline, then `b` to a
+SHARED tail at 0x167fa that performs the palette upload — 8 distinct
+per-case bodies feeding one shared palette-DMA tail.
+
+The matching trap: writing the source with a shared tail (each case sets
+a `const u16 *pal;` then `break;` to a common palette-DMA block) does NOT
+match. agbcc's cross-jumper merges the per-case TILE DMAs too (they differ
+only in a constant it CSE-folds into `frame + offset`), collapsing all
+bodies into one. byte_diff stuck at ~220.
+
+The fix has two parts:
+1. **Defeat the palette=tiles-32 CSE fold** by referencing each frame's
+   tiles and palette through INDEPENDENT linker-assigned ROM symbols
+   (`sIconFrameTilesN = 0x...; sIconFramePalN = 0x...;` in linker.ld),
+   not as `sIconAnimFrames[n].tiles` / `.palette` off a typed struct
+   array. With a struct view agbcc derives `palette = tiles - 32`
+   (`subs r2, #32`) — the same defeat-the-fold principle as "Adjacent
+   IWRAM bases".
+2. **Write BOTH DMAs inline in every case + `return`** (no shared tail in
+   source). The cross-jumper then merges only the IDENTICAL palette-upload
+   SUFFIX (which starts after each case's differing `ldr =palette_const`)
+   into one tail, while keeping the per-case tile DMAs distinct — exactly
+   the baserom shape. First-try byte match once both parts are in place.
+
+So the shared tail is a cross-jump RESULT, not a source construct. Trying
+to pre-share it in source is what blocks the match.
