@@ -674,17 +674,28 @@ node "\$COMPANION" task --write --cwd "\$PWD" --model ${CODEX.model} --effort ${
    inside THIS worktree without approval prompts; --cwd "\$PWD" pins the codex thread to your
    worktree's git root. The plugin renders codex's final message + touched files to codex-run.log.)
 
-   *** PATIENCE — THIS IS THE #1 DRIVER MISTAKE TO AVOID. *** After launching in the background you
-   are RE-INVOKED only when that command EXITS. codex legitimately spends many minutes in Phase 0
-   analysis ALONE and 10-40+ minutes end-to-end. SLOWNESS IS NORMAL, NOT FAILURE. Until the
-   background command has actually EXITED you MUST keep waiting: do NOT poll progress, do NOT tail
-   the log to judge "if it's far enough", do NOT decide codex is "too slow / still in Phase 0", and
-   NEVER report status="deferred"/"reverted" while codex is STILL RUNNING — that orphans codex's
-   work and strands the worktree. If you are somehow re-invoked while the background command has not
-   yet exited, simply resume waiting (end your turn again). The match/naked/defer decision is made
-   ONLY in step 6, AFTER codex has exited, FROM THE TREE — never from codex's pace.
-5. ONLY once the background codex command has EXITED, read the OUTCOME compactly (do NOT paste whole
-   logs into your reasoning):  tail -n 60 codex-run.log
+   *** PATIENCE — THIS IS THE #1 DRIVER MISTAKE TO AVOID. *** The background command is delivered
+   back to you as a COMPLETED tool result ONLY when codex EXITS. codex legitimately spends many
+   minutes in Phase 0 analysis ALONE and 10-40+ minutes end-to-end. SLOWNESS IS NORMAL, NOT FAILURE.
+   HARD RULES, no exceptions:
+   - You may call StructuredOutput / decide the outcome ONLY AFTER you have SEEN the completed result
+     of THIS backgrounded command (its exit + final output land in your context). That completion is
+     the ONLY signal that codex is done.
+   - NEVER report status="deferred"/"reverted"/"matched"/"naked" while codex may still be running. A
+     premature finalize ORPHANS codex mid-decomp and strands the worktree — this is the exact bug
+     this rule exists to prevent. "deferred" is a CONCLUSION ABOUT CODEX'S FINISHED OUTPUT, never a
+     way to end your own turn early.
+   - Do NOT poll, do NOT tail the log to judge "far enough", do NOT decide codex is "too slow" or
+     "still in Phase 0". Its pace is irrelevant.
+   - LIVENESS BACKSTOP: if for ANY reason you are prompted to act before that completion arrives
+     (a nudge, a reminder, an apparent stop), FIRST run \`pgrep -fl 'codex-task.md|codex (exec|app-server)|codex-companion.mjs task'\`.
+     If that lists ANY live process, codex is STILL WORKING: do NOT finalize — end your turn again to
+     keep waiting. Only when pgrep shows codex is GONE may you proceed to step 5/6.
+   The match/naked/defer decision is made ONLY in step 6, AFTER codex has exited, FROM THE TREE —
+   never from codex's pace and never to escape your turn.
+5. ONLY once the backgrounded codex command has returned its completed result (and \`pgrep\` confirms
+   no codex process remains), read the OUTCOME compactly (do NOT paste whole logs into your
+   reasoning):  tail -n 60 codex-run.log
 6. VERIFY INDEPENDENTLY — do NOT trust codex's printed summary. Derive the truth from the tree:
    a. make -j4 && make check — if it does NOT exit 0 the tree is broken: git reset --hard \$BASE
       && git clean -fd (drops codex-task.md/codex-run.log + anything codex left untracked),
