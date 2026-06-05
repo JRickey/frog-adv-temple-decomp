@@ -320,6 +320,7 @@ typedef struct SoundLockSystem {
 #define SOUND_FLAG_ENVELOPE_C_INACTIVE         0x20
 #define SOUND_FLAG_ENV_DIRTY                   0x40
 #define SOUND_FLAG_UPDATE_DIRTY                0x80
+#define SOUND_FLAG_STOP_PENDING                0x100
 #define SOUND_FLAG_PSG_REG_DIRTY               0x200
 #define SOUND_FLAG_CLEAR_ENVELOPE_C_STATE      (~(SOUND_FLAG_ENVELOPE_C_ACTIVE | SOUND_FLAG_ENVELOPE_C_INACTIVE))
 #define SOUND_FLAG_CLEAR_PSG_REG_UPDATE        ((u32) - 0xa2)
@@ -402,6 +403,9 @@ typedef struct SoundLockSystem {
 #define SOUND_STREAM_CMD_EXTENDED_INDEX_OFFSET 4
 #define SOUND_STREAM_CMD_EXTRA_OFFSET          4
 #define SOUND_STREAM_CMD_EXTENDED_EXTRA_OFFSET 6
+#define SOUND_SEQ_WAIT_SKIP_IF_STOPPING        0x1
+#define SOUND_SEQ_WAIT_RANDOMIZE               0x2
+#define SOUND_SEQ_WAIT_SKIP_IF_NO_STREAM       0x4
 #define SOUND_MIXER_TAIL_COMMIT_THUMB          0x080323cd
 #define SOUND_STREAM_CURSOR_COUNTDOWN(cursor)  (*(u16 *)(cursor))
 #define SOUND_STREAM_CURSOR_VALUE(cursor)      (*(u16 *)((u8 *)(cursor) + 2))

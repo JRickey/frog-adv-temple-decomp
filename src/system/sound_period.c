@@ -418,3 +418,153 @@ reset:
     *sp += 2;
     return 1;
 }
+
+extern u32 sub_0802E3C8(u32 limit);
+
+u32 sub_080304F4(s32 channel, SoundChannelSeq *seq)
+{
+    /* r2 is the target's channel home across both gate blocks. */
+    register s32 ch asm("r2");
+    /* r4 is the target's sequencer home and all op/cursor accesses derive from it. */
+    register SoundChannelSeq *s asm("r4");
+    /* r5 is the target's opcode pointer home across the whole handler. */
+    register u8 *op asm("r5");
+    /* r0 holds the cursor on entry and through the countdown arithmetic. */
+    register u32 cursor asm("r0");
+    u8 *nextOp;
+
+    ch = channel;
+    s = seq;
+    op = (u8 *)s->opPtr;
+    cursor = s->cursor;
+    if (cursor == 0) {
+        u32 opHalf;
+        u32 count;
+        register u32 flagsRaw asm("r1");
+        u32 flagBit;
+        /* r6 keeps the wait flags for later bit tests after the first gate. */
+        register u32 flags asm("r6");
+
+        /* Volatile keeps cse.c from reusing this count; the target re-reads it before the random BL. */
+        count = *(volatile u16 *)(op + 2);
+        opHalf = count;
+        if (opHalf == 0)
+            goto advance;
+
+        flagsRaw = op[1];
+        flagBit = flagsRaw & SOUND_SEQ_WAIT_SKIP_IF_STOPPING;
+        flags = flagsRaw;
+        if (flagBit != 0) {
+            if (ch <= 3) {
+                SoundSystem *ss;
+
+                ss = gpSoundSystem;
+                if (ss->chFlags[ch] & SOUND_FLAG_STOP_PENDING)
+                    goto advance;
+            } else {
+                SoundSystem *ss;
+
+                ss = gpSoundSystem;
+                if (SOUND_SYSTEM_SW_SLOT_FOR_CHANNEL(ss, ch)->flags & SOUND_FLAG_STOP_PENDING)
+                    goto advance;
+            }
+        }
+
+        if ((flags & SOUND_SEQ_WAIT_SKIP_IF_NO_STREAM) && ch > 3) {
+            SoundSystem *ss;
+
+            ss = gpSoundSystem;
+            if (!(SOUND_SYSTEM_SW_SLOT_FOR_CHANNEL(ss, ch)->flags & SOUND_SLOT_FLAG_RETIRE_PENDING)) {
+                /* r1/r0 reproduce the target stream-table probe without clobbering ch in r2. */
+                register void **streamTable asm("r1");
+                register u32 streamOff asm("r0");
+
+                streamTable = (void **)SOUND_SYSTEM_STREAM_TABLE(ss);
+                streamOff = (u32)ch << 2;
+                streamOff += (u32)streamTable;
+                streamOff -= 0x10;
+                if (*(void **)streamOff == NULL)
+                    goto advance;
+            }
+        }
+
+        if (flags & SOUND_SEQ_WAIT_RANDOMIZE)
+            /* See the count load above: this second opcode-count read is target-visible. */
+            s->cursor = sub_0802E3C8(*(volatile u16 *)(op + 2));
+        else
+            s->cursor = opHalf;
+        return 0;
+    }
+
+    {
+        u32 mask;
+
+        mask = SOUND_STREAM_SENTINEL;
+        if (*(u16 *)(op + 2) != mask) {
+            cursor--;
+            s->cursor = cursor;
+            cursor &= mask;
+            if (cursor == 0) {
+                nextOp = op + 4;
+                goto storeAdvance;
+            }
+        }
+    }
+
+    {
+        register u32 flagsRaw asm("r1");
+        u32 flagBit;
+        /* r6 keeps the wait flags for the second gate block. */
+        register u32 flags asm("r6");
+
+        flagsRaw = op[1];
+        flagBit = flagsRaw & SOUND_SEQ_WAIT_SKIP_IF_STOPPING;
+        flags = flagsRaw;
+        if (flagBit != 0) {
+            if (ch <= 3) {
+                SoundSystem *ss;
+
+                ss = gpSoundSystem;
+                if (ss->chFlags[ch] & SOUND_FLAG_STOP_PENDING)
+                    goto clearAdvance;
+            } else {
+                SoundSystem *ss;
+
+                ss = gpSoundSystem;
+                if (SOUND_SYSTEM_SW_SLOT_FOR_CHANNEL(ss, ch)->flags & SOUND_FLAG_STOP_PENDING)
+                    goto clearAdvance;
+            }
+        }
+
+        if ((flags & SOUND_SEQ_WAIT_SKIP_IF_NO_STREAM) && ch > 3) {
+            SoundSystem *ss;
+
+            ss = gpSoundSystem;
+            {
+                /* r1/r0 reproduce the target stream-table probe without clobbering ch in r2. */
+                register void **streamTable asm("r1");
+                register u32 streamOff asm("r0");
+
+                streamTable = (void **)SOUND_SYSTEM_STREAM_TABLE(ss);
+                streamOff = (u32)ch << 2;
+                streamOff += (u32)streamTable;
+                streamOff -= 0x10;
+                if (*(void **)streamOff != NULL)
+                    goto keepWaiting;
+                goto clearAdvance;
+            }
+        }
+    }
+    goto keepWaiting;
+
+clearAdvance:
+    s->cursor = 0;
+advance:
+    nextOp = (u8 *)s->opPtr + 4;
+storeAdvance:
+    s->opPtr = (u32 *)nextOp;
+    return 1;
+
+keepWaiting:
+    return 0;
+}
