@@ -685,7 +685,6 @@ SECTIONS {
         src/engine/sub_08024070.o(.text);
         src/engine/sub_08024094.o(.text);
         src/engine/sub_080240e0.o(.text);
-        asm/disasm_0x080240e0.o(.text);  /* 0x080240e0 - 0x08024138, sub_080240E0 (auto-peeled) */
         src/engine/sub_08024138.o(.text);
         src/engine/sub_08024180.o(.text);
         src/engine/sub_080241cc.o(.text);
