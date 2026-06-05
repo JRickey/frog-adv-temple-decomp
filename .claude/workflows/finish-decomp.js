@@ -663,9 +663,9 @@ ${codexDecompBody(t)}
 CODEXEOF
 \`\`\`
    Confirm: wc -l codex-task.md (many lines) and grep -c '${t.name}' codex-task.md (>0).
-4. Launch codex via the PLUGIN task runtime in the BACKGROUND — hard decomps run many minutes and
-   a foreground Bash call would hit the 10-minute cap and kill the work. Run EXACTLY this with
-   run_in_background=true; you are re-invoked when it exits:
+4. Launch codex via the PLUGIN task runtime in the BACKGROUND with run_in_background=true (hard
+   decomps run 10-40+ minutes — a FOREGROUND Bash call would hit the 10-minute cap and kill the
+   work mid-decomp). Run EXACTLY this:
 \`\`\`sh
 node "\$COMPANION" task --write --cwd "\$PWD" --model ${CODEX.model} --effort ${CODEX.effort} \\
   --prompt-file codex-task.md > codex-run.log 2>&1
@@ -673,8 +673,18 @@ node "\$COMPANION" task --write --cwd "\$PWD" --model ${CODEX.model} --effort ${
    (--write gives codex a workspace-write sandbox with approvalPolicy=never, so it edits + commits
    inside THIS worktree without approval prompts; --cwd "\$PWD" pins the codex thread to your
    worktree's git root. The plugin renders codex's final message + touched files to codex-run.log.)
-5. When it exits, read the OUTCOME compactly (do NOT paste whole logs into your reasoning):
-   tail -n 60 codex-run.log
+
+   *** PATIENCE — THIS IS THE #1 DRIVER MISTAKE TO AVOID. *** After launching in the background you
+   are RE-INVOKED only when that command EXITS. codex legitimately spends many minutes in Phase 0
+   analysis ALONE and 10-40+ minutes end-to-end. SLOWNESS IS NORMAL, NOT FAILURE. Until the
+   background command has actually EXITED you MUST keep waiting: do NOT poll progress, do NOT tail
+   the log to judge "if it's far enough", do NOT decide codex is "too slow / still in Phase 0", and
+   NEVER report status="deferred"/"reverted" while codex is STILL RUNNING — that orphans codex's
+   work and strands the worktree. If you are somehow re-invoked while the background command has not
+   yet exited, simply resume waiting (end your turn again). The match/naked/defer decision is made
+   ONLY in step 6, AFTER codex has exited, FROM THE TREE — never from codex's pace.
+5. ONLY once the background codex command has EXITED, read the OUTCOME compactly (do NOT paste whole
+   logs into your reasoning):  tail -n 60 codex-run.log
 6. VERIFY INDEPENDENTLY — do NOT trust codex's printed summary. Derive the truth from the tree:
    a. make -j4 && make check — if it does NOT exit 0 the tree is broken: git reset --hard \$BASE
       && git clean -fd (drops codex-task.md/codex-run.log + anything codex left untracked),
