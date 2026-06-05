@@ -19,18 +19,18 @@ extern const u8 sCreditsTilemapEng[];
 void sub_0801C078(const u8 *str, u8 count, u8 colBase, u8 rowBase, u16 tileBase, s32 palBank, u8 screen)
 {
     /* Pins keep the baserom loop state live across sub_0801CEC0: col=r8, row=r9, palette=sl, base=r6. */
-    register s32 col asm("r8");
-    register s32 row asm("r9");
+    s32 col;
+    s32 row;
     register u16 palBits asm("sl");
     register u16 *base asm("r6");
     u8 i;
-    register int c asm("r5");
+    int c;
     u16 t;
     u16 *dst;
-    register s32 n asm("r4");
+    s32 n;
     int letterIndex;
     /* Digit pins make the digit store tail share the baserom's r1/r0 cross-jump with the tilde case. */
-    register u16 digitValue asm("r1");
+    u16 digitValue;
     register u16 *digitDst asm("r0");
 
     palBits = (palBank << 28) >> 16;
@@ -81,9 +81,9 @@ void sub_0801C078(const u8 *str, u8 count, u8 colBase, u8 rowBase, u16 tileBase,
             n = sub_0801CEC0((const char *)(str + i + 1), 3) - 0xC0;
             if ((u32)n <= 63) {
                 /* These pins target the bracket-case rotation: dst=r2, table=r3, n*3=r1. */
-                register u16 *escapeDst asm("r2");
-                register const u8 *table asm("r3");
-                register s32 m asm("r1");
+                u16 *escapeDst;
+                const u8 *table;
+                s32 m;
 
                 escapeDst = (u16 *)((row * 2 + rowBase) << 6);
                 escapeDst = (u16 *)((u32)escapeDst + (u32)(col * 2 + (u32)(u8 *)base));

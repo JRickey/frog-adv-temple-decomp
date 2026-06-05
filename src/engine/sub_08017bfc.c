@@ -41,7 +41,7 @@ void sub_0802D8F8(void);
 
 void sub_08017BFC(void)
 {
-    register vu16 *displayControl asm("r8");
+    vu16 *displayControl;
     const void *const volatile *assets;
     register void *layout asm("r5");
     struct IwramAt3480 *state;
@@ -104,7 +104,7 @@ void sub_08017BFC(void)
         }
     }
     if ((*displayControl & 0x10) != 0) {
-        register vu16 *displayControlForRead asm("r1") = displayControl;
+        vu16 *displayControlForRead = displayControl;
         u16 value = *displayControlForRead;
         value ^= 0x10;
         *displayControl = value;
@@ -158,8 +158,8 @@ void sub_08017D10(void)
 
 void sub_08017DB8(void)
 {
-    register struct IwramAt3480 *state asm("r5");
-    register vu16 *inputState asm("r6");
+    struct IwramAt3480 *state;
+    vu16 *inputState;
     register u32 input asm("r4");
     u32 zero;
 
@@ -191,7 +191,7 @@ void sub_08017DB8(void)
                 state->_data[8] = 1;
             }
             {
-                register struct IwramAt3480 *stateForTick asm("r1");
+                struct IwramAt3480 *stateForTick;
                 u32 now;
 
                 now = sub_08000900();
@@ -211,7 +211,7 @@ void sub_08017DB8(void)
         }
 
         {
-            register struct IwramAt3480 *stateForBlink asm("r1");
+            struct IwramAt3480 *stateForBlink;
 
             stateForBlink = &gIwram_3480;
             if (stateForBlink->_data[8] != 0) {
@@ -220,7 +220,7 @@ void sub_08017DB8(void)
         }
 
     checkTimeout: {
-        register struct IwramAt3480 *stateForTimeout asm("r4");
+        struct IwramAt3480 *stateForTimeout;
         u32 now;
 
         now = sub_08000900();

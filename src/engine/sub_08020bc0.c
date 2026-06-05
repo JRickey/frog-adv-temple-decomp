@@ -23,8 +23,8 @@ extern void SoundSlot_QueueRequest(void);
  */
 void sub_08020BC0(void)
 {
-    register StructAt3003570 *p asm("r1");
-    register int mask asm("r0");
+    StructAt3003570 *p;
+    int mask;
 
     p = &gStructAt3003570;
     mask = 2;
@@ -54,8 +54,8 @@ extern void sub_08031FDC(u32 a);
  */
 void sub_08020BF0(void)
 {
-    register StructAt3003570 *p asm("r0");
-    register int mask asm("r1");
+    StructAt3003570 *p;
+    int mask;
 
     p = &gStructAt3003570;
     mask = 0xfe;
@@ -79,7 +79,7 @@ extern void sub_08031E24(u32 arg);
  */
 void sub_08020C14(u32 arg)
 {
-    register StructAt3003570 *p asm("r1");
+    StructAt3003570 *p;
     register int mask asm("r0");
     StructAt3003570 s;
 
@@ -101,8 +101,8 @@ extern void sub_08020E98(u32 a);
  * Register pins: r1=pointer, r0=mask (same layout as sub_08020BC0). */
 void sub_08020C3C(void)
 {
-    register StructAt3003570 *p asm("r1");
-    register int mask asm("r0");
+    StructAt3003570 *p;
+    int mask;
 
     sub_08020E98(0);
     p = &gStructAt3003570;
@@ -113,7 +113,7 @@ void sub_08020C3C(void)
 
 void sub_08020C58(void)
 {
-    register StructAt3003570 *p asm("r4");
+    StructAt3003570 *p;
     register int mask asm("r0");
 
     p = &gStructAt3003570;

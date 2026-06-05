@@ -42,7 +42,7 @@ void sub_0801549C(void)
     switch (gIwram_3610.state) {
     case 0: {
         /* r0 table anchor makes case 0 load 0x08307da8 before reading the cached state byte. */
-        register const struct DmaJob_1549C *table asm("r0");
+        const struct DmaJob_1549C *table;
         /* r3 offset anchor fixes the final add operand order: `adds r3, r3, r0`. */
         register u32 offset asm("r3");
 
@@ -59,7 +59,7 @@ void sub_0801549C(void)
         sub_08013C60(*job, ((const u8 *)job)[2], (struct Queue_1549C *)0x03006580);
     reload_transfer_64c0: {
         /* r1 table anchor keeps the reload path as `ldr r1, table; ldr r0, state`. */
-        register const struct DmaJob_1549C *table asm("r1");
+        const struct DmaJob_1549C *table;
         /* r3 offset anchor fixes the final add operand order: `adds r3, r3, r1`. */
         register u32 offset asm("r3");
 
@@ -72,7 +72,7 @@ void sub_0801549C(void)
         break;
     case 3: {
         /* r0 table anchor gives case 3 the baserom's table-load before state-load order. */
-        register const struct DmaJob_1549C *table asm("r0");
+        const struct DmaJob_1549C *table;
         /* r3 offset anchor fixes the final add operand order: `adds r3, r3, r0`. */
         register u32 offset asm("r3");
 
@@ -90,7 +90,7 @@ void sub_0801549C(void)
             struct SceneState_1549C *scene;
             const struct DmaJob_1549C *cfg;
             /* r3 keeps the frame-table load before the DMA3 MMIO base literal. */
-            register const void *const *frames asm("r3");
+            const void *const *frames;
 
             scene = &gIwram_3610;
             cfg = (const struct DmaJob_1549C *)0x08306f08;
@@ -105,7 +105,7 @@ void sub_0801549C(void)
         }
         {
             /* r1 table anchor keeps case 4's final transfer as `ldr r1, table; ldr r0, state`. */
-            register const struct DmaJob_1549C *table asm("r1");
+            const struct DmaJob_1549C *table;
             /* r3 offset anchor fixes the final add operand order: `adds r3, r3, r1`. */
             register u32 offset asm("r3");
 

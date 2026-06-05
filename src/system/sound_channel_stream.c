@@ -440,13 +440,13 @@ sw_slot:
 
 void sub_0802EF7C(u8 clearAcc, u16 value, s32 channel)
 {
-    register u32 cf asm("r2");                 /* keeps the first inline flag offset in r2 for the flag load */
-    register u32 cfReload asm("ip");           /* preserves the later flags update as `[r2, ip]` */
-    register SoundSystem **pp asm("r3");       /* materializes `&gpSoundSystem` in r3 before the first ss load */
-    register SoundSystem **ppReload asm("r8"); /* keeps the gp pointer live across the inline inactive path */
-    register SoundSystem **ppFinal asm("r1");  /* forces the final inline accumulator reload through r1 */
+    register u32 cf asm("r2");           /* keeps the first inline flag offset in r2 for the flag load */
+    register u32 cfReload asm("ip");     /* preserves the later flags update as `[r2, ip]` */
+    register SoundSystem **pp asm("r3"); /* materializes `&gpSoundSystem` in r3 before the first ss load */
+    SoundSystem **ppReload;              /* keeps the gp pointer live across the inline inactive path */
+    SoundSystem **ppFinal;               /* forces the final inline accumulator reload through r1 */
     SoundSystem *ss1;
-    register SoundSystem *ss2 asm("r3"); /* keeps the second SoundSystem reload in r3 for the param store */
+    SoundSystem *ss2; /* keeps the second SoundSystem reload in r3 for the param store */
     SoundSystem *ss3;
     SoundSlot *slot;
     u32 flags;

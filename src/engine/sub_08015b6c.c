@@ -16,7 +16,7 @@ void sub_08015B6C(u8 mode, s16 dstX, s16 dstY, u8 widthArg, u8 heightArg, struct
 {
     register struct BlitSource_15B6C *srcp asm("r8");
     register u16 *dst asm("r6");
-    register const u16 *srcData asm("r3");
+    const u16 *srcData;
     register u32 row asm("r0");
     register u32 r1slot asm("r1");
     register u32 width asm("r5");

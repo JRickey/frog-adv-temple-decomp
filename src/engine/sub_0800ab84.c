@@ -14,10 +14,10 @@ void sub_0800AB84(u8 tile)
 {
     struct IwramAt35E0 *p35E0;
     s8 result;
-    register u8 *base asm("r0");
+    u8 *base;
     register u8 *base5 asm("r5");
     register u32 bit asm("r2");
-    register u8 *checkBase asm("r4");
+    u8 *checkBase;
 
     if (tile != 20)
         return;
@@ -99,9 +99,9 @@ extern s8 sub_0800D9FC(s8 idx);
 void sub_0800ACE8(u8 tile)
 {
     struct IwramAt35E0 *p35E0;
-    register struct IwramAt6110 *base5 asm("r5");
-    register struct IwramAt6110 *base4 asm("r4");
-    register struct IwramAt6110 *base2 asm("r2");
+    struct IwramAt6110 *base5;
+    struct IwramAt6110 *base4;
+    struct IwramAt6110 *base2;
     register u16 flags asm("r1");
     s8 result;
 

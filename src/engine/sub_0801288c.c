@@ -40,13 +40,13 @@ void sub_0801288C(void)
     u32 flags;
     u32 width;
     register u32 height asm("r9");
-    register const u16 *const *srcBase asm("r6");
+    const u16 *const *srcBase;
     register u16 *dst asm("r2");
     register const u16 *src asm("r1");
     u32 bank;
     void *flushSrc;
     void *flushDst;
-    register u32 row asm("r0");
+    u32 row;
     u32 nextRow;
     u8 col;
     register u16 *state asm("r4");

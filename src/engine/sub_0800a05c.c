@@ -5,7 +5,7 @@ extern void sub_0802D558(void *src, void *dst, u32 count);
 void sub_0800A05C(void)
 {
     u32 scratch[2];
-    register void *fillSrc asm("r8");
+    void *fillSrc;
 
     scratch[0] = 0;
     sub_0802D558(&scratch[0], (void *)0x06010000, 0x01000008);
@@ -13,11 +13,11 @@ void sub_0800A05C(void)
     fillSrc = &scratch[1];
 
     {
-        register u16 *oamBase asm("r0");
+        u16 *oamBase;
         u16 *oamFirst;
         u16 *oamRest;
-        register u32 zero asm("r5");
-        register u32 hiddenY asm("r6");
+        u32 zero;
+        u32 hiddenY;
         u16 *oamEnd;
         u16 **firstRef;
         u16 **restRef;
@@ -45,8 +45,8 @@ void sub_0800A05C(void)
         } while ((s32)oamFirst <= (s32)oamEnd);
 
         {
-            register void *oamDst asm("r1");
-            register u32 oamCount asm("r2");
+            void *oamDst;
+            u32 oamCount;
 
             oamDst = (void *)0x07000000;
             oamCount = 0x100;
@@ -55,9 +55,9 @@ void sub_0800A05C(void)
     }
 
     {
-        register u8 *hit asm("r0");
+        u8 *hit;
         register s32 i asm("r5");
-        register u32 zero asm("r1");
+        u32 zero;
 
         i = 0;
         zero = 0;
@@ -73,7 +73,7 @@ void sub_0800A05C(void)
     scratch[1] = 0;
 
     {
-        register u8 *ent asm("r4");
+        u8 *ent;
         register u32 mask asm("r1");
         register s32 j asm("r5");
 

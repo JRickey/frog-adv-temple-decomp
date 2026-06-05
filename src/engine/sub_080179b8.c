@@ -10,7 +10,7 @@ u32 __udivsi3(u32 num, u32 den);
 
 int sub_080179B8(void)
 {
-    register struct IwramAt34C0 *s asm("r6");
+    struct IwramAt34C0 *s;
     register const u16 *script asm("r5");
     register int op asm("r4");
     register GameStuff *gs asm("r2");
@@ -20,7 +20,7 @@ int sub_080179B8(void)
     int flag;
 
     {
-        register struct IwramAt34C0 *t asm("r0") = &gIwram_34C0;
+        struct IwramAt34C0 *t = &gIwram_34C0;
         u32 delay = t->delay;
 
         s = t;

@@ -18,20 +18,20 @@ struct BlitState {
  * mirror agbcc's prologue allocation and are load-bearing for the match. */
 void sub_080112C0(u32 frameArg, u32 rowsArg, u32 colsArg, u32 dstXArg, u32 dstYArg, u32 bankArg, u32 cellArg)
 {
-    register u32 frame asm("r9");
+    u32 frame;
     register u32 rows asm("r8");
     register u32 cols asm("ip");
     u32 dstX;
     u32 rowCount;
     register u32 dstY asm("sl");
-    register s32 bank asm("r5");
+    s32 bank;
     u32 cell;
     u16 *dst;
-    register const u16 *src asm("r2");
+    const u16 *src;
     register struct BlitState *state asm("r1");
     register u16 stride asm("r3");
     register u32 row asm("r0");
-    register u32 nextRow asm("r3");
+    u32 nextRow;
     register u16 *vram asm("r7");
 
     frame = (u8)frameArg;

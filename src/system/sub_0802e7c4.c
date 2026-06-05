@@ -118,15 +118,15 @@ big_slot: {
 
 void sub_0802E874(s8 delta, s32 ch)
 {
-    register SoundSystem *ss asm("r1");
-    register s32 newPan asm("r1");
-    register s32 deltaS asm("r4");
+    SoundSystem *ss;
+    s32 newPan;
+    s32 deltaS;
     register s32 chReg asm("r3");
     s32 chBit;
     u32 maskTen;
     u8 muteByte;
     u8 deltaU;
-    register u32 extracted asm("r0");
+    u32 extracted;
 
     chReg = ch;
     deltaU = (u8)delta;
@@ -174,10 +174,10 @@ call_pan:
     return;
 
 big_slot: {
-    register u8 *fieldp asm("r1");
+    u8 *fieldp;
     register s32 off asm("r0");
-    register u8 *slotp asm("r2");
-    register s32 newPanB asm("r1");
+    u8 *slotp;
+    s32 newPanB;
     u8 oldPan;
 
     fieldp = (u8 *)gpSoundSystem;

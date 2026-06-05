@@ -207,7 +207,7 @@ void sub_08016928(void)
         struct IwramAt5320 *s;
         struct DmaDesc2Entry *tableBase;
         struct DmaDesc2Entry *entry;
-        register u32 stride asm("r4");
+        u32 stride;
         u32 diff;
 
         s = &gIwram_5320;
