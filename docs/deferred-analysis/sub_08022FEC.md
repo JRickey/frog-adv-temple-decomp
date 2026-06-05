@@ -7,7 +7,7 @@ Engine routine at 0x08022FEC (520 bytes), an entity-scene setup pass. Lives in
 Callees (all peeled): sub_08020CDC (entity SFX/hitbox), sub_080210A0 (spawn),
 sub_0800696C, sub_08005D10, sub_0800A580, sub_08020FE4.
 
-## Behaviour (fully understood)
+## Behaviour (fully understood — unchanged from round 1)
 - Early exit: `if (gEntities[0].y > 0x198 && gEntities[0].x > 0xF0) return;`
 - Loop 1 over `i = 0..1`, entity = `gEntities[i + 0x5B]`, stride 56:
   - `field_1A == 0`: if `(status & 2) == 0 && (status & 0x8000)` →
@@ -16,71 +16,113 @@ sub_0800696C, sub_08005D10, sub_0800A580, sub_08020FE4.
       - if `field_1B == field_1C[0] - 2`: (i==1 → `sub_08020CDC(&gEntities[0x5C], 0x13, 3, 3)`),
         `sub_080210A0(i+0x5D, sLevelLayoutPtrs_311F28[i], 16, 24, 0x211, 12, 3, 3)`,
         `sub_0800696C(&gIwram_6110, i+0x5D)`.
-      - recompute entity (`gEntities[i+0x5B]`); if `(status & 0x8000)`:
-        `field_1A = 0; status |= 2`.
-- `sub_08005D10(0x5B, 0x5C)`.
+      - recompute entity (from idx=r6); if `(status & 0x8000)`: `field_1A = 0; status |= 2`.
+- `sub_08005D10(0x5B, 0x5C);`
 - Loop 2 over `i = 0..1`, entity = `gEntities[i + 0x5D]`:
-  - `if (status & 8) continue;`
+  - `if (status & 8) continue;`  (uses bit8 in r9 to keep loop-2 register pressure HIGH)
   - `field_1A == 0`: if `(status&2)==0 && (status&0x8000)`:
       `gEntities[i+0x5B].status |= 2; gEntities[i+0x5B].field_1A = 1; entity->status |= 8`.
-  - `field_1A == 4`: if `(status&2)==0`:
+  - `field_1A == 4`: if `(u16)(status&2)==0`:
       - if `x > 0x86`: `field_1A = 0; status |= 2;
         sub_0800A580(&gEntities[0x5D + i], 0, 0, 0);` (the +0x1458 base = slot 0x5D)
         (i==1 → `sub_08020CDC(&gEntities[0x5C], 0x5E, 3, 3)`).
       - recompute entity; if `(status & 0x8000)`: `status = (status | 2) & 0x7FFF`.
 - `sub_08020FE4(0x5D, 0x5E); sub_08005D10(0x5D, 0x5E);`
 
-## Drift
-Best clean byte_diff: **425** (diff_count 232 of ~239 — but cascading: a single
-extra hoisted-constant insn pair shifts every later offset, so the *operations*
-agree). Confirmed by register-agnostic mnemonic diff: **loop 2 and the entire
-epilogue match instruction-for-instruction**; the divergence is isolated to
-**loop 1**.
+NOTE the loop-2 case dispatch order in the baserom: `cmp #0; beq <case0 fwd>;
+cmp #4; bne <continue>; <case4 falls through>`. So **case 4 is the physical
+fall-through body and case 0 is the forward-jumped body** — i.e. in C source
+the `switch` must list `case 4:` BEFORE `case 0:` (codegen-notes
+"Case-number ≠ source-block-order"). This single reordering dropped diff_count
+from 211 to 141.
 
-Root cause: in loop 1 agbcc's loop-invariant code motion (gcc/loop.c
-`move_movables`) **hoists the `0x8000` status mask** into a callee-saved register
-(`movs r3,#0x80; lsls r3,#8; adds r7,r3,#0`) in the loop pre-header, then uses
-`ands r0,r7`. The baserom does NOT hoist it — it re-materialises `0x8000`
-inline at each use, into whatever scratch reg is free (r4 in case0, r3 in
-case1-tail). The hoist also steals r7 from `base`, so my prologue/`base` handling
-drifts. Loop 2 does NOT hoist (it has higher register pressure: bit8=r9, the
-`continue` early-out, the `sub_0800A580` index calc, the `prev` pointer) so the
-mask stays scratch there — which is exactly why loop 2 matches.
+## Round-2 progress (THIS is the new base — DO NOT restart from round 1's 425)
+Best clean byte_diff: **405** (diff_count 121, down from round-1 425 / 232).
+Instruction COUNT now matches exactly (252 == 252); the residual is pure
+register-coloring + a 2-insn local schedule in loop-1 `case 0`.
 
-The baserom register file in loop1: r5=i, r6=idx(i+0x5B), r7=base, r8=2 (mask,
-genuinely high-reg-hoisted), r4=pure scratch (reused for 0x8000 AND slot AND
-status — so 0x8000 is never a single-set movable → never hoisted).
+### Levers that WORKED (keep these — they are real structural wins)
+1. **Defeat the loop-1 0x8000 hoist via a reused scratch local.** Round 1's #1
+   blocker was gcc/loop.c `move_movables` hoisting `0x8000` into a callee-saved
+   reg in the loop pre-header (combine_movables merged the two single-set 0x8000
+   loads → combined lifetime 4 > threshold → hoisted, stealing r7 from base).
+   FIX: a function-scope `u32 mask;` assigned `mask = 0x8000;` at BOTH 0x8000
+   use-sites in loop 1. That makes the pseudo `n_times_set == 2`, so
+   `combine_movables` (requires `n_times_set==1`) skips it → no combine → each
+   use stays lifetime ~2 < threshold → NOT hoisted → materialised inline as
+   `movs #0x80; lsls #8` exactly like the baserom. CONFIRMED via the agbcc loop
+   dump (`old_agbcc … -dL`, reads `<file>.i.loop`): with the trick, regno for
+   0x8000 no longer appears as `move-insn … moved to N`. DO NOT apply this trick
+   to loop 2 — loop 2 already has enough pressure (bit8 r9 continue-check +
+   sub_0800A580 idx calc) that it never hoists; forcing the mask local there
+   regresses to 424/481.
+2. **`switch (field_1A)` instead of `if/else-if`** for BOTH loops. The baserom
+   dispatch is `cmp #0; beq; cmp #1; beq; b default` (loop 1) — the canonical
+   agbcc sparse-switch lowering, NOT if/else-if (which falls through case 0).
+3. **`case 4:` before `case 0:`** in loop-2's switch (see NOTE above).
+4. **`register u16 st asm("r1");` cached status in loop-1 case 0.** Pinning
+   status to r1 makes the bit2 test compile to the 2-insn `mov r0,r8; ands r0,r1`
+   (baserom form) instead of the 3-insn `add r0,r1,#0; mov r3,r8; and r0,r0,r3`
+   (the extra status-copy). dropped diff_count 141→124.
+5. **`i = 0;` BEFORE `base = …; bit2 = …;`** (split the for-init out) in both
+   loops. Baserom materialises `movs r5,#0` (i) FIRST in the pre-header; the
+   default `for(i=0;…)` schedules it last. Splitting it fixes the pre-header
+   order. 413→405.
 
-## Levers tried (none defeat the loop-1 0x8000 hoist)
-- Structure: nested-if vs `&&` (nested is closer); `(s16)status < 0` sign-test
-  (changes the mask insn, wrong — baserom uses explicit mask); array-index
-  `base[idx]` vs `(struct Entity*)(idx*56+(s32)base)`; explicit `idx`/`slot`
-  locals to raise pressure; caching `u16 st = status`.
-- Pins: `base asm("r7")` (fixes the prologue to the exact 2-high-reg form
-  `mov r7,r9; mov r6,r8; push {r6,r7}` but 0x8000 then overrides r7); `bit2
-  asm("r8")`, `bit8 asm("r9")` (these two ARE the genuine baserom high-reg
-  hoists and are needed); a `u32 hi=0x8000` local reassigned per use (drops r7
-  from the save set entirely — worse).
-- Flags: `-fno-gcse`, `-fno-expensive-optimizations`, `-fforce-addr`, `-O1`,
-  `-funroll-loops`/`-funroll-all-loops` (do not unroll the 2-trip loop),
-  `-ffixed-r3`/`-ffixed-r4`/`-ffixed-r10`, `-fno-schedule-insns{,2}`,
-  `-fno-strength-reduce`. None move below 425; -ffixed-r10 forces a stack spill
-  (451, worse). Both compilers (OLD_AGBCC default, AGBCC_BIN) hoist (432/433).
-- Permuter: not attempted — 425 is far outside its useful range (<=40) and the
-  divergence is a constant-hoist, not statement order.
+### Remaining divergence (isolated to loop-1 `case 0`, ~all of the 405 bytes)
+Everything is a CASCADE from two coupled coloring/schedule artifacts in case 0:
+- Baserom pre-loads the OR constant `2` EARLY (`movs r3,#2` right after the
+  `ldrh r1` status load, kept in r3 until the `status | 2`). agbcc-mine
+  materialises it LATE (`mov r0,#0x2` just before the orr). The `2` having a
+  long live-range from block-top to the OR is what frees the downstream
+  coloring. A `u32 two = 2;` read early did NOT help (agbcc CSE'd it back to a
+  late `mov`).
+- Baserom keeps 0x8000 in a *named* scratch (r4 in case0, r3 in case1-tail) and
+  COPIES it for the AND (`movs r4,#0x80; lsls; adds r0,r4,#0; ands r0,r1` — 4
+  insns), whereas agbcc-mine builds it directly in the AND dest (`movs r0,#0x80;
+  lsls; ands r0,r1` — 3 insns). i.e. baserom treats 0x8000 as a live value
+  copied into r0; mine consumes it. The `mask` local read-once doesn't force the
+  copy.
+- Net: case 0 in the baserom is ~1 insn LONGER (early-2) and the 0x8000 build is
+  ~1 insn LONGER (separate copy); my case 0 lacks both, so every later branch
+  offset shifts and the byte compare diverges even though the OPERATIONS agree.
 
-## Next attempt ideas
-1. Instrument a PRIVATE `old_agbcc` (gcc/loop.c `move_movables`, ~line 1855)
-   with an fprintf to log which movable+regno is moved, to find the exact
-   cost/availability gate, then craft source that keeps loop 1's register
-   pressure high enough that no callee-saved reg is free for 0x8000 (mirror
-   loop 2's pressure profile — e.g. a 5th genuinely-live value across the calls).
-2. The baserom keeps r4 as a multiply-set scratch holding 0x8000 / slot / status;
-   try a single C scratch local explicitly reused for all three so agbcc colours
-   them to one register (defeats the single-set-movable rule that triggers the
-   hoist).
+The OR/AND-result register in case 0 also differs (baserom result r0, status r1
+dies and is reused for 0x7FFF; with `st asm("r1")` the result reuses r1). The
+result reg is downstream of the early-2 / 0x8000-copy choices — fix those first.
 
-## Best-effort C (clean, readable; byte_diff 425)
+### Levers tried that did NOT help (avoid re-trying)
+- `entity asm("r2")` pin (global): 407/164 — pins entity right but forces the
+  3-insn AND back and exhausts scratch (spills base to r7). A *separate* loop-1
+  `entity1 asm("r2")` was 421/161.
+- Dropping the bit2 pin (let agbcc hoist `2` to r8 itself): gives the 2-insn AND
+  for FREE but colors `entity` to r3 instead of r2 in BOTH loops (a consistent
+  off-by-one), and loop-2 then re-hoists 0x8000 (pressure drops). 418/135.
+- `(u16)` cast on the loop-1 bit2 test (mimicking loop-2 case4): forces a status
+  RELOAD (worse). Flipping AND/OR operand order: no effect (commutative
+  canonicalisation). `two = 2` early local: CSE'd away.
+- per-TU CFLAGS: `-ffixed-r3` 445, `-fno-gcse -fno-expensive-optimizations` 447,
+  `-fno-schedule-insns{,2}` no entity-reg change. `-ffixed-r10` (round 1) spills.
+- Mask trick on loop-2 0x8000: 424/481 (regresses).
+
+### Next attempt ideas (ranked)
+1. The early-`2`-in-r3 + 0x8000-copy-in-r4 are a register-PRESSURE signature:
+   the baserom run had a 5th live value across case 0 that forced both constants
+   into named callee/scratch regs with long live-ranges. Mirror loop-2's
+   pressure: add a genuinely-live value (e.g. keep `idx`/`slot` live, or a
+   second mask) so local-alloc can't fold 0x8000 into the AND dest and must
+   schedule the `2` early. Instrument `old_agbcc` local-alloc.c / `reload.c`
+   privately (copy to a sandbox prefix, NEVER rebuild the shared symlink) and
+   log the coloring decision for the case-0 block.
+2. From the 405 base the function is at instruction-count parity; the residual
+   is coloring, which is exactly the permuter's domain — BUT 405 is far above
+   the ~40 useful range, so reduce case-0 to byte_diff <= ~40 by hand FIRST
+   (idea 1), then run the permuter to close the last coloring gap.
+3. Try a single multiply-set scratch reused for `2` AND `0x8000` AND `0x7FFF` in
+   case 0 (round-1 idea #2, never fully tried with the round-2 switch base) — it
+   may reproduce the baserom's r3/r4 "named scratch" allocation.
+
+## Best-effort C (clean, readable; byte_diff 405, diff_count 121)
 ```c
 #include "iwram.h"
 #include "types.h"
@@ -97,25 +139,32 @@ extern const u32 sLevelLayoutPtrs_311F28[2];
 void sub_08022FEC(void)
 {
     u8 i;
-    register struct Entity *base asm("r7"); /* pins the exact 2-high-reg prologue */
+    register struct Entity *base asm("r7");
     struct Entity *entity;
-    register u32 bit2 asm("r8"); /* baserom hoists the 0x2 status mask to r8 */
-    register u32 bit8 asm("r9"); /* baserom hoists the 0x8 status mask to r9 */
+    register u32 bit2 asm("r8");
+    register u32 bit8 asm("r9");
+    u32 mask;
+    register u16 st asm("r1");
 
     if (gEntities[0].y > 0x198 && gEntities[0].x > 0xF0)
         return;
 
+    i = 0;
     base = gEntities;
     bit2 = 2;
-    for (i = 0; i <= 1; i++) {
+    for (; i <= 1; i++) {
         entity = (struct Entity *)((i + 0x5B) * 56 + (s32)base);
-        if (entity->field_1A == 0) {
-            if ((entity->status & bit2) == 0) {
-                if ((entity->status & 0x8000) != 0)
-                    entity->status = (entity->status | 2) & 0x7FFF;
+        switch (entity->field_1A) {
+        case 0:
+            st = entity->status;
+            if ((bit2 & st) == 0) {
+                mask = 0x8000;
+                if ((st & mask) != 0)
+                    entity->status = (st | 2) & 0x7FFF;
             }
-        } else if (entity->field_1A == 1) {
-            if ((entity->status & bit2) == 0) {
+            break;
+        case 1:
+            if ((bit2 & entity->status) == 0) {
                 if (entity->field_1B == entity->field_1C[0] - 2) {
                     u32 slot = i + 0x5D;
                     if (i == 1)
@@ -124,33 +173,28 @@ void sub_08022FEC(void)
                     sub_0800696C(&gIwram_6110, slot);
                 }
                 entity = (struct Entity *)((i + 0x5B) * 56 + (s32)base);
-                if ((entity->status & 0x8000) != 0) {
+                mask = 0x8000;
+                if ((entity->status & mask) != 0) {
                     entity->field_1A = 0;
                     entity->status |= 2;
                 }
             }
+            break;
         }
     }
 
     sub_08005D10(0x5B, 0x5C);
 
+    i = 0;
     base = gEntities;
     bit2 = 2;
     bit8 = 8;
-    for (i = 0; i <= 1; i++) {
+    for (; i <= 1; i++) {
         entity = (struct Entity *)((i + 0x5D) * 56 + (s32)base);
         if ((entity->status & bit8) != 0)
             continue;
-        if (entity->field_1A == 0) {
-            if ((entity->status & bit2) == 0) {
-                if ((entity->status & 0x8000) != 0) {
-                    struct Entity *prev = (struct Entity *)((i + 0x5B) * 56 + (s32)base);
-                    prev->status |= 2;
-                    prev->field_1A = 1;
-                    entity->status |= bit8;
-                }
-            }
-        } else if (entity->field_1A == 4) {
+        switch (entity->field_1A) {
+        case 4:
             if ((u16)(entity->status & bit2) == 0) {
                 if (entity->x > 0x86) {
                     entity->field_1A = 0;
@@ -163,6 +207,17 @@ void sub_08022FEC(void)
                 if ((entity->status & 0x8000) != 0)
                     entity->status = (entity->status | 2) & 0x7FFF;
             }
+            break;
+        case 0:
+            if ((entity->status & bit2) == 0) {
+                if ((entity->status & 0x8000) != 0) {
+                    struct Entity *prev = (struct Entity *)((i + 0x5B) * 56 + (s32)base);
+                    prev->status |= 2;
+                    prev->field_1A = 1;
+                    entity->status |= bit8;
+                }
+            }
+            break;
         }
     }
 
