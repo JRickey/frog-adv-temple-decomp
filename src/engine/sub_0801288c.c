@@ -33,7 +33,7 @@ void sub_0801288C(void)
     register u32 hold6 asm("r6");
     s32 xCoord;
     s32 yCoord;
-    register u32 xWork asm("r2");
+    register u32 r2Work asm("r2");
     u32 yWork;
     register u32 x asm("r8");
     register u32 ipWork asm("ip");
@@ -41,7 +41,6 @@ void sub_0801288C(void)
     u32 width;
     register u32 height asm("r9");
     const u16 *const *srcBase;
-    register u16 *dst asm("r2");
     register const u16 *src asm("r1");
     u32 bank;
     void *flushSrc;
@@ -57,8 +56,8 @@ void sub_0801288C(void)
     entityBase = 0x03003720;
     xOffset = 0x692;
     xCoord = *(s16 *)(entityBase + xOffset);
-    xWork = xCoord * 3 + xOffset - xOffset + hold5 - hold5 + hold6 - hold6;
-    xWork <<= 16;
+    r2Work = xCoord * 3 + xOffset - xOffset + hold5 - hold5 + hold6 - hold6;
+    r2Work <<= 16;
     yOffset = 0x694;
     entityBase -= -yOffset;
     /* Keep yOffset live through the signed load for matching. */
@@ -69,7 +68,7 @@ void sub_0801288C(void)
     yWork = yCoord * 3 + yOffset - yOffset + hold5 - hold5 + hold6 - hold6;
     yWork = (u16)yWork;
     ipWork = yWork;
-    x = xWork >> 16;
+    x = r2Work >> 16;
     width = desc->width;
     yWork = desc->height;
     height = yWork;
@@ -83,14 +82,14 @@ void sub_0801288C(void)
         one = 1;
         flagBit = flags;
         flagBit &= one;
-        dst = (u16 *)(0x80 << 18);
+        r2Work = 0x80 << 18;
         if (flagBit)
-            dst = (u16 *)0x02010000;
+            r2Work = 0x02010000;
     }
 
     state = (u16 *)0x030060A0;
     stride = state[13];
-    dst += stride * ipWork + x;
+    r2Work += (stride * ipWork + x) << 1;
     src = srcBase[1];
     row = 0;
     bank = flags;
@@ -102,17 +101,20 @@ void sub_0801288C(void)
             nextRow = row + 1;
             if (col < width) {
                 do {
-                    *dst++ = *src++;
+                    *(u16 *)r2Work = *src++;
+                    r2Work += 2;
                     col++;
                 } while (col < width);
             }
             {
                 register u32 stride2 asm("r3");
+                u32 strideAdvance;
 
                 stride2 = ipWork;
                 stride2 = ((struct BlitState_1288C *)stride2)->stride;
-                stride2 -= width;
-                dst += stride2;
+                strideAdvance = stride2 - width;
+                strideAdvance <<= 1;
+                r2Work += strideAdvance;
             }
             row = (u8)nextRow;
         } while (row < height);
