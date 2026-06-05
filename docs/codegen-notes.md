@@ -2502,3 +2502,34 @@ introduced a third symbol and shifted 373 bytes of `sub_08008570`; converting
 both (so the function uses `gEntities` + `gEntities_03003720`, two names, like
 the baserom's two) restored the match. Rule: convert a function's pool-base
 references all-at-once, never split across a partial edit.
+
+## `register asm("ip")` pin can DESYNC reload's round-robin (sub_08032094)
+
+A `register T *p asm("ip")` pin on a loop-invariant pointer-to-pointer
+(`&gpSoundSystem`) that is dereferenced each loop iteration looks like the
+right tool when the baserom keeps that address in `ip` (re-materialized after
+each BL, since `ip`/r12 is call-clobbered). It is NOT — and it caused two
+prior sessions to plateau at byte_diff 10 on a function that matches with
+PLAIN locals and zero pins.
+
+Root cause (confirmed by instrumenting a private debug `old_agbcc`):
+- The in-loop scratch constants (`movs rX,#0x88; lsls #1` for offset 0x110,
+  etc.) and the `mov rX, r8` mode copy are NOT colored by local-alloc — they
+  are **reload registers** chosen in `reload1.c:allocate_reload_reg`, which
+  picks spill regs **round-robin** starting from `last_spill_reg` (so the
+  choice depends on the running sequence of prior reloads, not "lowest free").
+- The baserom's per-iteration `mov r1, ip; ldr r0, [r1]` count re-read is a
+  **reload** of `ip` into a low reg. Reload's input-reload avoids the `ldr`
+  output reg (r0), so it lands on r1, advancing the round-robin one step.
+- A `register asm("ip")` pin makes that same `mov r1, ip` an **allocator
+  copy** (`movsi_insn`), which does NOT advance `last_spill_reg`. That single
+  missing advance rotates every downstream reload register by one
+  (r0,r1,r2,r0 instead of the baserom's r2,r0,r1,r2) → a stuck byte_diff 10.
+
+Lesson: when the baserom holds a value in `ip` with post-call reloads, write
+a **plain local** (`SoundSystem **p = &gThing;`) and let agbcc choose `ip` +
+reloads itself. Do NOT pin to `ip`. The reload round-robin only stays in sync
+with the baserom when the per-iteration `ip`->low materialization is a real
+reload. (Instrument `allocate_reload_reg` with an env-gated `fprintf` of
+`last_spill_reg`/`spill_regs[i]` in a PRIVATE debug compiler copy to see this
+directly.)
