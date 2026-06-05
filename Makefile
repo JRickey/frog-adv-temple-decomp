@@ -158,6 +158,8 @@ src/system/sound_mixer_tail.s: CC = $(OLD_AGBCC_BIN)
 src/system/sound_mixer_tail.s: CFLAGS += -fforce-addr -fno-gcse -fno-cse-follow-jumps
 # __fixunssfsi uses `pop {r4, pc}` (non-interwork form); override interwork flag.
 src/game/sub_08033da8.s: CFLAGS += -mno-thumb-interwork
+# sub_08034760 uses `pop {r4, pc}` epilogue
+src/game/sub_08034760.s: CFLAGS += -mno-thumb-interwork
 
 
 
