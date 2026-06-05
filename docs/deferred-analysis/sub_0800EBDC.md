@@ -1,229 +1,271 @@
-# sub_0800EBDC — deferred (round 15, second Opus escalation)
+# sub_0800EBDC — deferred
 
-Per-scene scroll commit + visible-screenblock blit. ~225 Thumb instructions,
-slice [0x0800ebdc, 0x0800ee34) which ALSO carries trivial sub_0800EE0C
-(REG_BLDCNT/REG_BLDALPHA setter — confirmed matchable as plain C, see end).
+Per-scene scroll commit + visible-screenblock blit. Slice
+`[0x0800ebdc, 0x0800ee34)` also carries trivial `sub_0800EE0C`
+(`REG_BLDCNT` / `REG_BLDALPHA` setter), which matched as plain C in prior
+rounds but remains in the asm slice until `sub_0800EBDC` lands.
 
-## Semantics (fully reverse-engineered, high confidence)
-`void sub_0800EBDC(u8 count)`. Per scene i in [0,count): SceneScrollState at
-0x030060A0 (stride 0x20): +4 committedX, +8 committedY, +0xc scrollX, +0x10
-scrollY, +0x14 bgHofs, +0x16 bgVofs, +0x18 tileHeight, +0x1a tileWidth.
-Per entry: commit scroll->committed; derive srcRow/srcCol with clamps + publish
-bgHofs/bgVofs; switch(i) picks srcBase(EWRAM)/dstBase(VRAM) + writes
-gIwram_3550._data[2i..2i+1]; 32x32 halfword blit from EWRAM map to VRAM
-screenblock with per-store wrap.
+## Drift
 
-## ROUND-15 PROGRESS over the round-23 note (read this first)
-Got diff_count 296 -> 243 by re-deriving the field section. Three NEW,
-mechanically-confirmed findings the next attempt should BUILD ON, plus the
-remaining wall (now precisely localized to FOUR independent agbcc artifacts).
+Classifier verdict: `ATTEMPT_MATCH`. This is not `STRONG_UNMATCHABLE`.
+There are no callees. `classify_unmatchable.py` only reported high-register
+advisory (`r9`, `sl`), so NAKED is not justified.
 
-### NEW finding 1 — the field-write staging recipe REPRODUCES the ip+off+idx [.,#0] shape
-The prior note said agbcc "CANNOT" emit `ip+off+idx; [.,#0]`. FALSE. It can:
+New best this round:
+
+- `byte_diff 387`, `diff_count 179`, size `544` vs baserom `600`.
+- Compiler flags tried on this TU: `CC=$(AGBCC_BIN)` plus
+  `-fno-strength-reduce -fno-gcse`. Newer agbcc did not change the result
+  versus old agbcc for the best source shape.
+- Clean no-pin typed C: `byte_diff 399`, `diff_count 266`.
+- Guarded high-reg/address-staged C before extra pins: `byte_diff 476`,
+  `diff_count 221`.
+- Reduced-pin variant (only `i`/`base`/`idx`): `byte_diff 462`,
+  `diff_count 272` and an extra stack slot. Worse.
+- Best version uses a guard + `do` loop to place `base = 0x030060A0`
+  after the `count` guard, and pins the field-section registers enough to
+  reproduce much of the front block:
+  `r9` outer index, `ip` base, `r3` byte offset, `r5` copied offset,
+  `sl` source row, `r7` source col / loop counter, `r6` source base,
+  `r8` destination base, plus scoped `r1`/`r2` address pins.
+
+New findings to build on:
+
+- Explicit guard + `do` loop fixes the previous preheader problem:
+  the base literal load moves after the `count` check, matching the
+  baserom's control-flow shape.
+- `srcCol = i; idx = srcCol << 5;` with `srcCol` pinned to `r7` emits the
+  baserom `mov r7, r9; lsls r3, r7, #5`.
+- Scoped pins for committed-X (`r1`) and committed-Y (`r2`) remove the
+  earlier base+4 to base+8 CSE fold. The front commit block now matches
+  structurally through the two stores, aside from pool-distance shifts.
+- Keeping the scroll-Y pointer in scoped `r1` across the committed-Y store
+  reproduces the immediate post-store reload and improves the field section.
+- Copying `idx` to an `r5` alias after that reload reproduces the baserom's
+  retained byte offset for later field accesses.
+- Writing the tile-row and tile-col division as explicit signed-rounding
+  temporaries keeps the `cmp adjusted, #0` / add-before-shift checks that
+  agbcc otherwise proves dead.
+
+Remaining wall:
+
+- The clamp publish sections still choose different scratch registers around
+  `ldrh [base+idx,#0x18/#0x1a]` and the second scrollY/scrollX reloads.
+  Current best uses `r2`/`r4` where baserom wants `r0`/`r2`/`r3` in several
+  places.
+- The blit setup still spills/reuses badly: generated C reaches `mov r5, sp`
+  in the source-pointer calculation, showing the same register-pressure wall
+  noted before. The field half and blit half want different register budgets.
+- `agbcc_oracle.py --pass greg` confirms heavy pressure and many spill
+  decisions around the blit loop; further progress probably needs either RTL
+  dump mapping of the source/dest/colSpan pseudos or private reload/local-alloc
+  instrumentation.
+- Required history search could not run because
+  `tools/agent/corpus-mirrors` is absent in this worktree. Current-tree corpus
+  grep found no useful C analogue for this screenblock wrap loop.
+
+Do not ship NAKED for this function. The honest asm slice is better until the
+remaining allocation shape is solved.
+
+## Best-effort C
+
 ```c
-u32 a = base + off;          /* base pinned to ip */
-*(s32 *)(idx + a) = RHS;      /* idx-FIRST single expr -> adds rd, idx, a ; [.,#0] */
-```
-Probe-confirmed byte-for-byte for committedX/committedY WRITES and the scrollY
-(off 0x10) READS. The two keys the prior note missed:
-  - The address must be a SINGLE expression `idx + a` (NOT `a += idx`), which
-    makes agbcc emit `adds rd, idx, a` (idx as first source = baserom order
-    `adds r1, r3, r1`). `a = idx + a` or `a += idx` emit base-first (`add a,a,idx`).
-  - `a` must be a STANDALONE var = `base + off` so the store sees offset 0;
-    writing `*(T*)(idx + (base+off))` re-associates to `[idx+base, #off]`.
-  - scrollX READS use a raw literal `*(s32*)(idx + 0x030060AC)` (NOT a variable)
-    so agbcc emits the pool const each time = baserom `ldr r2,=0x030060ac`.
-  - immediate-offset fields (bgVofs@0x16, bgHofs@0x14, tileHeight@0x18,
-    tileWidth@0x1a) use `*(T*)(idx + base + 0x18)` (re-assoc to `[base+idx,#0x18]`).
-
-### NEW finding 2 — register pins that get the field section's coloring right
-`register u32 i asm("r9")` -> i lands in r9 AND emits `mov r7,r9; lsls r3,r7,#5`
-(baserom 0xebfe). `register u32 base asm("ip")`, `register u32 idx asm("r3")`,
-`srcRow asm("sl")`, `srcCol asm("r7")`, `srcBase asm("r6")`, `dstBase asm("r8")`.
-Build flags: `src/engine/sub_0800ebdc.s: CFLAGS += -fno-strength-reduce -fno-gcse`.
-
-### NEW finding 3 — the blit-loop wrap math is SIGNED, with -0x800 as a pool const
-Baserom: `dst = dstBase + (((dst - 0x800 - dstBase) >> 1) << 1)` uses `asrs`
-(ARITHMETIC shift) and materializes 0xfffff800 (= -0x800) as a pool literal that
-it ADDS (`ldr r7,=0xfffff800; adds r0,r4,r7`). So the intermediate is SIGNED.
-Natural unsigned C emits `lsr` and subtracts a register dstEnd. Write the
-intermediate as `s32` and add `(u32)-0x800` so agbcc keeps it a pool const.
-dstEnd (dstBase+0x800) is precomputed ONCE to [sp,#4]; make it an explicit
-`s32 dstEnd` local, compare `dst >= dstEnd`.
-
-## The remaining wall — FOUR independent agbcc artifacts (none flag-reachable so far)
-1. **ip-load placement.** Baserom loads base into ip INSIDE the loop body
-   (0xebfa, reached only on the entry path; the back-edge at 0xede0 jumps to
-   0xebfe AFTER it) — i.e. the loop PREHEADER sits AFTER the count guard. agbcc
-   (any flags, OLD and new) always emits the `register asm("ip")` initializer
-   BEFORE the guard (function entry). Tried: declare-then-assign-before-loop,
-   assign-inside-loop (LICM hoists + drops the ip pin -> base goes to r4),
-   newer agbcc (same placement). This shifts the i=0/`mov r9` ordering and
-   cascades the whole loop offset.
-2. **base+4 -> base+8 CSE reuse.** committedY write needs a FRESH
-   `mov r2,ip; adds r2,#8`. agbcc's local CSE always builds base+8 from the
-   live base+4 (`adds r1,#4`), 1 instr shorter -> an INSERTION/DELETION
-   misalignment. Survives -fno-gcse, -fno-cse-follow-jumps, -fforce-addr,
-   -fno-expensive-optimizations. The baserom never materializes a standalone
-   base+4 (it goes straight `mov ip; adds #4; adds idx` into one reg), so the
-   value is never a CSE candidate — but any C that yields `[.,#0]` for
-   committedX necessarily exposes base+off as a standalone value.
-3. **blit-loop register recycling.** Baserom parks `i+1` in sl and REUSES r9
-   for `&base[i]` across the inner blit (0xed64-76), then restores i from sl
-   (0xedd2). agbcc never recycles the i register this way from natural C.
-4. **blit-loop counter precompute + 2-operand muls order.** Baserom precomputes
-   row+1 (`adds r5,r0,#1` at 0xed7c) and `muls r2,r1` (srcRow*tw, srcRow first);
-   agbcc emits a different multiply order and recomputes 0x800+dstBase inside
-   the col loop instead of using [sp,#4].
-
-HEAVY PINNING IS COUNTERPRODUCTIVE: with i/base/idx/srcRow/srcCol/srcBase/
-dstBase all pinned, the blit loop runs out of low regs and SPILLS srcCol to the
-stack (`mov r2, sp` aliasing) -> codegen gets WORSE. The field-section pins help;
-the blit loop wants FEWER pins. The two halves want different register budgets,
-which is itself evidence the baserom allocated globally in a way agbcc-2.x at the
-project's flag set does not.
-
-## Drift (this round)
-  - field-staging + i/base/idx pins + srcRow/srcCol/srcBase/dstBase pins:
-        byte_diff 458, diff_count 243  (BEST this round; was 296)
-  - field-staging + i/base/idx pins only:                 diff_count 284
-  - field-staging, no pins:                               diff_count 314
-  - newer agbcc (CC=$(AGBCC_BIN)) on the pinned version:  diff_count 243 (no change)
-
-## Levers NOT yet tried (for the next attempt)
-  - Instrument agbcc cse.c (private debug build per codegen-notes) at the
-    PLUS-with-constant reuse site to find what makes it recompute base+8 fresh
-    (artifact #2) — that one fix may unblock the whole field section.
-  - A guard-then-preheader source shape for artifact #1: maybe an explicit
-    `if (count != 0) { ... do { } while(); }` written by hand (not a `for`)
-    lets agbcc place the ip-load after the guard.
-  - Split the blit into its own static helper so it gets an independent (looser)
-    register budget, then see if the call-site + helper match (baserom is one
-    function, so this only works if it inlines identically — unlikely, but the
-    helper in isolation is closer to matching than the over-pinned inline form).
-  - This is NOT STRONG_UNMATCHABLE (no libgcc push prologue) — do NOT ship NAKED.
-    Keep it an honest asm slice until a true match lands. Strong candidate for
-    the agbcc-instrumentation route or codex.
-
-## sub_0800EE0C (matches as plain C — apply when EBDC is solved)
-```c
-void sub_0800EE0C(u16 targets, u16 coeff)
-{
-    *(vu16 *)0x04000050 = targets | 0x1740;  /* REG_BLDCNT  = targets | 0x1740 */
-    *(vu16 *)0x04000052 = coeff;             /* REG_BLDALPHA = coeff */
-}
-```
-Verified byte-identical to the baserom in this round's full build (only the .o
-offset shifts because the non-matching EBDC precedes it).
-
-## Best-effort C (this round, diff_count 243 — the field section is shape-correct)
-```c
+#include "gba/io.h"
 #include "iwram.h"
 #include "types.h"
+
+#define SCREENBLOCK_TILE_COUNT 0x400
+#define SCREENBLOCK_ROW_BYTES  0x40
+#define SCREENBLOCK_ROW_TILES  0x20
+#define SCREENBLOCK_TILE_MASK  0x1f
+#define BG0_TILEMAP_BASE       ((u16 *)0x02000000)
+#define BG1_TILEMAP_BASE       ((u16 *)0x02010000)
+#define BG2_TILEMAP_BASE       ((u16 *)0x02020000)
+#define BG0_SCREENBLOCK_BASE   ((u16 *)0x0600E000)
+#define BG1_SCREENBLOCK_BASE   ((u16 *)0x0600E800)
+#define BG2_SCREENBLOCK_BASE   ((u16 *)0x0600F000)
+#define SCROLL_STATE_BASE      0x030060A0
+#define SCROLL_X_BASE          0x030060AC
+#define BLDCNT_EBDC_TARGETS \
+    (BLDCNT_EFFECT_BLEND | BLDCNT_TARGET2_BG0 | BLDCNT_TARGET2_BG1 | BLDCNT_TARGET2_BG2 | BLDCNT_TARGET2_OBJ)
+
+struct SceneScrollState_EBDC {
+    u8 _pad00[4];
+    s32 committedX;
+    s32 committedY;
+    s32 scrollX;
+    s32 scrollY;
+    u16 bgHofs;
+    u16 bgVofs;
+    u16 tileHeight;
+    u16 tileWidth;
+    u8 _pad1c[4];
+};
+
+extern struct SceneScrollState_EBDC gIwram_60A0[];
 
 void sub_0800EBDC(u8 count)
 {
     register u32 i asm("r9");
-    register u32 base asm("ip") = 0x030060A0;
+    register u32 base asm("ip");
     register u32 idx asm("r3");
-    u32 a, c;
+    register u32 idxCopy asm("r5");
+    u32 fieldAddr;
+    u32 scrollYAddr;
     struct IwramAt3550 *shadow;
     register s32 srcRow asm("sl");
     register s32 srcCol asm("r7");
-    s32 limit, sy, sx;
-    u16 tw, th;
+    s32 limit;
+    s32 scrollX;
+    s32 scrollY;
+    u16 tileWidth;
+    u16 tileHeight;
     register u32 srcBase asm("r6");
     register u32 dstBase asm("r8");
-    u16 *src, *dst;
-    s32 colSpan, col, row;
+    u16 *src;
+    u16 *dst;
+    s32 colSpan;
+    u16 col;
+    u16 row;
 
-    for (i = 0; i < count; i++) {
-        idx = i << 5;
-        a = base + 4;
-        *(s32 *)(idx + a) = *(s32 *)(idx + 0x030060AC);
-        a = base + 8;
-        c = base + 0x10;
-        *(s32 *)(idx + a) = *(s32 *)(idx + c);
+    i = 0;
+    if (i >= count) {
+        return;
+    }
 
-        srcCol = 0;
-        srcRow = 0;
-        c = base + 0x10;
-        sy = *(s32 *)(idx + c);
-        if (sy > 47) {
-            th = *(u16 *)(idx + base + 0x18);
-            limit = (th << 3) - 0xD0;
-            if (sy <= limit)
-                srcRow = (u16)((sy - 0x30) >> 3);
+    base = SCROLL_STATE_BASE;
+    do {
+        srcCol = i;
+        idx = srcCol << 5;
+        {
+            register u32 committedXAddr asm("r1");
+            register u32 scrollXBase asm("r2");
+
+            committedXAddr = base + 4;
+            committedXAddr = idx + committedXAddr;
+            scrollXBase = SCROLL_X_BASE;
+            *(s32 *)committedXAddr = *(s32 *)(idx + scrollXBase);
         }
-        c = base + 0x10;
-        sy = *(s32 *)(idx + c);
-        *(u16 *)(idx + base + 0x16) = sy;
-        th = *(u16 *)(idx + base + 0x18);
-        limit = (th << 3) - 0xD0;
-        if (sy > limit && th > 31)
-            srcRow = (u16)(th - 32);
+        {
+            register u32 committedYAddr asm("r2");
+            register u32 scrollYPtr asm("r1");
 
-        sx = *(s32 *)(idx + 0x030060AC);
-        if (sx > 7) {
-            tw = *(u16 *)(idx + base + 0x1a);
-            limit = (tw << 3) - 0xF8;
-            if (sx <= limit)
-                srcCol = (u16)((sx - 8) >> 3);
+            committedYAddr = base + 8;
+            committedYAddr = idx + committedYAddr;
+            scrollYPtr = base + 0x10;
+            scrollYPtr = idx + scrollYPtr;
+            *(s32 *)committedYAddr = *(s32 *)scrollYPtr;
+            srcCol = 0;
+            srcRow = 0;
+            scrollY = *(s32 *)scrollYPtr;
+            idxCopy = idx;
         }
-        sx = *(s32 *)(idx + 0x030060AC);
-        *(u16 *)(idx + base + 0x14) = sx;
-        tw = *(u16 *)(idx + base + 0x1a);
-        limit = (tw << 3) - 0xF8;
-        if (sx > limit && tw > 31)
-            srcCol = (u16)(tw - 32);
+        if (scrollY > 47) {
+            tileHeight = *(u16 *)(idxCopy + base + 0x18);
+            limit = (tileHeight << 3) - 0xD0;
+            if (scrollY <= limit) {
+                s32 adjusted = scrollY;
+                adjusted -= 0x30;
+                if (adjusted < 0) {
+                    adjusted += 7;
+                }
+                srcRow = (u16)(adjusted >> 3);
+            }
+        }
 
-        shadow = (struct IwramAt3550 *)0x03003550;
+        scrollYAddr = base + 0x10;
+        scrollY = *(s32 *)(idxCopy + scrollYAddr);
+        *(u16 *)(idxCopy + base + 0x16) = scrollY;
+        tileHeight = *(u16 *)(idxCopy + base + 0x18);
+        limit = (tileHeight << 3) - 0xD0;
+        if (scrollY > limit && tileHeight > SCREENBLOCK_TILE_MASK) {
+            srcRow = (u16)(tileHeight - SCREENBLOCK_ROW_TILES);
+        }
+
+        scrollX = *(s32 *)(idxCopy + SCROLL_X_BASE);
+        if (scrollX > 7) {
+            tileWidth = *(u16 *)(idxCopy + base + 0x1A);
+            limit = (tileWidth << 3) - 0xF8;
+            if (scrollX <= limit) {
+                s32 adjusted = scrollX;
+                adjusted -= 8;
+                if (adjusted < 0) {
+                    adjusted = scrollX - 1;
+                }
+                srcCol = (u16)(adjusted >> 3);
+            }
+        }
+
+        scrollX = *(s32 *)(idxCopy + SCROLL_X_BASE);
+        *(u16 *)(idxCopy + base + 0x14) = scrollX;
+        tileWidth = *(u16 *)(idxCopy + base + 0x1A);
+        limit = (tileWidth << 3) - 0xF8;
+        if (scrollX > limit && tileWidth > SCREENBLOCK_TILE_MASK) {
+            srcCol = (u16)(tileWidth - SCREENBLOCK_ROW_TILES);
+        }
+
+        shadow = &gIwram_3550;
         switch ((s32)i) {
         case 0:
-            srcBase = 0x02000000;
-            dstBase = 0x0600E000;
+            srcBase = (u32)BG0_TILEMAP_BASE;
+            dstBase = (u32)BG0_SCREENBLOCK_BASE;
             shadow->_data[1] = *(u16 *)(base + 0x16);
             shadow->_data[0] = *(u16 *)(base + 0x14);
             break;
         case 1: {
-            u16 *p = (u16 *)0x030060C0;
-            srcBase = 0x02010000;
-            dstBase = 0x0600E800;
-            shadow->_data[3] = p[0xb];
-            shadow->_data[2] = p[0xa];
+            struct SceneScrollState_EBDC *state = (struct SceneScrollState_EBDC *)0x030060C0;
+            srcBase = (u32)BG1_TILEMAP_BASE;
+            dstBase = (u32)BG1_SCREENBLOCK_BASE;
+            shadow->_data[3] = state->bgVofs;
+            shadow->_data[2] = state->bgHofs;
             break;
         }
         case 2: {
-            u16 *p = (u16 *)0x030060E0;
-            srcBase = 0x02020000;
-            dstBase = 0x0600F000;
-            shadow->_data[5] = p[0xb];
-            shadow->_data[4] = p[0xa];
+            struct SceneScrollState_EBDC *state = (struct SceneScrollState_EBDC *)0x030060E0;
+            srcBase = (u32)BG2_TILEMAP_BASE;
+            dstBase = (u32)BG2_SCREENBLOCK_BASE;
+            shadow->_data[5] = state->bgVofs;
+            shadow->_data[4] = state->bgHofs;
             break;
         }
         }
 
-        tw = *(u16 *)(idx + base + 0x1a);
-        src = (u16 *)(srcBase + (srcRow * tw) * 2 + srcCol * 2);
-        dst = (u16 *)(dstBase + (srcRow & 31) * 0x40 + (srcCol & 31) * 2);
-        colSpan = (u16)(32 - (srcCol & 31));
-        for (row = 0; (u16)row <= 31; row++) {
+        tileWidth = *(u16 *)(idxCopy + base + 0x1A);
+        src = (u16 *)(srcBase + (srcRow * tileWidth) * 2 + srcCol * 2);
+        dst = (u16 *)(dstBase + (srcRow & SCREENBLOCK_TILE_MASK) * SCREENBLOCK_ROW_BYTES +
+                      (srcCol & SCREENBLOCK_TILE_MASK) * 2);
+        colSpan = (u16)(SCREENBLOCK_ROW_TILES - (srcCol & SCREENBLOCK_TILE_MASK));
+        for (row = 0; row <= SCREENBLOCK_TILE_MASK; row++) {
             s32 remain = colSpan;
-            for (col = 0; (u16)col <= 31; col++) {
-                if (dst >= (u16 *)(dstBase + 0x800))
-                    dst = (u16 *)(dstBase + ((((u32)dst - 0x800 - dstBase) >> 1) << 1));
-                if (remain == 0) {
-                    dst -= 0x20;
-                    if ((u32)dst < dstBase)
-                        dst = (u16 *)(dstBase + 0x7C0);
+
+            for (col = 0; col <= SCREENBLOCK_TILE_MASK; col++) {
+                if (dst >= (u16 *)(dstBase + 0x800)) {
+                    dst = (u16 *)(dstBase + (((s32)((u32)dst + (u32)-0x800 - dstBase) >> 1) << 1));
                 }
+
+                if (remain == 0) {
+                    dst -= SCREENBLOCK_ROW_TILES;
+                    if ((u32)dst < dstBase) {
+                        dst = (u16 *)(dstBase + 0x7C0);
+                    }
+                }
+
                 *dst++ = *src++;
                 remain = (u16)(remain - 1);
             }
-            src = (u16 *)((u32)src + tw * 2 - 0x40);
-            if (colSpan != 32)
-                dst = (u16 *)((u32)dst + 0x40);
+
+            src = (u16 *)((u32)src + tileWidth * 2 - SCREENBLOCK_ROW_BYTES);
+            if (colSpan != SCREENBLOCK_ROW_TILES) {
+                dst = (u16 *)((u32)dst + SCREENBLOCK_ROW_BYTES);
+            }
         }
-    }
+        i++;
+    } while (i < count);
+}
+
+void sub_0800EE0C(u16 targets, u16 coeff)
+{
+    REG_BLDCNT = targets | BLDCNT_EBDC_TARGETS;
+    REG_BLDALPHA = coeff;
 }
 ```
