@@ -35,7 +35,7 @@ extern u16 gIwram_5398;
 void sub_080031D4(void)
 {
     register u32 mask asm("r0");
-    register struct Entity *p asm("r1") = gEntities;
+    struct Entity *p = gEntities;
     struct Entity *e;
     u16 *btn;
     int x;

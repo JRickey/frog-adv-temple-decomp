@@ -5,15 +5,15 @@ extern void sub_08009CBC(void);
 
 void sub_08004080(void)
 {
-    register unsigned char *control asm("r4");
-    register unsigned int zero asm("r5");
+    unsigned char *control;
+    unsigned int zero;
 
     control = (unsigned char *)0x03006110;
     ModeControl_Init((unsigned int)control, 0x32, 13, 0x082F9CD0, 1, zero = 0);
     sub_0800CE98(13, 0);
     control[0x2a] = zero;
     {
-        register unsigned int six asm("r0");
+        unsigned int six;
         register unsigned int wordZero asm("r1");
 
         six = 6;

@@ -9,7 +9,7 @@ extern u8 gIwram_3610;
 
 void sub_0800D808(u32 a)
 {
-    register u8 *slots asm("r8");
+    u8 *slots;
     register u8 *idx1 asm("r2");
     register u8 *slots1 asm("r5");
     u8 *ibuf;
@@ -45,7 +45,7 @@ void sub_0800D808(u32 a)
     slots = &gIwram_53A0;
     ibuf = &gIwram_3610;
     do {
-        register s32 next asm("r3");
+        s32 next;
 
         *rndp = sub_08000764(count);
         slots[ibuf[*rndp]] = 0;

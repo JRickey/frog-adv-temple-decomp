@@ -40,11 +40,11 @@ void sub_08003668(u32 arg0, u32 arg1, u32 arg2, u32 arg3, void *arg4, void *arg5
 {
     struct Entity *p3720;
     struct IwramAt35E0 *p35E0;
-    register struct IwramAt35E0 *q asm("r4");
-    register GameStuff *gs asm("r1");
+    struct IwramAt35E0 *q;
+    GameStuff *gs;
     register u32 mask asm("r0");
     u8 tile;
-    register u32 coord asm("r2");
+    u32 coord;
     register u32 c asm("r1");
     u32 k0;
 

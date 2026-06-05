@@ -53,7 +53,7 @@ void sub_0801BA34(void)
     {
         register s32 zero_h asm("r4") = 0;
         s32 sentinel;
-        register s32 oam_end asm("r6");
+        s32 oam_end;
         u16 *oam;
         u16 *cur;
 

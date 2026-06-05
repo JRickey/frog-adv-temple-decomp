@@ -46,7 +46,7 @@ u32 sub_0800C978(u8 col, u8 row, s16 tileX, s16 tileY, u8 dir)
                4;
 
     case DIR_LEFT: {
-        register s32 stride asm("r0");
+        s32 stride;
         register s32 y asm("r1");
 
         x = (s16)tileX;
@@ -63,7 +63,7 @@ u32 sub_0800C978(u8 col, u8 row, s16 tileX, s16 tileY, u8 dir)
     }
 
     case DIR_RIGHT: {
-        register s32 stride asm("r1");
+        s32 stride;
         register s32 y asm("r0");
         s32 nextX;
 

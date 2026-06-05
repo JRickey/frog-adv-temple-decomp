@@ -8,7 +8,7 @@ extern u8 gIwram_53A0;
 u8 sub_0800D270(u32 x, u32 y)
 {
     register s32 sx asm("r2");
-    register s32 dcol asm("r3");
+    s32 dcol;
     register s32 t asm("r0"); /* pin forces subs r0,r2,#3 (3-operand) for col2 check */
     s32 row;
 

@@ -29,7 +29,7 @@ void sub_0801C2B4(u16 value, u8 x, u8 y, u16 a, u16 b, u8 c, u32 forceZeros)
         digit = (u8)__udivsi3(value, 1000);
         value = (u16)__umodsi3(value, 1000);
         {
-            register u8 *dst asm("r1");
+            u8 *dst;
 
             dst = &buf[out];
             if (digit != 0 || forceZeros != 0) {
@@ -48,7 +48,7 @@ void sub_0801C2B4(u16 value, u8 x, u8 y, u16 a, u16 b, u8 c, u32 forceZeros)
         digit = (u8)__udivsi3(value, 100);
         value = (u16)__umodsi3(value, 100);
         {
-            register u8 *dst asm("r1");
+            u8 *dst;
 
             dst = &buf[out];
             if (digit != 0 || forceZeros != 0) {
@@ -67,7 +67,7 @@ void sub_0801C2B4(u16 value, u8 x, u8 y, u16 a, u16 b, u8 c, u32 forceZeros)
         digit = (u8)__udivsi3(value, 10);
         value = (u16)__umodsi3(value, 10);
         {
-            register u8 *dst asm("r1");
+            u8 *dst;
 
             dst = &buf[out];
             if (digit != 0 || forceZeros != 0) {

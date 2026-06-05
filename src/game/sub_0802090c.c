@@ -88,7 +88,7 @@ void sub_0802090C(void)
             sound = sub_0802D9EC(sound, 0xff, 0xff, 0xff);
             {
                 register u8 pan asm("r4");
-                register u32 mask asm("r1");
+                u32 mask;
                 mask = 0x7f;
                 pan = base[2];
                 mask &= pan;
@@ -109,7 +109,7 @@ void sub_0802090C(void)
             sound = sub_0802D9EC(93, 0xff, 0xff, 0xff);
             {
                 register u8 pan asm("r4");
-                register u32 mask asm("r1");
+                u32 mask;
                 mask = 0x7f;
                 pan = base[2];
                 mask &= pan;

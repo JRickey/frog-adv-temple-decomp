@@ -13,8 +13,8 @@ void sub_0800AA70(u8 tile)
     struct IwramAt35E0 *p35E0;
     u8 result;
     register u8 *base4 asm("r4");
-    register u8 *base5 asm("r5");
-    register u8 *exitBase asm("r0");
+    u8 *base5;
+    u8 *exitBase;
     register u32 exitBit asm("r2");
 
     if (tile == 20) {

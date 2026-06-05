@@ -51,7 +51,7 @@ void sub_0802D8F8(void)
 
     i = 0;
     {
-        register SoundSystem **pool asm("r0") = &gpSoundSystem;
+        SoundSystem **pool = &gpSoundSystem;
         SoundSystem *head;
 
         head = *pool;

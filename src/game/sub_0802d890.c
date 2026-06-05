@@ -6,7 +6,7 @@ extern void sub_08035D94(void);
 void sub_0802D890(u16 a, u16 b, u16 c)
 {
     /* c in r8 so params a/b/c fit in r6/r7/r8 with r4=pSys, r5=mask free */
-    register u16 cReg asm("r8") = c;
+    u16 cReg = c;
     /* mask in r5 so release path uses `ands r0, r5` (not lsls/lsrs) */
     register u32 mask asm("r5");
     SoundSystem **pSys;
@@ -15,7 +15,7 @@ void sub_0802D890(u16 a, u16 b, u16 c)
     pSys = &gpSoundSystem;
     {
         /* v in r1 so acquire check uses `lsls r1, r1, #24` in-place */
-        register s32 v asm("r1");
+        s32 v;
         v = (*pSys)->lockRefCount + 1;
         (*pSys)->lockRefCount = v;
         mask = 0xff;

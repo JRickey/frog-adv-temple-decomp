@@ -28,7 +28,7 @@
 void sub_0800E600(u8 arg)
 {
     register vu16 *win asm("r2");
-    register u32 tableBase asm("r4");
+    u32 tableBase;
     register u16 zero asm("r2");
     u8 *state;
     vu32 *dma;

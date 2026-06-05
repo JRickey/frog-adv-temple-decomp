@@ -5,7 +5,7 @@ void sub_08012FA0(void)
 {
     u8 i = 0;
     u8 *base = (u8 *)0x03003610;
-    register u8 *ptr asm("r1");
+    u8 *ptr;
     register u8 mask asm("r0");
 
     while (i <= 7) {

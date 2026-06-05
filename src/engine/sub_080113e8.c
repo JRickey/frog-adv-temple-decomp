@@ -86,7 +86,7 @@ extern struct BlitSrcEntry gBlitSrcTable_08306b84[];
 
 void sub_08011478(u8 count, struct BlitRecord *records, u8 srcIndex)
 {
-    register u32 limit asm("r8");
+    u32 limit;
     register u8 idx asm("sl") = srcIndex;
     register struct BlitRecord *romTable asm("r9");
     u8 i;
@@ -153,8 +153,8 @@ extern struct BlitRecord gBlitInitTable_08306AD4[];
 void sub_08011518(void)
 {
     u8 *base = &gIwram_3610;
-    register struct IwramAt6480_sub11518 *p6480 asm("r1");
-    register struct IwramAt6540_sub11518 *p6540 asm("r3");
+    struct IwramAt6480_sub11518 *p6480;
+    struct IwramAt6540_sub11518 *p6540;
     u8 zero;
     /* zero=0 inline: agbcc emits movs r2,#0 after adds r0,#0xc8 */
     base[0xC8] = (zero = 0);

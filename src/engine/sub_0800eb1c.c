@@ -33,9 +33,9 @@ extern void sub_08019EF0(void);
 
 void sub_0800EB1C(void)
 {
-    register u16 seedVal asm("r4");
-    register u32 romBase asm("r2");
-    register u32 cnt30 asm("r3");
+    u16 seedVal;
+    u32 romBase;
+    u32 cnt30;
     vu16 seed;
     u8 *ctrl5370;
     vu32 *dma;

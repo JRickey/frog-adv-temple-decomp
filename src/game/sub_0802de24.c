@@ -43,7 +43,7 @@ u32 sub_0802DE24(u32 handle, u16 value)
         ss = (SoundSystem *)((u8 *)ss + chOff);
         *(u32 *)ss |= SOUND_FLAG_ENV_DIRTY;
     } else {
-        register u32 adj asm("r2");
+        u32 adj;
         register SoundSlotAcc **swSlotsPtr asm("r1");
         SoundSlotAcc *swSlots;
 

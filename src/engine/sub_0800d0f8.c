@@ -11,7 +11,7 @@ extern void sub_0802BB5C(s32 a, s32 b, s32 c);
 
 void sub_0800D0F8(void)
 {
-    register u8 *base asm("r8");
+    u8 *base;
     u8 *b1;
     u32 v0;
     u32 v1;

@@ -88,7 +88,7 @@ u32 *sub_0800D070(u32 *out, s8 delta)
     }
 
     {
-        register u32 *storep asm("r3");
+        u32 *storep;
 
         storep = outp;
         *storep = packed;

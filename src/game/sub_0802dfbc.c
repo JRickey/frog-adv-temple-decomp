@@ -20,7 +20,7 @@
  */
 void sub_0802DFBC(u32 handle, u32 scale)
 {
-    register u32 scaleSaved asm("r4") = scale;
+    u32 scaleSaved = scale;
     register u32 period asm("r0");
     u32 idx;
     u8 *p;
@@ -36,7 +36,7 @@ void sub_0802DFBC(u32 handle, u32 scale)
     pPool = &gpSoundSystem;
 
     {
-        register u8 *slotPtr asm("r1");
+        u8 *slotPtr;
         u8 *swSlotsBase;
         u8 *swSlots;
 

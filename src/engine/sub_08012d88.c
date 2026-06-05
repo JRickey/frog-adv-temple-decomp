@@ -59,10 +59,10 @@ void sub_08012E00(void)
 
 void sub_08012E2C(void)
 {
-    register u8 zero asm("r2");
-    register u8 val asm("r1");
-    register u8 old asm("r3");
-    register u8 *ptr1 asm("r1");
+    u8 zero;
+    u8 val;
+    u8 old;
+    u8 *ptr1;
     register u8 *ptr0 asm("r0");
 
     ptr1 = gIwram_6410;

@@ -28,8 +28,8 @@ extern void sub_0800A9D4(u8 tile);
 void sub_08004508(u32 arg0, u32 arg1, u32 arg2, u32 arg3)
 {
     register u32 mask asm("r0");
-    register struct IwramAt35E0 *p35E0 asm("r4");
-    register u16 field asm("r4");
+    struct IwramAt35E0 *p35E0;
+    u16 field;
     struct Entity *p3720;
     u8 tile;
 

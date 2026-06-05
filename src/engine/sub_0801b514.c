@@ -89,7 +89,7 @@ u8 sub_0801B514(u8 arg)
  * the u8 state[8] zero lands in a separate register from the halfword zeros. */
 void sub_0801B620(u8 arg)
 {
-    register u32 tableBase asm("r4");
+    u32 tableBase;
     u8 *state;
     const u32 *const *entry;
     const u32 *base;
@@ -137,8 +137,8 @@ extern void sub_08020C78(u32 arg);
  * with an input barrier so 0x080C1254 loads before the gIwram_34B0 addr. */
 void sub_0801B694(u8 arg)
 {
-    register u32 tableVal asm("r5");
-    register u32 tableBase asm("r4");
+    u32 tableVal;
+    u32 tableBase;
     const u32 *table;
     u8 *state;
     const u32 *const *entry;

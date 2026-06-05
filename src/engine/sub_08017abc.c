@@ -13,8 +13,8 @@ void sub_0802D56C(const void *src, void *dst);
 
 void sub_08017ABC(void)
 {
-    register struct IwramAt34A0 *dispatch asm("r8");
-    register u16 *fadeState asm("r0");
+    struct IwramAt34A0 *dispatch;
+    u16 *fadeState;
     register u32 zero asm("r5");
     struct IwramAt3480 *state;
     volatile DmaChannel *dma;

@@ -9,7 +9,7 @@ extern const u32 sLevelLayoutPtrs_311EC0[10];
 void sub_08022F4C(void)
 {
     u8 i;
-    register const u32 *tbl asm("r8"); /* r8 holds table base across BL calls */
+    const u32 *tbl; /* r8 holds table base across BL calls */
 
     i = 0;
     tbl = sLevelLayoutPtrs_311EC0;

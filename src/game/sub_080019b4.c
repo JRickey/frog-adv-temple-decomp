@@ -40,7 +40,7 @@ void sub_080019B4(void)
     } frame;
 
     {
-        register u8 *statep asm("r0");
+        u8 *statep;
         register u8 zero asm("r1");
         statep = &frame.state;
         zero = 0;

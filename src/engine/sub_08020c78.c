@@ -138,9 +138,9 @@ u32 sub_08020D2C(struct Entity *entity, u32 sound, u8 halfW, u8 halfH)
 
 void sub_08020DA0(u8 index)
 {
-    register StructAt3003570 *p asm("r5");
+    StructAt3003570 *p;
     u32 offset;
-    register u32 *slot asm("r0");
+    u32 *slot;
     u32 handle;
 
     p = (StructAt3003570 *)&gIwram_3570;

@@ -19,7 +19,7 @@ void sub_0801DA1C(void)
     u16 zero;
     u16 savedPal;
     u8 byteZero;
-    register u32 a asm("r8");
+    u32 a;
     register u32 d asm("r9");
     register u32 e asm("sl");
     u8 b;
@@ -50,7 +50,7 @@ loop1:
 
         if (sub_0801E1FC(row, col)) {
             {
-                register u32 hi asm("r2") = 0x02000000;
+                u32 hi = 0x02000000;
                 u32 *slot = &cols[i];
                 *slot = (i << 11) + hi;
             }

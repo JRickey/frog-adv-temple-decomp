@@ -14,7 +14,7 @@ void sub_08013908(void)
 
 void sub_08013920(u16 *arr, u8 thresh, u32 *out, u8 n)
 {
-    register GameStuff *gs asm("r8");
+    GameStuff *gs;
     GameStuff *gsBase;
     u8 i;
     register u16 prev asm("r2");
@@ -53,7 +53,7 @@ void sub_08013920(u16 *arr, u8 thresh, u32 *out, u8 n)
 
     {
         register GameStuff *gsEp asm("r1");
-        register u32 *outEp asm("r7");
+        u32 *outEp;
         u32 val;
         gsEp = gs;
         val = gsEp->_unk00;

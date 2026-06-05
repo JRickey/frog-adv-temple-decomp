@@ -231,9 +231,9 @@ u32 sub_0800A458(u16 x, u16 y)
 {
     u32 xShift;
     u32 yShift;
-    register u16 xTile asm("r5");
+    u16 xTile;
     register u16 yTile asm("r4");
-    register u32 coordBits asm("r0");
+    u32 coordBits;
     u16 field8;
     s32 field;
     s32 coord;

@@ -85,7 +85,7 @@ void sub_0800FE10(void)
     u16 y;
     u32 cnt;
     u32 base;
-    register u32 bk asm("r4");
+    u32 bk;
     u16 t;
 
     state = (u8 *)0x03006440;

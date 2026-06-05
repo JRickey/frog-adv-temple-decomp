@@ -70,9 +70,9 @@ void sub_080193D8(void)
     u8 *table = (u8 *)0x030053A0;
     register u32 zero asm("r3") = 0;
     register u32 value asm("r1") = 1;
-    register u8 *state asm("r1");
-    register u32 zero2 asm("r2");
-    register u32 mask asm("r0");
+    u8 *state;
+    u32 zero2;
+    u32 mask;
 
     table[0] = value;
     table[1] = value;

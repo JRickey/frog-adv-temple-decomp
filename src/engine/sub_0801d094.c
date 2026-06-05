@@ -12,7 +12,7 @@ void sub_0801D094(void)
 
 void sub_0801D0BC(u32 data, u8 screen)
 {
-    register u32 base asm("r5");
+    u32 base;
     u8 i;
     u16 zero;
 
