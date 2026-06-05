@@ -34,7 +34,8 @@ during setup) — never commit it; the build verifies its SHA1.
 ## Dependencies
 
 - [agbcc](https://github.com/pret/agbcc) — clone separately (see Setup), then
-  `./install.sh "$(pwd)/../.."` from inside the clone to populate `tools/agbcc/`
+  `./build.sh && ./install.sh "$(pwd)/../.."` from inside the clone to populate
+  `tools/agbcc/` (`install.sh` only copies binaries; `build.sh` compiles them)
 - `arm-none-eabi-binutils` (`brew install arm-none-eabi-binutils` on macOS;
   `apt-get install binutils-arm-none-eabi` on Linux)
 - `python3`
@@ -126,8 +127,9 @@ reports `0` ROM-diff bytes with no nonmatching functions.
 
 There is still decompilation work remaining. At the current checkpoint:
 
-- `218` functions remain in asm stubs or asm slices (`40,653` asm lines).
-- `28` compiled functions are still `NAKED` / `NON_MATCHING` asm fallbacks.
+- `154` functions remain in asm stubs or asm slices (`42,823` asm lines,
+  most of which are objdump preview comments rather than hand-written code).
+- `30` compiled functions are still `NAKED` / `NON_MATCHING` asm fallbacks.
   They byte-match the baserom, but are not yet true pure C.
 - Most non-code ROM bytes are still raw assets or data blobs.
 
@@ -141,13 +143,13 @@ function count reported by `progress.py`.
 Thumb prologue scan, not a ground-truth disassembly. Treat ±20% as honest.
 Regenerate with `python3 tools/agent/progress_stats.py --update-readme`.
 
-- **Functions decompiled to C**: 677 / ~513 estimated total (**132.0%**)
-  - true pure-C matches: 649
-  - NAKED+NON_MATCHING (asm fallback, byte-matches but not pure C): 28
-  - peeled-but-still-asm: 155
+- **Functions decompiled to C**: 761 / ~513 estimated total (**148.3%**)
+  - true pure-C matches: 731
+  - NAKED+NON_MATCHING (asm fallback, byte-matches but not pure C): 30
+  - peeled-but-still-asm: 145
   - estimate range (lower / upper): 335 / 1140
-- **Data deblobbed**: 571.7 KiB of 4.00 MiB (**13.96%**)
-  - raw INCBIN bytes: 3.44 MiB (86.0% of ROM)
+- **Data deblobbed**: 585.0 KiB of 4.00 MiB (**14.28%**)
+  - raw INCBIN bytes: 3.43 MiB (85.7% of ROM)
   - `database.json` entries: 265
 
 Code occupies roughly [0x08000000, 0x08036000) (~216.0 KiB). Past that the
