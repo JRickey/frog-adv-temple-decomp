@@ -189,7 +189,7 @@ SECTIONS {
         src/system/vblank.o(.text);      /* 0x080008dc - 0x0800090c, sub_080008DC + sub_08000900 */
         asm/text/text_0x0800090c.o(.text);  /* 0x0800090c - 0x08000918, raw bytes */
         src/system/sub_08000918.o(.text);  /* 0x08000918 - 0x08000b6c, sub_08000918 (NAKED + NON_MATCHING; mode-X cluster mov-pc-rN dispatcher) */
-        src/system/sub_08000b6c.o(.text);  /* 0x08000b6c - 0x08000c98, sub_08000B6C (NAKED + NON_MATCHING; high-register pins on sl/r8/r9) */
+        src/system/sub_08000b6c.o(.text);  /* 0x08000b6c - 0x08000c98, sub_08000B6C */
         src/system/sub_08000c98.o(.text);  /* 0x08000c98 - 0x08000cec, sub_08000C98 + sub_08000CB0 */
         src/system/sub_08000cec.o(.text);  /* 0x08000cec - 0x08000d2c, sub_08000CEC */
         src/system/sub_08000d2c.o(.text);  /* 0x08000d2c - 0x08000d50, sub_08000D2C */
