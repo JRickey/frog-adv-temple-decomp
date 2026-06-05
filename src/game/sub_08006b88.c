@@ -634,21 +634,16 @@ NAKED void sub_08006D24(void *cells, s32 first, s32 last, u8 arg3)
  * the cursor sub-coords advance by the raw delta and each axis is clamped to
  * within +/-1 of entry.limit, then the stamp is refreshed.
  *
- * Shipped NAKED. The outer entry base is pinned in sl and the loop index is
- * carried byte-shifted in r8/r9 across the two __divsi3 calls and the
- * sub_0800CD88 call; agbcc 2.x will not hold these high registers live across
- * the call-bearing loop and instead recomputes the base from low registers,
- * so the high-reg save/restore frame and the `mov rN, sl` / `add r0, sl`
- * index forms can't be reproduced from pure C. This is the
- * docs/codegen-notes.md "High registers" (Class 1) unmatchable pattern; the
- * NON_MATCHING body documents intent for the phase-3 PC port. */
+ * This regular-C body matches. The explicit byte-offset entry expression keeps
+ * the same pointer arithmetic as the baserom, and the deltaY clamp intentionally
+ * uses the entry's +0 halfword limit. */
 
 extern int __divsi3(int num, int den);
 
-#ifdef NON_MATCHING
+#if 1
 struct GridEntry {
-    u8 _pad00[2];
-    s16 limit; /* +2 */
+    s16 limitX; /* +0 */
+    s16 limit;  /* +2 */
     u8 _pad04[8];
     u32 stamp; /* +12 */
     s8 deltaX; /* +16 */
@@ -665,7 +660,7 @@ void sub_08006E8C(struct GridEntry *entries, s8 first, s8 last)
     s8 i;
 
     for (i = first; i <= last; i++) {
-        struct GridEntry *e = &entries[i];
+        struct GridEntry *e = (struct GridEntry *)((i * sizeof(struct GridEntry)) + (u32)entries);
 
         if (tick - e->stamp <= e->ageMax)
             continue;
@@ -686,9 +681,9 @@ void sub_08006E8C(struct GridEntry *entries, s8 first, s8 last)
                 }
 
                 if (entries[i].deltaY != 0) {
-                    if (gEntities[0].x > entries[i].limit)
+                    if (gEntities[0].x > entries[i].limitX)
                         gEntities[0].x--;
-                    if (gEntities[0].x < entries[i].limit)
+                    if (gEntities[0].x < entries[i].limitX)
                         gEntities[0].x++;
                 }
             }
