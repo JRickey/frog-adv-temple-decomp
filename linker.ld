@@ -180,7 +180,7 @@ SECTIONS {
         asm/disasm_0x080000fc.o(.text);  /* 0x080000fc - 0x08000114, IntrEnable */
         asm/system/intr_disable.o(.text);  /* 0x08000114 - 0x0800012c, shipped ARM runtime */
         asm/system/intr_main.o(.text);     /* 0x0800012c - 0x08000240, shipped ARM IRQ dispatcher */
-        src/system/sub_08000240.o(.text);  /* 0x08000240 - 0x080002a4, sub_08000240 (NAKED + NON_MATCHING; ARM-mode, CPSR manip) */
+        asm/system/sub_08000240.o(.text);  /* 0x08000240 - 0x080002a4, shipped ARM runtime */
         src/system/agb_main.o(.text);    /* 0x080002a4 - 0x08000430, AgbMain */
         src/system/init1.o(.text);       /* 0x08000430 - 0x0800072c, sub_08000430 (Init1) + sub_080004C4 + sub_080005D8 + sub_08000678 */
         src/system/init.o(.text);        /* 0x0800072c - 0x08000820, sub_0800072C + sub_08000764 + sub_08000790 */
