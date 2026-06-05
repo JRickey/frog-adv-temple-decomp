@@ -23,6 +23,7 @@
 
 /* REG_DISPCNT bits. */
 #define DISPCNT_MODE_MASK   7U
+#define DISPCNT_FRAME1      (1U << 4)
 #define DISPCNT_OBJ_1D      (1U << 6)
 #define DISPCNT_FORCE_BLANK (1U << 7)
 #define DISPCNT_BG0_ON      (1U << 8)
