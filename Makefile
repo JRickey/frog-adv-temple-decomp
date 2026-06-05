@@ -107,65 +107,37 @@ src/engine/sub_0800f24c.s: CC = $(AGBCC_BIN)
 src/engine/sub_08012d40.s: CC = $(AGBCC_BIN)
 src/engine/sub_08013040.s: CC = $(AGBCC_BIN)
 src/engine/sub_0800d808.s: CC = $(OLD_AGBCC_BIN)
-# sub_0800E4BC is a nested-switch link handshake; -fforce-addr keeps the
-# 0x03005370 base in a register before the 15-mask constant (the baserom's
-# operand order for `mask & ctrl[N]`), and -fno-expensive-optimizations keeps
-# the per-test mask copy (`adds r0, maskreg, #0`) instead of a folded in-place
-# `ands`. Together they match the baserom's coloring of both inner switches.
-src/engine/sub_0800e4bc.s: CFLAGS += -fforce-addr -fno-expensive-optimizations
-# Keep the inner tilemap loop indexing `col*2 + row_ptr` per iteration
-# (baserom does not reduce it to a pointer increment), which raises the
-# register pressure that drives base/oldPal/newPal into sl/r9/r8.
-src/engine/sub_080184dc.s: CFLAGS += -fno-strength-reduce
-# Matches the state-byte dispatcher prologue in the baserom.
-src/game/sub_08001214.s: CFLAGS += -fforce-addr -fno-expensive-optimizations
-src/game/sub_080019b4.s: CFLAGS += -fforce-addr -fno-expensive-optimizations -fno-gcse
-src/game/sub_08002184.s: CFLAGS += -fforce-addr -fno-expensive-optimizations -fno-gcse
-src/game/sub_08002524.s: CFLAGS += -fforce-addr -fno-expensive-optimizations -fno-gcse
-src/game/mode_15.s: CFLAGS += -fforce-addr -fno-expensive-optimizations -fno-gcse
-src/game/sub_08004938.s: CFLAGS += -fforce-addr -fno-expensive-optimizations -fno-gcse
-src/game/sub_08009d9c.s: CFLAGS += -fno-gcse
-src/game/sub_0802bc24.s: CFLAGS += -fno-gcse
-src/engine/sub_08012f00.s: CFLAGS += -fforce-addr -fno-expensive-optimizations -fno-gcse
-src/engine/sub_0801621c.s: CFLAGS += -fno-expensive-optimizations
-src/game/sub_08002b58.s: CFLAGS += -fforce-addr -fno-expensive-optimizations
-src/system/sub_08001508.s: CFLAGS += -fforce-addr -fno-expensive-optimizations
+# Proven-needed codegen exceptions. Keep these grouped so new decomp work
+# does not cargo-cult stale target-specific flags.
+src/engine/sub_0800e4bc.s \
+src/engine/sub_0801621c.s \
+src/game/sub_08001214.s \
+src/game/sub_080019b4.s \
+src/game/sub_08002184.s \
+src/game/sub_08002b58.s \
+src/game/sub_08004938.s \
+src/system/sub_08001508.s \
+src/system/sound_envelope_dual.s: CFLAGS += -fno-expensive-optimizations
+
+src/game/sub_080019b4.s \
+src/game/sub_08004938.s \
+src/engine/sub_08015930.s \
+src/system/sound_channel_stream.s: CFLAGS += -fno-gcse
+
 src/game/sub_08003254.s: CFLAGS += -ffixed-r3
-# sub_0800A580's dense motion-descriptor switch: free the callee-saved low regs
-# so agbcc keeps the two delta bytes in their incoming r2/r3 and emits the
-# baserom's frameless prologue (record pointer cached in ip, no push/pop).
-src/game/sub_0800a520.s: CFLAGS += -ffixed-r4 -ffixed-r5 -ffixed-r6 -ffixed-r7
-src/game/sub_08006a0c.s: CFLAGS += -O1
-# Loop reverses to a `bge.n` countdown under strength reduction; the baserom
-# keeps a signed count-up (`ble.n`). Disabling strength reduction restores it.
 src/game/sub_08003b8c.s: CFLAGS += -fno-strength-reduce
-# Keeps the loop-invariant gIwram_6110 base in r7 across the loop instead of
-# GCSE-reloading it from the constant pool each iteration (matches baserom).
-src/engine/sub_08015930.s: CFLAGS += -fno-gcse
-# Keeps the scroll-object address arithmetic in the baserom's non-hoisted form.
-src/engine/sub_0800f24c.s: CFLAGS += -fno-strength-reduce
-src/engine/sub_0800f2f8.s: CFLAGS += -fno-strength-reduce
-# -O1 prevents agbcc from hoisting loop-body updates ahead of the OAM inner loop.
 src/engine/sub_0801b9e4.s: CFLAGS += -O1
 src/engine/sub_0801a6d4.s: CC = $(AGBCC_BIN)
-src/engine/sub_0801a6d4.s: CFLAGS += -fno-strength-reduce
-# Keeps the duplicated window step value in the baserom's r6/sl allocation.
 src/engine/sub_0801a894.s: CFLAGS += -fno-rerun-cse-after-loop
-src/engine/sub_0801c078.s: CFLAGS += -fno-caller-saves
-src/engine/sub_08022360.s: CFLAGS += -fno-gcse
 # Current forced-C lanes for split sound NON_MATCHING candidates.
 src/system/sound_pitch.s: CC = $(OLD_AGBCC_BIN)
-src/system/sound_pitch.s: CFLAGS += -fforce-addr -fno-gcse -fno-expensive-optimizations
 src/system/sound_channel_envelope_a.s: CC = $(OLD_AGBCC_BIN)
 src/system/sound_channel_stream.s: CC = $(OLD_AGBCC_BIN)
-src/system/sound_channel_stream.s: CFLAGS += -fforce-addr -fno-gcse -fno-cse-follow-jumps
-src/system/sound_envelope_dual.s: CFLAGS += -fforce-addr -fno-gcse -fno-expensive-optimizations
+src/system/sound_channel_stream.s: CFLAGS += -fno-cse-follow-jumps
+src/system/sound_envelope_dual.s: CFLAGS += -fforce-addr
 src/system/sound_envelope_slide.s: CC = $(AGBCC_BIN)
-src/system/sound_envelope_slide.s: CFLAGS += -fforce-addr -fno-gcse
 src/system/sound_channel_state.s: CC = $(OLD_AGBCC_BIN)
-src/system/sound_mixer.s: CFLAGS += -fforce-addr -fno-gcse
 src/system/sound_mixer_tail.s: CC = $(OLD_AGBCC_BIN)
-src/system/sound_mixer_tail.s: CFLAGS += -fforce-addr -fno-gcse -fno-cse-follow-jumps
 # Enable verbose output
 ifeq ($(V),1)
 	Q =
