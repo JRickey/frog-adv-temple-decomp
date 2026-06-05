@@ -107,6 +107,12 @@ src/engine/sub_0800f24c.s: CC = $(AGBCC_BIN)
 src/engine/sub_08012d40.s: CC = $(AGBCC_BIN)
 src/engine/sub_08013040.s: CC = $(AGBCC_BIN)
 src/engine/sub_0800d808.s: CC = $(OLD_AGBCC_BIN)
+# sub_0800E4BC is a nested-switch link handshake; -fforce-addr keeps the
+# 0x03005370 base in a register before the 15-mask constant (the baserom's
+# operand order for `mask & ctrl[N]`), and -fno-expensive-optimizations keeps
+# the per-test mask copy (`adds r0, maskreg, #0`) instead of a folded in-place
+# `ands`. Together they match the baserom's coloring of both inner switches.
+src/engine/sub_0800e4bc.s: CFLAGS += -fforce-addr -fno-expensive-optimizations
 # Keep the inner tilemap loop indexing `col*2 + row_ptr` per iteration
 # (baserom does not reduce it to a pointer increment), which raises the
 # register pressure that drives base/oldPal/newPal into sl/r9/r8.
