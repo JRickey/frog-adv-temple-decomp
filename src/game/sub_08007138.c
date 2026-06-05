@@ -39,7 +39,6 @@ s32 sub_08007138(unsigned int baseIn, s8 count)
     u32 bound;
     s32 boundTemp;
     s32 signedBound;
-    register s32 cmpHit asm("r6");
     s32 shifted;
     s32 shiftedTmp;
     int new_var;
@@ -48,7 +47,6 @@ s32 sub_08007138(unsigned int baseIn, s8 count)
     register s32 tailBound asm("r6");
     register u8 stateByte asm("r1");
     u32 stateMask;
-    register s32 hitOne asm("r1");
     s32 arg4;
     u8 playerKey;
     struct Entity *player;
@@ -71,8 +69,8 @@ s32 sub_08007138(unsigned int baseIn, s8 count)
     boundTemp = countByte << 24;
     signedBound = boundTemp >> 24;
     bound = boundTemp;
-    cmpHit = *(volatile s32 *)&hit;
-    if (cmpHit < signedBound) {
+    tailBound = *(volatile s32 *)&hit;
+    if (tailBound < signedBound) {
         maskHi = 0xFFFF0000;
         maskLo = 0x0000FFFF;
         for (;;) {
@@ -97,7 +95,6 @@ s32 sub_08007138(unsigned int baseIn, s8 count)
                                 register u32 r1v asm("r1");
                                 register u32 r2v asm("r2");
                                 register u32 r3v asm("r3");
-                                register u32 r6v asm("r6");
 
                                 r2v = entry->height;
                                 r3v = r2v << 16;
@@ -113,17 +110,17 @@ s32 sub_08007138(unsigned int baseIn, s8 count)
                                 r0v = r2v << 16;
                                 r2v = r0v >> 16;
                                 r0v >>= 17;
-                                r6v = entry->width;
-                                r0v = r6v - r0v;
+                                tailBound = entry->width;
+                                r0v = tailBound - r0v;
                                 r0v -= 1;
                                 r0v <<= 16;
-                                r6v = maskLo;
-                                r1v &= r6v;
+                                tailBound = maskLo;
+                                r1v &= tailBound;
                                 point.w = r1v | r0v;
                                 r0v = maskHi;
                                 r0v &= size.w;
                                 r0v |= r2v;
-                                r0v &= r6v;
+                                r0v &= tailBound;
                                 size.w = r0v | r3v;
                             }
 
@@ -135,8 +132,8 @@ s32 sub_08007138(unsigned int baseIn, s8 count)
                                 callPlayer = player;
                                 callSize = size.w;
                                 if (sub_0800CED0(callPlayer, point.w, callSize, 0) != 0) {
-                                    hitOne = 1;
-                                    hit = hitOne;
+                                    stateByte = 1;
+                                    hit = stateByte;
                                 }
                             }
                         }
