@@ -7,8 +7,8 @@ extern u32 sub_08020C78(u32 sound);
 
 void sub_0801AC84(u8 arg)
 {
-    register u8 *state asm("r3");
-    register u32 tableBase asm("r4");
+    u8 *state;
+    u32 tableBase;
     register u8 b1 asm("r5");
     const u32 *const *entryPtr;
     const u32 *base;
@@ -63,7 +63,7 @@ void sub_0801AD10(u8 a0)
      * (adds r4,r0,#0; lsls r4,r4,#24; lsrs r4,r4,#24) rather than
      * the 2-insn form that register u8 arg asm("r4") = a0 would emit */
     u8 arg;
-    register u8 *state asm("r2");
+    u8 *state;
     register u8 b1 asm("r5");
     const u32 *const *entryPtr;
     const u32 *base;

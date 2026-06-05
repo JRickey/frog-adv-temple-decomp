@@ -15,8 +15,8 @@ int sub_0801A614(u8 index, int useTableA)
 {
     /* Pins mirror the matching sibling sub_080179B8: script, the cursor state and
      * the opcode all stay live across the two BLs, giving the push {r4,r5,r6,lr}. */
-    register const u8 *script asm("r6");
-    register struct IwramAt34C0 *s asm("r5");
+    const u8 *script;
+    struct IwramAt34C0 *s;
     register int op asm("r4");
 
     if (useTableA != 0) {

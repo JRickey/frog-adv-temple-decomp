@@ -172,7 +172,7 @@ void sub_08016928(void)
 {
     /* ip holds the gGameStuff base across the whole function; used to
      * produce 'mov r1, ip; ldr r0, [r1, #0]' at the end. */
-    register u32 idx asm("r2");
+    u32 idx;
     register u32 gs asm("ip");
     volatile u32 *dma;
 

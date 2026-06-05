@@ -67,7 +67,7 @@ void sub_0801932C(void)
 
 void sub_080193D8(void)
 {
-    register u8 *table asm("r0") = (u8 *)0x030053A0;
+    u8 *table = (u8 *)0x030053A0;
     register u32 zero asm("r3") = 0;
     register u32 value asm("r1") = 1;
     register u8 *state asm("r1");

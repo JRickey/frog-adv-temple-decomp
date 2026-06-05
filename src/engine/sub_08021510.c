@@ -16,7 +16,7 @@ void sub_08021510(u8 baseSlot, u8 *pCount, u8 kind, u8 unused, u8 bitBase)
     u16 new_var;
     u32 count;
     s32 slot;
-    register s32 idx asm("r0");
+    s32 idx;
     struct Entity *base;
     struct Entity *entity;
     register u16 status asm("r2");
@@ -93,7 +93,7 @@ void sub_08021510(u8 baseSlot, u8 *pCount, u8 kind, u8 unused, u8 bitBase)
                 st |= entity->status;
                 entity->status = st | 4;
                 {
-                    register u32 mask asm("r0");
+                    u32 mask;
                     register u32 shift asm("r1");
                     shift = bitBase + i;
                     mask = 1;
@@ -115,7 +115,7 @@ void sub_08021510(u8 baseSlot, u8 *pCount, u8 kind, u8 unused, u8 bitBase)
                 }
                 {
                     register s32 caseSlot asm("r0");
-                    register struct Entity *caseEntity asm("r0");
+                    struct Entity *caseEntity;
                     register u16 caseStatus asm("r1");
                     caseSlot = slot;
                     caseEntity = (struct Entity *)(((caseSlot << 3) - caseSlot) * 8 + (s32)base);

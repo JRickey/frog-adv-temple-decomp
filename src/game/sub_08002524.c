@@ -32,17 +32,17 @@ void sub_08002524(void)
         u8 state;
         u8 pad[2];
     } frame;
-    register u8 *statep asm("r5");
+    u8 *statep;
     register u8 *statepInit asm("r0");
 
     {
-        register u8 zero asm("r1");
+        u8 zero;
         statepInit = &frame.state;
         zero = 0;
         *(volatile u8 *)statepInit = zero;
     }
     {
-        register u32 mode asm("r1");
+        u32 mode;
         mode = gGameStuff.mode;
         statep = statepInit;
         if (mode == 14)
@@ -114,7 +114,7 @@ loop:
             *statep = 7;
         {
             register u8 *acceptp asm("r1");
-            register u8 zero asm("r0");
+            u8 zero;
             acceptp = (u8 *)&frame.accept;
             zero = 0;
             *(volatile u8 *)acceptp = zero;
@@ -134,7 +134,7 @@ loop:
         s32 counter;
         if ((s8)frame.accept == 0) {
             register u8 *acceptDst asm("r0");
-            register u8 *acceptSrc asm("r1");
+            u8 *acceptSrc;
             u8 nextAccept;
             sub_08010694(0xBF);
             acceptDst = (u8 *)&frame.accept;

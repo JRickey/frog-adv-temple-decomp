@@ -58,8 +58,8 @@ int sub_08017814(u16 *dest, u8 idx)
 
 int sub_08017858(u16 *src, u32 idx)
 {
-    register volatile u16 *srcp asm("r3");
-    register u32 ridx asm("r1");
+    volatile u16 *srcp;
+    u32 ridx;
     u32 start;
     u16 buf[8];
     u8 i;
@@ -84,8 +84,8 @@ int sub_08017858(u16 *src, u32 idx)
 
 int sub_0801789C(u16 *buf, u32 start, u32 count)
 {
-    register u32 start16 asm("r6");
-    register u32 count8 asm("r5");
+    u32 start16;
+    u32 count8;
     register u32 countShift asm("r2");
     u8 i;
 
@@ -119,8 +119,8 @@ fail:
 
 int sub_080178FC(u16 *buf, u32 start, u32 count)
 {
-    register u32 start16 asm("r6");
-    register u32 count8 asm("r5");
+    u32 start16;
+    u32 count8;
     register u32 countShift asm("r2");
     u8 i;
 

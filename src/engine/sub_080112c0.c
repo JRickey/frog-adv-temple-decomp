@@ -30,7 +30,7 @@ void sub_080112C0(u32 frameArg, u32 rowsArg, u32 colsArg, u32 dstXArg, u32 dstYA
     const u16 *src;
     register struct BlitState *state asm("r1");
     register u16 stride asm("r3");
-    register u32 row asm("r0");
+    u32 row;
     u32 nextRow;
     register u16 *vram asm("r7");
 

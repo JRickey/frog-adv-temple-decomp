@@ -11,7 +11,7 @@ u32 __udivsi3(u32 num, u32 den);
 int sub_080179B8(void)
 {
     struct IwramAt34C0 *s;
-    register const u16 *script asm("r5");
+    const u16 *script;
     register int op asm("r4");
     register GameStuff *gs asm("r2");
     register u8 cursor asm("r0");

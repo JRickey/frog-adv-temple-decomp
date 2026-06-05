@@ -103,7 +103,7 @@ orr_phase:
     goto tail;
 
 sw_slot: {
-    register u8 *swSlotsField asm("r1");
+    u8 *swSlotsField;
     register u32 off asm("r0");
     u8 *slot;
     u8 *panCacheP;

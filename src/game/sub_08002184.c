@@ -40,8 +40,8 @@ void sub_08002184(void)
         u8 pad[2];
         u8 r4_obj[8];
     } frame;
-    register u8 *statep asm("r6");
-    register u8 *statepInit asm("r0");
+    u8 *statep;
+    u8 *statepInit;
     u32 r7;
     u32 zero;
 
