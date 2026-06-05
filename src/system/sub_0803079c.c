@@ -1,6 +1,15 @@
 #include "sound.h"
 #include "macros.h"
 
+typedef struct SoundInlineAcc1ElementView {
+    u8 _pad00[0x22];
+    u16 acc1;
+} SoundInlineAcc1ElementView;
+
+typedef struct SoundInlineAcc1View {
+    SoundInlineAcc1ElementView inlineAcc1[SOUND_INLINE_CHANNEL_COUNT];
+} SoundInlineAcc1View;
+
 /* sub_0803079C — stream opcode handler. Programs a channel's acc1 "step"
  * from a 16-bit operand relative to the channel's current acc0, then flags
  * the channel's envelope dirty (SOUND_FLAG_ENV_DIRTY).
@@ -34,6 +43,41 @@ s32 sub_0803079C(s32 channel, u32 *state_ptr)
 
         slot = (channel * SOUND_SW_SLOT_STRIDE - 0x100) + (u8 *)gpSoundSystem->swSlots;
         *(u16 *)(slot + 2) = *(u16 *)(stream + 2) - *(u16 *)slot;
+        *(u32 *)(slot + SOUND_SLOT_FLAGS_OFFSET) |= SOUND_FLAG_ENV_DIRTY;
+    }
+
+    *state_ptr += 4;
+    return 1;
+}
+
+s32 sub_0803080C(s32 channel, u32 *state_ptrArg)
+{
+    u32 *state_ptr;
+    u8 *stream;
+
+    state_ptr = state_ptrArg;
+    stream = (u8 *)*state_ptr;
+
+    if (channel <= 2) {
+        SoundSystem **pPool;
+
+        if (stream[1] & 1) {
+            ((SoundInlineAcc1View *)gpSoundSystem)->inlineAcc1[channel].acc1 = *(u16 *)(stream + 2);
+            pPool = &gpSoundSystem;
+        } else {
+            ((SoundInlineAcc1View *)gpSoundSystem)->inlineAcc1[channel].acc1 += *(u16 *)(stream + 2);
+            pPool = &gpSoundSystem;
+        }
+        (*pPool)->chFlags[channel] |= SOUND_FLAG_ENV_DIRTY;
+    } else if (channel > 3) {
+        u8 *slot;
+
+        slot = (channel * SOUND_SW_SLOT_STRIDE - 0x100) + (u8 *)gpSoundSystem->swSlots;
+        if (stream[1] & 1) {
+            *(u16 *)(slot + 2) = *(u16 *)(stream + 2);
+        } else {
+            *(u16 *)(slot + 2) += *(u16 *)(stream + 2);
+        }
         *(u32 *)(slot + SOUND_SLOT_FLAGS_OFFSET) |= SOUND_FLAG_ENV_DIRTY;
     }
 
