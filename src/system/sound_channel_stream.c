@@ -437,3 +437,111 @@ sw_slot:
     block->acc = 0;
     block->param.cfg = cfg;
 }
+
+void sub_0802EF7C(u8 clearAcc, u16 value, s32 channel)
+{
+    register u32 cf asm("r2");                 /* keeps the first inline flag offset in r2 for the flag load */
+    register u32 cfReload asm("ip");           /* preserves the later flags update as `[r2, ip]` */
+    register SoundSystem **pp asm("r3");       /* materializes `&gpSoundSystem` in r3 before the first ss load */
+    register SoundSystem **ppReload asm("r8"); /* keeps the gp pointer live across the inline inactive path */
+    register SoundSystem **ppFinal asm("r1");  /* forces the final inline accumulator reload through r1 */
+    SoundSystem *ss1;
+    register SoundSystem *ss2 asm("r3"); /* keeps the second SoundSystem reload in r3 for the param store */
+    SoundSystem *ss3;
+    SoundSlot *slot;
+    u32 flags;
+    register u32 newFlags asm("r0"); /* keeps the updated flags value in r0 through mask/or/store */
+    s32 channelOffset;
+
+    if (channel > 3)
+        goto sw_slot;
+
+    pp = &gpSoundSystem;
+    ss1 = *pp;
+    cf = (u32)(channel << 2);
+    {
+        u8 *flagp;
+
+        flagp = (u8 *)ss1;
+        flagp += SOUND_CH_FLAGS_OFFSET;
+        flagp += cf;
+        flags = *(u32 *)flagp;
+    }
+    flags &= SOUND_FLAG_ENVELOPE_C_ACTIVE | SOUND_FLAG_ENVELOPE_C_INACTIVE;
+    ppReload = pp;
+    cfReload = cf;
+    channelOffset = channel << 3;
+    if (flags == 0) {
+        u8 *accp;
+        register s16 accReset asm("r1"); /* matches the inline channel accumulator reset store */
+
+        accp = (u8 *)ss1 + channelOffset;
+        accReset = 0;
+        if (clearAcc == 0) {
+            cf = 0xff;
+            cf <<= 8;
+            accReset = cf;
+        }
+        *(u16 *)(accp + SOUND_SYSTEM_CHANNEL_VOLUME_OFFSET) = accReset;
+    }
+
+    ss2 = *ppReload;
+    {
+        register u32 *flagp asm("r2"); /* anchors the second inline flags address in r2 */
+
+        flagp = (u32 *)((u8 *)ss2 + SOUND_CH_FLAGS_OFFSET);
+        flagp = (u32 *)((u8 *)flagp + cfReload);
+        newFlags = *flagp;
+        newFlags &= SOUND_ENVELOPE_C_CLEAR_ACTIVE_MODE;
+        newFlags |= SOUND_FLAG_ENVELOPE_C_INACTIVE;
+        *flagp = newFlags;
+    }
+    ss2 = (SoundSystem *)((u8 *)ss2 + SOUND_ENVELOPE_C_CHANNEL_BASE);
+    ss2 = (SoundSystem *)((u8 *)ss2 + channelOffset);
+    *(s32 *)ss2 = value;
+    if (clearAcc == 0)
+        *(s32 *)ss2 = -(s32)value;
+
+    ppFinal = ppReload;
+    ss3 = *ppFinal;
+    {
+        u8 *accp;
+        register s16 accReset asm("r1"); /* matches the unconditional final accumulator reset store */
+
+        accp = (u8 *)ss3 + channelOffset;
+        accReset = 0;
+        if (clearAcc == 0) {
+            cf = 0xff;
+            cf <<= 8;
+            accReset = cf;
+        }
+        *(u16 *)(accp + SOUND_SYSTEM_CHANNEL_VOLUME_OFFSET) = accReset;
+    }
+    return;
+
+sw_slot:
+    slot = SOUND_SYSTEM_SW_SLOT_FOR_CHANNEL(gpSoundSystem, channel);
+    newFlags = slot->flags;
+    flags = SOUND_FLAG_ENVELOPE_C_ACTIVE | SOUND_FLAG_ENVELOPE_C_INACTIVE;
+    newFlags &= flags;
+    if (newFlags == 0) {
+        register s16 accReset asm("r0"); /* keeps the sw-slot accumulator reset value in r0 */
+        register u32 high asm("r1");     /* builds 0xff00 in r1 before copying to r0 */
+
+        accReset = 0;
+        if (clearAcc == 0) {
+            high = 0xff;
+            high <<= 8;
+            accReset += high;
+        }
+        SOUND_SLOT_ENVELOPE_C(slot)->acc = accReset;
+    }
+
+    newFlags = slot->flags;
+    newFlags &= SOUND_ENVELOPE_C_CLEAR_ACTIVE_MODE;
+    newFlags |= SOUND_FLAG_ENVELOPE_C_INACTIVE;
+    slot->flags = newFlags;
+    SOUND_SLOT_ENVELOPE_C(slot)->param.inactiveDelta = value;
+    if (clearAcc == 0)
+        SOUND_SLOT_ENVELOPE_C(slot)->param.inactiveDelta = -(s32)value;
+}
