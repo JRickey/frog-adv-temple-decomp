@@ -107,6 +107,10 @@ src/engine/sub_0800f24c.s: CC = $(AGBCC_BIN)
 src/engine/sub_08012d40.s: CC = $(AGBCC_BIN)
 src/engine/sub_08013040.s: CC = $(AGBCC_BIN)
 src/engine/sub_0800d808.s: CC = $(OLD_AGBCC_BIN)
+# Keep the inner tilemap loop indexing `col*2 + row_ptr` per iteration
+# (baserom does not reduce it to a pointer increment), which raises the
+# register pressure that drives base/oldPal/newPal into sl/r9/r8.
+src/engine/sub_080184dc.s: CFLAGS += -fno-strength-reduce
 # Matches the state-byte dispatcher prologue in the baserom.
 src/game/sub_08001214.s: CFLAGS += -fforce-addr -fno-expensive-optimizations
 src/game/sub_080019b4.s: CFLAGS += -fforce-addr -fno-expensive-optimizations -fno-gcse
