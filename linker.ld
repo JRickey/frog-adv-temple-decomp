@@ -696,7 +696,6 @@ SECTIONS {
         src/engine/sub_080242d8.o(.text);
         asm/disasm_0x080242d8.o(.text);  /* 0x080242d8 - 0x08024304, sub_080242D8 (auto-peeled) */
         src/engine/sub_08024304.o(.text);
-        asm/disasm_0x08024304.o(.text);  /* 0x08024304 - 0x08024328, sub_08024304 (auto-peeled) */
         asm/disasm_0x08024328.o(.text);  /* 0x08024328 - 0x08024390, sub_08024328 (auto-peeled) */
         asm/disasm_0x08024390.o(.text);  /* 0x08024390 - 0x080243d4, sub_08024390 (auto-peeled) */
         asm/disasm_0x080243d4.o(.text);  /* 0x080243d4 - 0x08024444, sub_080243D4 (auto-peeled) */
@@ -982,6 +981,7 @@ SECTIONS {
         sLevelLayout_312210 = sLevelLayoutData_311F80 + 0x290;
         sLevelLayout_312228 = sLevelLayoutData_311F80 + 0x2a8;
         sLevelLayout_312248 = sLevelLayoutData_311F80 + 0x2c8;
+        sLevelLayout_312270 = sLevelLayoutData_311F80 + 0x2f0;
         src/data/level_layout_312c20.o(.rodata);  /* 0x08312c20 - 0x08312d60, sLevelLayout_312C20 + sLevelLayoutPtrs_312C98 + sLevelLayout_312CAC + sLevelLayoutPtrs_312D4C */
         src/data/level_layout_ptrs_312d60.o(.rodata);  /* 0x08312d60 - 0x08312e94, sLevelLayoutPtrs_312D60 + _312D80 + _312DA8 + _312DD4 + _312E6C + sLevelLayoutSentinel_312E84 */
         src/data/level_layout_312e94.o(.rodata);  /* 0x08312e94 - 0x08314a68, sLevelLayoutData_312E94 + sLevelLayoutPtrs_31332C + sLevelLayoutData_313360 + sLevelLayoutPtrs_313F78 + sLevelLayoutData_314068 */
