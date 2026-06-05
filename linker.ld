@@ -107,6 +107,7 @@ SECTIONS {
         . = 0x00005360; gIwram_5360 = .;
         . = 0x00005398; gIwram_5398 = .;
         . = 0x000053A0; gIwram_53A0 = .;
+        . = 0x0000549F; gIwram_549F = .;
         . = 0x000060A0; gIwram_60A0 = .;
         . = 0x00006110; gIwram_6110 = .;
         . = 0x00006150; gIwram_6150 = .;
@@ -460,7 +461,6 @@ SECTIONS {
         src/engine/sub_080139f8.o(.text);
         src/engine/sub_08013aac.o(.text);
         src/engine/sub_08013d1c.o(.text);
-        asm/disasm_0x08013dfc.o(.text);  /* 0x08013dfc - 0x08013e94, sub_08013DFC (auto-peeled) */
         src/engine/sub_08013e94.o(.text);
         asm/disasm_0x08013e94.o(.text);  /* 0x08013e94 - 0x08013f68, sub_08013E94 (auto-peeled) */
         src/engine/sub_08013f68.o(.text);

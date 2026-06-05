@@ -77,14 +77,26 @@ def text_size(o: Path) -> int:
     raise SystemExit(f"no .text in {o}")
 
 
-def mapping_symbols(o: Path, size: int) -> list[tuple[int, str]]:
+def function_span(o: Path, fn: str) -> tuple[int, int]:
+    """Return (offset, size) for `fn` within the candidate .text."""
+    out = sh("arm-none-eabi-nm", "-n", "-S", str(o))
+    for line in out.splitlines():
+        parts = line.split()
+        if len(parts) == 4 and parts[2] in ("T", "t") and parts[3] == fn:
+            return int(parts[0], 16), int(parts[1], 16)
+    raise SystemExit(f"{fn!r} not found with size in {o}")
+
+
+def mapping_symbols(o: Path, start: int, size: int) -> list[tuple[int, str]]:
     """[(offset, '$t'|'$d')] sorted; from the candidate .o."""
     out = sh("arm-none-eabi-readelf", "-s", str(o))
     maps = []
     for line in out.splitlines():
         m = re.search(r":\s+([0-9a-f]{8})\s+\d+\s+NOTYPE\s+LOCAL\s+DEFAULT\s+\d+\s+(\$[tda])\b", line)
         if m:
-            maps.append((int(m.group(1), 16), m.group(2)))
+            off = int(m.group(1), 16)
+            if start <= off < start + size:
+                maps.append((off - start, m.group(2)))
     maps = sorted(set(maps))
     if not maps or maps[0][0] != 0:
         maps = [(0, "$t")] + maps
@@ -93,7 +105,7 @@ def mapping_symbols(o: Path, size: int) -> list[tuple[int, str]]:
     return maps
 
 
-def relocations(o: Path) -> dict[int, tuple[str, str]]:
+def relocations(o: Path, start: int, size: int) -> dict[int, tuple[str, str]]:
     """offset -> (symbol, type) from the candidate .o."""
     out = sh("arm-none-eabi-objdump", "-r", str(o))
     relocs = {}
@@ -101,9 +113,10 @@ def relocations(o: Path) -> dict[int, tuple[str, str]]:
         m = re.match(r"([0-9a-f]{8})\s+(R_ARM_\S+)\s+(\S+)", line)
         if m:
             off = int(m.group(1), 16)
-            typ = m.group(2)
-            sym = m.group(3).split("+")[0]
-            relocs[off] = (sym, typ)
+            if start <= off < start + size:
+                typ = m.group(2)
+                sym = m.group(3).split("+")[0]
+                relocs[off - start] = (sym, typ)
     return relocs
 
 
@@ -119,14 +132,14 @@ def main() -> int:
 
     cand = Path(args.candidate) if args.candidate else find_candidate_o(fn)
     addr = int(args.addr, 16) if args.addr else func_address(fn)
-    size = text_size(cand)
+    start, size = function_span(cand, fn)
     file_off = addr - ROM_BASE
     data = BASEROM.read_bytes()[file_off:file_off + size]
     if len(data) != size:
         raise SystemExit(f"short baserom read at {file_off:#x}")
 
-    maps = mapping_symbols(cand, size)
-    relocs = relocations(cand)
+    maps = mapping_symbols(cand, start, size)
+    relocs = relocations(cand, start, size)
 
     runs = []
     for i, (off, mk) in enumerate(maps):
