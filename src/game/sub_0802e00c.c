@@ -81,3 +81,28 @@ void sub_0802E00C(u32 slotIndex, StreamCursor *cursor)
     if (ret < produced)
         *work = 0;
 }
+
+extern void sub_0802FF58(void);
+extern void sub_08030290(void);
+
+void sub_0802E0BC(u8 idx)
+{
+    SoundSystem *ss = gpSoundSystem;
+    u32 oldCount = ss->count;
+
+    if (oldCount == idx)
+        return;
+
+    if (idx > ss->slot->numChannels)
+        idx = ss->slot->numChannels;
+
+    ss->count = idx;
+
+    if (idx == 0) {
+        sub_0802FF58();
+        return;
+    }
+
+    if (oldCount == 0)
+        sub_08030290();
+}
