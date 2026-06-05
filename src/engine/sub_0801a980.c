@@ -1,6 +1,25 @@
+#include "game.h"
+#include "iwram.h"
 #include "types.h"
 
+u16 sub_080004C4(void);
 void sub_080008DC(void);
+void sub_0801A774(u8 mode);
+void sub_0801A894(u8 flags, u8 count);
+void sub_0801AD10(u8 mode);
+u8 sub_0801B224(u8 mode);
+
+extern u16 gIwram_5398;
+
+struct Sub0801AB44RoomState {
+    u8 _pad00[8];
+    u32 field_8;
+};
+
+struct Sub0801AB44Penalty {
+    u8 _pad00[2];
+    u16 value;
+};
 
 void sub_0801A980(u8 flags, u8 count_)
 {
@@ -108,4 +127,113 @@ void sub_0801AA60(u8 index)
     dma[1] = 0x0600F901;
     dma[2] = 0x80000004;
     dma[2];
+}
+
+u32 sub_0801AB44(u8 arg)
+{
+    u8 mode;
+    s8 i;
+    u32 bits;
+    s32 highest;
+    vu16 *win;
+    struct Sub0801AB44RoomState *roomState;
+    struct Sub0801AB44Penalty *penalty;
+
+    mode = (u8)(arg - 1);
+    if (mode % 3 == 0) {
+        mode = (u8)(mode / 3);
+        goto mode_ready;
+    }
+
+    if (mode != 13) {
+        return 1;
+    }
+    mode = 5;
+
+mode_ready:
+    if (mode == 5) {
+        i = 15;
+        bits = gGameStuff._unk0C;
+        while (i >= 0) {
+            if (((bits >> i) & 1) != 0) {
+                highest = i + 1;
+                goto check_mode5;
+            }
+            i--;
+        }
+        highest = 0;
+
+    check_mode5:
+        if ((u8)highest > 13) {
+            return 1;
+        }
+    }
+
+    if (mode == 4) {
+        i = 15;
+        bits = gGameStuff._unk0C;
+        while (i >= 0) {
+            if (((bits >> i) & 1) != 0) {
+                highest = i + 1;
+                goto check_mode4;
+            }
+            i--;
+        }
+        highest = 0;
+
+    check_mode4:
+        if ((u8)highest > 12) {
+            return 1;
+        }
+    }
+
+    sub_0801A774(mode);
+    sub_0801A894(3, 20);
+    sub_0801AA60(mode);
+    sub_0801AD10(mode);
+
+    do {
+        gIwram_5398 = sub_080004C4();
+    } while (sub_0801B224(mode) != 0xFE);
+
+    sub_0801A980(3, 20);
+
+    win = (vu16 *)0x04000040;
+    *win = 0;
+    win += 2;
+    *win = 0;
+    win--;
+    *win = 0;
+    win += 2;
+    *win = 0;
+    win++;
+    *win = 0;
+    win++;
+    *win = 0;
+
+    if (mode == 4) {
+        /* Fixed pointer regs force the case-4 `ldr r0; ldr r1; adds r2, r0` shared-store tail. */
+        register struct Sub0801AB44RoomState *case4RoomState asm("r2");
+        register struct Sub0801AB44RoomState *loadedRoomState asm("r0");
+        u32 case4Result;
+
+        loadedRoomState = (struct Sub0801AB44RoomState *)0x03003540;
+        case4Result = loadedRoomState->field_8;
+        case4RoomState = loadedRoomState;
+        if (case4Result != 0) {
+            roomState = case4RoomState;
+            penalty = (struct Sub0801AB44Penalty *)&gIwram_35E0;
+            penalty->value -= 50;
+            goto return_room_result;
+        }
+    }
+
+    roomState = (struct Sub0801AB44RoomState *)0x03003540;
+    if (mode == 5 && roomState->field_8 != 0) {
+        penalty = (struct Sub0801AB44Penalty *)&gIwram_35E0;
+        penalty->value -= 75;
+    }
+
+return_room_result:
+    return roomState->field_8;
 }
