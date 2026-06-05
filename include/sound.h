@@ -328,6 +328,7 @@ typedef struct SoundLockSystem {
 #define SOUND_ENVELOPE_C_MODE_BITS             (SOUND_ENVELOPE_C_MODE_MASK << 1)
 #define SOUND_ENVELOPE_C_FLAG_KICKOFF          0x10
 #define SOUND_ENVELOPE_C_CLEAR_MODE            ((u32) - 7)
+#define SOUND_ENVELOPE_C_CLEAR_ACTIVE_MODE     ((u32) - 8)
 #define SOUND_ENVELOPE_C_MODE_SLIDE_DOWN       2u
 #define SOUND_ENVELOPE_C_MODE_KICKOFF          4u
 #define SOUND_ENVELOPE_C_MODE_STOP             6u
