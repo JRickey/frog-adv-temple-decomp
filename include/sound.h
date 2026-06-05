@@ -347,8 +347,13 @@ typedef struct SoundLockSystem {
 #define SOUND_SLOT_FLAG_PERIOD_ACTIVE          0x1400
 #define SOUND_SLOT_FLAG_PAN_AUTO_REVERSE       0x2000
 #define SOUND_SLOT_FLAG_PAN_OVERRIDE           0x10000
+#define SOUND_SLOT_FLAG_STREAM_PRIME           0x30000
 #define SOUND_SLOT_FLAG_PAN_DIRTY              0x80
 #define SOUND_SLOT_FLAG_CLEAR_RETIRE           0xfffffdff
+#define SOUND_STREAM_PRIORITY                  0x1000
+#define SOUND_STREAM_MIX_ENTRY_STRIDE          28
+#define SOUND_STREAM_HANDLE_ACTIVE             0x80000000
+#define SOUND_STREAM_HANDLE(slotIdx, channel)  (((channel) | ((slotIdx) << 16)) | SOUND_STREAM_HANDLE_ACTIVE)
 #define SOUND_CHANNEL_PAN_RESET                0xff00
 #define SOUND_CHANNEL_COUNTDOWN_RESET          0xc000
 #define SOUND_MIXER_FREQ_RESTART               0x8000
@@ -425,6 +430,7 @@ typedef struct SoundLockSystem {
 #define SOUND_SYSTEM_CH_ACC_OFFSET            0xac
 #define SOUND_SYSTEM_PSG_PITCH_CACHE_OFFSET   0xb4
 #define SOUND_SYSTEM_PAN_BITS_OFFSET          0xba
+#define SOUND_SYSTEM_STREAM_PAN_BYTE_OFFSET   0x10e
 #define SOUND_SYSTEM_MUTE_MASK_OFFSET         0x10f
 #define SOUND_SYSTEM_DMA_SRC_OFFSET           0xd0
 #define SOUND_SYSTEM_PERIOD_STATE_OFFSET      0xf4
