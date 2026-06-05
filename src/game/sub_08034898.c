@@ -51,3 +51,18 @@ s32 sub_08034898(u32 a)
     tmp = (s32)(buf.fraction >> shift);
     return buf.sign ? -tmp : tmp;
 }
+
+extern u32 sub_0803401C(fp_number_type *comp);
+
+u32 sub_08034900(u32 a)
+{
+    fp_number_type comp;
+    u32 neg;
+
+    sub_080340D4(&a, &comp);
+    neg = 0;
+    if (comp.sign == 0)
+        neg = 1;
+    comp.sign = neg;
+    return sub_0803401C(&comp);
+}
