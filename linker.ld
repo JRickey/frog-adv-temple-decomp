@@ -171,6 +171,7 @@ SECTIONS {
         asm/disasm_0x08000000.o(.text);  /* 0x08000000 - 0x08000004, entry branch */
         asm/header.o(.text);             /* 0x08000004 - 0x080000BF, header */
         src/system/boot.o(.text);
+        src/system/_start.o(.text);
         asm/disasm_0x080000c0.o(.text);  /* 0x080000c0 - 0x080000fc, _start */
         asm/disasm_0x080000fc.o(.text);  /* 0x080000fc - 0x08000114, IntrEnable */
         src/system/intr_disable.o(.text);
