@@ -30,13 +30,13 @@ extern void sub_08001E24(void *obj, void *r4_obj);
 void sub_08002484(void *arg0, void *arg1)
 {
     GameStuff *g;
+    register u8 id asm("r2");
+    register u32 offset asm("r0");
 
     sub_0800A520();
 
     {
         const GameProc *procs = sEntityProcB;
-        register u8 id asm("r2");
-        register u32 offset asm("r0");
 
         g = &gGameStuff;
         id = g->pendingMode;
@@ -47,8 +47,6 @@ void sub_08002484(void *arg0, void *arg1)
 
     {
         const GameProc *procsD = sEntityProcD;
-        register u8 id asm("r2");
-        register u32 offset asm("r0");
 
         id = g->pendingMode;
         offset = id << 2;

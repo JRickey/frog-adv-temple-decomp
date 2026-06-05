@@ -9,13 +9,13 @@ extern const u32 sLevelLayoutPtrs_311EC0[10];
 void sub_08022F4C(void)
 {
     u8 i;
-    const u32 *tbl; /* r8 holds table base across BL calls */
+    const u32 *tbl;             /* r8 holds table base across BL calls */
+    register u32 idx asm("r5"); /* pin forces ptr->r4, counter->r6 */
 
     i = 0;
     tbl = sLevelLayoutPtrs_311EC0;
     do {
         if (i <= 3) {
-            register u32 idx asm("r5"); /* pin forces ptr->r4, counter->r6 */
             const void *ptr;
             u32 mod;
             u16 field14;
@@ -26,7 +26,6 @@ void sub_08022F4C(void)
             field14 = (((mod << 24) >> 4) + 0x01710000) >> 16;
             sub_080210A0(idx, ptr, 16, 13, field14, 11, 2, 3);
         } else {
-            register u32 idx asm("r5");
             const void *ptr;
             u32 mod;
             u16 field14;
