@@ -2533,3 +2533,45 @@ with the baserom when the per-iteration `ip`->low materialization is a real
 reload. (Instrument `allocate_reload_reg` with an env-gated `fprintf` of
 `last_spill_reg`/`spill_regs[i]` in a PRIVATE debug compiler copy to see this
 directly.)
+
+## In-shift constant mutation forces a constant into a callee-saved reg (defeats a no-arg coalescing tie)
+
+`sub_08012664` (spawn-tile picker, no arguments) plateaued at byte_diff 12 across
+THREE prior Opus rounds plus thousands of permuter iterations and full
+local-alloc + global.c instrumentation. The residual was diagnosed as a "no
+source-handle coalescing tie": the baserom keeps the read-region constant
+`0xFD000000` in a callee-saved register (r6) and then REUSES that register for
+the `colExcl` base pointer in the fill/collect loops (`mov r6, sp`). With the
+constant written as a plain local read twice, agbcc gives it a caller-saved reg
+(r2), the loop counter coalesces into r2 instead, and the `colExcl`/`colCand`
+base pointers land on the wrong registers — a cascade of ~12 bytes that no
+register pin fixed (`register u32 k asm("r6")` over-reserves r6 across its whole
+scope, so `colExcl` can't reuse it → byte_diff 22, WORSE).
+
+The fix the permuter found (and which is matchable PURE C): write the first
+band's compute as an **assignment INTO the constant, inside the shift
+expression**:
+
+```c
+k = 0xFD000000;
+colBase = (k = t8 + k) >> 24;        /* mutate k in-expression -> k lives in r6 */
+rowBase = (t10 + 0xFD000000) >> 24;  /* second band uses the literal, not k */
+```
+
+The `(k = t8 + k)` form (NOT the equivalent split `k = t8 + k; colBase = k >> 24;`,
+which gives byte_diff 17) makes agbcc keep the constant in a callee-saved register
+across the assignment, and that register is then exactly the one reused for the
+`colExcl` base — fixing the read-region coloring AND the base-pointer "swap" in
+one move. The asymmetry (first band reads `k`, second band reads the literal) is
+load-bearing: making both symmetric re-materializes the constant and costs 2 bytes.
+
+Both bands are still semantically `(u8)(coord - 3)` (the constant is `-(3<<24)`),
+so this is correct, readable C — no pins, no asm, no NON_MATCHING.
+
+Lesson: a "no-argument coalescing tie" is NOT proof of unmatchability. When the
+baserom reuses a constant's register for a later pointer/index, an
+in-expression assignment that mutates the constant (or a scratch temp) can pin it
+to the callee-saved register the reuse needs. Run the permuter from the CLEANEST
+near-match base before declaring a coalescing tie irreducible — it mutates
+expression structure into shapes (like `(x = a + x)`) that manual derivation
+overlooks.
