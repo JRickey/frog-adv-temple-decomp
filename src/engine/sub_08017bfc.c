@@ -1,6 +1,7 @@
 #include "macros.h"
 #include "types.h"
 #include "gba/dma.h"
+#include "gba/io.h"
 #include "iwram.h"
 
 asm(".global sub_08015EC4\n"
@@ -256,4 +257,62 @@ void sub_08017ECC(void)
     gIwram_34B8._data[1] = 0;
     gIwram_34B8._data[2] = 0x50;
     gIwram_34B8._data[3] = 0x18;
+}
+
+struct ScreenInstallArgs {
+    u32 _unk00;
+    const void *tilemap1;
+    const void *tilemap2;
+    u32 _unk0C;
+};
+
+extern void sub_08018C0C(s32 mode);
+extern void sub_08018898(s32 flag, s32 a, s32 b, struct ScreenInstallArgs args, s32 last);
+extern void sub_08018CA8(void);
+extern void sub_080181D0(void);
+
+extern const u16 sBgTilemap_E6C18[];
+
+void sub_08017F00(void)
+{
+    struct IwramAt3480 *state;
+    u32 field08;
+    s32 count;
+    u32 tableBase;
+    struct ScreenInstallArgs args;
+
+    args._unk00 = 0;
+    args.tilemap1 = sBgTilemap_E6C18;
+
+    /* Anchor the ROM table literal into a register before the gIwram_34B0 index
+       load; without the fence agbcc defers the table base and emits the index
+       load into r0 first (ARGUMENT_MISMATCH at +0x12). Same idiom as sub_080181D0. */
+    tableBase = 0x08308f70;
+    asm volatile("" : "+r"(tableBase));
+    args.tilemap2 = (const void *)*(const u32 *)(tableBase + gIwram_34B0._data * 4);
+    args._unk0C = 0;
+
+    REG_DISPCNT &= ~DISPCNT_BG1_ON;
+
+    state = &gIwram_3480;
+    state->_data[0] = 10;
+    if (gIwram_34A0._field_08 != 0) {
+        state->_unk14 = 0;
+    }
+
+    sub_08018C0C(14);
+
+    field08 = gIwram_34A0._field_08;
+    count = (field08 != 0) ? 23 : 25;
+    sub_08018898((field08 == 0), count, 6, args, 2);
+
+    REG_DMA3.src = sBgTilemap_E6C18;
+    REG_DMA3.dst = (void *)0x0600e800;
+    REG_DMA3.cnt = DMA_ENABLE | 0x400;
+    (void)REG_DMA3.cnt;
+
+    sub_08018CA8();
+
+    REG_DISPCNT |= DISPCNT_BG3_ON;
+    sub_080181D0();
 }
