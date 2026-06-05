@@ -173,6 +173,7 @@ SECTIONS {
         src/system/boot.o(.text);
         src/system/_start.o(.text);
         asm/disasm_0x080000c0.o(.text);  /* 0x080000c0 - 0x080000fc, _start */
+        src/system/intr_enable.o(.text);
         asm/disasm_0x080000fc.o(.text);  /* 0x080000fc - 0x08000114, IntrEnable */
         src/system/intr_disable.o(.text);
         asm/disasm_0x08000114.o(.text);  /* 0x08000114 - 0x0800012c, IntrDisable */
