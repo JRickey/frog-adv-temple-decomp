@@ -1,4 +1,5 @@
 #include "sound.h"
+#include "macros.h"
 
 /* sub_0802EA80 — per-frame countdown-bounce envelope tick (envelope-A0).
  *
@@ -111,3 +112,170 @@ count_check:
     if (i < (*gpCheck)->count)
         goto body;
 }
+
+/* sub_0802EB34 configures the clamp envelope (envelope-A at +0x1c) for
+ * one channel. Shipped NAKED + NON_MATCHING: classify_unmatchable reports
+ * class3-libgcc (wide r4-r7 prologue plus lone __divsi3 BL). The readable
+ * C bottoms out at byte_diff 126 because agbcc's final jump2 cross-jump
+ * pass merges the per-branch divide tails and swaps the target/frame high
+ * register homes; no available -f option suppresses that pass.
+ *
+ * Corpus: current-tree C hits for __divsi3 are ordinary divisions or inline
+ * asm strings; no pure-C precedent for this wide-prologue libgcc shape was
+ * available, and corpus history mirrors are not populated in this worktree.
+ */
+#if defined(NON_MATCHING) || defined(NON_MATCHING_sub_0802EB34)
+void sub_0802EB34(u8 absolute, u16 target, u16 frames, s32 mode)
+{
+    SoundSystem *ss;
+    SlotClampEnvelope *env;
+    s32 dividend;
+
+    if (mode <= SOUND_INLINE_CHANNEL_COUNT - 1) {
+        SoundSystem **gpp = &gpSoundSystem;
+        s32 viewOff = mode * SOUND_INLINE_CHANNEL_STRIDE + SOUND_INLINE_CHANNEL_BASE_OFFSET;
+        u8 *view;
+
+        ss = *gpp;
+        view = (u8 *)ss + viewOff;
+        env = SOUND_SLOT_ENVELOPE_A((SoundSlot *)view);
+        if (absolute) {
+            u8 *channelBase = (u8 *)ss + mode * SOUND_INLINE_CHANNEL_STRIDE;
+            s32 signedTarget = (s16)target;
+
+            env->limit = signedTarget - *(u16 *)(channelBase + SOUND_INLINE_CHANNEL_BASE_OFFSET);
+            dividend = signedTarget - ((s16) * (s16 *)(channelBase + SOUND_INLINE_CHANNEL_BASE_OFFSET) +
+                                       (s16) * (s16 *)(view + SOUND_SLOT_ENVELOPE_A_OFFSET));
+        } else {
+            dividend = (s16)target;
+            env->limit += dividend;
+        }
+    } else {
+        SoundSlot *slot;
+
+        if (mode == SOUND_INLINE_CHANNEL_COUNT)
+            return;
+
+        slot = SOUND_SYSTEM_SW_SLOT_FOR_CHANNEL(gpSoundSystem, mode);
+        env = SOUND_SLOT_ENVELOPE_A(slot);
+        if (absolute) {
+            s32 signedTarget = (s16)target;
+
+            env->limit = signedTarget - *(u16 *)slot;
+            dividend = signedTarget - ((s16) * (s16 *)slot + (s16)env->acc);
+        } else {
+            dividend = (s16)target;
+            env->limit += dividend;
+        }
+    }
+
+    env->step = dividend / frames;
+}
+#else
+NAKED
+void sub_0802EB34(u8 absolute, u16 target, u16 frames, s32 mode)
+{
+    asm(".syntax unified\n"
+        "    push    {r4, r5, r6, r7, lr}\n"
+        "    mov     r7, r8\n"
+        "    push    {r7}\n"
+        "    lsls    r0, r0, #24\n"
+        "    lsrs    r7, r0, #24\n"
+        "    mov     ip, r7\n"
+        "    lsls    r1, r1, #16\n"
+        "    lsrs    r5, r1, #16\n"
+        "    mov     r8, r5\n"
+        "    lsls    r2, r2, #16\n"
+        "    lsrs    r6, r2, #16\n"
+        "    adds    r2, r6, #0\n"
+        "    cmp     r3, #2\n"
+        "    bgt     _0802EB96\n"
+        "    ldr     r0, _0802EB84            @ =gpSoundSystem (0x030065e0)\n"
+        "    lsls    r1, r3, #3\n"
+        "    adds    r1, r1, r3\n"
+        "    lsls    r2, r1, #2\n"
+        "    adds    r1, r2, #0\n"
+        "    adds    r1, #0x20\n"
+        "    ldr     r0, [r0, #0]\n"
+        "    adds    r3, r0, r1\n"
+        "    adds    r4, r3, #0\n"
+        "    adds    r4, #0x1c\n"
+        "    cmp     r7, #0\n"
+        "    beq     _0802EB88\n"
+        "    adds    r2, r0, r2\n"
+        "    lsls    r0, r5, #16\n"
+        "    asrs    r0, r0, #16\n"
+        "    ldrh    r5, [r2, #0x20]\n"
+        "    subs    r1, r0, r5\n"
+        "    strh    r1, [r4, #4]\n"
+        "    movs    r5, #0x20\n"
+        "    ldrsh   r1, [r2, r5]\n"
+        "    movs    r5, #0x1c\n"
+        "    ldrsh   r2, [r3, r5]\n"
+        "    adds    r1, r1, r2\n"
+        "    subs    r0, r0, r1\n"
+        "    adds    r1, r6, #0\n"
+        "    b       _0802EBE6\n"
+        "    .align  2, 0\n"
+        "_0802EB84: .4byte 0x030065e0\n"
+        "_0802EB88:\n"
+        "    lsls    r0, r5, #16\n"
+        "    asrs    r0, r0, #16\n"
+        "    ldrh    r2, [r4, #4]\n"
+        "    adds    r1, r2, r0\n"
+        "    strh    r1, [r4, #4]\n"
+        "    adds    r1, r6, #0\n"
+        "    b       _0802EBE6\n"
+        "_0802EB96:\n"
+        "    cmp     r3, #3\n"
+        "    ble     _0802EBEC\n"
+        "    ldr     r0, _0802EBD0            @ =gpSoundSystem (0x030065e0)\n"
+        "    ldr     r1, [r0, #0]\n"
+        "    adds    r1, #0xc8\n"
+        "    lsls    r0, r3, #6\n"
+        "    ldr     r3, _0802EBD4            @ =-0x100\n"
+        "    adds    r0, r0, r3\n"
+        "    ldr     r1, [r1, #0]\n"
+        "    adds    r3, r1, r0\n"
+        "    adds    r4, r3, #0\n"
+        "    adds    r4, #0x1c\n"
+        "    mov     r0, ip\n"
+        "    cmp     r0, #0\n"
+        "    beq     _0802EBD8\n"
+        "    lsls    r0, r5, #16\n"
+        "    asrs    r0, r0, #16\n"
+        "    ldrh    r2, [r3, #0]\n"
+        "    subs    r1, r0, r2\n"
+        "    strh    r1, [r4, #4]\n"
+        "    movs    r5, #0\n"
+        "    ldrsh   r1, [r3, r5]\n"
+        "    movs    r5, #0x1c\n"
+        "    ldrsh   r2, [r3, r5]\n"
+        "    adds    r1, r1, r2\n"
+        "    subs    r0, r0, r1\n"
+        "    adds    r1, r6, #0\n"
+        "    b       _0802EBE6\n"
+        "    .align  2, 0\n"
+        "_0802EBD0: .4byte 0x030065e0\n"
+        "_0802EBD4: .4byte 0xffffff00\n"
+        "_0802EBD8:\n"
+        "    mov     r1, r8\n"
+        "    lsls    r0, r1, #16\n"
+        "    asrs    r0, r0, #16\n"
+        "    ldrh    r3, [r4, #4]\n"
+        "    adds    r1, r3, r0\n"
+        "    strh    r1, [r4, #4]\n"
+        "    adds    r1, r2, #0\n"
+        "_0802EBE6:\n"
+        "    bl      __divsi3\n"
+        "    strh    r0, [r4, #2]\n"
+        "_0802EBEC:\n"
+        "    pop     {r3}\n"
+        "    mov     r8, r3\n"
+        "    pop     {r4, r5, r6, r7}\n"
+        "    pop     {r0}\n"
+        "    bx      r0\n"
+        "    .hword  0x0000\n"
+        "    .syntax divided\n");
+}
+#endif
