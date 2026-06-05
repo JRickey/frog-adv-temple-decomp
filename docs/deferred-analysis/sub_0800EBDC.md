@@ -1,169 +1,198 @@
-# sub_0800EBDC — deferred (round 33)
+# sub_0800EBDC — deferred (round 23, Opus escalation)
 
 Per-scene scroll commit + visible-screenblock blit. ~225 Thumb instructions,
 600 bytes of asm slice [0x0800ebdc, 0x0800ee34). The slice also carries a
-trivial second function sub_0800EE0C (REG_BLDCNT/REG_BLDALPHA setter) which IS
-trivially matchable — see "## Best-effort C".
+trivial second function **sub_0800EE0C** (REG_BLDCNT/REG_BLDALPHA setter) which
+IS confirmed matchable as plain C — see "## sub_0800EE0C (matches)".
 
-## Semantics (fully reverse-engineered, high confidence)
+## Semantics (fully reverse-engineered, high confidence — unchanged)
 `void sub_0800EBDC(u8 count)`. For each of `count` SceneScrollState entries at
-0x030060A0 (stride 0x20 — same layout sub_0800F2F8 / sub_0801A6D4 use):
-  - struct fields: +0x04 committedX, +0x08 committedY, +0x0c scrollX,
-    +0x10 scrollY, +0x14 bgHofs, +0x16 bgVofs, +0x18 tileHeight, +0x1a tileWidth.
-  1. commit: committedX = scrollX; committedY = scrollY.
-  2. derive source tile coords: srcRow from scrollY, srcCol from scrollX, each
-     clamped: if scrollY in (47, (tileH<<3)-0xD0] -> srcRow=(scrollY-0x30)>>3
-     (signed /8); else if scrollY > that limit && tileH>31 -> srcRow=tileH-32.
-     Symmetric for srcCol with scrollX, 0xF8, 8. Also publishes
-     bgVofs=scrollY, bgHofs=scrollX.
-  3. dispatch on i (0/1/2) -> (srcEwram, dstVram, gIwram_3550._data pair):
-     i=0: 0x02000000 / 0x0600E000 / _data[0..1]=ss[0].bgHofs/bgVofs
-     i=1: 0x02010000 / 0x0600E800 / _data[2..3]=ss[1] (read via 0x030060C0)
-     i=2: 0x02020000 / 0x0600F000 / _data[4..5]=ss[2] (read via 0x030060E0)
-  4. 32x32-tile halfword blit from EWRAM map buffer to VRAM screenblock:
-     src = srcEwram + (srcRow*tileWidth + srcCol)*2
-     dst = dstVram + (srcRow&31)*0x40 + (srcCol&31)*2
-     colSpan = 32 - (srcCol&31)
-     outer 32 rows, inner 32 cols; per store: wrap dst at +0x800 screenblock
-     boundary (dst = dstVram + (((dst-0x800-dstVram)>>1)<<1)), and when the
-     per-row colSpan counter hits 0 wrap the column (dst-=0x40; if <dstVram
-     dst=dstVram+0x7C0). After each row src += tileWidth*2 - 0x40, and if
-     colSpan!=32 dst += 0x40.
+0x030060A0 (stride 0x20). Struct fields: +0x04 committedX, +0x08 committedY,
++0x0c scrollX, +0x10 scrollY, +0x14 bgHofs, +0x16 bgVofs, +0x18 tileHeight,
++0x1a tileWidth. Per entry: (1) commit scroll->committed; (2) derive
+srcRow/srcCol with clamps + publish bgHofs/bgVofs; (3) switch(i) sets
+srcEwram/dstVram and writes gIwram_3550._data[2i..2i+1]; (4) 32x32 halfword blit
+from EWRAM map to VRAM screenblock with per-store wrap. (Details same as the
+prior round-33 note.)
 
-## Drift (why it does NOT match — corpus-confirmed hard class)
-Four structurally-distinct C shapes were tried; ALL land at "fundamentally
-different codegen", not a near-match:
-  - v1 single `st = &gIwram_60A0[i]` struct pointer:        byte_diff 403, diff 255
-  - v2 raw `base+fieldoff+off` arithmetic, 2 anchors:        byte_diff 441, diff 231
-  - v3 do-while + struct pointer, count on stack (cleanest): byte_diff 416, diff 291
-  - v4 macro raw-arith, minimized locals:                    byte_diff 454, diff 303
-(total instructions ~225, so diff_count > instr count = almost nothing aligns.)
+## CORRECTION to the prior note (round 33)
+The prior note said "the baserom keeps the bare base 0x030060A0 in **ip**,
+RELOADED from a pool literal at the top of EVERY iteration." This is WRONG. The
+`ldr r2,=0x030060A0; mov ip,r2` runs ONCE before the loop — the back-edge at
+0x0800ede0 jumps to **0x0800ebfe** (the `mov r7,r9` AFTER the ip load), not to
+0x0800ebfa. ip is a normal loop-invariant set once. This matters: it means ip is
+just where agbcc parked the loop-invariant base, not a per-iteration reload.
 
-Root cause: the baserom keeps the bare entry base 0x030060A0 in **ip (r12)**,
-RELOADED from a pool literal at the top of EVERY iteration, and recomputes each
-field address as `ip + fieldoff + off` (mov r1,ip; adds r1,#K; adds r1,r3,r1).
-It never forms a single induction pointer. The loop index is in **r9**, count
-lives on the **stack** ([sp,#0]) and is reloaded for each `cmp r9,[sp]` check,
-srcRow/srcCol are in callee-saved **sl/r7**, and the loop increment is hoisted
-into sl mid-body (`sl=i+1`) then applied at loop-end (`i=(u8)sl`).
+## The EXACT wall (this round's contribution — precise, mechanically confirmed)
+The baserom computes EVERY per-scene field address as
+`ip + fieldoff + idx` (idx = i<<5 in r3), with the store/load at **offset 0**:
+```
+mov r1, ip        ; base
+adds r1, #4       ; base + fieldoff      (committedX example)
+adds r1, r3, r1   ; + idx
+str  r0, [r1, #0] ; offset 0
+```
+It NEVER forms a single `base+idx` induction pointer and NEVER uses an immediate
+field offset in the per-scene section. Multiply-read fields whose loop-invariant
+field-base `&base[0].field` is materialized as a pool CONSTANT use that const
+instead of ip (e.g. scrollX = `idx + 0x030060ac; ldr [r0,#0]`); singly/locally
+used fields use `ip + fieldoff + idx`.
 
-agbcc 2.x given any natural C instead forms `st = base+off` once (low reg r4)
-and reuses it, or reloads the literal into low regs — it never emits the
-`mov ip, <base>` anchor + per-access recompute. Corpus census confirms this is
-NOT a local-coloring miss but a genuine codegen-shape gap:
-  `corpus.py grep 'mov +ip, *r[0-9]' --c` -> EVERY hit (boktai2, mzm/mf,
-  mother3, rmz3, fireemblem8u, pokeemerald) is inside an inline-asm string
-  ("mov ip, r2\n\") — i.e. hand-asm. History search (metroidret/mzm
-  f49762944c, c1b6184564, 10f0d2601b) shows `mov ip` only ever
-  removed-as-asm / re-added inside NAKED_FUNCTION blocks, never produced from
-  plain C. So the ip-anchor-reload idiom appears unreachable from agbcc C.
+agbcc 2.x at -O2 (the project default OLD_AGBCC) CANNOT be coaxed into this from
+C. Mechanically confirmed via ~15 isolated probes (`tools/agbcc/bin/old_agbcc
+-O2 -fhex-asm`):
+  - Any natural C (`st = base+i; st->field`, or `base[i].field`) forms ONE
+    `base+idx` pointer (r5) and uses IMMEDIATE offsets `[r5,#0xc]`, `[r5,#4]`,…
+    — the exact opposite of the baserom. (`base[i]` even strength-reduces to an
+    induction `base += 0x20` despite `-fno-strength-reduce`.)
+  - Pinning base to ip via `register u32 base asm("ip")` IS honored (emits
+    `mov ip, r0`) BUT agbcc still copies ip to a low reg and forms `base+idx`
+    with immediate offsets.
+  - `idx + (base + fieldoff)` inline re-associates to `(idx+base)+fieldoff` →
+    `[base+idx, #fieldoff]` (immediate offset) for any fieldoff that fits the
+    Thumb load/store offset (committedX@4, committedY@8 always fit → always
+    folded). This is GO_IF_LEGITIMATE_ADDRESS / GO_IF_LEGITIMATE_INDEX in
+    config/arm/arm_020422.h — a TARGET MACRO, not a flag-gated optimization, so
+    NO -fXXX flag disables it (`-fforce-addr`, `-fforce-mem`, `-fno-gcse`,
+    `-fno-cse-follow-jumps`, `-fno-peephole`, `-fno-rerun-cse-after-loop`,
+    `-O1`, `volatile` write target — all still emit `[r,#4]`).
+  - The ONLY shape that reproduces `mov ip; adds #off; adds idx; [.,#0]` is
+    EXPLICIT per-field base variables `u32 cxB = base + 4; *(s32*)(idx + cxB)`
+    (probe confirmed: field section comes out byte-identical in shape). BUT at
+    full-function scale agbcc hoists all 7 base-vars to the loop top and SPILLS
+    them to stack (`str r0,[sp,#4]`), which is globally WORSE (byte_diff 477 vs
+    391) — the baserom computes each `ip+off` lazily right before its use, which
+    no source ordering reproduced.
 
-This is the "high register holding loop state across recomputation" hard class
-(docs/codegen-notes "High registers ... usually MATCHABLE" lists straight-line
-cases as matchable, but the per-iteration ip-base-reload + index recompute is
-the narrow genuinely-hard variant). It is NOT class3-libgcc STRONG_UNMATCHABLE,
-so per the asymmetric-cost rule it was NOT shipped NAKED — deferred instead.
+So the wall is the combination of (a) per-field address recompute under heavy
+register pressure (i=r9, srcRow=sl, srcCol=r7, dstBase=r8, base=ip leaves no
+low callee-saved reg to hold a `base+idx` pseudo, so the baserom recomputes)
+AND (b) offset-0 addressing that the Thumb backend macro refuses to emit when a
+small immediate offset is legal. Neither is reachable from agbcc-2.x C: when
+given spare registers it CSEs `base+idx`; when starved via explicit base-vars it
+spills.
 
-Levers NOT yet tried (for the next attempt): (a) instrument agbcc's
-local-alloc.c / reload.c to see why it refuses ip for the base across the loop
-(ip is 5th in REG_ALLOC_ORDER and call-used, and there are no calls here, so it
-*should* be eligible); (b) a linker-assigned symbol pair gIwram_60A0/gIwram_60AC
-was added (kept — see linker.ld) but did not by itself trigger the ip anchor;
-(c) permuter from the v3 base (byte_diff 416 is well above the ~40 permuter
-sweet spot, so likely fruitless until a near-match exists); (d) -ffixed-rN to
-starve low regs and force ip.
+## Drift (byte_diff / diff_count for each structural family tried this round)
+  - v1  struct ptr `base[i].field`, no pins:                    byte_diff 422, diff 311
+  - v2  struct ptr `st=base+i; st->field`, -fno-strength-reduce: byte_diff 391, diff 296  (BEST CLEAN)
+  - v3  raw `SCENE_BASE + off + idx` literal macros:            byte_diff 490, diff 325
+  - v4  struct ptr + ip/r9/sl/r7/r8 pins:                       byte_diff 516, diff 319
+  - v5  ip-pinned macros, scrollX-as-const:                     byte_diff 466, diff 313
+  - inline `idx+(base+off)`, i+base pinned:                     byte_diff 454, diff 284
+  - named base-vars per field (probeF shape), i+base pinned:    byte_diff 477, diff 310
+diff_count > instr-count means almost nothing aligns — every family is a
+fundamentally-different codegen, not a near-match. Permuter is futile (sweet
+spot is byte_diff <= ~40; floor here is 391).
 
-## Best-effort C
+## Levers NOT yet tried (for the next attempt)
+  - Instrument agbcc local-alloc.c / reload.c (private debug build per
+    codegen-notes) to confirm WHY no `base+idx` pseudo survives the loop under
+    the real register pressure, and whether a `-ffixed-rN` combination that
+    frees exactly the registers the baserom leaves free flips it to per-field
+    recompute WITHOUT the explicit-base-var spill.
+  - The newer agbcc (`CC = $(AGBCC_BIN)`, the non-OLD one used by 4 TUs) may
+    schedule the explicit-base-var form differently (lazy, no spill). Worth a
+    per-TU `src/engine/sub_0800ebdc.s: CC = $(AGBCC_BIN)` probe with the
+    named-base-var v (byte_diff 477 under OLD_AGBCC) — different scheduler.
+  - A formulation where each field's `ip+off` is genuinely live only inside its
+    own basic block (declare the base-var inside the `if`) so agbcc computes it
+    lazily per-block rather than hoisting all to the loop top.
+
+## sub_0800EE0C (matches as plain C — apply when EBDC is solved)
 ```c
-/* do-while + struct-pointer shape (v3), cleanest readable form; byte_diff 416.
- * sub_0800EE0C (the trivial second fn in the slice) DOES match as plain C. */
+void sub_0800EE0C(u16 targets, u16 coeff)
+{
+    *(vu16 *)0x04000050 = targets | 0x1740;  /* REG_BLDCNT  = targets | 0x1740 */
+    *(vu16 *)0x04000052 = coeff;             /* REG_BLDALPHA = coeff */
+}
+```
+Its instructions (`movs r4,#0xba; lsls r4,#5; adds r2,r4,#0; orrs r0,r2; strh;
+ldr; strh`) were verified byte-identical to the baserom; only the .o offset
+shifts because the non-matching EBDC precedes it.
+
+## Best-effort C (v2 — cleanest readable form, byte_diff 391)
+```c
 #include "iwram.h"
 #include "types.h"
 
-enum { SCROLL_Y_MIN = 47, SCROLL_X_MIN = 7, TILE_PIXELS_SHIFT = 3,
-       SCREEN_TILES = 32, SCREENBLOCK_BYTES = 0x800, ROW_BYTES = 0x40 };
-
-struct SceneScrollState_EBDC {
+struct SceneScrollState {
     u8 _pad00[4];
     s32 committedX; s32 committedY; s32 scrollX; s32 scrollY;
     u16 bgHofs; u16 bgVofs; u16 tileHeight; u16 tileWidth;
     u8 _pad1c[4];
 };
-extern struct SceneScrollState_EBDC gIwram_60A0;
-extern s32 gIwram_60AC;
 
-void sub_0800EBDC(u8 countArg)
+void sub_0800EBDC(u8 count)
 {
-    u8 count;
-    register u32 i asm("r9");
-    register s32 srcRow asm("sl");
-    s32 srcCol;
-    register u32 dstVram asm("r8");
+    u32 i;
+    struct SceneScrollState *base = (struct SceneScrollState *)0x030060A0;
+    struct SceneScrollState *st;
+    struct IwramAt3550 *shadow;
+    s32 srcRow, srcCol, limit;
+    u32 srcBase, dstBase;
+    u16 *src, *dst;
+    s32 colSpan, col, row;
 
-    count = countArg;
-    i = 0;
-    if (i >= count) return;
-    do {
-        struct SceneScrollState_EBDC *base = &gIwram_60A0;
-        u32 off = i * sizeof(struct SceneScrollState_EBDC);
-        struct SceneScrollState_EBDC *st = (struct SceneScrollState_EBDC *)((u32)base + off);
-        s32 limit; u32 srcEwram; u16 *src; u16 *dst; s32 colSpan; s32 row; u16 *shadow;
-
-        st->committedX = *(s32 *)((u32)&gIwram_60AC + off);
+    for (i = 0; i < count; i++) {
+        st = base + i;
+        st->committedX = st->scrollX;
         st->committedY = st->scrollY;
-        srcCol = 0; srcRow = 0;
-        limit = (st->tileHeight << TILE_PIXELS_SHIFT) - 0xD0;
-        if (st->scrollY > SCROLL_Y_MIN && st->scrollY <= limit)
-            srcRow = (st->scrollY - 0x30) >> TILE_PIXELS_SHIFT;
+        srcRow = 0;
+        srcCol = 0;
+        limit = (st->tileHeight << 3) - 0xD0;
+        if (st->scrollY > 47 && st->scrollY <= limit)
+            srcRow = (u16)((st->scrollY - 0x30) >> 3);
         st->bgVofs = st->scrollY;
         if (st->scrollY > limit && st->tileHeight > 31)
-            srcRow = st->tileHeight - SCREEN_TILES;
-        limit = (st->tileWidth << TILE_PIXELS_SHIFT) - 0xF8;
-        if (st->scrollX > SCROLL_X_MIN && st->scrollX <= limit)
-            srcCol = (st->scrollX - 8) >> TILE_PIXELS_SHIFT;
+            srcRow = (u16)(st->tileHeight - 32);
+        limit = (st->tileWidth << 3) - 0xF8;
+        if (st->scrollX > 7 && st->scrollX <= limit)
+            srcCol = (u16)((st->scrollX - 8) >> 3);
         st->bgHofs = st->scrollX;
         if (st->scrollX > limit && st->tileWidth > 31)
-            srcCol = st->tileWidth - SCREEN_TILES;
-
-        shadow = gIwram_3550._data;
+            srcCol = (u16)(st->tileWidth - 32);
+        shadow = (struct IwramAt3550 *)0x03003550;
         switch (i) {
-        case 0: srcEwram = 0x02000000; dstVram = 0x0600E000;
-            shadow[1] = base->bgVofs; shadow[0] = base->bgHofs; break;
-        case 1: srcEwram = 0x02010000; dstVram = 0x0600E800;
-            shadow[3] = ((struct SceneScrollState_EBDC *)0x030060C0)->bgVofs;
-            shadow[2] = ((struct SceneScrollState_EBDC *)0x030060C0)->bgHofs; break;
-        case 2: srcEwram = 0x02020000; dstVram = 0x0600F000;
-            shadow[5] = ((struct SceneScrollState_EBDC *)0x030060E0)->bgVofs;
-            shadow[4] = ((struct SceneScrollState_EBDC *)0x030060E0)->bgHofs; break;
+        case 0:
+            srcBase = 0x02000000; dstBase = 0x0600E000;
+            shadow->_data[1] = base->bgVofs; shadow->_data[0] = base->bgHofs; break;
+        case 1:
+            srcBase = 0x02010000; dstBase = 0x0600E800;
+            shadow->_data[3] = ((struct SceneScrollState *)0x030060C0)->bgVofs;
+            shadow->_data[2] = ((struct SceneScrollState *)0x030060C0)->bgHofs; break;
+        case 2:
+            srcBase = 0x02020000; dstBase = 0x0600F000;
+            shadow->_data[5] = ((struct SceneScrollState *)0x030060E0)->bgVofs;
+            shadow->_data[4] = ((struct SceneScrollState *)0x030060E0)->bgHofs; break;
         }
-
-        src = (u16 *)(srcEwram + (srcRow * st->tileWidth) * 2 + srcCol * 2);
-        dst = (u16 *)(dstVram + (srcRow & 31) * ROW_BYTES + (srcCol & 31) * 2);
-        colSpan = (u16)(SCREEN_TILES - (srcCol & 31));
-        for (row = 1;; row++) {
-            s32 col; s32 remain = colSpan;
-            for (col = 0;; col++) {
-                if (dst >= (u16 *)(dstVram + SCREENBLOCK_BYTES))
-                    dst = (u16 *)(dstVram + ((((u32)dst - SCREENBLOCK_BYTES - dstVram) >> 1) << 1));
+        src = (u16 *)(srcBase + (srcRow * st->tileWidth) * 2 + srcCol * 2);
+        dst = (u16 *)(dstBase + (srcRow & 31) * 0x40 + (srcCol & 31) * 2);
+        colSpan = (u16)(32 - (srcCol & 31));
+        for (row = 0; (u16)row <= 31; row++) {
+            s32 remain = colSpan;
+            for (col = 0; (u16)col <= 31; col++) {
+                if (dst >= (u16 *)(dstBase + 0x800))
+                    dst = (u16 *)(dstBase + ((((u32)dst - 0x800 - dstBase) >> 1) << 1));
                 if (remain == 0) {
-                    dst = (u16 *)((u32)dst - ROW_BYTES);
-                    if ((u32)dst < dstVram) dst = (u16 *)(dstVram + 0x7C0);
+                    dst -= 0x20;
+                    if ((u32)dst < dstBase) dst = (u16 *)(dstBase + 0x7C0);
                 }
                 *dst++ = *src++;
                 remain = (u16)(remain - 1);
-                if ((u16)col >= 31) break;
             }
-            src = (u16 *)((u32)src + st->tileWidth * 2 - ROW_BYTES);
-            if (colSpan != SCREEN_TILES) dst = (u16 *)((u32)dst + ROW_BYTES);
-            if ((u16)row >= 31) break;
+            src = (u16 *)((u32)src + st->tileWidth * 2 - 0x40);
+            if (colSpan != 32) dst = (u16 *)((u32)dst + 0x40);
         }
-        i = (u8)(i + 1);
-    } while (i < count);
-}
-
-void sub_0800EE0C(u16 targets, u16 coeff)
-{
-    *(vu16 *)0x04000050 = targets | 0x1740;  /* REG_BLDCNT  |= 0x1740 | targets */
-    *(vu16 *)0x04000052 = coeff;             /* REG_BLDALPHA = coeff */
+    }
 }
 ```
+
+## Recommendation for next tier
+This is a genuine register-pressure + Thumb-addressing-macro wall, NOT a
+local-coloring miss. It resisted re-derivation from scratch on the Opus
+escalation. Next step is either (a) the agbcc-instrumentation route to find a
+`-ffixed-rN` combination that frees exactly the registers needed to flip the
+allocator to per-field recompute without the explicit-base-var spill, or
+(b) hand it to codex (GPT-5.5-high) with this analysis. It is NOT
+STRONG_UNMATCHABLE (no libgcc push prologue), so a NAKED ship is NOT
+appropriate — keep it as an honest asm slice until a true match is found.
