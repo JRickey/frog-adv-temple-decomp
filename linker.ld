@@ -175,6 +175,7 @@ SECTIONS {
         asm/disasm_0x080000fc.o(.text);  /* 0x080000fc - 0x08000114, IntrEnable */
         src/system/intr_disable.o(.text);
         asm/disasm_0x08000114.o(.text);  /* 0x08000114 - 0x0800012c, IntrDisable */
+        src/system/intr_main.o(.text);
         asm/disasm_0x0800012c.o(.text);  /* 0x0800012c - 0x08000240, IntrMain */
         src/system/sub_08000240.o(.text);  /* 0x08000240 - 0x080002a4, sub_08000240 (NAKED + NON_MATCHING; ARM-mode, CPSR manip) */
         src/system/agb_main.o(.text);    /* 0x080002a4 - 0x08000430, AgbMain */
