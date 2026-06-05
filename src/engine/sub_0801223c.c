@@ -86,3 +86,152 @@ void sub_0801223C(u32 unused0, u32 unused1, u32 unused2, u32 unused3, s32 frames
     if (chA->_field_0e <= 0)
         chA->_field_0e = 0;
 }
+
+/* ROM transfer descriptor consumed by sub_08013C60 (first 16 bytes by value,
+ * byte at +2 is the mode selector). Same shape as the 0x08306f08 descriptor
+ * used by sub_08012D88. */
+struct TransferDesc_6908 {
+    u32 word0;
+    u32 word4;
+    u32 word8;
+    u32 wordC;
+};
+
+/* ROM channel-seed source for the case-1 inlined sequencer step (mirrors
+ * sub_08012604's Sub08012604Args at 0x08306e08 / 0x08306e28). */
+struct SeqSeed_6E08 {
+    u8 _pad00[4];
+    u8 posA; /* +0x04 */
+    u8 _pad05[9];
+    u8 frames; /* +0x0E */
+    u8 _pad0F[5];
+    u8 posB; /* +0x14 */
+};
+
+/* Channel timing slots at 0x03006400 / 0x03006410 (frame-count limit at +12,
+ * cached position at +8). */
+struct ChanTiming {
+    u8 _pad00[8];
+    u32 cachedPos; /* +0x08 */
+    u8 maxFrames;  /* +0x0c */
+};
+
+/* Camera-target tracker at 0x03006480 (signed target at +0x36). */
+struct CamTarget_6480 {
+    u8 _pad00[54];
+    s16 target; /* +0x36 */
+};
+
+/* Entity[0] position word read at 0x03003720 +0x04 (16-bit, sign-extended). */
+struct EntityPos_3720 {
+    u8 _pad00[4];
+    u16 y; /* +0x04 */
+};
+
+extern struct ChanTiming gIwram_6400;
+extern struct ChanTiming gIwram_6410;
+extern struct CamTarget_6480 gIwram_6480;
+extern struct EntityPos_3720 gEntities_03003720;
+extern u8 gIwram_60A0[];
+
+extern void sub_08020C78(u32 sound);
+extern void sub_08020DC4(u32 idx);
+extern void sub_08020E7C(u32 idx);
+extern u8 sub_08011E40(void);
+extern u8 sub_08012098(void);
+extern void sub_08012180(void);
+extern void sub_08015B20(u32 arg);
+extern void sub_08013C60(struct TransferDesc_6908 desc, u8 mode, void *buf);
+
+/* Scene cut-scene / camera intro sequencer. gIwram_53A0[1] is the phase index;
+ * each phase advances it. After the dispatch, the tail unconditionally streams
+ * the ROM transfer descriptor at 0x08306908 into the 0x030064c0 work buffer.
+ *
+ * cam is pinned to r2 so the baserom's camera-target comparisons match: the
+ * pinned base anchors gIwram_6480 in r2 and forces both target reads to reload
+ * through it (the subtract consumes the first load) instead of caching it. */
+void sub_080122E4(void)
+{
+    u8 phase;
+    s32 pos;
+    s32 ok;
+    struct SeqSeed_6E08 *seedA;
+    struct SeqSeed_6E08 *seedB;
+    u8 a0;
+    u8 a1;
+    register struct CamTarget_6480 *cam asm("r2");
+    struct TransferDesc_6908 *desc;
+
+    phase = gIwram_53A0[1];
+    switch (phase) {
+    case 0:
+        if (gIwram_6110.byteFlags8 == gIwram_6110.gateByte)
+            break;
+        if (gIwram_60A0[0] >> 7 != 0)
+            break;
+        sub_08020C78(28);
+        gIwram_5360._field_04 = 0;
+        gIwram_6150._field_04 = 0;
+        gIwram_5360._maxFrames = 0;
+        gIwram_5360._field_00 = 0;
+        gIwram_6150._maxFrames = 0;
+        gIwram_6150._field_00 = 1;
+        gIwram_53A0[0xff] = 0;
+        gIwram_6410.maxFrames = 8;
+        gIwram_53A0[1] = 1;
+        break;
+
+    case 1:
+        ok = 0;
+        seedA = (struct SeqSeed_6E08 *)0x08306e08;
+        a0 = seedA->posA;
+        a1 = seedA->posB;
+        seedB = (struct SeqSeed_6E08 *)0x08306e28;
+        sub_0801223C(a0, a1, seedB->posA, seedB->posA, seedB->frames);
+        sub_08012180();
+        if (gIwram_6150._field_04 == 0 && gIwram_5360._field_04 == 0 && gIwram_5360._field_0e == 0) {
+            sub_08015B20(0);
+            sub_08015B20(1);
+            ok = 1;
+        }
+        if (ok == 0)
+            break;
+        gIwram_53A0[1] = 2;
+        break;
+
+    case 2:
+        pos = (s16)gEntities_03003720.y >> 3;
+        cam = &gIwram_6480;
+        if (pos - cam->target <= 59 && pos > cam->target)
+            sub_08020DC4(8);
+        else
+            sub_08020E7C(8);
+        if (!sub_08011E40())
+            break;
+        gIwram_53A0[1] = 3;
+        gIwram_6400.cachedPos = gGameStuff._unk00;
+        break;
+
+    case 3:
+        sub_08011E40();
+        if (gGameStuff._unk00 - gIwram_6400.cachedPos <= 300)
+            break;
+        gIwram_53A0[1] = 4;
+        break;
+
+    case 4:
+        sub_08011E40();
+        if (!sub_08012098())
+            break;
+        sub_08020E7C(8);
+        gIwram_6410.maxFrames = 8;
+        gIwram_6480.target = 0;
+        gIwram_53A0[1] = 0;
+        gIwram_6110.byteFlags8 &= 0xf0;
+        gIwram_6110.gateByte &= 0xf0;
+        break;
+    }
+
+    desc = (struct TransferDesc_6908 *)0x08306908;
+    sub_08013C60(*desc, ((u8 *)desc)[2], (void *)0x030064c0);
+}
