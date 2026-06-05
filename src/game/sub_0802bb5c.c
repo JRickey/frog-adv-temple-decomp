@@ -4,6 +4,8 @@
 
 extern void sub_08021140(u32 a0, const void *a1, u32 a2, u32 a3, u32 a4, u32 a5, u32 a6);
 
+extern const u32 sLevelLayout_317FA8[];
+
 struct WalkerDesc {
     u16 count;
     u16 _h2;
@@ -12,6 +14,11 @@ struct WalkerDesc {
     s16 x;
     s16 y;
     u16 kind;
+};
+
+struct Pos2D {
+    s16 x;
+    s16 y;
 };
 
 void sub_0802BB5C(u8 id, s8 tileX, s8 tileY)
@@ -26,4 +33,22 @@ void sub_0802BB5C(u8 id, s8 tileX, s8 tileY)
     desc.kind = 0x303;
 
     sub_08021140((u16)(id + 0x17), &desc, 16, 0x57, 0x89, 3, 0);
+}
+
+void sub_0802BBC0(struct Pos2D *pos)
+{
+    if (pos->x <= 0x3a)
+        pos->x = 0x3b;
+    else if (pos->x > 0x12b)
+        pos->x = 0x12b;
+
+    if (pos->y <= 0x58)
+        pos->y = 0x59;
+    else if (pos->y > 0x149)
+        pos->y = 0x149;
+}
+
+void sub_0802BBFC(void)
+{
+    sub_08021140(3, sLevelLayout_317FA8, 0x10, 0x56, 0x81, 2, 0);
 }
