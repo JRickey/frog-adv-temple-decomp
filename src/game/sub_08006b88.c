@@ -50,14 +50,10 @@ u8 sub_08006BA4(void *p, u16 mask)
  * id (offset 0x19) and a y/x bias (offsets 0x10/0x11); and a few bytes/words
  * are forwarded verbatim. `out` advances by 0x24 each iteration.
  *
- * Shipped NAKED. The loop pins the table base in r8, base+4 in sl, and the
- * record array in r9 across the whole body so the per-iteration index math
- * never reloads the pool literal — agbcc 2.x will not hold three high
- * registers live across a loop like this and instead recomputes the bases
- * from low registers, so the prologue/epilogue high-reg save pair and the
- * `add rN, r8/r9/sl` index forms can't be reproduced from pure C. This is the
- * docs/codegen-notes.md "High registers" (Class 1) unmatchable pattern; the
- * NON_MATCHING body documents intent for the phase-3 PC port.
+ * The NON_MATCHING branch is the current regular-C candidate. It has the right
+ * stack-frame family and several key register-coloring fixes, but the asm
+ * fallback stays active until the remaining low-register allocation drift is
+ * matched.
  */
 
 #ifdef NON_MATCHING
@@ -76,67 +72,105 @@ struct SrcRec {
 
 struct PartEntry {
     s8 count;
-    u8 _pad[3];
+    u8 _b1;
+    u8 _pad[2];
     const struct SrcRec *records;
 };
 
-extern const struct PartEntry gPartTable_080C0AB0[];
+struct BB4Frame {
+    struct SrcRec s;
+    s32 i;
+};
+
+#define gPartTable_080C0AB0 ((const struct PartEntry *)0x080C0AB0)
 
 void sub_08006BB4(u8 partId, u8 *out)
 {
-    s8 id = (s8)partId;
-    const struct PartEntry *entry = &gPartTable_080C0AB0[id];
-    const struct SrcRec *records = entry->records;
-    s32 i;
+    register u8 *outCopy asm("r2");
+    u8 *dst;
+    register u8 partTmp asm("r3");
+    register s32 iCheck asm("r4");
+    register struct SrcRec *scratch asm("r5");
+    register const u8 *recordPtrsTmp asm("r7");
+    register const struct PartEntry *table asm("r8");
+    register const struct PartEntry *tableBase asm("r9");
+    register const u8 *recordPtrs asm("sl");
+    register u32 part asm("ip");
+    register s32 partShift asm("r1");
+    struct BB4Frame frame;
+    s32 count;
+    u8 countByte;
 
-    for (i = 0; i < entry->count; i++) {
-        struct SrcRec s = records[i];
-        s8 firstByte = *(const s8 *)&records[0];
+    outCopy = out;
+    part = (u8)partId;
+    frame.i = 0;
+    table = gPartTable_080C0AB0;
+    partTmp = part;
+    partShift = partTmp << 24;
+    countByte = *(u8 *)((partShift >> 21) + (u32)table);
+    count = (s8)countByte;
+    iCheck = *(volatile s32 *)((u8 *)&frame.s + sizeof(struct SrcRec));
+    if (iCheck < count) {
 
-        *(s16 *)(out + 0) = s._h0;
-        *(s16 *)(out + 2) = s._h2;
+        tableBase = table;
+        recordPtrsTmp = (const u8 *)4;
+        recordPtrsTmp += (u32)table;
+        recordPtrs = recordPtrsTmp;
+        scratch = &frame.s;
+        dst = outCopy;
 
-        if (s._b6 > 1) {
-            *(s16 *)(out + 4) = s._b4 * 24 + 12;
-            *(s16 *)(out + 6) = s._b5 * 24 - 12;
-        } else {
-            *(s16 *)(out + 4) = s._b4 * 24 - 12;
-            *(s16 *)(out + 6) = s._b5 * 24 + 12;
-        }
+        do {
+            const struct PartEntry *entry;
+            const struct SrcRec *records = *(const struct SrcRec **)(recordPtrs + (partShift >> 21));
+            *scratch = records[frame.i];
 
-        out[18] = s._b8;
-        out[24] = s._b9;
-        out[26] = 0;
-        out[28] = (u8)(s._b4 * s._b5);
-        *(u32 *)(out + 32) = s._w12;
-        out[8] = ((const u8 *)&records[0])[1];
+            *(s16 *)(dst + 0) = scratch->_h0;
+            *(s16 *)(dst + 2) = scratch->_h2;
 
-        switch (s._b6) {
-        case 0:
-            out[25] = (firstByte > 1) ? s._b6 : 18;
-            out[16] = 0;
-            out[17] = (u8)(-s._b7);
-            break;
-        case 1:
-            out[25] = (firstByte > 1) ? 12 : 20;
-            out[16] = 0;
-            out[17] = s._b7;
-            break;
-        case 2:
-            out[25] = (firstByte > 1) ? 24 : 21;
-            out[17] = 0;
-            out[16] = (u8)(-s._b7);
-            break;
-        case 3:
-            out[25] = (firstByte > 1) ? 36 : 23;
-            out[17] = 0;
-            out[16] = s._b7;
-            break;
-        default:
-            break;
-        }
+            if (scratch->_b6 <= 1) {
+                *(s16 *)(dst + 4) = scratch->_b4 * 24 - 12;
+                *(s16 *)(dst + 6) = scratch->_b5 * 24 + 12;
+            } else {
+                *(s16 *)(dst + 4) = scratch->_b4 * 24 + 12;
+                *(s16 *)(dst + 6) = scratch->_b5 * 24 - 12;
+            }
 
-        out += 0x24;
+            dst[18] = scratch->_b8;
+            dst[24] = scratch->_b9;
+            dst[26] = 0;
+            dst[28] = (u8)(scratch->_b4 * scratch->_b5);
+            *(u32 *)(dst + 32) = scratch->_w12;
+            entry = (const struct PartEntry *)((partShift >> 21) + (u32)tableBase);
+            dst[8] = entry->_b1;
+
+            switch (scratch->_b6) {
+            case 0:
+                dst[25] = (entry->count > 1) ? scratch->_b6 : 18;
+                dst[16] = 0;
+                dst[17] = (u8)(-scratch->_b7);
+                break;
+            case 1:
+                dst[25] = (entry->count > 1) ? 12 : 20;
+                dst[16] = 0;
+                dst[17] = scratch->_b7;
+                break;
+            case 2:
+                dst[25] = (entry->count > 1) ? 24 : 21;
+                dst[17] = 0;
+                dst[16] = (u8)(-scratch->_b7);
+                break;
+            case 3:
+                dst[25] = (entry->count > 1) ? 36 : 23;
+                dst[17] = 0;
+                dst[16] = scratch->_b7;
+                break;
+            default:
+                break;
+            }
+
+            dst += 0x24;
+            frame.i++;
+        } while (frame.i < *(s8 *)((partShift >> 21) + (u32)table));
     }
 }
 #else
@@ -360,17 +394,12 @@ NAKED void sub_08006BB4(u8 partId, u8 *out)
  * sub_080112C0 (kinds 4/3 keyed on which tri-step encoding the sub-record
  * uses). The cell's last-stamp is refreshed to the current tick afterward.
  *
- * Shipped NAKED. The outer index is pinned in r9, the cell base in sl, and
- * the table/record bases shuffle through r8/sl across both the sub_0800CD88
- * and sub_080112C0 calls — agbcc 2.x will not hold these high registers live
- * across the nested call-bearing loops and instead recomputes the bases from
- * low registers, so the high-reg save/restore frame and the `add rN, r8/sl`
- * index forms can't be reproduced from pure C. This is the
- * docs/codegen-notes.md "High registers" (Class 1) unmatchable pattern; the
- * NON_MATCHING body documents intent for the phase-3 PC port. */
+ * The NON_MATCHING branch is the current regular-C candidate. It matches the
+ * 44-byte frame and most high-register state, but the asm fallback stays active
+ * until the remaining scheduling and register-allocation drift is resolved. */
 
 extern u8 sub_0800CD88(u8 col, u8 row, s32 tileX, s32 tileY);
-extern void sub_080112C0(s32 kind, s32 a, s32 b, s32 tileX, s32 tileY, s32 sub);
+extern void sub_080112C0(u32 frameArg, u32 rowsArg, u32 colsArg, u32 dstXArg, u32 dstYArg, u32 bankArg, u32 cellArg);
 
 #ifdef NON_MATCHING
 struct Cell {
@@ -384,43 +413,105 @@ struct Cell {
     const s16 *records; /* +32: { s16 col, s16 row } pairs */
 };
 
+struct D24Frame {
+    s32 last;
+    u32 counter;
+    u32 tick;
+    s32 cellOff;
+    u32 flag;
+    s32 next;
+    s32 iTimes8;
+    s32 rowByte;
+};
+
 void sub_08006D24(struct Cell *cells, s32 first, s32 last, u8 arg3)
 {
-    s32 i;
-    u32 tick = gGameStuff._unk00;
-    s8 flag = (s8)arg3;
+    register struct Cell *base asm("sl");
+    register s32 i asm("r9");
+    volatile struct D24Frame frame;
+    u32 flagArg;
+    s32 iTimes8;
+    s32 off;
+    u32 rowLocal;
 
-    for (i = first; i <= last; i++) {
-        struct Cell *cell = &cells[i];
+    base = cells;
+    frame.last = last;
+    flagArg = (u8)arg3;
+    frame.tick = gGameStuff._unk00;
+    i = first;
+    if (i > last)
+        return;
+    frame.flag = flagArg;
+
+    do {
+        struct Cell *cell;
         s32 j;
+        u32 delta;
 
-        if (tick - cell->lastStamp <= cell->threshold)
-            continue;
+        iTimes8 = i << 3;
+        off = (iTimes8 + i) << 2;
+        cell = (struct Cell *)(off + (u32)base);
+        delta = frame.tick - cell->lastStamp;
+        frame.iTimes8 = iTimes8;
+        frame.next = i + 1;
 
+        if (delta <= cell->threshold)
+            goto next_cell;
+
+        frame.counter = cell->counter;
         cell->counter++;
         if ((cell->counter & 3) == 0)
             cell->counter -= 4;
 
-        for (j = 0; j < cell->count; j++) {
-            const s16 *rec = &cell->records[j * 2];
-            s32 col = rec[0];
-            s32 row = rec[1] + 1;
+        j = 0;
+        if (j >= cell->count)
+            goto stamp_cell;
+        frame.cellOff = off;
 
-            if ((u8)sub_0800CD88(gIwram_35E0._field_18, gIwram_35E0._field_19, col, row) == 8 &&
-                cell->_pad1A[0 - 24 + 0x11] == 0) {
-                /* flag byte at cell+0x11 */
-                s32 a = rec[0] * 3;
-                s32 b = rec[1] * 3;
-                sub_080112C0(1, 4, 3, b, flag, a);
-            } else {
-                s32 a = cell->records[j * 2] * 3;
-                s32 b = cell->records[j * 2 + 1] * 3;
-                sub_080112C0(1, 3, 3, b, flag, a);
-            }
+        {
+            register struct Cell *cellReg asm("r6") = cell;
+            register s32 recOff asm("r8") = 0;
+
+            do {
+                const s16 *rec;
+                s32 sub = frame.counter;
+                s32 col;
+                s32 row;
+
+                if (cellReg->count > 1) {
+                    if (j == cellReg->count - 1) {
+                        sub = (u8)(frame.counter + 8);
+                    } else if (j > 0) {
+                        sub = (u8)(frame.counter + 4);
+                    }
+                }
+
+                cell = (struct Cell *)(frame.cellOff + (u32)base);
+                rec = (const s16 *)((u32)cell->records + recOff);
+                col = rec[0];
+                row = (s16)(rec[1] + 1);
+                rowLocal = gIwram_35E0._field_19;
+                frame.rowByte = rowLocal;
+                if ((u8)sub_0800CD88(gIwram_35E0._field_18, rowLocal, col, row) == 8 &&
+                    *(s8 *)((u8 *)cell + 0x11) == 0) {
+                    rec = (const s16 *)((u32)cell->records + recOff);
+                    sub_080112C0(1, 4, 3, (u16)(rec[0] * 3), (u16)(rec[1] * 3), frame.flag, sub);
+                } else {
+                    rec = (const s16 *)((u32)cellReg->records + recOff);
+                    sub_080112C0(1, 3, 3, (u16)(rec[0] * 3), (u16)(rec[1] * 3), frame.flag, sub);
+                }
+
+                recOff += 4;
+                j++;
+            } while (j < cellReg->count);
         }
 
-        cell->lastStamp = tick;
-    }
+    stamp_cell:
+        cell = (struct Cell *)(((frame.iTimes8 + i) << 2) + (u32)base);
+        cell->lastStamp = frame.tick;
+    next_cell:
+        i = frame.next;
+    } while (i <= frame.last);
 }
 #else
 NAKED void sub_08006D24(void *cells, s32 first, s32 last, u8 arg3)
