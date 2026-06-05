@@ -753,6 +753,7 @@ SECTIONS {
         asm/disasm_0x080304f4.o(.text);  /* 0x080304f4 - 0x08030644, sub_080304F4 (auto-peeled) */
         src/system/sub_08030644.o(.text);
         asm/disasm_0x08030644.o(.text);  /* 0x08030644 - 0x0803079c, sub_08030644 (auto-peeled) */
+        src/system/sub_0803079c.o(.text);
         asm/disasm_0x0803079c.o(.text);  /* 0x0803079c - 0x080308b0, sub_0803079C (auto-peeled) */
         asm/text/text_0x080308b0.o(.text);  /* 0x080308b0 - 0x080315d8, raw bytes */
         src/system/sound_opcode_dispatch.o(.text);  /* 0x080315d8 - 0x08031638, sub_080315D8 */
