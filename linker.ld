@@ -42,6 +42,18 @@ sRoomDmaTable_080C1254 = 0x080C1254;
  * a real extracted array when the dispatcher cluster is named. */
 gStateHandlers_0830804C = 0x0830804C;
 
+/* Per-scene tilemap-source pointer table (anchor inside sSpriteFramePtrs_08110).
+ * Linker-assigned absolute symbol so the array base becomes a relocation: this
+ * makes agbcc load the table base before the (absolute) gIwram_34B0 index base,
+ * matching the baserom pool/register order in sub_0801F418. */
+sScreenTilemapTable_308EF4 = 0x08308EF4;
+
+/* Per-scene record-pointer table at the head of sSpriteFramePtrs_08110. Each
+ * entry points at a small array of ROM pointers whose [1]/[2] slots feed
+ * sub_0801C900. Linker-assigned for the same defeat-the-fold reason as the
+ * tilemap table above (sub_0801F418 / sub_0801F560). */
+sSceneRecordTable_308110 = 0x08308110;
+
 /* Per-frame palette/tile sources for the animated-icon DMA in sub_08016650.
  * Declared as linker-assigned ROM symbols (not absolute casts) so agbcc
  * treats each as an independent relocation: this defeats the CSE fold that
@@ -616,7 +628,6 @@ SECTIONS {
         src/engine/sub_0801f1e0.o(.text);
         asm/disasm_0x0801f1e0.o(.text);  /* 0x0801f1e0 - 0x0801f418, sub_0801F1E0 (auto-peeled) */
         src/engine/sub_0801f418.o(.text);
-        asm/disasm_0x0801f418.o(.text);  /* 0x0801f418 - 0x0801f684, sub_0801F418 (auto-peeled) */
         src/engine/sub_0801f684.o(.text);
         asm/disasm_0x0801f684.o(.text);  /* 0x0801f684 - 0x0801f8bc, sub_0801F684 (auto-peeled) */
         src/engine/sub_0801f8bc.o(.text);
