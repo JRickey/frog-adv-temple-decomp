@@ -102,19 +102,35 @@ const BOOTSTRAP = `
 WORKTREE BOOTSTRAP (run FIRST, before any build — fresh worktrees lack gitignored deps):
 \`\`\`sh
 MAIN=${MAIN}
-# vendor/{decomp-permuter,m2c} are submodules with gitignored .venv — symlink the whole
-# set-up dirs from main so the permuter + m2c seed work without re-installing per worktree.
-for dep in tools/agbcc tools/agbcc-src tools/agent/bin baserom.gba frog_us_baserom.gba node_modules \\
-           vendor/decomp-permuter vendor/m2c; do
+# GITIGNORED deps — plain symlink from main. corpus-mirrors (1.4G) is REQUIRED for the asm-history
+# search (corpus_asm_search.py); tools/agbcc-src is the agbcc COMPILER SOURCE you read to crack
+# coloring/fold/schedule divergences. Omitting either silently disables the two hardest-tier levers.
+for dep in tools/agbcc tools/agbcc-src tools/agent/bin tools/agent/corpus-mirrors \\
+           baserom.gba frog_us_baserom.gba node_modules; do
   [ -e "$dep" ] || ln -s "$MAIN/$dep" "$dep"
+done
+# vendor/{decomp-permuter,m2c} are git SUBMODULES. \`git worktree add\` leaves an EMPTY mountpoint
+# dir, which made the old \`[ -e ]\` guard SKIP the symlink — so .venv/permuter.py went missing and
+# the permuter silently never ran in worktrees. Replace each empty mountpoint with a symlink to
+# main's populated checkout (which has the gitignored .venv), then \`submodule.<sub>.ignore all\` so
+# \`git status\` does not error (exit 128) on the gitlink->symlink typechange and stays clean.
+for sub in vendor/decomp-permuter vendor/m2c; do
+  if [ ! -L "$sub" ] && [ -d "$sub" ] && [ -z "$(ls -A "$sub" 2>/dev/null)" ]; then
+    rmdir "$sub" 2>/dev/null && ln -s "$MAIN/$sub" "$sub"
+  fi
+  git config "submodule.$sub.ignore" all 2>/dev/null
 done
 # tools/agbcc-src is the agbcc COMPILER SOURCE (gcc 2.x) — gcc_arm/{local-alloc,regclass,
 # reload,cse,gcse,loop,combine}.c. Read the relevant pass to understand WHY agbcc diverges
 # (which register it picks, when it strength-reduces a loop, when it CSE-folds) and what C
 # avoids it. This is how the hardest matches get cracked — not by mutating, by understanding.
+# Sanity-check the hard-tier levers actually resolved (symlinks above), so a decomp does not waste
+# a session discovering they are missing:
+[ -x vendor/decomp-permuter/.venv/bin/python ] || echo "WARN: permuter .venv missing"
+[ -e tools/agent/corpus-mirrors ] || echo "WARN: corpus-mirrors missing (asm-history search disabled)"
 # data/ is gitignored; populate if empty (needs baserom symlink first):
 [ -n "$(ls -A data 2>/dev/null)" ] || python3 tools/extractor.py
-git status --short      # MUST be empty (all the above are gitignored)
+git status --short      # MUST be empty (all the above are gitignored / submodule-ignored)
 make -j4 && make check  # MUST exit 0 on the pristine tree before you touch anything
 \`\`\`
 If 'make check' does NOT exit 0 on the pristine bootstrapped tree, STOP and report
@@ -540,6 +556,20 @@ that you satisfy "match the bytes" THROUGH readable source, not by accumulating 
   \`.rodata\`. This matched the whole mode-X cluster.
 
 == PHASE 2 — DIFF DOWN (only after a clean attempt exists) ==
+*** WHEN A NEAR-MATCH WON'T CONVERGE, THESE TWO MOVES BREAK THROUGH MORE OFTEN THAN ANY LEVER —
+DO THEM BEFORE GUESSING. *** (Both rely on worktree deps the bootstrap just symlinked: the agbcc
+SOURCE at tools/agbcc-src/ and the corpus at tools/agent/corpus-mirrors/ + ~/.cache/decomp-corpus.
+If a command says either is missing, STOP and report it — do not silently work around it.)
+  1. READ THE COMPILER. The divergence has a CAUSE in a specific agbcc pass. Open the real source
+     in tools/agbcc-src/gcc_arm/ for the symptom — register choice: local-alloc.c / regclass.c /
+     reload.c / global.c; loop reversal or strength-reduce: loop.c; a fold: cse.c / gcse.c;
+     scheduling: sched / combine.c — and read WHY it picks what it picks, then write C that gives it
+     no other choice. If you still can't see it, INSTRUMENT agbcc (private debug build, fprintf at
+     the decision site — recipe below). This is the move that cracked the hardest matches.
+  2. MINE THE CORPUS for the exact idiom (other agbcc decomps already solved it): run BOTH
+     \`corpus.py grep\` (current-tree C) AND \`corpus_asm_search.py search --asm ... --require-c\` (the
+     HISTORY/asm<->C pairing) — details below. Adapt their C STRUCTURE; do not reinvent it.
+A pin / asm("") / -fXXX is a LAST resort applied AFTER 1 and 2, never instead of them.
 - NOW the matching levers are allowed: register T x asm("rN") pins (INCLUDING high regs
   r8/r9/sl — these are usually matchable and are NOT a NAKED trigger); a local base-ptr anchor
   (T *p=&gThing;); cast a now-dead pointer to an index to force its register reuse; an asm("")
