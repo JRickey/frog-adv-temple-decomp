@@ -168,6 +168,7 @@ SECTIONS {
     gHandlerTable_08308AEC = 0x08308AEC;
 
     .text : ALIGN(4) {
+        src/system/entry_branch.o(.text);
         asm/disasm_0x08000000.o(.text);  /* 0x08000000 - 0x08000004, entry branch */
         asm/header.o(.text);             /* 0x08000004 - 0x080000BF, header */
         src/system/boot.o(.text);
