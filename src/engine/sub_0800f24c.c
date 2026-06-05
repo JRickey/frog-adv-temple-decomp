@@ -33,7 +33,7 @@ void sub_0800F24C(u8 countArg)
     u32 stateCount = countArg;
     struct SceneScrollState *scrollStates;
     struct ScrollCameraTarget *cameraTarget;
-    register s32 stateOffset asm("r2");
+    register s32 r2v asm("r2");
     s32 *scrollX;
     s32 *scrollY;
     struct SceneScrollState *state;
@@ -53,12 +53,12 @@ void sub_0800F24C(u8 countArg)
     do {
         u32 scrollXBase;
         u32 scrollYBase;
-        stateOffset = stateIndex * sizeof(struct SceneScrollState);
+        r2v = stateIndex * sizeof(struct SceneScrollState);
         scrollXBase = (u32)&scrollStates->scrollX;
-        scrollX = (s32 *)(stateOffset + scrollXBase);
+        scrollX = (s32 *)(r2v + scrollXBase);
         *scrollX = cameraTarget->x - SCREEN_HALF_WIDTH;
         scrollYBase = (u32)&scrollStates->scrollY;
-        scrollY = (s32 *)(stateOffset + scrollYBase);
+        scrollY = (s32 *)(r2v + scrollYBase);
         *scrollY = cameraTarget->y - SCREEN_HALF_HEIGHT;
         if (cameraTarget->x <= SCREEN_HALF_WIDTH - 1) {
             *scrollX = 0;
@@ -68,15 +68,14 @@ void sub_0800F24C(u8 countArg)
         }
 
         targetX = cameraTarget->x;
-        state = (struct SceneScrollState *)(stateOffset + (u32)scrollStates);
+        state = (struct SceneScrollState *)(r2v + (u32)scrollStates);
         {
             register u32 rawX asm("r0");
-            register u32 shiftedX asm("r2");
             s32 limitX;
 
             rawX = state->tileWidth;
-            shiftedX = rawX << TILE_PIXELS_SHIFT;
-            limitX = (s32)shiftedX - SCREEN_HALF_WIDTH;
+            r2v = rawX << TILE_PIXELS_SHIFT;
+            limitX = r2v - SCREEN_HALF_WIDTH;
 
             if (targetX > limitX) {
                 *scrollX = limitX - SCREEN_HALF_WIDTH;
@@ -85,13 +84,12 @@ void sub_0800F24C(u8 countArg)
 
         targetY = cameraTarget->y;
         {
-            register u32 shiftedY asm("r2");
             register u32 rawY asm("r3");
             s32 limitY;
 
             rawY = state->tileHeight;
-            shiftedY = rawY << TILE_PIXELS_SHIFT;
-            limitY = (s32)shiftedY - SCREEN_HALF_HEIGHT;
+            r2v = rawY << TILE_PIXELS_SHIFT;
+            limitY = r2v - SCREEN_HALF_HEIGHT;
 
             if (targetY > limitY) {
                 *scrollY = limitY - SCREEN_HALF_HEIGHT;

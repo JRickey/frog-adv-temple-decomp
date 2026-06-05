@@ -6,6 +6,7 @@ void sub_0800A05C(void)
 {
     u32 scratch[2];
     void *fillSrc;
+    register s32 idx asm("r5");
 
     scratch[0] = 0;
     sub_0802D558(&scratch[0], (void *)0x06010000, 0x01000008);
@@ -56,18 +57,17 @@ void sub_0800A05C(void)
 
     {
         u8 *hit;
-        register s32 i asm("r5");
         u32 zero;
 
-        i = 0;
+        idx = 0;
         zero = 0;
         hit = (u8 *)0x03006160;
         do {
             *(u16 *)(hit + 2) = zero;
-            hit[0] = i;
+            hit[0] = idx;
             hit += 8;
-            i++;
-        } while (i <= 0x3f);
+            idx++;
+        } while (idx <= 0x3f);
     }
 
     scratch[1] = 0;
@@ -75,18 +75,17 @@ void sub_0800A05C(void)
     {
         u8 *ent;
         register u32 mask asm("r1");
-        register s32 j asm("r5");
 
         ent = (u8 *)0x03003720;
         sub_0802D558(fillSrc, ent, 0x01000700);
 
         mask = 8;
         ent += 0x34;
-        j = 0x7f;
+        idx = 0x7f;
         do {
             *(u16 *)ent |= mask;
             ent += 0x38;
-            j--;
-        } while (j >= 0);
+            idx--;
+        } while (idx >= 0);
     }
 }

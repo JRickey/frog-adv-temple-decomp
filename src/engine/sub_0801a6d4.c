@@ -37,9 +37,7 @@ void sub_0801A6D4(u8 countArg)
 
     struct SceneScrollState_A6D4 *scrollStates;
     struct ScrollCameraTarget_A6D4 *cameraTarget;
-    /* stateOffset (i * sizeof entry) is the Rn of the address adds; pinned to
-     * r2 to keep `adds Rd, r2, <base+off>` in the baserom's operand order. */
-    register s32 stateOffset asm("r2");
+    register s32 r2v asm("r2");
     s32 *scrollX;
     s32 *scrollY;
     struct SceneScrollState_A6D4 *state;
@@ -57,12 +55,12 @@ void sub_0801A6D4(u8 countArg)
     do {
         u32 scrollXBase;
         u32 scrollYBase;
-        stateOffset = stateIndex * sizeof(struct SceneScrollState_A6D4);
+        r2v = stateIndex * sizeof(struct SceneScrollState_A6D4);
         scrollXBase = (u32)&scrollStates->scrollX;
-        scrollX = (s32 *)(stateOffset + scrollXBase);
+        scrollX = (s32 *)(r2v + scrollXBase);
         *scrollX = cameraTarget->x - SCREEN_HALF_WIDTH;
         scrollYBase = (u32)&scrollStates->scrollY;
-        scrollY = (s32 *)(stateOffset + scrollYBase);
+        scrollY = (s32 *)(r2v + scrollYBase);
         *scrollY = cameraTarget->y - SCREEN_CLAMP_Y;
         if (cameraTarget->x <= SCREEN_HALF_WIDTH) {
             *scrollX = 0;
@@ -72,17 +70,14 @@ void sub_0801A6D4(u8 countArg)
         }
 
         targetX = cameraTarget->x;
-        state = (struct SceneScrollState_A6D4 *)(stateOffset + (u32)scrollStates);
+        state = (struct SceneScrollState_A6D4 *)(r2v + (u32)scrollStates);
         {
-            /* rawX/shiftedX pinned to r0/r2 to reuse the stride register and
-             * keep the shifted limit in the baserom's registers. */
             register u32 rawX asm("r0");
-            register u32 shiftedX asm("r2");
             s32 limitX;
 
             rawX = state->tileWidth;
-            shiftedX = rawX << TILE_PIXELS_SHIFT;
-            limitX = (s32)shiftedX - SCREEN_HALF_WIDTH;
+            r2v = rawX << TILE_PIXELS_SHIFT;
+            limitX = r2v - SCREEN_HALF_WIDTH;
 
             if (targetX >= limitX) {
                 *scrollX = limitX - SCREEN_HALF_WIDTH;
@@ -91,13 +86,12 @@ void sub_0801A6D4(u8 countArg)
 
         targetY = cameraTarget->y;
         {
-            register u32 shiftedY asm("r2");
             register u32 rawY asm("r3");
             s32 limitY;
 
             rawY = state->tileHeight;
-            shiftedY = rawY << TILE_PIXELS_SHIFT;
-            limitY = (s32)shiftedY - SCREEN_CLAMP_Y;
+            r2v = rawY << TILE_PIXELS_SHIFT;
+            limitY = r2v - SCREEN_CLAMP_Y;
 
             if (targetY >= limitY) {
                 *scrollY = limitY - (SCREEN_CLAMP_HEIGHT - SCREEN_CLAMP_Y);

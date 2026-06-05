@@ -53,9 +53,8 @@ void sub_0800E600(u8 arg)
 
     {
         u8 z1 = 0;
-        register u16 z2 asm("r2") = 0;
+        zero = 0;
         state[8] = z1;
-        zero = z2;
     }
     *(u16 *)(state + 44) = arg;
 

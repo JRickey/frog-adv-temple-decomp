@@ -34,6 +34,7 @@ extern int sub_0800CB80(int xTile, int mode, int x, int y, int flags);
 void sub_0800AF50(EntitySlot *slots)
 {
     u32 slotsStack;
+    register u32 r0v asm("r0");
     register s32 type asm("r5"); /* held across the inner bl; agbcc won't pick r5 unpinned */
     register s32 i asm("r9");    /* outer/clear loop counter, callee-saved across the bl */
     s32 j;
@@ -98,11 +99,10 @@ void sub_0800AF50(EntitySlot *slots)
 
     next: {
         s32 iWrap;
-        register u32 nextTypeShift asm("r0"); /* type recompute uses a scratch then `lsrs r5,r0,#24` */
 
         iWrap = (i << 16) + 0x10000;
-        nextTypeShift = savedTypeShift + 0x01000000;
-        type = nextTypeShift >> 24;
+        r0v = savedTypeShift + 0x01000000;
+        type = r0v >> 24;
         i = (u32)iWrap >> 16;
     }
     } while ((s16)i <= 3);
@@ -126,20 +126,18 @@ void sub_0800AF50(EntitySlot *slots)
 
         do {
             s32 idx;
-            register s32 t asm("r0"); /* pinning the address temp to r0 forces a fresh idx+N each
-                                       * store; otherwise CSE derives idx+154 from idx+42 via +112 */
             s32 stride;
 
             idx = (s16)i;
-            t = idx;
-            t += 42;
-            *(u8 *)(t + base) = 0;
-            t = idx;
-            t += 154;
-            *(u8 *)(t + base) = 0;
+            r0v = idx;
+            r0v += 42;
+            *(u8 *)(r0v + base) = 0;
+            r0v = idx;
+            r0v += 154;
+            *(u8 *)(r0v + base) = 0;
             stride = ((idx << 3) - idx) << 1;
-            t = stride + 1;
-            *(u8 *)(t + base) = 0;
+            r0v = stride + 1;
+            *(u8 *)(r0v + base) = 0;
             stride += 12;
             *(u8 *)(stride + base) = 0;
             i = (u16)(idx + 1);

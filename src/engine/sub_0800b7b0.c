@@ -27,6 +27,7 @@ void sub_0800B7B0(CollisionSlot *slotsArg, unsigned long long *outArg, s8 type)
     volatile s32 typeStack;
     register const EntityHitbox *table asm("r8");
     register const u8 *points asm("r9");
+    register u32 r1v asm("r1");
     const EntityHitbox *tbl2;
     u32 typeByte;
     s32 i;
@@ -82,7 +83,6 @@ void sub_0800B7B0(CollisionSlot *slotsArg, unsigned long long *outArg, s8 type)
             u32 offset;
             const s16 *pt;
             u32 pointAddr;
-            register u32 pointsReg asm("r2");
             u32 pointBase;
             u32 xTileReg;
 
@@ -90,9 +90,9 @@ void sub_0800B7B0(CollisionSlot *slotsArg, unsigned long long *outArg, s8 type)
             branchType = typeShift >> 24;
             offset = branchType * sizeof(EntityHitbox);
             {
-                pointsReg = (u32)points;
-                asm volatile("" : "+r"(pointsReg));
-                pointAddr = offset + pointsReg;
+                slotShift = (u32)points;
+                asm volatile("" : "+r"(slotShift));
+                pointAddr = offset + slotShift;
                 pointBase = *(u32 *)pointAddr;
                 pointAddr = ((u32)iShift >> 22) + pointBase;
                 pt = (const s16 *)pointAddr;
@@ -120,14 +120,13 @@ void sub_0800B7B0(CollisionSlot *slotsArg, unsigned long long *outArg, s8 type)
 
         asm volatile("" : "+r"(typeByte));
         {
-            register s32 tailShift asm("r1");
             u8 *countPtr;
 
-            asm volatile("" : "=r"(tailShift) : "0"(typeByte << 24));
+            asm volatile("" : "=r"(r1v) : "0"(typeByte << 24));
             slotShift = iShift + 0x01000000;
-            typeShift = tailShift;
-            tailShift = typeShift >> 24;
-            countPtr = (u8 *)((tailShift * sizeof(EntityHitbox)) + (u32)table);
+            typeShift = r1v;
+            r1v = typeShift >> 24;
+            countPtr = (u8 *)((r1v * sizeof(EntityHitbox)) + (u32)table);
             i = (u32)slotShift >> 24;
             pointCount = *countPtr;
         }
@@ -136,13 +135,12 @@ void sub_0800B7B0(CollisionSlot *slotsArg, unsigned long long *outArg, s8 type)
 
 done: {
     u32 zero0;
-    register u32 zero1 asm("r1");
     register u32 *out asm("r2");
 
     zero0 = 0;
-    zero1 = 0;
+    r1v = 0;
     out = (u32 *)outStack;
     out[0] = zero0;
-    out[1] = zero1;
+    out[1] = r1v;
 }
 }

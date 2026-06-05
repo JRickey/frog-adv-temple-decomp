@@ -29,10 +29,11 @@ void sub_0800A83C(u8 type, u32 gridId, u32 gridPlane, u32 useAlternateFlags)
     volatile u32 typeStack;
     register u32 gridIdReg asm("r9");
     register u32 gridPlaneReg asm("r8");
+    register u32 r0v asm("r0");
+    register u32 r1v asm("r1");
     const u32 *pointsFieldBase;
     s32 pointIndex;
     s32 pointOffset;
-    register s32 typeIndex asm("r1");
     register s32 savedTypeIndex asm("r5");
     u32 shiftedType;
     const EntityHitbox *hitboxTable;
@@ -45,8 +46,8 @@ void sub_0800A83C(u8 type, u32 gridId, u32 gridPlane, u32 useAlternateFlags)
     useAlternateFlagsStack = (u8)useAlternateFlags;
     pointIndex = 0;
     shiftedType = type << 24;
-    typeIndex = (s32)shiftedType >> 24;
-    initialOffset = typeIndex * sizeof(EntityHitbox);
+    r1v = (s32)shiftedType >> 24;
+    initialOffset = r1v * sizeof(EntityHitbox);
     hitboxTable = sEntityHitboxTable;
     pointCount = *(s8 *)(initialOffset + (u32)hitboxTable);
     if (pointIndex >= pointCount)
@@ -54,56 +55,51 @@ void sub_0800A83C(u8 type, u32 gridId, u32 gridPlane, u32 useAlternateFlags)
 
     pointsFieldBase = &hitboxTable->points;
     pointOffset = 0;
-    savedTypeIndex = typeIndex;
+    savedTypeIndex = r1v;
     do {
         const EntityHitboxPoint *point;
         s32 branchTypeIndex;
-        register u32 offset asm("r1");
         s32 x;
         register s32 y asm("r3");
 
         {
             register u32 useAlternateFlagsTest asm("r7");
-            register u32 zero asm("r0");
 
             useAlternateFlagsTest = useAlternateFlagsStack;
-            zero = 0;
-            if (useAlternateFlagsTest == zero) {
+            r0v = 0;
+            if (useAlternateFlagsTest == r0v) {
                 branchTypeIndex = (s32)shiftedType >> 24;
-                offset = branchTypeIndex * sizeof(EntityHitbox);
-                point = (const EntityHitboxPoint *)(pointOffset + *(const u32 *)((u32)offset + (u32)pointsFieldBase));
+                r1v = branchTypeIndex * sizeof(EntityHitbox);
+                point = (const EntityHitboxPoint *)(pointOffset + *(const u32 *)((u32)r1v + (u32)pointsFieldBase));
                 x = point->x;
                 y = point->y;
                 sub_0800CB80(gridIdReg, gridPlaneReg, x, y,
-                             ((const EntityHitboxFlagBytes *)((u8 *)sEntityHitboxTable + offset))->primaryFlags);
+                             ((const EntityHitboxFlagBytes *)((u8 *)sEntityHitboxTable + r1v))->primaryFlags);
             } else {
-                offset = savedTypeIndex * sizeof(EntityHitbox);
-                point = (const EntityHitboxPoint *)(pointOffset + *(const u32 *)((u32)offset + (u32)pointsFieldBase));
+                r1v = savedTypeIndex * sizeof(EntityHitbox);
+                point = (const EntityHitboxPoint *)(pointOffset + *(const u32 *)((u32)r1v + (u32)pointsFieldBase));
                 x = point->x;
                 y = point->y;
                 sub_0800CB80(gridIdReg, gridPlaneReg, x, y,
-                             ((const EntityHitboxFlagBytes *)((u8 *)sEntityHitboxTable + offset))->alternateFlags);
+                             ((const EntityHitboxFlagBytes *)((u8 *)sEntityHitboxTable + r1v))->alternateFlags);
             }
         }
         {
-            register u32 typeLoad asm("r1");
-            register u32 typeShift asm("r0");
             s32 countTypeIndex;
             u32 countOffset;
             register const s8 *countBase asm("r3");
-            register s8 *countPtr asm("r1");
 
-            typeLoad = typeStack;
-            typeShift = typeLoad << 24;
-            asm volatile("" : "+r"(typeShift));
+            r1v = typeStack;
+            r0v = r1v << 24;
+            asm volatile("" : "+r"(r0v));
             pointOffset += sizeof(EntityHitboxPoint);
             pointIndex++;
-            shiftedType = typeShift;
+            shiftedType = r0v;
             countTypeIndex = (s32)shiftedType >> 24;
             countOffset = countTypeIndex * sizeof(EntityHitbox);
             countBase = (const s8 *)sEntityHitboxTable;
-            countPtr = (s8 *)(countOffset + (u32)countBase);
-            pointCount = *countPtr;
+            r1v = countOffset + (u32)countBase;
+            pointCount = *(s8 *)r1v;
         }
     } while (pointIndex < pointCount);
 }

@@ -67,8 +67,6 @@ void sub_08015B6C(u8 mode, s16 dstX, s16 dstY, u8 widthArg, u8 heightArg, struct
     row = 0;
     loopState = (struct BlitState_15B6C *)r1slot;
     if (row < height) {
-        register u32 scratch asm("r2");
-
         do {
             col = 0;
             r1slot = row + 1 + scratch2 - scratch2;
@@ -79,9 +77,9 @@ void sub_08015B6C(u8 mode, s16 dstX, s16 dstY, u8 widthArg, u8 heightArg, struct
                 } while (col < width);
             }
 
-            scratch = (u32)loopState;
-            scratch = ((struct BlitState_15B6C *)scratch)->stride;
-            dst += scratch - width + scratch2 - scratch2;
+            dx = (u32)loopState;
+            dx = ((struct BlitState_15B6C *)dx)->stride;
+            dst += dx - width + scratch2 - scratch2;
             scratch2 = (u32)srcp;
             scratch2 = ((struct BlitSource_15B6C *)scratch2)->srcStride;
             srcData += scratch2 - width;

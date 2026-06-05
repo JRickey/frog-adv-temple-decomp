@@ -259,6 +259,7 @@ s32 sub_0803038C(s32 channel, u32 *state_ptr)
     u32 *sp;
     register u8 *stream asm("ip");
     register SoundSystemAcc **gpss asm("r8");
+    register u32 period asm("r0");
 
     ch = channel;
     sp = state_ptr;
@@ -268,7 +269,6 @@ s32 sub_0803038C(s32 channel, u32 *state_ptr)
         SoundSystemAcc **gp;
         register SoundSystemAcc *ss asm("r4");
         register u32 flagOff asm("r2");
-        register u32 period asm("r0");
         u32 directOff;
         DirectSoundChannel *direct;
         u32 *flags;
@@ -309,7 +309,6 @@ s32 sub_0803038C(s32 channel, u32 *state_ptr)
         SoundSystemAcc *ss;
         SoundSlotAcc *slot;
         register u8 *periodSlot asm("r6");
-        register u32 period asm("r0");
         SoundCommandBytes *cmd;
         register u32 scale asm("r2");
         register SoundSystemAcc **gpDirty asm("r2");

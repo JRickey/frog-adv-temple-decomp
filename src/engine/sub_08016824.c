@@ -116,13 +116,13 @@ cont:
 
     {
         u32 tableBase = (u32)gDmaDescTable_08306888;
-        register u32 stride asm("r1") = idx << 4;
         register u32 r0r asm("r0");
 
+        r1val = idx << 4;
         /* DMA source: double-deref the pointer stored at table[idx]+4.
          * REG_DMA3 base is loaded between the two derefs (agbcc scheduling). */
         r0r = tableBase + 4;
-        r0r = stride + r0r;
+        r0r = r1val + r0r;
         r0r = *(u32 *)r0r;
         dma = (volatile u32 *)0x040000D4;
         r0r = *(u32 *)r0r;
@@ -131,17 +131,17 @@ cont:
         /* DMA destination: single-deref the u32 at table[idx]+8. */
         r0r = tableBase;
         r0r += 8;
-        r0r = stride + r0r;
+        r0r = r1val + r0r;
         r0r = *(u32 *)r0r;
         dma[1] = r0r;
 
         /* DMA count: ldrh at table[idx]+12, shift right to get halfword count. */
-        stride += tableBase;
-        stride = *(u16 *)(stride + 12);
-        r0r = stride >> 1;
-        stride = 0x80;
-        stride <<= 24; /* stride = 0x80000000 = DMA_ENABLE */
-        r0r |= stride;
+        r1val += tableBase;
+        r1val = *(u16 *)(r1val + 12);
+        r0r = r1val >> 1;
+        r1val = 0x80;
+        r1val <<= 24; /* stride = 0x80000000 = DMA_ENABLE */
+        r0r |= r1val;
         dma[2] = r0r;
         (void)dma[2];
     }
