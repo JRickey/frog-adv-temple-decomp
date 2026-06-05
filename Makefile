@@ -316,13 +316,3 @@ src/game/sub_080342cc.s: CFLAGS = -Werror -O2 -fhex-asm
 # sub_080342F8 is __subsf3 from libgcc fp-bit.c, compiled without -mthumb-interwork.
 # The epilogue is pop {r4, pc} instead of pop {r4}; pop {r1}; bx r1.
 src/game/sub_080342f8.s: CFLAGS = -Werror -O2 -fhex-asm
-
-
-# IntrMain is an ARM-mode function; agbcc always marks NAKED functions as
-# .thumb_func, which would make the linker resolve IntrMain references to
-# 0x0800012D (Thumb bit set) instead of 0x0800012C. Strip the .thumb_func
-# directive from the generated .s before assembling so IntrMain lands with
-# a clean even address in the ELF symbol table.
-src/system/intr_main.o: src/system/intr_main.s
-	$(MSG) AS $@
-	$Q sed 's/^	\.thumb_func$$/	.arm/' $< | $(AS) $(ASFLAGS) - -o $@
