@@ -25,10 +25,10 @@
  */
 s32 sub_0802DCBC(u32 handle, s32 vol)
 {
-    register u32 handleR asm("r4") = handle;
-    register s32 volR asm("r3") = vol;
+    u32 handleR = handle;
+    s32 volR = vol;
     register u32 channel asm("r5");
-    register SoundSystem **pPool asm("r2");
+    SoundSystem **pPool;
     SoundSystem **gpsp;
     void **handleTable;
     u32 slotEntry;
@@ -62,7 +62,7 @@ s32 sub_0802DCBC(u32 handle, s32 vol)
 
     mask = SOUND_PAN_BOTH_BITS_BASE << channel >> 24;
     {
-        register u8 *panBitsP asm("r1");
+        u8 *panBitsP;
         register u32 acc asm("r0");
 
         panBitsP = (u8 *)*gpsp + SOUND_SYSTEM_PAN_BITS_OFFSET;
@@ -105,7 +105,7 @@ orr_phase:
 sw_slot: {
     register u8 *swSlotsField asm("r1");
     register u32 off asm("r0");
-    register u8 *slot asm("r2");
+    u8 *slot;
     u8 *panCacheP;
 
     swSlotsField = (u8 *)*gpsp + SOUND_SYSTEM_SW_SLOTS_OFFSET;
@@ -116,7 +116,7 @@ sw_slot: {
     old = *panCacheP;
     *panCacheP = volR;
     {
-        register u32 volByte asm("r0");
+        u32 volByte;
         volByte = (u8)volR;
         if (volByte != (u8)old)
             *(u32 *)(slot + SOUND_SLOT_FLAGS_OFFSET) |= SOUND_FLAG_UPDATE_DIRTY;
@@ -135,10 +135,10 @@ tail:
 s32 sub_0802DDB0(u32 handle)
 {
     register SoundSystem *ss asm("r4");
-    register u32 channel asm("r2");
+    u32 channel;
     void **handleTable;
-    register s32 old asm("r0");
-    register u32 bits asm("r1");
+    s32 old;
+    u32 bits;
 
     if (handle == 0)
         return -1;
@@ -153,7 +153,7 @@ s32 sub_0802DDB0(u32 handle)
         goto sw_slot;
 
     {
-        register u32 acc asm("r0");
+        u32 acc;
         register u8 *panBitsP asm("r1");
 
         acc = SOUND_PAN_BOTH_BITS_BASE << channel >> 24;
@@ -172,7 +172,7 @@ s32 sub_0802DDB0(u32 handle)
 
 sw_slot: {
     register u8 *swSlotsField asm("r0");
-    register u8 *addr asm("r1");
+    u8 *addr;
 
     swSlotsField = (u8 *)ss + SOUND_SYSTEM_SW_SLOTS_OFFSET;
     addr = (u8 *)(channel << 6);

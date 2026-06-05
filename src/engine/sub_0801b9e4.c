@@ -5,10 +5,10 @@ extern u16 gIwram_5398;
 
 u32 sub_0801B9E4(u8 arg)
 {
-    register u8 argReg asm("r3") = arg;
-    register u32 ret asm("r2") = 1;
-    register u8 *state asm("r4") = (u8 *)0x03006440;
-    register u32 *frameCounter asm("r5");
+    u8 argReg = arg;
+    u32 ret = 1;
+    u8 *state = (u8 *)0x03006440;
+    u32 *frameCounter;
 
     if (*(u16 *)(state + 0x30) == 0)
         state[0x0B] = 8;
@@ -38,7 +38,7 @@ void sub_0801BA34(void)
 
     zero2 = 0;
     {
-        register u16 *vram asm("r0");
+        u16 *vram;
         register s32 i asm("r1");
 
         vram = (u16 *)0x06010000;
@@ -52,17 +52,17 @@ void sub_0801BA34(void)
 
     {
         register s32 zero_h asm("r4") = 0;
-        register s32 sentinel asm("r5");
+        s32 sentinel;
         register s32 oam_end asm("r6");
-        register u16 *oam asm("r2");
-        register u16 *cur asm("r3");
+        u16 *oam;
+        u16 *cur;
 
         oam = (u16 *)0x030054a0;
         oam_end = (s32)((u32)oam + (0xFE << 2));
         sentinel = 0xF0;
         cur = oam;
         do {
-            register u16 *inner asm("r0");
+            u16 *inner;
             s32 n;
 
             *oam = sentinel;
@@ -94,11 +94,11 @@ void sub_0801BA34(void)
     ent = (u8 *)0x03003720;
     {
         /* Load fill mode into r2 before sp → r0 to match baserom instruction ordering. */
-        register u32 fill_mode asm("r2") = 0x01000700;
+        u32 fill_mode = 0x01000700;
         sub_0802D558(&zero, ent, fill_mode);
     }
     {
-        register s32 mask asm("r2") = 8;
+        s32 mask = 8;
 
         ent += 0x34;
         for (j = 0x7F; j >= 0; j--) {

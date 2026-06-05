@@ -30,18 +30,18 @@ extern s32 sub_0800CED0(void *ctx, u32 point, u32 size, s32 arg3);
 s32 sub_08007138(unsigned int baseIn, s8 count)
 {
     register u32 maskHi asm("sl");
-    register u32 maskLo asm("r9");
-    register u8 raw asm("r2");
-    register u8 countByte asm("r3");
+    u32 maskLo;
+    u8 raw;
+    u8 countByte;
     volatile s32 stackArg;
     volatile unsigned int base;
     s32 hit;
     u32 bound;
-    register s32 boundTemp asm("r0");
-    register s32 signedBound asm("r1");
+    s32 boundTemp;
+    s32 signedBound;
     register s32 cmpHit asm("r6");
     s32 shifted;
-    register s32 shiftedTmp asm("r2");
+    s32 shiftedTmp;
     int new_var;
     s32 idx;
     s32 next;
@@ -50,7 +50,7 @@ s32 sub_08007138(unsigned int baseIn, s8 count)
     u32 stateMask;
     register s32 hitOne asm("r1");
     s32 arg4;
-    register u8 playerKey asm("r2");
+    u8 playerKey;
     struct Entity *player;
     struct CollisionEntity07138 *entry;
     register union PackedPointUnion07138 point asm("r4");
@@ -93,7 +93,7 @@ s32 sub_08007138(unsigned int baseIn, s8 count)
                         arg4 = 0;
                         if (player != NULL && entry != NULL) {
                             {
-                                register u32 r0v asm("r0");
+                                u32 r0v;
                                 register u32 r1v asm("r1");
                                 register u32 r2v asm("r2");
                                 register u32 r3v asm("r3");
@@ -130,7 +130,7 @@ s32 sub_08007138(unsigned int baseIn, s8 count)
                             stackArg = arg4;
                             {
                                 register struct Entity *callPlayer asm("r0");
-                                register u32 callSize asm("r2");
+                                u32 callSize;
 
                                 callPlayer = player;
                                 callSize = size.w;

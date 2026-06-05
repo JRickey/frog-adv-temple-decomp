@@ -12,7 +12,7 @@ void sub_08012F00(void)
             switch (i) {
             case 0: {
                 register u8 *dst asm("r0");
-                register u8 flag asm("r1");
+                u8 flag;
                 dst = base + 0xD4;
                 flag = 0x20;
                 *dst |= flag;
@@ -20,7 +20,7 @@ void sub_08012F00(void)
             }
             case 1: {
                 register u8 *dst asm("r0");
-                register u8 flag asm("r1");
+                u8 flag;
                 dst = base + 0xD4;
                 flag = 0x10;
                 *dst |= flag;
@@ -28,7 +28,7 @@ void sub_08012F00(void)
             }
             case 2: {
                 register u8 *dst asm("r0");
-                register u8 flag asm("r1");
+                u8 flag;
                 dst = base + 0xD4;
                 flag = 0x80;
                 *dst |= flag;
@@ -36,7 +36,7 @@ void sub_08012F00(void)
             }
             case 3: {
                 register u8 *dst asm("r0");
-                register u8 flag asm("r1");
+                u8 flag;
                 dst = base + 0xD4;
                 flag = 0x40;
                 *dst |= flag;
@@ -44,7 +44,7 @@ void sub_08012F00(void)
             }
             case 4: {
                 register u8 *dst asm("r0");
-                register u8 flag asm("r1");
+                u8 flag;
                 dst = base + 0xD4;
                 flag = 2;
                 *dst |= flag;
@@ -52,7 +52,7 @@ void sub_08012F00(void)
             }
             case 5: {
                 register u8 *dst asm("r0");
-                register u8 flag asm("r1");
+                u8 flag;
                 dst = base + 0xD4;
                 flag = 1;
                 *dst |= flag;
@@ -60,7 +60,7 @@ void sub_08012F00(void)
             }
             case 6: {
                 register u8 *dst asm("r0");
-                register u8 flag asm("r1");
+                u8 flag;
                 dst = base + 0xD4;
                 flag = 8;
                 *dst |= flag;
@@ -68,7 +68,7 @@ void sub_08012F00(void)
             }
             case 7: {
                 register u8 *dst asm("r0");
-                register u8 flag asm("r1");
+                u8 flag;
                 dst = base + 0xD4;
                 flag = 4;
                 *dst |= flag;

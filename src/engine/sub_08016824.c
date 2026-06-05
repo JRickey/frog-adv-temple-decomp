@@ -18,11 +18,11 @@ extern struct TileBlitRecord gTileBlitTable_08306840[];
 
 void sub_08016824(u8 index)
 {
-    register struct TileBlitRecord *tableBase asm("r5");
+    struct TileBlitRecord *tableBase;
     u32 stride;
     register struct TileBlitRecord *entry asm("r2");
-    register u16 *vramDst asm("r1");
-    register const u16 *src asm("r4");
+    u16 *vramDst;
+    const u16 *src;
     u32 row;
 
     tableBase = gTileBlitTable_08306840;
@@ -37,7 +37,7 @@ void sub_08016824(u8 index)
         vramDst = (u16 *)((u32)vramDst + rowOffset);
     }
     {
-        register u32 srcAddr asm("r0");
+        u32 srcAddr;
 
         srcAddr = (u32)tableBase;
         srcAddr += 16;
@@ -51,7 +51,7 @@ void sub_08016824(u8 index)
 
     {
         register struct TileBlitRecord *loopBase asm("ip");
-        register struct TileBlitRecord *loopEntry asm("r5");
+        struct TileBlitRecord *loopEntry;
         u32 loopStride;
 
         loopBase = tableBase;
@@ -89,7 +89,7 @@ extern u32 gDmaDescTable_08306888[];
 
 void sub_080168A0(void)
 {
-    register u32 idx asm("r4");
+    u32 idx;
     u8 mode;
     register u32 r1val asm("r1");
     volatile u32 *dma;
@@ -115,7 +115,7 @@ cont:
     gIwram_5320.byte0 = 0;
 
     {
-        register u32 tableBase asm("r3") = (u32)gDmaDescTable_08306888;
+        u32 tableBase = (u32)gDmaDescTable_08306888;
         register u32 stride asm("r1") = idx << 4;
         register u32 r0r asm("r0");
 
@@ -204,9 +204,9 @@ void sub_08016928(void)
     {
         /* tableBase left unpinned so agbcc allocates it to r7 and includes
          * r7 in the push/pop (explicit asm(r7) pins bypass callee-save). */
-        register struct IwramAt5320 *s asm("r6");
+        struct IwramAt5320 *s;
         struct DmaDesc2Entry *tableBase;
-        register struct DmaDesc2Entry *entry asm("r5");
+        struct DmaDesc2Entry *entry;
         register u32 stride asm("r4");
         u32 diff;
 
@@ -226,7 +226,7 @@ void sub_08016928(void)
             /* r0 is the address register; r3 receives the loaded pointer.
              * Two-step "(r0 << 24) >> 22" prevents agbcc folding to "<< 2". */
             register u32 r0r asm("r0");
-            register u32 r3r asm("r3");
+            u32 r3r;
 
             r0r = (u32)tableBase + 4;
             r0r = stride + r0r;
@@ -247,7 +247,7 @@ void sub_08016928(void)
             dma[1] = r0r;
 
             {
-                register u32 r5r asm("r5");
+                u32 r5r;
                 r5r = entry->count;
                 r0r = r5r >> 1;
             }
@@ -259,7 +259,7 @@ void sub_08016928(void)
         {
             /* Must go through r1 to match "mov r1, ip; ldr r0, [r1, #0]". */
             register u32 r1r asm("r1");
-            register u32 r0r asm("r0");
+            u32 r0r;
             r1r = gs;
             r0r = *(u32 *)r1r;
             s->field4 = r0r;

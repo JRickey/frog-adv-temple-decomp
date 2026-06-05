@@ -59,7 +59,7 @@ void sub_0800A83C(u8 type, u32 gridId, u32 gridPlane, u32 useAlternateFlags)
         const EntityHitboxPoint *point;
         s32 branchTypeIndex;
         register u32 offset asm("r1");
-        register s32 x asm("r2");
+        s32 x;
         register s32 y asm("r3");
 
         {

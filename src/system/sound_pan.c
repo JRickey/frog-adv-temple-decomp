@@ -29,15 +29,15 @@
 
 void sub_0802F2FC(void)
 {
-    register SoundSystem **gpsp asm("r1");
+    SoundSystem **gpsp;
     register SoundSystem **gpspCache asm("ip");
-    register SoundSlot *slot asm("r3");
+    SoundSlot *slot;
     register SoundSlot *slotCache asm("r8");
-    register s32 i asm("r5");
-    register s32 step asm("r2");
+    s32 i;
+    s32 step;
     register u16 savedStep asm("r4");
     register s32 sum asm("r1");
-    register s32 stepCopy asm("r0");
+    s32 stepCopy;
     u32 autoReverseMask;
     SoundSystem *ss;
     s32 writeStep;
@@ -173,7 +173,7 @@ extern void sub_0802E3F8(void);
 
 void sub_0802F398(s32 index)
 {
-    register s32 idx asm("r5");
+    s32 idx;
     register PanSoundSystem **gpsp asm("r2");
     register PanSlot *slot asm("ip");
     PanMixEntry *mix;
@@ -182,8 +182,8 @@ void sub_0802F398(s32 index)
     u32 gainL;
     u32 gainR;
     u32 t;
-    register u32 mono asm("r8");
-    register u32 panBase asm("r4");
+    u32 mono;
+    u32 panBase;
     u16 *pbp;
 
     idx = index;

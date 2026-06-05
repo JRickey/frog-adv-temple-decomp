@@ -332,19 +332,19 @@ extern u16 gIwram_5398;
 
 u32 sub_08009EEC(u8 *arg, u8 kind)
 {
-    register struct Entity *e3720 asm("r8");
-    register GameStuff *initGs asm("r1");
-    register struct Entity *e3720init asm("r0");
-    register struct Entity *e3720else asm("r2");
-    register struct Entity *e3720end asm("r2");
-    register GameStuff *gs asm("r5");
-    register const EntityProc *procs asm("r1");
+    struct Entity *e3720;
+    GameStuff *initGs;
+    struct Entity *e3720init;
+    struct Entity *e3720else;
+    struct Entity *e3720end;
+    GameStuff *gs;
+    const EntityProc *procs;
     const u8 *lut;
     u8 idx;
     u32 offset;
     register u8 nextState asm("r0");
     register u8 stateByte asm("r3");
-    register u16 flags asm("r1");
+    u16 flags;
     register vu16 *dst asm("r1");
     u16 *src;
 
@@ -363,7 +363,7 @@ u32 sub_08009EEC(u8 *arg, u8 kind)
         e3720else = gEntities;
         flags = e3720else->status;
         if (flags & 0x8000) {
-            register u32 t asm("r0");
+            u32 t;
             t = 2;
             t |= flags;
             t &= 0x7fff;

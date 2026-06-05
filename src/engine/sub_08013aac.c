@@ -47,8 +47,8 @@ extern u8 gIwram_60A0[];
 
 void sub_08013AAC(u8 idx)
 {
-    register struct TilemapTableEntry *table asm("r6") = (struct TilemapTableEntry *)0x083070ec;
-    register struct TilemapTableEntry *desc asm("r4");
+    struct TilemapTableEntry *table = (struct TilemapTableEntry *)0x083070ec;
+    struct TilemapTableEntry *desc;
     u32 stride;
 
     stride = (u32)idx * 3;
@@ -94,11 +94,11 @@ void sub_08013AE8(void)
 
 void sub_08013B54(void)
 {
-    register u32 zero asm("r2");
+    u32 zero;
     register u8 small asm("r3");
 
     {
-        register u8 *ptr asm("r1");
+        u8 *ptr;
 
         ptr = gIwram_6410;
         zero = 0;
@@ -109,8 +109,8 @@ void sub_08013B54(void)
     }
 
     {
-        register u8 *ptr asm("r0");
-        register u8 sixteen asm("r1");
+        u8 *ptr;
+        u8 sixteen;
 
         ptr = gIwram_6400;
         *(u32 *)(ptr + 4) = zero;
@@ -120,7 +120,7 @@ void sub_08013B54(void)
     }
 
     {
-        register u8 *ptr asm("r1");
+        u8 *ptr;
 
         ptr = gIwram_6480;
         small = 1;
@@ -128,13 +128,13 @@ void sub_08013B54(void)
     }
 
     {
-        register u8 *ptr asm("r0");
+        u8 *ptr;
 
         ptr = gIwram_6500;
         ptr[10] = zero;
     }
     {
-        register u8 val asm("r1");
+        u8 val;
 
         val = gIwram_60A0[0x40];
         val |= small;
@@ -148,10 +148,10 @@ void sub_08013BA4(void)
     const struct DmaJob_13BA4 *src;
     struct DmaJob_13BA4 job;
     register struct Queue_64C0 *queue asm("r4");
-    register GameStuff *gs asm("r5");
+    GameStuff *gs;
     u8 mode;
-    register u32 seed asm("r3");
-    register u32 oldSeed asm("r1");
+    u32 seed;
+    u32 oldSeed;
 
     if ((gIwram_60A0[0x40] & 1) != 0) {
         *(u16 *)0x04000050 = 0x1744;
@@ -189,7 +189,7 @@ void sub_08013BA4(void)
         (void)REG_DMA3.cnt;
 
         {
-            register struct DmaJob_13BA4 *jobPtr asm("r0");
+            struct DmaJob_13BA4 *jobPtr;
             register u8 wrapCursor asm("r6");
 
             jobPtr = &job;

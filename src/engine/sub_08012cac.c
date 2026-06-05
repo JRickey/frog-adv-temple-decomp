@@ -11,15 +11,15 @@ void sub_08012CAC(void)
 {
     register u8 *scrollState asm("r5");
     register GameStuff *gs asm("r4");
-    register u32 anchor asm("r1");
-    register struct IwramAt3550 *bg asm("r3");
+    u32 anchor;
+    struct IwramAt3550 *bg;
     register struct IwramAt3550 *bgSave;
     register u32 prev asm("r0");
     s32 delta;
     register u32 elapsed asm("r1");
     u32 oldCur;
     u32 newCur;
-    register u8 maxFrames asm("r0");
+    u8 maxFrames;
     u8 state;
 
     bg = &gIwram_3550;
@@ -61,12 +61,12 @@ void sub_08012CAC(void)
 
     {
         register struct IwramAt3550 *bg2 asm("r6") = bgSave;
-        register u32 oldCurB asm("r5");
+        u32 oldCurB;
         register u32 newCurB asm("r3");
 
         anchor = *(u32 *)(scrollState + 12);
         {
-            register u8 *anim1 asm("r2") = gIwram_6410;
+            u8 *anim1 = gIwram_6410;
             u8 maxFrames1;
 
             prev = *(u32 *)(anim1 + 4);

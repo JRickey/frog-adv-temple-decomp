@@ -24,30 +24,30 @@ struct BlitState_1288C {
 
 void sub_0801288C(void)
 {
-    register const struct TileBlit_1288C *desc asm("r3");
-    register const u8 *flagPtr asm("r4");
+    const struct TileBlit_1288C *desc;
+    const u8 *flagPtr;
     register u32 entityBase asm("r1");
     u32 xOffset;
     register u32 yOffset asm("r0");
     register u32 hold5 asm("r5");
     register u32 hold6 asm("r6");
-    register s32 xCoord asm("r0");
-    register s32 yCoord asm("r1");
+    s32 xCoord;
+    s32 yCoord;
     register u32 xWork asm("r2");
-    register u32 yWork asm("r0");
+    u32 yWork;
     register u32 x asm("r8");
     register u32 y asm("ip");
-    register u32 flags asm("r3");
-    register u32 width asm("r5");
+    u32 flags;
+    u32 width;
     register u32 height asm("r9");
     register const u16 *const *srcBase asm("r6");
     register u16 *dst asm("r2");
     register const u16 *src asm("r1");
-    register u32 bank asm("r6");
-    register void *flushSrc asm("r1");
-    register void *flushDst asm("r2");
+    u32 bank;
+    void *flushSrc;
+    void *flushDst;
     register u32 row asm("r0");
-    register u32 nextRow asm("r4");
+    u32 nextRow;
     u8 col;
     register u16 *state asm("r4");
     register u16 stride asm("r1");
@@ -78,7 +78,7 @@ void sub_0801288C(void)
 
     {
         register u32 one asm("r1");
-        register u32 flagBit asm("r0");
+        u32 flagBit;
 
         one = 1;
         flagBit = flags;

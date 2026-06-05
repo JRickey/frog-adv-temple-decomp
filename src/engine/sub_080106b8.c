@@ -59,7 +59,7 @@ u16 sub_080106EC(u16 arg)
 
 u8 sub_08010710(void)
 {
-    register vu8 *countdown asm("r2") = (vu8 *)0x03006538;
+    vu8 *countdown = (vu8 *)0x03006538;
     vu8 *p3480 = (vu8 *)0x03003480;
     int c = *countdown;
     if (c != 0) {
@@ -89,7 +89,7 @@ void sub_08010778(void)
     u32 *frameCounter = (u32 *)0x03005330;
     register u32 *state asm("r3") = (u32 *)0x03006540;
     u32 *savedFrameCounter;
-    register u32 *savedState asm("r6");
+    u32 *savedState;
     u16 value;
     u16 next;
     u8 i;
@@ -193,11 +193,11 @@ void *sub_08010870(void *ptr, void *base)
 
 void sub_0801089C(void)
 {
-    register u32 *frameCounter asm("r4") = (u32 *)0x03005330;
-    register u8 *state asm("r3") = (u8 *)0x03006480;
+    u32 *frameCounter = (u32 *)0x03005330;
+    u8 *state = (u8 *)0x03006480;
     vu32 *dma;
     register u8 index asm("r5");
-    register u32 *table asm("r2");
+    u32 *table;
     register u32 offset asm("r0");
 
     if (*frameCounter - *(u32 *)(state + 4) <= 7)
@@ -223,11 +223,11 @@ void sub_0801089C(void)
 
 void sub_080108F8(void)
 {
-    register u32 *frameCounter asm("r4") = (u32 *)0x03005330;
-    register u8 *state asm("r3") = (u8 *)0x03006480;
+    u32 *frameCounter = (u32 *)0x03005330;
+    u8 *state = (u8 *)0x03006480;
     vu32 *dma;
     register u8 index asm("r5");
-    register u32 *table asm("r2");
+    u32 *table;
     register u32 offset asm("r0");
 
     if (*frameCounter - *(u32 *)(state + 4) > 7) {

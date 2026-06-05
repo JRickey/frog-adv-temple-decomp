@@ -64,15 +64,15 @@ void sub_0800D8A0(void)
 
 u32 *sub_0800D924(u32 *out, u32 mask, u32 limit)
 {
-    register u32 *outp asm("r9") = out;
-    register u32 maskBits asm("r6") = mask;
+    u32 *outp = out;
+    u32 maskBits = mask;
     register u32 found asm("sl");
     register u8 ulimit asm("r8");
     u32 scratch;
     register s32 slimit asm("ip");
-    register s32 sf asm("r1");
-    register s32 i asm("r5");
-    register u32 loopValue asm("r0");
+    s32 sf;
+    s32 i;
+    u32 loopValue;
     register u32 inRange asm("r3");
     register u32 belowLimit asm("r2");
     u32 shiftedLimit;
