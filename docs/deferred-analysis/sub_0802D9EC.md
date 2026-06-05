@@ -599,3 +599,309 @@ r6, `&gp`→r0 not r1, no `adds r3,r1,#0`), which cascades into ~30 of the 77 di
 3. Accept as a firm defer for a NON_MATCHING ship ONLY if a human signs off — the
    classifier says ATTEMPT_MATCH and the body is 100% correct C, so a NAKED ship
    would be a premature regression per the asymmetric-cost rule.
+
+---
+
+## Round-20 Opus escalation: PLATEAU ESCAPED 272 -> 246, new root cause = find_barrier pool placement
+
+This round RE-DERIVED the entry from scratch (per the escalation brief) and broke
+through the long-standing 272/78 floor to **byte_diff 246 / diff_count 60**, with the
+ENTRY region now nearly byte-identical to the baserom (the `adds r3,r1,#0` address-copy
+is reproduced, ss->r6, addr->r1, desc->r4 all match). Function size is EXACTLY 560B.
+The residual is now precisely localized to agbcc's **constant-pool dump placement**, a
+compiler-internal decision that is NOT controllable from C shape / flags / either
+compiler / the permuter.
+
+### The winning structural moves (KEEP these — they are the 246 base, below)
+The 272 plateau was caused by the SINGLE `ss`/address variable being colored r3 with the
+address rematerialized. The escape is to **split the entry into THREE pinned locals** so
+agbcc reproduces the baserom's `ss=r6 + addr=r1->r3` two-register entry:
+1. `register SoundSystem *ssE asm("r6")` — entry-only ss (count + bankPtr). Lands r6.
+2. `register SoundSystem **pLoad asm("r1")` — entry-scoped pool-LOAD pointer.
+   `pLoad = &gpSoundSystem; ssE = *pLoad;` puts the address in r1 (the baserom's scratch),
+   so it SURVIVES the `&bankPtr` computation (which uses r0) instead of being clobbered.
+3. `register SoundDescTable *desc asm("r4")` — desc lands r4 (frees r1 as the address holder).
+4. An UNPINNED copy `pE = pLoad;` used for `(*pE)->panScale` — reproduces `adds r3,r1,#0`
+   (the address copy into a callee-saved reg). MUST be unpinned; pinning pE/pPool->r1
+   makes it global and spills across the BLs (445/489).
+5. Read the bound-check `count` into a temp BEFORE the `pE = pLoad` copy:
+   `{ u32 count = desc->count; pE = pLoad; if (id >= count) return 0; }` — this orders the
+   count load before the address copy, matching baserom 0x2da10(count)/0x2da12(copy).
+   (Without it: copy-before-count, +4 byte_diff.)
+
+Progression this round: 272 -> 261 (ssE r6 + unpinned pE copy) -> 255 (defer pE to after
+desc) -> 250 (pLoad r1 + desc r4) -> **246** (count-temp before copy).
+
+### The remaining 60 diffs — root cause is find_barrier (NEW, the actionable lead)
+Read `tools/agbcc-src/gcc/thumb.c::find_barrier` (line ~250) + `thumb_reorg` (line 352).
+agbcc dumps each constant pool at "the last BARRIER (unconditional-jump point) within
+MAX_COUNT_SI=1000 bytes forward of the pcrel load; if none, it CREATES one (`b` + pool)".
+
+- OUR build: the entry `ldr r1,.L24` finds the EXISTING barrier after `bl sub_08032904; b`
+  (~0xc4 bytes away, well within 1000) and dumps the first pool THERE (offset 0xd8). So
+  loads at 0x14 and 0x96 SHARE that one pool word (4 total gpSoundSystem words).
+- BASEROM: dumps its first pool EARLY at 0x2da68 (offset 0x7c) via a CREATED barrier
+  (`b.n 0x2da76` skips it), right after the panScale/pitch block and BEFORE the kind
+  dispatch. So its loads can't share -> 5 separate gpSoundSystem words.
+
+The pool-offset diff (+0x14: `[pc,#100]` vs `[pc,#192]`) and ALL the branch-distance
+diffs (+0x74, +0x84, +0x9c, +0xb0) are downstream of this single placement difference.
+Why baserom created an early barrier when an existing one was in range is unresolved —
+likely a few-byte difference in find_barrier's byte accumulation (our extra `mov r0,sl`
+sub-reads and the descTableOff-in-r4 add bytes that shift the count), OR a tighter
+MAX_COUNT in the baserom's agbcc. The diffs are SELF-REINFORCING: eliminating the
+`mov sl` / descTableOff-temp extras would change the byte counts find_barrier sees and
+could re-align the pool.
+
+### Remaining diffs (the 60), all interlinked via the pool shift
+- `mov r0,sl; ldrb r4,[r0]` (+0x44) and `mov r1,sl` (+0xb6) — sub->kind / sub->flags read
+  through the high-reg `sub asm("sl")` pin; baserom reads `ldrb r4,[r2]` from the low temp
+  BEFORE the sl store. Reading kind from an expression temp before `sub = t` REGRESSES
+  hard (503-518) on every base tried — agbcc schedules the sl-store first regardless.
+  The sl pin is load-bearing (unpinned sub = 507).
+- descTableOff temp r4 vs r0 (+0x20/0x22): the `desc asm("r4")` pin folds the offset read
+  into r4 (`ldr r4,[r2,#12]; adds r4,r2,r4`); baserom uses a scratch r0 (`ldr r0; adds
+  r4,r2,r0`). Unpinning desc sends it to r1 and breaks the address-in-r1 win (459). An
+  explicit `u32 off` temp still folds into r4. 1-arg cost, accepted.
+- `bcs.n fail` vs `bcc.n continue; b.n fail` (+0x2a): the shared `return 0` branch
+  direction — a pool-shift/layout artifact, expected to resolve once the pool lands right.
+
+### Levers tried this round that FAILED (don't repeat)
+- kind-from-temp before sub=sl: 503-518 on both the 250 and 246 bases.
+- unpin sub (let agbcc pick sl): 507. unpin desc: 459. Both pins load-bearing.
+- pin pE/pPool->r1 (global): 445/489 (spills across BLs). pin pE->r1 (scoped): 263.
+- ss pinned r6 globally (single var): 452 (collides with tail swSlot wanting r3).
+- explicit descTableOff `u32 off` temp: folds into r4, 246 unchanged.
+- two pool-pointer copies / never-cache-ss: 513 / 272 (CSE folds them back).
+- CFLAGS sweep (-fforce-addr, -fno-peephole, -fno-defer-pop, -fomit-frame-pointer,
+  -fno-gcse/-fno-cse-follow-jumps/-fno-schedule-insns/2/-fno-strength-reduce/-fcaller-saves):
+  ALL neutral — none change the pool-load register or the pool-dump point.
+- new agbcc (AGBCC_BIN) vs old: both 246 (identical byte_diff; minor scheduling reorder).
+- Private instrumented agbcc: ABANDONED — the SHARED tools/agbcc has a modified
+  combine.o (a `DBG ftm` fprintf is in the source AND a clean rebuild of local-alloc
+  diverges in register allocation), so a from-source private build does NOT reproduce the
+  real compiler. Cannot instrument reliably. (Do NOT rebuild the shared agbcc.)
+- permuter (~1068 iters, -j4, 25s, base score 3209): floor ~2785, NEVER approached 0 —
+  the 3 entry pins lock the structure so statement/scope mutation can't reach the
+  pool-placement decision. Permuter is the wrong tool for a find_barrier divergence.
+
+### RECOMMENDED NEXT ANGLE (for the next attempt)
+The pool placement is the whole remaining ballgame and it is byte-count-sensitive:
+1. The highest-EV idea is to ELIMINATE the `mov r0/r1,sl` sub-reads and the
+   descTableOff-r4 extra, because removing those bytes changes what find_barrier counts
+   and may re-align the first pool to 0x7c (which would cascade-fix +0x14, +0x74, +0x84,
+   +0x9c, +0xb0, and the bcs/bcc branch all at once). They resisted the temp-restructure
+   this round, but a DIFFERENT approach to the sub pointer (e.g. not pinning sub to sl and
+   instead finding a low-reg shape that still lands it in sl for the cross-BL chSeq use)
+   could remove the movs.
+2. Investigate forcing an early pool dump: a source construct that emits an unconditional
+   branch (barrier) right after the pitch block / before the kind dispatch would make
+   agbcc dump the pool at 0x7c like the baserom. (The baserom's `b.n 0x2da76` is a
+   find_barrier-CREATED jump, not source — but a source `b` at that point would also serve
+   as the barrier.) No natural C construct produces one there yet; this needs creativity.
+3. This is NOT NAKED-worthy: classifier = ATTEMPT_MATCH, structure is 100% correct C, and
+   the entry now matches the baserom. It is a find_barrier pool-placement local minimum.
+
+### Best-effort C this round (byte_diff 246 / diff_count 60, OLD_AGBCC default)
+```c
+#include "types.h"
+
+typedef struct SoundDescTable {
+    u32 count;
+    struct SoundDesc *entries;
+} SoundDescTable;
+
+typedef struct SoundDesc {
+    u16 subIndex;
+    u8 priority;
+    u8 _pad3;
+    u8 altId;
+    u8 pan;
+    u8 pitch;
+    u8 volume;
+} SoundDesc;
+
+typedef struct SoundSubRecord {
+    u8 kind;
+    u8 flags;
+} SoundSubRecord;
+
+typedef struct SoundBank {
+    u32 subTableOff;
+    u8 _pad4[8];
+    u32 descTableOff;
+} SoundBank;
+
+typedef struct ChannelRecord {
+    u8 _pad0[4];
+    u8 field4;
+    u8 field5;
+    u8 pan6;
+    u8 vol7;
+    u8 pan8;
+} ChannelRecord;
+
+typedef struct ChannelSeq {
+    SoundSubRecord *cursor;
+    u32 field4;
+    u16 field8;
+    u16 fielda;
+    u16 subIndex;
+} ChannelSeq;
+
+typedef struct SoundSystem {
+    u8 count;
+    u8 _pad01[3];
+    u32 rng;
+    u8 _pad08[6];
+    u16 panScale;
+    u32 chDirty[4];
+    u8 _pad20[0x18];
+    u32 field38;
+    u8 _pad3c[0x8c];
+    u8 *swSlotBase;
+    ChannelRecord **swHandleTable;
+    u8 _padD0[0x40];
+    u8 *bankPtr;
+    u8 *chSeqTableBase;
+    u8 *chRecHolder;
+    u16 globalSeq;
+    u8 _pad11e[2];
+    u32 **handleTable;
+} SoundSystem;
+
+#define gpSoundSystem (*(SoundSystem **)0x030065e0)
+
+extern u32 sub_08032BA0(u32 flag, u32 priority, u32 kind);
+extern void sub_08032904(s32 ch, u32 step, u32 pan, u32 ctrl, u16 hwCtrl);
+extern void SoundChannel_Init(u32 index, u32 step, u32 mode, u32 ctrl);
+extern s32 SoundSlot_PickByPriority(s32 a0, u32 priority, s32 a2, s32 idx);
+extern void sub_08032894(void *slot, u32 a1, u32 a2, u32 a3, u32 a4);
+extern void sub_08032BC8(void *slot, u32 a1, u32 a2, u32 a3);
+
+u32 sub_0802D9EC(u32 id, u32 vol, u32 pan, u32 pitch)
+{
+    register SoundSubRecord *sub asm("sl");
+    u32 rVol = vol;
+    u32 rPan = pan;
+    u32 rPitch = pitch;
+    register SoundSystem *ssE asm("r6");
+    register SoundSystem **pLoad asm("r1");
+    SoundSystem *ss;
+    SoundSystem **pPool = &gpSoundSystem;
+    SoundSystem **pE;
+    u8 *bank;
+    register SoundDescTable *desc asm("r4");
+    register SoundDesc *entry asm("r5");
+    s32 kind;
+    u32 handle;
+    u32 rng;
+
+    pLoad = &gpSoundSystem;
+    ssE = *pLoad;
+    bank = ssE->bankPtr;
+    desc = (SoundDescTable *)(bank + ((SoundBank *)bank)->descTableOff);
+
+    {
+        u32 count = desc->count;
+        pE = pLoad;
+        if (id >= count)
+            return 0;
+    }
+
+    entry = (SoundDesc *)((u8 *)&desc->entries + id * 8);
+    sub = (SoundSubRecord *)(bank + *(u32 *)(bank + entry->subIndex * 4 + *(u32 *)bank));
+    kind = sub->kind;
+
+    if (kind != 0xff || entry->altId != 0xff) {
+        if (kind >= (s32)(ssE->count + 4))
+            return 0;
+    }
+
+    if ((s32)rVol > 0x7f)
+        rVol = entry->volume;
+    if ((s32)rPan > 0x7f)
+        rPan = entry->pan;
+
+    rPan = (s32)((*pE)->panScale * rPan) >> 8;
+
+    if ((s32)rPitch > 0x80)
+        rPitch = entry->pitch;
+    if (rPitch == 0x80)
+        rPitch = 0xff;
+
+    if (kind <= 3) {
+        if (sub_08032BA0(1, entry->priority, kind) == 0)
+            return 0;
+
+        {
+            u16 *seq = &(*pPool)->globalSeq;
+            if (++*seq == 0)
+                *seq = 1;
+        }
+
+        if ((sub->flags & 0x80) == 0)
+            sub_08032904(kind, rVol, rPitch, rPan, 0x100 | entry->priority);
+        else
+            SoundChannel_Init(kind, rVol, rPan, 0x100 | entry->priority);
+
+        (*pPool)->chDirty[kind] |= 0x10000;
+    } else {
+        ChannelRecord *swSlot;
+
+        if (kind != 0xff)
+            kind -= 4;
+
+        kind = SoundSlot_PickByPriority(1, entry->priority, 0xff, kind);
+        if (kind < 0)
+            return 0;
+
+        {
+            SoundSystem *swSys = *pPool;
+
+            swSlot = (ChannelRecord *)(swSys->swSlotBase + (kind << 6));
+
+            if (++swSys->globalSeq == 0)
+                swSys->globalSeq = 1;
+        }
+
+        if ((sub->flags & 0x80) == 0)
+            sub_08032894(swSlot, rVol, rPitch, rPan, 0x100 | entry->priority);
+        else
+            sub_08032BC8(swSlot, rVol, rPan, 0x100 | entry->priority);
+
+        *(u32 *)((u8 *)swSlot + 0x38) |= 0x10000;
+        (*pPool)->swHandleTable[kind] = swSlot;
+        kind += 4;
+    }
+
+    ss = *pPool;
+    {
+        ChannelRecord *rec = (ChannelRecord *)(*(u8 **)(ss->chRecHolder + 0x110) + kind * 12);
+
+        rec->field4 = 0;
+        rec->field5 = 0xff;
+        rec->pan6 = entry->pan;
+        rec->pan8 = entry->pan;
+        rec->vol7 = entry->volume;
+    }
+
+    ss = *pPool;
+    {
+        ChannelSeq *rec2 = (ChannelSeq *)(ss->chSeqTableBase + kind * 16);
+
+        rec2->field8 = 0;
+        rec2->fielda = 0;
+        rec2->field4 = 0;
+        rec2->cursor = sub + 4;
+        rec2->subIndex = entry->subIndex;
+    }
+
+    ss->rng *= 0xa8351d63;
+    rng = (ss->rng << 11) >> 17;
+    handle = (kind << 16) | ss->globalSeq | (rng << 24);
+    ss->handleTable[kind] = (u32 *)handle;
+
+    return handle;
+}
+```
