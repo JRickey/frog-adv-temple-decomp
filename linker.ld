@@ -170,6 +170,7 @@ SECTIONS {
     .text : ALIGN(4) {
         asm/disasm_0x08000000.o(.text);  /* 0x08000000 - 0x08000004, entry branch */
         asm/header.o(.text);             /* 0x08000004 - 0x080000BF, header */
+        src/system/boot.o(.text);
         asm/disasm_0x080000c0.o(.text);  /* 0x080000c0 - 0x080000fc, _start */
         asm/disasm_0x080000fc.o(.text);  /* 0x080000fc - 0x08000114, IntrEnable */
         asm/disasm_0x08000114.o(.text);  /* 0x08000114 - 0x0800012c, IntrDisable */
