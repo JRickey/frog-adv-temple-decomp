@@ -10,6 +10,55 @@ of the baserom's callee-saved r3/r2). Classifier = ATTEMPT_MATCH. NOT NAKED-wort
 
 **START FROM THE "## Best-effort C (7/6)" BLOCK BELOW — do NOT restart from 246.**
 
+## Drift
+GPT-5.5 attempt on 2026-06-05 reconfirmed the same true-C plateau:
+**byte_diff 7 / diff_count 6**, exact 560-byte size. `classify_unmatchable.py`
+returns `ATTEMPT_MATCH` with only high-register advisory, so this must remain
+deferred rather than NAKED.
+
+New evidence from this attempt:
+- Clean no-pin Phase 1 C built but stayed far away: `byte_diff 482`,
+  `diff_count 76`; a source-only lifetime/order rewrite without pins stayed
+  `482/81`. The high-reg/descriptor pins from the block below are still needed.
+- Reapplying the load-bearing pure-C pins plus the pointer-form `globalSeq`
+  increment returns to `7/6`. The residual remains exactly:
+  `+0xf2/+0xf4` channel-side `gpSoundSystem` pool address in r0 instead of r3,
+  `+0x190/+0x192` slot-side pool address in r0 instead of r2, and `+0x1a0`
+  common merge reload instead of `adds r3,r2,#0`.
+- A local analogue from `src/game/sub_0802dfbc.c` suggested splitting value and
+  pool-pointer RTXs. Applying a branch-carried `SoundSystem **tailPool` fixed the
+  channel-side r3 address but regressed to `byte_diff 51`: slot-side chose r3
+  instead of r2, deleted the target `adds r3,r2,#0`, and reloaded the pool later
+  near the RNG block. Adding a slot-side `register SoundSystem **slotTailPool
+  asm("r2")` made size drift worse (`byte_diff 106`) and shifted BL targets.
+- A common-block `recPool = &gpSoundSystem; ... ss = *recPool;` rewrite was
+  neutral: still `7/6`.
+- Flag sweep from the 7-base:
+  `-fforce-addr`, `-fno-gcse`, `-fno-cse-follow-jumps`,
+  `-fforce-addr -fno-gcse`, `-fforce-addr -fno-gcse -fno-cse-follow-jumps`,
+  and `-fcaller-saves` were all neutral at `7/6`;
+  `-fno-expensive-optimizations` regressed to `48/33`;
+  `-ffixed-r0` and `-ffixed-r2` regressed to ~500 byte diff.
+- Current-tree corpus grep found no matching C idiom for carrying a
+  `gpSoundSystem` address across a merge. History search could not run in this
+  worktree because `tools/agent/corpus-mirrors/` is absent.
+- A private `/tmp` old_agbcc instrumentation build was made (shared
+  `tools/agbcc-src` was not touched). Logging `allocate_reload_reg` showed the
+  residual pool loads are not ordinary reloads of `0x030065e0`; reload saw only
+  small field-offset constants (`272`, `276`, `280`, `284`, `288`). RTL dump
+  showed the common block materializes a fresh `(const_int 50357728)` into r3
+  before dereferencing, confirming the branch-carried pool-address pseudo is
+  lost before/at global allocation rather than picked by a simple reload choice.
+- Permuter could not be run: `vendor/decomp-permuter` exists as an empty
+  directory in this worktree, with no `.venv/bin/python`. `setup_permuter.py`
+  can create `nonmatchings/sub_0802D9EC`, but the runner is unavailable.
+
+Newly ruled out: branch-carried `tailPool`, slot-side r2 pool pin, common
+`recPool`, the above CFLAGS, and simple reload-register instrumentation as the
+decision site. Still untried: a full history search from populated mirrors, and
+a real permuter run from the 7-byte base once `vendor/decomp-permuter` is
+available.
+
 ## The breakthroughs that broke the 246 plateau (KEEP ALL OF THESE)
 The prior rounds were stuck at 246 because the constant pool was MISPLACED (agbcc
 shared the entry pool across the whole function; the baserom dumps 5 separate
