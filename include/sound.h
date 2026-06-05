@@ -458,6 +458,7 @@ typedef struct SoundLockSystem {
 #define SOUND_PAN_LOW_MAX                     0x3f
 #define SOUND_PAN_CENTER_VALUE                0x40
 #define SOUND_PAN_HIGH_MAX                    0x7f
+#define SOUND_VOL_SET_MAX                     0x80
 #define SOUND_MIX_BYTE_MASK                   0xff
 #define SOUND_ACC_SUM_0_OFFSET                0x00
 #define SOUND_ACC_SUM_1_OFFSET                0x02
