@@ -284,3 +284,7 @@ us:
 # Matches the baserom epilogue (pop {r4,r5,pc} instead of bx r1);
 # the TU was compiled without -mthumb-interwork.
 src/game/sub_0803578c.s: CFLAGS = -Werror -O2 -fhex-asm
+
+# sub_080342CC is __addsf3 from libgcc fp-bit.c, compiled without -mthumb-interwork.
+# The epilogue is pop {r4, pc} instead of pop {r4}; pop {r1}; bx r1.
+src/game/sub_080342cc.s: CFLAGS = -Werror -O2 -fhex-asm
