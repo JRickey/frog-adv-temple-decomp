@@ -3,6 +3,7 @@
 void sub_08012F00(void)
 {
     u8 *base;
+    register u8 *dst asm("r0");
     u8 i;
 
     i = 0;
@@ -11,7 +12,6 @@ void sub_08012F00(void)
         if (((base[0xD3] >> i) & 1) != 0) {
             switch (i) {
             case 0: {
-                register u8 *dst asm("r0");
                 u8 flag;
                 dst = base + 0xD4;
                 flag = 0x20;
@@ -19,7 +19,6 @@ void sub_08012F00(void)
                 break;
             }
             case 1: {
-                register u8 *dst asm("r0");
                 u8 flag;
                 dst = base + 0xD4;
                 flag = 0x10;
@@ -27,7 +26,6 @@ void sub_08012F00(void)
                 break;
             }
             case 2: {
-                register u8 *dst asm("r0");
                 u8 flag;
                 dst = base + 0xD4;
                 flag = 0x80;
@@ -35,7 +33,6 @@ void sub_08012F00(void)
                 break;
             }
             case 3: {
-                register u8 *dst asm("r0");
                 u8 flag;
                 dst = base + 0xD4;
                 flag = 0x40;
@@ -43,7 +40,6 @@ void sub_08012F00(void)
                 break;
             }
             case 4: {
-                register u8 *dst asm("r0");
                 u8 flag;
                 dst = base + 0xD4;
                 flag = 2;
@@ -51,7 +47,6 @@ void sub_08012F00(void)
                 break;
             }
             case 5: {
-                register u8 *dst asm("r0");
                 u8 flag;
                 dst = base + 0xD4;
                 flag = 1;
@@ -59,7 +54,6 @@ void sub_08012F00(void)
                 break;
             }
             case 6: {
-                register u8 *dst asm("r0");
                 u8 flag;
                 dst = base + 0xD4;
                 flag = 8;
@@ -67,7 +61,6 @@ void sub_08012F00(void)
                 break;
             }
             case 7: {
-                register u8 *dst asm("r0");
                 u8 flag;
                 dst = base + 0xD4;
                 flag = 4;
