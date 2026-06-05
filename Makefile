@@ -313,6 +313,10 @@ src/game/sub_0803578c.s: CFLAGS = -Werror -O2 -fhex-asm
 # sub_080342CC is __addsf3 from libgcc fp-bit.c, compiled without -mthumb-interwork.
 # The epilogue is pop {r4, pc} instead of pop {r4}; pop {r1}; bx r1.
 src/game/sub_080342cc.s: CFLAGS = -Werror -O2 -fhex-asm
+# sub_080342F8 is __subsf3 from libgcc fp-bit.c, compiled without -mthumb-interwork.
+# The epilogue is pop {r4, pc} instead of pop {r4}; pop {r1}; bx r1.
+src/game/sub_080342f8.s: CFLAGS = -Werror -O2 -fhex-asm
+
 
 # IntrMain is an ARM-mode function; agbcc always marks NAKED functions as
 # .thumb_func, which would make the linker resolve IntrMain references to
