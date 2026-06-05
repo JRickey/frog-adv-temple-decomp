@@ -428,6 +428,9 @@ u32 sub_080304F4(s32 channel, SoundChannelSeq *seq)
     u8 *op;
     u32 cursor;
     u8 *nextOp;
+    register u32 flagsRaw asm("r1");
+    register u32 flags asm("r6");
+    register u32 streamOff asm("r0");
 
     ch = channel;
     s = seq;
@@ -436,10 +439,7 @@ u32 sub_080304F4(s32 channel, SoundChannelSeq *seq)
     if (cursor == 0) {
         u32 opHalf;
         u32 count;
-        register u32 flagsRaw asm("r1");
         u32 flagBit;
-        /* r6 keeps the wait flags for later bit tests after the first gate. */
-        register u32 flags asm("r6");
 
         /* Volatile keeps cse.c from reusing this count; the target re-reads it before the random BL. */
         count = *(volatile u16 *)(op + 2);
@@ -473,7 +473,6 @@ u32 sub_080304F4(s32 channel, SoundChannelSeq *seq)
             if (!(SOUND_SYSTEM_SW_SLOT_FOR_CHANNEL(ss, ch)->flags & SOUND_SLOT_FLAG_RETIRE_PENDING)) {
                 /* r0 keeps the stream-table probe in the target instruction shape. */
                 void **streamTable;
-                register u32 streamOff asm("r0");
 
                 streamTable = (void **)SOUND_SYSTEM_STREAM_TABLE(ss);
                 streamOff = (u32)ch << 2;
@@ -508,10 +507,7 @@ u32 sub_080304F4(s32 channel, SoundChannelSeq *seq)
     }
 
     {
-        register u32 flagsRaw asm("r1");
         u32 flagBit;
-        /* r6 keeps the wait flags for the second gate block. */
-        register u32 flags asm("r6");
 
         flagsRaw = op[1];
         flagBit = flagsRaw & SOUND_SEQ_WAIT_SKIP_IF_STOPPING;
@@ -539,7 +535,6 @@ u32 sub_080304F4(s32 channel, SoundChannelSeq *seq)
             {
                 /* r0 keeps the stream-table probe in the target instruction shape. */
                 void **streamTable;
-                register u32 streamOff asm("r0");
 
                 streamTable = (void **)SOUND_SYSTEM_STREAM_TABLE(ss);
                 streamOff = (u32)ch << 2;

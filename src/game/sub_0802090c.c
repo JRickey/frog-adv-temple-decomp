@@ -9,6 +9,7 @@ extern void sub_0802DC1C(u32 handle, u32 pan);
 void sub_0802090C(void)
 {
     u8 *base;
+    register u8 pan asm("r4");
     u32 state;
     u32 sound;
 
@@ -87,7 +88,6 @@ void sub_0802090C(void)
         playSound:
             sound = sub_0802D9EC(sound, 0xff, 0xff, 0xff);
             {
-                register u8 pan asm("r4");
                 u32 mask;
                 mask = 0x7f;
                 pan = base[2];
@@ -108,7 +108,6 @@ void sub_0802090C(void)
 
             sound = sub_0802D9EC(93, 0xff, 0xff, 0xff);
             {
-                register u8 pan asm("r4");
                 u32 mask;
                 mask = 0x7f;
                 pan = base[2];

@@ -49,6 +49,8 @@ void sub_08004938(void)
     goto tail;
 
     do {
+        register u32 partId asm("r0");
+
         sub_08020BC0();
         switch (frame.state) {
         default:
@@ -58,7 +60,6 @@ void sub_08004938(void)
              * expensive &frame.obj0 address into r1 ahead of the cheap literal
              * 5, so without the pin `add r1, sp, #280` lands before `mov r0,
              * #5`. The pin forces the constant out first. */
-            register u32 partId asm("r0");
             void *b;
             b = frame.b;
             gGameStuff.pendingMode = 14;
@@ -103,7 +104,6 @@ void sub_08004938(void)
             }
             {
                 /* Same &frame.obj0-vs-literal-5 argument-order pin as case 0. */
-                register u32 partId asm("r0");
                 void *b;
                 b = frame.b;
                 partId = 5;
