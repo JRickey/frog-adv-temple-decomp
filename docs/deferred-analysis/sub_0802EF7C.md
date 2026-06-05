@@ -1,149 +1,154 @@
 # Deferred analysis: sub_0802EF7C
 
 Range [0x0802ef7c, 0x0802f054) (216 bytes), thumb. Asm slice
-asm/disasm_0x0802ef7c.s. Destination src/system/sound_channel_stream.c
-(appends after sub_0802EEF8, its near-twin) — OR its own TU
-src/system/sub_0802ef7c.c (see below; the matching path needs a flag
-incompatible with sub_0802EEF8's, so a TU split is required).
+asm/disasm_0x0802ef7c.s. Destination: its OWN TU src/system/sub_0802ef7c.c
+(the matching path needs `-fforce-addr` WITHOUT sub_0802EEF8's
+`-fno-gcse -fno-cse-follow-jumps`, so a TU split is mandatory — those flags
+shorten EF7C to 200 bytes and drop the r8 hold).
 
-## Semantics (fully understood — unchanged from prior attempt)
+## Semantics (fully understood — confirmed by full asm trace, unchanged)
 
 `void sub_0802EF7C(u8 clearAcc, u16 value, s32 channel)` — the INACTIVE/release
 complement of sub_0802EEF8 (kickoff). Sets envelope-C into the INACTIVE state.
 
-- `channel <= 3` (inline/direct channels): operate on `gpSoundSystem`
-  (`*0x030065e0`). Flags in `ss->chFlags[channel]` (base +0x10, stride 4);
-  envelope-C block in `ss->channels[channel]` (base 0x8c, stride 8) — param
-  (s32 inactiveDelta) at +0, acc (u16) at +4 (=0x90).
-- `channel >= 4` (sw-mixed slots): `SOUND_SYSTEM_SW_SLOT_FOR_CHANNEL(ss,channel)`,
+- `channel <= 3` (inline channels): operate on `gpSoundSystem` (`*0x030065e0`).
+  Flags `ss->chFlags[channel]` (base 0x10, stride 4); envelope-C block at
+  `ss + 0x8c + channel*8` — param (s32 inactiveDelta) at +0 (0x8c), acc (u16)
+  at +4 (0x90).  NOTE: `channels[]` is stride 8 under agbcc (the union
+  SoundEnvelopeCChannel is 8 bytes; host cc mis-pads it — trust the asm, not
+  a host offsetof probe).
+- `channel >= 4` (sw slots): `SOUND_SYSTEM_SW_SLOT_FOR_CHANNEL(ss,channel)`,
   flags at slot+0x38, envelope-C param at slot+0x24, acc at slot+0x28.
 
 Per-path logic:
-1. If `(flags & (ACTIVE|INACTIVE)) == 0`: prime acc = (clearAcc ? 0 : 0xff00).
-2. `flags = (flags & ~7) | INACTIVE`  (mask is `~7` == `movs #8; negs`, i.e.
-   `~(SOUND_FLAG_ENVELOPE_C_ACTIVE | SOUND_ENVELOPE_C_MODE_BITS)`).
+1. If `(flags & (ACTIVE|INACTIVE)) == 0` (`& 0x21`): prime acc = (clearAcc ? 0
+   : 0xff00).  The acc-prime idiom is `accReset = 0; if (clearAcc==0)
+   accReset = 0xff00;` (NOT the inverted form — inverting regresses sw_slot).
+2. `flags = (flags & ~7) | 0x20`  (mask `~7` = `movs #8; negs`; INACTIVE=0x20).
 3. param = value; if (!clearAcc) param = -value.
 4. (inline path only) re-prime acc unconditionally = (clearAcc ? 0 : 0xff00).
-   The inline path holds `&gpSoundSystem` (the constant 0x030065e0) in a
-   callee-saved high reg (r8) and RELOADS `*r8` at each of the 3 blocks.
 
 The sw_slot path (channel >= 4) matches byte-for-byte. ALL residual divergence
-is in the inline path (channels 0..3), and it is ONE register-coloring decision
-(see Drift). The acc-prime idiom in BOTH paths is `accReset = 0; if (clearAcc
-== 0) accReset = 0xff00;` (NOT the `0xff00; if (clearAcc != 0) 0` form the prior
-attempt used — using the wrong form regresses sw_slot under -fforce-addr).
+is in the inline path (channels 0..3), and it is now narrowed to ONE coupled
+register-allocation cascade (see Drift).
 
-## NEW (this attempt): the -fforce-addr lane reproduces the WHOLE structure
+## BIG PROGRESS THIS ATTEMPT: byte_diff 184 -> 124 via cfbase + cf-r2 pin
 
-The prior attempt's best was byte_diff 149 WITHOUT -fforce-addr. The decisive
-new finding: compile this function in its OWN translation unit with
-`-fforce-addr` (and NOT -fno-gcse / -fno-cse-follow-jumps — those are
-sub_0802EEF8's flags and they SHORTEN this function to 200 bytes, dropping the
-r8 hold). With a pointer-to-pointer local for &gpSoundSystem, plain
-`ss->chFlags[channel]` / `ss->channels[channel]` array syntax, and 3 explicit
-`ss = *pp` reloads:
+The decisive structural finding (NEW — supersedes all prior 184-class lanes):
 
-    src/system/sub_0802ef7c.s: CC = $(OLD_AGBCC_BIN)
-    src/system/sub_0802ef7c.s: CFLAGS += -fforce-addr
+  - Spell the chFlags access through an EXPLICIT base-pointer variable
+    `u8 *cfbase = (u8 *)ssN + 0x10;` and an EXPLICIT byte offset
+    `register u32 cf asm("r2"); cf = channel << 2;`, then
+    `*(u32 *)(cfbase + cf)`. The named `cfbase` variable is LOAD-BEARING: it
+    breaks the address dataflow so agbcc keeps the `adds #16` SEPARATE (a plain
+    `*(u32*)((u8*)ss + 0x10 + cf)` or `&ss->chFlags[0] + cf` FOLDS the 0x10 into
+    the `ldr` displacement and shrinks the object to ~192 — see "byte-offset
+    chFlags folds" below).
+  - Keep the `channels[]` accesses in ARRAY syntax `ssN->channels[channel]...`
+    (array is required for the +0x8c/+0x90 staged-add shape and to CSE
+    channel<<3 into one long-lived index web; byte-offset channels regresses).
+  - The `register u32 cf asm("r2")` pin is the key: it OCCUPIES r2 so channel's
+    parameter-copy preference to r2 FAILS, and it matches the target (cf IS in
+    r2 in block1). With this pin, channel's r2 copy-pref is gone (verified by
+    instrumented allocator: channel pseudo loses its `copypref: r2`).
 
-gives **byte_diff 184 / diff_count 56 / size 208** (vs target 216). The
-structure is now BYTE-CORRECT: it emits the r8 address-hold (`mov r8,r3`),
-`mov ip` for channel<<2, the 3 reloads of `*r8`, the 0xff00-via-scratch
-materialise — everything. 100% of the residual diff is a single
-register-RENAMING of an otherwise-identical instruction stream.
+Result: **byte_diff 124 / diff_count 66 / size 216 (EXACT length)**, with the
+r8 hold, the in-place `lsls rX,rX,#3` channel<<3 reuse, the `adds #16` chFlags
+staging, and the cf-in-r2 — ALL structurally byte-correct. The 124 residual is
+100% a single coupled register RENAME (no instruction-count or shape diffs).
 
-(Using separate ss1/ss2/ss3 locals per block trims diff_count 61 -> 56 with
-the same 184 byte_diff and is marginally cleaner — see Best-effort C.)
+## Drift — root cause, diagnosed at the agbcc global-allocator level
 
-## Drift — root cause, diagnosed at the agbcc-pseudo level
+Instrumented a PRIVATE old_agbcc (probe in gcc/global.c find_reg printing
+pseudo refs/ll, hard conflicts, and copy preferences) and read the trace for
+the 124 lane. The ONE remaining coupled cascade:
 
-The ONE difference: where `channel` lives.
-  - TARGET: `channel` -> r4 (copied in at entry: `adds r4, r2, #0`), then
-    reused for `channel<<3` (`lsls r4,r4,#3`); `ss`(block1) -> r5;
-    `channel<<2` -> r2 (scratch) -> ip.
-  - OURS:   `channel` STAYS in its incoming arg reg r2; `ss`(block1) -> r4;
-    `channel<<2` -> r0 -> ip; `channel<<3` -> r5.
-Everything else (the 0xff00-in-scratch-then-copy at 3 sites, the flags-block
-register numbers, the acc-address-computed-first ordering) is a MECHANICAL
-cascade of this one choice.
+  - The `gpSoundSystem` CONSTANT (0x030065e0) materialises into **r0** in our
+    build (`ldr r0,=...; mov r8,r0; ldr r6,[r0]` — spills to r8 IMMEDIATELY),
+    whereas the TARGET keeps it in **r3** (`ldr r3,=...; ldr r5,[r3]; ...block1
+    work...; mov r8,r3` — spills to r8 LATE, after the AND).
+  - Because the const sits in r0, `cfbase` (chFlags base ss+0x10, pseudo with
+    refs=5 ll=10, hardconf r0 r1 r2 r3) cannot use r0 and is forced to the
+    callee-saved **r4**. That eats r4, so the channel/channel<<3 web shifts to
+    **r5** (target r4), ss1 to **r6** (target r5), and `value` spills to **ip**
+    (target r7). Everything downstream is a mechanical +1 register rename of
+    this one displacement.
+  - In the TARGET the const stays in r3 through block1, so r0 is FREE → the
+    chFlags address chain is computed in r0 (a scratch, NOT a callee-saved
+    cfbase) → no extra callee-saved reg is consumed → channel<<3 web gets r4,
+    ss1 r5, value r7, pp r8. EXACT.
 
-Instrumented old_agbcc (private debug build of gcc/global.c — old_agbcc builds
-from gcc/, NOT gcc_arm/) and read the global-allocator trace. Findings:
-  - `channel` is pseudo 32, refs=5, live_length=21.  `ss`(block1) is pseudo 34,
-    refs=8, ll=33.  `&gpSoundSystem` (pp) is pseudo 33, refs=4, ll=74.
-  - allocno priority = `floor_log2(refs)*refs/live_length*10000*size`
-    (allocno_compare). ss(34): 3*8/33 -> ~7272.  channel(32): 2*5/21 -> ~4761.
-    So ss is allocated FIRST and takes r4.
-  - `channel` has a COPY PREFERENCE to r2 (born from `set (reg/v 32) (reg 2
-    r2)`, the incoming-param copy). In find_reg, the copy-preferred reg
-    OVERRIDES best_reg whenever it is free. r2 is free when channel is
-    allocated, so channel ALWAYS takes r2.
-  - `pp` spills to r8 only because r4(ss),r5,r6(clearAcc),r7(value) are all
-    taken by long-lived values. This is why ANY lever that frees a low reg
-    (e.g. pinning channel to r4 with a short-lived ss) makes pp drop OUT of r8.
+So the last mile is: **make the gpSoundSystem const materialise+linger in a
+LOW scratch (r3) for block1 and spill to r8 LATE, instead of spilling
+immediately from r0.** This is a reload/scheduling decision, robust to every
+`-fXXX` and to OLD vs NEW agbcc tried (see below). The fix is almost certainly
+a source shape that keeps the const live in a low reg across block1 (so reload
+defers the r8 spill), OR that occupies r0/r1 at the const-load point so the
+const picks r3.
 
-To get channel -> r4 you must EITHER (a) make a higher-priority pseudo grab r2
-before channel, OR (b) remove channel's r2 copy-preference. gcc-2.x has no flag
-to disable copy-preferencing, and no clean source shape found does either while
-preserving the four-long-lived-low-reg pressure that forces pp -> r8.
+### Confirmed dead ends this attempt (do NOT repeat)
+- Plain array-syntax everywhere (prior 184 lane): channel takes r2 via the
+  param copy-pref, robust to ALL flags (`-ffixed-r*`, `-fno-strength-reduce`,
+  `-fno-gcse`, scheduling, caller-saves, `-O3`, NEW agbcc). 184/56.
+- Byte-offset chFlags (`*(u32*)(ss+0x10+cf)`, `&ss->chFlags[0]+cf`, or a
+  pinned cf without the cfbase variable): FOLDS the +0x10 into the ldr, shrinks
+  to ~188-192, DROPS the r8 hold. 181-192-class.
+- Byte-offset channels (`*(u8*)ss + (channel<<3) + 0x90` etc): folds +0x90 and
+  shrinks; array syntax for channels is required. 186/204, 136/216.
+- `channel <<= 3` in-place + `channel >> 3` for the chFlags array index: ugly
+  and regresses (196). chFlags must index by the UNSHIFTED channel.
+- `i4 = channel` alias for chFlags index: coalesced away by agbcc; no effect.
+- Pin channel asm("r4") (with or without cf-r2 / clearAcc-r6 / value-r7 pins):
+  pins FREE a low reg, killing the pressure that forces pp->r8 (drops the r8
+  hold) and/or break the channel<<2->ip CSE; 175-211-class. Multi-pin fights.
+- Pin cfbase asm("r0") (scratch): drops pressure, channel->r3, pp->ip; 192.
+- Separate cfbase1/cfbase2 (one per block, scratch): drops pressure, no r8; 190.
+- cf pinned to ip/r3 instead of r2: 128-162 (worse than r2's 124).
+- block1 direct `gpSoundSystem` + pp held for 2/3: loses r8 consistency; 193.
+- The permuter cannot help (the residual is pure register coloring, not
+  statement order/scope) — do NOT burn time on it.
 
-### Levers tried this attempt (all 184-class, or regress, or perturb)
-- -fforce-addr alone (single ss):            184 / 61 / 208  (BEST structural)
-- -fforce-addr + separate ss1/ss2/ss3:       184 / 56 / 208  (BEST, cleanest)
-- -fforce-addr + {-ffixed-r0..r3, -fno-gcse(=200), -fno-cse-follow-jumps,
-  -fno-expensive-optimizations, -frerun-cse-after-loop, -fschedule-insns2,
-  -fno-delayed-branch, -fcaller-saves, -fomit-frame-pointer, …}: all 184
-  (channel coloring robust to every flag).
-- newer agbcc + -fforce-addr:                same channel->r2, 192-class.
-- pin channel asm("r4") (local copy) + single ss:  174 / 87 / 208 but DROPS r8
-  (pp reloaded to r7 each block; pin freed a low reg so pp no longer spills).
-- pin channel r4 + ss r5:                    200 / 146 / 216 (size right, scrambled).
-- pin channel r4 + pp r8:                    206 / 85 / 220 (pp held from entry —
-  target loads &gpSS to r3 first, derefs, THEN moves to r8).
-- pin channel r4 + ss r5 + clearAcc r6 + value r7 (force pp->r8): 199 / 160 / 216
-  (the keep* copies add instructions; pins fight).
-- explicit chFlagsOff/chBlockOff locals + byte addressing: 173 / 78 / 184 (TOO
-  SHORT — byte addressing folds +0x10/+0x90 into the load; array syntax
-  `chFlags[channel]` is REQUIRED for the `adds #16; index` shape).
-- folded `flags & mask == 0` test: 194 (changes the flag-test codegen).
-- decomp-permuter from the 184 base (-fforce-addr compile, custom compile.sh):
-  base score 1765, NEVER beaten in ~75 iters — confirmed a sharp local minimum
-  the permuter cannot escape (it only reorders statements / scopes).
+### Next-attempt ideas (target the const->r3 / late-spill specifically)
+- Instrument old_agbcc's RELOAD pass (reload1.c spill/inheritance, choose_reload_regs)
+  on the 124-lane .i to watch WHY the const spills to r8 from r0 immediately
+  rather than lingering in r3. The recipe: build ONLY old_agbcc with
+  `make -C gcc old -j4` from a `cp -RL tools/agbcc-src /tmp/agbcc-dbg` copy
+  (NEVER touch the shared symlink); compile the .i directly
+  (`old_agbcc -O2 -mthumb-interwork -fhex-asm -fforce-addr file.i`).
+- Try to occupy r0 (and maybe r1) with a live scratch value AT the const-load
+  point so the const's materialise-scratch falls to r3. E.g. compute cf
+  (channel<<2) so it lands in r0 transiently before the const load, or reorder
+  so a clearAcc/value promotion holds r0 across the const load.
+- Try keeping the const explicitly in a low local that is RE-DEREFERENCED in
+  block1 a second time (lengthening its low-reg live range so reload defers the
+  spill), e.g. read a throwaway `*pp` field early — but watch it doesn't add an
+  instruction.
 
-### Next-attempt ideas (use a DIFFERENT lever than above)
-- The mechanism is now exact: you need r2 occupied by a higher-priority pseudo
-  *at the moment channel is allocated*, so channel's r2 copy-preference fails
-  and it falls to r4. Look for a source shape that gives the chFlags-read
-  result (`flags`) OR the chFlags offset a copy-preference to r2 and a priority
-  above ss(7272). Computing `channel<<2` into a named local that is itself
-  copied (so it copy-prefers an arg reg) might do it — but every array-syntax
-  variant re-CSE's the shift. The byte-addressing form that would let you name
-  the offset cleanly breaks the chFlags `adds #16` shape; you'd need to keep
-  array syntax for chFlags AND a named offset for channels, without the two
-  CSE-merging.
-- Alternatively confirm via the instrumented allocator (recipe in
-  codegen-notes "Instrumenting agbcc itself") that a candidate source makes
-  channel(32) sort before ss(34): patch gcc/global.c find_reg to
-  `fprintf(stderr,"AGBCC-DBG pseudo %d refs=%d ll=%d -> r%d\n", ...)` at the
-  `reg_renumber[...] = best_reg;` line and read the order. (Throwaway private
-  build; never touch the shared tools/agbcc-src.)
-
-## Best-effort C (the 184 / diff_count 56 lane — structurally byte-correct,
-##  pure C, NO pins/asm; in its own TU with `-fforce-addr`)
+## Best-effort C (the byte_diff 124 / diff_count 66 / size 216 lane —
+##  structurally byte-correct, ONE pin `cf asm("r2")`; own TU with -fforce-addr)
+##  Wiring (add to Makefile near the other sound TUs):
+##    src/system/sub_0802ef7c.s: CC = $(OLD_AGBCC_BIN)
+##    src/system/sub_0802ef7c.s: CFLAGS += -fforce-addr
+##  and a linker.ld entry replacing the asm slice:
+##    src/system/sub_0802ef7c.o(.text);  /* 0x0802ef7c - 0x0802f054, sub_0802EF7C */
 
 ```c
-/* In src/system/sub_0802ef7c.c — own TU because -fforce-addr is incompatible
- * with sub_0802EEF8's -fno-gcse/-fno-cse-follow-jumps tuning.
- *   src/system/sub_0802ef7c.s: CC = $(OLD_AGBCC_BIN)
- *   src/system/sub_0802ef7c.s: CFLAGS += -fforce-addr
- */
+#include "sound.h"
+#include "macros.h"
+
 void sub_0802EF7C(u8 clearAcc, u16 value, s32 channel)
 {
+    /* cf in r2 occupies channel's param-copy-preference register, so channel
+     * falls to a callee-saved reg (the target shape) instead of staying in r2.
+     * cf also IS r2 in block1 of the target (chFlags byte offset). */
+    register u32 cf asm("r2");
     SoundSystem **pp;
     SoundSystem *ss1;
     SoundSystem *ss2;
     SoundSystem *ss3;
     SoundSlot *slot;
+    u8 *cfbase; /* named base ptr breaks the dataflow so agbcc keeps `adds #16`
+                 * separate (a folded ss+0x10+cf shrinks the object). */
     u32 flags;
     u32 newFlags;
     u16 accReset;
@@ -151,9 +156,11 @@ void sub_0802EF7C(u8 clearAcc, u16 value, s32 channel)
     if (channel > 3)
         goto sw_slot;
 
+    cf = (u32)(channel << 2);
     pp = &gpSoundSystem;
     ss1 = *pp;
-    flags = ss1->chFlags[channel];
+    cfbase = (u8 *)ss1 + SOUND_CH_FLAGS_OFFSET;
+    flags = *(u32 *)(cfbase + cf);
     if ((flags & (SOUND_FLAG_ENVELOPE_C_ACTIVE | SOUND_FLAG_ENVELOPE_C_INACTIVE)) == 0) {
         accReset = 0;
         if (clearAcc == 0)
@@ -162,9 +169,10 @@ void sub_0802EF7C(u8 clearAcc, u16 value, s32 channel)
     }
 
     ss2 = *pp;
-    newFlags = ss2->chFlags[channel];
+    cfbase = (u8 *)ss2 + SOUND_CH_FLAGS_OFFSET;
+    newFlags = *(u32 *)(cfbase + cf);
     newFlags = (newFlags & ~(SOUND_FLAG_ENVELOPE_C_ACTIVE | SOUND_ENVELOPE_C_MODE_BITS)) | SOUND_FLAG_ENVELOPE_C_INACTIVE;
-    ss2->chFlags[channel] = newFlags;
+    *(u32 *)(cfbase + cf) = newFlags;
     ss2->channels[channel].envelopeC.param.inactiveDelta = value;
     if (clearAcc == 0)
         ss2->channels[channel].envelopeC.param.inactiveDelta = -(s32)value;
