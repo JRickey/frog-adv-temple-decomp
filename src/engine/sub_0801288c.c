@@ -28,7 +28,7 @@ void sub_0801288C(void)
     const u8 *flagPtr;
     register u32 entityBase;
     u32 xOffset;
-    register u32 yOffset asm("r0");
+    register u32 r0Work asm("r0");
     register u32 hold5 asm("r5");
     register u32 hold6 asm("r6");
     s32 xCoord;
@@ -58,14 +58,14 @@ void sub_0801288C(void)
     xCoord = *(s16 *)(entityBase + xOffset);
     r2Work = xCoord * 3 + xOffset - xOffset + hold5 - hold5 + hold6 - hold6;
     r2Work <<= 16;
-    yOffset = 0x694;
-    entityBase -= -yOffset;
-    /* Keep yOffset live through the signed load for matching. */
-    if (yOffset)
+    r0Work = 0x694;
+    entityBase -= -r0Work;
+    /* Keep the r0 scratch live through the signed load for matching. */
+    if (r0Work)
         yCoord = *(s16 *)entityBase;
     else
         yCoord = *(s16 *)entityBase;
-    yWork = yCoord * 3 + yOffset - yOffset + hold5 - hold5 + hold6 - hold6;
+    yWork = yCoord * 3 + r0Work - r0Work + hold5 - hold5 + hold6 - hold6;
     yWork = (u16)yWork;
     ipWork = yWork;
     x = r2Work >> 16;
@@ -130,10 +130,8 @@ void sub_0801288C(void)
         }
     }
     {
-        register u32 one asm("r0");
-
-        one = 1;
-        bank &= one;
+        r0Work = 1;
+        bank &= r0Work;
     }
     sub_080100E4(bank, flushSrc, flushDst);
     {
