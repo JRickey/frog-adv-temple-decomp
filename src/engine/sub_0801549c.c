@@ -38,13 +38,12 @@ extern u32 sub_08011884(void);
 void sub_0801549C(void)
 {
     const struct DmaJob_1549C *job;
+    register u32 offset asm("r3");
 
     switch (gIwram_3610.state) {
     case 0: {
         /* r0 table anchor makes case 0 load 0x08307da8 before reading the cached state byte. */
         const struct DmaJob_1549C *table;
-        /* r3 offset anchor fixes the final add operand order: `adds r3, r3, r0`. */
-        register u32 offset asm("r3");
 
         table = gDmaJobTable_08307DA8;
         offset = gIwram_3610.state << 4;
@@ -60,8 +59,6 @@ void sub_0801549C(void)
     reload_transfer_64c0: {
         /* r1 table anchor keeps the reload path as `ldr r1, table; ldr r0, state`. */
         const struct DmaJob_1549C *table;
-        /* r3 offset anchor fixes the final add operand order: `adds r3, r3, r1`. */
-        register u32 offset asm("r3");
 
         table = gDmaJobTable_08307DA8;
         offset = gIwram_3610.state << 4;
@@ -73,8 +70,6 @@ void sub_0801549C(void)
     case 3: {
         /* r0 table anchor gives case 3 the baserom's table-load before state-load order. */
         const struct DmaJob_1549C *table;
-        /* r3 offset anchor fixes the final add operand order: `adds r3, r3, r0`. */
-        register u32 offset asm("r3");
 
         table = gDmaJobTable_08307DA8;
         offset = gIwram_3610.state << 4;
@@ -106,8 +101,6 @@ void sub_0801549C(void)
         {
             /* r1 table anchor keeps case 4's final transfer as `ldr r1, table; ldr r0, state`. */
             const struct DmaJob_1549C *table;
-            /* r3 offset anchor fixes the final add operand order: `adds r3, r3, r1`. */
-            register u32 offset asm("r3");
 
             table = gDmaJobTable_08307DA8;
             offset = gIwram_3610.state << 4;
