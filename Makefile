@@ -176,6 +176,8 @@ src/game/sub_08034898.s: CFLAGS += -mno-thumb-interwork
 src/game/sub_080340d4.s: CFLAGS += -mno-thumb-interwork
 # sub_0803401C (float-reassembly companion to sub_080340D4) uses `pop {r4-r6, pc}`
 src/game/sub_0803401c.s: CFLAGS += -mno-thumb-interwork
+# sub_08034924 uses `pop {pc}` epilogue
+src/game/sub_08034924.s: CFLAGS += -mno-thumb-interwork
 
 
 
