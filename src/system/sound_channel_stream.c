@@ -451,6 +451,7 @@ void sub_0802EF7C(u8 clearAcc, u16 value, s32 channel)
     SoundSlot *slot;
     u32 flags;
     register u32 newFlags asm("r0"); /* keeps the updated flags value in r0 through mask/or/store */
+    register s16 accReset asm("r1"); /* matches the inline channel accumulator reset stores */
     s32 channelOffset;
 
     if (channel > 3)
@@ -473,7 +474,6 @@ void sub_0802EF7C(u8 clearAcc, u16 value, s32 channel)
     channelOffset = channel << 3;
     if (flags == 0) {
         u8 *accp;
-        register s16 accReset asm("r1"); /* matches the inline channel accumulator reset store */
 
         accp = (u8 *)ss1 + channelOffset;
         accReset = 0;
@@ -506,7 +506,6 @@ void sub_0802EF7C(u8 clearAcc, u16 value, s32 channel)
     ss3 = *ppFinal;
     {
         u8 *accp;
-        register s16 accReset asm("r1"); /* matches the unconditional final accumulator reset store */
 
         accp = (u8 *)ss3 + channelOffset;
         accReset = 0;
