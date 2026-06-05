@@ -178,6 +178,8 @@ src/game/sub_080340d4.s: CFLAGS += -mno-thumb-interwork
 src/game/sub_0803401c.s: CFLAGS += -mno-thumb-interwork
 # sub_08034924 uses `pop {pc}` epilogue
 src/game/sub_08034924.s: CFLAGS += -mno-thumb-interwork
+# sub_0803493C uses `pop {r4, r5, r6, pc}` epilogue
+src/game/sub_0803493c.s: CFLAGS += -mno-thumb-interwork
 
 
 
