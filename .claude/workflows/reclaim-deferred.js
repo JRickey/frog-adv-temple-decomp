@@ -159,21 +159,27 @@ Steps:
 1. git status --short — if NON-empty, set mainDirty=true and STOP (report it; the loop halts).
 2. Enumerate the backlog:  ls docs/deferred-analysis/*.md  → strip dir + ".md" to get fn names
    (docs/deferred-analysis/sub_08030644.md → sub_08030644). deferredNoteCount = how many.${onlyClause}${skipClause}
-3. python3 tools/agent/pick_target.py --json --limit 500 — rows carry name, file (asm slice),
-   destination (.c), addr, byte_size, legal, legality_note. Build a name→row map.
+3. python3 tools/agent/pick_target.py --all --json — rows carry name, file (asm slice),
+   destination (.c), addr, byte_size, legal, legality_note. Use --all so layout-BLOCKED rows are
+   present too (without it they vanish and look "resolved" — they are not). Build a name→row map.
 4. python3 tools/agent/function_status.py --status deferred --json — carries next_tier per fn
    ('opus' = Sonnet-deferred, 'codex' = firm-defer). INFORMATIONAL ONLY — in THIS sweep every legal
    deferred target goes to codex regardless of tier.
-5. Classify EACH deferred-note fn:
-   - ALREADY RESOLVED → put name in staleResolved, do NOT dispatch. A note is resolved if the fn no
-     longer has an asm slice / is absent from pick_target / is already defined in a committed source
-     (grep -rlE "\\b<name>\\s*\\(" src finds a real body). The stash note is stale; a later attempt
-     already landed it.
-   - LEGAL → emit a candidate. Legal == the pick_target row has legal==true (legality_note begins
-     "OK: appends"). Emit {name, asmFile (=file), destC (=destination), addr (the "0x…" hex string),
-     byteSize (=byte_size), nextTier (from function_status, else "")}.
-   - LAYOUT-BLOCKED → put name in illegal, do NOT dispatch. Deferred + still asm but legal==false
-     (an earlier sibling in its slice must land first). A later sweep picks it up.
+5. Classify EACH deferred-note fn. The DEFINITIVE "still-deferred" test is whether an ASM SLICE
+   still exists — grep the disasm for it:  grep -l "thumb_func_start <name>\\b\\|arm_func_start
+   <name>\\b" asm/disasm_*.s  (NOT "absent from pick_target" — a blocked fn is absent from the
+   default pick_target view yet very much still asm).
+   - ALREADY RESOLVED → put name in staleResolved, do NOT dispatch. Resolved ⟺ NO asm slice remains
+     for the fn AND it is defined in a committed source (grep -rlE "\\b<name>\\s*\\(" src finds a
+     real body). The stash note is stale; a later attempt already landed it.
+   - LEGAL → emit a candidate. Legal ⟺ an asm slice STILL exists AND the pick_target row has
+     legal==true (legality_note begins "OK: appends"). Emit {name, asmFile (=file),
+     destC (=destination), addr (the "0x…" hex string), byteSize (=byte_size), nextTier (from
+     function_status, else "")}.
+   - BLOCKED → put name in illegal, do NOT dispatch. An asm slice STILL exists but legal==false
+     (legality_note "blocked: …" — e.g. an earlier sibling must land first, OR a C body already
+     defines it = a NON_MATCHING ship that belongs to the reclaim-naked pass, not this sweep). A
+     later sweep / the right workflow picks it up.
 6. Order candidates smallest byteSize first. They MAY share asmFile/destC across the list (the pool
    serializes integration), but prefer DISTINCT destC early so concurrent codex drivers rarely touch
    the same file.
