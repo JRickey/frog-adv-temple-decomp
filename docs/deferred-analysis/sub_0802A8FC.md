@@ -1,89 +1,63 @@
-# sub_0802A8FC — deferred (round 38, opus)
+# sub_0802A8FC — deferred
 
 `void sub_0802A8FC(void)` at 0x0802a8fc, 256 bytes. Operates on entity-pool
-slots 10 and 11 (`gEntities[10]`/`gEntities[11]`), then tail-calls
-`sub_08005D10(10, 11)`. Callees `sub_08020C78` (sound, arg 0x2b) and
-`sub_08005D10` are both peeled.
-
-The C is fully understood and reads cleanly (see Best-effort C). The block is
-a state dispatch on `gEntities[10].field_1A`:
-- `field_1A == 3`: branch on `field_1B`; toggle `gEntities[10].status` bit 0x200
-  (play sound 43 + clear when set, set otherwise); then if `!(status&2) &&
-  (status&0x8000)` promote slots 10/11 (`field_1A=5`/`6`, set bit 2, clear 0x8000).
-- else: for slots 10 and 11, if `status & 0x8000` then `status = (status|2)&0x7fff`.
-
-VERDICT from classify_unmatchable.py: ATTEMPT_MATCH (no structural-impossibility
-signature; prologue `push {r4,r5,lr}`). NOT a NAKED candidate.
+slots 10 and 11 (`gEntities[10]`/`gEntities[11]`), then calls
+`sub_08005D10(10, 11)`. Callees `sub_08020C78` and `sub_08005D10` are both
+peeled. `classify_unmatchable.py` reports `ATTEMPT_MATCH`; this is not a
+NAKED candidate.
 
 ## Drift
 
-Best result: **byte_diff 225, diff_count 75** (Thumb), with the struct-index C
-below compiled by `old_agbcc` (the Makefile default). The STRUCTURE is correct —
-all branches land at the same relative offsets and the else-branch + tail
-(`sub_08005D10(10,11)` + `pop {r4,r5}; pop {r0}; bx r0` epilogue) match exactly.
-The 75 diffs are a register-coloring/CSE cascade rooted in TWO baserom idioms
-agbcc will not reproduce from any C shape tried:
+Best result in this pass: **byte_diff 85, diff_count 39**, size 260, old agbcc.
+This improves the prior best (225/75) by using a small set of register pins and
+source ordering:
 
-1. **field_1B offset reuse.** Baserom reads `field_1A` via `r1=0x24a; r0=r2+r1;
-   ldrb`, then reads `field_1B` via `r1+=1; r0=r2+r1; ldrb` (reuses the 0x24a
-   offset register, `adds r1,#1`). agbcc instead loads `0x24b` as a FRESH pool
-   word — this extra pool word shifts the whole pool layout (+8 bytes on the
-   else target) and is what inflates byte_diff. This is `cse.c` constant
-   equivalence (`0x24b ≡ 0x24a+1`) that only fires when agbcc keeps the offset
-   reg live across the `cmp/bne`; it doesn't here.
+- `base asm("r2")`, `offset asm("r1")`, and `state asm("r0")` make the opening
+  dispatch match through the `0x24a -> adds r1,#1 -> field_1B` idiom, avoiding
+  the extra `0x24b` literal.
+- Branch-local raw status pointers avoid reloading `gEntities` in the first
+  toggle block and reproduce the `0x264 - 0x64 = 0x200` mask derivation.
+- Splitting `!(status & 2) && (status & 0x8000)` into nested `if`s prevents the
+  `0x8002` combined-mask fold.
+- Reloading `gEntities` into `promoteBase asm("r3")`, with `promoteStatus
+  asm("r5")`, `status asm("r2")`, and `moved asm("r4")`, gets the promote block
+  close to the baserom live ranges.
+- Reordering the promote body to write slot 10 state, update the local status,
+  write slot 11 state, then update slot 11 status removed the previous extra
+  `r6` prologue.
 
-2. **base reuse + mask derivation for the status block.** Baserom keeps base in
-   r2 across the field_1B test and computes `r4 = r2 + 0x264` (status10 ptr) with
-   `0x264` via `movs 153; lsls 2`, THEN derives the mask `0x200` as `subs r0,#0x64`
-   (= 0x264 - 0x64, reusing the live offset constant). agbcc instead RELOADS base
-   into r0 (`ldr r0,[pool]`) and materializes `0x200` independently — so the
-   offset/mask registers differ and the derivation never happens. This is
-   downstream of agbcc not carrying r2's value across the `||`-chain branch joins
-   (cse-follow-jumps is on but doesn't propagate it).
+Remaining drift at best:
 
-Note the baserom DOES reload base into r3 for the final promote-block and again
-in the top-level else branch, so "pin base to one register" is wrong (and v9,
-`register T *base asm("r2")`, made it far worse — 187 — because the
-caller-saved pin forces reloads around the `sub_08020C78` call).
+- The set path still uses `r3`/`r5` where baserom uses `r1`/`r2` for
+  `status |= 0x200`:
+  target `mov r1,#0x99; lsls r1,#2; ... mov r2,#0x80; lsls r2,#2`,
+  built `mov r3,#0x99; ... mov r5,#0x80`.
+- The promote block is physically close but still has a four-byte branch/pool
+  skew: built branch tails go to `0x2a9ec` where target goes to `0x2a9e8`.
+- Slot-11 status update and the final else branch are mostly register-coloring
+  drift (`r4/r5/r3` vs target `r3/r4/r1`) after the promotion pins.
 
-### Levers tried (none closed the gap)
-Structures (best diff_count in parens):
-- struct index `gEntities[10].field` — **75 (best)**
-- `(u8*)gEntities` macro + explicit byte offsets `E[0x24a]`, `*(u16*)(E+0x264)` — 114 (folds base+offset into one address)
-- cached `struct Entity *e = &gEntities[10]` — 120
-- cached `struct Entity *base = gEntities; base[10].field` — 132
-- explicit `u16 *status10 = &gEntities[10].status` — 126
-- `switch(field_1B){case 2: case 6: case 10:}` — 115 (jump table)
-- inverted `if (mode!=2 && !=6 && !=10)` — 91 (wrong branch direction)
-- `mode` local, non-inverted — 75 (tie, no change)
-- `u8 *p; p[0x24a]` for 1A/1B + struct for status — 83 (got the `base+0x24a` reg
-  form right, but `p[0x24a+1]` const-folds to 0x24b, no `+1` reuse)
-- `s32 off=0x24a; base[off]; base[off+1]` — 94 (off var spills, pushes r6; `off+1`
-  still const-folds to 0x24b)
-- `register struct Entity *base asm("r2")` pin — 187 (caller-saved pin → reloads)
+New levers tried in this pass:
 
-Flags (all left old_agbcc/v1 at 75, or worse): -fforce-addr, -fno-gcse,
--fno-cse-follow-jumps, -fno-cse-skip-blocks, -fno-rerun-cse-after-loop,
--fno-thread-jumps, -fno-strength-reduce, -ffixed-r3/r4/r5, -fcaller-saves,
--O1, -fpeephole/-fno-peephole, and combos. Newer agbcc (`AGBCC_BIN`) gives 87
-(worse than old's 75); newer + flags ≥ 91.
-
-Permuter: base score **4475** (≈60×/diff, NOT the ~5×/diff of a coloring tail),
-improving only to ~3800 over 60 iters — confirms this is NOT a near-match
-register-coloring tail the permuter can crack from this base. Did not pursue
-a long run (the howto explicitly excludes "huge byte_diff, not a coloring tail").
-
-### Next lever to try (untried directions)
-- corpus_asm_search.py HISTORY search once the full mirrors are populated at
-  tools/agent/corpus-mirrors/ (absent in this worktree): find a commit that
-  REPLACED `adds r[0-7], #1` following a `add r[0-7], rX, rY; ldrb` (the offset
-  +1 reuse) with C, to learn the exact source shape that makes agbcc CSE the
-  offset constant. That asm<->C pairing is the missing piece.
-- Read tools/agbcc-src/gcc_arm/cse.c around `fold_rtx`/const equivalence to find
-  the precise condition under which `0x24b` is synthesized from a live `0x24a`,
-  then shape the C to satisfy it (likely requires the offset to be a genuine
-  non-folded induction value — but a plain `off` var didn't do it; may need the
-  two byte reads to be the ONLY uses with no intervening const-fold).
+- Source-only byte-base offset, pointer-walk, and pre-increment forms. All
+  folded back to a fresh `0x24b` literal unless `offset asm("r1")` was present.
+- `base asm("r2")` + `state asm("r0")` fixed the opening add order; `state`
+  without `base` did not.
+- Raw branch-local status pointers improved from 225/75 to 143/58; precomputing
+  status pointers at function entry moved work before the dispatch and worsened
+  layout.
+- A separate `promoteBase asm("r3")` improved the promote block to 124/55.
+- Promotion-local pins for `promoteStatus/status/moved` improved to 110/60 but
+  first introduced `r6`; reordering the statements removed `r6` and reached
+  88/43, then separating the test constant from `moved` reached 85/39.
+- `setMask asm("r2")` for the set path worsened slightly (89/44).
+- Per-TU `-fno-gcse` and `-fno-cse-follow-jumps` made no difference; `-ffixed-r3`
+  forced `r6` and worsened the prologue. Newer `AGBCC_BIN` worsened to 96/44.
+- `corpus_asm_search.py` could not be used here because
+  `tools/agent/corpus-mirrors/` is absent.
+- Permuter could not be run in this worktree because `vendor/decomp-permuter`
+  contains no `.venv` or permuter files; `setup_permuter.py` wrote
+  `nonmatchings/sub_0802A8FC/target.{s,o}` but failed on the missing interpreter.
 
 ## Best-effort C
 
@@ -91,35 +65,99 @@ a long run (the howto explicitly excludes "huge byte_diff, not a coloring tail")
 #include "iwram.h"
 #include "types.h"
 
+enum {
+    ENTITY_SLOT_MAIN = 10,
+    ENTITY_SLOT_NEXT = 11,
+};
+
+enum {
+    ENTITY_SLOT_MAIN_STATE_OFFSET = 0x24a,
+    ENTITY_SLOT_MAIN_STATUS_OFFSET = 0x264,
+    ENTITY_SLOT_NEXT_STATE_OFFSET = 0x282,
+    ENTITY_SLOT_NEXT_STATUS_OFFSET = 0x29c,
+};
+
+enum {
+    ENTITY_STATE_READY = 3,
+    ENTITY_STATE_PROMOTED_MAIN = 5,
+    ENTITY_STATE_PROMOTED_NEXT = 6,
+};
+
+enum {
+    ENTITY_MODE_2 = 2,
+    ENTITY_MODE_6 = 6,
+    ENTITY_MODE_10 = 10,
+};
+
+enum {
+    ENTITY_STATUS_MOVED = 2,
+    ENTITY_STATUS_TOGGLE = 0x200,
+    ENTITY_STATUS_PENDING = 0x8000,
+    ENTITY_STATUS_VISIBLE_MASK = 0x7fff,
+};
+
+enum {
+    SOUND_2B = 43,
+};
+
 extern void sub_08020C78(u32 sound);
-extern void sub_08005D10(s32 a0, s32 a1);
+extern void sub_08005D10(s32 first, s32 last);
 
 void sub_0802A8FC(void)
 {
-    if (gEntities[10].field_1A == 3) {
-        if (gEntities[10].field_1B == 2 || gEntities[10].field_1B == 6 ||
-            gEntities[10].field_1B == 10) {
-            if (gEntities[10].status & 0x200) {
-                sub_08020C78(43);
-                gEntities[10].status &= 0xfdff;
+    register u8 *base asm("r2");
+    u8 mode;
+    register u8 *state asm("r0");
+    register s32 offset asm("r1");
+    u16 *mainStatus;
+    register u16 *nextStatus asm("r1");
+    register u8 *promoteBase asm("r3");
+    register u16 *promoteStatus asm("r5");
+    register u16 status asm("r2");
+    register u16 moved asm("r4");
+
+    base = (u8 *)gEntities;
+    offset = ENTITY_SLOT_MAIN_STATE_OFFSET;
+    if (*(base + offset) == ENTITY_STATE_READY) {
+        offset++;
+        state = base + offset;
+        mode = *state;
+        if (mode == ENTITY_MODE_2 || mode == ENTITY_MODE_6 || mode == ENTITY_MODE_10) {
+            mainStatus = (u16 *)(base + ENTITY_SLOT_MAIN_STATUS_OFFSET);
+            if (*mainStatus & ENTITY_STATUS_TOGGLE) {
+                sub_08020C78(SOUND_2B);
+                *mainStatus &= ~ENTITY_STATUS_TOGGLE;
             }
         } else {
-            gEntities[10].status |= 0x200;
+            state = base + ENTITY_SLOT_MAIN_STATUS_OFFSET;
+            *(u16 *)state |= ENTITY_STATUS_TOGGLE;
         }
 
-        if (!(gEntities[10].status & 2) && (gEntities[10].status & 0x8000)) {
-            gEntities[10].field_1A = 5;
-            gEntities[11].field_1A = 6;
-            gEntities[11].status |= 2;
-            gEntities[10].status = (gEntities[10].status | 2) & 0x7fff;
+        promoteBase = (u8 *)gEntities;
+        promoteStatus = (u16 *)(promoteBase + ENTITY_SLOT_MAIN_STATUS_OFFSET);
+        status = *promoteStatus;
+        moved = ENTITY_STATUS_MOVED;
+        if (!(status & ENTITY_STATUS_MOVED)) {
+            if (status & ENTITY_STATUS_PENDING) {
+                *(promoteBase + ENTITY_SLOT_MAIN_STATE_OFFSET) = ENTITY_STATE_PROMOTED_MAIN;
+                status |= moved;
+                *(promoteBase + ENTITY_SLOT_NEXT_STATE_OFFSET) = ENTITY_STATE_PROMOTED_NEXT;
+                nextStatus = (u16 *)(promoteBase + ENTITY_SLOT_NEXT_STATUS_OFFSET);
+                *nextStatus |= ENTITY_STATUS_MOVED;
+                status &= ENTITY_STATUS_VISIBLE_MASK;
+                *promoteStatus = status;
+            }
         }
     } else {
-        if (gEntities[10].status & 0x8000)
-            gEntities[10].status = (gEntities[10].status | 2) & 0x7fff;
-        if (gEntities[11].status & 0x8000)
-            gEntities[11].status = (gEntities[11].status | 2) & 0x7fff;
+        mainStatus = (u16 *)(base + ENTITY_SLOT_MAIN_STATUS_OFFSET);
+        if (*mainStatus & ENTITY_STATUS_PENDING)
+            *mainStatus = (*mainStatus | ENTITY_STATUS_MOVED) & ENTITY_STATUS_VISIBLE_MASK;
+
+        nextStatus = (u16 *)(base + ENTITY_SLOT_NEXT_STATUS_OFFSET);
+        if (*nextStatus & ENTITY_STATUS_PENDING)
+            *nextStatus = (*nextStatus | ENTITY_STATUS_MOVED) & ENTITY_STATUS_VISIBLE_MASK;
     }
 
-    sub_08005D10(10, 11);
+    sub_08005D10(ENTITY_SLOT_MAIN, ENTITY_SLOT_NEXT);
 }
 ```
