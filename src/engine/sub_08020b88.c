@@ -25,8 +25,8 @@ extern void SoundSlot_QueueRequest(void);
  */
 void sub_08020B88(u32 arg)
 {
-    register StructAt3003570 *p asm("r1");
-    register int mask asm("r0");
+    StructAt3003570 *p;
+    int mask;
     StructAt3003570 s;
 
     p = &gStructAt3003570;

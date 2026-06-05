@@ -86,7 +86,7 @@ extern void sub_0800A328(void);
 
 void sub_0800DE0C(void)
 {
-    register u32 done asm("r5") = 0;
+    u32 done = 0;
     GameStuff *gs;
     u8 *base = (u8 *)0x03003720;
     u32 off = 0x32a;
@@ -110,7 +110,7 @@ void sub_0800DE0C(void)
         sub_080008DC();
         sub_0800A328();
         {
-            register u32 check asm("r0") = 1;
+            u32 check = 1;
             check &= done;
             if (check == 0)
                 continue;

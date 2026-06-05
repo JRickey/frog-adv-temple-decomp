@@ -22,8 +22,8 @@ void sub_08015930(void)
      * high registers across the inner BL; pin them so agbcc does the same. */
     u8 i = 0;
     struct IwramAt6110 *ctrl = &gIwram_6110;
-    register u32 one asm("r8") = 1;
-    register struct TilemapTableEntry *table asm("r9") = (struct TilemapTableEntry *)0x08307e18;
+    u32 one = 1;
+    struct TilemapTableEntry *table = (struct TilemapTableEntry *)0x08307e18;
     register struct TilemapTableEntry *table16 asm("sl") = (struct TilemapTableEntry *)((u8 *)table + 16);
     u32 stride;
 
@@ -76,7 +76,7 @@ void sub_080159B0(void)
 {
     /* r2 holds &gIwram_6540 throughout the paired init writes;
      * without the pin, agbcc assigns the wrong register. */
-    register struct IwramInited6540 *p6540 asm("r2") = &gIwram_6540;
+    struct IwramInited6540 *p6540 = &gIwram_6540;
 
     p6540->flag = 0;
     gIwram_6480.flag = 0;

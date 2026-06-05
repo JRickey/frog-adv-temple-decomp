@@ -64,8 +64,8 @@ void sub_0802AC60(void)
     const u8 *src;
     u8 *base;
     u32 off;
-    register u32 *dp asm("r2");
-    register const u32 *sp asm("r0");
+    u32 *dp;
+    const u32 *sp;
     u32 v0;
     u32 v1;
 

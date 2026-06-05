@@ -17,7 +17,7 @@ void sub_08019964(void)
 
 void sub_08019984(void)
 {
-    register u8 *src asm("r1");
+    u8 *src;
 
     src = &gIwram_53A0;
     if (src[14] != 0) {
@@ -31,9 +31,9 @@ void sub_08019984(void)
 
     {
         u8 i;
-        register u8 *state asm("r5");
-        register u8 *src2 asm("r4");
-        register u8 *cmp asm("r3");
+        u8 *state;
+        u8 *src2;
+        u8 *cmp;
 
         i = 0;
         state = &gIwram_5330;

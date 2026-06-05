@@ -29,10 +29,10 @@ void sub_0802BC4C(void)
     u8 i;
 
     for (i = 0; i <= 3; i++) {
-        register u32 off asm("r0");
+        u32 off;
         u32 *dst;
         const u32 *src;
-        register u32 hi asm("r1");
+        u32 hi;
         u32 lo;
 
         off = i << 3;
@@ -74,8 +74,8 @@ void sub_0802BC94(void)
     }
 
     {
-        register u32 p6540 asm("r1");
-        register u32 pent asm("r0");
+        u32 p6540;
+        u32 pent;
 
         p6540 = 0x03006540;
         pent = (u32)gEntities;

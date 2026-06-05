@@ -98,12 +98,12 @@ void sub_0802E4B4(u32 desc, u32 pan)
 
 void sub_0802E4E8(u32 desc, u32 enable)
 {
-    register s32 idx asm("r1");
-    register SoundLockSystem *ss asm("r3");
-    register SoundLockSystem *mixBase asm("r2");
+    s32 idx;
+    SoundLockSystem *ss;
+    SoundLockSystem *mixBase;
     u8 *dst;
-    register u32 value asm("r0");
-    register u32 enableReg asm("r4") = enable;
+    u32 value;
+    u32 enableReg = enable;
 
     if (desc == 0)
         return;

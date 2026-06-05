@@ -29,17 +29,17 @@ extern struct BlitRecord_sub11574 gBlitParamTable_08306b74[];
 
 u32 sub_08011574(u8 idx)
 {
-    register struct BlitRecord_sub11574 *base asm("r8");
-    register GameStuff *gs asm("r9");
-    register struct IwramAt6580_sub11574 *s asm("r5");
-    register u32 idxCopy asm("r1");
-    register u32 stride asm("r6");
-    register u32 strideTmp asm("r0");
+    struct BlitRecord_sub11574 *base;
+    GameStuff *gs;
+    struct IwramAt6580_sub11574 *s;
+    u32 idxCopy;
+    u32 stride;
+    u32 strideTmp;
     struct BlitRecord_sub11574 *entry;
     u32 fieldA;
     register u32 ipField asm("ip");
     u32 srcAddr;
-    register u32 srcAddr2 asm("r4");
+    u32 srcAddr2;
     const u16 **srcTable;
     GameStuff *p;
 
@@ -66,7 +66,7 @@ u32 sub_08011574(u8 idx)
                  (srcAddr = (u32)base + 16, srcAddr2 = stride + srcAddr, srcTable = *(const u16 ***)srcAddr2, srcTable),
                  (s->field_a = (u8)(fieldA + 1), ipField));
     {
-        register GameStuff *postGs asm("r1");
+        GameStuff *postGs;
 
         postGs = gs;
         s->lastTime = postGs->_unk00;

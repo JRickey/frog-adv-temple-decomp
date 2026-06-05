@@ -46,7 +46,7 @@ void sub_08000B6C(void *ent, u32 arg1)
         return;
 
     {
-        register u8 *entityBase asm("r4");
+        u8 *entityBase;
         entityBase = (u8 *)gEntities;
         if (*(u16 *)(entityBase + 2) > 408) {
             sub_08006B88(&gIwram_35E0, 0x800);
@@ -64,7 +64,7 @@ void sub_08000B6C(void *ent, u32 arg1)
     }
 
     {
-        register u8 *entityBase asm("r4");
+        u8 *entityBase;
         s32 delta;
         entityBase = (u8 *)gEntities;
         delta = -0x104;

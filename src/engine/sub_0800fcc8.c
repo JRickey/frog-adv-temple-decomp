@@ -17,7 +17,7 @@ void sub_0800FCC8(u8 arg)
  * return value pins to r2 and is left undefined in default. */
 void *sub_0800FCE4(u8 idx)
 {
-    register void *ret asm("r2");
+    void *ret;
     switch (idx) {
     case 0:
         ret = (void *)0x02000000;
@@ -34,7 +34,7 @@ void *sub_0800FCE4(u8 idx)
 
 void *sub_0800FD18(u8 idx)
 {
-    register void *ret asm("r2");
+    void *ret;
     switch (idx) {
     case 0:
         ret = (void *)0x0600E000;

@@ -13,12 +13,12 @@ extern void sub_0802BA64(void);
 
 void sub_0800D1F8(void)
 {
-    register GameStuff *gs asm("r6");
-    register u8 *base asm("r4");
+    GameStuff *gs;
+    u8 *base;
     u32 *counter;
     u32 diff;
     u8 threshold;
-    register u8 *ctr asm("r1");
+    u8 *ctr;
     u8 val;
 
     if (sub_0800679C((u8 *)&gIwram_6110, 3, 0) != 0) {

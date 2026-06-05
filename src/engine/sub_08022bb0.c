@@ -86,10 +86,10 @@ void sub_08022CD4(void)
 {
     u8 i;
     u32 slot;
-    register struct Entity *base asm("r5");
-    register struct Entity *baseCopy asm("r3");
-    register u32 value asm("r2");
-    register u8 *ptr asm("r1");
+    struct Entity *base;
+    struct Entity *baseCopy;
+    u32 value;
+    u8 *ptr;
 
     for (i = 0; i < 14; i++) {
         sub_080210A0(i + 12, (const void *)sLevelLayoutPtrs_3116B8[i], 0x400, 20, 0x81, 4, 3, 3);

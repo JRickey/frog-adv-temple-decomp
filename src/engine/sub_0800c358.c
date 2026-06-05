@@ -31,7 +31,7 @@ void sub_0800C358(u8 mode)
     }
 
     if (mode == 22) {
-        register u8 *base4 asm("r4") = (u8 *)0x03006110;
+        u8 *base4 = (u8 *)0x03006110;
         if (sub_0800679C(base4, 5, 3) != 0) {
             if (sub_0800679C(base4, 5, 2) == 0) {
                 sub_08006600(base4, 5, 2);
@@ -54,7 +54,7 @@ void sub_0800C3E4(u8 mode)
     }
 
     if (mode == 21) {
-        register u8 *base4 asm("r4") = (u8 *)0x03006110;
+        u8 *base4 = (u8 *)0x03006110;
         if (sub_0800679C(base4, 5, 0) != 0) {
             if (sub_0800679C(base4, 5, 1) == 0) {
                 sub_08006600(base4, 5, 1);
