@@ -801,7 +801,8 @@ SECTIONS {
         asm/text/text_0x080347a8.o(.text);  /* 0x080347a8 - 0x08034898, raw bytes */
         src/game/sub_08034898.o(.text);
         asm/disasm_0x08034898.o(.text);  /* 0x08034898 - 0x08034900, sub_08034898 (auto-peeled) */
-        asm/text/text_0x08034900.o(.text);  /* 0x08034900 - 0x0803578c, raw bytes */
+        asm/disasm_0x08034900.o(.text);  /* 0x08034900 - 0x08034924, sub_08034900 (auto-peeled) */
+        asm/text/text_0x08034924.o(.text);  /* 0x08034924 - 0x0803578c, raw bytes */
         src/game/sub_0803578c.o(.text);
         asm/text/text_0x080357ec.o(.text);  /* 0x080357ec - 0x08035d7c, raw bytes */
         src/game/sub_08035d7c.o(.text);  /* 0x08035d7c - 0x08035d84, sub_08035D7C (Thumb-to-ARM interwork thunk -> IntrEnable) */
