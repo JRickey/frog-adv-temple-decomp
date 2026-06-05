@@ -62,7 +62,7 @@
 @   0x080349d2: bdf0        pop	{r4, r5, r6, r7, pc}
 @   0x080349d4: ffff        0000 	vaddl.u<illegal width 64>	q8, d15, d0
 
-        thumb_func_start sub_08034968
-sub_08034968: @ 0x08034968
+        thumb_func_start __muldi3
+__muldi3: @ 0x08034968 — libgcc 64-bit integer multiply helper
         .incbin "frog_us_baserom.gba", 0x34968, 0x70
-        thumb_func_end sub_08034968
+        thumb_func_end __muldi3
