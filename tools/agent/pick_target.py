@@ -62,14 +62,12 @@ INCBIN_SIZE_RE = re.compile(
 THUMB_AVG_INSTR_BYTES = 2  # Thumb-1 is mostly 2-byte; BL is 4 — estimate only
 DEFAULT_NAME_PREFIX_MIN = 3
 
-# libgcc helpers compiled into the ROM. These are byte-identical to the
-# corresponding members of tools/agbcc/lib/libgcc.a (modulo BL relocations
-# resolved against the in-ROM `__divsi3_help` site at 0x08033da8). They are
-# NOT decomp targets — the asm/disasm_*.s slices that host them are already
-# in their final state: labelled with the canonical libgcc symbol name so
-# `bl __divsi3` / `bl _call_via_r3` etc. from project code resolve to the
-# in-ROM bytes via the linker. See docs/codegen-notes.md "In-ROM libgcc
-# helpers" + "`_call_via_rX` libgcc thunk table".
+# libgcc helpers are NOT decomp targets. The known helper run is linked
+# directly from tools/agbcc/lib/libgcc.a in linker.ld, with compatibility
+# aliases for old sub_XXXXXXXX call sites. Do not create C scaffolds or peeled
+# asm stubs for these names; if a newly peeled range is byte-identical to a
+# libgcc archive member, wire that member into linker.ld and delete the stub.
+# See docs/codegen-notes.md "In-ROM libgcc helpers".
 LIBGCC_SYMBOLS = frozenset({
     "__divsi3",
     "__udivsi3",
@@ -322,15 +320,13 @@ def _sheet_status(addr: int) -> tuple[str, str] | None:
 
 
 def classify(t: Target, min_prefix: int) -> Target:
-    # Guard 0: libgcc helpers — permanent-asm by design. The asm slices that
-    # host them are already labelled with the canonical libgcc name so the
-    # linker resolves project-emitted `bl __divsi3` etc. to the in-ROM bytes.
-    # No C scaffold is wanted (would just be NAKED .incbin busywork) and the
-    # picker should not suggest these as decomp candidates.
+    # Guard 0: libgcc helpers — linked from libgcc.a by design. No C scaffold
+    # or asm stub is wanted, and the picker should never suggest these as
+    # decomp candidates.
     if t.name in LIBGCC_SYMBOLS:
         t.legality_note = (
-            f"skipped: {t.name} is an in-ROM libgcc helper (permanent-asm). "
-            "Already labelled correctly in asm/disasm_*.s; not a decomp target."
+            f"skipped: {t.name} is an in-ROM libgcc helper linked from libgcc.a. "
+            "Not a decomp target; wire exact archive members in linker.ld instead."
         )
         return t
 

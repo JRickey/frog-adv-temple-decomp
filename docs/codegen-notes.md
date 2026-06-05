@@ -503,13 +503,13 @@ Reads as "set bits 0 and 1 individually". Two `|=` statements
 (`s->flags |= 1; s->flags |= 2;`) would each produce a full
 load-modify-store and not match. Worked example: `sub_08020B30`.
 
-## In-ROM libgcc helpers — rename the peeled symbol, don't extern it
+## In-ROM libgcc helpers — link archive members, don't decompile
 
 When agbcc lowers `u32 % u32` (or `/`, `<<` on 64-bit, etc.) it emits a
 BL to a libgcc helper like `__umodsi3`. Konami statically linked
-libgcc, so the helper sits in the ROM at a fixed address — and the
-peeled asm at that address is byte-identical to
-`tools/agbcc/lib/libgcc.a:_umodsi3.o`.
+libgcc, so the helper sits in the ROM at a fixed address. If a peeled
+range is byte-identical to a member of `tools/agbcc/lib/libgcc.a`, it is
+not a decomp target.
 
 Trying to keep the peel's auto-name (`sub_08033F5C`) and just declare
 `extern u32 sub_08033F5C(u32, u32)` in the .c **does not match** — agbcc
@@ -517,10 +517,19 @@ hard-codes the call to the canonical libgcc name. ld then sees
 `__umodsi3` undefined, pulls libgcc's copy, and places it at the end of
 `.text` — wrong address, wrong BL offset.
 
-Fix: rename the peeled `thumb_func_start sub_XXXXXXXX` symbol to the
-libgcc name in both the `.s` file and the `linker.ld` comment. The C
-`%`/`/` etc. then resolves to the in-ROM copy directly. Update the
-peel header's name comment too so future agents see what it really is.
+Fix: put the exact archive member in the address-ordered `.text` list in
+`linker.ld`, e.g. `*libgcc.a:_umodsi3.o(.text);`. Delete the peeled asm
+stub and any C scaffolding for that helper. Add linker aliases only when
+existing project code still references old `sub_XXXXXXXX` names:
+
+```ld
+*libgcc.a:_umodsi3.o(.text);
+sub_08033F5C = __umodsi3;
+```
+
+For archive members with static BSS, place the member's `.bss` in the
+known runtime slot too. The current soft-float run does this for
+`fp-bit.o` and `dp-bit.o` at `0x03003440` and `0x03003450`.
 
 Verify by inspecting libgcc:
 
@@ -528,8 +537,9 @@ Verify by inspecting libgcc:
 arm-none-eabi-objdump -d tools/agbcc/lib/libgcc.a | less   # find _umodsi3.o etc.
 ```
 
-and comparing bytewise against the peeled range. Worked example:
-`sub_08000764` (LCG-mod-byte) → `__umodsi3` at `0x08033f5c`.
+and comparing bytewise against the ROM range. Worked examples in
+`linker.ld`: `_call_via_rX.o`, `_divsi3.o`, `_umodsi3.o`, `fp-bit.o`,
+`_muldi3.o`, and `dp-bit.o`.
 
 ## Thumb-callable ARM interwork thunks: declare `thumb_func_start`
 
@@ -1028,33 +1038,35 @@ insn_diff 20 with old_agbcc `-O2`; the first drift is the compiler's early
 post-call temporaries, pointer/cast stores, K&R spelling) stay in the same
 basin; varargs and `volatile` stack copies regress by adding a frame.
 
-## In-ROM libgcc helpers (`__divsi3`, `__umodsi3`, `__umulsi3`)
+## In-ROM libgcc helpers (`__divsi3`, `__umodsi3`, soft-float)
 
 The agbcc 2.x toolchain ships its libgcc helpers into the ROM rather than
 through dynamic linking. When you peel a small Thumb function that's just
 `stmfd sp!, …` + `bl <something>` + `ldmfd sp!, …`, check
 `tools/agbcc/lib/libgcc.a` for a byte-identical match: it's often a
-libgcc helper that the linker inlined into the source ROM. Rename the
-peeled symbol accordingly in `asm/disasm_*.s` + `linker.ld`.
+libgcc helper that the linker inlined into the source ROM. Link the
+archive member in `linker.ld` and remove the peel/scaffold.
 
 Detected examples so far:
 - `__umodsi3` at 0x08033F5C (found in pass 2 / bootstrap)
 - `__divsi3` at 0x08033D14 (found in iter-1, alongside `sub_0802E5D8`)
+- `fp-bit.o` at 0x0803401C..0x08034968 (single-precision soft-float)
+- `dp-bit.o` at 0x080349D8..0x08035774 (double-precision soft-float)
 
 A regular code-region peel that's actually a libgcc helper will:
 - Be small (~200 bytes).
 - Have no `bl` to other project code.
 - Show up at addresses clustered near each other (the libgcc segment
-  in this ROM is roughly `[0x08033d14, 0x0803401c)`).
+  in this ROM is roughly `[0x08033ca4, 0x0803578c)`).
 
 Compare bytes via:
 ```sh
 arm-none-eabi-objdump -dz tools/agbcc/lib/libgcc.a 2>&1 | grep -A20 '<__divsi3>'
 ```
 
-Naming the symbol after libgcc form preserves call-site readability —
-calls to `__divsi3` make immediate semantic sense; calls to `sub_08033D14`
-require chasing back to the asm.
+Canonical libgcc symbols should come from the linked archive member.
+Keep old address names only as linker-script aliases for already-written
+project code; new C should call/trigger the canonical helper names.
 
 ## Sine LUT shape: 256+64 = 320 entries
 
@@ -1156,21 +1168,9 @@ pointer call would otherwise need `mov lr, pc; bx rN`.
 
 Detected in this ROM at `0x08033cd8` (block runs to `0x08033d14`,
 i.e. the next libgcc artefact — `__divsi3`). The whole 60-byte
-block is a single archive member, so peel as one unit:
-
-```sh
-python3 tools/disasm/peel.py --start 0x08033cd8 --end 0x08033d14 \
-        --mode thumb --force-boundary
-```
-
-`--force-boundary` is required because `auto_peel.py`'s boundary
-detector mis-fires on bare `bx rN; nop` pairs (no prologue) and
-sees the 14 sub-entries as one 60-byte function.
-
-Inside the resulting `asm/disasm_0x08033cd8.s`, declare each
-`_call_via_rN` as its own `thumb_func_start` symbol so ld resolves
-the canonical libgcc name to the in-ROM location. Bytewise verify
-against `tools/agbcc/lib/libgcc.a:_call_via_rX.o`:
+block is a single archive member, so link `*libgcc.a:_call_via_rX.o(.text)`
+at that point in `linker.ld`. Bytewise verify against
+`tools/agbcc/lib/libgcc.a:_call_via_rX.o`:
 
 ```sh
 ar -p tools/agbcc/lib/libgcc.a _call_via_rX.o > /tmp/lib_call_via.bin
@@ -1181,8 +1181,8 @@ with open('frog_us_baserom.gba','rb') as f:
 ")
 ```
 
-Joins `__umodsi3` (0x08033f5c) and `__divsi3` (0x08033d14) in the
-ROM's libgcc cluster `[0x08033cd8, 0x0803401c)`.
+Joins `__umodsi3` (0x08033f5c), `__divsi3` (0x08033d14), and the
+soft-float archive members in the ROM's libgcc cluster.
 
 ## Apostrophe trap fires at COMPILE time too (not just pre-commit)
 

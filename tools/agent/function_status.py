@@ -7,8 +7,8 @@ every function into exactly one status, so a future cleanup/reclaim pass can pul
 its worklist with `--status <X>` instead of re-deriving it.
 
 Statuses (one per function, in priority order):
-  asm            — still an un-decompiled slice in asm/disasm_*.s (libgcc helpers
-                   excluded — they are permanent-asm by design).
+  asm            — still an un-decompiled slice in asm/disasm_*.s. libgcc helpers
+                   are excluded because they are linked from libgcc.a by design.
   deferred       — has a docs/deferred-analysis/<fn>.md stash (a full-effort attempt
                    that honestly left the asm slice in place; resume from the .md).
   naked          — defined in src but uses NAKED+NON_MATCHING (byte-matches via the
@@ -63,7 +63,7 @@ FUNC_HEADER_RE = re.compile(r"^[A-Za-z_][\w\s\*]*\s+([A-Za-z_]\w*)\s*\([^;]*\)\s
 NAKED_RE = re.compile(r"\bNAKED\b")
 THUMB_START_RE = re.compile(r"^\s*(?:thumb_func_start|arm_func_start)\s+(\S+)\s*$")
 
-# Mirror pick_target.LIBGCC_SYMBOLS — these asm slices are permanent-asm, not work.
+# Mirror pick_target.LIBGCC_SYMBOLS — these helpers are linked from libgcc.a, not work.
 LIBGCC_SYMBOLS = frozenset({
     "__divsi3", "__udivsi3", "__umodsi3", "__ashldi3",
     "_call_via_r0", "_call_via_r1", "_call_via_r2", "_call_via_r3",

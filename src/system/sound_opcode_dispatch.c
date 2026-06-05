@@ -16,9 +16,8 @@
  * handler-private cursor state, not yet decoded.
  *
  * Called from sub_0802F4B0 (per-VBlank mixer driver). The handler
- * dispatch goes through agbcc’s libgcc thunk `_call_via_r2` at 0x08033ce0
- * (peeled into asm/disasm_0x08033cd8.s as the canonical 14-entry
- * `_call_via_rX` helper block).
+ * dispatch goes through agbcc's libgcc thunk `_call_via_r2` at 0x08033ce0
+ * (linked from libgcc.a:_call_via_rX.o as the canonical 14-entry helper block).
  *
  * Matching notes:
  *   - `i` and `byteOffset` are pinned because the ROM keeps them in r5/r4

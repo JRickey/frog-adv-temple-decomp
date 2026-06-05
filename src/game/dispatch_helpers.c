@@ -14,9 +14,9 @@
  * by pendingMode, and finishes with sub_08009A58 + sub_08009188.
  *
  * The two `sEntityProcB[id]()` / `sEntityProcD[id]()` indirect calls
- * go through libgcc's _call_via_r0 helper
- * (asm/disasm_0x08033cd8.s) — agbcc lowers a Thumb function-pointer
- * call to that helper rather than emitting `bx r0` inline.
+ * go through libgcc's _call_via_r0 helper from libgcc.a:_call_via_rX.o;
+ * agbcc lowers a Thumb function-pointer call to that helper rather than
+ * emitting `bx r0` inline.
  *
  * Uses the same explicit table-offset idiom as sub_0800A26C: load the
  * gGameStuff base through the linker-assigned IWRAM symbol, keep the

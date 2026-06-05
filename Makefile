@@ -166,26 +166,6 @@ src/system/sound_channel_state.s: CC = $(OLD_AGBCC_BIN)
 src/system/sound_mixer.s: CFLAGS += -fforce-addr -fno-gcse
 src/system/sound_mixer_tail.s: CC = $(OLD_AGBCC_BIN)
 src/system/sound_mixer_tail.s: CFLAGS += -fforce-addr -fno-gcse -fno-cse-follow-jumps
-# __fixunssfsi uses `pop {r4, pc}` (non-interwork form); override interwork flag.
-src/game/sub_08033da8.s: CFLAGS += -mno-thumb-interwork
-# sub_08034760 uses `pop {r4, pc}` epilogue
-src/game/sub_08034760.s: CFLAGS += -mno-thumb-interwork
-# sub_08034898 uses `pop {pc}` epilogue
-src/game/sub_08034898.s: CFLAGS += -mno-thumb-interwork
-# sub_080340D4 uses `pop {r4, pc}` epilogue
-src/game/sub_080340d4.s: CFLAGS += -mno-thumb-interwork
-# sub_0803401C (float-reassembly companion to sub_080340D4) uses `pop {r4-r6, pc}`
-src/game/sub_0803401c.s: CFLAGS += -mno-thumb-interwork
-# sub_08034924 uses `pop {pc}` epilogue
-src/game/sub_08034924.s: CFLAGS += -mno-thumb-interwork
-# sub_0803493C uses `pop {r4, r5, r6, pc}` epilogue
-src/game/sub_0803493c.s: CFLAGS += -mno-thumb-interwork
-# sub_0803457C uses `pop {r4, pc}` epilogue
-src/game/sub_0803457c.s: CFLAGS += -mno-thumb-interwork
-
-
-
-
 # Enable verbose output
 ifeq ($(V),1)
 	Q =
@@ -309,10 +289,3 @@ us:
 # Matches the baserom epilogue (pop {r4,r5,pc} instead of bx r1);
 # the TU was compiled without -mthumb-interwork.
 src/game/sub_0803578c.s: CFLAGS = -Werror -O2 -fhex-asm
-
-# sub_080342CC is __addsf3 from libgcc fp-bit.c, compiled without -mthumb-interwork.
-# The epilogue is pop {r4, pc} instead of pop {r4}; pop {r1}; bx r1.
-src/game/sub_080342cc.s: CFLAGS = -Werror -O2 -fhex-asm
-# sub_080342F8 is __subsf3 from libgcc fp-bit.c, compiled without -mthumb-interwork.
-# The epilogue is pop {r4, pc} instead of pop {r4}; pop {r1}; bx r1.
-src/game/sub_080342f8.s: CFLAGS = -Werror -O2 -fhex-asm
