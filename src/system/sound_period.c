@@ -51,7 +51,7 @@ extern u32 __udivsi3(u32 num, u32 den);
 u32 sub_080301C4(MixEntry *entry, u8 b, u8 c)
 {
     u32 a = entry->anchor;
-    register u32 r3 asm("r3");
+    u32 r3;
 
     if (c == 0) {
         u32 s;
@@ -72,7 +72,7 @@ u32 sub_080301C4(MixEntry *entry, u8 b, u8 c)
     same_note:
         r3 = entry->basePeriod << 12;
     } else {
-        register const u16 *table asm("r2");
+        const u16 *table;
         register u32 d asm("r1");
         u16 hi;
         s32 delta;
@@ -230,8 +230,8 @@ s32 sub_0803030C(s32 channel, u32 *state_ptr)
     if (ch > 3) {
         SoundSlotAcc *swSlots;
         SoundSystemAcc *ss;
-        register SoundSlotAcc *slot asm("r2");
-        register s32 chShifted asm("r0");
+        SoundSlotAcc *slot;
+        s32 chShifted;
         ss = *gpss;
         swSlots = *(SoundSlotAcc **)((u8 *)ss + SOUND_SYSTEM_SW_SLOTS_OFFSET);
         chShifted = ch << 6;
@@ -255,7 +255,7 @@ s32 sub_0803030C(s32 channel, u32 *state_ptr)
 
 s32 sub_0803038C(s32 channel, u32 *state_ptr)
 {
-    register s32 ch asm("r5");
+    s32 ch;
     u32 *sp;
     register u8 *stream asm("ip");
     register SoundSystemAcc **gpss asm("r8");
@@ -265,7 +265,7 @@ s32 sub_0803038C(s32 channel, u32 *state_ptr)
     stream = (u8 *)*sp;
 
     if (ch <= 3) {
-        register SoundSystemAcc **gp asm("r3");
+        SoundSystemAcc **gp;
         register SoundSystemAcc *ss asm("r4");
         register u32 flagOff asm("r2");
         register u32 period asm("r0");
@@ -275,7 +275,7 @@ s32 sub_0803038C(s32 channel, u32 *state_ptr)
         u32 flagsVal;
         SoundCommandBytes *cmd;
         register SoundSystemAcc **gpDirty asm("r3");
-        register u32 *flagsDirty asm("r1");
+        u32 *flagsDirty;
 
         gp = &gpSoundSystemAcc;
         directOff = ch << 3;
@@ -305,16 +305,16 @@ s32 sub_0803038C(s32 channel, u32 *state_ptr)
         flagsDirty = (u32 *)((u8 *)flagsDirty + flagOff);
         *flagsDirty |= SOUND_FLAG_UPDATE_DIRTY;
     } else {
-        register SoundSystemAcc **gp asm("r2");
-        register SoundSystemAcc *ss asm("r3");
-        register SoundSlotAcc *slot asm("r0");
+        SoundSystemAcc **gp;
+        SoundSystemAcc *ss;
+        SoundSlotAcc *slot;
         register u8 *periodSlot asm("r6");
         register u32 period asm("r0");
         SoundCommandBytes *cmd;
         register u32 scale asm("r2");
         register SoundSystemAcc **gpDirty asm("r2");
-        register u8 *ssDirty asm("r0");
-        register SoundSlotAcc *slotDirty asm("r1");
+        u8 *ssDirty;
+        SoundSlotAcc *slotDirty;
         register u32 chShift asm("r1");
 
         ch -= 4;
@@ -357,7 +357,7 @@ extern void sub_0802E724(s32 ch);
 
 s32 sub_0803045C(s32 channel, u32 *state_ptr)
 {
-    register s32 ch asm("r3");
+    s32 ch;
     u32 *sp;
     u8 *stream;
     u32 *flags;
@@ -368,7 +368,7 @@ s32 sub_0803045C(s32 channel, u32 *state_ptr)
     stream = (u8 *)*sp;
 
     if (ch <= 3) {
-        register SoundSystemAcc **gp asm("r1");
+        SoundSystemAcc **gp;
         SoundSystemAcc *ss;
         u32 flagOff;
         u32 channelOff;
@@ -380,9 +380,9 @@ s32 sub_0803045C(s32 channel, u32 *state_ptr)
         channelOff = (ch << 3) + SOUND_DIRECT_CHANNEL_BASE;
         gateBase = (u8 *)ss + channelOff;
     } else {
-        register SoundSystemAcc *ss asm("r1");
-        register u32 arrayOff asm("r2");
-        register u32 slotOff asm("r1");
+        SoundSystemAcc *ss;
+        u32 arrayOff;
+        u32 slotOff;
         SoundSystemAcc **gp;
         u8 *slot;
         u8 **slotPtr;
@@ -423,14 +423,10 @@ extern u32 sub_0802E3C8(u32 limit);
 
 u32 sub_080304F4(s32 channel, SoundChannelSeq *seq)
 {
-    /* r2 is the target's channel home across both gate blocks. */
-    register s32 ch asm("r2");
-    /* r4 is the target's sequencer home and all op/cursor accesses derive from it. */
-    register SoundChannelSeq *s asm("r4");
-    /* r5 is the target's opcode pointer home across the whole handler. */
-    register u8 *op asm("r5");
-    /* r0 holds the cursor on entry and through the countdown arithmetic. */
-    register u32 cursor asm("r0");
+    s32 ch;
+    SoundChannelSeq *s;
+    u8 *op;
+    u32 cursor;
     u8 *nextOp;
 
     ch = channel;
@@ -475,8 +471,8 @@ u32 sub_080304F4(s32 channel, SoundChannelSeq *seq)
 
             ss = gpSoundSystem;
             if (!(SOUND_SYSTEM_SW_SLOT_FOR_CHANNEL(ss, ch)->flags & SOUND_SLOT_FLAG_RETIRE_PENDING)) {
-                /* r1/r0 reproduce the target stream-table probe without clobbering ch in r2. */
-                register void **streamTable asm("r1");
+                /* r0 keeps the stream-table probe in the target instruction shape. */
+                void **streamTable;
                 register u32 streamOff asm("r0");
 
                 streamTable = (void **)SOUND_SYSTEM_STREAM_TABLE(ss);
@@ -541,8 +537,8 @@ u32 sub_080304F4(s32 channel, SoundChannelSeq *seq)
 
             ss = gpSoundSystem;
             {
-                /* r1/r0 reproduce the target stream-table probe without clobbering ch in r2. */
-                register void **streamTable asm("r1");
+                /* r0 keeps the stream-table probe in the target instruction shape. */
+                void **streamTable;
                 register u32 streamOff asm("r0");
 
                 streamTable = (void **)SOUND_SYSTEM_STREAM_TABLE(ss);
