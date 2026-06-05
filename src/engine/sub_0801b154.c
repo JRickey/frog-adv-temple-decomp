@@ -116,7 +116,7 @@ void sub_0801B274(void)
 void sub_0801B278(u8 count)
 {
     vu32 *dma;
-    register const u8 *const *entries asm("r9");
+    const u8 *const *entries;
     u16 fill;
     u8 i;
     const u8 *entry;

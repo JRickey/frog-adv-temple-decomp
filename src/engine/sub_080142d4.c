@@ -60,7 +60,7 @@ u8 sub_080142D4(void)
     sub_080135B8(0, 0, 0, 1);
 
     {
-        register struct IwramAt60A0 *p60a0 asm("r2") = &gIwram_60A0;
+        struct IwramAt60A0 *p60a0 = &gIwram_60A0;
         u32 f10;
 
         p60a0->field_4c += gIwram_6540.field_34;

@@ -40,7 +40,7 @@ void sub_08020414(struct Entity *entity, u8 channel, u8 halfW, u8 halfH)
         {
             StructAt3003570 *p;
             u32 offset;
-            register u32 slot asm("r6");
+            u32 slot;
             u32 base;
             u32 sound;
             u32 handle;

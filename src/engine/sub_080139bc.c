@@ -16,8 +16,8 @@ extern void sub_08012BC4(u8 mode, u16 a, u16 b, u16 c, u16 d, void *tiles, u8 e)
 
 void sub_080139BC(u8 idx)
 {
-    register struct TilemapTableEntry *table asm("r6") = (struct TilemapTableEntry *)0x0830702c;
-    register struct TilemapTableEntry *desc asm("r4");
+    struct TilemapTableEntry *table = (struct TilemapTableEntry *)0x0830702c;
+    struct TilemapTableEntry *desc;
     u32 stride;
 
     stride = (u32)idx * 3;

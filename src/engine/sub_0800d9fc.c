@@ -26,7 +26,7 @@ void sub_0800DA10(void)
      * pointer and loading its 0xF0 value, and held live across that store:
      * the r3 pin + the separate `p` pointer + the `zero = 0` placement
      * reproduce baserom's instruction schedule. */
-    register u8 zero asm("r3");
+    u8 zero;
 
     for (i = 0; i <= 0x3f; i++) {
         (&gIwram_53A0)[i] = 0;

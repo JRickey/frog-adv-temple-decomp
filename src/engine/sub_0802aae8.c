@@ -27,7 +27,7 @@ void sub_0802AB14(void)
 {
     u8 i;
     u16 *flags;
-    register u32 offset asm("r0");
+    u32 offset;
 
     offset = 0xfb;
     flags = (u16 *)((u8 *)gEntities + (offset << 2));

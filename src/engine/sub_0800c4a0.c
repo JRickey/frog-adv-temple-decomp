@@ -29,7 +29,7 @@ void sub_0800C4A0(void)
     for (; i <= 3; i++) {
         u32 bit = (u8)i;
         if ((u8)sub_0800679C(base6110, 5, bit) != 0) {
-            register s32 sh asm("r1") = i;
+            s32 sh = i;
             base6110[0x33] |= 1 << sh;
         }
     }

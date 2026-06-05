@@ -43,7 +43,7 @@ void sub_08020E98(u32 arg)
             offset = (u32)i << 3;
             /* Keep the field-A base in r0 so agbcc emits the baserom's offset-first add. */
             {
-                register u32 fieldAAddr asm("r0") = (u32)&p->entries[0].fieldA;
+                u32 fieldAAddr = (u32)&p->entries[0].fieldA;
 
                 if (*(s32 *)(offset + fieldAAddr) != -1) {
                     sub_0802DC1C(fieldB_arr[i * 2], (u8)(m_shifted >> 24));

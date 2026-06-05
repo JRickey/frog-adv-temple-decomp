@@ -16,7 +16,7 @@ int sub_0801F8BC(u8 arg0)
     sub_0803578C(s.name, (const void *)0x081BE804, 10);
 
     {
-        register u32 mask asm("r0") = 0xffffff00;
+        u32 mask = 0xffffff00;
         s.attr = (s.attr & mask) | 0x02;
     }
     s.attr = (s.attr & 0xffff00ff) | 0x0300;

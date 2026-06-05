@@ -109,7 +109,7 @@ void sub_0801377C(void)
 
 void sub_08013828(void)
 {
-    register u32 zero asm("r2");
+    u32 zero;
     u8 *flags;
     u8 *control;
 

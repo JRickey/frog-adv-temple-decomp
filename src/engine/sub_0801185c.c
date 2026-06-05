@@ -107,7 +107,7 @@ void sub_080118FC(void)
 
 u32 sub_0801190C(void)
 {
-    register u32 result asm("r8");
+    u32 result;
     s32 x;
     s32 y;
 

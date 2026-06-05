@@ -14,7 +14,7 @@ void sub_0801129C(void)
 {
     u8 *state = (u8 *)0x03006540;
     s32 buf = 0x030063F0;
-    register u8 zero asm("r2") = 0;
+    u8 zero = 0;
     s32 p;
 
     for (p = buf + 15; p >= buf; p--) {

@@ -36,7 +36,7 @@ extern struct Unk03006420 gUnk03006420;
 
 u32 sub_08019E6C(void)
 {
-    register struct Unk03006420 *base asm("r4") = &gUnk03006420;
+    struct Unk03006420 *base = &gUnk03006420;
 
     if (base->active == 0) {
         sub_08019A14();

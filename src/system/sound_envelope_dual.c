@@ -349,7 +349,7 @@ void sub_0802EA2C(s32 step, u32 reload, s32 ch)
 {
     if (ch <= 2) {
         u8 *base;
-        register s32 off asm("r1");
+        s32 off;
         u32 half;
 
         base = (u8 *)gpSoundSystem;

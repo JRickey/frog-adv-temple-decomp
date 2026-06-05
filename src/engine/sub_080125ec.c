@@ -2,8 +2,8 @@
 
 void sub_080125EC(void)
 {
-    register u8 *unk6410 asm("r1") = (u8 *)0x03006410;
-    register u32 zero asm("r2") = 0;
+    u8 *unk6410 = (u8 *)0x03006410;
+    u32 zero = 0;
     u8 *unk6480;
 
     unk6410[0x0C] = 8;

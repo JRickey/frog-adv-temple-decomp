@@ -11,7 +11,7 @@ void sub_08022160(void)
 {
     struct Entity *elt;
     u8 i;
-    register struct Entity *base asm("r8");
+    struct Entity *base;
 
     if (gEntities[0].y <= 0x2B7)
         return;
