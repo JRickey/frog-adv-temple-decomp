@@ -36,7 +36,7 @@ void sub_0801288C(void)
     register u32 xWork asm("r2");
     u32 yWork;
     register u32 x asm("r8");
-    register u32 y asm("ip");
+    register u32 ipWork asm("ip");
     u32 flags;
     u32 width;
     register u32 height asm("r9");
@@ -68,7 +68,7 @@ void sub_0801288C(void)
         yCoord = *(s16 *)entityBase;
     yWork = yCoord * 3 + yOffset - yOffset + hold5 - hold5 + hold6 - hold6;
     yWork = (u16)yWork;
-    y = yWork;
+    ipWork = yWork;
     x = xWork >> 16;
     width = desc->width;
     yWork = desc->height;
@@ -90,12 +90,12 @@ void sub_0801288C(void)
 
     state = (u16 *)0x030060A0;
     stride = state[13];
-    dst += stride * y + x;
+    dst += stride * ipWork + x;
     src = srcBase[1];
     row = 0;
     bank = flags;
     if (row < height) {
-        register u32 loopState asm("ip") = (u32)state;
+        ipWork = (u32)state;
 
         do {
             col = 0;
@@ -109,7 +109,7 @@ void sub_0801288C(void)
             {
                 register u32 stride2 asm("r3");
 
-                stride2 = loopState;
+                stride2 = ipWork;
                 stride2 = ((struct BlitState_1288C *)stride2)->stride;
                 stride2 -= width;
                 dst += stride2;
