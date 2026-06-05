@@ -160,6 +160,9 @@ src/system/sound_mixer_tail.s: CFLAGS += -fforce-addr -fno-gcse -fno-cse-follow-
 src/game/sub_08033da8.s: CFLAGS += -mno-thumb-interwork
 # sub_08034760 uses `pop {r4, pc}` epilogue
 src/game/sub_08034760.s: CFLAGS += -mno-thumb-interwork
+# sub_08034898 uses `pop {pc}` epilogue
+src/game/sub_08034898.s: CFLAGS += -mno-thumb-interwork
+
 
 
 
