@@ -19,6 +19,45 @@ This was one of my favorite games as a kid. I am sure no one is going to attempt
 
 This is an agentic project. Instructions for your agent on how to work and contribute can be found at *CLAUDE.MD* and *AGENTS.MD* respectively.
 
+## Progress
+
+Current `main` builds a byte-identical ROM: `make check` passes, the built
+SHA1 equals the baserom SHA1, and `tools/agent/progress.py --per-function`
+reports `0` ROM-diff bytes with no nonmatching functions.
+
+There is still decompilation work remaining. As of my last check, I use ~400 register pins, there are a few instances of volatile asm,
+which will be cleaned up. I am trying my best to minimize the number of register pins used.
+
+More importantly, a large majority of the symbols are not named. A lot of locals are not properly named either.
+
+The generated estimate block below is the broader progress snapshot. The
+denominator is pinned at ~1114 functions — our working estimate of the total
+in the code region, which sits inside the Thumb prologue scan's 335…1140
+bracket. It's still an estimate, not a ground-truth disassembly. Note the
+`peeled-but-still-asm` count is file/slice-based, so it can differ from the
+function count reported by `progress.py`.
+
+<!-- BEGIN PROGRESS (managed by tools/agent/progress_stats.py) -->
+
+**All figures are estimates** — the function-count denominator (~1114) is a working estimate bracketed by a Thumb prologue
+scan, not a ground-truth disassembly. Treat ±20% as honest.
+Regenerate with `python3 tools/agent/progress_stats.py --update-readme`.
+
+- **Functions decompiled to C**: 841 / ~1114 estimated total (**75.5%**)
+  - true pure-C matches: 768
+  - NAKED+NON_MATCHING (asm fallback, byte-matches but not pure C): 73
+  - peeled-but-still-asm: 111
+  - not yet in C (non-matching tail — asm slices + raw INCBIN): ~273
+  - prologue-scan bracket (lower / upper): 335 / 1140
+- **Data deblobbed**: 594.9 KiB of 4.00 MiB (**14.53%**)
+  - raw INCBIN bytes: 3.42 MiB (85.5% of ROM)
+  - `database.json` entries: 265
+
+Code occupies roughly [0x08000000, 0x08036000) (~216.0 KiB). Past that the
+ROM is graphics, audio, level/script data, and lookup tables.
+
+<!-- END PROGRESS -->
+
 ## ROM info
 
 - Region: USA, North America
@@ -118,43 +157,6 @@ make check
 # Clean (keeps data/; add DATA=1 to drop it too)
 make tidy
 ```
-
-## Progress
-
-Current `main` builds a byte-identical ROM: `make check` passes, the built
-SHA1 equals the baserom SHA1, and `tools/agent/progress.py --per-function`
-reports `0` ROM-diff bytes with no nonmatching functions.
-
-There is still decompilation work remaining. As of my last check, I use ~400 register pins, there are a few instances of volatile asm,
-which will be cleaned up. I am trying my best to minimize the number of register pins used.
-
-More importantly, a large majority of the symbols are not named. A lot of locals are not properly named either.
-
-The generated estimate block below is the broader progress snapshot. It's original midpoint estimate is out of date, the
-`peeled-but-still-asm` count is file/slice-based, so it can differ from the
-function count reported by `progress.py`.
-
-The total number of functions as of now is at the high end of the original estimate, probably a little over 1000 functions.
-
-<!-- BEGIN PROGRESS (managed by tools/agent/progress_stats.py) -->
-
-**All figures are estimates** — the function-count denominator is a
-Thumb prologue scan, not a ground-truth disassembly. Treat ±20% as honest.
-Regenerate with `python3 tools/agent/progress_stats.py --update-readme`.
-
-- **Functions decompiled to C**: 791 / ~513 estimated total (**154.2%**)
-  - true pure-C matches: 767
-  - NAKED+NON_MATCHING (asm fallback, byte-matches but not pure C): 24
-  - peeled-but-still-asm: 153
-  - estimate range (lower / upper): 335 / 1140
-- **Data deblobbed**: 594.9 KiB of 4.00 MiB (**14.53%**)
-  - raw INCBIN bytes: 3.42 MiB (85.5% of ROM)
-  - `database.json` entries: 265
-
-Code occupies roughly [0x08000000, 0x08036000) (~216.0 KiB). Past that the
-ROM is graphics, audio, level/script data, and lookup tables.
-
-<!-- END PROGRESS -->
 
 ## Contributing
 

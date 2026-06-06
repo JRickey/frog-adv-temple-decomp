@@ -39,6 +39,13 @@ ROM_SIZE = 4 * 1024 * 1024  # 4 MiB
 # time of writing). Round up to the next 4-byte slot so we err generously.
 CODE_END_GUESS = 0x08036000
 
+# Working estimate of the total function count in the code region, used as the
+# headline denominator. The Thumb prologue scan brackets this between its
+# strong-signal lower bound (~335) and its aligned+ARM upper bound (~1140);
+# 1114 sits inside that bracket. Still an ESTIMATE — not a ground-truth
+# disassembly — so the README keeps the ±20% disclaimer.
+ESTIMATED_TOTAL_FUNCS = 1114
+
 
 @dataclass
 class FunctionCounts:
@@ -62,6 +69,13 @@ class FunctionCounts:
     @property
     def identified(self) -> int:
         return self.decomped_c + self.peeled_asm
+
+    @property
+    def remaining(self) -> int:
+        """Functions not yet decompiled to C (still asm slices or raw INCBIN) —
+        i.e. the "non-matching" tail: estimated total minus what's in C. Floored
+        at 0 in case decomped_c ever exceeds the estimate."""
+        return max(0, self.estimate_total - self.decomped_c)
 
 
 @dataclass
@@ -203,11 +217,11 @@ def gather_stats() -> tuple[FunctionCounts, DataStats]:
             db_entries = 0
 
     strong, aligned, arm = scan_function_prologues()
-    # Midpoint between strong (lower bound) and aligned*0.6 (upper bound minus
-    # known collision fudge — switch tables, BL stubs, etc account for ~40%
-    # of the aligned count empirically on similar GBA titles). Clamped to
-    # [strong, aligned].
-    estimate = max(strong, min(aligned, (strong + int(aligned * 0.6)) // 2 + arm))
+    # Headline denominator is the fixed working estimate (ESTIMATED_TOTAL_FUNCS),
+    # which sits inside the prologue scan's bracket. The scan's strong (lower)
+    # and aligned+arm (upper) bounds are still carried through for the range
+    # disclaimer shown in the output.
+    estimate = ESTIMATED_TOTAL_FUNCS
 
     total_c, naked_c = count_c_functions()
     fns = FunctionCounts(
@@ -250,8 +264,9 @@ def render_human(fns: FunctionCounts, data: DataStats) -> str:
     out.append(f"    - true pure-C     : {fns.true_c}")
     out.append(f"    - NAKED+NON_MATCH : {fns.naked_c}  (asm fallback — byte-matches, not pure C)")
     out.append(f"  peeled to asm slice : {fns.peeled_asm}")
+    out.append(f"  not yet in C (rem.) : {fns.remaining}  (non-matching tail: asm slices + raw INCBIN)")
     out.append(f"  estimated TOTAL     : {fns.estimate_total} "
-               f"(range {fns.strong_signal_total} … {fns.aligned_total + fns.arm_total})")
+               f"(prologue-scan bracket {fns.strong_signal_total} … {fns.aligned_total + fns.arm_total})")
     out.append(f"  → decomp progress   : {fmt_pct(fns.decomped_c, fns.estimate_total)} "
                f"(of estimated total)")
     out.append("")
@@ -279,8 +294,9 @@ def render_readme_section(fns: FunctionCounts, data: DataStats) -> str:
     lines = [
         README_BEGIN,
         "",
-        "**All figures are estimates** — the function-count denominator is a",
-        "Thumb prologue scan, not a ground-truth disassembly. Treat ±20% as honest.",
+        "**All figures are estimates** — the function-count denominator "
+        f"(~{fns.estimate_total}) is a working estimate bracketed by a Thumb prologue",
+        "scan, not a ground-truth disassembly. Treat ±20% as honest.",
         "Regenerate with `python3 tools/agent/progress_stats.py --update-readme`.",
         "",
         f"- **Functions decompiled to C**: {fns.decomped_c} / ~{fns.estimate_total} "
@@ -288,7 +304,8 @@ def render_readme_section(fns: FunctionCounts, data: DataStats) -> str:
         f"  - true pure-C matches: {fns.true_c}",
         f"  - NAKED+NON_MATCHING (asm fallback, byte-matches but not pure C): {fns.naked_c}",
         f"  - peeled-but-still-asm: {fns.peeled_asm}",
-        f"  - estimate range (lower / upper): {fns.strong_signal_total} / "
+        f"  - not yet in C (non-matching tail — asm slices + raw INCBIN): ~{fns.remaining}",
+        f"  - prologue-scan bracket (lower / upper): {fns.strong_signal_total} / "
         f"{fns.aligned_total + fns.arm_total}",
         f"- **Data deblobbed**: {fmt_bytes(data.rom_size - data.raw_blob_bytes)} "
         f"of {fmt_bytes(data.rom_size)} (**{deblob_pct:.2f}%**)",
@@ -358,6 +375,7 @@ def main() -> None:
                 "true_c": fns.true_c,
                 "naked_c": fns.naked_c,
                 "peeled_asm": fns.peeled_asm,
+                "remaining": fns.remaining,
                 "estimate_total": fns.estimate_total,
                 "strong_signal_lower": fns.strong_signal_total,
                 "aligned_upper": fns.aligned_total + fns.arm_total,
