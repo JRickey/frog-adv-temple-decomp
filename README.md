@@ -142,10 +142,10 @@ The total number of functions as of now is at the high end of the original estim
 Thumb prologue scan, not a ground-truth disassembly. Treat ±20% as honest.
 Regenerate with `python3 tools/agent/progress_stats.py --update-readme`.
 
-- **Functions decompiled to C**: 784 / ~513 estimated total (**152.8%**)
-  - true pure-C matches: 760
+- **Functions decompiled to C**: 791 / ~513 estimated total (**154.2%**)
+  - true pure-C matches: 767
   - NAKED+NON_MATCHING (asm fallback, byte-matches but not pure C): 24
-  - peeled-but-still-asm: 159
+  - peeled-but-still-asm: 153
   - estimate range (lower / upper): 335 / 1140
 - **Data deblobbed**: 594.9 KiB of 4.00 MiB (**14.53%**)
   - raw INCBIN bytes: 3.42 MiB (85.5% of ROM)
