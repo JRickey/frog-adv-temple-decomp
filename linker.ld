@@ -53,6 +53,9 @@ sScreenTilemapTable_308EF4 = 0x08308EF4;
  * sub_0801C900. Linker-assigned for the same defeat-the-fold reason as the
  * tilemap table above (sub_0801F418 / sub_0801F560). */
 sSceneRecordTable_308110 = 0x08308110;
+sSpawnTable_0830791C = 0x0830791C;
+sSpawnTable_083079DC = 0x083079DC;
+sSpawnRecords_08307CB0 = 0x08307CB0;
 
 /* Per-frame palette/tile sources for the animated-icon DMA in sub_08016650.
  * Declared as linker-assigned ROM symbols (not absolute casts) so agbcc
@@ -745,7 +748,6 @@ SECTIONS {
         src/game/sub_0802bc24.o(.text);
         src/game/sub_0802bdbc.o(.text);
         src/game/sub_0802bf58.o(.text);
-        asm/disasm_0x0802c000.o(.text);  /* 0x0802c000 - 0x0802c200, sub_0802C000 (auto-peeled) */
         src/game/sub_0802c200.o(.text);
         asm/disasm_0x0802c200.o(.text);  /* 0x0802c200 - 0x0802c3e4, sub_0802C200 (auto-peeled) */
         src/game/sub_0802c3e4.o(.text);
