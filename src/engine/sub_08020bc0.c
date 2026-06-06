@@ -9,10 +9,10 @@ typedef struct {
 
 #define gStructAt3003570 (*(StructAt3003570 *)0x03003570)
 
-extern u32 sub_08032148(void);
+extern u32 SoundSystem_IsActive(void);
 extern void SoundSlot_QueueRequest(void);
 
-/* When bit 1 of the 0x03003570 flags byte is set and sub_08032148() reports
+/* When bit 1 of the 0x03003570 flags byte is set and SoundSystem_IsActive() reports
  * zero, poke SoundSlot_QueueRequest. Sibling of sub_08020B88 in this cluster (same
  * push{lr}/bx-r0 void-tail epilogue).
  *
@@ -30,7 +30,7 @@ void sub_08020BC0(void)
     mask = 2;
     mask = mask & p->flags;
     if (mask != 0) {
-        if (sub_08032148() == 0) {
+        if (SoundSystem_IsActive() == 0) {
             SoundSlot_QueueRequest();
         }
     }
@@ -46,7 +46,7 @@ void sub_08020BE4(u32 arg)
 
 extern void sub_08031FDC(u32 a);
 
-/* Clear bit 0 of gStructAt3003570.flags, then if sub_08032148() is non-zero,
+/* Clear bit 0 of gStructAt3003570.flags, then if SoundSystem_IsActive() is non-zero,
  * call sub_08031FDC(1). Sibling of sub_08020BC0 in this cluster.
  *
  * agbcc matching lever: base pointer pinned to r0, mask to r1 so agbcc emits
@@ -61,7 +61,7 @@ void sub_08020BF0(void)
     mask = 0xfe;
     mask = mask & p->flags;
     p->flags = mask;
-    if (sub_08032148()) {
+    if (SoundSystem_IsActive()) {
         sub_08031FDC(1);
     }
 }

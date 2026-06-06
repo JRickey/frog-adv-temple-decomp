@@ -345,20 +345,20 @@ void sub_0802E934(void)
 }
 #endif
 
-void sub_0802EA2C(s32 step, u32 reload, s32 ch)
+void SoundEnvelope_SetOscillator(s32 step, u32 reload, s32 ch)
 {
     if (ch <= 2) {
-        u8 *base;
-        s32 off;
-        u32 half;
+        u8 *ssBase;
+        s32 channelOff;
+        u32 halfReload;
 
-        base = (u8 *)gpSoundSystem;
-        off = ch * SOUND_INLINE_CHANNEL_STRIDE;
-        SOUND_INLINE_ENVELOPE_A0_AT(base, off)->reload = reload;
-        base = (u8 *)gpSoundSystem + off;
-        half = reload >> 1;
-        SOUND_INLINE_ENVELOPE_A0_AT(base, 0)->countdown = half;
-        SOUND_INLINE_ENVELOPE_A0_AT(gpSoundSystem, off)->step = step;
+        ssBase = (u8 *)gpSoundSystem;
+        channelOff = ch * SOUND_INLINE_CHANNEL_STRIDE;
+        SOUND_INLINE_ENVELOPE_A0_AT(ssBase, channelOff)->reload = reload;
+        ssBase = (u8 *)gpSoundSystem + channelOff;
+        halfReload = reload >> 1;
+        SOUND_INLINE_ENVELOPE_A0_AT(ssBase, 0)->countdown = halfReload;
+        SOUND_INLINE_ENVELOPE_A0_AT(gpSoundSystem, channelOff)->step = step;
         return;
     }
 
@@ -366,10 +366,10 @@ void sub_0802EA2C(s32 step, u32 reload, s32 ch)
         return;
 
     {
-        u8 **bankp = (u8 **)((u8 *)gpSoundSystem + SOUND_SYSTEM_SW_SLOTS_OFFSET);
+        u8 **slotBankPtr = (u8 **)((u8 *)gpSoundSystem + SOUND_SYSTEM_SW_SLOTS_OFFSET);
         SlotEnvelopeA0 *env;
 
-        env = (SlotEnvelopeA0 *)(ch * SOUND_SW_SLOT_STRIDE + (s32)*bankp - SOUND_SW_SLOT_ENVELOPE_A0_BIAS);
+        env = (SlotEnvelopeA0 *)(ch * SOUND_SW_SLOT_STRIDE + (s32)*slotBankPtr - SOUND_SW_SLOT_ENVELOPE_A0_BIAS);
         env->reload = reload;
         env->countdown = reload >> 1;
         env->step = step;

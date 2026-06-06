@@ -21,7 +21,7 @@
 @   0x080317da: bc02        pop	{r1}
 @   0x080317dc: 4708        bx	r1
 
-        thumb_func_start sub_080317C0
-sub_080317C0: @ 0x080317c0
+        thumb_func_start SoundOp_SetEnvelopeC
+SoundOp_SetEnvelopeC: @ 0x080317c0
         .incbin "frog_us_baserom.gba", 0x317c0, 0x20
-        thumb_func_end sub_080317C0
+        thumb_func_end SoundOp_SetEnvelopeC

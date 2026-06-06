@@ -2,7 +2,7 @@
 @ Address-aligned bucket of unparsed baserom bytes.
 @ Range:  [0x08032200, 0x080325b0)  (0x3b0 bytes)
 @
-@ Post-peel chunk after sub_08032148.
+@ Post-peel chunk after SoundSystem_IsActive.
 @
 @ This file holds raw bytes only; no instructions are assembled here.
 

@@ -2,7 +2,7 @@
 
 extern void sub_0802F8F0(s32 idx);
 
-u32 sub_08031638(s32 channelIdx, u8 **cursor)
+u32 SoundOpcode_SetStreamPan(s32 channelIdx, u8 **cursor)
 {
     u8 *ptr = *cursor;
 

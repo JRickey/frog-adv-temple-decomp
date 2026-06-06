@@ -2,7 +2,7 @@
 @ Address-aligned bucket of unparsed baserom bytes.
 @ Range:  [0x080317e0, 0x0803189c)  (0xbc bytes)
 @
-@ Post-peel chunk after sub_080317C0.
+@ Post-peel chunk after SoundOp_SetEnvelopeC.
 @
 @ This file holds raw bytes only; no instructions are assembled here.
 

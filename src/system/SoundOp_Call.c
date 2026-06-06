@@ -2,7 +2,7 @@
 
 extern void sub_0802EF7C(u8 clearAcc, u16 value, s32 channel);
 
-u32 sub_08031798(u32 arg0, u8 **cursor)
+u32 SoundOp_Call(u32 arg0, u8 **cursor)
 {
     u8 *ptr = *cursor;
     u32 offset;
@@ -15,14 +15,14 @@ u32 sub_08031798(u32 arg0, u8 **cursor)
     return 1;
 }
 
-u32 sub_080317B0(u32 arg0, u8 **cursor)
+u32 SoundOp_Return(u32 arg0, u8 **cursor)
 {
     cursor[1] = 0;
     *cursor += 2;
     return 1;
 }
 
-u32 sub_080317C0(u32 arg0, u8 **cursor)
+u32 SoundOp_SetEnvelopeC(u32 arg0, u8 **cursor)
 {
     sub_0802EF7C((*cursor)[1], *(u16 *)(*cursor + 2), (s32)arg0);
     *cursor += 4;

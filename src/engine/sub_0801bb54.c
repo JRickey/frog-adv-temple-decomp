@@ -11,7 +11,7 @@ extern void text_0800e76c(void);
 extern void sub_0801BE7C(const u8 *str, int len, int x, int y, int a, int b, int c);
 extern u16 sub_080004C4(void);
 extern void sub_08017000(void);
-extern u32 sub_08032148(void);
+extern u32 SoundSystem_IsActive(void);
 extern u32 sub_08000900(void);
 extern void sub_08020BAC(void);
 
@@ -74,7 +74,7 @@ void sub_0801BB54(u8 kind)
         sub_0801BE7C(msgs.p[gIwram_34B0._data], len, x, yArg, 278, 14, 3);
 
         if (gIwram_34B4._data[0] != 0) {
-            while (sub_08032148() != 0 && gIwram_5398 == 0) {
+            while (SoundSystem_IsActive() != 0 && gIwram_5398 == 0) {
                 sub_08017000();
                 gIwram_5398 = sub_080004C4();
             }
@@ -115,7 +115,7 @@ void sub_0801BB54(u8 kind)
 
         sub_08000900();
         if (gIwram_34B4._data[0] != 0) {
-            while (sub_08032148() != 0 && gIwram_5398 == 0) {
+            while (SoundSystem_IsActive() != 0 && gIwram_5398 == 0) {
                 gIwram_5398 = sub_080004C4();
                 sub_08017000();
             }

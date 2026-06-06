@@ -1,6 +1,6 @@
 #include "sound.h"
 
-u8 sub_08032148(void)
+u8 SoundSystem_IsActive(void)
 {
     SoundRequestSlot *slot = gpSoundSystem->slot;
     u32 active = slot->flags & SOUND_REQUEST_FLAG_ACTIVE;

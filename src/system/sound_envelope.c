@@ -113,7 +113,7 @@ count_check:
         goto body;
 }
 
-/* sub_0802EB34 configures the clamp envelope (envelope-A at +0x1c) for
+/* SoundEnvelope_SetRamp configures the clamp envelope (envelope-A at +0x1c) for
  * one channel. Shipped NAKED + NON_MATCHING: classify_unmatchable reports
  * class3-libgcc (wide r4-r7 prologue plus lone __divsi3 BL). The readable
  * C bottoms out at byte_diff 126 because agbcc's final jump2 cross-jump
@@ -125,55 +125,55 @@ count_check:
  * available, and corpus history mirrors are not populated in this worktree.
  */
 #if defined(NON_MATCHING) || defined(NON_MATCHING_sub_0802EB34)
-void sub_0802EB34(u8 absolute, u16 target, u16 frames, s32 mode)
+void SoundEnvelope_SetRamp(u8 absolute, u16 target, u16 frames, s32 mode)
 {
     SoundSystem *ss;
     SlotClampEnvelope *env;
-    s32 dividend;
+    s32 delta;
 
     if (mode <= SOUND_INLINE_CHANNEL_COUNT - 1) {
         SoundSystem **gpp = &gpSoundSystem;
-        s32 viewOff = mode * SOUND_INLINE_CHANNEL_STRIDE + SOUND_INLINE_CHANNEL_BASE_OFFSET;
-        u8 *view;
+        s32 channelOffset = mode * SOUND_INLINE_CHANNEL_STRIDE + SOUND_INLINE_CHANNEL_BASE_OFFSET;
+        u8 *channelView;
 
         ss = *gpp;
-        view = (u8 *)ss + viewOff;
-        env = SOUND_SLOT_ENVELOPE_A((SoundSlot *)view);
+        channelView = (u8 *)ss + channelOffset;
+        env = SOUND_SLOT_ENVELOPE_A((SoundSlot *)channelView);
         if (absolute) {
             u8 *channelBase = (u8 *)ss + mode * SOUND_INLINE_CHANNEL_STRIDE;
             s32 signedTarget = (s16)target;
 
             env->limit = signedTarget - *(u16 *)(channelBase + SOUND_INLINE_CHANNEL_BASE_OFFSET);
-            dividend = signedTarget - ((s16) * (s16 *)(channelBase + SOUND_INLINE_CHANNEL_BASE_OFFSET) +
-                                       (s16) * (s16 *)(view + SOUND_SLOT_ENVELOPE_A_OFFSET));
+            delta = signedTarget - ((s16) * (s16 *)(channelBase + SOUND_INLINE_CHANNEL_BASE_OFFSET) +
+                                    (s16) * (s16 *)(channelView + SOUND_SLOT_ENVELOPE_A_OFFSET));
         } else {
-            dividend = (s16)target;
-            env->limit += dividend;
+            delta = (s16)target;
+            env->limit += delta;
         }
     } else {
-        SoundSlot *slot;
+        SoundSlot *swSlot;
 
         if (mode == SOUND_INLINE_CHANNEL_COUNT)
             return;
 
-        slot = SOUND_SYSTEM_SW_SLOT_FOR_CHANNEL(gpSoundSystem, mode);
-        env = SOUND_SLOT_ENVELOPE_A(slot);
+        swSlot = SOUND_SYSTEM_SW_SLOT_FOR_CHANNEL(gpSoundSystem, mode);
+        env = SOUND_SLOT_ENVELOPE_A(swSlot);
         if (absolute) {
             s32 signedTarget = (s16)target;
 
-            env->limit = signedTarget - *(u16 *)slot;
-            dividend = signedTarget - ((s16) * (s16 *)slot + (s16)env->acc);
+            env->limit = signedTarget - *(u16 *)swSlot;
+            delta = signedTarget - ((s16) * (s16 *)swSlot + (s16)env->acc);
         } else {
-            dividend = (s16)target;
-            env->limit += dividend;
+            delta = (s16)target;
+            env->limit += delta;
         }
     }
 
-    env->step = dividend / frames;
+    env->step = delta / frames;
 }
 #else
 NAKED
-void sub_0802EB34(u8 absolute, u16 target, u16 frames, s32 mode)
+void SoundEnvelope_SetRamp(u8 absolute, u16 target, u16 frames, s32 mode)
 {
     asm(".syntax unified\n"
         "    push    {r4, r5, r6, r7, lr}\n"

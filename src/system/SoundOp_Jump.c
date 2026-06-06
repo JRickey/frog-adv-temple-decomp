@@ -1,6 +1,6 @@
 #include "types.h"
 
-u32 sub_08031748(u32 arg0, u8 **cursor)
+u32 SoundOp_Jump(u32 arg0, u8 **cursor)
 {
     u8 *ptr = *cursor;
     u32 offset;

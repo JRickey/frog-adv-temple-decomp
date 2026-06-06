@@ -1,7 +1,7 @@
 #include "sound.h"
 #include "macros.h"
 
-/* sub_08030A44 — stream opcode that (re)defines a sample loop region.
+/* SoundOpcode_SetStreamLoop — stream opcode that (re)defines a sample loop region.
  *
  * A 10-byte sequencer opcode handler in the software-mix family
  * (signature shared with sub_0803030C / sub_0803038C / sub_0803045C:
@@ -65,7 +65,7 @@ typedef struct StreamLoopSystem {
 extern void sub_0802E418(void);
 extern void sub_0802E3F8(void);
 
-s32 sub_08030A44(s32 channel, u32 *cursor)
+s32 SoundOpcode_SetStreamLoop(s32 channel, u32 *cursor)
 {
     StreamLoopEntry *entry;
     StreamLoopSub *sub;

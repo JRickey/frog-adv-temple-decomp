@@ -2,7 +2,7 @@
 @ Address-aligned bucket of unparsed baserom bytes.
 @ Range:  [0x08030b34, 0x080315d8)  (0xaa4 bytes)
 @
-@ Post-peel chunk after sub_08030A44.
+@ Post-peel chunk after SoundOpcode_SetStreamLoop.
 @
 @ This file holds raw bytes only; no instructions are assembled here.
 
