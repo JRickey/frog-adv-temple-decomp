@@ -1,5 +1,10 @@
 # sub_08004FAC — deferred analysis (round 2 / Opus escalation)
 
+> **Update (2026-06-06):** the standalone asm slice `asm/disasm_0x08004fac.s` was
+> absorbed into this function's TU `src/game/sub_08004fac.c` as an `#else` NAKED `.incbin`
+> (matching bytes unchanged) and the slice file removed. The readable C stays under
+> `#ifdef NON_MATCHING` in that TU — resume the match there.
+
 mode-22 scene handler (`gGameStuff.mode == GAME_MODE_SCENE_22`). Canonical
 scene state machine: `while (mode == 22) { sub_08020BC0(); switch (state)
 {0..9} }`. The `mov pc, r0` at 0x08004fe0 is the C `switch` (10-entry inline

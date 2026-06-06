@@ -1,5 +1,10 @@
 # sub_0801CD0C — deferred analysis (round 29 update — Opus escalation)
 
+> **Update (2026-06-06):** the standalone asm slice `asm/disasm_0x0801cd0c.s` was
+> absorbed into this function's TU `src/engine/sub_0801cd0c.c` as an `#else` NAKED `.incbin`
+> (matching bytes unchanged) and the slice file removed. The readable C stays under
+> `#ifdef NON_MATCHING` in that TU — resume the match there.
+
 UI window-frame draw + inner-string render. Range [0x0801cd0c, 0x0801cec0),
 436 bytes, asm/disasm_0x0801cd0c.s -> src/engine/sub_0801cd0c.c.
 

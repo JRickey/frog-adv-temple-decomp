@@ -1,5 +1,10 @@
 # sub_0802CAFC — deferred analysis
 
+> **Update (2026-06-06):** the standalone asm slice `asm/disasm_0x0802cafc.s` was
+> absorbed into this function's TU `src/game/sub_0802cafc.c` as an `#else` NAKED `.incbin`
+> (matching bytes unchanged) and the slice file removed. The readable C stays under
+> `#ifdef NON_MATCHING` in that TU — resume the match there.
+
 Range [0x0802cafc, 0x0802cdd0) (724 bytes), Thumb, pure leaf (0 callees).
 Dest: `src/game/sub_0802cafc.c`. classify_unmatchable: ATTEMPT_MATCH.
 

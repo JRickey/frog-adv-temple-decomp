@@ -1,5 +1,10 @@
 # sub_0802A8FC — deferred (round 36, Opus)
 
+> **Update (2026-06-06):** the standalone asm slice `asm/disasm_0x0802a8fc.s` was
+> absorbed into this function's TU `src/engine/sub_0802a8fc.c` as an `#else` NAKED `.incbin`
+> (matching bytes unchanged) and the slice file removed. The readable C stays under
+> `#ifdef NON_MATCHING` in that TU — resume the match there.
+
 `void sub_0802A8FC(void)` at 0x0802a8fc, 256 bytes. Operates on entity-pool
 slots 10 and 11 (`gEntities[10]`/`gEntities[11]`), then calls
 `sub_08005D10(10, 11)`. Callees `sub_08020C78` (sound 43) and `sub_08005D10`

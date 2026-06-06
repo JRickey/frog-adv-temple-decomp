@@ -1,5 +1,10 @@
 # sub_0801DEA0 — deferred analysis (Round 31, Opus escalation)
 
+> **Update (2026-06-06):** the standalone asm slice `asm/disasm_0x0801dea0.s` was
+> absorbed into this function's TU `src/engine/sub_0801dea0.c` as an `#else` NAKED `.incbin`
+> (matching bytes unchanged) and the slice file removed. The readable C stays under
+> `#ifdef NON_MATCHING` in that TU — resume the match there.
+
 Two-row glyph text writer into one of four EWRAM tilemap scratch buffers
 (`0x02000000 + screen * 0x800`). Each glyph occupies one tilemap column over two
 rows: top tile at `(rowBase<<6) + colBase*2 + base`, bottom tile at `top + 0x40`.

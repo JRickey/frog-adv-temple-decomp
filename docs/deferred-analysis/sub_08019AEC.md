@@ -1,5 +1,10 @@
 # sub_08019AEC — deferred analysis (round 47, Opus escalation)
 
+> **Update (2026-06-06):** the standalone asm slice `asm/disasm_0x08019aec.s` was
+> absorbed into this function's TU `src/engine/sub_08019aec.c` as an `#else` NAKED `.incbin`
+> (matching bytes unchanged) and the slice file removed. The readable C stays under
+> `#ifdef NON_MATCHING` in that TU — resume the match there.
+
 Range `[0x08019aec, 0x08019db4)`, 712 bytes. The asm slice `asm/disasm_0x08019aec.s`
 incbin covers `[0x19aec, 0x19db4)` = BOTH functions under the `sub_08019AEC` label:
 - `sub_08019AEC` `[0x08019aec, 0x08019d6c)` — the room OAM-attribute streamer (320 instrs / 640 bytes).

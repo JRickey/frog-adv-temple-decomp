@@ -1,5 +1,10 @@
 # sub_0800EBDC — deferred
 
+> **Update (2026-06-06):** the standalone asm slice `asm/disasm_0x0800ebdc.s` was
+> absorbed into this function's TU `src/engine/sub_0800ebdc.c` as an `#else` NAKED `.incbin`
+> (matching bytes unchanged) and the slice file removed. The readable C stays under
+> `#ifdef NON_MATCHING` in that TU — resume the match there.
+
 Per-scene scroll commit + visible-screenblock blit. Slice
 `[0x0800ebdc, 0x0800ee34)` also carries trivial `sub_0800EE0C`
 (`REG_BLDCNT`/`REG_BLDALPHA` setter: `*(vu16*)0x04000050 = targets | 0x1740;

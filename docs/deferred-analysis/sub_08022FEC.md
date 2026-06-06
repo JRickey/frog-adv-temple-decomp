@@ -1,5 +1,10 @@
 # sub_08022FEC — deferred analysis
 
+> **Update (2026-06-06):** the standalone asm slice `asm/disasm_0x08022fec.s` was
+> absorbed into this function's TU `src/engine/sub_08022fec.c` as an `#else` NAKED `.incbin`
+> (matching bytes unchanged) and the slice file removed. The readable C stays under
+> `#ifdef NON_MATCHING` in that TU — resume the match there.
+
 Engine routine at 0x08022FEC (520 bytes), a two-phase entity-scene setup pass in
 `asm/disasm_0x08022fec.s`; destination `src/engine/sub_08022fec.c`.
 
