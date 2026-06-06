@@ -1,107 +1,104 @@
-# sub_08019AEC — deferred analysis (round 38, Opus escalation)
+# sub_08019AEC — deferred analysis (round 47, Opus escalation)
 
 Range `[0x08019aec, 0x08019db4)`, 712 bytes. The asm slice `asm/disasm_0x08019aec.s`
-contains TWO functions:
-- `sub_08019AEC` `[0x08019aec, 0x08019d6c)` — the room OAM-attribute streamer.
-- `sub_08019D90` `[0x08019d90, 0x08019db4)` — a trivial REG_BLDCNT/BLDALPHA setter
-  (`*(u16*)0x04000050 = 0x1142; *(u16*)0x04000052 = 0x050B;`). Byte-trivial; the
+incbin covers `[0x19aec, 0x19db4)` = BOTH functions under the `sub_08019AEC` label:
+- `sub_08019AEC` `[0x08019aec, 0x08019d6c)` — the room OAM-attribute streamer (320 instrs / 640 bytes).
+- pool `[0x08019d6c, 0x08019d90)` — 9 literal words.
+- `sub_08019D90` `[0x08019d90, 0x08019db4)` — trivial REG_BLDCNT/BLDALPHA setter
+  (`*(u16*)0x04000050 = 0x1142; *(u16*)0x04000052 = 0x050B;`). Byte-trivial. The
   blocker is entirely `sub_08019AEC`.
 
-## Semantics (fully reverse-engineered — CORRECT)
+## Semantics — UNCHANGED, fully correct (see round-38 note history below)
 
-Param `u8 dispatchIdx` (caller `sub_0800FE10` passes `*(s16*)(state+44)`).
+Param `u8 dispatchIdx`. Tables keyed by `gIwram_34B0._data` (24-byte stride from
+`sRoomDmaTable_080C1254` = 0x080C1254). `entry.word[0][dispatchIdx]` = `sub` (u16
+record list, 0xFFFF-delim, 0xFFFE = final sentinel). `entry.word[1]` = `data` (flat
+byte array; UNALIGNED u32 loads at byte offsets +0..+3). Count-skip loop → block-A
+guard → region1 while-loop (VRAM 0x0600D420/0x0600D820, stride out*48) → region2
+(0x0600DC20/0x0600E020) → tail (`if (sub[i]==0xFFFE) state[8]=0xFF`).
 
-Tables (24-byte stride keyed by `gIwram_34B0._data`, base `sRoomDmaTable_080C1254`
-= 0x080C1254):
-- `entry.word[0]` is `const u16 **`; `entry.word[0][dispatchIdx]` = `sub` (a u16
-  record list, 0xFFFF-delimited, 0xFFFE = final sentinel).
-- `entry.word[1]` = `*(u32*)(base + idx24 + 4)` = `data`, a flat byte array.
-  Inner reads are **UNALIGNED u32 loads at BYTE offsets +0,+1,+2,+3** from
-  `(u8*)data + (sub[i] << 7) + (k << 2)`. attr0(+0)/attr2(+2) are `<< 8`;
-  attr1(+1)/attr3(+3) are raw.
+## ROUND-47 BREAKTHROUGH: diff_count 196 → **131** via a NEW pin strategy
 
-Control flow: count-skip loop (advance `i` past `count = state[8]` 0xFFFF
-terminators) → block A guard → while-loop #1 (8 OAM slots → VRAM 0x0600D420 attr0,
-0x0600D820 attr2, stride out*48) → while-loop #2 (identical body → 0x0600DC20 /
-0x0600E020) → tail (`if (sub[i]==0xFFFE) state[8]=0xFF`). Loops #1/#2 share the
-advancing `i` and an identical guard `(u16)(sub[i]+2) > 1`; written as plain
-`while`, agbcc deletes loop #2 (dead). The `if (guard<=1) goto next; do{...}while`
-form keeps both (size 0x280=640 real).
+The round-38 note (and every prior attempt) pinned ALL FIVE registers
+(i=sl, idx4=r9, tb4=r8, gbase=r7, dispatchIdx=r2) and plateaued at diff_count 196.
+**That pin set is WRONG — it FIGHTS the allocator.** The natural, no-pin allocation
+(`/tmp/nopins.c`) is diff_count **157**, already better than the 5-pin 196.
 
-## Drift — ROUND-38 PROGRESS: byte_diff 560, diff_count 196 (prior plateau ~210)
+I instrumented a PRIVATE debug copy of `old_agbcc` (copy `tools/agbcc-src/gcc` to a
+sandbox, the dump in `gcc/global.c::find_reg`-area is already env-gated by
+`AGBCC_DUMP_ALLOC`/`AGBCC_DUMP_RENUM`; `gmake old`, run with the env var, `rm -rf` the
+sandbox — NEVER touch the shared symlink). Ground-truth allocno data for the no-pin C:
 
-The round-33 note had diff_count ~210. This round re-derived from scratch and got
-to **diff_count 196 / byte_diff 560 / size 656-660** (the prior best-effort,
-re-measured, was diff_count 210 / byte_diff 555). The STRUCTURE is now byte-exact
-in size and the count loop + both inner loops are near-exact. KEY FIXES that
-helped (apply these in the next attempt):
+- `i`    (pseudo 29): refs=23 live=524 → priority floor_log2(23)*23/524*1e4 = **1756**
+- `tb4`  (pseudo 39): refs=26 live=784 → 4*26/784*1e4 = **1327**
+- `idx4` (pseudo 40): refs=12 live=234 → **2052** (highest)
 
-1. **Inner store value temp + dst form.** Write
-   `v = data0 << 8; dst = (u32*)(0x0600D420 + out*48 + (k<<2)); dst[0] = v;
-    dst[6] = data1;` — the `v` temp forces RHS-before-dst ordering (matches
-   baserom `ldr r0;lsls;ldr r1,=const;...;str r0`). Crucially the dst form
-   `const + out*48 + (k<<2)` does NOT hoist the VRAM base (the `(k<<2)+const+o48`
-   and the `o48`-local forms DO reassociate→hoist `const+o48` into r8/r9, +8
-   bytes). This single change took diff_count 196→153 BEFORE the pins.
-2. **Data-addr operand order:** `*(const u32*)((k << 2) + ((rec << 7) +
-   (u32)ROOM_DATA) + N)` gives baserom's `adds r0,r2,r0` (k<<2 as left operand).
-3. **Count-loop increment:** `u32 j = i; i = (u8)(j + 1);` (NOT `i = (u8)(i+1)`)
-   — reads `i` once (`mov r1,sl; adds r0,r1,#1`), matching baserom. With the pin,
-   the `i+1` form emits a redundant `mov r0,sl` (+2 bytes).
-4. **Pins that landed the coloring:** `register u32 dispatchIdx asm("r2")` (copy
-   from a plain `arg` param), `register u32 i asm("sl")`,
-   `register struct IwramAt34B0 *gbase asm("r7")`, `register u32 tb4 asm("r8")`,
-   `register u32 idx4 asm("r9")`. With all five, the count loop matches
-   (i=sl, dispatchIdx=r2, count=r4) and the inner loop's `add r0,r8` /
-   `adds r0,r2,r0` match.
-5. **Region-scoped tb4:** assign `tb4 = (u32)sRoomDmaTable_080C1254 + 4;` in EACH
-   region preamble (right before each `do {`), NOT at block-A top — block-A top
-   assignment adds 2 bytes (size 660 vs 656). Baserom sets r8 in both region
-   preambles.
+`REG_ALLOC_ORDER` (arm.h:833) for the callee-saved highs is **{8, 10(sl), 9, 11}** —
+r8 FIRST, then sl, then r9. Allocation is by descending priority; `allocno_compare`
+(gcc/global.c) is PURELY the priority formula + allocno-number tiebreak (no
+range-copy term in the old compiler). So the no-pin order is idx4(2052)→r8,
+i(1756)→? , tb4(1327)→? ... but the dump shows i→r8, idx4→r9, tb4→sl. Baserom wants
+**i→sl, idx4→r9, tb4→r8**.
 
-## The REMAINING wall (pure register-coloring + scheduling, ~190 diffs)
+### The winning lever (diff_count 131) — PIN ONLY tb4→r8 AND idx4→r9; LET i FALL TO sl
 
-Two residual sub-problems, both pure agbcc allocator/scheduler choices that NO
-`-fXXX` flag and NO expression reorder moves (swept exhaustively this round:
-all -fno-{gcse,strength-reduce,schedule-insns,schedule-insns2,cse-follow-jumps,
-rerun-cse-after-loop,expensive-optimizations,move-all-movables,reduce-all-givs,
-caller-saves,thread-jumps}, -ffixed-{r8,r9,sl,ip}, newer agbcc — all neutral or
-worse):
+`register u32 tb4 asm("r8"); register u32 idx4 asm("r9");` and NOTHING else pinned.
+With r8/r9 occupied, `i` naturally takes **sl** (next free in alloc order) — VERIFIED
+by the RENUM dump (pseudo 29 → hardreg 10). dispatchIdx lands in r2 naturally; do NOT
+pin it (neutral). This is the `/tmp/wA.c` shape = the "## Best-effort C" below.
+Result: **diff_count 131, byte_diff 488, size 664** (only 3 extra instrs vs 320).
+make check fails (nonmatching).
 
-A. **Inner-store value register: r1 vs r0.** Baserom keeps `data<<8` in r0
-   (`lsls r0,r0,#8`) and loads the VRAM const into r1 (`ldr r1,=const;
-    adds r3,r2,r1; adds r3,r6,r3; str r0,[r3]`). Mine puts `v` in r1 and loads
-   const into r3, bouncing the dst-accumulate through r0
-   (`lsls r1,r0,#8; ldr r3,=const; adds r0,r2,r3; adds r3,r6,r0; str r1,[r3]`).
-   ~16 diffs/region. The dst form that avoids the base-hoist forces the
-   intermediate through r0 (clobbering v→r1); the form that keeps v in r0 hoists.
-   These two are coupled — no single expression shape escapes both. THIS is the
-   coring permuter case.
-B. **`lsls r2,r5,#2` (k<<2) scheduling:** mine emits it before the gIwram load,
-   baserom after the data load. Pure schedule order; `-fschedule-insns*` toggles
-   neutral.
+Pinning i→sl directly (instead of letting it fall) costs ~70 diffs because it
+disrupts the low-reg cascade. The 5-pin set is a LOCAL MINIMUM; escape it by pinning
+only the two highs the allocator misplaces and letting i settle.
 
-Blame: `gcc_arm/global.c:allocno_compare` (priority = floor_log2(n_refs)*n_refs/
-live_length*size; tie → allocno number) and `local-alloc.c` (ascending regno,
-prefers ip(12)>sl(10)... no, sl<ip so sl should win — but `i` lands in ip
-unpinned because sl is excluded at i's allocation point; `-ffixed-ip` spills i to
-STACK instead of choosing sl, proving agbcc strongly prefers ip≻sl≻stack for the
-no-call scratch). The five-pin set is the only way to force i→sl, but it then
-introduces the A/B residuals.
+## The REMAINING 131 — three residuals, all coloring/scheduling (permuter-shaped)
 
-## NEXT LEVER (unchanged from round 33, now even more applicable)
+1. **Residual A (dominant, ~16 ARGUMENT_MISMATCH × repeats): inner-store v/const swap.**
+   Baserom: `lsls r0,r0,#8 (v→r0); ldr r1,=VRAMconst; adds r3,r2,r1 (k4+const);
+   adds r3,r6,r3 (+out48); str r0,[r3]`. Mine: `lsls r1,r0,#8 (v→r1);
+   ldr r3,=const; adds r0,r2,r3; adds r3,r6,r0; str r1,[r3]`. v lands r1 not r0.
+   ROOT CAUSE (confirmed via reload trace): in baserom the allocator knew v was live
+   in r0 at the dst-build, so the `k4+const` intermediate went to r3 (avoiding r0);
+   in mine v is colored r1 first (during the shift), freeing r0, so the intermediate
+   grabs r0 and evicts v. It is a 3-coloring of {v,const,intermediate} over {r0,r1,r3}
+   — baserom {r0,r1,r3}, mine {r1,r3,r0}. Both valid; differs only by allocator
+   PREFERENCE. LEVERS TRIED THAT FAIL: `register u32 v asm("r0")` (fixes v→r0 but then
+   const→r3 / intermediate→r1, AND cascades the whole fn to diff_count 178 — net
+   WORSE); the inline-store-no-temp form (diff 333, hoists/ spills); the dst-assoc
+   `(k4+const)+out48` form (hoists `const+out48` into ip, +8 bytes). ALL `-fXXX`
+   neutral (swept: -fno-{schedule-insns,schedule-insns2,gcse,strength-reduce,
+   expensive-optimizations,cse-follow-jumps,rerun-cse-after-loop}, -fforce-addr —
+   all keep v→r1, 4 stores).
+2. **idx4 low-copy.** Baserom keeps idx4 in BOTH r9 (saved) AND r3 (low), doing
+   `lsls r3,r2,#2` in block-A (preserving dispatchIdx in r2) and `mov r3,r9` at each
+   region back-edge, then `adds r2,r3,r2` (low-reg deref). Mine uses `add r0,r9`
+   directly (idx4 in r9 only) — fewer instrs but mismatches. This needs idx4 forced
+   through a low reg at the sub-base deref; no clean C shape found.
+3. **Shared-zero (+2 bytes).** Baserom `movs r3,#0; mov sl,r3` inits i AND leaves
+   r3=0 for `n` (no separate movs). Mine emits `movs r0,#0` (i) + a separate
+   `movs r3,#0` (n). Needs i's init-temp colored to n's register (r3); not coercible
+   by statement order tried.
 
-This is the textbook permuter case: structure byte-exact, residual is <~20
-instruction-pairs of pure register-rename + 1 schedule swap, from a diff_count-196
-base. **The permuter is STILL unavailable** — `vendor/decomp-permuter` is a
-self-referential broken symlink project-wide (even in main; the submodule .venv/
-checkout was never populated), and cloning the fork is blocked by the worktree's
-external-code sandbox. RESTORE THE PERMUTER FIRST (populate vendor/decomp-permuter
-+ its .venv in main), then run it from the Best-effort C below — it should
-converge (the A/B residuals are exactly statement-order/scope-coercible register
-colors). Do NOT NAKED this: it is matchable in pure C.
+All three are exactly statement-order/scope register renames a permuter would
+resolve from the 131 base. **THE PERMUTER IS STILL DOWN**: `vendor/decomp-permuter`
+is a SELF-REFERENTIAL broken symlink (`-> vendor/decomp-permuter`) in MAIN itself,
+not just the worktree; its `.venv`/checkout was never populated. Cannot be fixed from
+a worktree. RESTORE IT FIRST (populate `vendor/decomp-permuter` + `.venv` in main),
+then run from the Best-effort C below — the residuals are pure coloring the permuter
+mutates well. Do NOT NAKED: matchable in pure C.
 
-## Best-effort C (diff_count 196, byte_diff 560 — the round-38 base)
+## NEXT LEVER for the resumer
+1. Start from the Best-effort C (diff 131), NOT the round-38 5-pin C (diff 196).
+2. Fix residual A first — it repeats most. Idea not yet tried: a block-scoped
+   `register u32 v asm("r0")` declared INSIDE the `for(k...)` body (function-scope
+   pin was too broad). Or instrument `local-alloc.c` reg-preference (qty_phys_reg)
+   to learn why v prefers r1, then find the C that flips the preference.
+3. Then idx4-low-copy and shared-zero (smaller).
+4. If still short, permuter from the 131 base (when restored).
+
+## Best-effort C (diff_count 131, byte_diff 488, size 664 — the round-47 base)
 
 ```c
 #include "iwram.h"
@@ -109,14 +106,16 @@ colors). Do NOT NAKED this: it is matchable in pure C.
 
 extern const u8 sRoomDmaTable_080C1254[];
 
-#define ROOM_SUB2 ((const u16 *)*(const u32 *)((u32)((const u32 *)(gbase->_data * 24 + (u32)sRoomDmaTable_080C1254))[0] + idx4))
+#define ROOM_SUB2                                                                                                       \
+    ((const u16 *)*(const u32 *)((u32)((const u32 *)(gbase->_data * 24 + (u32)sRoomDmaTable_080C1254))[0] + idx4))
 #define ROOM_DATA ((const u32 *)*(const u32 *)(gbase->_data * 24 + tb4))
+#define DAT(N) (*(const u32 *)((k << 2) + ((rec << 7) + (u32)ROOM_DATA) + (N)))
 
 void sub_08019AEC(u8 arg)
 {
-    register u32 dispatchIdx asm("r2");
+    u32 dispatchIdx;
     u8 *state;
-    register u32 i asm("sl");
+    u32 i;
     u32 count;
     u32 n;
     u32 out;
@@ -125,8 +124,8 @@ void sub_08019AEC(u8 arg)
     u32 *dst;
     u32 v;
     const u16 *sub;
-    register struct IwramAt34B0 *gbase asm("r7");
-    register u32 tb4 asm("r8");
+    struct IwramAt34B0 *gbase;
+    register u32 tb4 asm("r8");   /* pin ONLY these two highs; i then falls to sl */
     register u32 idx4 asm("r9");
 
     dispatchIdx = arg;
@@ -155,14 +154,14 @@ void sub_08019AEC(u8 arg)
         rec = ROOM_SUB2[i];
         i = (u8)(i + 1);
         for (k = 0; k <= 7; k++) {
-            v = *(const u32 *)((k << 2) + ((rec << 7) + (u32)ROOM_DATA) + 0) << 8;
+            v = DAT(0) << 8;
             dst = (u32 *)(0x0600D420 + out * 48 + (k << 2));
             dst[0] = v;
-            dst[6] = *(const u32 *)((k << 2) + ((rec << 7) + (u32)ROOM_DATA) + 1);
-            v = *(const u32 *)((k << 2) + ((rec << 7) + (u32)ROOM_DATA) + 2) << 8;
+            dst[6] = DAT(1);
+            v = DAT(2) << 8;
             dst = (u32 *)(0x0600D820 + out * 48 + (k << 2));
             dst[0] = v;
-            dst[6] = *(const u32 *)((k << 2) + ((rec << 7) + (u32)ROOM_DATA) + 3);
+            dst[6] = DAT(3);
         }
         out = (u8)(out + 1);
     } while ((u16)(ROOM_SUB2[i] + 2) > 1);
@@ -176,14 +175,14 @@ check2:
         rec = ROOM_SUB2[i];
         i = (u8)(i + 1);
         for (k = 0; k <= 7; k++) {
-            v = *(const u32 *)((k << 2) + ((rec << 7) + (u32)ROOM_DATA) + 0) << 8;
+            v = DAT(0) << 8;
             dst = (u32 *)(0x0600DC20 + out * 48 + (k << 2));
             dst[0] = v;
-            dst[6] = *(const u32 *)((k << 2) + ((rec << 7) + (u32)ROOM_DATA) + 1);
-            v = *(const u32 *)((k << 2) + ((rec << 7) + (u32)ROOM_DATA) + 2) << 8;
+            dst[6] = DAT(1);
+            v = DAT(2) << 8;
             dst = (u32 *)(0x0600E020 + out * 48 + (k << 2));
             dst[0] = v;
-            dst[6] = *(const u32 *)((k << 2) + ((rec << 7) + (u32)ROOM_DATA) + 3);
+            dst[6] = DAT(3);
         }
         out = (u8)(out + 1);
     } while ((u16)(ROOM_SUB2[i] + 2) > 1);
@@ -203,3 +202,10 @@ void sub_08019D90(void)
     *reg = 0x050B;
 }
 ```
+
+## Round-38 history (kept for reference)
+Prior plateau diff_count 196 with the 5-pin set + heavy ROOM_DATA macros + `v` temp.
+The round-38 "key fixes" (inner store temp, data-addr operand order, count-loop `j`
+increment) are SUBSUMED by the round-47 Best-effort C; its claimed residuals A/B are
+the same residual A above. The change that mattered in round 47 was DROPPING three of
+the five pins.
