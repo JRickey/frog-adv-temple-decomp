@@ -44,6 +44,10 @@ def main() -> int:
     ap.add_argument("old", help="existing source path, e.g. src/engine/sub_0801cd0c.c")
     ap.add_argument("new", help="new source path, e.g. src/engine/ui_window.c")
     ap.add_argument("--no-check", action="store_true", help="skip make check (not recommended)")
+    ap.add_argument("--batch", action="store_true",
+                    help="batch mode: tolerate a dirty tree (prior uncommitted renames) and, on "
+                         "make-check failure, SCOPED-revert only THIS rename (not the whole tree) "
+                         "so the caller can land many renames in one commit")
     args = ap.parse_args()
 
     old = Path(args.old)
@@ -57,18 +61,20 @@ def main() -> int:
         raise SystemExit(f"destination {new} already exists")
     if old.suffix != new.suffix:
         raise SystemExit("old and new must share an extension (.c/.h)")
-    if dirty := tree_dirty():
+    if not args.batch and (dirty := tree_dirty()):
         raise SystemExit("tree has uncommitted tracked changes — commit/stash first so a "
-                         "failed rename reverts cleanly:\n" + "\n".join(dirty))
+                         "failed rename reverts cleanly (or use --batch):\n" + "\n".join(dirty))
 
     old_rel, new_rel = str(old), str(new)
     old_obj, new_obj = old_rel[:-2] + ".o", new_rel[:-2] + ".o"      # src/.../x.o token
     old_s, new_s = old_rel[:-2] + ".s", new_rel[:-2] + ".s"          # per-TU .s token
 
+    # Capture pre-edit copies for a scoped revert (batch mode).
     linker_txt = LINKER.read_text()
+    make_txt = MAKEFILE.read_text()
+    edited_originals = {}  # path -> original text
     if old_obj not in linker_txt:
         print(f"warning: {old_obj} not found in linker.ld (file may be unwired)", file=sys.stderr)
-    make_txt = MAKEFILE.read_text()
     has_make_rule = (old_s + ":") in make_txt
 
     # 1. git mv (mkdir the destination dir).
@@ -77,10 +83,12 @@ def main() -> int:
 
     # 2. linker.ld — swap the object path token (covers .text/.rodata/.data/.bss).
     if old_obj in linker_txt:
+        edited_originals[LINKER] = linker_txt
         LINKER.write_text(linker_txt.replace(old_obj, new_obj))
 
     # 3. Makefile — swap the derived .s token in per-TU rules.
     if has_make_rule:
+        edited_originals[MAKEFILE] = make_txt
         MAKEFILE.write_text(make_txt.replace(old_s, new_s))
 
     # 4. header includes (only when renaming a .h).
@@ -90,6 +98,7 @@ def main() -> int:
         for p in list(REPO.glob("src/**/*.c")) + list(REPO.glob("src/**/*.h")) + list(REPO.glob("include/**/*.h")):
             t = p.read_text(errors="replace")
             if inc_old in t:
+                edited_originals[p] = t
                 p.write_text(t.replace(inc_old, inc_new))
                 include_updates += 1
 
@@ -107,8 +116,15 @@ def main() -> int:
     check = subprocess.run(["make", "check"], cwd=REPO) if build.returncode == 0 else build
     if build.returncode != 0 or check.returncode != 0:
         print("\n*** make check FAILED — reverting the rename ***", file=sys.stderr)
-        git("reset", "--hard", "HEAD", check=False)   # safe: tree was clean at start
-        git("clean", "-fd", "--", new_rel, check=False)
+        if args.batch:
+            # Scoped revert: undo ONLY this rename, preserving prior batch renames.
+            for p, txt in edited_originals.items():
+                p.write_text(txt)
+            if new_abs.exists() and not old_abs.exists():
+                git("mv", new_rel, old_rel, check=False)
+        else:
+            git("reset", "--hard", "HEAD", check=False)   # safe: tree was clean at start
+            git("clean", "-fd", "--", new_rel, check=False)
         print("reverted. Likely a missed Makefile per-TU rule or a linker slot mismatch.",
               file=sys.stderr)
         return 1

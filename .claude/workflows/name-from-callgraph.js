@@ -206,11 +206,34 @@ Steps:
    If it still fails, set makeCheck=false, committed=false, and STOP (nothing lands; tree is clean).
 4. On make check PASS: do NOT rename/move/create/delete any source file here, and do NOT git mv —
    file renaming is a SEPARATE later phase. apply_renames only MODIFIES tracked files (and refreshes
-   README + .function_addresses via its cache step); it creates no new files. Commit exactly those:
-     git add -u && git add README.md .function_addresses.json 2>/dev/null; git commit -m "Name <N> symbols from call graph"
-   (N = functions + data renamed). BEFORE committing, run \`git status --short\` and confirm there are
-   NO renamed/added/deleted SOURCE files (no lines starting with R, A, D, or ??); if there are, some
-   step overstepped — set committed=false and STOP (do not commit). Capture the commit sha.
+   README + .function_addresses via its cache step); it creates no new files. BEFORE committing, run
+   \`git status --short\` and confirm there are NO renamed/added/deleted SOURCE files (no lines
+   starting with R, A, D, or ??); if there are, some step overstepped — set committed=false and STOP.
+   Then make ONE consolidated, reviewable commit whose BODY lists every rename. Build the message
+   from the fragments and commit:
+\`\`\`sh
+python3 - > .git/NAME_MSG <<'PY'
+import json, glob
+fns, ds = [], []
+for f in glob.glob(".callgraph_packets/frag_*.json"):
+    m = json.load(open(f))
+    fns += [(e["old"], e["new"]) for e in m.get("functions", [])]
+    ds  += [(e["old"], e["new"]) for e in m.get("data_symbols", [])]
+fns, ds = sorted(set(fns)), sorted(set(ds))
+print("Name %d symbols from call graph\n" % (len(fns) + len(ds)))
+print("Call-graph-driven semantic naming (build_callgraph.py + naming_context.py).\n")
+if fns:
+    print("Functions:")
+    for o, n in fns: print("  %s -> %s" % (o, n))
+if ds:
+    print("\nData symbols:")
+    for o, n in ds: print("  %s -> %s" % (o, n))
+PY
+git add -u && git add README.md .function_addresses.json 2>/dev/null
+git commit -F .git/NAME_MSG
+\`\`\`
+   (Some listed names may have been dropped on collision — the diff is the source of truth; the body
+   documents intent.) Capture the commit sha.
 5. Report applied (# renames that landed), droppedCollisions, leftoverWarnings, makeCheck=true,
    committed=true, commitSha, notes.`
 }
@@ -258,13 +281,26 @@ linker.ld + the Makefile per-TU .s rules and verifies make check).
 Renames:
 ${list}
 
-For EACH rename (skip any whose 'old' no longer exists or whose 'new' already exists):
-1. Ensure git status --short is clean (commit/▲stash anything first — but there should be nothing).
-2. python3 tools/agent/rename_source_file.py <old> <new>
-   - On "make check PASSED": git add -A && git commit -m "Rename <oldbase> -> <newbase>".
-   - On failure: rename_source_file already reverted (tree clean). Record it under failed[] and
-     CONTINUE to the next (do not abort the whole batch).
-3. After all: make check on main MUST still exit 0 -> makeCheckHealthy.
+Start from a clean tree (commit/verify nothing pending). Then for EACH rename (skip any whose 'old'
+no longer exists or whose 'new' already exists), use BATCH mode so renames ACCUMULATE in one commit:
+1. python3 tools/agent/rename_source_file.py <old> <new> --batch
+   - It make-checks each rename on the accumulating tree. On PASS: leave it staged, do NOT commit
+     yet; record under renamed[]. On FAILURE: it SCOPED-reverts only that one (prior renames are
+     preserved); record under failed[] and CONTINUE.
+2. After ALL renames: run \`make -j8 && make check\` once (must exit 0) -> makeCheckHealthy. Then make
+   ONE consolidated commit whose body lists every rename:
+\`\`\`sh
+python3 - "$@" > .git/RENAME_MSG <<'PY'
+import sys
+pairs = [tuple(a.split('=>')) for a in sys.argv[1:]]   # caller passes old=>new args
+print("Rename %d source files to semantic names\n" % len(pairs))
+print("Call-graph-driven file naming (rename_source_file.py; byte-identical).\n")
+for o, n in pairs: print("  %s -> %s" % (o, n))
+PY
+git add -A && git commit -F .git/RENAME_MSG
+\`\`\`
+   (Pass the landed renamed[] as old=>new args to the heredoc.) If makeCheckHealthy is false, do NOT
+   commit — report the failure (the scoped reverts already kept the tree consistent).
 Report renamed[] (new paths that landed), failed[], makeCheckHealthy, notes.`
 }
 
