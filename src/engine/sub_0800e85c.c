@@ -1,6 +1,7 @@
+#include "macros.h"
 #include "types.h"
 
-/* --- CharLayers_Upload: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- CharLayers_Upload: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "gba/dma.h"
 #include "gba/intr.h"
@@ -161,5 +162,10 @@ void CharLayers_Upload(u8 count)
     REG_DISPSTAT &= ~DISPSTAT_HBLANK_IRQ;
     gIwram_3608._pad4 = 1;
     gIwram_3608._field_5 = 0;
+}
+#else
+NAKED void CharLayers_Upload(void)
+{
+    asm(".incbin \"frog_us_baserom.gba\", 0xe85c, 0x2c0\n");
 }
 #endif /* NON_MATCHING */

@@ -2,7 +2,7 @@
 #include "types.h"
 #include "iwram.h"
 
-/* --- Scenery_BlitAndCyclePalette: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- Scenery_BlitAndCyclePalette: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "macros.h"
 #include "types.h"
@@ -105,5 +105,10 @@ void Scenery_BlitAndCyclePalette(void)
             }
         }
     }
+}
+#else
+NAKED void Scenery_BlitAndCyclePalette(void)
+{
+    asm(".incbin \"frog_us_baserom.gba\", 0x155f0, 0x26c\n");
 }
 #endif /* NON_MATCHING */

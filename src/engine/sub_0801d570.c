@@ -1,6 +1,7 @@
+#include "macros.h"
 #include "types.h"
 
-/* --- Credits_ScrollTick: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- Credits_ScrollTick: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "game.h"
 #include "macros.h"
@@ -233,5 +234,10 @@ pageflip: {
 abort:
     *out = 0;
     return 0xFE;
+}
+#else
+NAKED void Credits_ScrollTick(void)
+{
+    asm(".incbin \"frog_us_baserom.gba\", 0x1d570, 0x310\n");
 }
 #endif /* NON_MATCHING */

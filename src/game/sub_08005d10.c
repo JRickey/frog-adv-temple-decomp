@@ -3,7 +3,7 @@
 #include "macros.h"
 #include "types.h"
 
-/* --- Entity_AdvanceAnimFrames: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- Entity_AdvanceAnimFrames: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "game.h"
 #include "iwram.h"
@@ -117,5 +117,10 @@ void Entity_AdvanceAnimFrames(s32 slot, s32 endSlot)
         e = (struct Entity *)((u8 *)e + 0x38);
         i++;
     } while (i <= endSlot);
+}
+#else
+NAKED void Entity_AdvanceAnimFrames(void)
+{
+    asm(".incbin \"frog_us_baserom.gba\", 0x5d10, 0x1c8\n");
 }
 #endif /* NON_MATCHING */

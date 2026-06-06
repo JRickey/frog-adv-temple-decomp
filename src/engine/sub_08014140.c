@@ -1,7 +1,7 @@
 #include "macros.h"
 #include "types.h"
 
-/* --- AnimState_BlitStep: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- AnimState_BlitStep: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "game.h"
 #include "macros.h"
@@ -161,5 +161,10 @@ u8 AnimState_BlitStep(struct AnimState *p0, u8 step)
     }
 
     return 0;
+}
+#else
+NAKED void AnimState_BlitStep(void)
+{
+    asm(".incbin \"frog_us_baserom.gba\", 0x14140, 0x194\n");
 }
 #endif /* NON_MATCHING */

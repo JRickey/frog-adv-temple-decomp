@@ -3,7 +3,7 @@
 #include "macros.h"
 #include "types.h"
 
-/* --- PadGrid_DeactivateEntityAtPos: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- PadGrid_DeactivateEntityAtPos: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "game.h"
 #include "iwram.h"
@@ -115,5 +115,10 @@ void PadGrid_DeactivateEntityAtPos(s16 x, s16 y)
         (&gIwram_53A0)[(u8)idx] = 0;
         return;
     }
+}
+#else
+NAKED void PadGrid_DeactivateEntityAtPos(void)
+{
+    asm(".incbin \"frog_us_baserom.gba\", 0xd2c0, 0x190\n");
 }
 #endif /* NON_MATCHING */

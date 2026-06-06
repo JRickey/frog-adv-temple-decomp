@@ -1,8 +1,9 @@
+#include "macros.h"
 #include "game.h"
 #include "iwram.h"
 #include "types.h"
 
-/* --- Entity2_Tick: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- Entity2_Tick: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "game.h"
 #include "iwram.h"
@@ -144,5 +145,10 @@ tail:
 
 ret:
     Entity_Update(e2);
+}
+#else
+NAKED void Entity2_Tick(void)
+{
+    asm(".incbin \"frog_us_baserom.gba\", 0x2ce60, 0x310\n");
 }
 #endif /* NON_MATCHING */

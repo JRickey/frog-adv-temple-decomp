@@ -1,3 +1,4 @@
+#include "macros.h"
 #include "game.h"
 #include "types.h"
 
@@ -219,5 +220,10 @@ void ScaleAnim_SyncSelectors(void)
     }
 
     ScaleAnim_TickFrames();
+}
+#else
+NAKED void ScaleAnim_SyncSelectors(void)
+{
+    asm(".incbin \"frog_us_baserom.gba\", 0x1310c, 0x1dc\n");
 }
 #endif

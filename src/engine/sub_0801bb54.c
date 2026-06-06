@@ -1,7 +1,7 @@
 #include "macros.h"
 #include "types.h"
 
-/* --- ShowWinLoseMessage: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- ShowWinLoseMessage: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "game.h"
 #include "iwram.h"
@@ -169,5 +169,10 @@ cleanup:
     DrawTextGlyphs(MSG_BLANK, 30, 0, yArg, 278, 14, 3);
 
 epilogue:;
+}
+#else
+NAKED void ShowWinLoseMessage(void)
+{
+    asm(".incbin \"frog_us_baserom.gba\", 0x1bb54, 0x328\n");
 }
 #endif /* NON_MATCHING */

@@ -1,6 +1,7 @@
+#include "macros.h"
 #include "types.h"
 
-/* --- BgScrollBlit: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- BgScrollBlit: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "gba/io.h"
 #include "iwram.h"
@@ -198,5 +199,10 @@ void sub_0800EE0C(u16 targets, u16 coeff)
 {
     *(vu16 *)0x04000050 = targets | 0x1740;
     *(vu16 *)0x04000052 = coeff;
+}
+#else
+NAKED void BgScrollBlit(void)
+{
+    asm(".incbin \"frog_us_baserom.gba\", 0xebdc, 0x258\n");
 }
 #endif /* NON_MATCHING */

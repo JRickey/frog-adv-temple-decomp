@@ -1,6 +1,7 @@
+#include "macros.h"
 #include "types.h"
 
-/* --- Scroll_FlushTilemapWindow: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- Scroll_FlushTilemapWindow: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "types.h"
 
@@ -86,5 +87,10 @@ void Scroll_FlushTilemapWindow(u32 bankArg, const u16 *src, u16 *dst)
         if (xSpan != 32)
             dst += 0x40 / 2;
     } while ((u8)row <= 31);
+}
+#else
+NAKED void Scroll_FlushTilemapWindow(void)
+{
+    asm(".incbin \"frog_us_baserom.gba\", 0x100e4, 0x178\n");
 }
 #endif /* NON_MATCHING */

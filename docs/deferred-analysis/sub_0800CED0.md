@@ -1,5 +1,9 @@
 # sub_0800CED0 — deferred analysis
 
+> **Location (updated 2026-06-06):** moved to its own TU `src/engine/sub_0800ced0.c` — readable C
+> under `#ifdef NON_MATCHING`, matching bytes via an `#else` NAKED `.incbin`. The
+> standalone asm slice `asm/disasm_0x0800ced0.s` was absorbed into that TU and removed.
+
 Range `[0x0800ced0, 0x0800cf94)` (the asm slice `asm/disasm_0x0800ced0.s` was
 peeled too WIDE — it also contained a SECOND function `sub_0800CF9C` at
 `[0x0800cf9c, 0x0800cfdc)`). The slice should be split: `sub_0800CF9C` lives in

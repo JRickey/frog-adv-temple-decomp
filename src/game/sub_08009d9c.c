@@ -54,6 +54,85 @@ extern void Scroll_RunSubtypeTicks(u32 a);
 extern void Game_CommitRender(void);
 extern void BiosSwiTable(void *dst, void *src, u32 count);
 
+#ifdef NON_MATCHING
+/* Reference body for the phase-3 PC port. The shape mirrors the asm:
+ * an init-or-advance branch on *arg, a fixed handler dispatch via two
+ * ROM tables, a sprite/OAM transfer, and a late-tick state check.
+ *
+ * Audit (post-iter-30): permuter ran 12K iterations and improved the
+ * score by 5.4% (9205 → 8705). Two mutations from the best candidate
+ * are preserved below as documented improvements:
+ *   - The `|= 2; &= 0x7fff;` split write (vs the combined
+ *     `= (... | 2) & 0x7fff;`) — permuter found this lands closer to
+ *     baserom's two-instruction `orrs + ands` than the combined form.
+ *   - Wrapping the post-tail in a `do { ... } while (0)` block — a
+ *     permuter trick to force a different basic-block boundary that
+ *     emits slightly different epilogue code.
+ * The function still does NOT match in pure C — too many simultaneous
+ * register-coloring choices. NAKED below is the source-of-truth.
+ */
+u32 Scene_InitScan(u8 *arg)
+{
+    u8 *r7;
+
+    *(u16 *)0x03005398 = Input_Poll();
+
+    if (*(s8 *)arg == 0) {
+        /* First-time init */
+        *(u32 *)(0x03005330 + 20) = *(u32 *)0x03005330;
+        *arg = 1;
+        r7 = (u8 *)0x03003720;
+        *(r7 + 26) += 29;
+        *(u16 *)(r7 + 0x34) |= 2;
+    } else {
+        r7 = (u8 *)0x03003720;
+        if ((*(u16 *)(r7 + 0x34) & 0x8000) != 0) {
+            /* Split-write form (per permuter audit, +5% score). */
+            *(u16 *)(r7 + 0x34) |= 2;
+            *(u16 *)(r7 + 0x34) &= 0x7fff;
+            *arg += 1;
+        }
+    }
+
+    Entity_Update(r7);
+    (*(void (**)(void))(0x080c0cb8 + (*(u8 *)(0x03005330 + 10) << 2)))();
+    (*(void (**)(void))(0x080c0d40 + (*(u8 *)(0x03005330 + 10) << 2)))();
+    Entity_UpdateVisibility();
+    Entity_Advance();
+    WaitVblank();
+
+    *(vu16 *)0x04000200 &= 0xfffe;
+    Scroll_RunSubtypeTicks(*(u8 *)(0x080c0d84 + *(u8 *)(0x03005330 + 10)));
+    Game_CommitRender();
+    BiosSwiTable((void *)0x07000000, (void *)0x030054a0, 0x100);
+
+    /* Manually copy 6 halfwords to MMIO at 0x04000010 (BG0 scroll regs) */
+    {
+        vu16 *dst = (vu16 *)0x04000010;
+        u16 *src = (u16 *)0x03003550;
+        s32 i;
+        for (i = 0; i < 6; i++) {
+            dst[i] = src[i];
+        }
+    }
+
+    *(vu16 *)0x04000200 |= 1;
+
+    if (*arg != 8 && *(u16 *)0x03005398 == 0) {
+        return 0;
+    }
+
+    if (*(r7 + 26) > 28) {
+        *(r7 + 26) -= 29;
+        *(u16 *)(r7 + 0x34) |= 2;
+    }
+
+    if (*(u16 *)0x03005398 != 0) {
+        *(u16 *)(0x030035e0 + 18) = *(u16 *)0x03005398;
+    }
+    return 1;
+}
+#else
 NAKED u32 Scene_InitScan(u8 *arg)
 {
     asm(".syntax unified\n"
@@ -208,85 +287,6 @@ NAKED u32 Scene_InitScan(u8 *arg)
         "    pop     {r1}\n"
         "    bx      r1\n"
         ".syntax divided\n");
-}
-
-#ifdef NON_MATCHING
-/* Reference body for the phase-3 PC port. The shape mirrors the asm:
- * an init-or-advance branch on *arg, a fixed handler dispatch via two
- * ROM tables, a sprite/OAM transfer, and a late-tick state check.
- *
- * Audit (post-iter-30): permuter ran 12K iterations and improved the
- * score by 5.4% (9205 → 8705). Two mutations from the best candidate
- * are preserved below as documented improvements:
- *   - The `|= 2; &= 0x7fff;` split write (vs the combined
- *     `= (... | 2) & 0x7fff;`) — permuter found this lands closer to
- *     baserom's two-instruction `orrs + ands` than the combined form.
- *   - Wrapping the post-tail in a `do { ... } while (0)` block — a
- *     permuter trick to force a different basic-block boundary that
- *     emits slightly different epilogue code.
- * The function still does NOT match in pure C — too many simultaneous
- * register-coloring choices. NAKED below is the source-of-truth.
- */
-u32 Scene_InitScan(u8 *arg)
-{
-    u8 *r7;
-
-    *(u16 *)0x03005398 = Input_Poll();
-
-    if (*(s8 *)arg == 0) {
-        /* First-time init */
-        *(u32 *)(0x03005330 + 20) = *(u32 *)0x03005330;
-        *arg = 1;
-        r7 = (u8 *)0x03003720;
-        *(r7 + 26) += 29;
-        *(u16 *)(r7 + 0x34) |= 2;
-    } else {
-        r7 = (u8 *)0x03003720;
-        if ((*(u16 *)(r7 + 0x34) & 0x8000) != 0) {
-            /* Split-write form (per permuter audit, +5% score). */
-            *(u16 *)(r7 + 0x34) |= 2;
-            *(u16 *)(r7 + 0x34) &= 0x7fff;
-            *arg += 1;
-        }
-    }
-
-    Entity_Update(r7);
-    (*(void (**)(void))(0x080c0cb8 + (*(u8 *)(0x03005330 + 10) << 2)))();
-    (*(void (**)(void))(0x080c0d40 + (*(u8 *)(0x03005330 + 10) << 2)))();
-    Entity_UpdateVisibility();
-    Entity_Advance();
-    WaitVblank();
-
-    *(vu16 *)0x04000200 &= 0xfffe;
-    Scroll_RunSubtypeTicks(*(u8 *)(0x080c0d84 + *(u8 *)(0x03005330 + 10)));
-    Game_CommitRender();
-    BiosSwiTable((void *)0x07000000, (void *)0x030054a0, 0x100);
-
-    /* Manually copy 6 halfwords to MMIO at 0x04000010 (BG0 scroll regs) */
-    {
-        vu16 *dst = (vu16 *)0x04000010;
-        u16 *src = (u16 *)0x03003550;
-        s32 i;
-        for (i = 0; i < 6; i++) {
-            dst[i] = src[i];
-        }
-    }
-
-    *(vu16 *)0x04000200 |= 1;
-
-    if (*arg != 8 && *(u16 *)0x03005398 == 0) {
-        return 0;
-    }
-
-    if (*(r7 + 26) > 28) {
-        *(r7 + 26) -= 29;
-        *(u16 *)(r7 + 0x34) |= 2;
-    }
-
-    if (*(u16 *)0x03005398 != 0) {
-        *(u16 *)(0x030035e0 + 18) = *(u16 *)0x03005398;
-    }
-    return 1;
 }
 #endif
 

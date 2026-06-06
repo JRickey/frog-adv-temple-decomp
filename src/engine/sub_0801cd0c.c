@@ -3,7 +3,7 @@
 #include "macros.h"
 #include "types.h"
 
-/* --- sub_0801CD0C: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- sub_0801CD0C: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "macros.h"
 #include "types.h"
@@ -82,5 +82,10 @@ void sub_0801CD0C(u8 col, u8 row, const u8 *str, u8 innerRows, u8 width, u16 pal
         i++;
 
     DrawTilemapString(str, i, (u8)(col + 1), (u8)(row + 1), 0xa0, 14, 3);
+}
+#else
+NAKED void sub_0801CD0C(void)
+{
+    asm(".incbin \"frog_us_baserom.gba\", 0x1cd0c, 0x1b4\n");
 }
 #endif /* NON_MATCHING */

@@ -1,6 +1,7 @@
+#include "macros.h"
 #include "types.h"
 
-/* --- Scroll_TickBlitDir: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- Scroll_TickBlitDir: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "game.h"
 #include "iwram.h"
@@ -217,5 +218,10 @@ refresh:
     }
 
     Scroll_FlushTilemapWindow(scroll->mirror, (void *)scroll->srcRead, (void *)scroll->dstRead);
+}
+#else
+NAKED void Scroll_TickBlitDir(void)
+{
+    asm(".incbin \"frog_us_baserom.gba\", 0x10f64, 0x324\n");
 }
 #endif /* NON_MATCHING */

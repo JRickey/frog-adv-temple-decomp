@@ -1,7 +1,7 @@
 #include "macros.h"
 #include "types.h"
 
-/* --- ScaleAnim_BlitSceneLayers: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- ScaleAnim_BlitSceneLayers: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "macros.h"
 #include "types.h"
@@ -109,5 +109,10 @@ void ScaleAnim_BlitSceneLayers(void)
     next:
         mode = (u8)(mode + 1);
     } while (mode <= 7);
+}
+#else
+NAKED void ScaleAnim_BlitSceneLayers(void)
+{
+    asm(".incbin \"frog_us_baserom.gba\", 0x132e8, 0x2d0\n");
 }
 #endif /* NON_MATCHING */

@@ -1,7 +1,7 @@
 #include "macros.h"
 #include "types.h"
 
-/* --- UpdateColumnClipSpans: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- UpdateColumnClipSpans: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "macros.h"
 #include "types.h"
@@ -173,5 +173,10 @@ reset_columns:
     REG_DMA3.dst = (void *)0x030036B0;
     REG_DMA3.cnt = DMA_ENABLE | DMA_SRC_FIXED | 0x30;
     (void)REG_DMA3.cnt;
+}
+#else
+NAKED void UpdateColumnClipSpans(void)
+{
+    asm(".incbin \"frog_us_baserom.gba\", 0x16404, 0x24c\n");
 }
 #endif /* NON_MATCHING */

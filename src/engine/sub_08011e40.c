@@ -1,8 +1,9 @@
+#include "macros.h"
 #include "gba/io.h"
 #include "iwram.h"
 #include "types.h"
 
-/* --- Selector_TriggerWindowReveal: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- Selector_TriggerWindowReveal: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "game.h"
 #include "gba/dma.h"
@@ -64,5 +65,10 @@ s32 Selector_TriggerWindowReveal(void)
         result = 1;
 
     return result;
+}
+#else
+NAKED void Selector_TriggerWindowReveal(void)
+{
+    asm(".incbin \"frog_us_baserom.gba\", 0x11e40, 0x258\n");
 }
 #endif /* NON_MATCHING */

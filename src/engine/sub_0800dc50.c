@@ -3,7 +3,7 @@
 #include "macros.h"
 #include "types.h"
 
-/* --- EntitySpawnDriver: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- EntitySpawnDriver: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "game.h"
 #include "iwram.h"
@@ -75,5 +75,10 @@ void EntitySpawnDriver(void)
             Game_ForceRender();
         }
     }
+}
+#else
+NAKED void EntitySpawnDriver(void)
+{
+    asm(".incbin \"frog_us_baserom.gba\", 0xdc50, 0x130\n");
 }
 #endif /* NON_MATCHING */

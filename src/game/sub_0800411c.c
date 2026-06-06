@@ -5,7 +5,7 @@
 
 /* TODO: decomp */
 
-/* --- SceneLoop_20: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- SceneLoop_20: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "game.h"
 #include "iwram.h"
@@ -178,5 +178,10 @@ loop:
 tail:
     if (gGameStuff.mode == GAME_MODE_SCENE_20 || gGameStuff.mode == GAME_MODE_ATTRACT)
         goto loop;
+}
+#else
+NAKED void SceneLoop_20(void)
+{
+    asm(".incbin \"frog_us_baserom.gba\", 0x411c, 0x300\n");
 }
 #endif /* NON_MATCHING */

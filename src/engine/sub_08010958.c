@@ -1,6 +1,7 @@
+#include "macros.h"
 #include "types.h"
 
-/* --- ModeChannel_Apply: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- ModeChannel_Apply: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "game.h"
 #include "macros.h"
@@ -58,5 +59,10 @@ void ModeChannel_Apply(u8 a, u8 b)
             }
         }
     }
+}
+#else
+NAKED void ModeChannel_Apply(void)
+{
+    asm(".incbin \"frog_us_baserom.gba\", 0x10958, 0xec\n");
 }
 #endif /* NON_MATCHING */

@@ -1,8 +1,9 @@
+#include "macros.h"
 #include "game.h"
 #include "iwram.h"
 #include "types.h"
 
-/* --- Enemy_PickNextStep: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- Enemy_PickNextStep: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "game.h"
 #include "iwram.h"
@@ -187,5 +188,10 @@ step_up:
     out[0] = sc;
     out[1] = sr - 1;
     return 1;
+}
+#else
+NAKED void Enemy_PickNextStep(void)
+{
+    asm(".incbin \"frog_us_baserom.gba\", 0x2cafc, 0x2d4\n");
 }
 #endif /* NON_MATCHING */

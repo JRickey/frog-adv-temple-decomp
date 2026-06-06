@@ -1,8 +1,9 @@
+#include "macros.h"
 #include "game.h"
 #include "iwram.h"
 #include "types.h"
 
-/* --- EntityPool_UpdateOwned: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- EntityPool_UpdateOwned: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "game.h"
 #include "iwram.h"
@@ -91,5 +92,10 @@ void EntityPool_UpdateOwned(u8 owner)
         EntityMover_Tick(j + 8);
         Entity_Update(&base8[j]);
     }
+}
+#else
+NAKED void EntityPool_UpdateOwned(void)
+{
+    asm(".incbin \"frog_us_baserom.gba\", 0x2c200, 0x1e4\n");
 }
 #endif /* NON_MATCHING */

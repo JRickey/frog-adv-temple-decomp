@@ -1,7 +1,7 @@
 #include "macros.h"
 #include "types.h"
 
-/* --- ScaleBlit_Tick: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- ScaleBlit_Tick: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "game.h"
 #include "types.h"
@@ -89,5 +89,10 @@ void ScaleBlit_Tick(void)
 
 done:
     SetModeBlendRegs();
+}
+#else
+NAKED void ScaleBlit_Tick(void)
+{
+    asm(".incbin \"frog_us_baserom.gba\", 0x12a6c, 0xcc\n");
 }
 #endif /* NON_MATCHING */

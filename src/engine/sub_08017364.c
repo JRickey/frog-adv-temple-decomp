@@ -1,3 +1,4 @@
+#include "macros.h"
 #include "gba/intr.h"
 #include "iwram.h"
 #include "save.h"
@@ -22,7 +23,7 @@
  * forks (pret, jiangzhengwenjz) have byte-identical allocators, and the Konami
  * cvaos decomp spreads this idiom with that same allocator. The natural form of
  * our pattern funnels (corpus-confirmed); the C shape that spreads it hasn't
- * been found, so the asm slice provides the matching bytes. Full analysis in
+ * been found, so the NAKED .incbin below provides the matching bytes. Full analysis in
  * docs/deferred-analysis/SaveLoad.md. */
 #ifdef NON_MATCHING
 
@@ -175,4 +176,13 @@ restore:
     return 0;
 }
 
+#else
+NAKED void SaveLoad(void)
+{
+    asm(".incbin \"frog_us_baserom.gba\", 0x17364, 0x208\n");
+}
+NAKED void SaveCommit(void)
+{
+    asm(".incbin \"frog_us_baserom.gba\", 0x1756c, 0x234\n");
+}
 #endif /* NON_MATCHING */

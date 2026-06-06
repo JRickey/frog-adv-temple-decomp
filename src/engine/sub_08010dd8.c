@@ -1,6 +1,7 @@
+#include "macros.h"
 #include "types.h"
 
-/* --- Scroll_PrepareBlitWork: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- Scroll_PrepareBlitWork: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "game.h"
 #include "iwram.h"
@@ -120,5 +121,10 @@ void Scroll_PrepareBlitWork(struct DrawRecord *records, u32 idxArg, u32 commit)
     if (commit != 0) {
         ctrlSaved[0x2b] = ctrlSaved[0x2a];
     }
+}
+#else
+NAKED void Scroll_PrepareBlitWork(void)
+{
+    asm(".incbin \"frog_us_baserom.gba\", 0x10dd8, 0x18c\n");
 }
 #endif /* NON_MATCHING */

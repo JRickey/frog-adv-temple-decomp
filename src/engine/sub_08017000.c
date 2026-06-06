@@ -1,7 +1,7 @@
 #include "macros.h"
 #include "types.h"
 
-/* --- FrogStatusBar_Update: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- FrogStatusBar_Update: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "macros.h"
 #include "types.h"
@@ -189,5 +189,10 @@ void sub_080172B6(u32 packed)
     stride |= v;
     dma[2] = stride;
     (void)dma[2];
+}
+#else
+NAKED void FrogStatusBar_Update(void)
+{
+    asm(".incbin \"frog_us_baserom.gba\", 0x17000, 0x2f4\n");
 }
 #endif /* NON_MATCHING */

@@ -1,6 +1,7 @@
+#include "macros.h"
 #include "types.h"
 
-/* --- Blit_CopyEntry: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- Blit_CopyEntry: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "types.h"
 
@@ -64,5 +65,10 @@ void Blit_CopyEntry(struct BlitEntry *entries, u8 index, u8 srcIndex)
             row = (u8)(row + 1);
         } while (row < entries[i].rows);
     }
+}
+#else
+NAKED void Blit_CopyEntry(void)
+{
+    asm(".incbin \"frog_us_baserom.gba\", 0x105b0, 0xe4\n");
 }
 #endif /* NON_MATCHING */

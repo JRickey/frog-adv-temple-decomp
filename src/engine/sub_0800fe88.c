@@ -1,6 +1,7 @@
+#include "macros.h"
 #include "types.h"
 
-/* --- Credits_RenderStep: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- Credits_RenderStep: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "game.h"
 #include "gba/dma.h"
@@ -225,5 +226,10 @@ static void sub_080100A4(void)
 
     REG_BG3CNT = 0x1F08;
     REG_DISPCNT = 0x840;
+}
+#else
+NAKED void Credits_RenderStep(void)
+{
+    asm(".incbin \"frog_us_baserom.gba\", 0xfe88, 0x25c\n");
 }
 #endif /* NON_MATCHING */

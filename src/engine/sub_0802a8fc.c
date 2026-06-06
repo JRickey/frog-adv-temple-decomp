@@ -1,7 +1,8 @@
+#include "macros.h"
 #include "iwram.h"
 #include "types.h"
 
-/* --- Entity10_UpdateStatus: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- Entity10_UpdateStatus: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "iwram.h"
 #include "types.h"
@@ -63,5 +64,10 @@ void Entity10_UpdateStatus(void)
     }
 
     Entity_AdvanceAnimFrames(10, 11);
+}
+#else
+NAKED void Entity10_UpdateStatus(void)
+{
+    asm(".incbin \"frog_us_baserom.gba\", 0x2a8fc, 0x100\n");
 }
 #endif /* NON_MATCHING */

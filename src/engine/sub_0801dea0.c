@@ -1,6 +1,7 @@
+#include "macros.h"
 #include "types.h"
 
-/* --- Credits_DrawLineAlt: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- Credits_DrawLineAlt: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
 #ifdef NON_MATCHING
 register u16 *dr2 asm("r2");
 dr2 = (u16 *)(rowBase << 6);
@@ -82,4 +83,9 @@ exact statement-reorder/scope mutation decomp-permuter is built for.
   baserom's `bls` (do NOT invert to colBase>30-first; that's +1).
 
 ## Best-effort C (byte_diff 172, ONE `asm("r2")` pin — resume from THIS)
+#else
+NAKED void Credits_DrawLineAlt(void)
+{
+    asm(".incbin \"frog_us_baserom.gba\", 0x1dea0, 0x1d8\n");
+}
 #endif /* NON_MATCHING */

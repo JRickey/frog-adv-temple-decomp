@@ -283,7 +283,6 @@ SECTIONS {
         src/game/sub_08004080.o(.text);
         src/game/sub_080040c4.o(.text);
         src/game/sub_0800411c.o(.text);
-        asm/disasm_0x0800411c.o(.text);  /* 0x0800411c - 0x0800441c, SceneLoop_20 (auto-peeled) */
         src/game/sub_0800441c.o(.text);
         src/game/sub_08004470.o(.text);
         src/game/sub_08004508.o(.text);  /* 0x08004508 - 0x080045e0, Scene20_UpdateParts + TileCacheProbe_Init */
@@ -292,7 +291,6 @@ SECTIONS {
         src/game/sub_08004938.o(.text);
         src/game/sub_08004c04.o(.text);  /* 0x08004c04 - 0x08004fac, Mode14_Setup + Mode15_Setup + Mode17_RunFrame + Mode_InitEntityState + Mode_EndScene + SpawnCycle_Update */
         src/game/sub_08004fac.o(.text);
-        asm/disasm_0x08004fac.o(.text);  /* 0x08004fac - 0x080052c0, SceneLoop_22 (auto-peeled) */
         src/game/set_game_mode_15.o(.text);  /* 0x080052c0 - 0x080052cc, SetGameMode_15 */
         src/game/sub_080052cc.o(.text);
         src/game/sub_08005308.o(.text);
@@ -304,7 +302,6 @@ SECTIONS {
         src/game/sub_080059c4.o(.text);
         asm/disasm_0x080059c4.o(.text);  /* 0x080059c4 - 0x08005d10, Entity_Update (auto-peeled) */
         src/game/sub_08005d10.o(.text);
-        asm/disasm_0x08005d10.o(.text);  /* 0x08005d10 - 0x08005ed8, Entity_AdvanceAnimFrames (auto-peeled) */
         src/game/sub_08005ed8.o(.text);
         src/game/sub_08005fc8.o(.text);
         asm/disasm_0x08005fc8.o(.text);  /* 0x08005fc8 - 0x080063ec, Game_CommitRender (auto-peeled) */
@@ -382,14 +379,13 @@ SECTIONS {
         src/engine/sub_0800ce10.o(.text);
         src/engine/sub_0800ce54.o(.text);
         src/engine/sub_0800ce98.o(.text);
-        asm/disasm_0x0800ced0.o(.text);  /* 0x0800ced0 - 0x0800cfdc, Rect_PointInRect (auto-peeled) */
+        src/engine/sub_0800ced0.o(.text);  /* 0x0800ced0 - 0x0800cfdc, Rect_PointInRect (NAKED+NON_MATCHING) */
         src/engine/sub_0800cfdc.o(.text);
         src/engine/sub_0800d028.o(.text);
         src/engine/sub_0800d0f8.o(.text);
         src/engine/sub_0800d1f8.o(.text);  /* 0x0800d1f8 - 0x0800d270, GateRoom_TickFrogUpdate */
         src/engine/sub_0800d270.o(.text);
         src/engine/sub_0800d2c0.o(.text);
-        asm/disasm_0x0800d2c0.o(.text);  /* 0x0800d2c0 - 0x0800d450, PadGrid_DeactivateEntityAtPos (auto-peeled) */
         src/engine/sub_0800d450.o(.text);
         asm/disasm_0x0800d450.o(.text);  /* 0x0800d450 - 0x0800d808, PadGrid_FillGrid (auto-peeled) */
         src/engine/sub_0800d808.o(.text);  /* 0x0800d808 - 0x0800d8a0, PadGrid_RemoveRandom */
@@ -399,22 +395,19 @@ SECTIONS {
         src/engine/sub_0800dc3c.o(.text);
         asm/disasm_0x0800dc3c.o(.text);  /* 0x0800dc3c - 0x0800dc50, sub_0800DC3C (auto-peeled) */
         src/engine/sub_0800dc50.o(.text);
-        asm/disasm_0x0800dc50.o(.text);  /* 0x0800dc50 - 0x0800dd80, EntitySpawnDriver (auto-peeled) */
         src/engine/sub_0800dd80.o(.text);  /* 0x0800dd80 - 0x0800de0c, WorldMap_Init */
         src/engine/sub_0800de80.o(.text);  /* 0x0800de80 - 0x0800df7c, Game_FrameEnd */
         src/engine/sub_0800df7c.o(.text);  /* 0x0800df7c - 0x0800dffc, EntityProcE_Dispatch, EntityProcE_Init, EntityProcE_Run */
         src/engine/sub_0800dffc.o(.text);  /* 0x0800dffc - 0x0800e048, Fixed8Mul, Fixed16Mul, Fixed8Div */
         src/engine/sub_0800e048.o(.text);
         src/engine/sub_0800e060.o(.text);  /* 0x0800e060 - 0x0800e174, Scene_LoadBg */
-        asm/disasm_0x0800e174.o(.text);  /* 0x0800e174 - 0x0800e4bc, UpdateBgTilemapFrames (auto-peeled) */
+        src/engine/sub_0800e174.o(.text);  /* 0x0800e174 - 0x0800e4bc, UpdateBgTilemapFrames (NAKED+NON_MATCHING) */
         src/engine/sub_0800e4bc.o(.text);  /* 0x0800e4bc - 0x0800e600, AnimCtrl_RunPhase */
         src/engine/sub_0800e600.o(.text);  /* 0x0800e600 - 0x0800e6a8, Scene08_MapScreenInit */
         src/engine/sub_0800e6a8.o(.text);  /* 0x0800e6a8 - 0x0800e85c, Scene_FadeUpdate + text_0800e76c + SetModeBlendRegs */
         src/engine/sub_0800e85c.o(.text);
-        asm/disasm_0x0800e85c.o(.text);  /* 0x0800e85c - 0x0800eb1c, CharLayers_Upload (auto-peeled) */
         src/engine/sub_0800eb1c.o(.text);  /* 0x0800eb1c - 0x0800ebdc, FrogOam_Init */
         src/engine/sub_0800ebdc.o(.text);
-        asm/disasm_0x0800ebdc.o(.text);  /* 0x0800ebdc - 0x0800ee34, BgScrollBlit (auto-peeled) */
         src/engine/sub_0800ee34.o(.text);  /* 0x0800ee34 - 0x0800ee94, BgLayer_Disable */
         src/engine/sub_0800ee94.o(.text);  /* 0x0800ee94 - 0x0800ef58, BgLayer_Enable + Bg_SetLayersByMode */
         src/engine/sub_0800ef58.o(.text);  /* 0x0800ef58 - 0x0800ef90, SceneReset */
@@ -429,23 +422,17 @@ SECTIONS {
         src/engine/sub_0800fcc8.o(.text);
         src/engine/sub_0800fd50.o(.text);  /* 0x0800fd50 - 0x0800fe10, Scene08_MapScreenTick (extended-pool range; 7 trailing words land in .o pool) */
         src/engine/sub_0800fe88.o(.text);
-        asm/disasm_0x0800fe88.o(.text);  /* 0x0800fe88 - 0x080100e4, Credits_RenderStep (auto-peeled) */
         src/engine/sub_080100e4.o(.text);
-        asm/disasm_0x080100e4.o(.text);  /* 0x080100e4 - 0x0801025c, Scroll_FlushTilemapWindow (auto-peeled) */
         src/engine/sub_0801025c.o(.text);
         asm/disasm_0x0801025c.o(.text);  /* 0x0801025c - 0x080105b0, ScaleAnim_BlitFrameToVram (auto-peeled) */
         src/engine/sub_080105b0.o(.text);
-        asm/disasm_0x080105b0.o(.text);  /* 0x080105b0 - 0x08010694, Blit_CopyEntry (auto-peeled) */
         src/engine/sub_08010694.o(.text);
         src/engine/sub_080106b8.o(.text);  /* 0x080106b8 - 0x08010958, Blend_StepFade + Screen_BeginFlash + Screen_TickFlash + Render_UpdateBlendRegs + Pal_RotateEntries + Render_DmaLoadTileset + WrapBufPtr + Anim_AdvanceFrameStep + Anim_TickFrame */
         src/engine/sub_08010958.o(.text);
-        asm/disasm_0x08010958.o(.text);  /* 0x08010958 - 0x08010a44, ModeChannel_Apply (auto-peeled) */
         src/engine/sub_08010a44.o(.text);
         asm/disasm_0x08010a44.o(.text);  /* 0x08010a44 - 0x08010dd8, sub_08010A44 (auto-peeled) */
         src/engine/sub_08010dd8.o(.text);
-        asm/disasm_0x08010dd8.o(.text);  /* 0x08010dd8 - 0x08010f64, Scroll_PrepareBlitWork (auto-peeled) */
         src/engine/sub_08010f64.o(.text);
-        asm/disasm_0x08010f64.o(.text);  /* 0x08010f64 - 0x08011288, Scroll_TickBlitDir (auto-peeled) */
         asm/text/text_0x08011288.o(.text);  /* 0x08011288 - 0x0801129c, raw bytes */
         src/engine/sub_0801129c.o(.text);  /* 0x0801129c - 0x080112c0, Scroll_ResetDirStep */
         src/engine/sub_080112c0.o(.text);  /* 0x080112c0 - 0x080113e8, BlitFrameCell */
@@ -453,11 +440,10 @@ SECTIONS {
         src/engine/sub_08011574.o(.text);  /* 0x08011574 - 0x080116b8, Selector_StepBlitAnim + Selector_RunAnimSequence */
         src/engine/sub_080116b8.o(.text);  /* 0x080116b8 - 0x0801185c, Selector_BlitStateMachine */
         src/engine/sub_0801185c.o(.text);  /* 0x0801185c - 0x08011984, GetVcountRandom + Anim_CheckScreenIdle + Selector_InitScene + Selector_Update + Selector_StepScroll + Selector_VblankTick */
-        asm/disasm_0x08011984.o(.text);  /* 0x08011984 - 0x08011aa4, Selector_BlitTiles (auto-peeled) */
+        src/engine/sub_08011984.o(.text);  /* 0x08011984 - 0x08011aa4, Selector_BlitTiles (NAKED+NON_MATCHING) */
         src/engine/sub_08011aa4.o(.text);
         asm/disasm_0x08011aa4.o(.text);  /* 0x08011aa4 - 0x08011e40, Selector_UpdateBlit (auto-peeled) */
         src/engine/sub_08011e40.o(.text);
-        asm/disasm_0x08011e40.o(.text);  /* 0x08011e40 - 0x08012098, Selector_TriggerWindowReveal (auto-peeled) */
         src/engine/sub_08012098.o(.text);  /* 0x08012098 - 0x0801223c, Selector_StepColorFade + Selector_ResetState + UpdateScrollFromAnimChannels */
         src/engine/sub_0801223c.o(.text);  /* 0x0801223c - 0x080124d0, InitScrollAnimSequence + RunScrollTransitionSequence */
         src/engine/sub_080124d0.o(.text);  /* 0x080124d0 - 0x08012504, AnimChannels_Reset */
@@ -470,9 +456,7 @@ SECTIONS {
         src/engine/sub_08012664.o(.text);
         src/engine/sub_0801288c.o(.text);
         src/engine/sub_0801297c.o(.text);
-        asm/disasm_0x0801297c.o(.text);  /* 0x0801297c - 0x08012a6c, BlitEntityTileFrame2 (auto-peeled) */
         src/engine/sub_08012a6c.o(.text);
-        asm/disasm_0x08012a6c.o(.text);  /* 0x08012a6c - 0x08012b38, ScaleBlit_Tick (force-peeled) */
         src/engine/sub_08012b38.o(.text);  /* 0x08012b38 - 0x08012bb4, LoadScreenTilemap_188EDC + ScrollState_Reset + Scene_Init2Layer */
         asm/disasm_0x08012bb4.o(.text);  /* 0x08012bb4 - 0x08012bc4, sub_08012BB4 (auto-peeled) */
         src/engine/sub_08012bc4.o(.text);  /* 0x08012bc4 - 0x08012cac, sub_08012BC4 */
@@ -485,11 +469,8 @@ SECTIONS {
 
         src/engine/sub_08013040.o(.text);  /* 0x08013040 - 0x0801310c, ScaleAnim_TickFrames */
         src/engine/sub_0801310c.o(.text);
-        asm/disasm_0x0801310c.o(.text);  /* 0x0801310c - 0x080132e8, ScaleAnim_SyncSelectors (auto-peeled) */
         src/engine/sub_080132e8.o(.text);
-        asm/disasm_0x080132e8.o(.text);  /* 0x080132e8 - 0x080135b8, ScaleAnim_BlitSceneLayers (auto-peeled) */
         src/engine/sub_080135b8.o(.text);
-        asm/disasm_0x080135b8.o(.text);  /* 0x080135b8 - 0x08013694, Selector_StepScrollAxes (auto-peeled) */
         src/engine/sub_08013694.o(.text);
         src/engine/sub_0801377c.o(.text);  /* 0x0801377c - 0x08013880, BgLayer_Init + ScaleAnim_Reset */
         src/engine/sub_08013880.o(.text);
@@ -508,7 +489,6 @@ SECTIONS {
         src/engine/sub_08014064.o(.text);
         src/engine/sub_08014078.o(.text);
         src/engine/sub_08014140.o(.text);
-        asm/disasm_0x08014140.o(.text);  /* 0x08014140 - 0x080142d4, AnimState_BlitStep (auto-peeled) */
         src/engine/sub_080142d4.o(.text);
         asm/disasm_0x0801436c.o(.text);  /* 0x0801436c - 0x08014ea8, sub_0801436C (auto-peeled) */
         src/engine/sub_08014ea8.o(.text);  /* 0x08014ea8 - 0x08014ee8, Display_ResetLayers */
@@ -520,7 +500,6 @@ SECTIONS {
         src/engine/sub_080152b0.o(.text);
         src/engine/sub_0801549c.o(.text);
         src/engine/sub_080155f0.o(.text);
-        asm/disasm_0x080155f0.o(.text);  /* 0x080155f0 - 0x0801585c, Scenery_BlitAndCyclePalette (auto-peeled) */
         src/engine/sub_0801585c.o(.text);  /* 0x0801585c - 0x08015930, Scenery_UpdateSelectorCells */
         src/engine/sub_08015930.o(.text);  /* 0x08015930 - 0x08015a00, Tilemap_DispatchPendingBlits + Scenery_InitScrollState */
         src/engine/sub_08015a00.o(.text);
@@ -536,17 +515,14 @@ SECTIONS {
         asm/text/text_0x0801629c.o(.text);  /* 0x0801629c - 0x08016360, raw bytes */
         src/engine/sub_08016360.o(.text);  /* 0x08016360 - 0x08016404, EntitySlots_Init */
         src/engine/sub_08016404.o(.text);
-        asm/disasm_0x08016404.o(.text);  /* 0x08016404 - 0x08016650, UpdateColumnClipSpans (auto-peeled) */
         src/engine/sub_08016650.o(.text);  /* 0x08016650 - 0x08016824, Icon_LoadFrameByMode */
         src/engine/sub_08016824.o(.text);
         src/engine/sub_080169bc.o(.text);
         src/engine/sub_08016a40.o(.text);
         asm/disasm_0x08016a40.o(.text);  /* 0x08016a40 - 0x08017000, StatusBar_Update (auto-peeled) */
         src/engine/sub_08017000.o(.text);
-        asm/disasm_0x08017000.o(.text);  /* 0x08017000 - 0x080172f4, FrogStatusBar_Update (auto-peeled) */
         src/engine/sub_080172f4.o(.text);  /* 0x080172f4 - 0x08017364, SaveDetect */
         src/engine/sub_08017364.o(.text);
-        asm/disasm_0x08017364.o(.text);  /* 0x08017364 - 0x080177a0, SaveLoad (auto-peeled) */
         src/engine/sub_080177a0.o(.text);
         src/engine/sub_0801793c.o(.text);  /* 0x0801793c - 0x080179b8, GameMode_Attract */
         src/engine/sub_080179b8.o(.text);
@@ -560,7 +536,6 @@ SECTIONS {
         src/engine/sub_080182cc.o(.text);  /* 0x080182cc - 0x080184dc, CreditsMenu_HandleInputA, CreditsScreen_Init, CreditsMenu_HandleInputB, Bg_InitMode0 */
         src/engine/sub_080184dc.o(.text);  /* 0x080184dc - 0x080185c0, Tilemap_SwapPalette */
         src/engine/sub_080185c0.o(.text);
-        asm/disasm_0x080185c0.o(.text);  /* 0x080185c0 - 0x0801932c, Sprite_CycleDmaFrame (auto-peeled) */
         src/engine/sub_0801932c.o(.text);  /* 0x0801932c - 0x080193d8, TitleLogo_Display */
         src/engine/sub_08019420.o(.text);
         asm/disasm_0x080193d8.o(.text);  /* 0x080193d8 - 0x08019500, Menu25_InitKeyTable + Menu25_PollInput (auto-peeled) */
@@ -572,7 +547,6 @@ SECTIONS {
         src/engine/sub_080199e4.o(.text);
         asm/text/text_0x08019a14.o(.text);  /* 0x08019a14 - 0x08019aec, raw bytes */
         src/engine/sub_08019aec.o(.text);
-        asm/disasm_0x08019aec.o(.text);  /* 0x08019aec - 0x08019db4, Room_StreamOamAttribs (auto-peeled) */
         src/engine/sub_08019db4.o(.text);  /* 0x08019db4 - 0x08019e6c, Display_RestoreState + Display_EnableBg */
         src/engine/sub_08019e6c.o(.text);  /* 0x08019e6c - 0x0801a268, BgBuffer_ApplyPending + LoadRoomBg3Graphics + BgPlane_FillTilemap + RoomSelect_InitDisplay + WinPose_Init + MapCursor_Step */
         src/engine/sub_0801a268.o(.text);
@@ -583,7 +557,7 @@ SECTIONS {
         src/engine/sub_0801a894.o(.text);
         src/engine/sub_0801a980.o(.text);  /* IrisClose + Credits_DmaLoadTiles + LevelSelect_Enter */
         src/engine/sub_0801ac84.o(.text);
-        asm/disasm_0x0801ada8.o(.text);  /* 0x0801ada8 - 0x0801b0ac, Credits_RunScript (auto-peeled) */
+        src/engine/sub_0801ada8.o(.text);  /* 0x0801ada8 - 0x0801b0ac, Credits_RunScript (NAKED+NON_MATCHING) */
         src/engine/sub_0801b0ac.o(.text);
         src/engine/sub_0801b154.o(.text);
         src/engine/sub_0801b514.o(.text);  /* 0x0801b514 - 0x0801b71c, RunWorldSelectTransition + sub_0801B620 + sub_0801B694 */
@@ -594,7 +568,6 @@ SECTIONS {
         src/engine/sub_0801badc.o(.text);
         src/engine/sub_0801bb1c.o(.text);
         src/engine/sub_0801bb54.o(.text);
-        asm/disasm_0x0801bb54.o(.text);  /* 0x0801bb54 - 0x0801be7c, ShowWinLoseMessage (auto-peeled) */
         src/engine/sub_0801be7c.o(.text);
         asm/disasm_0x0801be7c.o(.text);  /* 0x0801be7c - 0x0801c078, DrawTextGlyphs (auto-peeled) */
         src/engine/sub_0801c078.o(.text);
@@ -602,7 +575,6 @@ SECTIONS {
         src/engine/sub_0801c464.o(.text);
         asm/disasm_0x0801c6fc.o(.text);  /* 0x0801c6fc - 0x0801cd0c, sub_0801C6FC (auto-peeled) */
         src/engine/sub_0801cd0c.o(.text);
-        asm/disasm_0x0801cd0c.o(.text);  /* 0x0801cd0c - 0x0801cec0, sub_0801CD0C (auto-peeled) */
         src/engine/sub_0801cec0.o(.text);
         src/engine/sub_0801cf18.o(.text);  /* 0x0801cf18 - 0x0801cfa0, DrawByteDecimal */
         src/engine/sub_0801cfa0.o(.text);  /* 0x0801cfa0 - 0x0801d048, Bg_WriteTilePair */
@@ -613,12 +585,10 @@ SECTIONS {
         src/engine/sub_0801d33c.o(.text);
         src/engine/sub_0801d4cc.o(.text);  /* 0x0801d4cc - 0x0801d570, Credits_InitScrollPage1 */
         src/engine/sub_0801d570.o(.text);
-        asm/disasm_0x0801d570.o(.text);  /* 0x0801d570 - 0x0801d880, Credits_ScrollTick (auto-peeled) */
         src/engine/sub_0801d880.o(.text);
         src/engine/sub_0801da1c.o(.text);
         src/engine/sub_0801dbb4.o(.text);
         src/engine/sub_0801dea0.o(.text);
-        asm/disasm_0x0801dea0.o(.text);  /* 0x0801dea0 - 0x0801e078, Credits_DrawLineAlt (auto-peeled) */
         src/engine/sub_0801e078.o(.text);  /* 0x0801e078 - 0x0801e118, Credits_FadeTransition */
         src/engine/sub_0801e118.o(.text);  /* 0x0801e118 - 0x0801e270, Screen_FadeSequence + Credits_Tick + Credits_FillPage */
         src/engine/sub_0801e270.o(.text);  /* 0x0801e270 - 0x0801e28c, WaitFrames */
@@ -674,7 +644,6 @@ SECTIONS {
         src/engine/sub_080222bc.o(.text);  /* 0x080222bc - 0x08022360, SpawnRowGroupEntities */
         src/engine/sub_08022360.o(.text);  /* 0x08022360 - 0x08022434, InitSpecialEntitySlots */
         src/engine/sub_08022434.o(.text);
-        asm/disasm_0x08022434.o(.text);  /* 0x08022434 - 0x08022730, UpdateLogPairEntities (auto-peeled) */
         src/engine/sub_08022730.o(.text);  /* 0x08022730 - 0x08022758, SpawnEntitySlot2 */
         src/engine/sub_08022758.o(.text);  /* 0x08022758 - 0x0802277c, SpawnZone_Slot02 */
         src/engine/sub_0802277c.o(.text);  /* 0x0802277c - 0x080228ac, UpdateZone_Slots36to3D + StreamInit_Slot2F + SpawnZone_Slot2F + UpdateZone_Slots19to26 + StreamInit_Slots3Eto44 + StreamInit_Slot05 */
@@ -686,7 +655,6 @@ SECTIONS {
         src/engine/sub_08022ea8.o(.text);  /* 0x08022ea8 - 0x08022f4c, LevelLayout_SpawnGroup311C80 */
         src/engine/sub_08022f4c.o(.text);
         src/engine/sub_08022fec.o(.text);
-        asm/disasm_0x08022fec.o(.text);  /* 0x08022fec - 0x080231f4, UpdateLogPairEntities2 (auto-peeled) */
         src/engine/sub_080231f4.o(.text);
         src/engine/sub_0802321c.o(.text);
         src/engine/sub_08023244.o(.text);
@@ -731,9 +699,7 @@ SECTIONS {
         src/engine/sub_0802a4a4.o(.text);
         src/engine/sub_0802a538.o(.text);
         src/engine/sub_0802a63c.o(.text);
-        asm/disasm_0x0802a63c.o(.text);  /* 0x0802a63c - 0x0802a8fc, SpawnGrid_UpdateSection (auto-peeled) */
         src/engine/sub_0802a8fc.o(.text);
-        asm/disasm_0x0802a8fc.o(.text);  /* 0x0802a8fc - 0x0802a9fc, Entity10_UpdateStatus (auto-peeled) */
         src/engine/sub_0802a9fc.o(.text);
         src/engine/sub_0802aae8.o(.text);
         src/game/sub_0802ab64.o(.text);  /* 0x0802ab64 - 0x0802af10, EntitySlot17_Init + EntitySlot12_LoadLayout + RoomEntities_Update + RoomEntities_Init + RoomFrogEntity_Update */
@@ -746,20 +712,17 @@ SECTIONS {
         src/game/sub_0802bdbc.o(.text);
         src/game/sub_0802bf58.o(.text);
         src/game/sub_0802c200.o(.text);
-        asm/disasm_0x0802c200.o(.text);  /* 0x0802c200 - 0x0802c3e4, EntityPool_UpdateOwned (auto-peeled) */
         src/game/sub_0802c3e4.o(.text);
         asm/disasm_0x0802c3e4.o(.text);  /* 0x0802c3e4 - 0x0802c75c, EntityPool_SpawnEntry (auto-peeled) */
         src/game/sub_0802c75c.o(.text);
         src/game/sub_0802c7ec.o(.text);
-        asm/disasm_0x0802c910.o(.text);  /* 0x0802c910 - 0x0802ca54, Entity22_Update (auto-peeled) */
+        src/game/sub_0802c910.o(.text);  /* 0x0802c910 - 0x0802ca54, Entity22_Update (NAKED+NON_MATCHING) */
         src/game/sub_0802ca54.o(.text);
         asm/disasm_0x0802ca54.o(.text);  /* 0x0802ca54 - 0x0802ca64, sub_0802CA54 (auto-peeled) */
         src/game/sub_0802ca64.o(.text);
         src/game/sub_0802cafc.o(.text);
-        asm/disasm_0x0802cafc.o(.text);  /* 0x0802cafc - 0x0802cdd0, Enemy_PickNextStep (auto-peeled) */
         src/game/sub_0802cdd0.o(.text);
         src/game/sub_0802ce60.o(.text);
-        asm/disasm_0x0802ce60.o(.text);  /* 0x0802ce60 - 0x0802d170, Entity2_Tick (auto-peeled) */
         src/game/sub_0802d170.o(.text);
         asm/disasm_0x0802d170.o(.text);  /* 0x0802d170 - 0x0802d294, sub_0802D170 (auto-peeled) */
         src/game/sub_0802d294.o(.text);

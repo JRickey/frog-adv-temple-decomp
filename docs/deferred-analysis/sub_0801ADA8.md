@@ -1,5 +1,9 @@
 # Deferred analysis: sub_0801ADA8
 
+> **Location (updated 2026-06-06):** moved to its own TU `src/engine/sub_0801ada8.c` — readable C
+> under `#ifdef NON_MATCHING`, matching bytes via an `#else` NAKED `.incbin`. The
+> standalone asm slice `asm/disasm_0x0801ada8.s` was absorbed into that TU and removed.
+
 Credits-roll tilemap-script interpreter. Slice `asm/disasm_0x0801ada8.s`
 (0x0801ada8..0x0801b0ac, 0x304 bytes) carries TWO functions:
 sub_0801ADA8 (0x1ada8..0x1b094, the interpreter) and an orphan tail
@@ -141,7 +145,7 @@ statement ordering).
 
 ## Best-effort C (byte_diff 584 / diff_count 303; CFG-correct; do NOT ship — make check fails)
 
-Destination: src/engine/sub_0801ac84.c (append; struct + 2 fns). Needs
+Destination: own TU src/engine/sub_0801ada8.c (NON_MATCHING reference + NAKED `.incbin`; carries Credits_RunScript + orphan tail sub_0801B098). Needs
 `#include "game.h"` added to that file's includes (for gGameStuff). The two
 register pins are PURE C (status would still be "matched" if it reached
 byte_diff 0).

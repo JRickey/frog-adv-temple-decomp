@@ -1,7 +1,8 @@
+#include "macros.h"
 #include "iwram.h"
 #include "types.h"
 
-/* --- SpawnGrid_UpdateSection: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- SpawnGrid_UpdateSection: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "game.h"
 #include "iwram.h"
@@ -112,5 +113,10 @@ void SpawnGrid_UpdateSection(void)
         EntityMover_Tick((u8)(i + 2));
         Entity_Update(e);
     }
+}
+#else
+NAKED void SpawnGrid_UpdateSection(void)
+{
+    asm(".incbin \"frog_us_baserom.gba\", 0x2a63c, 0x2c0\n");
 }
 #endif /* NON_MATCHING */

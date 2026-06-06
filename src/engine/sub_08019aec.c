@@ -1,6 +1,7 @@
+#include "macros.h"
 #include "types.h"
 
-/* --- Room_StreamOamAttribs: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- Room_StreamOamAttribs: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "iwram.h"
 #include "types.h"
@@ -101,5 +102,10 @@ void sub_08019D90(void)
     *reg = 0x1142;
     reg++;
     *reg = 0x050B;
+}
+#else
+NAKED void Room_StreamOamAttribs(void)
+{
+    asm(".incbin \"frog_us_baserom.gba\", 0x19aec, 0x2c8\n");
 }
 #endif /* NON_MATCHING */

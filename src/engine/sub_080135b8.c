@@ -1,7 +1,7 @@
 #include "macros.h"
 #include "types.h"
 
-/* --- Selector_StepScrollAxes: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- Selector_StepScrollAxes: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "macros.h"
 #include "types.h"
@@ -91,5 +91,10 @@ void Selector_StepScrollAxes(u16 maxX, u8 stepX, u16 maxY, u8 stepY)
             y->lastTick = gs->_unk00;
         }
     }
+}
+#else
+NAKED void Selector_StepScrollAxes(void)
+{
+    asm(".incbin \"frog_us_baserom.gba\", 0x135b8, 0xdc\n");
 }
 #endif /* NON_MATCHING */

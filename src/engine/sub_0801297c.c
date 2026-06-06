@@ -1,7 +1,7 @@
 #include "macros.h"
 #include "types.h"
 
-/* --- BlitEntityTileFrame2: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- BlitEntityTileFrame2: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "iwram.h"
 #include "types.h"
@@ -65,5 +65,10 @@ void BlitEntityTileFrame2(void)
         Scroll_FlushTilemapWindow(bank & 1, (u16 *)0x02000000, (u16 *)0x0600E000);
 
     gIwram_64C0._field_0A = 0;
+}
+#else
+NAKED void BlitEntityTileFrame2(void)
+{
+    asm(".incbin \"frog_us_baserom.gba\", 0x1297c, 0xf0\n");
 }
 #endif /* NON_MATCHING */
