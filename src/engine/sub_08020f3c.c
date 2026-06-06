@@ -14,7 +14,7 @@ typedef struct EntityMover {
     u8 _pad33[5];
 } EntityMover;
 
-extern long long sub_08006830(struct IwramAt6110 *p, u8 a, u8 b);
+extern long long sub_08006830(struct IwramAt6110 *p, s32 a, s32 b);
 
 void sub_08020F3C(u8 arg)
 {
@@ -87,5 +87,88 @@ void sub_08020F3C(u8 arg)
         stamp = (u32 *)(finalOff + (u32)stampBase);
         gs = gsHi;
         *stamp = gs->_unk00;
+    }
+}
+
+void sub_08020FE4(s32 start, s32 end)
+{
+    EntityMover *base;
+    GameStuff *gsLo;
+    u8 *stampBasePtr;
+    GameStuff *gsHi;
+    s32 idx;
+    s32 last;
+    u32 arg8;
+    u32 off;
+    u32 elapsed;
+    s32 stampOff;
+    s32 xyOff;
+    u8 interval;
+
+    idx = start;
+    last = end;
+    if (sub_08006830(&gIwram_6110, idx, last) == 0)
+        return;
+
+    gsLo = &gGameStuff;
+    do {
+        base = (EntityMover *)gEntities;
+        arg8 = idx << 3;
+        off = (arg8 - idx) << 3;
+    } while (0);
+    stampBasePtr = (u8 *)base + 0x2c;
+
+    {
+        u8 *stampBase = stampBasePtr;
+        elapsed = gsLo->_unk00 - *(u32 *)(off + (u32)stampBase);
+    }
+
+    interval = *(u8 *)((off + (u32)base) + 0x32);
+    gsHi = gsLo;
+    if (elapsed < interval)
+        return;
+    if (idx > last)
+        return;
+
+    {
+        EntityMover *mover;
+        u32 *stampPtr;
+        struct IwramAt35E0 *flags;
+        u16 *xyPtr;
+
+        mover = base;
+        flags = &gIwram_35E0;
+        stampOff = off + 0x2c;
+        stampPtr = (u32 *)(stampOff + (u32)mover);
+        xyOff = off + 2;
+        xyPtr = (u16 *)(xyOff + (u32)mover);
+
+        do {
+            s32 dx;
+            register s32 dy;
+
+            dy = ((u8 *)stampPtr)[5];
+            dx = ((s8 *)stampPtr)[4];
+            xyPtr[0] += dx;
+            dy <<= 24;
+            dy >>= 24;
+            xyPtr[1] += dy;
+
+            {
+                u32 active;
+
+                active = 2;
+                active &= flags->_field_10;
+                if (active != 0 && idx == flags->_field_D) {
+                    mover->x += dx;
+                    mover->y += dy;
+                }
+            }
+
+            *stampPtr = gsHi->_unk00;
+            stampPtr = (u32 *)((u32)stampPtr + 0x38);
+            xyPtr = (u16 *)((u32)xyPtr + 0x38);
+            idx++;
+        } while (idx <= last);
     }
 }
