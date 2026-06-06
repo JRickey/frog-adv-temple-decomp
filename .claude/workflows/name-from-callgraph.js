@@ -145,8 +145,11 @@ function namePrompt(chunk, idx) {
   const fileList = chunk.map((c) => `  ${c.file}: ${c.functions.join(', ')}`).join('\n')
   const fragPath = `${PKT}/frag_${idx}.json`
   return `You are a NAMING agent (Sonnet) on the MAIN checkout (${MAIN}). You DECIDE NAMES — this is
-the only judgment step. READ-ONLY on the tracked tree: your ONLY write is the fragment file
-${fragPath} (under the gitignored ${PKT}/). Do NOT edit sources, linker.ld, or commit.
+the only judgment step. STRICTLY READ-ONLY on the tracked tree: your ONLY filesystem write is the
+fragment file ${fragPath} (under the gitignored ${PKT}/). Do NOT edit any source/header/linker.ld,
+do NOT git mv / rename / create / delete any tracked file, do NOT run apply_renames, do NOT
+git add/commit. (Symbol + file renames are applied by separate later phases; if you think a FILE
+should be renamed, just say so in "notes".) Touching the tracked tree here corrupts the run.
 
 Your clusters (${chunk.length} file(s); name them as coherent families):
 ${fileList}
@@ -201,9 +204,13 @@ Steps:
    offending NEW name, then drop the offending function/data entry from the relevant
    ${PKT}/frag_*.json (edit the file via bash/python) and RETRY apply_renames. Up to 3 retries.
    If it still fails, set makeCheck=false, committed=false, and STOP (nothing lands; tree is clean).
-4. On make check PASS: apply_renames already refreshed README via progress_stats. Commit everything:
-     git add -A && git commit -m "Name <N> symbols from call graph"
-   (N = functions + data renamed). Capture the commit sha.
+4. On make check PASS: do NOT rename/move/create/delete any source file here, and do NOT git mv —
+   file renaming is a SEPARATE later phase. apply_renames only MODIFIES tracked files (and refreshes
+   README + .function_addresses via its cache step); it creates no new files. Commit exactly those:
+     git add -u && git add README.md .function_addresses.json 2>/dev/null; git commit -m "Name <N> symbols from call graph"
+   (N = functions + data renamed). BEFORE committing, run \`git status --short\` and confirm there are
+   NO renamed/added/deleted SOURCE files (no lines starting with R, A, D, or ??); if there are, some
+   step overstepped — set committed=false and STOP (do not commit). Capture the commit sha.
 5. Report applied (# renames that landed), droppedCollisions, leftoverWarnings, makeCheck=true,
    committed=true, commitSha, notes.`
 }
