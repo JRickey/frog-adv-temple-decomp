@@ -10,20 +10,20 @@ extern void (*const gHandlerTable_08308AE0[])(void);
 extern u16 gIwram_5398;
 
 /* Dispatch through a ROM handler table indexed by gIwram_3480._data[2].
- * Class-sibling of sub_080201C8 (which indexes gHandlerTable_08308AD4 by the
+ * Class-sibling of GameMode_Menu07 (which indexes gHandlerTable_08308AD4 by the
  * same byte); the indirect call lowers to `bl _call_via_r0` and the popped
  * lr lands in r0 before bx, discarding the handler's return value. */
 
-void sub_080201E8(void)
+void GameMode_Menu27(void)
 {
     gHandlerTable_08308AE0[gIwram_3480._data[2]]();
 }
 
 /* Mode-reset helper at 0x08020208 — shares this compilation slice with
- * sub_080201E8 (not reached by any ROM BL; kept as a separate symbol so the
+ * GameMode_Menu27 (not reached by any ROM BL; kept as a separate symbol so the
  * surrounding layout stays byte-identical). Snaps the game back to mode 4,
  * clears dispatcher state bytes, and sets _data[20] = 2. */
-void sub_08020208(void)
+void Dispatcher_ResetModeA(void)
 {
     gGameStuff.mode = GAME_MODE_ROUTER;
     gIwram_3480._data[0] = 8;
@@ -35,11 +35,11 @@ void sub_08020208(void)
 }
 
 /* Mode-reset helper at 0x0802023c — shares this compilation slice with
- * sub_080201E8 (not reached by any ROM BL; kept as a separate symbol so the
+ * GameMode_Menu27 (not reached by any ROM BL; kept as a separate symbol so the
  * surrounding layout stays byte-identical). Snaps the game back to mode 4,
  * clears dispatcher state bytes, sets _data[20] = 1, and clears
  * gIwram_34A0.dispatchIdx. */
-void sub_0802023C(void)
+void Dispatcher_ResetModeB(void)
 {
     gGameStuff.mode = GAME_MODE_ROUTER;
     gIwram_3480._data[0] = 8;
@@ -50,9 +50,9 @@ void sub_0802023C(void)
     gIwram_34A0.dispatchIdx = 0;
 }
 
-extern u16 sub_08010694(u16 arg);
+extern u16 Blend_StartFade(u16 arg);
 
-void sub_08020270(void)
+void Dispatcher_ResetModeC(void)
 {
     gGameStuff.mode = GAME_MODE_ROUTER;
 
@@ -66,5 +66,5 @@ void sub_08020270(void)
     gIwram_3480._data[6] = 1;
     gIwram_3480._data[7] = 0;
 
-    sub_08010694(0xBF);
+    Blend_StartFade(0xBF);
 }

@@ -3,7 +3,7 @@
 extern u8 sub_0801B71C(u8 arg);
 extern u16 gIwram_5398;
 
-u32 sub_0801B9E4(u8 arg)
+u32 Credits_StepThrottled(u8 arg)
 {
     u8 argReg = arg;
     u32 ret = 1;
@@ -25,11 +25,11 @@ u32 sub_0801B9E4(u8 arg)
     return ret;
 }
 
-extern void sub_0802D558(void *src, void *dst, u32 mode);
+extern void BiosSwiTable(void *src, void *dst, u32 mode);
 extern void sub_0801BAD8(void);
-extern void sub_0801BADC(void);
+extern void LoadWorldLevelLayoutAlt(void);
 
-void sub_0801BA34(void)
+void Credits_InitScene(void)
 {
     s32 zero2;
     u32 zero;
@@ -95,7 +95,7 @@ void sub_0801BA34(void)
     {
         /* Load fill mode into r2 before sp → r0 to match baserom instruction ordering. */
         u32 fill_mode = 0x01000700;
-        sub_0802D558(&zero, ent, fill_mode);
+        BiosSwiTable(&zero, ent, fill_mode);
     }
     {
         s32 mask = 8;
@@ -108,5 +108,5 @@ void sub_0801BA34(void)
     }
 
     sub_0801BAD8();
-    sub_0801BADC();
+    LoadWorldLevelLayoutAlt();
 }

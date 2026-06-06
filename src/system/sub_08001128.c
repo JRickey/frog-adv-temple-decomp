@@ -1,64 +1,64 @@
 #include "game.h"
 #include "types.h"
 
-/* Cluster of four small dispatcher helpers between sub_08000EB8 (mode-9
- * inner loop) and sub_080011A4 (an input gate). The cluster is glue
- * between the mode-9 / mode-11 inner loops in sub_08000EB8 / sub_08001508
- * and the per-entity probe dispatcher in sub_08000E0C. None of the four
+/* Cluster of four small dispatcher helpers between Scene09_Run (mode-9
+ * inner loop) and Entity_UpdateHudState (an input gate). The cluster is glue
+ * between the mode-9 / mode-11 inner loops in Scene09_Run / Scene11_AttractModeMain
+ * and the per-entity probe dispatcher in Scene09_UpdatePlayerTile. None of the four
  * functions are referenced from any already-decompiled C — they are
- * called by sub_08001214 (still asm) which sits immediately after this
+ * called by Scene10_Main (still asm) which sits immediately after this
  * cluster and looks like another mode dispatcher.
  *
  * Shape sketch (verified by baserom objdump):
- *   sub_08001128(a, b)         — sets gGameStuff.pendingMode = 2 and calls
- *                                sub_0800B7B0(a, b, 3).
- *   sub_08001140(a, b)         — tail of an init/reset chain (5 subsystem
- *                                resets) followed by sub_08000E0C(a, b)
+ *   EntityProbe_SetMode2(a, b)         — sets gGameStuff.pendingMode = 2 and calls
+ *                                Entity_UpdateHitboxSlots(a, b, 3).
+ *   EntityProbe_ResetAndDispatch(a, b)         — tail of an init/reset chain (5 subsystem
+ *                                resets) followed by Scene09_UpdatePlayerTile(a, b)
  *                                and gGameStuff._unk14++; matches the
- *                                sub_08000CEC pattern exactly with
- *                                sub_08000B6C swapped for sub_08000E0C
- *                                (and no sub_08016404 config-load step).
- *   sub_08001174(p, a, b)      — calls sub_08009C14(p); if it returns 0
+ *                                Scene08_PlayFrameTick pattern exactly with
+ *                                Scene08_UpdatePlayerEntity swapped for Scene09_UpdatePlayerTile
+ *                                (and no UpdateColumnClipSpans config-load step).
+ *   EntityProbe_FinishOrSetup(p, a, b)      — calls Scene_EntityTick(p); if it returns 0
  *                                writes 7 to *p, then unconditionally
- *                                sub_0800B7B0(a, b, 3).
- *   sub_08001198(void)         — single-statement thunk to sub_0800DE80.
+ *                                Entity_UpdateHitboxSlots(a, b, 3).
+ *   ModeControl_Cleanup(void)         — single-statement thunk to Game_FrameEnd.
  */
 
-extern void sub_0800B7B0(void *sp_buf, void *r4_obj, u32 arg2);
-extern void sub_0800A2D8(void);
-extern void sub_080008DC(void);
-extern void sub_0800A328(void);
-extern void sub_080094F8(void);
-extern void sub_08009984(void);
-extern void sub_08000E0C(void *ent, u32 arg1);
-extern u32 sub_08009C14(u8 *p);
-extern void sub_0800DE80(void);
+extern void Entity_UpdateHitboxSlots(void *sp_buf, void *r4_obj, u32 arg2);
+extern void Game_RunEntityFrame(void);
+extern void WaitVblank(void);
+extern void Game_ForceRender(void);
+extern void Entity_CheckAllCollisions(void);
+extern void Player_CheckTileEvents(void);
+extern void Scene09_UpdatePlayerTile(void *ent, u32 arg1);
+extern u32 Scene_EntityTick(u8 *p);
+extern void Game_FrameEnd(void);
 
-void sub_08001128(void *a, void *b)
+void EntityProbe_SetMode2(void *a, void *b)
 {
     gGameStuff.pendingMode = 2;
-    sub_0800B7B0(a, b, 3);
+    Entity_UpdateHitboxSlots(a, b, 3);
 }
 
-void sub_08001140(void *a, u32 b)
+void EntityProbe_ResetAndDispatch(void *a, u32 b)
 {
-    sub_0800A2D8();
-    sub_080008DC();
-    sub_0800A328();
-    sub_080094F8();
-    sub_08009984();
-    sub_08000E0C(a, b);
+    Game_RunEntityFrame();
+    WaitVblank();
+    Game_ForceRender();
+    Entity_CheckAllCollisions();
+    Player_CheckTileEvents();
+    Scene09_UpdatePlayerTile(a, b);
     gGameStuff._unk14++;
 }
 
-void sub_08001174(u8 *p, void *a, void *b)
+void EntityProbe_FinishOrSetup(u8 *p, void *a, void *b)
 {
-    if (sub_08009C14(p) == 0)
+    if (Scene_EntityTick(p) == 0)
         *p = 7;
-    sub_0800B7B0(a, b, 3);
+    Entity_UpdateHitboxSlots(a, b, 3);
 }
 
-void sub_08001198(void)
+void ModeControl_Cleanup(void)
 {
-    sub_0800DE80();
+    Game_FrameEnd();
 }

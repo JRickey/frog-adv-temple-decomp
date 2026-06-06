@@ -236,7 +236,7 @@
 @   0x080132e2: bc01        pop	{r0}
 @   0x080132e4: 4700        bx	r0
 
-        thumb_func_start sub_0801310C
-sub_0801310C: @ 0x0801310c
+        thumb_func_start ScaleAnim_SyncSelectors
+ScaleAnim_SyncSelectors: @ 0x0801310c
         .incbin "frog_us_baserom.gba", 0x1310c, 0x1dc
-        thumb_func_end sub_0801310C
+        thumb_func_end ScaleAnim_SyncSelectors

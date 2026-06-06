@@ -2,7 +2,7 @@
 @ Address-aligned bucket of unparsed baserom bytes.
 @ Range:  [0x08019a14, 0x08019aec)  (0xd8 bytes)
 @
-@ Pre-peel chunk shrunk from text_0x08019984 to expose sub_08019984 + sub_080199E4.
+@ Pre-peel chunk shrunk from text_0x08019984 to expose FrogSelect_ValidateSelection + FrogSelect_ClearInputState.
 @
 @ This file holds raw bytes only; no instructions are assembled here.
 

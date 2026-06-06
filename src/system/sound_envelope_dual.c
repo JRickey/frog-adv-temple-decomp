@@ -1,10 +1,10 @@
 #include "sound.h"
 #include "macros.h"
 
-/* sub_0802E934 — per-frame "dual envelope" tick.
+/* Sound_TickDualEnvelopes — per-frame "dual envelope" tick.
  *
- * Sister of sub_0802EC7C (sound_channel.c, envelope-A at +0x1c) and
- * sub_0802EA80 (sound_envelope.c, envelope-A0 at +0x14). Same two-stage
+ * Sister of Sound_UpdateChannelEnvelopesA (sound_channel.c, envelope-A at +0x1c) and
+ * SoundEnvelope_TickA0 (sound_envelope.c, envelope-A0 at +0x14). Same two-stage
  * shape: stage 1 walks three inline channel blocks embedded in
  * SoundSystem itself (ss+0x20, ss+0x44, ss+0x68 — stride 36); stage 2
  * walks the per-slot bank via ss->slotPtrTable[i]. The distinguishing
@@ -13,7 +13,7 @@
  * stride 8). Each sub-envelope has the familiar 8-byte acc/step/limit
  * shape.
  *
- * Bounce semantics differ from sub_0802EC7C: instead of clamping to the
+ * Bounce semantics differ from Sound_UpdateChannelEnvelopesA: instead of clamping to the
  * limit and zeroing step, the wrap subtracts the unsigned u16 form of
  * the limit from the accumulator — a true sawtooth wrap. step is
  * preserved across the wrap. dirty bit 0x40 is ORd into ss->chFlags[i]
@@ -99,7 +99,7 @@
 
 /* The +4/+12 sub-envelope pair. Both sub-envelopes share this shape. */
 #if defined(NON_MATCHING) || defined(NON_MATCHING_sub_0802E934)
-void sub_0802E934(void)
+void Sound_TickDualEnvelopes(void)
 {
     SoundSystem *ss;
     register SoundSystem **gpsp asm("sl");
@@ -201,7 +201,7 @@ void sub_0802E934(void)
 }
 #else
 NAKED
-void sub_0802E934(void)
+void Sound_TickDualEnvelopes(void)
 {
     asm(".syntax unified\n"
         "    push    {r4, r5, r6, r7, lr}\n"

@@ -415,7 +415,7 @@
 @   0x0801fd08: bc02        pop	{r1}
 @   0x0801fd0a: 4708        bx	r1
 
-        thumb_func_start sub_0801F970
-sub_0801F970: @ 0x0801f970
+        thumb_func_start SaveSlot_UpdateScreen
+SaveSlot_UpdateScreen: @ 0x0801f970
         .incbin "frog_us_baserom.gba", 0x1f970, 0x39c
-        thumb_func_end sub_0801F970
+        thumb_func_end SaveSlot_UpdateScreen

@@ -12,42 +12,42 @@ typedef void (*GameProc)(void);
 
 extern const GameProc sEntityProcE[17];
 
-void sub_0800DF7C(void)
+void EntityProcE_Dispatch(void)
 {
     sEntityProcE[gGameStuff.pendingMode]();
 }
 
-extern void sub_0800A05C(void);
-extern void sub_08013880(void);
+extern void EntityPool_Reset(void);
+extern void BgLayer_InitAndCommit(void);
 
-void sub_0800DF9C(void)
+void EntityProcE_Init(void)
 {
-    sub_0800A05C();
-    sub_08013880();
+    EntityPool_Reset();
+    BgLayer_InitAndCommit();
 }
 
-extern void sub_080008DC(void);
-extern void sub_0800A328(void);
-extern void sub_08009A58(void);
-extern void sub_08009188(void);
-extern int sub_08013694(void);
-extern u8 sub_0800A104(s8 *phase, u32 callbackTable);
+extern void WaitVblank(void);
+extern void Game_ForceRender(void);
+extern void Entity_UpdateVisibility(void);
+extern void Entity_Advance(void);
+extern int BgScroll_Step(void);
+extern u8 RunFadeTransition(s8 *phase, u32 callbackTable);
 
-void sub_0800DFAC(void)
+void EntityProcE_Run(void)
 {
     u8 done = 0;
     s8 state = done;
 
-    while (sub_0800A104(&state, 0x0800DF9D) == 0) {
-        sub_080008DC();
+    while (RunFadeTransition(&state, 0x0800DF9D) == 0) {
+        WaitVblank();
     }
 
     while (!(done & 1)) {
-        sub_080008DC();
-        if (sub_08013694() != 0)
+        WaitVblank();
+        if (BgScroll_Step() != 0)
             done |= 1;
-        sub_08009A58();
-        sub_08009188();
-        sub_0800A328();
+        Entity_UpdateVisibility();
+        Entity_Advance();
+        Game_ForceRender();
     }
 }

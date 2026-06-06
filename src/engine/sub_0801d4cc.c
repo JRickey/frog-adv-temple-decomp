@@ -3,18 +3,18 @@
 #include "macros.h"
 #include "types.h"
 
-extern void sub_0802E13C(void);
-extern void sub_08020C78(u32 a);
-extern void sub_0801D33C(u8 arg);
+extern void Sound_DrainActiveSlots(void);
+extern void Sound_Play(u32 a);
+extern void Credits_LoadFrogGfx(u8 arg);
 
 /* Per-room/scene state init + double DMA3 OBJ-VRAM clear. Sibling of
- * sub_0800E600 (same 0x03006440 state struct, same 0x080C1254 ROM table
+ * Scene08_MapScreenInit (same 0x03006440 state struct, same 0x080C1254 ROM table
  * indexed by gIwram_34B0._data with a 24-byte stride).
  *
  * Loads state+12 from a ROM subtable (table[idx][0] then byte offset
- * arg*4 + 0x9C), zeroes the per-room counters, raises sub_0802E13C, kicks
- * sub_08020C78 with table2[arg+1], DMA3-clears two OBJ-VRAM regions from a
- * stack halfword of 0, then chains sub_0801D33C(arg).
+ * arg*4 + 0x9C), zeroes the per-room counters, raises Sound_DrainActiveSlots, kicks
+ * Sound_Play with table2[arg+1], DMA3-clears two OBJ-VRAM regions from a
+ * stack halfword of 0, then chains Credits_LoadFrogGfx(arg).
  *
  * Matching notes (old_agbcc):
  *   - tableBase pinned to r3 + input barrier so 0x080C1254 loads before the
@@ -26,7 +26,7 @@ extern void sub_0801D33C(u8 arg);
  *     the r4 zero; r4's zero is then held across both BLs and reused as the
  *     DMA stack-fill halfword.
  */
-void sub_0801D4CC(u8 arg)
+void Credits_InitScrollPage1(u8 arg)
 {
     u8 *state;
     u32 tableBase;
@@ -59,12 +59,12 @@ void sub_0801D4CC(u8 arg)
     *(u16 *)(state + 50) = zero;
     state[11] = 8;
 
-    sub_0802E13C();
+    Sound_DrainActiveSlots();
 
     table2 = (const u32 *)0x081BE094;
     idx2 = arg + 1;
     asm volatile("" : "+r"(idx2));
-    sub_08020C78(table2[idx2]);
+    Sound_Play(table2[idx2]);
 
     fill = zero;
     REG_DMA3.src = (const void *)&fill;
@@ -78,5 +78,5 @@ void sub_0801D4CC(u8 arg)
     REG_DMA3.cnt = DMA_ENABLE | DMA_SRC_FIXED | 0xC0;
     (void)REG_DMA3.cnt;
 
-    sub_0801D33C(arg);
+    Credits_LoadFrogGfx(arg);
 }

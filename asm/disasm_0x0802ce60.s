@@ -379,7 +379,7 @@
 @   0x0802d16c: 3790        adds	r7, #144	@ 0x90
 @   0x0802d16e: 0300        lsls	r0, r0, #12
 
-        thumb_func_start sub_0802CE60
-sub_0802CE60: @ 0x0802ce60
+        thumb_func_start Entity2_Tick
+Entity2_Tick: @ 0x0802ce60
         .incbin "frog_us_baserom.gba", 0x2ce60, 0x310
-        thumb_func_end sub_0802CE60
+        thumb_func_end Entity2_Tick

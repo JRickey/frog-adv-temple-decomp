@@ -4,7 +4,7 @@
 #include "types.h"
 
 /* Per-tick refresh helper for gIwram_3720. Two flag-toggles on the
- * halfword at +0x6c, then hands the sub-struct at +0x38 to sub_080059C4
+ * halfword at +0x6c, then hands the sub-struct at +0x38 to Entity_Update
  * (the frame-setup / palette-refresh routine the entity-dispatch cluster
  * also calls).
  *
@@ -12,7 +12,7 @@
  *   - If (field_34 & 4) is set, raise bit 8 in field_6c.
  *   - If (field_6c & 0x8000) is set, clear the top bit (mask &= 0x7fff)
  *     and OR bit 8 back in.
- *   - Tail: sub_080059C4(&field_38).
+ *   - Tail: Entity_Update(&field_38).
  *
  * Matching notes (agbcc 2.x):
  *   - `flags` (a `u16 *` local to gIwram_3720._field_6c) materialises
@@ -29,9 +29,9 @@
  *     if-blocks is load-bearing — baserom emits an explicit `ldrh r1, [r2, #0]` at
  *     0x0800a4f4 to refresh; without it agbcc reuses the cached t. */
 
-extern void sub_080059C4(void *p);
+extern void Entity_Update(void *p);
 
-void sub_0800A4D0(void)
+void Entity_UpdateSlot1Status(void)
 {
     struct Entity *base = gEntities;
     u16 *flags = (u16 *)((u8 *)base + 0x6c); /* slot 1 status (+0x6c); kept as base+offset to match */
@@ -67,5 +67,5 @@ void sub_0800A4D0(void)
         *flags = (u16)mask;
     }
 
-    sub_080059C4((u8 *)base + 0x38); /* slot 1 head (+0x38) */
+    Entity_Update((u8 *)base + 0x38); /* slot 1 head (+0x38) */
 }

@@ -3,27 +3,27 @@
 #include "types.h"
 
 extern void sub_0801B374(u8 arg);
-extern void sub_08020BAC(void);
-extern void sub_08020B88(u8 arg);
-extern void sub_0801A894(u32 flags, u32 count);
-extern void sub_0801B430(u8 arg);
+extern void Sound_DrainIfActive(void);
+extern void Sound_PlayIfEnabled(u8 arg);
+extern void IrisOpen(u32 flags, u32 count);
+extern void Room_LoadSpriteTiles(u8 arg);
 extern void sub_0801B694(u8 arg);
-extern u16 sub_080004C4(void);
-extern u8 sub_0801B9E4(u8 arg);
-extern void sub_0801A980(u8 flags, u8 count);
-extern void sub_0800EB1C(void);
-extern void sub_08016A40(void);
+extern u16 Input_Poll(void);
+extern u8 Credits_StepThrottled(u8 arg);
+extern void IrisClose(u8 flags, u8 count);
+extern void FrogOam_Init(void);
+extern void StatusBar_Update(void);
 
 extern u16 gIwram_5398;
 
 /* Per-scene setup for the bonus/door rooms: decode the room id (16 -> 6,
  * else id/3 if divisible, otherwise reject), program the window registers,
- * then spin sub_080004C4 until sub_0801B9E4 reports completion (0xFE).
+ * then spin Input_Poll until Credits_StepThrottled reports completion (0xFE).
  *
  * The r4-pinned zero survives the sub_0801B374 call and is reused for the
  * two 0x03003540 byte writes; the scroll-clear zero is a separate literal so
  * agbcc keeps them in distinct registers (matches the baserom's r0/r4 split). */
-u8 sub_0801B514(u8 arg)
+u8 RunWorldSelectTransition(u8 arg)
 {
     register u8 zero asm("r4");
     u8 *state;
@@ -58,31 +58,31 @@ u8 sub_0801B514(u8 arg)
     state[1] = zero;
     state[12] = zero;
 
-    sub_08020BAC();
-    sub_08020B88(16);
-    sub_0801A894(2, 20);
-    sub_0801B430(arg);
+    Sound_DrainIfActive();
+    Sound_PlayIfEnabled(16);
+    IrisOpen(2, 20);
+    Room_LoadSpriteTiles(arg);
     sub_0801B694(arg);
 
     do {
-        gIwram_5398 = sub_080004C4();
-    } while (sub_0801B9E4(arg) != 0xFE);
+        gIwram_5398 = Input_Poll();
+    } while (Credits_StepThrottled(arg) != 0xFE);
 
-    sub_0801A980(2, 20);
+    IrisClose(2, 20);
 
     *(vu16 *)0x04000040 = 0;
     *(vu16 *)0x04000044 = 0;
 
-    sub_0800EB1C();
-    sub_08016A40();
+    FrogOam_Init();
+    StatusBar_Update();
 
     return 1;
 }
 
-/* Sibling of sub_0801D4CC / sub_0800E600: load the per-room state struct
+/* Sibling of Credits_InitScrollPage1 / Scene08_MapScreenInit: load the per-room state struct
  * field from the 0x080C1254 ROM table (24-byte stride indexed by
  * gIwram_34B0._data, then arg*4 + 0x20), zero the counters, and DMA3-clear
- * an OBJ-VRAM region before chaining sub_0801B430.
+ * an OBJ-VRAM region before chaining Room_LoadSpriteTiles.
  *
  * tableBase is pinned to r4 with an input barrier so the table literal loads
  * before the gIwram_34B0 address; byteZero/halfZero get their own barrier so
@@ -122,15 +122,15 @@ void sub_0801B620(u8 arg)
     REG_DMA3.cnt = DMA_ENABLE | DMA_SRC_FIXED | 0xC0;
     (void)REG_DMA3.cnt;
 
-    sub_0801B430(arg);
+    Room_LoadSpriteTiles(arg);
 }
 
-extern void sub_08020C78(u32 arg);
+extern void Sound_Play(u32 arg);
 
-/* Sibling of sub_0801B620 and sub_0801D4CC: look up a value from the
+/* Sibling of sub_0801B620 and Credits_InitScrollPage1: look up a value from the
  * 0x081BDA70 ROM table at index arg+7 (pinned to r5 across function body),
  * init the 0x03006440 state struct, then DMA3-clear OBJ-VRAM at 0x0600FBC0
- * before chaining sub_0801B430(arg) and sub_08020C78(tableVal).
+ * before chaining Room_LoadSpriteTiles(arg) and Sound_Play(tableVal).
  *
  * tableVal pinned to r5; a barrier on the table pointer prevents agbcc
  * from folding 7*4=28 into the pool constant. tableBase pinned to r4
@@ -185,6 +185,6 @@ void sub_0801B694(u8 arg)
     dma[2] = DMA_ENABLE | DMA_SRC_FIXED | 0xC0;
     (void)dma[2];
 
-    sub_0801B430(arg);
-    sub_08020C78(tableVal);
+    Room_LoadSpriteTiles(arg);
+    Sound_Play(tableVal);
 }

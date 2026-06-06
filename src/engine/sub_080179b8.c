@@ -5,10 +5,10 @@
 
 extern const u16 *const gScriptPtrTable_08307fec[];
 
-u32 sub_08000900(void);
+u32 GetFrameTick(void);
 u32 __udivsi3(u32 num, u32 den);
 
-int sub_080179B8(void)
+int ScriptTick(void)
 {
     struct IwramAt34C0 *s;
     const u16 *script;
@@ -25,7 +25,7 @@ int sub_080179B8(void)
 
         s = t;
         if (delay != 0) {
-            if (__udivsi3(sub_08000900() - s->stepTick, 60) < s->delay) {
+            if (__udivsi3(GetFrameTick() - s->stepTick, 60) < s->delay) {
                 goto ret_op_zero;
             }
         }
@@ -68,7 +68,7 @@ int sub_080179B8(void)
         idx = (u32)idx >> 23;
         idx = idx + (u32)script;
         s->delay = (u8) * (u16 *)idx;
-        s->stepTick = sub_08000900();
+        s->stepTick = GetFrameTick();
         return op;
     }
 

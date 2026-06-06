@@ -117,7 +117,7 @@
 @   0x08013690: 5330        strh	r0, [r6, r4]
 @   0x08013692: 0300        lsls	r0, r0, #12
 
-        thumb_func_start sub_080135B8
-sub_080135B8: @ 0x080135b8
+        thumb_func_start Selector_StepScrollAxes
+Selector_StepScrollAxes: @ 0x080135b8
         .incbin "frog_us_baserom.gba", 0x135b8, 0xdc
-        thumb_func_end sub_080135B8
+        thumb_func_end Selector_StepScrollAxes

@@ -382,7 +382,7 @@
 @   0x0801b0a8: 5330        strh	r0, [r6, r4]
 @   0x0801b0aa: 0300        lsls	r0, r0, #12
 
-        thumb_func_start sub_0801ADA8
-sub_0801ADA8: @ 0x0801ada8
+        thumb_func_start Credits_RunScript
+Credits_RunScript: @ 0x0801ada8
         .incbin "frog_us_baserom.gba", 0x1ada8, 0x304
-        thumb_func_end sub_0801ADA8
+        thumb_func_end Credits_RunScript

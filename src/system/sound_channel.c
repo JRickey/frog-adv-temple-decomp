@@ -3,7 +3,7 @@
 
 /* Per-frame pitch/pan envelope tick for the sound subsystem.
  *
- * Called from sub_0802F4B0 (the per-VBlank mixer) over the slot table
+ * Called from SoundMixer_VBlankUpdate (the per-VBlank mixer) over the slot table
  * pointed to by `(*gpSoundSystem)->slotPtrTable`. For each active slot
  * (flag bit 0x400 in `flags`), advances the signed accumulator in
  * `slot->envelope.acc` by `slot->envelope.step`, reflecting off the
@@ -23,7 +23,7 @@
  * decomp-permuter.
  */
 
-void sub_0802ED5C(void)
+void Sound_TickSlotEnvelopeB(void)
 {
     SoundSlot **slotPtr;
     s32 i;

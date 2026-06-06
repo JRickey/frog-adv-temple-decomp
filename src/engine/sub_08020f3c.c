@@ -14,9 +14,9 @@ typedef struct EntityMover {
     u8 _pad33[5];
 } EntityMover;
 
-extern long long sub_08006830(struct IwramAt6110 *p, s32 a, s32 b);
+extern long long CtrlFlags_ReadBitRange(struct IwramAt6110 *p, s32 a, s32 b);
 
-void sub_08020F3C(u8 arg)
+void EntityMover_Tick(u8 arg)
 {
     register EntityMover *base asm("r3");
     EntityMover *e;
@@ -29,7 +29,7 @@ void sub_08020F3C(u8 arg)
     u8 interval;
 
     argReg = arg;
-    if (sub_08006830(&gIwram_6110, argReg, argReg) == 0)
+    if (CtrlFlags_ReadBitRange(&gIwram_6110, argReg, argReg) == 0)
         return;
 
     gsLo = &gGameStuff;
@@ -90,7 +90,7 @@ void sub_08020F3C(u8 arg)
     }
 }
 
-void sub_08020FE4(s32 start, s32 end)
+void Entity_UpdateMovers(s32 start, s32 end)
 {
     EntityMover *base;
     GameStuff *gsLo;
@@ -107,7 +107,7 @@ void sub_08020FE4(s32 start, s32 end)
 
     idx = start;
     last = end;
-    if (sub_08006830(&gIwram_6110, idx, last) == 0)
+    if (CtrlFlags_ReadBitRange(&gIwram_6110, idx, last) == 0)
         return;
 
     gsLo = &gGameStuff;

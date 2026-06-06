@@ -3,11 +3,11 @@
 #include "macros.h"
 #include "types.h"
 
-extern u8 sub_08000764(s16 range);
+extern u8 RandRange(s16 range);
 extern u8 gIwram_53A0;
 extern u8 gIwram_3610;
 
-void sub_0800D808(u32 a)
+void PadGrid_RemoveRandom(u32 a)
 {
     u8 *slots;
     register u8 *idx1 asm("r2");
@@ -47,7 +47,7 @@ void sub_0800D808(u32 a)
     do {
         s32 next;
 
-        *rndp = sub_08000764(count);
+        *rndp = RandRange(count);
         slots[ibuf[*rndp]] = 0;
         count = 0;
         j = 0;

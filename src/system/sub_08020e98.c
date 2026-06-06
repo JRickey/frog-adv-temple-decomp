@@ -1,12 +1,12 @@
 #include "types.h"
 #include "macros.h"
 
-/* sub_08020E98 — broadcast a 7-bit value to all live sound-channel handles.
+/* SoundChannel_BroadcastValue — broadcast a 7-bit value to all live sound-channel handles.
  *
  * The struct at 0x03003570 holds a sound-channel handle table starting at
  * offset 4: 12 entries × 8 B, each `{ s32 fieldA; u32 fieldB; }`. Entries
  * with fieldA == -1 are unused slots; for each live slot, fieldB is the
- * handle to forward into sub_0802DC1C. */
+ * handle to forward into SoundHandle_SetPan. */
 
 typedef struct {
     s32 fieldA;
@@ -23,9 +23,9 @@ typedef struct {
 
 #define gStructAt3003570 (*(StructAt3003570 *)0x03003570)
 
-extern void sub_0802DC1C(u32 handle, u8 val);
+extern void SoundHandle_SetPan(u32 handle, u8 val);
 
-void sub_08020E98(u32 arg)
+void SoundChannel_BroadcastValue(u32 arg)
 {
     u8 i;
     StructAt3003570 *p;
@@ -46,7 +46,7 @@ void sub_08020E98(u32 arg)
                 u32 fieldAAddr = (u32)&p->entries[0].fieldA;
 
                 if (*(s32 *)(offset + fieldAAddr) != -1) {
-                    sub_0802DC1C(fieldB_arr[i * 2], (u8)(m_shifted >> 24));
+                    SoundHandle_SetPan(fieldB_arr[i * 2], (u8)(m_shifted >> 24));
                 }
             }
             i++;
@@ -54,10 +54,10 @@ void sub_08020E98(u32 arg)
     } while (0);
 }
 
-/* Setter for the offset-3 counter byte that sub_08020EE4 (++) and
- * sub_08020F08 (--) maintain. The value arrives in the second argument
+/* Setter for the offset-3 counter byte that Sound_IncrementChannelDepth (++) and
+ * Sound_DecrementChannelDepth (--) maintain. The value arrives in the second argument
  * register (r1); r0 is unused on entry and is reused to hold the base. */
-void sub_08020ED8(u32 unused, u32 value)
+void SoundChannelTable_SetCounter(u32 unused, u32 value)
 {
     gStructAt3003570.d = value;
 }

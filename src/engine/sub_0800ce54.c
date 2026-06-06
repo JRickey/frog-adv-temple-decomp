@@ -13,7 +13,7 @@ struct SpriteAssetIndexEntry {
 
 extern const struct SpriteAssetIndexEntry sSpriteAssetIndexTable[];
 
-u32 sub_0800CE54(u8 a, u8 b, s16 c, s16 d)
+u32 TileCell_GetPropertyB(u8 a, u8 b, s16 c, s16 d)
 {
     s32 dStride;
     u16 *cell;

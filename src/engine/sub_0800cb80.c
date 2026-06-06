@@ -4,7 +4,7 @@
 #include "types.h"
 
 /* Field-store helper on the per-room packed-halfword grid at EWRAM
- * 0x02030000. The matching read accessor is sub_0800CD88, which pulls
+ * 0x02030000. The matching read accessor is Tilemap_GetTileClass, which pulls
  * (*cell & 0x3F0) >> 4 from the same cell; this writer clears that 6-bit
  * field and ORs in (e << 4). The grid stride (entry_descriptor[+4]) comes
  * from sSpriteAssetIndexTable at 0x08306444 (see src/data/sprite_dispatch.c).
@@ -32,31 +32,31 @@ struct SpriteAssetIndexEntry {
 
 extern struct SpriteAssetIndexEntry sSpriteAssetIndexTable[];
 
-void sub_0800CB80(u8 a, u8 b, s16 c, s16 d, u8 e)
+void SpriteGrid_SetCellFlags(u8 a, u8 b, s16 c, s16 d, u8 e)
 {
     *(u16 *)(2 * (d * sSpriteAssetIndexTable[(u8)a].stride) + 5 * b * 4096 + 2 * c + 0x02030000) &= 0xFC0F;
     *(u16 *)(2 * (d * sSpriteAssetIndexTable[(u8)a].stride) + 5 * b * 4096 + 2 * c + 0x02030000) |= (u8)e << 4;
 }
 
-void sub_0800CBE8(u8 a, u8 b, s16 c, s16 d, u8 e)
+void BgMap_WriteTileAttr(u8 a, u8 b, s16 c, s16 d, u8 e)
 {
     *(u16 *)(2 * (d * sSpriteAssetIndexTable[(u8)a].stride) + 5 * b * 4096 + 2 * c + 0x02030000) &= 0xFFF0;
     *(u16 *)(2 * (d * sSpriteAssetIndexTable[(u8)a].stride) + 5 * b * 4096 + 2 * c + 0x02030000) |= (u8)e;
 }
 
-void sub_0800CC50(u8 a, u8 b, s16 c, s16 d, u8 e)
+void SpriteGrid_SetBit14(u8 a, u8 b, s16 c, s16 d, u8 e)
 {
     *(u16 *)(2 * (d * sSpriteAssetIndexTable[(u8)a].stride) + 5 * b * 4096 + 2 * c + 0x02030000) &= 0xBFFF;
     *(u16 *)(2 * (d * sSpriteAssetIndexTable[(u8)a].stride) + 5 * b * 4096 + 2 * c + 0x02030000) |= (u8)e << 14;
 }
 
-void sub_0800CCB8(u8 a, u8 b, s16 c, s16 d, u8 e)
+void SpriteGrid_SetBits13_12(u8 a, u8 b, s16 c, s16 d, u8 e)
 {
     *(u16 *)(2 * (d * sSpriteAssetIndexTable[(u8)a].stride) + 5 * b * 4096 + 2 * c + 0x02030000) &= 0xCFFF;
     *(u16 *)(2 * (d * sSpriteAssetIndexTable[(u8)a].stride) + 5 * b * 4096 + 2 * c + 0x02030000) |= (u8)e << 12;
 }
 
-void sub_0800CD20(u8 a, u8 b, s16 c, s16 d, u8 e)
+void SpriteGrid_SetBits11_10(u8 a, u8 b, s16 c, s16 d, u8 e)
 {
     *(u16 *)(2 * (d * sSpriteAssetIndexTable[(u8)a].stride) + 5 * b * 4096 + 2 * c + 0x02030000) &= 0xF3FF;
     *(u16 *)(2 * (d * sSpriteAssetIndexTable[(u8)a].stride) + 5 * b * 4096 + 2 * c + 0x02030000) |= (u8)e << 4;

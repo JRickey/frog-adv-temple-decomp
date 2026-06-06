@@ -1,7 +1,7 @@
 #include "game.h"
 #include "types.h"
 
-extern u32 sub_08000900(void);
+extern u32 GetFrameTick(void);
 
 struct StructA0C {
     u8 _pad00[16];
@@ -10,7 +10,7 @@ struct StructA0C {
     u32 _field_14;
 };
 
-u8 sub_08006A0C(struct StructA0C *p, u16 key)
+u8 Input_DetectHold(struct StructA0C *p, u16 key)
 {
     int field = p->_field_10;
     int val = field & 8;
@@ -30,7 +30,7 @@ u8 sub_08006A0C(struct StructA0C *p, u16 key)
             return 1;
         }
 
-        if (sub_08000900() - p->_field_14 > 30) {
+        if (GetFrameTick() - p->_field_14 > 30) {
             int v = 9;
             p->_field_10 &= -v;
             return 0;

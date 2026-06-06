@@ -2,18 +2,18 @@
 #include "gba/dma.h"
 #include "types.h"
 
-extern void sub_0801D880(void);
-extern int sub_0801E1FC(u8 row, u8 col);
-extern void sub_0801E270(u8 arg);
-extern int sub_080106EC(int arg);
-extern int sub_08010710(void);
-extern void sub_08020B50(void);
-extern void sub_0801E078(void);
+extern void Credits_LoadGfx(void);
+extern int Credits_FillPage(u8 row, u8 col);
+extern void WaitFrames(u8 arg);
+extern int Screen_BeginFlash(int arg);
+extern int Screen_TickFlash(void);
+extern void SoundMixer_Stop(void);
+extern void Credits_FadeTransition(void);
 
 #define BG_PAL_1E2 (*(vu16 *)0x050001E2)
 #define BG3VOFS    (*(vu16 *)0x0400001E)
 
-void sub_0801DA1C(void)
+void BgScroll_TileWipeTransition(void)
 {
     u32 cols[12];
     u16 zero;
@@ -37,7 +37,7 @@ void sub_0801DA1C(void)
     c = 0;
     d = 1;
     e = 6;
-    sub_0801D880();
+    Credits_LoadGfx();
 
     i = 0;
 loop1:
@@ -48,7 +48,7 @@ loop1:
         u8 row = i;
         u8 col = i;
 
-        if (sub_0801E1FC(row, col)) {
+        if (Credits_FillPage(row, col)) {
             {
                 u32 hi = 0x02000000;
                 u32 *slot = &cols[i];
@@ -65,14 +65,14 @@ loop1_done:
     REG_DMA3.dst = (void *)0x0600F800;
     REG_DMA3.cnt = DMA_ENABLE | 0x400;
     (void)REG_DMA3.cnt;
-    sub_080106EC(0xBF);
+    Screen_BeginFlash(0xBF);
 
-    while (sub_08010710()) {
-        sub_0801E270(2);
+    while (Screen_TickFlash()) {
+        WaitFrames(2);
     }
 
     for (;;) {
-        sub_0801E270(2);
+        WaitFrames(2);
         c = (u8)(c + 1);
         BG3VOFS = (u16)c;
 
@@ -116,8 +116,8 @@ loop1_done:
         byteZero = 0;
         *vofs = (u16)d;
     }
-    sub_08020B50();
-    sub_0801E078();
+    SoundMixer_Stop();
+    Credits_FadeTransition();
     BG_PAL_1E2 = savedPal;
     gGameStuff.mode = GAME_MODE_ROUTER;
     *(u8 *)0x03003480 = byteZero;

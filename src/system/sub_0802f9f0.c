@@ -1,9 +1,9 @@
 #include "sound.h"
 
-/* sub_0802F9F0 — channel-flags STOP transition + queued-program swap.
+/* Sound_RetireChannel — channel-flags STOP transition + queued-program swap.
  *
- * Slot-retire helper called from sub_080315D8's stop opcode handlers and
- * from sub_0802E13C's drain-all path. Two responsibilities:
+ * Slot-retire helper called from Sound_OpcodeDispatch's stop opcode handlers and
+ * from Sound_DrainActiveSlots's drain-all path. Two responsibilities:
  *
  *   1. Set the STOP-pending bit (0x100) on the channel's u32 flag word
  *      and run a one-shot transition: if the current mode (low 3 bits)
@@ -48,9 +48,9 @@
  *     the pre-OR `flags` (r3 vs r2 in the baserom).
  */
 
-extern u32 sub_080301C4(u32 base, u32 hi, u32 lo);
+extern u32 Sound_CalcNotePeriod(u32 base, u32 hi, u32 lo);
 
-void sub_0802F9F0(s32 idx)
+void Sound_RetireChannel(s32 idx)
 {
     SoundSystem *ss;
     SoundChannelSeq *seq;
@@ -89,7 +89,7 @@ void sub_0802F9F0(s32 idx)
     }
 }
 
-void sub_0802FA60(s32 idx)
+void Sound_UpdateStreamPeriod(s32 idx)
 {
     SoundSystem *ss;
     SoundSlotAccs *slot;
@@ -103,5 +103,5 @@ void sub_0802FA60(s32 idx)
 
     entry = (SoundPeriodEntry *)((u8 *)ss->mixTable + idx * 28);
     sum = (u16)(slot->acc0 + slot->acc1 + slot->acc2 + slot->acc3 + slot->acc4 + slot->acc5);
-    entry->period = (u16)sub_080301C4(entry->base, (u16)sum >> 8, (sum << 24) >> 24);
+    entry->period = (u16)Sound_CalcNotePeriod(entry->base, (u16)sum >> 8, (sum << 24) >> 24);
 }

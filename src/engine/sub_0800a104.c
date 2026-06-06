@@ -22,35 +22,35 @@ struct EntityBounds0800A158 {
     u8 width;
 };
 
-extern u8 sub_0800CED0(void *ctx, struct PackedRect0800A158 rect, s16 c, s16 d);
-extern u16 sub_08010694(u16 arg);
-extern int sub_080106B8(void);
-extern u16 sub_080106EC(u16 arg);
-extern int sub_08010710(void);
+extern u8 Rect_PointInRect(void *ctx, struct PackedRect0800A158 rect, s16 c, s16 d);
+extern u16 Blend_StartFade(u16 arg);
+extern int Blend_StepFade(void);
+extern u16 Screen_BeginFlash(u16 arg);
+extern int Screen_TickFlash(void);
 
-int sub_0800A104(s8 *phase, GameProc callback)
+int RunFadeTransition(s8 *phase, GameProc callback)
 {
     int p = (s8)*phase;
 
     if (p == 0) {
-        sub_08010694(0xBF);
+        Blend_StartFade(0xBF);
         goto advance;
     }
     if (p == 1) {
-        if (sub_080106B8() != 0)
+        if (Blend_StepFade() != 0)
             goto zero_return;
         goto advance;
     }
     if (p == 2) {
         callback();
-        sub_080106EC(0xBF);
+        Screen_BeginFlash(0xBF);
     advance:
         *phase = *phase + 1;
     zero_return:
         return 0;
     }
     if (p == 3) {
-        if (sub_08010710() == 0)
+        if (Screen_TickFlash() == 0)
             return 1;
         {
             int ret;
@@ -62,7 +62,7 @@ int sub_0800A104(s8 *phase, GameProc callback)
     return p;
 }
 
-u8 sub_0800A158(void *ctx, struct EntityBounds0800A158 *entity)
+u8 Entity_RectOverlap(void *ctx, struct EntityBounds0800A158 *entity)
 {
     struct PackedRect0800A158 rect;
 
@@ -71,5 +71,5 @@ u8 sub_0800A158(void *ctx, struct EntityBounds0800A158 *entity)
     rect.height = entity->height;
     rect.width = entity->width;
 
-    return sub_0800CED0(ctx, rect, 0, 0);
+    return Rect_PointInRect(ctx, rect, 0, 0);
 }

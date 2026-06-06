@@ -2,12 +2,12 @@
 #include "iwram.h"
 #include "types.h"
 
-u16 sub_080004C4(void);
-void sub_080008DC(void);
-void sub_0801A774(u8 mode);
-void sub_0801A894(u8 flags, u8 count);
-void sub_0801AD10(u8 mode);
-u8 sub_0801B224(u8 mode);
+u16 Input_Poll(void);
+void WaitVblank(void);
+void Room_InitWindowAndState(u8 mode);
+void IrisOpen(u8 flags, u8 count);
+void Credits_InitStateB(u8 mode);
+u8 CreditsRoll_StepThrottled(u8 mode);
 
 extern u16 gIwram_5398;
 
@@ -21,7 +21,7 @@ struct Sub0801AB44Penalty {
     u16 value;
 };
 
-void sub_0801A980(u8 flags, u8 count_)
+void IrisClose(u8 flags, u8 count_)
 {
     register s32 count asm("r4") = count_;
     u32 left = 104;
@@ -37,7 +37,7 @@ void sub_0801A980(u8 flags, u8 count_)
             *(vu16 *)0x04000044 = (left << 8) | 0xa0;
             *(vu16 *)0x04000042 = 0xf0;
             *(vu16 *)0x04000046 = top;
-            sub_080008DC();
+            WaitVblank();
             {
                 u32 newLeft = left + step;
                 left = (u8)newLeft;
@@ -62,7 +62,7 @@ void sub_0801A980(u8 flags, u8 count_)
     }
 }
 
-void sub_0801AA60(u8 index)
+void Credits_DmaLoadTiles(u8 index)
 {
     vu32 *dma;
     const u32 *sourceA;
@@ -129,7 +129,7 @@ void sub_0801AA60(u8 index)
     dma[2];
 }
 
-u32 sub_0801AB44(u8 arg)
+u32 LevelSelect_Enter(u8 arg)
 {
     u8 mode;
     s8 i;
@@ -187,16 +187,16 @@ mode_ready:
         }
     }
 
-    sub_0801A774(mode);
-    sub_0801A894(3, 20);
-    sub_0801AA60(mode);
-    sub_0801AD10(mode);
+    Room_InitWindowAndState(mode);
+    IrisOpen(3, 20);
+    Credits_DmaLoadTiles(mode);
+    Credits_InitStateB(mode);
 
     do {
-        gIwram_5398 = sub_080004C4();
-    } while (sub_0801B224(mode) != 0xFE);
+        gIwram_5398 = Input_Poll();
+    } while (CreditsRoll_StepThrottled(mode) != 0xFE);
 
-    sub_0801A980(3, 20);
+    IrisClose(3, 20);
 
     win = (vu16 *)0x04000040;
     *win = 0;

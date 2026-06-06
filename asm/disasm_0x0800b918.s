@@ -629,7 +629,7 @@
 @   0x0800be14: 0b00        lsrs	r0, r0, #12
 @   0x0800be16: 080c        lsrs	r4, r1, #32
 
-        thumb_func_start sub_0800B918
-sub_0800B918: @ 0x0800b918
+        thumb_func_start Entity_UpdateHitboxWithTile
+Entity_UpdateHitboxWithTile: @ 0x0800b918
         .incbin "frog_us_baserom.gba", 0xb918, 0x500
-        thumb_func_end sub_0800B918
+        thumb_func_end Entity_UpdateHitboxWithTile

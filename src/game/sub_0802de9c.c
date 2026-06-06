@@ -1,6 +1,6 @@
 #include "sound.h"
 
-/* sub_0802DE9C — start a streaming sound channel.
+/* Sound_OpenStream — start a streaming sound channel.
  *
  * channel:    one of 4 stream channels (0..3); fails if already active.
  * generator:  generator function pointer stored in channelWork[channel].
@@ -12,9 +12,9 @@
  *             system stream-pan byte (+0x10e) instead of 0.
  *
  * Reserves a SW slot via SoundSlot_PickByPriority, primes it with
- * sub_08032894, installs it in the slot table, then runs the generator once
+ * SoundSlot_InitParams, installs it in the slot table, then runs the generator once
  * to fill the first run and seeds the mix entry before committing the slot's
- * pan with sub_0802F398.
+ * pan with SoundPan_UpdateMixEntry.
  *
  * Returns a packed handle (active bit | slotIdx << 16 | channel) on success,
  * 0 on failure.
@@ -35,10 +35,10 @@ typedef struct StreamMixEntry {
 } StreamMixEntry;
 
 extern s32 SoundSlot_PickByPriority(s32 mode, u32 priority, s32 a2, s32 idx);
-extern void sub_08032894(SoundSlotInit *slot, u32 arg1, u32 arg2, u32 arg3, u32 arg4);
-extern void sub_0802F398(s32 index);
+extern void SoundSlot_InitParams(SoundSlotInit *slot, u32 arg1, u32 arg2, u32 arg3, u32 arg4);
+extern void SoundPan_UpdateMixEntry(s32 index);
 
-u32 sub_0802DE9C(u32 channel, u32 generator, u32 lengthFp, u32 loopLength, u32 arg4, u32 useMutePan)
+u32 Sound_OpenStream(u32 channel, u32 generator, u32 lengthFp, u32 loopLength, u32 arg4, u32 useMutePan)
 {
     SoundSystem *ss;
     u32 *work;
@@ -71,7 +71,7 @@ u32 sub_0802DE9C(u32 channel, u32 generator, u32 lengthFp, u32 loopLength, u32 a
         slot = (SoundSlotInit *)((u8 *)ss1->swSlots + slotIdx * SOUND_SW_SLOT_STRIDE);
     }
 
-    sub_08032894(slot, 0, arg4, loopLength, SOUND_STREAM_PRIORITY);
+    SoundSlot_InitParams(slot, 0, arg4, loopLength, SOUND_STREAM_PRIORITY);
     slot->flags |= SOUND_SLOT_FLAG_STREAM_PRIME;
     *((u8 *)slot + 0x3e) = channel;
 
@@ -104,7 +104,7 @@ u32 sub_0802DE9C(u32 channel, u32 generator, u32 lengthFp, u32 loopLength, u32 a
     mix->word0c = 0;
     mix->word10 = 0;
 
-    sub_0802F398(slotIdx);
+    SoundPan_UpdateMixEntry(slotIdx);
 
     return SOUND_STREAM_HANDLE(slotIdx, channel);
 

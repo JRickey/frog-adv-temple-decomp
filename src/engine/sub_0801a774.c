@@ -1,14 +1,14 @@
 #include "iwram.h"
 #include "types.h"
 
-extern void sub_0801B1B4(u8 index);
+extern void Room_LoadTilesAndPalette(u8 index);
 
 /* Per-room init handler dispatched on a small mode id (0..5). Programs the
- * window registers, kicks off a tile DMA via sub_0801B1B4, then arms the room
+ * window registers, kicks off a tile DMA via Room_LoadTilesAndPalette, then arms the room
  * state at 0x03003540 for the selected mode. Modes 4 and 5 clamp a tile
  * counter read from gIwram_35E0[+2] against a per-mode threshold to choose
  * between two state ids and whether the +8 word is armed. */
-void sub_0801A774(u8 mode)
+void Room_InitWindowAndState(u8 mode)
 {
     u8 *state;
 
@@ -20,7 +20,7 @@ void sub_0801A774(u8 mode)
     *(vu16 *)0x0400004A = 0x3F3F;
     *(vu16 *)0x0400004A ^= 8;
 
-    sub_0801B1B4(mode);
+    Room_LoadTilesAndPalette(mode);
 
     state = (u8 *)0x03003540;
     state[1] = 0;

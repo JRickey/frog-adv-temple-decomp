@@ -826,7 +826,7 @@ sub_0802FAB8: @ 0x0802fab8
         .incbin "frog_us_baserom.gba", 0x2fab8, 0x4a0
         thumb_func_end sub_0802FAB8
 
-        thumb_func_start sub_0802FF58
-sub_0802FF58: @ 0x0802ff58
+        thumb_func_start SoundMixer_VBlankTick
+SoundMixer_VBlankTick: @ 0x0802ff58
         .incbin "frog_us_baserom.gba", 0x2ff58, 0x200
-        thumb_func_end sub_0802FF58
+        thumb_func_end SoundMixer_VBlankTick

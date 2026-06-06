@@ -35,7 +35,7 @@ extern const u16 sIconFramePal4[16], sIconFrameTiles4[80];
  * gGameStuff.pendingMode (the scene-type id) selects which of the five
  * icon frames to upload; scene type 15 reads a finer animation state
  * from gIwram_6110.spawnMask. */
-void sub_08016650(void)
+void Icon_LoadFrameByMode(void)
 {
     switch (gGameStuff.pendingMode - 1) {
     case 0:

@@ -205,7 +205,7 @@
 @   0x08010f60: 60a0        str	r0, [r4, #8]
 @   0x08010f62: 0300        lsls	r0, r0, #12
 
-        thumb_func_start sub_08010DD8
-sub_08010DD8: @ 0x08010dd8
+        thumb_func_start Scroll_PrepareBlitWork
+Scroll_PrepareBlitWork: @ 0x08010dd8
         .incbin "frog_us_baserom.gba", 0x10dd8, 0x18c
-        thumb_func_end sub_08010DD8
+        thumb_func_end Scroll_PrepareBlitWork

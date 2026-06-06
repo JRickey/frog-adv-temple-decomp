@@ -3,16 +3,16 @@
 #include "macros.h"
 #include "types.h"
 
-/* --- sub_08005D10: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- Entity_AdvanceAnimFrames: non-matching reference (asm slice provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "game.h"
 #include "iwram.h"
 #include "macros.h"
 #include "types.h"
 
-extern s32 sub_08006830(struct IwramAt6110 *p, s32 lo, s32 hi);
-extern u8 sub_08005ED8(u8 state, u8 dir);
-extern u8 sub_08005F50(u8 state, u8 dir);
+extern s32 CtrlFlags_ReadBitRange(struct IwramAt6110 *p, s32 lo, s32 hi);
+extern u8 Anim_GetFrameHeight(u8 state, u8 dir);
+extern u8 Anim_GetFrameWidth(u8 state, u8 dir);
 
 typedef struct SpriteAssetEntry2 {
     u32 id;
@@ -40,7 +40,7 @@ typedef struct AnimFrame {
     u8 field_0F;
 } AnimFrame;
 
-void sub_08005D10(s32 slot, s32 endSlot)
+void Entity_AdvanceAnimFrames(s32 slot, s32 endSlot)
 {
     struct Entity *e;
     u8 *field28;
@@ -51,7 +51,7 @@ void sub_08005D10(s32 slot, s32 endSlot)
     AnimFrame frame;
 
     {
-        s64 ret = sub_08006830(&gIwram_6110, slot, endSlot);
+        s64 ret = CtrlFlags_ReadBitRange(&gIwram_6110, slot, endSlot);
         if (ret == 0)
             return;
     }
@@ -71,8 +71,8 @@ void sub_08005D10(s32 slot, s32 endSlot)
 
             frame = *(const AnimFrame *)desc->frames;
             e->field_1C[0] = desc->frameCount;
-            e->field_18[1] = sub_08005ED8(desc->state, desc->dir);
-            e->field_18[0] = sub_08005F50(desc->state, desc->dir);
+            e->field_18[1] = Anim_GetFrameHeight(desc->state, desc->dir);
+            e->field_18[0] = Anim_GetFrameWidth(desc->state, desc->dir);
             e->field_1B = 0;
 
             e->field_01 = frame.field_09;

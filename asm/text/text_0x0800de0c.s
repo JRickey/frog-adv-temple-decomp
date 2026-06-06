@@ -2,7 +2,7 @@
 @ Address-aligned bucket of unparsed baserom bytes.
 @ Range:  [0x0800de0c, 0x0800de80)  (0x74 bytes)
 @
-@ Post-peel chunk after sub_0800DD80.
+@ Post-peel chunk after WorldMap_Init.
 @
 @ This file holds raw bytes only; no instructions are assembled here.
 

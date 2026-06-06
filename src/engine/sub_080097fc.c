@@ -10,7 +10,7 @@
  *
  * Returns 1 if the boxes overlap, 0 otherwise.
  */
-u32 sub_080097FC(struct Entity *p1, struct Entity *p2)
+u32 Entity_BBoxOverlap(struct Entity *p1, struct Entity *p2)
 {
     s32 center1x, half1, left1, right1;
     s32 center1y, top1, bottom1;

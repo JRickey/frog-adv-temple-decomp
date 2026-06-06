@@ -2,7 +2,7 @@
 #include "types.h"
 #include "iwram.h"
 
-/* --- sub_080155F0: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- Scenery_BlitAndCyclePalette: non-matching reference (asm slice provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "macros.h"
 #include "types.h"
@@ -10,7 +10,7 @@
 #include "game.h"
 #include "gba/dma.h"
 
-extern void sub_080100E4(u32 mode, void *src, void *dst);
+extern void Scroll_FlushTilemapWindow(u32 mode, void *src, void *dst);
 
 extern const u16 sScenerVariantMode0Low_1B9DBA[];
 extern const u16 sScenerVariantMode0High_1BAC7E[];
@@ -50,11 +50,11 @@ struct SceneSel {
             REG_DMA3.cnt = DMA_ENABLE | 0x8000;                                                                        \
             (void)REG_DMA3.cnt;                                                                                        \
             cache[0xb] = gSceneSel.sel.u;                                                                              \
-            sub_080100E4(1, (void *)0x02010000, (void *)0x0600e800);                                                   \
+            Scroll_FlushTilemapWindow(1, (void *)0x02010000, (void *)0x0600e800);                                      \
         }                                                                                                              \
     } while (0)
 
-void sub_080155F0(void)
+void Scenery_BlitAndCyclePalette(void)
 {
     const void *const *paletteTable;
 

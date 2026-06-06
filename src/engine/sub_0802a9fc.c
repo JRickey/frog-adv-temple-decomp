@@ -1,8 +1,8 @@
 #include "iwram.h"
 #include "types.h"
 
-extern void sub_08020C78(u32 sound);
-extern void sub_080059C4(void *p);
+extern void Sound_Play(u32 sound);
+extern void Entity_Update(void *p);
 
 /* Slot-12 state machine over gEntities[12]. The matching code keeps the
  * gEntities base in a register and reaches the slot-12 fields with the full
@@ -22,7 +22,7 @@ enum {
  * r1/r2/r0 working set so cases 0 and 1 stay distinct from the case-2/commit
  * tail (an unpinned shape lets agbcc cross-jump-merge them and shortens the
  * function). */
-void sub_0802A9FC(void)
+void Entity12_TickStateMachine(void)
 {
     u8 *base;
     u8 *statePtr;
@@ -69,7 +69,7 @@ void sub_0802A9FC(void)
         status = *statusPtr;
         queued = (u16)(status & ENTITY_STATUS_QUEUED);
         if (queued) {
-            sub_08020C78(0x22);
+            Sound_Play(0x22);
             break;
         }
     commit:
@@ -85,7 +85,7 @@ void sub_0802A9FC(void)
         register u16 *sp asm("r3") = (u16 *)(base + SLOT12_STATUS_OFFSET);
         queued = *sp;
         if (queued & ENTITY_STATUS_QUEUED) {
-            sub_08020C78(0x73);
+            Sound_Play(0x73);
             break;
         }
         if (!(queued & ENTITY_STATUS_BUSY))
@@ -96,5 +96,5 @@ void sub_0802A9FC(void)
     }
     }
 
-    sub_080059C4(&gEntities[12]);
+    Entity_Update(&gEntities[12]);
 }

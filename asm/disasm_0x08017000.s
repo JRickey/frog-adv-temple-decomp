@@ -382,7 +382,7 @@
 @   0x080172f0: 00d4        lsls	r4, r2, #3
 @   0x080172f2: 0400        lsls	r0, r0, #16
 
-        thumb_func_start sub_08017000
-sub_08017000: @ 0x08017000
+        thumb_func_start FrogStatusBar_Update
+FrogStatusBar_Update: @ 0x08017000
         .incbin "frog_us_baserom.gba", 0x17000, 0x2f4
-        thumb_func_end sub_08017000
+        thumb_func_end FrogStatusBar_Update

@@ -11,7 +11,7 @@ struct BgScreenblock {
     vu16 entry[32][32];
 };
 
-void sub_0801C464(void)
+void HUD_DrawStampIcons(void)
 {
     u32 tileBase1 = (u32)0xb1 << 8;
     u32 tileBase2 = 0x0000a109;
@@ -66,10 +66,10 @@ void sub_0801C464(void)
     } while (row <= 2);
 }
 
-extern void sub_0801BE7C(const u8 *str, int len, int x, int y, int a, int b, int c);
+extern void DrawTextGlyphs(const u8 *str, int len, int x, int y, int a, int b, int c);
 
 /* UI string addresses (raw casts, matching the sibling style in
- * sub_0801C2B4 / sub_0801C0xx). Both live in sWinLoseLabels at 0x081be008. */
+ * DrawNumber / sub_0801C0xx). Both live in sWinLoseLabels at 0x081be008. */
 #define UI_DIGIT_GLYPH ((const u8 *)0x081BE040) /* "*" digit-fill glyph */
 #define UI_TIME_LABEL  ((const u8 *)0x081BE044) /* "TIME" label */
 
@@ -88,7 +88,7 @@ extern void sub_0801BE7C(const u8 *str, int len, int x, int y, int a, int b, int
  * rowBase (= row 17's byte offset, 17*64) is anchored in a register by the
  * asm barrier so each stamp store keeps its full screenblock address as an
  * independent pool literal instead of being CSE-folded into +2 increments. */
-void sub_0801C4F8(u8 a, u8 b, u8 c)
+void HUD_DrawStatus(u8 a, u8 b, u8 c)
 {
     u8 buf[4];
     u8 tens;
@@ -102,34 +102,34 @@ void sub_0801C4F8(u8 a, u8 b, u8 c)
     *(vu16 *)(rowBase + 0x0600f84aU) = UI_STAMP_BL;
     *(vu16 *)(rowBase + 0x0600f84cU) = UI_STAMP_BR;
 
-    sub_0801BE7C(UI_DIGIT_GLYPH, 4, 7, 17, 278, 14, 3);
+    DrawTextGlyphs(UI_DIGIT_GLYPH, 4, 7, 17, 278, 14, 3);
 
     tens = (u8)(b / 10u);
     units = (u8)(b % 10u);
     buf[0] = tens + 0x30;
     buf[1] = units + 0x30;
-    sub_0801BE7C(buf, 2, 9, 17, 278, 14, 3);
+    DrawTextGlyphs(buf, 2, 9, 17, 278, 14, 3);
 
     *(vu16 *)(rowBase + 0x0600f830U) = UI_STAMP_TL;
     *(vu16 *)(rowBase + 0x0600f832U) = UI_STAMP_TR;
     *(vu16 *)(rowBase + 0x0600f870U) = UI_STAMP_BL;
     *(vu16 *)(rowBase + 0x0600f872U) = UI_STAMP_BR;
 
-    sub_0801BE7C(UI_DIGIT_GLYPH, 4, 26, 17, 278, 14, 3);
+    DrawTextGlyphs(UI_DIGIT_GLYPH, 4, 26, 17, 278, 14, 3);
 
     tens = (u8)(a / 10u);
     units = (u8)(a % 10u);
     buf[0] = tens + 0x30;
     buf[1] = units + 0x30;
-    sub_0801BE7C(buf, 2, 28, 17, 278, 14, 3);
+    DrawTextGlyphs(buf, 2, 28, 17, 278, 14, 3);
 
-    sub_0801BE7C(UI_TIME_LABEL, 4, 12, 1, 278, 14, 3);
+    DrawTextGlyphs(UI_TIME_LABEL, 4, 12, 1, 278, 14, 3);
 
     tens = (u8)(c / 10u);
     units = (u8)(c % 10u);
     buf[0] = tens + 0x30;
     buf[1] = units + 0x30;
-    sub_0801BE7C(buf, 2, 17, 1, 278, 14, 3);
+    DrawTextGlyphs(buf, 2, 17, 1, 278, 14, 3);
 }
 
 /* Tear down the bonus/score panel: turn off WIN0 in DISPCNT, blank the
@@ -148,7 +148,7 @@ void sub_0801C4F8(u8 a, u8 b, u8 c)
  * Writing the fill value through `*p` (staged: address, then a fresh `zero`)
  * lands `mov r1,sp; movs r0,#0` in baserom order rather than reusing the
  * palette-write zero already sitting in r2. */
-void sub_0801C69C(u8 a)
+void HUD_ClearScreen(u8 a)
 {
     vu16 local;
     vu16 *p;

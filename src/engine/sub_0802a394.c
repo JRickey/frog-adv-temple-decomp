@@ -2,11 +2,11 @@
 #include "iwram.h"
 #include "types.h"
 
-extern void sub_0802A2F0(void);
-extern u32 sub_08000900(void);
-extern void sub_08021510(u32 a0, const void *a1, u32 a2, void *a3, u8 a4);
+extern void SpawnGrid_SpawnWave2(void);
+extern u32 GetFrameTick(void);
+extern void Entity_WalkCompactRecords(u32 a0, const void *a1, u32 a2, void *a3, u8 a4);
 
-void sub_0802A394(void)
+void EntityGroup14_Tick(void)
 {
     u32 *gs;
     u8 *base3720;
@@ -18,15 +18,15 @@ void sub_0802A394(void)
     base3720 = (u8 *)gEntities;
 
     if (*gs - *(u32 *)(base3720 + 0xb54) > 0x258) {
-        sub_0802A2F0();
+        SpawnGrid_SpawnWave2();
         *(u32 *)(base3720 + 0xb54) = *gs;
     }
 
     buf[0] = (buf[0] & 0xffff0000u) | 2u;
 
-    tick = sub_08000900();
+    tick = GetFrameTick();
     if (tick - *(u32 *)(base3720 + 0xcf * 4) <= 0x12b) {
-        sub_08021510(14, buf, 3, &gIwram_6110, 0);
+        Entity_WalkCompactRecords(14, buf, 3, &gIwram_6110, 0);
     } else {
         i = 0;
         do {

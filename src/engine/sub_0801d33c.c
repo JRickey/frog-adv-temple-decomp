@@ -7,7 +7,7 @@
 extern const void *const gFrogTileSrcA_083087C8[];
 extern const void *const gFrogPaletteSrcB_083087E8[];
 
-void sub_0801D33C(u8 arg)
+void Credits_LoadFrogGfx(u8 arg)
 {
     const u8 *srcB;
     const u8 *srcA;
@@ -76,10 +76,10 @@ void sub_0801D33C(u8 arg)
     (void)REG_DMA3.cnt;
 }
 
-extern void sub_0802E13C(void);
-extern void sub_08020C78(u32 a);
+extern void Sound_DrainActiveSlots(void);
+extern void Sound_Play(u32 a);
 
-void sub_0801D438(u8 arg)
+void Credits_InitScrollPage2(u8 arg)
 {
     u8 *state;
     u32 tableBase;
@@ -122,7 +122,7 @@ void sub_0801D438(u8 arg)
     REG_DMA3.cnt = DMA_ENABLE | DMA_SRC_FIXED | 0xC0;
     (void)REG_DMA3.cnt;
 
-    sub_0801D33C(arg);
-    sub_0802E13C();
-    sub_08020C78(0x4B);
+    Credits_LoadFrogGfx(arg);
+    Sound_DrainActiveSlots();
+    Sound_Play(0x4B);
 }

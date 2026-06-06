@@ -44,12 +44,12 @@
  *         sub_0802C780 (dispatched by r2):
  *           r2=0 -> 0x0831807c, r2=1 -> 0x0831810c,
  *           r2=2 -> 0x083180dc, r2=3 -> 0x083180ac
- *           Calls sub_08021140 (walker) with (0x85, anchor, 0x10, 0x4, ...).
+ *           Calls LevelLayout_WalkRecords (walker) with (0x85, anchor, 0x10, 0x4, ...).
  *
  *         sub_0802C8C8 (dispatched by `*(u8*)r0_in`):
  *           [0] -> 0x0831807c, [1] -> 0x083180ac,
  *           [2] -> 0x083180dc, [3] -> 0x0831810c
- *           Calls sub_08021510 (walker variant) with the same anchor.
+ *           Calls Entity_WalkCompactRecords (walker variant) with the same anchor.
  *
  *       Refcount-2 anchors (one ref from each consumer):
  *         0x0831807c (0x0802c792, 0x0802c8ca)
@@ -78,12 +78,12 @@
  *
  * --- Walker family ---
  *
- * sub_08021140 (entries 1-4):  reads `[base, #8]` halfword and `[base,
+ * LevelLayout_WalkRecords (entries 1-4):  reads `[base, #8]` halfword and `[base,
  *   #10]` halfword as the first record; the stack args (0x85, 3, 0/3)
  *   and immediate args (r2=0x10, r3=4) drive a small switch table that
  *   consumes the rest of the records.
  *
- * sub_08021510 (entries 1-4 via second consumer):  same prologue
+ * Entity_WalkCompactRecords (entries 1-4 via second consumer):  same prologue
  *   shape as 0x21140, but the per-record dispatch uses r2=0x4 (vs 0x10
  *   for 0x21140) -- likely a "compact-record" variant of the same
  *   walker.

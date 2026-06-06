@@ -2,8 +2,8 @@
 #include "gba/dma.h"
 #include "types.h"
 
-extern void sub_08020B60(void);
-extern void sub_08020C78(u32 a);
+extern void SoundSystem_StopAll(void);
+extern void Sound_Play(u32 a);
 
 /* Scene/mode teardown dispatched on gGameStuff.pendingMode. Modes 3, 6, 9, 15
  * additionally clear REG_BLDCNT before the shared teardown body; all other
@@ -18,7 +18,7 @@ extern void sub_08020C78(u32 a);
  *   - If *(u32 *)0x030034B0 is nonzero, DMA3 copy a second tile blob
  *     pointed to by g_TileBlobTable[*(u32 *)0x030034B0 - 1] into the same
  *     BG-VRAM region (0xA00 halfwords).
- *   - Call sub_08020B60(), then sub_08020C78(3).
+ *   - Call SoundSystem_StopAll(), then Sound_Play(3).
  *   - Set gGameStuff._unk18 |= 1 and gGameStuff._unk04 = 6.
  *
  * Matching notes (agbcc 2.x):
@@ -35,7 +35,7 @@ extern void sub_08020C78(u32 a);
  *     [r0, #24]; orrs r1, r2; strb r1, [r0, #24]` shape.
  */
 
-void sub_0800E060(void)
+void Scene_LoadBg(void)
 {
     vu16 seed;
     u8 *ctrl5370;
@@ -96,8 +96,8 @@ void sub_0800E060(void)
         (void)REG_DMA3.cnt;
     }
 
-    sub_08020B60();
-    sub_08020C78(3);
+    SoundSystem_StopAll();
+    Sound_Play(3);
 
     {
         GameStuff *g;
@@ -109,7 +109,7 @@ void sub_0800E060(void)
     }
 }
 
-/* --- sub_0800E174: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- UpdateBgTilemapFrames: non-matching reference (asm slice provides the matching bytes) --- */
 #ifdef NON_MATCHING
 typedef struct {
     u16 x;
@@ -122,11 +122,11 @@ typedef struct {
 extern const FrameDescriptor *const sSpriteAnimFrameSet_06824[];
 
 /* Per-slot tile blitter into OBJ-VRAM screenblock 31 (0x0600F800). The five
- * control bytes at 0x03005370 (stride 4, written by sub_0800E060) each select
+ * control bytes at 0x03005370 (stride 4, written by Scene_LoadBg) each select
  * a blit mode for the matching FrameDescriptor record; bit 0x80 marks a slot
  * already drawn. Records come from the 0x080C1xxx descriptor array selected by
  * gIwram_34B0._data. After the loop, an empty handshake byte at 0x03005328
- * triggers a full VRAM clear + sub_08016A40().
+ * triggers a full VRAM clear + StatusBar_Update().
  *
  * Mode 1: blit verbatim.
  * Mode 2: blit each tile masked with 0xEFFF (clear the palette-bank-high bit).
@@ -138,7 +138,7 @@ extern const FrameDescriptor *const sSpriteAnimFrameSet_06824[];
  * count-up loop (not a `y << 5` shift), and the per-row x indent is re-added
  * inside the outer loop so the trailing skip is `32 - x - h`.
  */
-void sub_0800E174(void)
+void UpdateBgTilemapFrames(void)
 {
     const FrameDescriptor *records;
     u8 idx;
@@ -260,7 +260,7 @@ void sub_0800E174(void)
         dma[2] = DMA_ENABLE | DMA_SRC_FIXED | 0x400;
         (void)dma[2];
 
-        sub_08016A40();
+        StatusBar_Update();
     }
 }
 #endif /* NON_MATCHING */

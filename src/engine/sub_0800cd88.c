@@ -4,7 +4,7 @@
 #include "types.h"
 
 /* Field-extract helper on the per-room packed-halfword grid at EWRAM
- * 0x02030000. Sister functions sub_0800CDCC / sub_0800CE10 / sub_0800CE54
+ * 0x02030000. Sister functions SpriteAsset_GetCellFlag / SpriteAsset_GetTileAttr / TileCell_GetPropertyB
  * differ only in which bitfield they pull from the halfword. The grid
  * stride (entry_descriptor[+4]) comes from sSpriteAssetIndexTable at
  * 0x08306444 (see src/data/sprite_dispatch.c). */
@@ -19,7 +19,7 @@ struct SpriteAssetIndexEntry {
 
 extern const struct SpriteAssetIndexEntry sSpriteAssetIndexTable[];
 
-u32 sub_0800CD88(u8 a, u8 b, s16 c, s16 d)
+u32 Tilemap_GetTileClass(u8 a, u8 b, s16 c, s16 d)
 {
     s32 dStride;
     u16 *cell;

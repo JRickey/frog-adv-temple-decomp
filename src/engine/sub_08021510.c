@@ -2,14 +2,14 @@
 #include "iwram.h"
 #include "game.h"
 
-extern void sub_08020C78(u32 effect);
-extern void sub_08016A40(void);
+extern void Sound_Play(u32 effect);
+extern void StatusBar_Update(void);
 extern int __divsi3(int num, int den);
-extern void sub_0800D2C0(s16 tileX, s16 tileY);
-extern void sub_0800696C(void *unused, s32 bit);
-extern void sub_08005D10(s32 first, s32 last);
+extern void PadGrid_DeactivateEntityAtPos(s16 tileX, s16 tileY);
+extern void ModeControl_SetBit(void *unused, s32 bit);
+extern void Entity_AdvanceAnimFrames(s32 first, s32 last);
 
-void sub_08021510(u8 baseSlot, u8 *pCount, u8 kind, u8 unused, u8 bitBase)
+void Entity_WalkCompactRecords(u8 baseSlot, u8 *pCount, u8 kind, u8 unused, u8 bitBase)
 {
     u8 i;
     s32 firstSlot;
@@ -43,7 +43,7 @@ void sub_08021510(u8 baseSlot, u8 *pCount, u8 kind, u8 unused, u8 bitBase)
         if (status & 0x80) {
             switch (kind) {
             case 3:
-                sub_08020C78(6);
+                Sound_Play(6);
                 st = 8;
                 st |= entity->status;
                 entity->status = st | 4;
@@ -60,7 +60,7 @@ void sub_08021510(u8 baseSlot, u8 *pCount, u8 kind, u8 unused, u8 bitBase)
                 asm(".space 0");
                 goto call_effect;
             case 12:
-                sub_08020C78(13);
+                Sound_Play(13);
                 st = 8;
                 st |= entity->status;
                 entity->status = st | 4;
@@ -75,7 +75,7 @@ void sub_08021510(u8 baseSlot, u8 *pCount, u8 kind, u8 unused, u8 bitBase)
                 asm(".space 0");
                 goto call_effect;
             case 2:
-                sub_08020C78(6);
+                Sound_Play(6);
                 st = 8;
                 st |= entity->status;
                 entity->status = st | 4;
@@ -88,7 +88,7 @@ void sub_08021510(u8 baseSlot, u8 *pCount, u8 kind, u8 unused, u8 bitBase)
                 }
                 goto call_effect;
             case 11:
-                sub_08020C78(13);
+                Sound_Play(13);
                 st = 8;
                 st |= entity->status;
                 entity->status = st | 4;
@@ -109,9 +109,9 @@ void sub_08021510(u8 baseSlot, u8 *pCount, u8 kind, u8 unused, u8 bitBase)
                 goto call_effect;
             case 4:
                 if (gGameStuff.pendingMode == 15) {
-                    sub_08020C78(123);
+                    Sound_Play(123);
                 } else {
-                    sub_08020C78(7);
+                    Sound_Play(7);
                 }
                 {
                     register s32 caseSlot asm("r0");
@@ -130,20 +130,20 @@ void sub_08021510(u8 baseSlot, u8 *pCount, u8 kind, u8 unused, u8 bitBase)
                 }
                 goto call_effect;
             call_effect:
-                sub_08016A40();
+                StatusBar_Update();
                 goto tail;
             case 86:
-                sub_08020C78(0x3a);
-                sub_0800D2C0((s16)__divsi3(entity->x, 24), (s16)__divsi3(entity->y, 24));
+                Sound_Play(0x3a);
+                PadGrid_DeactivateEntityAtPos((s16)__divsi3(entity->x, 24), (s16)__divsi3(entity->y, 24));
                 base->field_10++;
                 goto call_effect;
             case 87:
-                sub_08020C78(0x40);
-                sub_0800D2C0((s16)__divsi3(entity->x, 24), (s16)__divsi3(entity->y, 24));
+                Sound_Play(0x40);
+                PadGrid_DeactivateEntityAtPos((s16)__divsi3(entity->x, 24), (s16)__divsi3(entity->y, 24));
                 if ((s16)base->field_10 > 0) {
                     base->field_10--;
                 }
-                sub_08016A40();
+                StatusBar_Update();
                 goto tail;
             default:
                 goto tail;
@@ -154,7 +154,7 @@ void sub_08021510(u8 baseSlot, u8 *pCount, u8 kind, u8 unused, u8 bitBase)
         if (firstSlot == 0) {
             firstSlot = (u8)slot;
         }
-        sub_0800696C((void *)0x03006110, slot);
+        ModeControl_SetBit((void *)0x03006110, slot);
         if (base[slot].status & 2) {
             break;
         }
@@ -169,6 +169,6 @@ void sub_08021510(u8 baseSlot, u8 *pCount, u8 kind, u8 unused, u8 bitBase)
     }
 
     if (firstSlot != 0) {
-        sub_08005D10(firstSlot, baseSlot + count - 1);
+        Entity_AdvanceAnimFrames(firstSlot, baseSlot + count - 1);
     }
 }

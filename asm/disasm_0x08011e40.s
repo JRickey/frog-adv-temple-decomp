@@ -303,7 +303,7 @@
 @   0x08012094: 6540        str	r0, [r0, #84]	@ 0x54
 @   0x08012096: 0300        lsls	r0, r0, #12
 
-        thumb_func_start sub_08011E40
-sub_08011E40: @ 0x08011e40
+        thumb_func_start Selector_TriggerWindowReveal
+Selector_TriggerWindowReveal: @ 0x08011e40
         .incbin "frog_us_baserom.gba", 0x11e40, 0x258
-        thumb_func_end sub_08011E40
+        thumb_func_end Selector_TriggerWindowReveal

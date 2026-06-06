@@ -21,10 +21,10 @@ typedef struct SoundSystem {
 
 #define gpSoundSystem (*(SoundSystem **)0x030065e0)
 
-extern void sub_0802E724(s32 ch);
-extern void sub_08030264(void);
+extern void SoundChannel_Reset(s32 ch);
+extern void SoundPeriod_Reset(void);
 
-void sub_0802D8F8(void)
+void Sound_Reset(void)
 {
     SoundSystem **pp;
     SoundSystem **channelPp;
@@ -43,7 +43,7 @@ void sub_0802D8F8(void)
                 ss = *channelPp;
                 ss->channelSeqs[i * 4] = zero;
                 ss->slotTable[i] = zero;
-                sub_0802E724(i);
+                SoundChannel_Reset(i);
                 i++;
             } while (i < (s32)(*channelPp)->count + 4);
         }
@@ -74,5 +74,5 @@ void sub_0802D8F8(void)
     }
 
     (*pp)->status = 0;
-    sub_08030264();
+    SoundPeriod_Reset();
 }

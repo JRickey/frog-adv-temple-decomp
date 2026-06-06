@@ -28,7 +28,7 @@ struct ScrollCameraTarget {
     s16 y;
 };
 
-void sub_0800F24C(u8 countArg)
+void Scroll_UpdateCamera(u8 countArg)
 {
     u32 stateCount = countArg;
     struct SceneScrollState *scrollStates;

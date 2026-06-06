@@ -18,9 +18,9 @@ typedef struct CollisionSlot {
 } CollisionSlot;
 
 extern const EntityHitbox sEntityHitboxTable[];
-extern int sub_0800CB80(int xTile, int mode, int x, int y, int flags);
+extern int SpriteGrid_SetCellFlags(int xTile, int mode, int x, int y, int flags);
 
-void sub_0800B7B0(CollisionSlot *slotsArg, unsigned long long *outArg, s8 type)
+void Entity_UpdateHitboxSlots(CollisionSlot *slotsArg, unsigned long long *outArg, s8 type)
 {
     volatile u32 slotsStack;
     volatile u32 outStack;
@@ -97,7 +97,7 @@ void sub_0800B7B0(CollisionSlot *slotsArg, unsigned long long *outArg, s8 type)
                 pointAddr = ((u32)iShift >> 22) + pointBase;
                 pt = (const s16 *)pointAddr;
             }
-            sub_0800CB80(xTileReg, 1, pt[0], pt[1], *(u8 *)(offset + (u32)&tbl2->flags));
+            SpriteGrid_SetCellFlags(xTileReg, 1, pt[0], pt[1], *(u8 *)(offset + (u32)&tbl2->flags));
         } else {
             s32 stackType;
             u32 offset;
@@ -115,7 +115,7 @@ void sub_0800B7B0(CollisionSlot *slotsArg, unsigned long long *outArg, s8 type)
             pointBase = *(u32 *)pointAddr;
             pointAddr = ((u32)iShift >> 22) + pointBase;
             pt = (const s16 *)pointAddr;
-            sub_0800CB80(xTileReg, 0, pt[0], pt[1], *(u8 *)(offset + (u32)&tbl2->flags));
+            SpriteGrid_SetCellFlags(xTileReg, 0, pt[0], pt[1], *(u8 *)(offset + (u32)&tbl2->flags));
         }
 
         asm volatile("" : "+r"(typeByte));

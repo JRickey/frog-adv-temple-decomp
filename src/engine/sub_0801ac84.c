@@ -2,10 +2,10 @@
 #include "iwram.h"
 #include "types.h"
 
-extern void sub_0801AA60(u8 arg);
-extern u32 sub_08020C78(u32 sound);
+extern void Credits_DmaLoadTiles(u8 arg);
+extern u32 Sound_Play(u32 sound);
 
-void sub_0801AC84(u8 arg)
+void Credits_InitStateA(u8 arg)
 {
     u8 *state;
     u32 tableBase;
@@ -53,11 +53,11 @@ void sub_0801AC84(u8 arg)
     dma[2] = DMA_ENABLE | DMA_SRC_FIXED | 0xC0;
     (void)dma[2];
 
-    sub_0801AA60(arg);
-    sub_08020C78(*(const u32 *)0x081BDA70);
+    Credits_DmaLoadTiles(arg);
+    Sound_Play(*(const u32 *)0x081BDA70);
 }
 
-void sub_0801AD10(u8 a0)
+void Credits_InitStateB(u8 a0)
 {
     /* plain local for arg: agbcc allocates to r4 with 3-insn zero-extend
      * (adds r4,r0,#0; lsls r4,r4,#24; lsrs r4,r4,#24) rather than
@@ -111,7 +111,7 @@ void sub_0801AD10(u8 a0)
     dma[2] = DMA_ENABLE | DMA_SRC_FIXED | 0xC0;
     (void)dma[2];
 
-    sub_0801AA60(arg);
+    Credits_DmaLoadTiles(arg);
     {
         const u32 *tbl;
         u32 idx;
@@ -121,14 +121,14 @@ void sub_0801AD10(u8 a0)
         tbl = (const u32 *)0x081BDA70;
         asm volatile("" : "+r"(tbl));
         idx = (u32)arg + 1;
-        sub_08020C78(tbl[idx]);
+        Sound_Play(tbl[idx]);
     }
 }
 
-/* --- sub_0801ADA8: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- Credits_RunScript: non-matching reference (asm slice provides the matching bytes) --- */
 #ifdef NON_MATCHING
-extern u16 sub_080004C4(void);
-extern void sub_0801AD10(u8 arg);
+extern u16 Input_Poll(void);
+extern void Credits_InitStateB(u8 arg);
 
 extern const u8 sCreditsTilemapEng[];
 extern u16 gIwram_5398;
@@ -157,7 +157,7 @@ struct CreditsState {
     u16 swapped; /* +0x32: page-flip latch */
 };
 
-u8 sub_0801ADA8(u8 a0)
+u8 Credits_RunScript(u8 a0)
 {
     register u8 arg asm("r8");
     register vu16 *in asm("r9");
@@ -198,7 +198,7 @@ loop:
                     *(u16 *)((u8 *)state->front + 108) = (u16)flash;
                 flash = (flash != 0) ? 0 : 1;
                 frameStart = gGameStuff._unk00;
-                *in = sub_080004C4();
+                *in = Input_Poll();
             }
             input = *in;
             if (input == CREDIT_KEY_UP)
@@ -221,7 +221,7 @@ loop:
                     *(u16 *)((u8 *)state->front + 108) = (u16)flash;
                 flash = (flash != 0) ? 0 : 1;
                 frameStart = gGameStuff._unk00;
-                *in = sub_080004C4();
+                *in = Input_Poll();
             }
             input = *in;
             if (input == CREDIT_KEY_UP)
@@ -235,11 +235,11 @@ loop:
         if (*(u32 *)0x03003544 == 0) {
             *(u32 *)0x03003544 = 1;
             (*(u8 *)0x03003541)++;
-            sub_0801AC84(arg);
+            Credits_InitStateA(arg);
         } else {
             *(u32 *)0x03003544 = 0;
             (*(u8 *)0x03003541)++;
-            sub_0801AD10(arg);
+            Credits_InitStateB(arg);
         }
         goto after_dispatch;
     }
@@ -294,7 +294,7 @@ end_script:
                 *(u16 *)((u8 *)state->front + 108) = (u16)flash;
             flash = (flash != 0) ? 0 : 1;
             frameStart = gGameStuff._unk00;
-            *in = sub_080004C4();
+            *in = Input_Poll();
         }
         input = *in;
         in = &gIwram_5398;

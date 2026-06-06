@@ -16,7 +16,7 @@ struct TileBlitRecord {
 
 extern struct TileBlitRecord gTileBlitTable_08306840[];
 
-void sub_08016824(u8 index)
+void TileBlit_DrawEntry(u8 index)
 {
     struct TileBlitRecord *tableBase;
     u32 stride;
@@ -78,16 +78,16 @@ void sub_08016824(u8 index)
     }
 }
 
-/* Re-declare without prototype so sub_080168A0 passes idx (u32 in r4) as-is via
+/* Re-declare without prototype so Icon_DmaLoadSprite passes idx (u32 in r4) as-is via
  * `add r0, r4, #0` — no zero-extension of the u8 parameter — matching the baserom. */
-void sub_08016824();
+void TileBlit_DrawEntry();
 
 /* DMA descriptor table: 16-byte entries at 0x08306888. Each entry holds
  * (at byte offset 4) a pointer to a source pointer, (at +8) the destination
  * address, and (at +12) a byte count as a u16. */
 extern u32 gDmaDescTable_08306888[];
 
-void sub_080168A0(void)
+void Icon_DmaLoadSprite(void)
 {
     u32 idx;
     u8 mode;
@@ -152,7 +152,7 @@ cont:
     dma[2] = 0x80000010;
     (void)dma[2];
 
-    sub_08016824(idx);
+    TileBlit_DrawEntry(idx);
 }
 
 /* DMA descriptor table at 0x08306888 with richer entry layout:
@@ -168,7 +168,7 @@ struct DmaDesc2Entry {
     u16 _pad0e;
 };
 
-void sub_08016928(void)
+void Icon_DmaUpdateSprite(void)
 {
     /* ip holds the gGameStuff base across the whole function; used to
      * produce 'mov r1, ip; ldr r0, [r1, #0]' at the end. */

@@ -3,7 +3,7 @@
 #include "macros.h"
 #include "types.h"
 
-/* --- sub_0800D2C0: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- PadGrid_DeactivateEntityAtPos: non-matching reference (asm slice provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "game.h"
 #include "iwram.h"
@@ -11,12 +11,12 @@
 #include "types.h"
 
 extern u8 gIwram_53A0;
-extern u8 sub_0800D270(s32 x, s32 y);
+extern u8 TileMap_GetCell(s32 x, s32 y);
 
 /* Per-TU flag (Makefile), optional: sub_0800d2c0.s: CFLAGS += -fforce-addr
    (byte_diff 259 with or without it). */
 
-void sub_0800D2C0(s16 x, s16 y)
+void PadGrid_DeactivateEntityAtPos(s16 x, s16 y)
 {
     u32 ux, uy, mode;
     struct Entity *e;
@@ -27,7 +27,7 @@ void sub_0800D2C0(s16 x, s16 y)
 
     ux = (u16)x;
     uy = (u16)y;
-    mode = (u8)sub_0800D270((s16)x, (s16)y);
+    mode = (u8)TileMap_GetCell((s16)x, (s16)y);
 
     if (mode == 1) {
         for (i = 0; i <= 19; i++) {

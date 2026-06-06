@@ -66,12 +66,12 @@ typedef struct SoundSystem {
 
 #define gpSoundSystem (*(SoundSystem **)0x030065e0)
 
-extern u32 sub_08032BA0(u32 flag, u32 priority, u32 kind);
-extern void sub_08032904(s32 ch, u32 step, u32 pan, u32 ctrl, u16 hwCtrl);
+extern u32 SoundChannel_CheckPriority(u32 flag, u32 priority, u32 kind);
+extern void SoundChannel_SetState(s32 ch, u32 step, u32 pan, u32 ctrl, u16 hwCtrl);
 extern void SoundChannel_Init(u32 index, u32 step, u32 mode, u32 ctrl);
 extern s32 SoundSlot_PickByPriority(s32 a0, u32 priority, s32 a2, s32 idx);
-extern void sub_08032894(void *slot, u32 a1, u32 a2, u32 a3, u32 a4);
-extern void sub_08032BC8(void *slot, u32 a1, u32 a2, u32 a3);
+extern void SoundSlot_InitParams(void *slot, u32 a1, u32 a2, u32 a3, u32 a4);
+extern void SoundVoice_Init(void *slot, u32 a1, u32 a2, u32 a3);
 
 /* sub_0802D9EC - "play sound by id". Resolves a sound descriptor for `id`,
  * applies the caller's volume/pan/pitch overrides (or the descriptor defaults
@@ -165,7 +165,7 @@ boundOk:
         rPitch = 0xff;
 
     if (kind <= 3) {
-        if (sub_08032BA0(1, entry->priority, kind) == 0)
+        if (SoundChannel_CheckPriority(1, entry->priority, kind) == 0)
             return 0;
 
         {
@@ -176,7 +176,7 @@ boundOk:
 
         if ((subL->flags & 0x80) == 0) {
             u32 ctrl = 0x100 | entry->priority;
-            sub_08032904(kind, rVol, rPitch, rPan, ctrl);
+            SoundChannel_SetState(kind, rVol, rPitch, rPan, ctrl);
         } else {
             SoundChannel_Init(kind, rVol, rPan, 0x100 | entry->priority);
         }
@@ -204,9 +204,9 @@ boundOk:
 
         if ((subL->flags & 0x80) == 0) {
             u32 ctrl = 0x100 | entry->priority;
-            sub_08032894(swSlot, rVol, rPitch, rPan, ctrl);
+            SoundSlot_InitParams(swSlot, rVol, rPitch, rPan, ctrl);
         } else {
-            sub_08032BC8(swSlot, rVol, rPan, 0x100 | entry->priority);
+            SoundVoice_Init(swSlot, rVol, rPan, 0x100 | entry->priority);
         }
 
         *(u32 *)((u8 *)swSlot + 0x38) |= 0x10000;

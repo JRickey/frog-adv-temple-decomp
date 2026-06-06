@@ -378,7 +378,7 @@
 @   0x0800765c: 0ae8        lsrs	r0, r5, #11
 @   0x0800765e: 080c        lsrs	r4, r1, #32
 
-        thumb_func_start sub_0800736C
-sub_0800736C: @ 0x0800736c
+        thumb_func_start CollisionTable_CheckAndTriggerScript
+CollisionTable_CheckAndTriggerScript: @ 0x0800736c
         .incbin "frog_us_baserom.gba", 0x736c, 0x2f4
-        thumb_func_end sub_0800736C
+        thumb_func_end CollisionTable_CheckAndTriggerScript

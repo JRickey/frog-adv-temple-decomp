@@ -9,7 +9,7 @@
  * and two fixed ROM blocks into OBJ VRAM + palette RAM, and seeds palette slot
  * 0x050001E2. The DMA cnt for every clear is the shared 0x81000400
  * (DMA_ENABLE | DMA_SRC_FIXED | 0x400); the cleared-source halfword is a stack
- * local. Sibling of sub_0801D4CC / sub_0801D150 (same DMA-clear family, same
+ * local. Sibling of Credits_InitScrollPage1 / Credits_Init (same DMA-clear family, same
  * 0x080C1254 ROM table with a 24-byte stride keyed on gIwram_34B0._data).
  *
  * Matching notes (old_agbcc):
@@ -21,7 +21,7 @@
  *     constant or a `ldr [base, #4]` offset; rowOff materializes the 24x index
  *     scale first so the `adds #4` is emitted after the multiply, matching the
  *     baserom\'s order. */
-void sub_0801D880(void)
+void Credits_LoadGfx(void)
 {
     volatile DmaChannel *dma;
     const u32 *table;

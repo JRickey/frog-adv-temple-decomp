@@ -3,24 +3,24 @@
 #include "macros.h"
 #include "types.h"
 
-extern u8 sub_0800E4BC(void);
-extern void sub_080008DC(void);
-extern void sub_0800E174(void);
-extern u8 sub_0800FD50(void);
-extern void sub_08020B78(void);
+extern u8 AnimCtrl_RunPhase(void);
+extern void WaitVblank(void);
+extern void UpdateBgTilemapFrames(void);
+extern u8 Scene08_MapScreenTick(void);
+extern void SoundSystem_FadeOut(void);
 
-u8 sub_0800E6A8(void)
+u8 Scene_FadeUpdate(void)
 {
     u8 result;
 
-    result = sub_0800E4BC();
-    sub_080008DC();
-    sub_0800E174();
+    result = AnimCtrl_RunPhase();
+    WaitVblank();
+    UpdateBgTilemapFrames();
 
     if (*(u8 *)0x03005328 == 0 || result == 0) {
         gGameStuff._unk18 &= 0xFE;
         gIwram_34A0.dispatchIdx = 0;
-        sub_08020B78();
+        SoundSystem_FadeOut();
     }
 
     if (*(u8 *)0x03005328 == 0) {
@@ -78,7 +78,7 @@ void text_0800e76c(void)
     }
 }
 
-void sub_0800E7D4(void)
+void SetModeBlendRegs(void)
 {
     switch (gGameStuff.pendingMode) {
     case 1:
@@ -119,5 +119,5 @@ void sub_0800E7D4(void)
 
 void text_0800e850(void)
 {
-    sub_0800FD50();
+    Scene08_MapScreenTick();
 }

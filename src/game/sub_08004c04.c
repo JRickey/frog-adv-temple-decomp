@@ -3,109 +3,109 @@
 #include "macros.h"
 #include "types.h"
 
-extern void sub_08006BB4(u8 partId, u8 *out);
-extern void sub_0800B7B0(u32 a, u32 b, u8 c);
-extern void sub_08006600(u8 *base, u32 selector, u32 bit);
-extern void sub_080066C4(u8 *base, u32 selector, u32 bit);
-extern u32 sub_08009C14(u8 *state);
-extern void sub_0800DE80(void);
+extern void EntityScript_BuildSlotData(u8 partId, u8 *out);
+extern void Entity_UpdateHitboxSlots(u32 a, u32 b, u8 c);
+extern void CtrlFlags_SetBit(u8 *base, u32 selector, u32 bit);
+extern void ModeControl_ClearBit(u8 *base, u32 selector, u32 bit);
+extern u32 Scene_EntityTick(u8 *state);
+extern void Game_FrameEnd(void);
 
-void sub_08004C04(u8 *buf, u32 arg1, u32 arg2)
+void Mode14_Setup(u8 *buf, u32 arg1, u32 arg2)
 {
     gGameStuff.pendingMode = 14;
-    sub_08006BB4(5, buf);
-    sub_0800B7B0(arg1, arg2, 17);
+    EntityScript_BuildSlotData(5, buf);
+    Entity_UpdateHitboxSlots(arg1, arg2, 17);
 }
 
-extern void sub_0800CE98(u32 a, u32 b);
-extern void sub_08009CBC(void);
+extern void SpriteAsset_LoadSheet(u32 a, u32 b);
+extern void EntityDispatch_RunFrame(void);
 
-void sub_08004C30(void)
+void Mode15_Setup(void)
 {
     ModeControl_Init(&gIwram_6110, 0x80, 0xf, (const void *)0x082f9bd0, 1, 5);
-    sub_0800CE98(0xf, 0);
-    sub_08009CBC();
+    SpriteAsset_LoadSheet(0xf, 0);
+    EntityDispatch_RunFrame();
 }
 
-extern void sub_08007660(u32 a, u32 b);
-extern void sub_0800A2D8(void);
-extern void sub_080008DC(void);
-extern void sub_0800A328(void);
-extern void sub_080094F8(void);
-extern void sub_08009984(void);
-extern void sub_080045EC(u32 a, u32 b);
+extern void Entity_RunScript(u32 a, u32 b);
+extern void Game_RunEntityFrame(void);
+extern void WaitVblank(void);
+extern void Game_ForceRender(void);
+extern void Entity_CheckAllCollisions(void);
+extern void Player_CheckTileEvents(void);
+extern void Player_HandleTileTransitions(u32 a, u32 b);
 
-void sub_08004C64(u32 a, u32 b, u32 c)
+void Mode17_RunFrame(u32 a, u32 b, u32 c)
 {
-    sub_08007660(5, a);
-    sub_0800A2D8();
-    sub_080008DC();
-    sub_0800A328();
-    sub_080094F8();
-    sub_08009984();
-    sub_080045EC(b, c);
+    Entity_RunScript(5, a);
+    Game_RunEntityFrame();
+    WaitVblank();
+    Game_ForceRender();
+    Entity_CheckAllCollisions();
+    Player_CheckTileEvents();
+    Player_HandleTileTransitions(b, c);
     gGameStuff._unk14++;
 }
 
-void sub_08004CA4(u8 *state, u32 arg1, u32 arg2)
+void Mode_InitEntityState(u8 *state, u32 arg1, u32 arg2)
 {
     u8 *base;
 
     if (gIwram_35E0._field_5 <= 2) {
         base = (u8 *)&gIwram_6110;
-        sub_080066C4(base, 3, 0);
-        sub_080066C4(base, 3, 1);
+        ModeControl_ClearBit(base, 3, 0);
+        ModeControl_ClearBit(base, 3, 1);
     } else {
-        sub_08006600((u8 *)&gIwram_6110, 3, 1);
+        CtrlFlags_SetBit((u8 *)&gIwram_6110, 3, 1);
     }
 
-    if (sub_08009C14(state) == 0)
+    if (Scene_EntityTick(state) == 0)
         state[0] = 7;
 
-    sub_0800B7B0(arg1, arg2, 17);
+    Entity_UpdateHitboxSlots(arg1, arg2, 17);
 }
 
-void sub_08004D04(void)
+void Mode_EndScene(void)
 {
-    sub_0800DE80();
+    Game_FrameEnd();
 }
 
-extern u32 sub_0800679C(u8 *base, u32 selector, u32 bit);
+extern u32 ModeControl_GetFlag(u8 *base, u32 selector, u32 bit);
 extern void sub_0800BE18(u8 *slots, u32 *out, s8 type);
 extern void sub_0800BF24(u8 *slots, u32 *out, s8 type);
 extern void sub_0800BEBC(u8 *slots, u32 *out, s8 type, u8 tile);
-extern void sub_0800CBE8(u8 col, u8 row, u32 a, u32 b, u32 c);
-extern u8 sub_0800CD88(u8 col, u8 row, s16 tileX, s16 tileY);
-extern void sub_08015A50(void);
-extern void sub_08015A80(void);
-extern void sub_080124D0(void);
-extern void sub_08016A40(void);
-extern void sub_08020C78(u32 arg);
+extern void BgMap_WriteTileAttr(u8 col, u8 row, u32 a, u32 b, u32 c);
+extern u8 Tilemap_GetTileClass(u8 col, u8 row, s16 tileX, s16 tileY);
+extern void BgTilemap_DmaVariantA(void);
+extern void BgTilemap_DmaVariantB(void);
+extern void AnimChannels_Reset(void);
+extern void StatusBar_Update(void);
+extern void Sound_Play(u32 arg);
 
-void sub_08004D10(u8 *arg0, u32 *arg1, u8 *arg2, u32 *arg3)
+void SpawnCycle_Update(u8 *arg0, u32 *arg1, u8 *arg2, u32 *arg3)
 {
-    if ((u8)sub_0800679C((u8 *)&gIwram_6110, 3, 3)) {
+    if ((u8)ModeControl_GetFlag((u8 *)&gIwram_6110, 3, 3)) {
         u8 *base3720 = (u8 *)gEntities;
         u32 off = 0xaf2;
         *(u16 *)(base3720 + off) = 0;
-        sub_08006600((u8 *)&gIwram_6110, 3, 4);
-        sub_080066C4((u8 *)&gIwram_6110, 3, 3);
+        CtrlFlags_SetBit((u8 *)&gIwram_6110, 3, 4);
+        ModeControl_ClearBit((u8 *)&gIwram_6110, 3, 3);
     }
 
-    if ((u8)sub_0800679C((u8 *)&gIwram_6110, 3, 4)) {
-        sub_08006600((u8 *)&gIwram_6110, 3, 5);
-        sub_08006600((u8 *)&gIwram_6110, 3, 0);
-        sub_080066C4((u8 *)&gIwram_6110, 3, 6);
+    if ((u8)ModeControl_GetFlag((u8 *)&gIwram_6110, 3, 4)) {
+        CtrlFlags_SetBit((u8 *)&gIwram_6110, 3, 5);
+        CtrlFlags_SetBit((u8 *)&gIwram_6110, 3, 0);
+        ModeControl_ClearBit((u8 *)&gIwram_6110, 3, 6);
 
         if (gIwram_6110.spawnMask == 1) {
-            sub_08015A50();
+            BgTilemap_DmaVariantA();
             sub_0800BE18(arg0, arg1, 29);
             sub_0800BE18(arg2, arg3, 30);
         }
 
         gIwram_6110.byteFlags8 = 0;
         gIwram_6110.gateByte = 0;
-        sub_080066C4((u8 *)&gIwram_6110, 3, 4);
+        ModeControl_ClearBit((u8 *)&gIwram_6110, 3, 4);
     }
 
     if (gIwram_35E0._data[4] == 5) {
@@ -117,14 +117,14 @@ void sub_08004D10(u8 *arg0, u32 *arg1, u8 *arg2, u32 *arg3)
         gIwram_6110.gateByte = 0;
 
         if ((u8)mask == 4) {
-            sub_0800CBE8(gIwram_35E0._field_18, gIwram_35E0._field_19, 7, 4, 15);
-            sub_0800CBE8(gIwram_35E0._field_18, gIwram_35E0._field_19, 6, 4, 15);
+            BgMap_WriteTileAttr(gIwram_35E0._field_18, gIwram_35E0._field_19, 7, 4, 15);
+            BgMap_WriteTileAttr(gIwram_35E0._field_18, gIwram_35E0._field_19, 6, 4, 15);
             gIwram_6110.inputFlags |= 8;
-            sub_080066C4((u8 *)&gIwram_6110, 3, 7);
+            ModeControl_ClearBit((u8 *)&gIwram_6110, 3, 7);
             return;
         }
 
-        sub_080066C4((u8 *)&gIwram_6110, 3, 7);
+        ModeControl_ClearBit((u8 *)&gIwram_6110, 3, 7);
 
         if (gIwram_6110.spawnMask == 1) {
             sub_0800BE18(arg0, arg1, 29);
@@ -134,11 +134,11 @@ void sub_08004D10(u8 *arg0, u32 *arg1, u8 *arg2, u32 *arg3)
         if (gIwram_6110.spawnMask == 2) {
             sub_0800BE18(arg0, arg1, 29);
             sub_0800BE18(arg2, arg3, 30);
-            sub_08015A80();
+            BgTilemap_DmaVariantB();
         }
 
-        sub_080124D0();
-        sub_08020C78(28);
+        AnimChannels_Reset();
+        Sound_Play(28);
 
         {
             u8 *base3720 = (u8 *)gEntities;
@@ -161,26 +161,26 @@ void sub_08004D10(u8 *arg0, u32 *arg1, u8 *arg2, u32 *arg3)
             }
         }
 
-        sub_08016A40();
-        sub_08006600((u8 *)&gIwram_6110, 3, 8);
+        StatusBar_Update();
+        CtrlFlags_SetBit((u8 *)&gIwram_6110, 3, 8);
     }
 
-    if ((u8)sub_0800679C((u8 *)&gIwram_6110, 3, 9)) {
+    if ((u8)ModeControl_GetFlag((u8 *)&gIwram_6110, 3, 9)) {
         u32 *g = &gGameStuff._unk00;
         u8 *base3720 = (u8 *)gEntities;
         u32 off = 0xb48;
         if (*g - *(u32 *)(base3720 + off) > 120) {
-            sub_08006600((u8 *)&gIwram_6110, 3, 0);
-            sub_08006600((u8 *)&gIwram_6110, 3, 5);
+            CtrlFlags_SetBit((u8 *)&gIwram_6110, 3, 0);
+            CtrlFlags_SetBit((u8 *)&gIwram_6110, 3, 5);
             gIwram_6110.gateByte = 0;
-            sub_080066C4((u8 *)&gIwram_6110, 3, 9);
+            ModeControl_ClearBit((u8 *)&gIwram_6110, 3, 9);
         }
     }
 
     if (gIwram_6110.spawnMask == 1) {
         /* short-circuit || — the baserom skips the second probe when the
            first is set, so the calls must stay inside the condition */
-        if ((u8)sub_0800679C((u8 *)&gIwram_6110, 3, 0) || (u8)sub_0800679C((u8 *)&gIwram_6110, 3, 7)) {
+        if ((u8)ModeControl_GetFlag((u8 *)&gIwram_6110, 3, 0) || (u8)ModeControl_GetFlag((u8 *)&gIwram_6110, 3, 7)) {
             sub_0800BF24(arg0, arg1, 29);
             sub_0800BF24(arg2, arg3, 30);
         }
@@ -190,12 +190,12 @@ void sub_08004D10(u8 *arg0, u32 *arg1, u8 *arg2, u32 *arg3)
         return;
     if (gIwram_6110.spawnMask != 1)
         return;
-    if ((u8)sub_0800679C((u8 *)&gIwram_6110, 3, 0) == 0)
+    if ((u8)ModeControl_GetFlag((u8 *)&gIwram_6110, 3, 0) == 0)
         return;
 
     {
-        u8 tile =
-            (u8)sub_0800CD88(gIwram_35E0._field_18, gIwram_35E0._field_19, gIwram_35E0._field_8, gIwram_35E0._field_A);
+        u8 tile = (u8)Tilemap_GetTileClass(gIwram_35E0._field_18, gIwram_35E0._field_19, gIwram_35E0._field_8,
+                                           gIwram_35E0._field_A);
         sub_0800BEBC(arg0, arg1, 29, tile);
         sub_0800BEBC(arg2, arg3, 30, tile);
     }

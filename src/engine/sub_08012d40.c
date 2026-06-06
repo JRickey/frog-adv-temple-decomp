@@ -1,14 +1,14 @@
 #include "macros.h"
 #include "types.h"
 
-extern void sub_08010958(u8 arg0, u8 arg1);
+extern void ModeChannel_Apply(u8 arg0, u8 arg1);
 
 extern u8 gIwram_6410[];
 extern u8 gIwram_6400[];
 extern u8 gIwram_6480[];
 extern u8 gIwram_60A0[];
 
-void sub_08012D40(void)
+void BgScrollAnim_Init(void)
 {
     register u8 val asm("r1");
 
@@ -21,5 +21,5 @@ void sub_08012D40(void)
     val = gIwram_60A0[0x40];
     val |= 1;
     gIwram_60A0[0x40] = val;
-    sub_08010958(4, 4);
+    ModeChannel_Apply(4, 4);
 }

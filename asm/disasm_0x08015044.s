@@ -167,7 +167,7 @@
 @   0x08015190: 64c0        str	r0, [r0, #76]	@ 0x4c
 @   0x08015192: 0300        lsls	r0, r0, #12
 
-        thumb_func_start sub_08015044
-sub_08015044: @ 0x08015044
+        thumb_func_start EnemySpawn_ProcessWaveB
+EnemySpawn_ProcessWaveB: @ 0x08015044
         .incbin "frog_us_baserom.gba", 0x15044, 0x150
-        thumb_func_end sub_08015044
+        thumb_func_end EnemySpawn_ProcessWaveB

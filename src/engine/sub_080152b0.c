@@ -21,13 +21,13 @@ extern u8 gIwram_6400[];
 extern u8 gIwram_6410[];
 extern u8 gIwram_6580[];
 
-extern void sub_0800EE34(u8 layer);
-extern void sub_0800EE94(u8 layer);
-extern void sub_080124D0(void);
-extern void sub_08020C78(u32 sound);
-extern void sub_08013C60(struct DmaJob_152B0 job, u8 mode, void *buf);
+extern void BgLayer_Disable(u8 layer);
+extern void BgLayer_Enable(u8 layer);
+extern void AnimChannels_Reset(void);
+extern void Sound_Play(u32 sound);
+extern void DmaJob_Advance(struct DmaJob_152B0 job, u8 mode, void *buf);
 
-void sub_080152B0(void)
+void Screen_LoadForMode(void)
 {
     u8 mode;
 
@@ -35,7 +35,7 @@ void sub_080152B0(void)
 
     switch (mode) {
     case 0:
-        sub_0800EE34(2);
+        BgLayer_Disable(2);
         break;
 
     case 1:
@@ -58,7 +58,7 @@ void sub_080152B0(void)
 
         *(vu16 *)0x04000050 = 0x1744;
         *(vu16 *)0x04000052 = 0x0C04;
-        sub_0800EE94(2);
+        BgLayer_Enable(2);
         break;
 
     case 2:
@@ -75,13 +75,13 @@ void sub_080152B0(void)
         *(vu16 *)0x04000050 = 0x1744;
         *(vu16 *)0x04000052 = 0x0C04;
         gIwram_6580[10] = 0;
-        sub_0800EE94(2);
+        BgLayer_Enable(2);
         break;
 
     case 3:
-        sub_080124D0();
-        sub_0800EE34(2);
-        sub_08020C78(28);
+        AnimChannels_Reset();
+        BgLayer_Disable(2);
+        Sound_Play(28);
         break;
 
     case 4:
@@ -97,11 +97,11 @@ void sub_080152B0(void)
 
         *(vu16 *)0x04000050 = 0x1744;
         *(vu16 *)0x04000052 = 0x0C04;
-        sub_0800EE94(2);
+        BgLayer_Enable(2);
         break;
     }
 
-    sub_08020C78(0x6C);
+    Sound_Play(0x6C);
 
     {
         /* Anchor the table-base load into r0 before reading the state byte
@@ -111,7 +111,7 @@ void sub_080152B0(void)
         u8 *state = (u8 *)0x03003610;
         const struct DmaJob_152B0 *job = (const struct DmaJob_152B0 *)((*state << 4) + (u32)table);
 
-        sub_08013C60(*job, 0, (void *)0x030064C0);
+        DmaJob_Advance(*job, 0, (void *)0x030064C0);
 
         REG_DMA3.src = gPaletteSrcTable_08307E78[*state];
         REG_DMA3.dst = (void *)0x05000100;

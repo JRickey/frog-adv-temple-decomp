@@ -12,13 +12,13 @@ enum TextGlyph {
     GLYPH_TILDE = 0xE0EA,
 };
 
-extern s32 sub_0801CEC0(const char *str, u8 len);
+extern s32 ParseDecimalStr(const char *str, u8 len);
 
 extern const u8 sCreditsTilemapEng[];
 
-void sub_0801C078(const u8 *str, u8 count, u8 colBase, u8 rowBase, u16 tileBase, s32 palBank, u8 screen)
+void DrawTilemapString(const u8 *str, u8 count, u8 colBase, u8 rowBase, u16 tileBase, s32 palBank, u8 screen)
 {
-    /* Pins keep the baserom loop state live across sub_0801CEC0: col=r8, row=r9, palette=sl, base=r6. */
+    /* Pins keep the baserom loop state live across ParseDecimalStr: col=r8, row=r9, palette=sl, base=r6. */
     s32 col;
     s32 row;
     register u16 palBits asm("sl");
@@ -78,7 +78,7 @@ void sub_0801C078(const u8 *str, u8 count, u8 colBase, u8 rowBase, u16 tileBase,
             *(u16 *)(((row * 2 + rowBase) << 6) + (u32)((u8 *)base + col * 2) + 0x40) =
                 (u16)(t + GLYPH_LOWERCASE_OFFSET) + tileBase + palBits;
         } else if (c == '[' && str[i + 4] == ']') {
-            n = sub_0801CEC0((const char *)(str + i + 1), 3) - 0xC0;
+            n = ParseDecimalStr((const char *)(str + i + 1), 3) - 0xC0;
             if ((u32)n <= 63) {
                 /* These pins target the bracket-case rotation: dst=r2, table=r3, n*3=r1. */
                 u16 *escapeDst;

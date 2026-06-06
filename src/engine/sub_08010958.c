@@ -1,12 +1,12 @@
 #include "types.h"
 
-/* --- sub_08010958: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- ModeChannel_Apply: non-matching reference (asm slice provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "game.h"
 #include "macros.h"
 #include "types.h"
 
-extern void sub_080105B0(void *list, u8 index, u8 flag);
+extern void Blit_CopyEntry(void *list, u8 index, u8 flag);
 
 typedef struct ModeList {
     void *list;
@@ -17,7 +17,7 @@ typedef struct ModeList {
 #define gModePairs ((ModeList *)0x08307EB8)
 #define gModeListB ((ModeList *)0x08307EBC)
 
-void sub_08010958(u8 a, u8 b)
+void ModeChannel_Apply(u8 a, u8 b)
 {
     u8 *base = (u8 *)0x03006110;
     register u8 *p2a asm("r9");
@@ -33,7 +33,7 @@ void sub_08010958(u8 a, u8 b)
         for (i = 0; i < a; i++) {
             if ((*(u16 *)(base + 0x26) >> i) & 1) {
                 u32 idx = gGameStuff.pendingMode - 1;
-                sub_080105B0(listA[idx].list, i, 1);
+                Blit_CopyEntry(listA[idx].list, i, 1);
             }
         }
     }
@@ -52,7 +52,7 @@ void sub_08010958(u8 a, u8 b)
             count = pair[1];
             while (count != 0) {
                 u32 idx2 = gGameStuff.pendingMode - 1;
-                sub_080105B0(gModeListB[idx2].list, j, 0);
+                Blit_CopyEntry(gModeListB[idx2].list, j, 0);
                 j++;
                 count--;
             }

@@ -1,6 +1,6 @@
-extern void sub_08017000(void);
+extern void FrogStatusBar_Update(void);
 
-void sub_08013F94(void)
+void UpdateStatusBar(void)
 {
-    sub_08017000();
+    FrogStatusBar_Update();
 }

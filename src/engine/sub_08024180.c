@@ -5,7 +5,7 @@ extern void sub_080210A0(u16 a0, const void *a1, u16 a2, u8 a3, u16 a4, u8 a5, u
 
 extern const u32 sLevelLayoutPtrs_312E6C[6];
 
-void sub_08024180(void)
+void LevelLayout_LoadEntities59(void)
 {
     u8 i;
 

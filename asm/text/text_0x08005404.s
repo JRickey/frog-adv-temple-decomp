@@ -2,7 +2,7 @@
 @ Address-aligned bucket of unparsed baserom bytes.
 @ Range:  [0x08005404, 0x080054a8)  (0xa4 bytes)
 @
-@ Post-peel chunk after sub_080053F4.
+@ Post-peel chunk after Gate_FinishScene.
 @
 @ This file holds raw bytes only; no instructions are assembled here.
 
@@ -16,5 +16,5 @@ text_08005404:
 
 @ Thumb function alias so C code can BL to this address correctly.
         .thumb_func
-        .global sub_08005404
-        .set    sub_08005404, text_08005404
+        .global Entity_UpdateHitAndDraw
+        .set    Entity_UpdateHitAndDraw, text_08005404

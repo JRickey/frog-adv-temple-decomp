@@ -1,9 +1,9 @@
 #include "sound.h"
 #include "macros.h"
 
-/* sub_0802EA80 — per-frame countdown-bounce envelope tick (envelope-A0).
+/* SoundEnvelope_TickA0 — per-frame countdown-bounce envelope tick (envelope-A0).
  *
- * Sister of sub_0802EC7C in sound_channel.c. Same two-stage shape — three
+ * Sister of Sound_UpdateChannelEnvelopesA in sound_channel.c. Same two-stage shape — three
  * inline channel envelopes embedded in SoundSystem itself, then a per-slot
  * bank walked via slotPtrTable — but each channel/slot exposes a SECOND
  * envelope block at +0x14 (envelope-A0), and the bounce model is different:
@@ -32,7 +32,7 @@
  *     otherwise emits the operands in the opposite order.
  */
 
-void sub_0802EA80(void)
+void SoundEnvelope_TickA0(void)
 {
     register SoundSystem **gpsp asm("ip");
     register SoundSystem **gpspMirror asm("r6");
@@ -280,7 +280,7 @@ void SoundEnvelope_SetRamp(u8 absolute, u16 target, u16 frames, s32 mode)
 }
 #endif
 
-/* sub_0802EBF8 configures the clamp envelope-A (at +0x1c) for one channel,
+/* SoundEnvelope_InitClamp configures the clamp envelope-A (at +0x1c) for one channel,
  * initializing it from a SoundDrainEntry baseline value. Shipped NAKED +
  * NON_MATCHING: classify_unmatchable reports class3-libgcc (wide r4-r7
  * prologue plus a lone __divsi3 BL — agbcc emits a narrower prologue
@@ -296,7 +296,7 @@ void SoundEnvelope_SetRamp(u8 absolute, u16 target, u16 frames, s32 mode)
  * and copies env->_pad06 to channel[0] (acc field).
  */
 #if defined(NON_MATCHING) || defined(NON_MATCHING_sub_0802EBF8)
-void sub_0802EBF8(s16 target, u16 frames, s32 mode)
+void SoundEnvelope_InitClamp(s16 target, u16 frames, s32 mode)
 {
     SoundSystem *ss;
     SoundDrainEntry *drain;
@@ -333,7 +333,7 @@ void sub_0802EBF8(s16 target, u16 frames, s32 mode)
 }
 #else
 NAKED
-void sub_0802EBF8(s16 target, u16 frames, s32 mode)
+void SoundEnvelope_InitClamp(s16 target, u16 frames, s32 mode)
 {
     asm(".syntax unified\n"
         "    push    {r4, r5, r6, r7, lr}\n"

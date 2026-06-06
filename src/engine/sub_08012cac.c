@@ -7,7 +7,7 @@ extern u8 gIwram_6400[];
 extern u8 gIwram_6410[];
 extern u8 gIwram_60A0[];
 
-void sub_08012CAC(void)
+void BgScrollAnim_Update(void)
 {
     register u8 *scrollState asm("r5");
     register GameStuff *gs asm("r4");

@@ -1,35 +1,35 @@
 #include "sound.h"
 #include "macros.h"
 
-/* sub_0802F4B0 — sound-system per-VBlank mixer tick.
+/* SoundMixer_VBlankUpdate — sound-system per-VBlank mixer tick.
  *
  * Architectural keystone of the sound subsystem. Called once per frame
- * from the VBlank IRQ handler (sub_08000790), after the OAM/BG-scroll
+ * from the VBlank IRQ handler (VBlankIntr), after the OAM/BG-scroll
  * shadow flush. Drives the entire sound-channel state machine:
  *
  *   1. Dispatches the 8 per-frame sub-update routines in fixed order:
- *      sub_080315D8 (opcode-script dispatcher),
- *      sub_0802E934 (envelope-dual tick),
- *      sub_0802EA80 (envelope-A0 tick),
- *      sub_0802EC7C (envelope-A tick),
- *      sub_0802ED5C (envelope-B tick),
- *      sub_0802EDF0 (stream-cursor advancer),
- *      sub_0802F054 (envelope-C tick),
- *      sub_0802F2FC (pan-envelope tick).
+ *      Sound_OpcodeDispatch (opcode-script dispatcher),
+ *      Sound_TickDualEnvelopes (envelope-dual tick),
+ *      SoundEnvelope_TickA0 (envelope-A0 tick),
+ *      Sound_UpdateChannelEnvelopesA (envelope-A tick),
+ *      Sound_TickSlotEnvelopeB (envelope-B tick),
+ *      Sound_TickStreamHead (stream-cursor advancer),
+ *      Sound_TickEnvelopeC (envelope-C tick),
+ *      SoundPan_Tick (pan-envelope tick).
  *
  *   2. Stage 1 — fade-request slots (3 entries, ss->chFlags[0..2]):
  *      bit 0x40 set means the active envelopes contributed enough to
  *      this channel that the mixer must apply a fade update. Sum 6
  *      halfwords scattered across slot+0x20..+0x3c (the 6 per-active-
  *      voice mix accumulators), pack the high 16 bits into r0/r1, and
- *      forward to sub_0802E5D8 (pitch-and-fade interpolator).
+ *      forward to Sound_EmitPsgPitch (pitch-and-fade interpolator).
  *
  *   3. Stage 2 — volume-request slots (4 entries, ss->chFlags[0..3]):
  *      bit 0x80 set means channel volume changed; re-apply. Reads a
  *      per-channel halfword at +0x90 (volume), multiplies by the byte
  *      at +0x93 (mix scale), and either reads pan-base from +0xbc
  *      (normal) or +0xbe (high-bit pan-override) before forwarding to
- *      sub_0802E684 (per-channel volume setter). Also clears flag
+ *      SoundVolume_Emit (per-channel volume setter). Also clears flag
  *      0xfffffdff (== ~0x200) on bit 0x200 set, restarting the PSG
  *      frequency register through sChannelFreqRegTable. Channels 0-2
  *      reuse the cached pitch at ss+0xb4; channel 3 restarts the existing
@@ -46,11 +46,11 @@
  *          the coefficient pool 0x4ac8 / 0xb538 / 0xb818 (and ROM-data at
  *          0x083dda1c for the LUT base), gated by the input value 0x3f /
  *          0x7f / negative split,
- *        - bracket the writes to mixTable+0x18..0x1a with sub_0802E418
+ *        - bracket the writes to mixTable+0x18..0x1a with Sound_Lock
  *          (mutation lock; increments refcount at ss+0xbb) and
- *          sub_0802E3F8 (unlock).
+ *          Sound_Unlock (unlock).
  *        - if slot.flags bit 0x40 set, sum 6 halfwords (different
- *          stride/offsets than stage 1) and forward to sub_080301C4
+ *          stride/offsets than stage 1) and forward to Sound_CalcNotePeriod
  *          (mix-table commit), writing the result to mixEntry+0x14.
  *        - if slot.flags bit 0x8000 set, clear ss->slotPtrTable[i] (slot
  *          retire).
@@ -59,8 +59,8 @@
  *      clearing flag bit 0x500 from slot.flags entries that have both
  *      flag 0x200 and any of the 0x1400 bits set; writes a pointer (the
  *      ss-relative byte offset cached in r4) into a parallel table at
- *      ss+0xc4. Then bracketed by sub_0802E418 / sub_0802E3F8 again, and
- *      finally calls sub_080325B0 (sound-system tail).
+ *      ss+0xc4. Then bracketed by Sound_Lock / Sound_Unlock again, and
+ *      finally calls Sound_ProcessRequests (sound-system tail).
  *
  * Shipped as NAKED inline asm + NON_MATCHING reference C. This is the
  * deepest stack of patterns we have seen so far:
@@ -76,7 +76,7 @@
  *
  * Current forced-C evidence: filling in the stage-3 pitch/pan LUT path and
  * period-commit side effect improved the isolated candidate to byte_diff 813 /
- * insn_diff 345. Spelling the stage-1 sub_0802E5D8 arguments as the target's
+ * insn_diff 345. Spelling the stage-1 Sound_EmitPsgPitch arguments as the target's
  * `sum << 16` byte extraction, preserving the stage-1 masked arithmetic shift,
  * mirroring the stage-3 period-commit byte extraction, and correcting the final
  * retire-pass mask to 0x1400 drops the current best to byte_diff 743 /
@@ -99,27 +99,27 @@
  * for now.
  *
  * See docs/subsystems.md "Sound" for the cluster overview and
- * docs/unknowns.md (sub_0802F4B0 section) for blocker history.
+ * docs/unknowns.md (SoundMixer_VBlankUpdate section) for blocker history.
  */
 
 /* Forward declarations of the 8 sub-update routines this function calls.
  * All live in the sibling sound_*.c files in this directory. */
-extern void sub_080315D8(void);
-extern void sub_0802E934(void);
-extern void sub_0802EA80(void);
-extern void sub_0802EC7C(void);
-extern void sub_0802ED5C(void);
-extern void sub_0802EDF0(void);
-extern void sub_0802F054(void);
-extern void sub_0802F2FC(void);
+extern void Sound_OpcodeDispatch(void);
+extern void Sound_TickDualEnvelopes(void);
+extern void SoundEnvelope_TickA0(void);
+extern void Sound_UpdateChannelEnvelopesA(void);
+extern void Sound_TickSlotEnvelopeB(void);
+extern void Sound_TickStreamHead(void);
+extern void Sound_TickEnvelopeC(void);
+extern void SoundPan_Tick(void);
 
 /* Per-channel and per-slot helpers (still in asm/disasm_*.s). */
-extern void sub_0802E5D8(u32 hi16, u32 lo16, u32 channelIdx);
-extern void sub_0802E684(u32 panBase, u32 channelIdx);
-extern void sub_0802E418(void);
-extern void sub_0802E3F8(void);
-extern u32 sub_080301C4(u32 entry, u32 mid, u32 lo);
-extern void sub_080325B0(void);
+extern void Sound_EmitPsgPitch(u32 hi16, u32 lo16, u32 channelIdx);
+extern void SoundVolume_Emit(u32 panBase, u32 channelIdx);
+extern void Sound_Lock(void);
+extern void Sound_Unlock(void);
+extern u32 Sound_CalcNotePeriod(u32 entry, u32 mid, u32 lo);
+extern void Sound_ProcessRequests(void);
 extern vu16 *const sChannelFreqRegTable[4];
 
 #define SOUND_PAN_COEFF_RISE   0x4ac8
@@ -151,7 +151,7 @@ extern vu16 *const sChannelFreqRegTable[4];
  * byte-match; agbcc 2.x's allocator picks low-reg shapes from any
  * plausible C input and the baserom uses sl/r9/r8 for loop state. */
 
-void sub_0802F4B0(void)
+void SoundMixer_VBlankUpdate(void)
 {
     SoundSystem *ss;
     SoundSlot *slot;
@@ -161,14 +161,14 @@ void sub_0802F4B0(void)
     u32 stride;
     u32 panBase;
 
-    sub_080315D8();
-    sub_0802E934();
-    sub_0802EA80();
-    sub_0802EC7C();
-    sub_0802ED5C();
-    sub_0802EDF0();
-    sub_0802F054();
-    sub_0802F2FC();
+    Sound_OpcodeDispatch();
+    Sound_TickDualEnvelopes();
+    SoundEnvelope_TickA0();
+    Sound_UpdateChannelEnvelopesA();
+    Sound_TickSlotEnvelopeB();
+    Sound_TickStreamHead();
+    Sound_TickEnvelopeC();
+    SoundPan_Tick();
 
     for (i = 0; i <= SOUND_INLINE_CHANNEL_COUNT - 1; i++) {
         ss = gpSoundSystem;
@@ -179,7 +179,7 @@ void sub_0802F4B0(void)
             {
                 u32 sumShift = sum << 16;
 
-                sub_0802E5D8(sumShift >> 24, (s32)(sumShift & 0x00ff0000) >> 16, i);
+                Sound_EmitPsgPitch(sumShift >> 24, (s32)(sumShift & 0x00ff0000) >> 16, i);
             }
         }
     }
@@ -192,7 +192,7 @@ void sub_0802F4B0(void)
             c = (b >> 8) ? (b >> 8) + 1 : 0;
             stride = SOUND_SYSTEM_CHANNEL_SCALE(ss, i) * c << 8 >> 16;
             panBase = SOUND_SYSTEM_PAN_OVERRIDE_VALUE(ss, ss->chFlags[i]);
-            sub_0802E684((panBase * stride << 8) >> 16, i);
+            SoundVolume_Emit((panBase * stride << 8) >> 16, i);
         }
         if (gpSoundSystem->chFlags[i] & SOUND_SLOT_FLAG_RETIRE_PENDING) {
             vu16 *reg;
@@ -261,11 +261,11 @@ void sub_0802F4B0(void)
             }
 
             panScale = SOUND_SYSTEM_PAN_OVERRIDE_VALUE(gpSoundSystem, slot->flags);
-            sub_0802E418();
+            Sound_Lock();
             entry->panLeft = (left * panScale) >> 8;
             entry->panRight = (right * panScale) >> 8;
             entry->panMode = (u8)panMode;
-            sub_0802E3F8();
+            Sound_Unlock();
         }
         if (slot->flags & SOUND_FLAG_ENV_DIRTY) {
             slot->flags &= ~SOUND_FLAG_ENV_DIRTY;
@@ -277,7 +277,7 @@ void sub_0802F4B0(void)
                 {
                     u32 sum16 = (sum << 16) >> 16;
 
-                    entry->period = (u16)sub_080301C4(entry->base, sum16 >> 8, (sum16 << 24) >> 24);
+                    entry->period = (u16)Sound_CalcNotePeriod(entry->base, sum16 >> 8, (sum16 << 24) >> 24);
                 }
             }
         }
@@ -286,7 +286,7 @@ void sub_0802F4B0(void)
         }
     }
 
-    sub_0802E418();
+    Sound_Lock();
     for (i = 0; i < gpSoundSystem->count; i++) {
         slot = SOUND_SYSTEM_SLOT_PTR_TABLE(gpSoundSystem)[i];
         if (slot != NULL && (slot->flags & SOUND_SLOT_FLAG_RETIRE_PENDING) &&
@@ -295,13 +295,13 @@ void sub_0802F4B0(void)
             SOUND_SYSTEM_RETIRE_TABLE(gpSoundSystem)[i] = (u32)SOUND_SYSTEM_MIX_ENTRY(gpSoundSystem, i);
         }
     }
-    sub_0802E3F8();
-    sub_080325B0();
+    Sound_Unlock();
+    Sound_ProcessRequests();
 }
 
 #else
 NAKED
-void sub_0802F4B0(void)
+void SoundMixer_VBlankUpdate(void)
 {
     asm(".syntax unified\n"
         "    push    {r4, r5, r6, r7, lr}\n"
@@ -310,14 +310,14 @@ void sub_0802F4B0(void)
         "    mov     r5, r8\n"
         "    push    {r5, r6, r7}\n"
         "    sub     sp, #0xc\n"
-        "    bl      sub_080315D8\n"
-        "    bl      sub_0802E934\n"
-        "    bl      sub_0802EA80\n"
-        "    bl      sub_0802EC7C\n"
-        "    bl      sub_0802ED5C\n"
-        "    bl      sub_0802EDF0\n"
-        "    bl      sub_0802F054\n"
-        "    bl      sub_0802F2FC\n"
+        "    bl      Sound_OpcodeDispatch\n"
+        "    bl      Sound_TickDualEnvelopes\n"
+        "    bl      SoundEnvelope_TickA0\n"
+        "    bl      Sound_UpdateChannelEnvelopesA\n"
+        "    bl      Sound_TickSlotEnvelopeB\n"
+        "    bl      Sound_TickStreamHead\n"
+        "    bl      Sound_TickEnvelopeC\n"
+        "    bl      SoundPan_Tick\n"
         "    movs    r0, #0\n"
         "    mov     r9, r0\n"
         "    movs    r4, #0\n"
@@ -357,7 +357,7 @@ void sub_0802F4B0(void)
         "    ands    r1, r2\n"
         "    asrs    r1, r1, #0x10\n"
         "    mov     r2, r9\n"
-        "    bl      sub_0802E5D8\n"
+        "    bl      Sound_EmitPsgPitch\n"
         "_0802F52C:\n"
         "    adds    r4, #0x24\n"
         "    movs    r0, #1\n"
@@ -420,7 +420,7 @@ void sub_0802F4B0(void)
         "    lsrs    r1, r0, #0x10\n"
         "    adds    r0, r1, #0\n"
         "    mov     r1, r9\n"
-        "    bl      sub_0802E684\n"
+        "    bl      SoundVolume_Emit\n"
         "_0802F5A4:\n"
         "    ldr     r2, _0802F5DC            @ =gpSoundSystem (0x030065e0)\n"
         "    ldr     r3, [r2, #0]\n"
@@ -636,7 +636,7 @@ void sub_0802F4B0(void)
         "    ldrh    r0, [r0, #0]\n"
         "    adds    r4, r0, #0\n"
         "    str     r2, [sp, #8]\n"
-        "    bl      sub_0802E418\n"
+        "    bl      Sound_Lock\n"
         "    adds    r0, r7, #0\n"
         "    muls    r0, r4\n"
         "    asrs    r0, r0, #8\n"
@@ -648,7 +648,7 @@ void sub_0802F4B0(void)
         "    strb    r0, [r3, #0x19]\n"
         "    ldr     r2, [sp, #8]\n"
         "    strb    r2, [r3, #0x1a]\n"
-        "    bl      sub_0802E3F8\n"
+        "    bl      Sound_Unlock\n"
         "_0802F75E:\n"
         "    ldr     r1, [r5, #0x38]\n"
         "    movs    r0, #0x40\n"
@@ -687,7 +687,7 @@ void sub_0802F4B0(void)
         "    lsrs    r1, r2, #8\n"
         "    lsls    r2, r2, #0x18\n"
         "    lsrs    r2, r2, #0x18\n"
-        "    bl      sub_080301C4\n"
+        "    bl      Sound_CalcNotePeriod\n"
         "    strh    r0, [r4, #0x14]\n"
         "_0802F7AE:\n"
         "    ldr     r1, [r5, #0x38]\n"
@@ -721,7 +721,7 @@ void sub_0802F4B0(void)
         "    bge     _0802F7E8\n"
         "    b       _0802F628\n"
         "_0802F7E8:\n"
-        "    bl      sub_0802E418\n"
+        "    bl      Sound_Lock\n"
         "    movs    r1, #0\n"
         "    mov     r9, r1\n"
         "    ldr     r1, _0802F868            @ =gpSoundSystem (0x030065e0)\n"
@@ -774,8 +774,8 @@ void sub_0802F4B0(void)
         "    cmp     r9, r0\n"
         "    blt     _0802F7FE\n"
         "_0802F84E:\n"
-        "    bl      sub_0802E3F8\n"
-        "    bl      sub_080325B0\n"
+        "    bl      Sound_Unlock\n"
+        "    bl      Sound_ProcessRequests\n"
         "    add     sp, #0xc\n"
         "    pop     {r3, r4, r5}\n"
         "    mov     r8, r3\n"
@@ -794,20 +794,20 @@ void sub_0802F4B0(void)
 extern vu16 *const sChannelRegTable[4];
 extern vu16 *const sChannelFreqRegTable[4];
 
-/* sub_0802F870 — write to a PSG channel's duty/envelope byte register.
+/* Sound_WritePsgDuty — write to a PSG channel's duty/envelope byte register.
  * Sets the byte at sChannelRegTable[channelIdx] to (value << 6). */
-void sub_0802F870(u32 value, u32 channelIdx)
+void Sound_WritePsgDuty(u32 value, u32 channelIdx)
 {
     *((u8 *)sChannelRegTable[channelIdx]) = value << 6;
 }
 
-/* sub_0802F884 — write to channel 3 (noise) frequency register byte. */
-void sub_0802F884(u8 value)
+/* Sound_WriteNoiseFreq — write to channel 3 (noise) frequency register byte. */
+void Sound_WriteNoiseFreq(u8 value)
 {
     *((u8 *)sChannelFreqRegTable[3]) = value;
 }
 
-/* sub_0802F890 — update a PSG channel's duty/envelope register and mark dirty.
+/* Sound_WritePsgVolume — update a PSG channel's duty/envelope register and mark dirty.
  *
  * If bit 3 of value is clear: reads the current halfword, masks with
  * 0xf0c0, OR-s in (value << 8), and writes back.
@@ -824,7 +824,7 @@ void sub_0802F884(u8 value)
  *   - Common tail: ss+0x10 is computed in r2 via "ss = (u8*)ss + 0x10",
  *     giving adds r2, #16 then adds r2, r2, r3.
  */
-void sub_0802F890(u8 value, u32 channelIdx)
+void Sound_WritePsgVolume(u8 value, u32 channelIdx)
 {
     register u8 val asm("r4");
     u32 byteOff;
@@ -868,7 +868,7 @@ common_tail:
     *pF = flags;
 }
 
-void sub_0802F8F0(int channelIdx)
+void Sound_MarkChannelFullDirty(int channelIdx)
 {
     if (channelIdx <= 3) {
         SoundSystem *ss = gpSoundSystem;
@@ -888,7 +888,7 @@ void sub_0802F8F0(int channelIdx)
     }
 }
 
-void sub_0802F930(void *streamDesc)
+void Sound_LoadWaveRam(void *streamDesc)
 {
     u32 *desc = (u32 *)streamDesc;
     vu32 *waveRam = (vu32 *)0x04000090;

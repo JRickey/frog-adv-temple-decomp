@@ -2,13 +2,13 @@
 #include "macros.h"
 #include "types.h"
 
-extern s8 sub_0800A7A8(s8 a, s16 x, s16 y);
-extern u8 sub_0800679C(u8 *base, u32 selector, u32 bit);
-extern void sub_08006600(u8 *base, u32 selector, u32 bit);
-extern void sub_080066C4(u8 *base, u32 selector, u32 bit);
-extern void sub_0800A83C(u8 a, u8 b, u8 c, u8 d);
+extern s8 EntityHitbox_FindPoint(s8 a, s16 x, s16 y);
+extern u8 ModeControl_GetFlag(u8 *base, u32 selector, u32 bit);
+extern void CtrlFlags_SetBit(u8 *base, u32 selector, u32 bit);
+extern void ModeControl_ClearBit(u8 *base, u32 selector, u32 bit);
+extern void EntityHitbox_RegisterGridPoints(u8 a, u8 b, u8 c, u8 d);
 
-void sub_0800AA70(u8 tile)
+void Gate_HandleGateTile(u8 tile)
 {
     struct IwramAt35E0 *p35E0;
     u8 result;
@@ -19,47 +19,47 @@ void sub_0800AA70(u8 tile)
 
     if (tile == 20) {
         p35E0 = &gIwram_35E0;
-        result = (u8)sub_0800A7A8(15, p35E0->_field_8, p35E0->_field_A);
+        result = (u8)EntityHitbox_FindPoint(15, p35E0->_field_8, p35E0->_field_A);
 
         switch ((s8)result) {
         case 0:
             base4 = (u8 *)0x03006110;
-            sub_08006600(base4, 5, 6);
-            sub_080066C4(base4, 5, 1);
+            CtrlFlags_SetBit(base4, 5, 6);
+            ModeControl_ClearBit(base4, 5, 1);
             break;
         case 1:
             base4 = (u8 *)0x03006110;
-            sub_08006600(base4, 5, 7);
-            sub_080066C4(base4, 5, 0);
+            CtrlFlags_SetBit(base4, 5, 7);
+            ModeControl_ClearBit(base4, 5, 0);
             break;
         case 2:
             base5 = (u8 *)0x03006110;
-            if (sub_0800679C(base5, 5, 2) == 0) {
-                sub_0800A83C(13, p35E0->_field_18, 0, 1);
-                sub_08006600(base5, 8, 1);
+            if (ModeControl_GetFlag(base5, 5, 2) == 0) {
+                EntityHitbox_RegisterGridPoints(13, p35E0->_field_18, 0, 1);
+                CtrlFlags_SetBit(base5, 8, 1);
             }
             break;
         case 3:
             base5 = (u8 *)0x03006110;
-            if (sub_0800679C(base5, 5, 3) == 0) {
-                sub_0800A83C(14, p35E0->_field_18, 0, 1);
-                sub_08006600(base5, 8, 2);
+            if (ModeControl_GetFlag(base5, 5, 3) == 0) {
+                EntityHitbox_RegisterGridPoints(14, p35E0->_field_18, 0, 1);
+                CtrlFlags_SetBit(base5, 8, 2);
             }
             break;
         }
 
         exitBase = (u8 *)0x03006110;
         exitBit = result;
-        sub_08006600(exitBase, 5, exitBit);
+        CtrlFlags_SetBit(exitBase, 5, exitBit);
         return;
     }
 
     if (tile == 21) {
-        sub_08006600((u8 *)0x03006110, 3, 0);
+        CtrlFlags_SetBit((u8 *)0x03006110, 3, 0);
         return;
     }
 
     base4 = (u8 *)0x03006110;
-    sub_080066C4(base4, 5, 0);
-    sub_080066C4(base4, 5, 1);
+    ModeControl_ClearBit(base4, 5, 0);
+    ModeControl_ClearBit(base4, 5, 1);
 }

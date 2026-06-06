@@ -31,11 +31,11 @@ extern struct Queue_1549C gIwram_6580;
 extern const struct DmaJob_1549C gDmaJob_08307D98;
 extern const struct DmaJob_1549C gDmaJobTable_08307DA8[];
 
-extern void sub_08012CAC(void);
-extern u32 sub_08013C60(struct DmaJob_1549C job, u8 mode, struct Queue_1549C *queue);
-extern u32 sub_08011884(void);
+extern void BgScrollAnim_Update(void);
+extern u32 DmaJob_Advance(struct DmaJob_1549C job, u8 mode, struct Queue_1549C *queue);
+extern u32 Anim_CheckScreenIdle(void);
 
-void sub_0801549C(void)
+void SceneLoad_DmaUpdate(void)
 {
     const struct DmaJob_1549C *job;
     register u32 offset asm("r3");
@@ -51,11 +51,11 @@ void sub_0801549C(void)
         goto transfer_64c0;
     }
     case 1:
-        sub_08012CAC();
+        BgScrollAnim_Update();
         goto reload_transfer_64c0;
     case 2:
         job = &gDmaJob_08307D98;
-        sub_08013C60(*job, ((const u8 *)job)[2], (struct Queue_1549C *)0x03006580);
+        DmaJob_Advance(*job, ((const u8 *)job)[2], (struct Queue_1549C *)0x03006580);
     reload_transfer_64c0: {
         /* r1 table anchor keeps the reload path as `ldr r1, table; ldr r0, state`. */
         const struct DmaJob_1549C *table;
@@ -65,7 +65,7 @@ void sub_0801549C(void)
         job = (const struct DmaJob_1549C *)(offset + (u32)table);
     }
     transfer_64c0:
-        sub_08013C60(*job, ((const u8 *)job)[2], &gIwram_64C0);
+        DmaJob_Advance(*job, ((const u8 *)job)[2], &gIwram_64C0);
         break;
     case 3: {
         /* r0 table anchor gives case 3 the baserom's table-load before state-load order. */
@@ -74,13 +74,13 @@ void sub_0801549C(void)
         table = gDmaJobTable_08307DA8;
         offset = gIwram_3610.state << 4;
         job = (const struct DmaJob_1549C *)(offset + (u32)table);
-        if (sub_08013C60(*job, ((const u8 *)job)[2], &gIwram_64C0) != 0)
+        if (DmaJob_Advance(*job, ((const u8 *)job)[2], &gIwram_64C0) != 0)
             gIwram_3610.state = 0xff;
-        sub_08011884();
+        Anim_CheckScreenIdle();
         break;
     }
     case 4:
-        sub_08012CAC();
+        BgScrollAnim_Update();
         if (gGameStuff._unk00 - gIwram_64C0._seed > 7) {
             struct SceneState_1549C *scene;
             const struct DmaJob_1549C *cfg;
@@ -106,7 +106,7 @@ void sub_0801549C(void)
             offset = gIwram_3610.state << 4;
             job = (const struct DmaJob_1549C *)(offset + (u32)table);
         }
-        sub_08013C60(*job, ((const u8 *)job)[2], &gIwram_64C0);
+        DmaJob_Advance(*job, ((const u8 *)job)[2], &gIwram_64C0);
         break;
     }
 }

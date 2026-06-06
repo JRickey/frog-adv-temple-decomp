@@ -885,7 +885,7 @@
 @   0x0801ea04: 5398        strh	r0, [r3, r6]
 @   0x0801ea06: 0300        lsls	r0, r0, #12
 
-        thumb_func_start sub_0801E28C
-sub_0801E28C: @ 0x0801e28c
+        thumb_func_start Level_Load
+Level_Load: @ 0x0801e28c
         .incbin "frog_us_baserom.gba", 0x1e28c, 0x77c
-        thumb_func_end sub_0801E28C
+        thumb_func_end Level_Load

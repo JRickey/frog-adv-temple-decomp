@@ -1,18 +1,18 @@
 #include "types.h"
 #include "iwram.h"
 
-extern void sub_0800E85C(unsigned int arg);
-extern void sub_0800EB1C(void);
-extern void sub_08013B54(void);
-extern void sub_0800F24C(unsigned int arg);
-extern void sub_0800EBDC(unsigned int arg);
-extern void sub_08012CAC(void);
-extern void sub_08016A40(void);
-extern void sub_0800EE94(u8 layer);
+extern void CharLayers_Upload(unsigned int arg);
+extern void FrogOam_Init(void);
+extern void ResetBgAnimState(void);
+extern void Scroll_UpdateCamera(unsigned int arg);
+extern void BgScrollBlit(unsigned int arg);
+extern void BgScrollAnim_Update(void);
+extern void StatusBar_Update(void);
+extern void BgLayer_Enable(u8 layer);
 extern void sub_08010A44(u8 a, u8 b);
-extern void sub_08010958(u8 a, u8 b);
-extern void sub_08017000(void);
-extern u8 sub_0801185C(u8 range);
+extern void ModeChannel_Apply(u8 a, u8 b);
+extern void FrogStatusBar_Update(void);
+extern u8 GetVcountRandom(u8 range);
 extern u8 gIwram_53A0[];
 extern u8 gIwram_549F[];
 extern u8 gIwram_3610[];
@@ -25,20 +25,20 @@ struct TransferDesc_13D44 {
     u32 wordC;
 };
 
-extern void sub_08013C60(struct TransferDesc_13D44 desc, u8 mode, void *buf);
+extern void DmaJob_Advance(struct TransferDesc_13D44 desc, u8 mode, void *buf);
 
-void sub_08013D1C(void)
+void InitScene3Layer(void)
 {
-    sub_0800E85C(3);
-    sub_0800EB1C();
-    sub_08013B54();
-    sub_0800F24C(3);
-    sub_0800EBDC(3);
-    sub_08012CAC();
-    sub_08016A40();
+    CharLayers_Upload(3);
+    FrogOam_Init();
+    ResetBgAnimState();
+    Scroll_UpdateCamera(3);
+    BgScrollBlit(3);
+    BgScrollAnim_Update();
+    StatusBar_Update();
 }
 
-void sub_08013D44(void)
+void BgBlendTilemapUpdate(void)
 {
     u8 *scrollBase;
     u8 *scrollFlag;
@@ -51,7 +51,7 @@ void sub_08013D44(void)
         *(u16 *)0x04000050 = 0x1744;
         *(u16 *)0x04000052 = 0x0C04;
         *scrollFlag &= 0xFE;
-        sub_0800EE94(2);
+        BgLayer_Enable(2);
     }
 
     control = (u8 *)&gIwram_6110;
@@ -60,23 +60,23 @@ void sub_08013D44(void)
     }
 
     sub_08010A44(1, 1);
-    sub_08017000();
+    FrogStatusBar_Update();
 
     desc = (const struct TransferDesc_13D44 *)0x08307238;
-    sub_08013C60(*desc, ((const u8 *)desc)[2], (void *)0x030064C0);
+    DmaJob_Advance(*desc, ((const u8 *)desc)[2], (void *)0x030064C0);
 }
 
-void sub_08013DD4(void)
+void InitScene2LayerA(void)
 {
-    sub_0800E85C(2);
-    sub_0800EB1C();
-    sub_08010958(1, 1);
-    sub_0800F24C(2);
-    sub_0800EBDC(2);
-    sub_08016A40();
+    CharLayers_Upload(2);
+    FrogOam_Init();
+    ModeChannel_Apply(1, 1);
+    Scroll_UpdateCamera(2);
+    BgScrollBlit(2);
+    StatusBar_Update();
 }
 
-void sub_08013DFC(u8 n)
+void PopulateRasterScrollBuffer(u8 n)
 {
     u8 i;
 
@@ -85,7 +85,7 @@ void sub_08013DFC(u8 n)
         u8 *arr = gIwram_53A0;
         u8 *limit = arr + 0xFF;
         u8 *writeIdx = arr + 0xFE;
-        u8 rnd = sub_0801185C(*limit);
+        u8 rnd = GetVcountRandom(*limit);
         u8 j = rnd;
         int dst;
 

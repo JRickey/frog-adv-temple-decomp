@@ -1,8 +1,8 @@
 #include "game.h"
 #include "types.h"
 
-extern void sub_08020C78(u32 sound);
-extern void sub_0802D8F8(void);
+extern void Sound_Play(u32 sound);
+extern void Sound_Reset(void);
 
 /* Two-player link-cable handshake state machine.
  *
@@ -10,9 +10,9 @@ extern void sub_0802D8F8(void);
  * 0x03005398 link word carries the menu/cancel event; the 0x03005370 control
  * struct holds the five step bytes exchanged with the other unit (offsets
  * 0/4/8/12/16). Each (phase, event) pair plays a confirmation sound via
- * sub_08020C78 and advances or rolls back the step bytes. Returns 1 on every
+ * Sound_Play and advances or rolls back the step bytes. Returns 1 on every
  * path except the cancel branch (phase 2, event 16, step[12] settled at 0x3)
- * which tears the link down via sub_0802D8F8 and returns 0.
+ * which tears the link down via Sound_Reset and returns 0.
  *
  * Matching notes (old_agbcc): the inner dispatch on the link word lowers to two
  * sparse cmp-cascades, not jump tables. -fforce-addr keeps the 0x03005370 base
@@ -24,7 +24,7 @@ extern void sub_0802D8F8(void);
  * masked value in a fresh register so the control pointer wins the low register
  * the way the baserom colours that block. */
 
-u8 sub_0800E4BC(void)
+u8 AnimCtrl_RunPhase(void)
 {
     u8 *phase;
     u8 *ctrl;
@@ -40,7 +40,7 @@ u8 sub_0800E4BC(void)
         switch (*(u16 *)0x03005398) {
         case 1: {
             u8 *c;
-            sub_08020C78(2);
+            Sound_Play(2);
             c = (u8 *)0x03005370;
             c[4] = 3;
             c[8] = 1;
@@ -48,14 +48,14 @@ u8 sub_0800E4BC(void)
         }
         case 2: {
             u8 *c;
-            sub_08020C78(2);
+            Sound_Play(2);
             c = (u8 *)0x03005370;
             c[4] = 1;
             c[8] = 3;
             break;
         }
         case 64:
-            sub_08020C78(1);
+            Sound_Play(1);
             ctrl = (u8 *)0x03005370;
             mask = 15;
             if ((mask & ctrl[4]) == 3) {
@@ -63,7 +63,7 @@ u8 sub_0800E4BC(void)
             }
             goto p1_advance;
         case 16:
-            sub_08020C78(1);
+            Sound_Play(1);
             ctrl = (u8 *)0x03005370;
             mask = 15;
             if ((mask & ctrl[4]) != 3) {
@@ -92,7 +92,7 @@ u8 sub_0800E4BC(void)
         switch (*(u16 *)0x03005398) {
         case 4: {
             u8 *c;
-            sub_08020C78(2);
+            Sound_Play(2);
             c = (u8 *)0x03005370;
             c[12] = 3;
             c[16] = 1;
@@ -100,7 +100,7 @@ u8 sub_0800E4BC(void)
         }
         case 8: {
             u8 *c;
-            sub_08020C78(2);
+            Sound_Play(2);
             c = (u8 *)0x03005370;
             c[12] = 1;
             c[16] = 3;
@@ -110,12 +110,12 @@ u8 sub_0800E4BC(void)
             u8 mask2;
             u8 lo;
             u8 *ctrl2;
-            sub_08020C78(1);
+            Sound_Play(1);
             ctrl2 = (u8 *)0x03005370;
             mask2 = 15;
             if ((mask2 & ctrl2[12]) == 3) {
                 ret = 0;
-                sub_0802D8F8();
+                Sound_Reset();
                 break;
             }
             lo = mask2 & ctrl2[16];

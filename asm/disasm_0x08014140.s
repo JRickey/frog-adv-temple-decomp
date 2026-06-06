@@ -209,7 +209,7 @@
 @   0x080142d0: 60a0        str	r0, [r4, #8]
 @   0x080142d2: 0300        lsls	r0, r0, #12
 
-        thumb_func_start sub_08014140
-sub_08014140: @ 0x08014140
+        thumb_func_start AnimState_BlitStep
+AnimState_BlitStep: @ 0x08014140
         .incbin "frog_us_baserom.gba", 0x14140, 0x194
-        thumb_func_end sub_08014140
+        thumb_func_end AnimState_BlitStep

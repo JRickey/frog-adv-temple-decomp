@@ -2,7 +2,7 @@
 #include "types.h"
 
 /* Twelve-tone equal-temperament pitch lookup tables consumed by the
- * sound mixer (sub_080315D8 / sub_0802F4B0 cluster, still in asm).
+ * sound mixer (Sound_OpcodeDispatch / SoundMixer_VBlankUpdate cluster, still in asm).
  *
  * sNoteRatioTable maps a semitone index n to `0x1000 * 2^(n/12)`. The
  * first 48 entries cover 4 octaves of upward pitch ratios; entries

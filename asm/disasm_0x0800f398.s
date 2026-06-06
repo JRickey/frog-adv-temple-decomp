@@ -574,7 +574,7 @@
 @   0x0800f810: 63c0        str	r0, [r0, #60]	@ 0x3c
 @   0x0800f812: 0300        lsls	r0, r0, #12
 
-        thumb_func_start sub_0800F398
-sub_0800F398: @ 0x0800f398
+        thumb_func_start ScrollUpdate_Pass1
+ScrollUpdate_Pass1: @ 0x0800f398
         .incbin "frog_us_baserom.gba", 0xf398, 0x47c
-        thumb_func_end sub_0800F398
+        thumb_func_end ScrollUpdate_Pass1

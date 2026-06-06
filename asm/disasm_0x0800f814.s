@@ -601,7 +601,7 @@
 @   0x0800fcc2: 0000        movs	r0, r0
 @   0x0800fcc4: f800        ffff 	strb.w	pc, [r0, #255]!
 
-        thumb_func_start sub_0800F814
-sub_0800F814: @ 0x0800f814
+        thumb_func_start ScrollUpdate_Pass0
+ScrollUpdate_Pass0: @ 0x0800f814
         .incbin "frog_us_baserom.gba", 0xf814, 0x4b4
-        thumb_func_end sub_0800F814
+        thumb_func_end ScrollUpdate_Pass0

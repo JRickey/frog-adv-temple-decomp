@@ -3,7 +3,7 @@
 #include "macros.h"
 #include "types.h"
 
-extern void sub_08006A74(struct IwramAt35E0 *p, s8 a, s16 b, s8 c, s8 e);
+extern void PlayerState_Init(struct IwramAt35E0 *p, s8 a, s16 b, s8 c, s8 e);
 extern void Entity_Init(struct Entity *p, u8 a, s16 b, s16 c, u8 d, u16 e, u8 f, u8 g, u8 h, u16 i);
 
 struct SpawnRec {
@@ -20,9 +20,9 @@ struct SpawnRec {
  * state byte at +0x32 selects which array (one back), and `id` indexes into
  * the chosen array. The record's two leading halfwords become tile-to-pixel
  * positions (n*24 + 11) seeded into gIwram_35E0 / forwarded to Entity_Init,
- * while sub_08006A74 re-reads the bytes just stored into gIwram_35E0. */
+ * while PlayerState_Init re-reads the bytes just stored into gIwram_35E0. */
 
-void sub_08007874(u8 id)
+void Entity_SpawnFromRecord(u8 id)
 {
     struct SpawnRec *rec =
         (struct SpawnRec *)((const struct SpawnRec **)gIwram_6110.configTable)[gIwram_6110.state - 1] + (s8)id;
@@ -40,8 +40,8 @@ void sub_08007874(u8 id)
     gIwram_35E0._field_18 = rec->_b7;
     gIwram_35E0._field_19 = rec->_b8;
 
-    sub_08006A74(&gIwram_35E0, (s8)gIwram_35E0._data[0], *(s16 *)&gIwram_35E0._data[2], (s8)gIwram_35E0._data[4],
-                 gIwram_35E0._field_5);
+    PlayerState_Init(&gIwram_35E0, (s8)gIwram_35E0._data[0], *(s16 *)&gIwram_35E0._data[2], (s8)gIwram_35E0._data[4],
+                     gIwram_35E0._field_5);
 
     Entity_Init(gEntities, 0, px, py, b5, 1, 0, b6, b4, 16);
 }

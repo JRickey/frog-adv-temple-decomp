@@ -22,7 +22,7 @@ typedef struct {
     u8 unk13[3];
 } Dst08016360;
 
-void sub_08016360(Src08016360 *src, u8 count)
+void EntitySlots_Init(Src08016360 *src, u8 count)
 {
     u8 *flags;
     vu16 fill;

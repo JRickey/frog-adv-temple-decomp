@@ -34,7 +34,7 @@ extern u8 gIwram_53A0[];
  * scratch register for the comparison phase while channel B stays put: the
  * comparisons read cmpA/cmpB but the final floor-check reads the original chA,
  * and the last B-comparison reuses chB rather than cmpB. */
-void sub_0801223C(u32 unused0, u32 unused1, u32 unused2, u32 unused3, s32 frames)
+void InitScrollAnimSequence(u32 unused0, u32 unused1, u32 unused2, u32 unused3, s32 frames)
 {
     struct IwramAt5360 *chA;
     register struct IwramAt6150 *chB asm("r4");
@@ -87,7 +87,7 @@ void sub_0801223C(u32 unused0, u32 unused1, u32 unused2, u32 unused3, s32 frames
         chA->_field_0e = 0;
 }
 
-/* ROM transfer descriptor consumed by sub_08013C60 (first 16 bytes by value,
+/* ROM transfer descriptor consumed by DmaJob_Advance (first 16 bytes by value,
  * byte at +2 is the mode selector). Same shape as the 0x08306f08 descriptor
  * used by sub_08012D88. */
 struct TransferDesc_6908 {
@@ -98,7 +98,7 @@ struct TransferDesc_6908 {
 };
 
 /* ROM channel-seed source for the case-1 inlined sequencer step (mirrors
- * sub_08012604's Sub08012604Args at 0x08306e08 / 0x08306e28). */
+ * TickScrollAnimUntilDone's Sub08012604Args at 0x08306e08 / 0x08306e28). */
 struct SeqSeed_6E08 {
     u8 _pad00[4];
     u8 posA; /* +0x04 */
@@ -134,14 +134,14 @@ extern struct CamTarget_6480 gIwram_6480;
 extern struct EntityPos_3720 gEntities_03003720;
 extern u8 gIwram_60A0[];
 
-extern void sub_08020C78(u32 sound);
-extern void sub_08020DC4(u32 idx);
-extern void sub_08020E7C(u32 idx);
-extern u8 sub_08011E40(void);
-extern u8 sub_08012098(void);
-extern void sub_08012180(void);
-extern void sub_08015B20(u32 arg);
-extern void sub_08013C60(struct TransferDesc_6908 desc, u8 mode, void *buf);
+extern void Sound_Play(u32 sound);
+extern void SoundEntry_Play(u32 idx);
+extern void SoundEntry_Stop(u32 idx);
+extern u8 Selector_TriggerWindowReveal(void);
+extern u8 Selector_StepColorFade(void);
+extern void UpdateScrollFromAnimChannels(void);
+extern void FlushFramebufferBank(u32 arg);
+extern void DmaJob_Advance(struct TransferDesc_6908 desc, u8 mode, void *buf);
 
 /* Scene cut-scene / camera intro sequencer. gIwram_53A0[1] is the phase index;
  * each phase advances it. After the dispatch, the tail unconditionally streams
@@ -150,7 +150,7 @@ extern void sub_08013C60(struct TransferDesc_6908 desc, u8 mode, void *buf);
  * cam is pinned to r2 so the baserom's camera-target comparisons match: the
  * pinned base anchors gIwram_6480 in r2 and forces both target reads to reload
  * through it (the subtract consumes the first load) instead of caching it. */
-void sub_080122E4(void)
+void RunScrollTransitionSequence(void)
 {
     u8 phase;
     s32 pos;
@@ -169,7 +169,7 @@ void sub_080122E4(void)
             break;
         if (gIwram_60A0[0] >> 7 != 0)
             break;
-        sub_08020C78(28);
+        Sound_Play(28);
         gIwram_5360._field_04 = 0;
         gIwram_6150._field_04 = 0;
         gIwram_5360._maxFrames = 0;
@@ -187,11 +187,11 @@ void sub_080122E4(void)
         a0 = seedA->posA;
         a1 = seedA->posB;
         seedB = (struct SeqSeed_6E08 *)0x08306e28;
-        sub_0801223C(a0, a1, seedB->posA, seedB->posA, seedB->frames);
-        sub_08012180();
+        InitScrollAnimSequence(a0, a1, seedB->posA, seedB->posA, seedB->frames);
+        UpdateScrollFromAnimChannels();
         if (gIwram_6150._field_04 == 0 && gIwram_5360._field_04 == 0 && gIwram_5360._field_0e == 0) {
-            sub_08015B20(0);
-            sub_08015B20(1);
+            FlushFramebufferBank(0);
+            FlushFramebufferBank(1);
             ok = 1;
         }
         if (ok == 0)
@@ -203,27 +203,27 @@ void sub_080122E4(void)
         pos = (s16)gEntities_03003720.y >> 3;
         cam = &gIwram_6480;
         if (pos - cam->target <= 59 && pos > cam->target)
-            sub_08020DC4(8);
+            SoundEntry_Play(8);
         else
-            sub_08020E7C(8);
-        if (!sub_08011E40())
+            SoundEntry_Stop(8);
+        if (!Selector_TriggerWindowReveal())
             break;
         gIwram_53A0[1] = 3;
         gIwram_6400.cachedPos = gGameStuff._unk00;
         break;
 
     case 3:
-        sub_08011E40();
+        Selector_TriggerWindowReveal();
         if (gGameStuff._unk00 - gIwram_6400.cachedPos <= 300)
             break;
         gIwram_53A0[1] = 4;
         break;
 
     case 4:
-        sub_08011E40();
-        if (!sub_08012098())
+        Selector_TriggerWindowReveal();
+        if (!Selector_StepColorFade())
             break;
-        sub_08020E7C(8);
+        SoundEntry_Stop(8);
         gIwram_6410.maxFrames = 8;
         gIwram_6480.target = 0;
         gIwram_53A0[1] = 0;
@@ -233,5 +233,5 @@ void sub_080122E4(void)
     }
 
     desc = (struct TransferDesc_6908 *)0x08306908;
-    sub_08013C60(*desc, ((u8 *)desc)[2], (void *)0x030064c0);
+    DmaJob_Advance(*desc, ((u8 *)desc)[2], (void *)0x030064c0);
 }

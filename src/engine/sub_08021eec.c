@@ -1,18 +1,18 @@
 #include "iwram.h"
 #include "types.h"
 
-extern void sub_08020F3C(u8 idx);
-extern void sub_080219BC(void *obj, u8 idx);
-extern void sub_080059C4(void *p);
+extern void EntityMover_Tick(u8 idx);
+extern void Entity_FollowPath(void *obj, u8 idx);
+extern void Entity_Update(void *p);
 
-void sub_08021EEC(void *obj, u8 idx)
+void Entity_InitFromLayout(void *obj, u8 idx)
 {
-    sub_08020F3C(idx);
-    sub_080219BC(obj, idx);
-    sub_080059C4((u8 *)gEntities + idx * 56);
+    EntityMover_Tick(idx);
+    Entity_FollowPath(obj, idx);
+    Entity_Update((u8 *)gEntities + idx * 56);
 }
 
-void sub_08021F1C(u8 dir, s8 *outX, s8 *outY)
+void DirToMotion(u8 dir, s8 *outX, s8 *outY)
 {
     *outX = 0;
     *outY = 0;

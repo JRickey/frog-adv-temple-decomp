@@ -2,9 +2,9 @@
 #include "types.h"
 
 extern s32 __divsi3(s32 num, s32 den);
-extern void sub_080008DC(void);
+extern void WaitVblank(void);
 
-void sub_0801A894(u32 flags, u32 count)
+void IrisOpen(u32 flags, u32 count)
 {
     vu16 *win0h;
     vu16 *win0v;
@@ -44,7 +44,7 @@ void sub_0801A894(u32 flags, u32 count)
             *win0v = (top << 8) | 0xA0;
             *(vu16 *)0x04000042 = full;
             *(vu16 *)0x04000046 = bottom;
-            sub_080008DC();
+            WaitVblank();
             top = (u8)(top - step);
             bottom = (u8)(bottom + bottomStep);
             i = (u8)(i - 1);

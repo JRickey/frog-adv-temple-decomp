@@ -1,6 +1,6 @@
 #include "types.h"
 
-void *sub_0803578C(void *dst, const void *src, u32 count)
+void *Memcpy(void *dst, const void *src, u32 count)
 {
     u8 *d = (u8 *)dst;
     const u8 *s = (const u8 *)src;

@@ -3,26 +3,26 @@
 #include "macros.h"
 #include "types.h"
 
-extern void sub_0800B918(void *ent, u32 arg1, u32 kind);
-extern void sub_0800B8A8(void *ent, u32 arg1, u32 kind, u32 tile);
-extern void sub_0800AA70(u8 tile);
-extern u32 sub_0800CD88(u8 col, u8 row, s16 tileX, s16 tileY);
-extern u8 sub_08006BA4(struct IwramAt35E0 *p, u32 mask);
-extern void sub_08006B94(struct IwramAt35E0 *p, u32 mask);
+extern void Entity_UpdateHitboxWithTile(void *ent, u32 arg1, u32 kind);
+extern void Entity_ActivateHitSlot(void *ent, u32 arg1, u32 kind, u32 tile);
+extern void Gate_HandleGateTile(u8 tile);
+extern u32 Tilemap_GetTileClass(u8 col, u8 row, s16 tileX, s16 tileY);
+extern u8 IsFlagMaskSet(struct IwramAt35E0 *p, u32 mask);
+extern void IwramFlags_Clear(struct IwramAt35E0 *p, u32 mask);
 
-/* Single-entity-pair variant of the sub_08004508 tile-cache probe (kind 17).
- * Enqueues the pair, maps the cached tile coords through sub_0800CD88, and —
+/* Single-entity-pair variant of the Scene20_UpdateParts tile-cache probe (kind 17).
+ * Enqueues the pair, maps the cached tile coords through Tilemap_GetTileClass, and —
  * when gIwram_35E0._field_10 has bit 0x10 set — re-enqueues with the resolved
- * tile and pokes sub_0800AA70.
+ * tile and pokes Gate_HandleGateTile.
  *
- * Gated on sub_08006BA4(&gIwram_35E0, 0x40), a cascade of coordinate tests over
+ * Gated on IsFlagMaskSet(&gIwram_35E0, 0x40), a cascade of coordinate tests over
  * the cached tile X (gIwram_35E0._field_8) / Y (gIwram_35E0._field_A) stamps the
  * scenery class into gEntities[0].field_06 and clears gIwram_35E0._field_1A. The
- * tail then fires sub_08006B94 for ten coord/x/y range gates.
+ * tail then fires IwramFlags_Clear for ten coord/x/y range gates.
  *
  * Matching notes (agbcc 2.x):
  *   - The first coord block reads through the r4-pinned p35E0 (the
- *     sub_0800CD88-surviving base); the remaining cascade blocks reference
+ *     Tilemap_GetTileClass-surviving base); the remaining cascade blocks reference
  *     gIwram_35E0 directly so agbcc CSEs the base into one callee-saved
  *     register (r3) and re-reads each field fresh there. A `p35E0->` form for
  *     those blocks instead forces a per-block base reload + copy.
@@ -34,7 +34,7 @@ extern void sub_08006B94(struct IwramAt35E0 *p, u32 mask);
  *     so the bases land in caller-saved registers and reload after each call
  *     rather than being kept across it in r4/r5. */
 
-void sub_080045EC(u32 arg0, u32 arg1)
+void Player_HandleTileTransitions(u32 arg0, u32 arg1)
 {
     struct IwramAt35E0 *p35E0;
     struct IwramAt35E0 *p;
@@ -44,17 +44,17 @@ void sub_080045EC(u32 arg0, u32 arg1)
     u16 uf;
     u32 coord;
 
-    sub_0800B918((void *)arg0, arg1, 17);
+    Entity_UpdateHitboxWithTile((void *)arg0, arg1, 17);
 
     p35E0 = &gIwram_35E0;
-    tile = (u8)sub_0800CD88(p35E0->_field_18, p35E0->_field_19, p35E0->_field_8, p35E0->_field_A);
+    tile = (u8)Tilemap_GetTileClass(p35E0->_field_18, p35E0->_field_19, p35E0->_field_8, p35E0->_field_A);
 
     if ((0x10 & p35E0->_field_10) != 0) {
-        sub_0800B8A8((void *)arg0, arg1, 17, tile);
-        sub_0800AA70(tile);
+        Entity_ActivateHitSlot((void *)arg0, arg1, 17, tile);
+        Gate_HandleGateTile(tile);
     }
 
-    if (!sub_08006BA4(p35E0, 0x40))
+    if (!IsFlagMaskSet(p35E0, 0x40))
         goto tail;
 
     f8a = p35E0->_field_8;
@@ -133,40 +133,40 @@ void sub_080045EC(u32 arg0, u32 arg1)
 tail:
     if ((u16)gIwram_35E0._field_A == 23) {
         if (gEntities[0].field_1A <= 3 && (u16)(gEntities[0].x - 216) <= 11)
-            sub_08006B94(&gIwram_35E0, 2);
+            IwramFlags_Clear(&gIwram_35E0, 2);
     }
     if ((u16)gIwram_35E0._field_A == 23) {
         if (gEntities[0].field_1A <= 3 && (u16)(gEntities[0].x - 72) <= 11)
-            sub_08006B94(&gIwram_35E0, 2);
+            IwramFlags_Clear(&gIwram_35E0, 2);
     }
     if ((u16)gIwram_35E0._field_A == 21) {
         if (gEntities[0].field_1A <= 3 && (u16)(gEntities[0].x - 131) <= 13)
-            sub_08006B94(&gIwram_35E0, 2);
+            IwramFlags_Clear(&gIwram_35E0, 2);
     }
     if ((u16)gIwram_35E0._field_A == 21) {
         if (gEntities[0].field_1A <= 3 && (u16)(gEntities[0].x - 299) <= 13)
-            sub_08006B94(&gIwram_35E0, 2);
+            IwramFlags_Clear(&gIwram_35E0, 2);
     }
     if ((u16)gIwram_35E0._field_A == 3) {
         if (gEntities[0].field_1A <= 3 && (u16)(gEntities[0].x - 328) <= 8)
-            sub_08006B94(&gIwram_35E0, 2);
+            IwramFlags_Clear(&gIwram_35E0, 2);
     }
     if ((u16)gIwram_35E0._field_A == 3) {
         if (gEntities[0].field_1A <= 3 && (u16)(gEntities[0].x - 384) <= 5)
-            sub_08006B94(&gIwram_35E0, 2);
+            IwramFlags_Clear(&gIwram_35E0, 2);
     }
     if ((u16)gIwram_35E0._field_A == 5) {
         if (gEntities[0].field_1A <= 3 && (u16)(gEntities[0].x - 402) <= 6)
-            sub_08006B94(&gIwram_35E0, 2);
+            IwramFlags_Clear(&gIwram_35E0, 2);
     }
     if ((u16)gIwram_35E0._field_A == 5) {
         if (gEntities[0].field_1A <= 3 && (u16)(gEntities[0].x - 456) <= 5)
-            sub_08006B94(&gIwram_35E0, 2);
+            IwramFlags_Clear(&gIwram_35E0, 2);
     }
     if ((u16)((u16)gIwram_35E0._field_8 - 6) <= 4) {
         if (gEntities[0].field_1A <= 3 && (u16)(gEntities[0].y - 96) <= 11)
-            sub_08006B94(&gIwram_35E0, 2);
+            IwramFlags_Clear(&gIwram_35E0, 2);
         if (gEntities[0].field_1A <= 3 && (u16)(gEntities[0].y - 301) <= 35)
-            sub_08006B94(&gIwram_35E0, 2);
+            IwramFlags_Clear(&gIwram_35E0, 2);
     }
 }

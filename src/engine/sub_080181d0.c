@@ -2,9 +2,9 @@
 #include "iwram.h"
 #include "types.h"
 
-extern void sub_080184DC(u32 *attr, u16 arg1, u16 arg2, u8 arg3);
+extern void Tilemap_SwapPalette(u32 *attr, u16 arg1, u16 arg2, u8 arg3);
 
-void sub_080181D0(void)
+void FrogSelect_LoadCharTilemap(void)
 {
     volatile DmaChannel *dma;
     u32 tableBase;
@@ -32,23 +32,23 @@ void sub_080181D0(void)
     /* Anchor the ROM table literal so agbcc materializes the DMA base then the
        table base into registers before loading the gIwram_34B0 index. Without
        the fence agbcc's EXPAND_SUM keeps the table constant deferred and folds
-       its load after the index. Same idiom as sub_0801B154 / sub_0801AC84. */
+       its load after the index. Same idiom as GetHighestUnlockedWorld / Credits_InitStateA. */
     asm volatile("" : "+r"(tableBase));
     dma->src = (const void *)*(const u32 *)(tableBase + gIwram_34B0._data * 4);
     dma->dst = (void *)0x0600f000;
     dma->cnt = DMA_ENABLE | 0x400;
     (void)dma->cnt;
 
-    sub_080184DC(&attr, 5, 4, 2);
+    Tilemap_SwapPalette(&attr, 5, 4, 2);
 }
 
-extern u32 sub_08000900(void);
-extern u16 sub_080106EC(u16 arg);
+extern u32 GetFrameTick(void);
+extern u16 Screen_BeginFlash(u16 arg);
 
-void sub_08018284(void)
+void FrogSelect_InitDispatch(void)
 {
-    gIwram_3480._unk0C = sub_08000900();
-    sub_080106EC(0xBF);
+    gIwram_3480._unk0C = GetFrameTick();
+    Screen_BeginFlash(0xBF);
 
     gIwram_3470[0] = 0;
     gIwram_3470[1] = 0;

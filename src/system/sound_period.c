@@ -1,9 +1,9 @@
 #include "sound.h"
 #include "macros.h"
 
-/* sub_080301C4 — per-mix-entry pitch-ratio scaler + period divide.
+/* Sound_CalcNotePeriod — per-mix-entry pitch-ratio scaler + period divide.
  *
- * Called from the mixer (sub_0802F4B0) stage-3 commit pass for each
+ * Called from the mixer (SoundMixer_VBlankUpdate) stage-3 commit pass for each
  * non-NULL slot whose flag bit 0x40 is set AND whose flags include
  * 0x1400 — see sound_mixer.c. The mixer accumulates six u16 samples
  * from the slot's interleaved acc[] fields, casts the result to u16,
@@ -30,7 +30,7 @@
  * is then divided by gpSoundSystem->divisor (the global sample-rate
  * scale, u16 at +2) via the libgcc __udivsi3 helper at 0x08033ee4.
  *
- * Companion to sub_0802E5D8 (PSG-channel pitch setter in sound_pitch.c)
+ * Companion to Sound_EmitPsgPitch (PSG-channel pitch setter in sound_pitch.c)
  * — that path uses sPsgPitchLut for the PSG period registers; this
  * path uses the slot-local sNoteRatioTable/sInversePitchTable for the
  * sample-streaming mix entries.
@@ -48,7 +48,7 @@ extern const u16 sInversePitchTable[128]; /* 0x083ddbdc — /2^(n/12) down */
 /* libgcc unsigned-int division helper (0x08033ee4). */
 extern u32 __udivsi3(u32 num, u32 den);
 
-u32 sub_080301C4(MixEntry *entry, u8 b, u8 c)
+u32 Sound_CalcNotePeriod(MixEntry *entry, u8 b, u8 c)
 {
     u32 a = entry->anchor;
     u32 r3;
@@ -106,9 +106,9 @@ divide:
     return (u16)r3;
 }
 
-extern void sub_0802E380(u8 *ptr, u32 count);
+extern void MemZero(u8 *ptr, u32 count);
 
-void sub_08030264(void)
+void SoundPeriod_Reset(void)
 {
     PeriodState *ps = SOUND_SYSTEM_PERIOD_STATE(gpSoundSystem);
     u8 flag;
@@ -118,13 +118,13 @@ void sub_08030264(void)
 
     flag = ps->flag;
     ps->flag = 0;
-    sub_0802E380(ps->bufStart, (u32)ps->bufEnd - (u32)ps->bufStart);
+    MemZero(ps->bufStart, (u32)ps->bufEnd - (u32)ps->bufStart);
     ps->flag = flag;
 }
 
-/* sub_08030290 — (re)start the dual-FIFO sample-DMA + timer chain.
+/* Sound_StartDma — (re)start the dual-FIFO sample-DMA + timer chain.
  *
- * Wrapped in the sound mutation lock (sub_0802E418 acquire / sub_0802E3F8
+ * Wrapped in the sound mutation lock (Sound_Lock acquire / Sound_Unlock
  * release). It arms the REG_SOUNDCNT_X high byte, points DMA1 at FIFO A
  * and DMA2 at FIFO B (each sourced from one of the two PCM ring buffers
  * cached in the SoundSystem block at +0xe4 / +0xe8), then turns on
@@ -160,15 +160,15 @@ void sub_08030264(void)
 
 /* The SoundSystem base + 0xd0 is held in r4 across the lock BLs, with the
  * two PCM ring-buffer pointers reached at +0x14 / +0x18 from there. */
-extern void sub_0802E418(void);
-extern void sub_0802E3F8(void);
+extern void Sound_Lock(void);
+extern void Sound_Unlock(void);
 
-void sub_08030290(void)
+void Sound_StartDma(void)
 {
     DmaSrcBlock *ss = SOUND_SYSTEM_DMA_SRC(gpSoundSystem);
     vu8 *cnt;
 
-    sub_0802E418();
+    Sound_Lock();
 
     REG_SOUNDCNT_X_H = 0x9a;
 
@@ -189,10 +189,10 @@ void sub_08030290(void)
     REG_TM1CNT_H |= 0xc0;
     REG_TM0CNT_H |= 0x80;
 
-    sub_0802E3F8();
+    Sound_Unlock();
 }
 
-s32 sub_0803030C(s32 channel, u32 *state_ptr)
+s32 SoundOp_RetireChannel(s32 channel, u32 *state_ptr)
 {
     s32 ch;
     u32 *sp;
@@ -253,7 +253,7 @@ s32 sub_0803030C(s32 channel, u32 *state_ptr)
     return 0;
 }
 
-s32 sub_0803038C(s32 channel, u32 *state_ptr)
+s32 SoundOp_SetPeriod(s32 channel, u32 *state_ptr)
 {
     s32 ch;
     u32 *sp;
@@ -352,9 +352,9 @@ s32 sub_0803038C(s32 channel, u32 *state_ptr)
     return 1;
 }
 
-extern void sub_0802E724(s32 ch);
+extern void SoundChannel_Reset(s32 ch);
 
-s32 sub_0803045C(s32 channel, u32 *state_ptr)
+s32 SoundOp_GateOff(s32 channel, u32 *state_ptr)
 {
     s32 ch;
     u32 *sp;
@@ -413,14 +413,14 @@ s32 sub_0803045C(s32 channel, u32 *state_ptr)
         return 0;
 
 reset:
-    sub_0802E724(ch);
+    SoundChannel_Reset(ch);
     *sp += 2;
     return 1;
 }
 
-extern u32 sub_0802E3C8(u32 limit);
+extern u32 Sound_Rand(u32 limit);
 
-u32 sub_080304F4(s32 channel, SoundChannelSeq *seq)
+u32 SoundOp_Wait(s32 channel, SoundChannelSeq *seq)
 {
     s32 ch;
     SoundChannelSeq *s;
@@ -484,7 +484,7 @@ u32 sub_080304F4(s32 channel, SoundChannelSeq *seq)
 
         if (flags & SOUND_SEQ_WAIT_RANDOMIZE)
             /* See the count load above: this second opcode-count read is target-visible. */
-            s->cursor = sub_0802E3C8(*(volatile u16 *)(op + 2));
+            s->cursor = Sound_Rand(*(volatile u16 *)(op + 2));
         else
             s->cursor = opHalf;
         return 0;

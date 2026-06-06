@@ -1,27 +1,27 @@
 #include "game.h"
 #include "types.h"
 
-extern void sub_08007660(u32 a, u32 b);
-extern void sub_0800A2D8(void);
-extern void sub_080008DC(void);
-extern void sub_0800A328(void);
-extern void sub_080094F8(void);
-extern void sub_08009984(void);
-extern void sub_080018F8(u32 a, u32 b);
+extern void Entity_RunScript(u32 a, u32 b);
+extern void Game_RunEntityFrame(void);
+extern void WaitVblank(void);
+extern void Game_ForceRender(void);
+extern void Entity_CheckAllCollisions(void);
+extern void Player_CheckTileEvents(void);
+extern void Scene12_UpdateTileInteraction(u32 a, u32 b);
 
 /* Per-frame tick for one of the mode handlers: drives shared input
- * (sub_08007660), per-frame state services (sub_0800A2D8 / sub_080008DC /
- * sub_0800A328), the sprite/asset pump (sub_080094F8 / sub_08009984), then
- * defers mode-specific work to sub_080018F8 before ticking the counter
+ * (Entity_RunScript), per-frame state services (Game_RunEntityFrame / WaitVblank /
+ * Game_ForceRender), the sprite/asset pump (Entity_CheckAllCollisions / Player_CheckTileEvents), then
+ * defers mode-specific work to Scene12_UpdateTileInteraction before ticking the counter
  * at gGameStuff._unk14. */
-void sub_08001D54(u32 a, u32 b, u32 c)
+void Scene06_Tick(u32 a, u32 b, u32 c)
 {
-    sub_08007660(0, a);
-    sub_0800A2D8();
-    sub_080008DC();
-    sub_0800A328();
-    sub_080094F8();
-    sub_08009984();
-    sub_080018F8(b, c);
+    Entity_RunScript(0, a);
+    Game_RunEntityFrame();
+    WaitVblank();
+    Game_ForceRender();
+    Entity_CheckAllCollisions();
+    Player_CheckTileEvents();
+    Scene12_UpdateTileInteraction(b, c);
     gGameStuff._unk14++;
 }

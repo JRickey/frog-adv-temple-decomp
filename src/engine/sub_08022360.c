@@ -19,9 +19,9 @@ typedef struct EntitySlot {
     u8 _pad36[2];
 } EntitySlot;
 
-extern void sub_0800A580(EntitySlot *e, s8 param, s8 deltaX, s8 deltaY);
+extern void MotionDesc_Set(EntitySlot *e, s8 param, s8 deltaX, s8 deltaY);
 
-void sub_08022360(void)
+void InitSpecialEntitySlots(void)
 {
     u8 *base = (u8 *)gEntities;
     EntitySlot *slot;
@@ -105,6 +105,6 @@ void sub_08022360(void)
         *(u16 *)flagAddr = mask;
     }
 
-    sub_0800A580((EntitySlot *)(base + 0xf18), 4, 0, 1);
-    sub_0800A580((EntitySlot *)(base + 0xf50), 4, 0, 1);
+    MotionDesc_Set((EntitySlot *)(base + 0xf18), 4, 0, 1);
+    MotionDesc_Set((EntitySlot *)(base + 0xf50), 4, 0, 1);
 }

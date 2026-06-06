@@ -2,14 +2,14 @@
 #include "iwram.h"
 #include "types.h"
 
-extern void sub_0800E7D4(void);
-extern void sub_08020C78(u32 sound);
+extern void SetModeBlendRegs(void);
+extern void Sound_Play(u32 sound);
 extern void sub_08012BC4(u32 flags, u32 dstX, u32 dstY, u32 widthArg, u32 srcRowsArg, const u16 **srcTable,
                          u32 srcIndex);
-extern void sub_080124D0(void);
-extern void sub_0801223C(u32 a, u32 b, u32 c, u32 d, s32 e);
-extern void sub_08012180(void);
-extern u32 sub_08011574(u8 idx);
+extern void AnimChannels_Reset(void);
+extern void InitScrollAnimSequence(u32 a, u32 b, u32 c, u32 d, s32 e);
+extern void UpdateScrollFromAnimChannels(void);
+extern u32 Selector_StepBlitAnim(u8 idx);
 
 struct BlitRecord_sub116b8 {
     u16 dstX;
@@ -46,7 +46,7 @@ extern struct BlitRecord_sub116b8 gBlitRecord_08306abc;
 extern const AnimDesc_sub116b8 sAnimDesc_6e08;
 extern const AnimDesc_sub116b8 sAnimDesc_6e28;
 
-void sub_080116B8(u8 maxIdxArg)
+void Selector_BlitStateMachine(u8 maxIdxArg)
 {
     register u8 *new_var4 = gIwram_3610;
     int new_var2;
@@ -68,7 +68,7 @@ void sub_080116B8(u8 maxIdxArg)
         struct IwramAt6110 *f;
         u32 one;
 
-        sub_0800E7D4();
+        SetModeBlendRegs();
         base = new_var4;
         flags = &gIwram_6110;
         base = statePtr;
@@ -92,8 +92,8 @@ void sub_080116B8(u8 maxIdxArg)
                 struct BlitRecord_sub116b8 *entry;
                 u8 *stateAddr;
 
-                sub_08020C78(25);
-                sub_08020C78(28);
+                Sound_Play(25);
+                Sound_Play(28);
                 stride = ((i << 1) + i) << 3;
                 entry = (struct BlitRecord_sub116b8 *)(stride + (u32)gBlitInitTable_08306AD4);
                 new_var3 = i;
@@ -103,7 +103,7 @@ void sub_080116B8(u8 maxIdxArg)
                 flags = f;
                 flags->selector6Flags |= one << new_var3;
                 if (new_var3 != 3)
-                    sub_08020C78(30);
+                    Sound_Play(30);
 
                 base[0xC9] = new_var3;
                 stateAddr = stateAddr2;
@@ -126,7 +126,7 @@ void sub_080116B8(u8 maxIdxArg)
         struct IwramAt6580_sub116b8 *ptr6580;
         u32 zero;
 
-        sub_080124D0();
+        AnimChannels_Reset();
         ptr6580 = &gIwram_6580;
         zero = 0;
         ptr6580->field_a = zero;
@@ -138,11 +138,11 @@ void sub_080116B8(u8 maxIdxArg)
         u8 done;
         u64 three;
 
-        sub_08011574(base2[0xC9]);
+        Selector_StepBlitAnim(base2[0xC9]);
         done = 0;
-        sub_0801223C(sAnimDesc_6e08.field_04, sAnimDesc_6e08.field_14, sAnimDesc_6e28.field_04, sAnimDesc_6e28.field_04,
-                     sAnimDesc_6e28.field_0e);
-        sub_08012180();
+        InitScrollAnimSequence(sAnimDesc_6e08.field_04, sAnimDesc_6e08.field_14, sAnimDesc_6e28.field_04,
+                               sAnimDesc_6e28.field_04, sAnimDesc_6e28.field_0e);
+        UpdateScrollFromAnimChannels();
         if (gIwram_6150._field_04 == 0 && gIwram_5360._field_04 == 0 && gIwram_5360._field_0e == 0)
             done = 1;
         if (done) {
@@ -153,7 +153,7 @@ void sub_080116B8(u8 maxIdxArg)
         return;
     }
     case 3:
-        if ((u8)sub_08011574(base2[0xC9]) != 0)
+        if ((u8)Selector_StepBlitAnim(base2[0xC9]) != 0)
             *statePtr = 0;
         return;
     }

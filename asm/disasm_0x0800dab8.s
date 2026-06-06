@@ -196,9 +196,9 @@
 @   0x0800dc38: bc02        pop	{r1}
 @   0x0800dc3a: 4708        bx	r1
 
-        .global sub_0800DB04
+        .global PadGrid_SlotToCoord
         .thumb_func
-sub_0800DB04: @ 0x0800db04
+PadGrid_SlotToCoord: @ 0x0800db04
         .incbin "frog_us_baserom.gba", 0xdb04, 0x48
 
         .incbin "frog_us_baserom.gba", 0xdb4c, 0xf0

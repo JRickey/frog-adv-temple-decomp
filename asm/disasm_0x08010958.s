@@ -123,7 +123,7 @@
 @   0x08010a40: 7ebc        ldrb	r4, [r7, #26]
 @   0x08010a42: 0830        lsrs	r0, r6, #32
 
-        thumb_func_start sub_08010958
-sub_08010958: @ 0x08010958
+        thumb_func_start ModeChannel_Apply
+ModeChannel_Apply: @ 0x08010958
         .incbin "frog_us_baserom.gba", 0x10958, 0xec
-        thumb_func_end sub_08010958
+        thumb_func_end ModeChannel_Apply

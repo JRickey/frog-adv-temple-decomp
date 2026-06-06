@@ -1,7 +1,7 @@
 #include "iwram.h"
 #include "types.h"
 
-/* Per-scene scroll-clamp, sibling of sub_0800F24C (same SceneScrollState
+/* Per-scene scroll-clamp, sibling of Scroll_UpdateCamera (same SceneScrollState
  * layout at 0x030060A0, same camera target at gIwram_3720). Walks `count`
  * scroll-state entries and clamps each one's scroll origin to the camera
  * target, bounded below by 0 and above by the entry's tile extent. */
@@ -29,7 +29,7 @@ struct ScrollCameraTarget_A6D4 {
     s16 y;
 };
 
-void sub_0801A6D4(u8 countArg)
+void ScrollCamera_Update(u8 countArg)
 {
     /* count holds the loop bound across the body; pinned to r8 (vs. ip) so
      * scrollStates lands in ip, matching the baserom allocation. */

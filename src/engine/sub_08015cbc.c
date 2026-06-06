@@ -20,7 +20,7 @@ struct DmaFrameCtrl_15CBC {
     u32 seed;
 };
 
-u8 sub_08015CBC(struct DmaFrameJob_15CBC job, u8 threshold, struct DmaFrameCtrl_15CBC *ctrl)
+u8 DmaFrameJob_Advance(struct DmaFrameJob_15CBC job, u8 threshold, struct DmaFrameCtrl_15CBC *ctrl)
 {
     u32 seed;
     u32 oldSeed;

@@ -1,7 +1,7 @@
 #include "macros.h"
 #include "types.h"
 
-/* --- sub_08017000: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- FrogStatusBar_Update: non-matching reference (asm slice provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "macros.h"
 #include "types.h"
@@ -33,7 +33,7 @@ extern u32 gDmaDescTable_08306888[];
 
 #define STATUS_VRAM ((u16 *)0x0600F800)
 
-void sub_08017000(void)
+void FrogStatusBar_Update(void)
 {
     register u32 acc asm("sl");
     struct IwramAt5320 *cur5320;
@@ -80,7 +80,7 @@ void sub_08017000(void)
         goto phase2;
     if (gGameStuff.pendingMode == 15)
         goto phase2;
-    sub_08016928();
+    Icon_DmaUpdateSprite();
     return;
 
 phase2:
@@ -120,7 +120,7 @@ phase2:
 /* Returns the status-bar animation table selector for the current sub-mode:
  * threshold 3 -> set 0, threshold 5 -> set 1, otherwise the no-op sentinel
  * 15. (The standalone counterpart of the selector inlined into
- * sub_08016928.) */
+ * Icon_DmaUpdateSprite.) */
 u32 sub_08017270(void)
 {
     register u32 sel asm("r1");
@@ -152,7 +152,7 @@ void sub_08017290(void)
 }
 
 /* DMA descriptor table at 0x08306888: 16-byte entries, layout per
- * sub_08016928 in sub_08016824.c. */
+ * Icon_DmaUpdateSprite in TileBlit_DrawEntry.c. */
 extern u32 gDmaDescTable_08306888[];
 
 /* Programs DMA3 from the descriptor entry packed into the high 12 bits of

@@ -121,7 +121,7 @@
 @   0x08010690: 60a0        str	r0, [r4, #8]
 @   0x08010692: 0300        lsls	r0, r0, #12
 
-        thumb_func_start sub_080105B0
-sub_080105B0: @ 0x080105b0
+        thumb_func_start Blit_CopyEntry
+Blit_CopyEntry: @ 0x080105b0
         .incbin "frog_us_baserom.gba", 0x105b0, 0xe4
-        thumb_func_end sub_080105B0
+        thumb_func_end Blit_CopyEntry

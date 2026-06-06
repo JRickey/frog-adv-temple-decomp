@@ -2,7 +2,7 @@
 @ Address-aligned bucket of unparsed baserom bytes.
 @ Range:  [0x0801b144, 0x0801b1b4)  (0x70 bytes)
 @
-@ Pre-peel chunk before sub_0801B1B4.
+@ Pre-peel chunk before Room_LoadTilesAndPalette.
 @
 @ This file holds raw bytes only; no instructions are assembled here.
 

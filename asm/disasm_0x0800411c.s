@@ -360,7 +360,7 @@
 @   0x08004418: 5330        strh	r0, [r6, r4]
 @   0x0800441a: 0300        lsls	r0, r0, #12
 
-        thumb_func_start sub_0800411C
-sub_0800411C: @ 0x0800411c
+        thumb_func_start SceneLoop_20
+SceneLoop_20: @ 0x0800411c
         .incbin "frog_us_baserom.gba", 0x411c, 0x300
-        thumb_func_end sub_0800411C
+        thumb_func_end SceneLoop_20

@@ -11,12 +11,12 @@ struct IwramAt6410 {
 };
 
 extern struct IwramAt6410 gIwram_6410;
-extern void sub_0800EE34(u8 layer);
+extern void BgLayer_Disable(u8 layer);
 
 /* The explicit gs/iw pointer vars force both pool loads before any
  * dereferences, which sets up the LIFO register reuse order that gives
  * r2=upper-byte and r3=lower-byte in the MMIO section. */
-u32 sub_08012098(void)
+u32 Selector_StepColorFade(void)
 {
     GameStuff *gs;
     struct IwramAt6410 *iw;
@@ -35,7 +35,7 @@ u32 sub_08012098(void)
     t2 = *(vu16 *)0x04000052 & 0xff;
 
     if (t2 == 0 && t1 == 15) {
-        sub_0800EE34(2);
+        BgLayer_Disable(2);
         return 1;
     }
 
@@ -66,7 +66,7 @@ struct IwramAt6540_12100 {
 extern struct IwramAt6480_12100 gIwram_6480;
 extern struct IwramAt6540_12100 gIwram_6540;
 
-void sub_08012100(void)
+void Selector_ResetState(void)
 {
     u16 zero;
     struct IwramAt6110 *ctrl;
@@ -113,7 +113,7 @@ extern u32 gIwram_5330;
 
 /* Within each switch the +2 case precedes the -2 case so the case bodies land in the
  * baserom's physical order (the +2 body falls through the cmp #2/#4 test). */
-void sub_08012180(void)
+void UpdateScrollFromAnimChannels(void)
 {
     s32 x;
     s32 y;

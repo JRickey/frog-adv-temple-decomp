@@ -1,6 +1,6 @@
 #include "types.h"
 
-void sub_080199E4(void)
+void FrogSelect_ClearInputState(void)
 {
     register u32 i asm("r2") = 0;
     register u8 *base asm("r4") = (u8 *)0x03005330;

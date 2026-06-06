@@ -2,14 +2,14 @@
 #include "iwram.h"
 #include "types.h"
 
-/* sub_0800DFFC returns an 8.8 fixed-point s16; declared int here so the
+/* Fixed8Mul returns an 8.8 fixed-point s16; declared int here so the
  * caller trusts the already-sign-extended return register instead of
  * re-extending it before the s32 add below. */
-extern int sub_0800DFFC(s16 a, s16 b);
-extern void sub_080059C4(void *p);
+extern int Fixed8Mul(s16 a, s16 b);
+extern void Entity_Update(void *p);
 extern const s16 sSineTable[320];
 
-void sub_08021CFC(u8 idx, u16 baseX, u16 baseY, s8 mag, u8 mode, u8 delta)
+void Entity_UpdateOrbitalPosition(u8 idx, u16 baseX, u16 baseY, s8 mag, u8 mode, u8 delta)
 {
     struct Entity *slot;
     s32 angle;
@@ -42,10 +42,10 @@ void sub_08021CFC(u8 idx, u16 baseX, u16 baseY, s8 mag, u8 mode, u8 delta)
     if ((s16)slot->field_10 - 0x40 < 0)
         angle = (u16)(angle + 0xFF);
 
-    sx = (s16)baseX + sub_0800DFFC(sSineTable[(s16)angle], mag);
+    sx = (s16)baseX + Fixed8Mul(sSineTable[(s16)angle], mag);
     slot->x = sx;
 
-    sy = (s16)baseY + sub_0800DFFC(sSineTable[(s16)angle - 0x40], mag);
+    sy = (s16)baseY + Fixed8Mul(sSineTable[(s16)angle - 0x40], mag);
     slot->y = sy;
 
     if ((gIwram_35E0._field_10 & 2) != 0 && idx == gIwram_35E0._field_D) {
@@ -53,5 +53,5 @@ void sub_08021CFC(u8 idx, u16 baseX, u16 baseY, s8 mag, u8 mode, u8 delta)
         gEntities[0].y = slot->y;
     }
 
-    sub_080059C4(&gEntities[idx]);
+    Entity_Update(&gEntities[idx]);
 }

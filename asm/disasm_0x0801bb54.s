@@ -379,7 +379,7 @@
 @   0x0801be78: e01c        b.n	0x1beb4
 @   0x0801be7a: 081b        lsrs	r3, r3, #32
 
-        thumb_func_start sub_0801BB54
-sub_0801BB54: @ 0x0801bb54
+        thumb_func_start ShowWinLoseMessage
+ShowWinLoseMessage: @ 0x0801bb54
         .incbin "frog_us_baserom.gba", 0x1bb54, 0x328
-        thumb_func_end sub_0801BB54
+        thumb_func_end ShowWinLoseMessage

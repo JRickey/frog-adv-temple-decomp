@@ -3,16 +3,16 @@
 
 extern const u16 sWinPoseScreenCoords[];
 
-extern u8 sub_0801ADA8(u8 arg);
+extern u8 Credits_RunScript(u8 arg);
 extern u16 gIwram_5398;
-void sub_0801B30C(u8 arg0, u8 arg1);
+void WorldMap_SetPathTile(u8 arg0, u8 arg1);
 
 struct Sub0801B154Bits {
     u8 pad00[0x0C];
     u32 bits;
 };
 
-u8 sub_0801B154(void)
+u8 GetHighestUnlockedWorld(void)
 {
     s8 i = 15;
     u32 bits = ((struct Sub0801B154Bits *)0x03005330)->bits;
@@ -27,7 +27,7 @@ u8 sub_0801B154(void)
     return 0;
 }
 
-u8 sub_0801B188(u32 bits)
+u8 CountHighestBit(u32 bits)
 {
     s8 i = 15;
 
@@ -41,7 +41,7 @@ u8 sub_0801B188(u32 bits)
     return 0;
 }
 
-void sub_0801B1B4(u8 index)
+void Room_LoadTilesAndPalette(u8 index)
 {
     vu32 *dma;
     const u32 *tiles;
@@ -85,7 +85,7 @@ struct Sub0801B224State {
     u16 gate;
 };
 
-u8 sub_0801B224(u8 arg)
+u8 CreditsRoll_StepThrottled(u8 arg)
 {
     struct Sub0801B224State *state;
     u32 *timer;
@@ -99,7 +99,7 @@ u8 sub_0801B224(u8 arg)
 
     timer = (u32 *)0x03005330;
     if (*timer - state->lastTime >= state->delay) {
-        result = sub_0801ADA8(arg);
+        result = Credits_RunScript(arg);
         state->lastTime = *timer;
     }
 
@@ -113,7 +113,7 @@ u8 sub_0801B224(u8 arg)
 void sub_0801B274(void)
 {}
 
-void sub_0801B278(u8 count)
+void WorldMap_DrawPathTiles(u8 count)
 {
     vu32 *dma;
     const u8 *const *entries;
@@ -141,14 +141,14 @@ void sub_0801B278(u8 count)
             entry = entries[i];
             entryCount = entry[0];
             for (j = 1; j <= entryCount; j++) {
-                sub_0801B30C(entry[j * 2], entry[j * 2 + 1]);
+                WorldMap_SetPathTile(entry[j * 2], entry[j * 2 + 1]);
             }
             i++;
         } while (i <= count);
     }
 }
 
-void sub_0801B30C(u8 arg0, u8 arg1)
+void WorldMap_SetPathTile(u8 arg0, u8 arg1)
 {
     u32 found;
     const u16 *coords;
@@ -236,7 +236,7 @@ void sub_0801B374(u8 index)
     dma[2];
 }
 
-void sub_0801B430(u8 index)
+void Room_LoadSpriteTiles(u8 index)
 {
     vu32 *dma;
     const u32 *sourceB;

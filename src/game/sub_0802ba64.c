@@ -3,10 +3,10 @@
 #include "types.h"
 
 extern int __divsi3(int num, int den);
-extern u8 sub_0800D270(u32 x, u32 y);
-extern void sub_08021510(u8 a0, const void *a1, u8 a2, void *a3, u8 a4);
+extern u8 TileMap_GetCell(u32 x, u32 y);
+extern void Entity_WalkCompactRecords(u8 a0, const void *a1, u8 a2, void *a3, u8 a4);
 
-void sub_0802BA64(void)
+void FrogGoal_UpdateEntities(void)
 {
     u32 hiMask;
     u32 d[2];
@@ -32,7 +32,7 @@ void sub_0802BA64(void)
     for (i = 9; i >= 0; i--) {
         s32 tx = (s16)__divsi3(ep[0], 24);
         s32 ty = (s16)__divsi3(ep[1], 24);
-        u8 result = (u8)sub_0800D270(tx, ty);
+        u8 result = (u8)TileMap_GetCell(tx, ty);
 
         if (result != 2) {
             u16 st = 8;
@@ -46,5 +46,5 @@ void sub_0802BA64(void)
 
     arg5 = z;
     control = &gIwram_6110;
-    sub_08021510(23, d, 0x57, control, arg5);
+    Entity_WalkCompactRecords(23, d, 0x57, control, arg5);
 }

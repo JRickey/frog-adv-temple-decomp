@@ -7,7 +7,7 @@ typedef struct {
     u16 d;
 } Entry;
 
-u8 sub_080217D4(Entry *base, u8 idxA, u8 idxB)
+u8 Entity_WaypointDirectionCompare(Entry *base, u8 idxA, u8 idxB)
 {
     u8 result = 0;
 

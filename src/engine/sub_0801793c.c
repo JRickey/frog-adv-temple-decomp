@@ -6,9 +6,9 @@
 typedef void (*GameProc)(void);
 extern const GameProc gHandlerTable_08308028[];
 
-extern void sub_08017A88(void);
+extern void Attract_StepFinish(void);
 
-void sub_0801793C(void)
+void GameMode_Attract(void)
 {
     GameStuff *tmp;
     GameStuff *gs;
@@ -41,6 +41,6 @@ void sub_0801793C(void)
     }
 
     gHandlerTable_08308028[step]();
-    sub_08017A88();
+    Attract_StepFinish();
     gGameStuff.pendingMode = 0;
 }

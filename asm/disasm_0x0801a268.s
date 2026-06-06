@@ -450,7 +450,7 @@
 @   0x0801a610: 0040        lsls	r0, r0, #1
 @   0x0801a612: 0400        lsls	r0, r0, #16
 
-        thumb_func_start sub_0801A268
-sub_0801A268: @ 0x0801a268
+        thumb_func_start GameMode_WorldMap
+GameMode_WorldMap: @ 0x0801a268
         .incbin "frog_us_baserom.gba", 0x1a268, 0x3bc
-        thumb_func_end sub_0801A268
+        thumb_func_end GameMode_WorldMap

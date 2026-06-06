@@ -2,7 +2,7 @@
 
 /* Per-channel volume setter for the four DMG-style PSG channels.
  *
- * Called from sub_0802F4B0 (the per-VBlank sound mixer) once per
+ * Called from SoundMixer_VBlankUpdate (the per-VBlank sound mixer) once per
  * "volume-request" slot. `vol` is the raw amplitude (0..127); it gets
  * divided by 8 to a 4-bit code which goes into bits 12..15 of the
  * channel's duty/length/envelope MMIO register:
@@ -31,7 +31,7 @@
 extern vu16 *const sChannelRegTable[4];
 extern const u8 sWaveVolLut[16];
 
-void sub_0802E684(s32 vol, s32 chIn)
+void SoundVolume_Emit(s32 vol, s32 chIn)
 {
     register s32 newCode asm("r4");
     register s32 ch asm("r3");

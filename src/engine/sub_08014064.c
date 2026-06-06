@@ -2,10 +2,10 @@
 #include "types.h"
 
 extern void sub_08010A44(u8 a, u8 b);
-extern void sub_08017000(void);
+extern void FrogStatusBar_Update(void);
 
-void sub_08014064(void)
+void Engine_Update(void)
 {
     sub_08010A44(5, 3);
-    sub_08017000();
+    FrogStatusBar_Update();
 }

@@ -1,58 +1,58 @@
 #include "iwram.h"
 #include "types.h"
 
-extern void sub_080219BC(const void *a0, s32 slot);
-extern void sub_08020FE4(s32 a0, s32 a1);
-extern void sub_08005D10(s32 a0, s32 a1);
-extern void sub_08021140(s32 a0, const void *a1, s32 a2, s32 a3, s32 a4, s32 a5, s32 a6);
-extern void sub_08021510(u8 a0, const void *a1, u8 a2, void *a3, u8 a4);
+extern void Entity_FollowPath(const void *a0, s32 slot);
+extern void Entity_UpdateMovers(s32 a0, s32 a1);
+extern void Entity_AdvanceAnimFrames(s32 a0, s32 a1);
+extern void LevelLayout_WalkRecords(s32 a0, const void *a1, s32 a2, s32 a3, s32 a4, s32 a5, s32 a6);
+extern void Entity_WalkCompactRecords(u8 a0, const void *a1, u8 a2, void *a3, u8 a4);
 extern void sub_080210A0(u16 a0, const void *a1, u16 a2, u8 a3, u16 a4, u8 a5, u8 a6, u8 a7);
-extern void sub_080063EC(u8 idx);
+extern void Entity_DmaLoadSprite(u8 idx);
 extern const u32 sLevelLayoutPtrs_310DD4[8];
 extern const u32 sLevelLayout_310C2C[6];
 extern const u32 sLevelLayoutPtrs_311074[14];
 extern const u32 sLevelLayoutPtrs_31118C[7];
 extern const u32 sLevelLayout_310B84[42];
 
-void sub_0802277C(void)
+void UpdateZone_Slots36to3D(void)
 {
     u8 i;
 
     i = 0;
     do {
-        sub_080219BC((const void *)sLevelLayoutPtrs_310DD4[i], i + 0x36);
+        Entity_FollowPath((const void *)sLevelLayoutPtrs_310DD4[i], i + 0x36);
         i++;
     } while (i <= 7);
 
-    sub_08020FE4(0x36, 0x3d);
-    sub_08005D10(0x36, 0x3d);
+    Entity_UpdateMovers(0x36, 0x3d);
+    Entity_AdvanceAnimFrames(0x36, 0x3d);
 }
 
-void sub_080227B4(void)
+void StreamInit_Slot2F(void)
 {
-    sub_08021140(0x2f, sLevelLayout_310C2C, 0, 0xb, 0xd1, 7, 0);
+    LevelLayout_WalkRecords(0x2f, sLevelLayout_310C2C, 0, 0xb, 0xd1, 7, 0);
 }
 
-void sub_080227DC(void)
+void SpawnZone_Slot2F(void)
 {
-    sub_08021510(0x2f, sLevelLayout_310C2C, 0xb, &gIwram_6110, 0);
+    Entity_WalkCompactRecords(0x2f, sLevelLayout_310C2C, 0xb, &gIwram_6110, 0);
 }
 
-void sub_08022800(void)
+void UpdateZone_Slots19to26(void)
 {
     u8 i;
 
     i = 0;
     do {
-        sub_080219BC((const void *)sLevelLayoutPtrs_311074[i], i + 25);
+        Entity_FollowPath((const void *)sLevelLayoutPtrs_311074[i], i + 25);
         i++;
     } while (i <= 13);
 
-    sub_08020FE4(25, 38);
-    sub_08005D10(25, 38);
+    Entity_UpdateMovers(25, 38);
+    Entity_AdvanceAnimFrames(25, 38);
 }
 
-void sub_08022838(void)
+void StreamInit_Slots3Eto44(void)
 {
     u8 i;
 
@@ -62,10 +62,10 @@ void sub_08022838(void)
         i++;
     } while (i <= 6);
 
-    sub_080063EC(0x3e);
+    Entity_DmaLoadSprite(0x3e);
 }
 
-void sub_08022884(void)
+void StreamInit_Slot05(void)
 {
-    sub_08021140(5, sLevelLayout_310B84, 0, 2, 0x51, 2, 0);
+    LevelLayout_WalkRecords(5, sLevelLayout_310B84, 0, 2, 0x51, 2, 0);
 }

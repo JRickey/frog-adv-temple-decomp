@@ -2,11 +2,11 @@
 #include "types.h"
 
 extern u32 sub_0802D9EC(u32 sound, u32 a, u32 b, u32 c);
-extern void sub_0802DC1C(u32 handle, u32 pan);
+extern void SoundHandle_SetPan(u32 handle, u32 pan);
 
 #define gStructAt3003570 (*(u8 *)0x03003570)
 
-void sub_0802090C(void)
+void Entity_PlayStateSound(void)
 {
     u8 *base;
     register u8 pan asm("r4");
@@ -92,7 +92,7 @@ void sub_0802090C(void)
                 mask = 0x7f;
                 pan = base[2];
                 mask &= pan;
-                sub_0802DC1C(sound, mask);
+                SoundHandle_SetPan(sound, mask);
             }
             return;
         case 2:
@@ -112,7 +112,7 @@ void sub_0802090C(void)
                 mask = 0x7f;
                 pan = base[2];
                 mask &= pan;
-                sub_0802DC1C(sound, mask);
+                SoundHandle_SetPan(sound, mask);
             }
             return;
         default:

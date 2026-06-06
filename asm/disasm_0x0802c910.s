@@ -160,7 +160,7 @@
 @   0x0802ca50: 801c        strh	r4, [r3, #0]
 @   0x0802ca52: 0831        lsrs	r1, r6, #32
 
-        thumb_func_start sub_0802C910
-sub_0802C910: @ 0x0802c910
+        thumb_func_start Entity22_Update
+Entity22_Update: @ 0x0802c910
         .incbin "frog_us_baserom.gba", 0x2c910, 0x144
-        thumb_func_end sub_0802C910
+        thumb_func_end Entity22_Update

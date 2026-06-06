@@ -2,7 +2,7 @@
 @ Address-aligned bucket of unparsed baserom bytes.
 @ Range:  [0x08011288, 0x0801129c)  (0x14 bytes)
 @
-@ Post-peel chunk after sub_08010F64.
+@ Post-peel chunk after Scroll_TickBlitDir.
 @
 @ This file holds raw bytes only; no instructions are assembled here.
 

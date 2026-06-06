@@ -2,7 +2,7 @@
 #include "iwram.h"
 #include "types.h"
 
-/* --- sub_0802CAFC: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- Enemy_PickNextStep: non-matching reference (asm slice provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "game.h"
 #include "iwram.h"
@@ -17,7 +17,7 @@ typedef struct {
 
 #define GRID ((u8 *)0x03003610)
 
-u8 sub_0802CAFC(Entry *e, s16 *out)
+u8 Enemy_PickNextStep(Entry *e, s16 *out)
 {
     struct Entity *p2;
     struct Entity *p0;

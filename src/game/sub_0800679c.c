@@ -30,7 +30,7 @@
  *     folding the two into a single `r = hi & signExt`, restoring the
  *     baserom's `ands r3, r1; adds r0, r3, #0; orrs r0, r2` ordering. */
 
-u32 sub_0800679C(u8 *baseIn, u32 selectorIn, u32 bitIn)
+u32 ModeControl_GetFlag(u8 *baseIn, u32 selectorIn, u32 bitIn)
 {
     u8 *base = baseIn;
     u32 selector = (u8)selectorIn;
@@ -116,7 +116,7 @@ ret_zero:
  *   - `bankBase` is a branch-local pointer distinct from `bank` so its live
  *     range pins it into r6 across both reads in the spanning branch.
  */
-s64 sub_08006830(void *unused, s32 lo, s32 hi)
+s64 CtrlFlags_ReadBitRange(void *unused, s32 lo, s32 hi)
 {
     u8 count = hi - lo + 1;
     s64 mask;

@@ -3,7 +3,7 @@
 /* Maps a (state, dir) pair to a single direction bit (8/16/32/64), or
  * 0xFF when the pair has no mapping. The inner switches deliberately
  * fall through to the next outer case for any dir they don't handle. */
-u8 sub_08005ED8(u8 state, u8 dir)
+u8 Anim_GetFrameHeight(u8 state, u8 dir)
 {
     switch (state) {
     case 0:
@@ -46,7 +46,7 @@ u8 sub_08005ED8(u8 state, u8 dir)
     return 0xFF;
 }
 
-u8 sub_08005F50(u8 state, u8 dir)
+u8 Anim_GetFrameWidth(u8 state, u8 dir)
 {
     switch (state) {
     case 0:

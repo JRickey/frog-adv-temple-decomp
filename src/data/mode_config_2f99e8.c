@@ -3,7 +3,7 @@
 
 /* Per-mode config-table cluster at [0x082f99e8..0x082f9d08).
  *
- * This is the data backing sub_08000918’s 14-case state machine
+ * This is the data backing Scene08_Main’s 14-case state machine
  * dispatcher (the "mode" select that routes from a u8 game mode
  * field into one of ~14 setup paths). The cluster has 16 pool-load
  * anchors in the still-asm code, all of which match the same
@@ -19,7 +19,7 @@
  *
  * ModeControl_Init zero-inits ~50 bytes of gIwram_6110 mode-control state
  * (offsets 0x00..0x33) and then writes the table pointer to configTable.
- * After install, sub_08000918’s per-case body runs the mode using the
+ * After install, Scene08_Main’s per-case body runs the mode using the
  * installed table.
  *
  * Anchor inventory (15 dispatcher anchors + 1 lookup table):
@@ -92,13 +92,13 @@
  *       every anchor; with raw INCBIN the pointer is just a u32
  *       value in the byte stream.
  *
- *   (c) Once sub_08000918 lands in C, per-anchor extern
+ *   (c) Once Scene08_Main lands in C, per-anchor extern
  *       declarations can pick up named offsets into
  *       sModeConfigTables_2F99E8[]. Example:
  *           extern const u32 sModeConfig_99E8[];  // = &raw[0]
  *           extern const u32 sModeConfig_9A1C[];  // = &raw[0x34/4]
  *
- * TODO: when sub_08000918 (asm/disasm_0x08000918.s) and one of the
+ * TODO: when Scene08_Main (asm/disasm_0x08000918.s) and one of the
  * per-case bodies (e.g. sub_08000d5c at 0x08000d5c, the callee of
  * the 0x82f99e8 consumer) land in C, split this into 15 typed
  * structs and rename per-mode (e.g., sMode00_TitleConfig,

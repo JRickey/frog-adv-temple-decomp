@@ -1,7 +1,7 @@
 #include "sound.h"
 
 /* SoundChannel_Init — per-channel sound-state primer (sibling of the high-register
- * variant sub_08032904 at 0x08032904). Clears the channel's "playing" dirty
+ * variant SoundChannel_SetState at 0x08032904). Clears the channel's "playing" dirty
  * bits, stores a per-channel mode byte and a control halfword, and for the
  * non-wave channels (index != 3) primes the mixer accumulator and step.
  *
@@ -113,12 +113,12 @@ u32 SoundSlot_ClearInProgress(void)
     return 0;
 }
 
-extern void sub_08031DBC(void);
+extern void SoundSlot_CalcStreamTiming(void);
 
 /* SoundSlot_QueueId — queues a 16-bit id (pose/sound selector) onto the active
  * sound slot, but only for a non-zero id and when the slot's +0x151 flag has
  * bit 0 set (ready). On success it stashes the id at slot+0x148, kicks
- * sub_08031DBC, and returns 1; otherwise returns 0. Sibling of the +0x151
+ * SoundSlot_CalcStreamTiming, and returns 1; otherwise returns 0. Sibling of the +0x151
  * predicates SoundSlot_QueueRequest / SoundSlot_ClearInProgress.
  *
  * Matching note: the u16 argument is zero-extended into a local `id` and kept
@@ -139,7 +139,7 @@ u32 SoundSlot_QueueId(u16 idArg)
         return 0;
 
     slot->pendingId = id;
-    sub_08031DBC();
+    SoundSlot_CalcStreamTiming();
     return 1;
 }
 
@@ -151,14 +151,14 @@ u32 SoundSlot_Stride(void)
     return 0x150;
 }
 
-/* sub_08032AA0 — initializes a sound slot: stores it as gpSoundSystem->slot,
+/* SoundSystem_InitRequestSlot — initializes a sound slot: stores it as gpSoundSystem->slot,
  * zeros the slot header (0x154 bytes), sets slot->nextRegion to arg1+0x154,
  * zeros the channel region ((arg0[2]+4)*12 bytes), clears flags, stores the
  * channel count, and returns 1.
  *
  * Matching notes:
  *   - pPool (&gpSoundSystem, r8) and buf (arg1, naturally allocated to r5) are
- *     callee-saved across the first bl to sub_0802E380. After the bl, sz (r4) =
+ *     callee-saved across the first bl to MemZero. After the bl, sz (r4) =
  *     arg1+0x154 (next).
  *   - To reproduce `mov r2, r8; ldr r1, [r2, #0]`, pPool is explicitly copied
  *     to r2pPool asm("r2") first; ssTmp then naturally loads into r1.
@@ -169,9 +169,9 @@ u32 SoundSlot_Stride(void)
  *     agbcc can use `ldrb r0, [r1, #2]` (immediate offset) vs modify-then-load.
  */
 
-extern void sub_0802E380(u8 *ptr, u32 count);
+extern void MemZero(u8 *ptr, u32 count);
 
-u32 sub_08032AA0(u8 *arg0, u8 *arg1)
+u32 SoundSystem_InitRequestSlot(u8 *arg0, u8 *arg1)
 {
     u8 *buf = arg1;
     register SoundSystem **pPool asm("r8") = &gpSoundSystem;
@@ -182,7 +182,7 @@ u32 sub_08032AA0(u8 *arg0, u8 *arg1)
 
     (*pPool)->slot = (SoundRequestSlot *)buf;
     sz = 0x154;
-    sub_0802E380(buf, sz);
+    MemZero(buf, sz);
 
     {
         SoundSystem *ssTmp;
@@ -196,7 +196,7 @@ u32 sub_08032AA0(u8 *arg0, u8 *arg1)
         slotField = (SoundRequestSlot **)((u8 *)ssTmp + 0x118); /* adds r1, r1, r6 */
         nextOff = 0x110;
         (*slotField)->nextRegion = (u8 *)sz;
-        sub_0802E380((*slotField)->nextRegion, ((u32)arg0[2] + 4) * 12);
+        MemZero((*slotField)->nextRegion, ((u32)arg0[2] + 4) * 12);
     }
 
     flagOff = 0x151;

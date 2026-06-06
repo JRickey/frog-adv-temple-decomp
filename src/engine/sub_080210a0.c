@@ -29,8 +29,8 @@ typedef struct SpawnRecord {
     s8 param;
 } SpawnRecord;
 
-extern void sub_08021F1C(u8 dir, s8 *outX, s8 *outY);
-extern void sub_0800A580(EntitySlot *e, s8 param, s8 deltaX, s8 deltaY);
+extern void DirToMotion(u8 dir, s8 *outX, s8 *outY);
+extern void MotionDesc_Set(EntitySlot *e, s8 param, s8 deltaX, s8 deltaY);
 
 void sub_080210A0(u32 idx, const void *record, u32 flags, u32 kind, u32 field14, u32 field16, u32 matchKey, u32 field17)
 {
@@ -98,8 +98,8 @@ void sub_080210A0(u32 idx, const void *record, u32 flags, u32 kind, u32 field14,
     oldFlags = entity->flags;
     entity->flags = flagMask | oldFlags;
 
-    sub_08021F1C(state, &deltaX, &deltaY);
+    DirToMotion(state, &deltaX, &deltaY);
     paramRec = (const u8 *)recVol;
     param = *(const s8 *)(paramRec + 12);
-    sub_0800A580(entity, param, deltaX, deltaY);
+    MotionDesc_Set(entity, param, deltaX, deltaY);
 }

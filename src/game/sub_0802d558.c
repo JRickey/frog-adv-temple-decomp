@@ -1,9 +1,9 @@
 #include "macros.h"
 #include "types.h"
 
-/* sub_0802D558 is the head of this title's libagbsyscall block — a run of
+/* BiosSwiTable is the head of this title's libagbsyscall block — a run of
  * thin Thumb wrappers around the game's BIOS/sound SWIs (svc 12, 14..37,
- * 40, 41). It sits one slot above the SWI 11 (CpuSet) wrapper sub_0802D554
+ * 40, 41). It sits one slot above the SWI 11 (CpuSet) wrapper Bios_CpuSet
  * and shares the same "svc N; bx lr" shape. A handful of entries adjust a
  * register before the SWI (the `movs r0/r1, #N; svc N` forms) or unpack the
  * SWI result (the `push {r0,r1}; svc 18; pop ...; strh` MidiKey2Freq-style
@@ -23,7 +23,7 @@
  * they remain available as proper future C-decomp targets rather than
  * being buried behind this NAKED block. */
 
-NAKED void sub_0802D558(void)
+NAKED void BiosSwiTable(void)
 {
     asm(".syntax unified\n"
         "    svc     12\n" /* CpuFastSet */

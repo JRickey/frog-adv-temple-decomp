@@ -2,7 +2,7 @@
 
 extern u32 __udivsi3(u32 num, u32 den);
 
-void sub_08031DBC(void)
+void SoundSlot_CalcStreamTiming(void)
 {
     SoundSystem *ss = gpSoundSystem;
     SoundRequestSlot *slot = ss->slot;

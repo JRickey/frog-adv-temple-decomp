@@ -2,7 +2,7 @@
 @ Address-aligned bucket of unparsed baserom bytes.
 @ Range:  [0x08006afc, 0x08006b88)  (0x8c bytes)
 @
-@ Post-peel chunk after sub_08006ADC.
+@ Post-peel chunk after Timer_DecrByte.
 @
 @ This file holds raw bytes only; no instructions are assembled here.
 

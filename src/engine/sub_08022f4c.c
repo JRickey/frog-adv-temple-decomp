@@ -6,7 +6,7 @@ extern u32 __umodsi3(u32 dividend, u32 divisor);
 
 extern const u32 sLevelLayoutPtrs_311EC0[10];
 
-void sub_08022F4C(void)
+void LevelLayout_SpawnGroup311EC0(void)
 {
     u8 i;
     const u32 *tbl;             /* r8 holds table base across BL calls */

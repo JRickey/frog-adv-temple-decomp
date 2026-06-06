@@ -1,16 +1,16 @@
 extern void ModeControl_Init(unsigned int a, unsigned int b, unsigned int c, unsigned int d, unsigned int e,
                              unsigned int f);
-extern void sub_0800CE98(unsigned int a, unsigned int b);
-extern void sub_08009CBC(void);
+extern void SpriteAsset_LoadSheet(unsigned int a, unsigned int b);
+extern void EntityDispatch_RunFrame(void);
 
-void sub_08004080(void)
+void Mode13_Init(void)
 {
     unsigned char *control;
     unsigned int zero;
 
     control = (unsigned char *)0x03006110;
     ModeControl_Init((unsigned int)control, 0x32, 13, 0x082F9CD0, 1, zero = 0);
-    sub_0800CE98(13, 0);
+    SpriteAsset_LoadSheet(13, 0);
     control[0x2a] = zero;
     {
         unsigned int six;
@@ -21,5 +21,5 @@ void sub_08004080(void)
         *(unsigned int *)(control + 4) = six;
         *(unsigned int *)(control + 8) = wordZero;
     }
-    sub_08009CBC();
+    EntityDispatch_RunFrame();
 }

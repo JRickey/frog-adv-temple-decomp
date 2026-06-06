@@ -300,7 +300,7 @@
 @   0x080100de: 8100        strh	r0, [r0, #8]
 @   0x080100e0: 1f08        subs	r0, r1, #4
 
-        thumb_func_start sub_0800FE88
-sub_0800FE88: @ 0x0800fe88
+        thumb_func_start Credits_RenderStep
+Credits_RenderStep: @ 0x0800fe88
         .incbin "frog_us_baserom.gba", 0xfe88, 0x25c
-        thumb_func_end sub_0800FE88
+        thumb_func_end Credits_RenderStep

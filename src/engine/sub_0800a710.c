@@ -1,10 +1,10 @@
 #include "macros.h"
 #include "types.h"
 
-/* Cluster of six helpers living between sub_0800A540 and sub_0800A7A8.
+/* Cluster of six helpers living between Entity_InitShadow and EntityHitbox_FindPoint.
  *
  * Entity_Init is a 10-argument struct initializer called from
- * sub_0800A540 (still asm). The remaining five are tiny flag/field
+ * Entity_InitShadow (still asm). The remaining five are tiny flag/field
  * helpers on the same struct, all sharing the +0x34 flag halfword.
  *
  * The struct type isn't yet identified — the layout below covers only
@@ -22,7 +22,7 @@
  *     stack args used last (stored at dest +22, +23, +26, +52) spill
  *     into r8/r9/sl/r4 — agbcc runs out of low callee-saved registers
  *     mid-prologue. First two stack args (+6, +20) stay in r5/r6.
- *   - sub_0800A798 uses `& 0xffbf` (not `& ~0x40`); the literal lands
+ *   - Entity_ClearTargetFlag uses `& 0xffbf` (not `& ~0x40`); the literal lands
  *     in the pool just past the function's bx lr. */
 
 struct ClusterA710 {
@@ -75,7 +75,7 @@ u8 Entity_TestFlags(struct ClusterA710 *p, u16 mask)
     return 0;
 }
 
-void sub_0800A788(struct ClusterA710 *p, u16 a, u16 b, u16 c)
+void Entity_SetTargetPos(struct ClusterA710 *p, u16 a, u16 b, u16 c)
 {
     p->_field_0C = a;
     p->_field_0E = b;
@@ -83,7 +83,7 @@ void sub_0800A788(struct ClusterA710 *p, u16 a, u16 b, u16 c)
     p->flags |= 0x40;
 }
 
-void sub_0800A798(struct ClusterA710 *p)
+void Entity_ClearTargetFlag(struct ClusterA710 *p)
 {
     p->flags &= 0xffbf;
 }
@@ -96,7 +96,7 @@ typedef struct EntityHitbox {
 
 extern const EntityHitbox sEntityHitboxTable[];
 
-s8 sub_0800A7A8(s8 a, s16 x, s16 y)
+s8 EntityHitbox_FindPoint(s8 a, s16 x, s16 y)
 {
     s8 i;
 

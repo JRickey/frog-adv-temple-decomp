@@ -47,25 +47,25 @@ extern struct IwramAt6500 gIwram_6500;
 extern struct IwramAt6540 gIwram_6540;
 extern struct IwramAt60A0 gIwram_60A0;
 
-extern void sub_08020C78(u32 arg);
-extern void sub_0800E85C(u8 arg);
-extern void sub_0800EB1C(void);
-extern void sub_0800F24C(u8 arg);
-extern void sub_0801310C(void);
-extern void sub_0800EBDC(u8 arg);
-extern void sub_08016A40(void);
-extern void sub_08012E2C(void);
-extern void sub_0800EE34(u8 layer);
+extern void Sound_Play(u32 arg);
+extern void CharLayers_Upload(u8 arg);
+extern void FrogOam_Init(void);
+extern void Scroll_UpdateCamera(u8 arg);
+extern void ScaleAnim_SyncSelectors(void);
+extern void BgScrollBlit(u8 arg);
+extern void StatusBar_Update(void);
+extern void BgScrollAnim_InitPartial(void);
+extern void BgLayer_Disable(u8 layer);
 extern u8 gIwram_3610;
 extern u8 gIwram_6110;
 
-void sub_0801377C(void)
+void BgLayer_Init(void)
 {
     vu16 *scroll;
     vu32 *dma;
     u8 *flags;
 
-    sub_08020C78(0x33);
+    Sound_Play(0x33);
 
     gIwram_60A0.field_c = 24;
     gIwram_60A0.field_10 = 40;
@@ -107,15 +107,15 @@ void sub_0801377C(void)
     flags[0xD4] = 0;
 }
 
-void sub_08013828(void)
+void ScaleAnim_Reset(void)
 {
     u32 zero;
     u8 *flags;
     u8 *control;
 
-    sub_0800E85C(3);
-    sub_0800EB1C();
-    sub_0800F24C(2);
+    CharLayers_Upload(3);
+    FrogOam_Init();
+    Scroll_UpdateCamera(2);
 
     flags = &gIwram_3610;
     zero = 0;
@@ -127,10 +127,10 @@ void sub_08013828(void)
     *(u16 *)(control + 0x28) = zero;
     control[0x2b] &= 0xf;
 
-    sub_0801310C();
-    sub_0801310C();
-    sub_0800EBDC(3);
-    sub_08016A40();
-    sub_08012E2C();
-    sub_0800EE34(2);
+    ScaleAnim_SyncSelectors();
+    ScaleAnim_SyncSelectors();
+    BgScrollBlit(3);
+    StatusBar_Update();
+    BgScrollAnim_InitPartial();
+    BgLayer_Disable(2);
 }

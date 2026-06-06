@@ -2,7 +2,7 @@
 @ Address-aligned bucket of unparsed baserom bytes.
 @ Range:  [0x08020d9c, 0x08020da0)  (0x4 bytes)
 @
-@ Post-peel chunk after sub_08020D2C.
+@ Post-peel chunk after Entity_PlaySoundOnScreenEnter.
 @
 @ This file holds raw bytes only; no instructions are assembled here.
 

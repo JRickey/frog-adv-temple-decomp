@@ -492,7 +492,7 @@
 @   0x0802150c: 3720        adds	r7, #32
 @   0x0802150e: 0300        lsls	r0, r0, #12
 
-        thumb_func_start sub_08021140
-sub_08021140: @ 0x08021140
+        thumb_func_start LevelLayout_WalkRecords
+LevelLayout_WalkRecords: @ 0x08021140
         .incbin "frog_us_baserom.gba", 0x21140, 0x3d0
-        thumb_func_end sub_08021140
+        thumb_func_end LevelLayout_WalkRecords

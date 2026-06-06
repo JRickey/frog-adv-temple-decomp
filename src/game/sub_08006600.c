@@ -1,7 +1,7 @@
 #include "types.h"
 
 /* Generic bit-set accessor on a struct at `base` — the "set bit" companion
- * to sub_080066C4 ("clear bit") and sub_0800679C ("test bit"). Same
+ * to ModeControl_ClearBit ("clear bit") and ModeControl_GetFlag ("test bit"). Same
  * (selector, bit) shape; ten populated cases (selector >= 10 falls through
  * to the shared pop/bx epilogue, leaving the struct untouched).
  *
@@ -27,7 +27,7 @@
  *     the shared `set_byte` block ships as `adds r1, r4, #0; adds r1,
  *     #N` for each, without spurious copies. */
 
-void sub_08006600(void *baseIn, u32 selectorIn, u32 bitIn)
+void CtrlFlags_SetBit(void *baseIn, u32 selectorIn, u32 bitIn)
 {
     u8 *base = (u8 *)baseIn;
     u32 selector = (u8)selectorIn;

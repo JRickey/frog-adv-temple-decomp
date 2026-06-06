@@ -344,7 +344,7 @@
 @   0x0800eb18: 3608        adds	r6, #8
 @   0x0800eb1a: 0300        lsls	r0, r0, #12
 
-        thumb_func_start sub_0800E85C
-sub_0800E85C: @ 0x0800e85c
+        thumb_func_start CharLayers_Upload
+CharLayers_Upload: @ 0x0800e85c
         .incbin "frog_us_baserom.gba", 0xe85c, 0x2c0
-        thumb_func_end sub_0800E85C
+        thumb_func_end CharLayers_Upload

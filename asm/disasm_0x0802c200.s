@@ -237,7 +237,7 @@
 @   0x0802c3e0: bc01        pop	{r0}
 @   0x0802c3e2: 4700        bx	r0
 
-        thumb_func_start sub_0802C200
-sub_0802C200: @ 0x0802c200
+        thumb_func_start EntityPool_UpdateOwned
+EntityPool_UpdateOwned: @ 0x0802c200
         .incbin "frog_us_baserom.gba", 0x2c200, 0x1e4
-        thumb_func_end sub_0802C200
+        thumb_func_end EntityPool_UpdateOwned

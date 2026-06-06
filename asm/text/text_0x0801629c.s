@@ -2,7 +2,7 @@
 @ Address-aligned bucket of unparsed baserom bytes.
 @ Range:  [0x0801629c, 0x08016360)  (0xc4 bytes)
 @
-@ Post-peel chunk after sub_0801621C.
+@ Post-peel chunk after Mode4_BlitRect.
 @
 @ This file holds raw bytes only; no instructions are assembled here.
 

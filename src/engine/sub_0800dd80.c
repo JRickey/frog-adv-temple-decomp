@@ -1,15 +1,15 @@
 #include "game.h"
 #include "types.h"
 
-extern void sub_0802D558(void *src, void *dst, u32 mode);
-extern void sub_0802D8F8(void);
-extern void sub_0801756C(u8 a, void *b);
+extern void BiosSwiTable(void *src, void *dst, u32 mode);
+extern void Sound_Reset(void);
+extern void SaveCommit(u8 a, void *b);
 
 /* Per-mode scene reset: marks the current pending mode as visited in
  * gGameStuff._unk0C (bitmap of seen modes), CpuFastSet-zeroes a 32-byte
  * VRAM region at 0x06010000 (OBJ tile 0), clears the 128-entry OAM
- * shadow at 0x030054a0 to {y=0xf0 (hidden), 0, 0, 0}, runs sub_0802D8F8,
- * then dispatches sub_0801756C with a byte from 0x03003538 plus a table
+ * shadow at 0x030054a0 to {y=0xf0 (hidden), 0, 0, 0}, runs Sound_Reset,
+ * then dispatches SaveCommit with a byte from 0x03003538 plus a table
  * base 0x03003600. Finally sets gGameStuff.mode to 23 if pendingMode is
  * 15, otherwise 29.
  *
@@ -21,7 +21,7 @@ extern void sub_0801756C(u8 a, void *b);
  *     then runs an inner loop writing 3 zero halfwords via a post-
  *     incrementing pointer, matching the baserom's 8-byte stride. */
 
-void sub_0800DD80(void)
+void WorldMap_Init(void)
 {
     GameStuff *g = &gGameStuff;
     u16 *p;
@@ -37,7 +37,7 @@ void sub_0800DD80(void)
     }
 
     zero = 0;
-    sub_0802D558(&zero, (void *)0x06010000, 0x01000008);
+    BiosSwiTable(&zero, (void *)0x06010000, 0x01000008);
 
     i = 0;
     base = (u16 *)0x030054a0;
@@ -60,12 +60,12 @@ void sub_0800DD80(void)
         i = next;
     } while (i <= 127);
 
-    sub_0802D8F8();
+    Sound_Reset();
 
     p_3003500 = (u8 *)0x03003500;
     asm volatile("" : "+r"(p_3003500));
     p_3003500 += 0x38;
-    sub_0801756C(*p_3003500, (void *)0x03003600);
+    SaveCommit(*p_3003500, (void *)0x03003600);
 
     {
         GameStuff *g2 = &gGameStuff;
@@ -77,14 +77,14 @@ void sub_0800DD80(void)
     }
 }
 
-extern void sub_0800A520(void);
-extern u32 sub_080115F8(void);
-extern void sub_08009A58(void);
-extern void sub_08009188(void);
-extern void sub_080008DC(void);
-extern void sub_0800A328(void);
+extern void Game_UpdateSubsystems(void);
+extern u32 Selector_RunAnimSequence(void);
+extern void Entity_UpdateVisibility(void);
+extern void Entity_Advance(void);
+extern void WaitVblank(void);
+extern void Game_ForceRender(void);
 
-void sub_0800DE0C(void)
+void EntityProcE_Settle(void)
 {
     u32 done = 0;
     GameStuff *gs;
@@ -99,16 +99,16 @@ void sub_0800DE0C(void)
     gs = &gGameStuff;
 
     do {
-        sub_0800A520();
-        if (sub_080115F8() != 0) {
+        Game_UpdateSubsystems();
+        if (Selector_RunAnimSequence() != 0) {
             if (gs->_unk00 - (u32)(s16)gs->_unk22 > 0xdb) {
                 done |= 1;
             }
         }
-        sub_08009A58();
-        sub_08009188();
-        sub_080008DC();
-        sub_0800A328();
+        Entity_UpdateVisibility();
+        Entity_Advance();
+        WaitVblank();
+        Game_ForceRender();
         {
             u32 check = 1;
             check &= done;

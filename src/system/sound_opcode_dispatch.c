@@ -1,6 +1,6 @@
 #include "sound.h"
 
-/* sub_080315D8 — per-frame sound opcode-script dispatcher.
+/* Sound_OpcodeDispatch — per-frame sound opcode-script dispatcher.
  *
  * Walks every channel sequencer slot in SoundSystem (the dynamic SFX bank
  * sized by ss->count, plus four fixed music channels — total iterations
@@ -15,7 +15,7 @@
  * the current opcode pointer (u8*); the remaining 12 bytes are
  * handler-private cursor state, not yet decoded.
  *
- * Called from sub_0802F4B0 (per-VBlank mixer driver). The handler
+ * Called from SoundMixer_VBlankUpdate (per-VBlank mixer driver). The handler
  * dispatch goes through agbcc's libgcc thunk `_call_via_r2` at 0x08033ce0
  * (linked from libgcc.a:_call_via_rX.o as the canonical 14-entry helper block).
  *
@@ -30,7 +30,7 @@
 typedef u32 (*SoundOpcodeHandler)(s32 channelIndex, SoundChannelSeq *seq);
 extern const SoundOpcodeHandler sSoundOpcodeHandlers[54];
 
-void sub_080315D8(void)
+void Sound_OpcodeDispatch(void)
 {
     const SoundOpcodeHandler *handlers;
     register s32 i asm("r5");

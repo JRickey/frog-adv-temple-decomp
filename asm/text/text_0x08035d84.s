@@ -2,7 +2,7 @@
 @ Range:  [0x08035d84, 0x08035d8c)  (8 bytes)
 @
 @ One 8-byte Thumb-to-ARM interwork veneer, mirrored from
-@ sub_08035D7C's pattern:
+@ IntrEnable_Thunk's pattern:
 @
 @   0x08035d84  bx pc; nop; b 0x08000240   (sub_08000240, ARM)
 @

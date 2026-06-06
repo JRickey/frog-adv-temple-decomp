@@ -21,9 +21,9 @@ typedef struct EntityHitboxPoint {
 } EntityHitboxPoint;
 
 extern const EntityHitbox sEntityHitboxTable[];
-extern int sub_0800CB80(int gridId, int gridPlane, int x, int y, int flags);
+extern int SpriteGrid_SetCellFlags(int gridId, int gridPlane, int x, int y, int flags);
 
-void sub_0800A83C(u8 type, u32 gridId, u32 gridPlane, u32 useAlternateFlags)
+void EntityHitbox_RegisterGridPoints(u8 type, u32 gridId, u32 gridPlane, u32 useAlternateFlags)
 {
     volatile s32 useAlternateFlagsStack;
     volatile u32 typeStack;
@@ -73,15 +73,17 @@ void sub_0800A83C(u8 type, u32 gridId, u32 gridPlane, u32 useAlternateFlags)
                 point = (const EntityHitboxPoint *)(pointOffset + *(const u32 *)((u32)r1v + (u32)pointsFieldBase));
                 x = point->x;
                 y = point->y;
-                sub_0800CB80(gridIdReg, gridPlaneReg, x, y,
-                             ((const EntityHitboxFlagBytes *)((u8 *)sEntityHitboxTable + r1v))->primaryFlags);
+                SpriteGrid_SetCellFlags(
+                    gridIdReg, gridPlaneReg, x, y,
+                    ((const EntityHitboxFlagBytes *)((u8 *)sEntityHitboxTable + r1v))->primaryFlags);
             } else {
                 r1v = savedTypeIndex * sizeof(EntityHitbox);
                 point = (const EntityHitboxPoint *)(pointOffset + *(const u32 *)((u32)r1v + (u32)pointsFieldBase));
                 x = point->x;
                 y = point->y;
-                sub_0800CB80(gridIdReg, gridPlaneReg, x, y,
-                             ((const EntityHitboxFlagBytes *)((u8 *)sEntityHitboxTable + r1v))->alternateFlags);
+                SpriteGrid_SetCellFlags(
+                    gridIdReg, gridPlaneReg, x, y,
+                    ((const EntityHitboxFlagBytes *)((u8 *)sEntityHitboxTable + r1v))->alternateFlags);
             }
         }
         {
@@ -104,30 +106,30 @@ void sub_0800A83C(u8 type, u32 gridId, u32 gridPlane, u32 useAlternateFlags)
     } while (pointIndex < pointCount);
 }
 
-extern u8 sub_0800679C(void *base, u32 selector, u32 bit);
-extern void sub_08006600(void *base, u32 selector, u32 bit);
+extern u8 ModeControl_GetFlag(void *base, u32 selector, u32 bit);
+extern void CtrlFlags_SetBit(void *base, u32 selector, u32 bit);
 
-void sub_0800A910(void)
+void Frog_UpdateContactHitboxes(void)
 {
-    if (sub_0800679C(&gIwram_6110, 5, 0) != 0) {
-        sub_08006600(&gIwram_6110, 8, 0);
-        sub_0800A83C(0, 3, 0, 1);
+    if (ModeControl_GetFlag(&gIwram_6110, 5, 0) != 0) {
+        CtrlFlags_SetBit(&gIwram_6110, 8, 0);
+        EntityHitbox_RegisterGridPoints(0, 3, 0, 1);
 
-        if (sub_0800679C(&gIwram_6110, 5, 1) != 0)
-            sub_08006600(&gIwram_6110, 8, 3);
+        if (ModeControl_GetFlag(&gIwram_6110, 5, 1) != 0)
+            CtrlFlags_SetBit(&gIwram_6110, 8, 3);
     }
 
-    if (sub_0800679C(&gIwram_6110, 5, 1) != 0) {
-        sub_08006600(&gIwram_6110, 8, 1);
-        sub_0800A83C(1, 3, 0, 1);
+    if (ModeControl_GetFlag(&gIwram_6110, 5, 1) != 0) {
+        CtrlFlags_SetBit(&gIwram_6110, 8, 1);
+        EntityHitbox_RegisterGridPoints(1, 3, 0, 1);
 
-        if (sub_0800679C(&gIwram_6110, 5, 0) != 0)
-            sub_08006600(&gIwram_6110, 5, 3);
+        if (ModeControl_GetFlag(&gIwram_6110, 5, 0) != 0)
+            CtrlFlags_SetBit(&gIwram_6110, 5, 3);
     }
 
-    if (sub_0800679C(&gIwram_6110, 5, 2) != 0) {
-        sub_08006600(&gIwram_6110, 5, 4);
-        sub_08006600(&gIwram_6110, 8, 2);
-        sub_0800A83C(2, 3, 0, 1);
+    if (ModeControl_GetFlag(&gIwram_6110, 5, 2) != 0) {
+        CtrlFlags_SetBit(&gIwram_6110, 5, 4);
+        CtrlFlags_SetBit(&gIwram_6110, 8, 2);
+        EntityHitbox_RegisterGridPoints(2, 3, 0, 1);
     }
 }

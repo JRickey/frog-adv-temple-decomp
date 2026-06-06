@@ -3,12 +3,12 @@
 #include "gba/io.h"
 #include "types.h"
 
-extern void sub_08019EF0(void);
+extern void LoadRoomBg3Graphics(void);
 
-/* Scene/mode bring-up sibling of sub_0800E060.
+/* Scene/mode bring-up sibling of Scene_LoadBg.
  *
  * Resets the 0x03005370 control struct (offsets 0/4/8/12/16), sets the
- * 0x03005328 control byte to 1, calls sub_08019EF0(), then fires a run of
+ * 0x03005328 control byte to 1, calls LoadRoomBg3Graphics(), then fires a run of
  * DMA3 transfers:
  *   - halfword-fill OBJ-VRAM 0x0600F800 with 0 (0x400 halfwords)
  *   - copy ROM 0x080E3754 -> palette 0x050001A0 (0x30 halfwords)
@@ -31,7 +31,7 @@ extern void sub_08019EF0(void);
  *     instead of mutating romBase's register in place.
  */
 
-void sub_0800EB1C(void)
+void FrogOam_Init(void)
 {
     u16 seedVal;
     u32 romBase;
@@ -50,7 +50,7 @@ void sub_0800EB1C(void)
 
     *(u8 *)0x03005328 = 1;
 
-    sub_08019EF0();
+    LoadRoomBg3Graphics();
 
     seed = seedVal;
     dma = (vu32 *)0x040000D4;

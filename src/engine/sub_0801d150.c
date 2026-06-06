@@ -1,11 +1,11 @@
 #include "gba/dma.h"
 #include "types.h"
 
-extern void sub_0801D268(u8 arg);
-extern void sub_08020BAC(void);
-extern void sub_08020B88(u8 arg);
+extern void Credits_LoadBgGfx(u8 arg);
+extern void Sound_DrainIfActive(void);
+extern void Sound_PlayIfEnabled(u8 arg);
 
-void sub_0801D150(u8 arg)
+void Credits_Init(u8 arg)
 {
     register u16 zeroReg asm("r4");
     volatile DmaChannel *dma;
@@ -69,10 +69,10 @@ void sub_0801D150(u8 arg)
     regs++;
     *regs = clear;
 
-    sub_0801D268(arg);
+    Credits_LoadBgGfx(arg);
     state = (u8 *)0x03003540;
     state[1] = (u8)zeroReg;
     state[12] = (u8)zeroReg;
-    sub_08020BAC();
-    sub_08020B88(0);
+    Sound_DrainIfActive();
+    Sound_PlayIfEnabled(0);
 }

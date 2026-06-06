@@ -139,7 +139,7 @@
 @   0x0800cfd6: bc02        pop	{r1}
 @   0x0800cfd8: 4708        bx	r1
 
-        thumb_func_start sub_0800CED0
-sub_0800CED0: @ 0x0800ced0
+        thumb_func_start Rect_PointInRect
+Rect_PointInRect: @ 0x0800ced0
         .incbin "frog_us_baserom.gba", 0xced0, 0x10c
-        thumb_func_end sub_0800CED0
+        thumb_func_end Rect_PointInRect

@@ -1,18 +1,18 @@
 #include "iwram.h"
 #include "types.h"
 
-/* --- sub_08022434: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- UpdateLogPairEntities: non-matching reference (asm slice provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "iwram.h"
 #include "types.h"
 
-extern u32 sub_08020CDC(struct Entity *entity, u32 sound, u8 halfW, u8 halfH);
-extern void sub_08020F3C(u8 idx);
-extern void sub_080059C4(void *p);
-extern void sub_08020FE4(s32 a, s32 b);
-extern void sub_08005D10(s32 a, s32 b);
+extern u32 Sound_PlayNearEntity(struct Entity *entity, u32 sound, u8 halfW, u8 halfH);
+extern void EntityMover_Tick(u8 idx);
+extern void Entity_Update(void *p);
+extern void Entity_UpdateMovers(s32 a, s32 b);
+extern void Entity_AdvanceAnimFrames(s32 a, s32 b);
 
-void sub_08022434(void)
+void UpdateLogPairEntities(void)
 {
     u8 i;
     struct Entity *slot;
@@ -37,7 +37,7 @@ void sub_08022434(void)
 
         if (slot->y == 0x2f5 || slot->y == 0x30d || slot->y == 0x325 || slot->y == 0x33d || slot->y == 0x355 ||
             slot->y == 0x36d)
-            sub_08020CDC(slot, 14, 3, 3);
+            Sound_PlayNearEntity(slot, 14, 3, 3);
 
         switch (slot->field_1A) {
         case 0:
@@ -98,7 +98,7 @@ void sub_08022434(void)
                 gEntities[70].status |= 2;
             }
             if (slot->field_1B == 1)
-                sub_08020CDC(slot, 14, 3, 3);
+                Sound_PlayNearEntity(slot, 14, 3, 3);
             if (slot->status & 0x8000) {
                 slot->y = resetY;
                 slot->field_06 = 4;
@@ -109,16 +109,16 @@ void sub_08022434(void)
     }
 
     if (gEntities[69].field_1A == 2) {
-        sub_08020F3C(70);
-        sub_080059C4(&gEntities[69]);
-        sub_080059C4(&gEntities[70]);
+        EntityMover_Tick(70);
+        Entity_Update(&gEntities[69]);
+        Entity_Update(&gEntities[70]);
     } else if (gEntities[70].field_1A == 2) {
-        sub_08020F3C(69);
-        sub_080059C4(&gEntities[69]);
-        sub_080059C4(&gEntities[70]);
+        EntityMover_Tick(69);
+        Entity_Update(&gEntities[69]);
+        Entity_Update(&gEntities[70]);
     } else {
-        sub_08020FE4(69, 70);
-        sub_08005D10(69, 70);
+        Entity_UpdateMovers(69, 70);
+        Entity_AdvanceAnimFrames(69, 70);
     }
 }
 #endif /* NON_MATCHING */

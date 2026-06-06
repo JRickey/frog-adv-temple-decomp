@@ -83,7 +83,7 @@
 @   0x08007134: 3720        adds	r7, #32
 @   0x08007136: 0300        lsls	r0, r0, #12
 
-        thumb_func_start sub_080070A0
-sub_080070A0: @ 0x080070a0
+        thumb_func_start Entity_ApplyScrollStep
+Entity_ApplyScrollStep: @ 0x080070a0
         .incbin "frog_us_baserom.gba", 0x70a0, 0x98
-        thumb_func_end sub_080070A0
+        thumb_func_end Entity_ApplyScrollStep

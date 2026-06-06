@@ -7,7 +7,7 @@
  * countdown) to REG_BLDCNT so the blend fades up as the countdown
  * runs out. Returns the post-decrement countdown.
  *
- * Companion to sub_08010694 (the fade-in init helper). 30 BL callers
+ * Companion to Blend_StartFade (the fade-in init helper). 30 BL callers
  * across the ROM.
  *
  * Matching notes (old_agbcc, control-flow join would otherwise emit
@@ -18,7 +18,7 @@
  *   - bldcnt pinned to r0 and the literal 16 pinned to r1 to force
  *     the target's evaluation order for `16 - *countdown`. */
 
-u8 sub_080106B8(void)
+u8 Blend_StepFade(void)
 {
     register vu8 *countdown asm("r2") = (vu8 *)0x03006538;
     register vu16 *bldcnt asm("r0");
@@ -39,9 +39,9 @@ u8 sub_080106B8(void)
 
 /* Fade-out init helper. Sets countdown=16, REG_BLDCNT=16 (full
  * darkness), and installs `arg` as REG_WININ. Companion to
- * sub_08010710 (fade-out ticker). */
+ * Screen_TickFlash (fade-out ticker). */
 
-u16 sub_080106EC(u16 arg)
+u16 Screen_BeginFlash(u16 arg)
 {
     *(vu8 *)0x03006538 = 16;
     *(vu16 *)0x04000054 = 16;
@@ -49,15 +49,15 @@ u16 sub_080106EC(u16 arg)
     return arg;
 }
 
-/* Fade-out ticker. Same countdown logic as sub_080106B8 but writes
+/* Fade-out ticker. Same countdown logic as Blend_StepFade but writes
  * the raw countdown value (rather than 16-countdown) to REG_BLDCNT,
  * so the blend darkens as the countdown runs out. 12 BL callers.
  *
- * Matching notes: same r2 pin + p3480 anchor as sub_080106B8. The
+ * Matching notes: same r2 pin + p3480 anchor as Blend_StepFade. The
  * final block doesn't need the bldcnt/n pins because there's no
  * arithmetic on countdown before the store. */
 
-u8 sub_08010710(void)
+u8 Screen_TickFlash(void)
 {
     vu8 *countdown = (vu8 *)0x03006538;
     vu8 *p3480 = (vu8 *)0x03003480;
@@ -71,11 +71,11 @@ u8 sub_08010710(void)
     return *countdown;
 }
 
-extern void sub_08017000(void);
+extern void FrogStatusBar_Update(void);
 
-void sub_08010740(void)
+void Render_UpdateBlendRegs(void)
 {
-    sub_08017000();
+    FrogStatusBar_Update();
 
     if (*(vu8 *)0x03006500 == 1) {
         *(vu16 *)0x04000050 = 0x1744;
@@ -84,7 +84,7 @@ void sub_08010740(void)
     }
 }
 
-void sub_08010778(void)
+void Pal_RotateEntries(void)
 {
     u32 *frameCounter = (u32 *)0x03005330;
     register u32 *state asm("r3") = (u32 *)0x03006540;
@@ -122,7 +122,7 @@ void sub_08010778(void)
     savedState[1] = *savedFrameCounter;
 }
 
-u32 sub_080107D0(u8 layer)
+u32 Render_DmaLoadTileset(u8 layer)
 {
     vu32 *dma;
     u32 cnt;
@@ -171,7 +171,7 @@ u32 sub_080107D0(u8 layer)
     return dma[2];
 }
 
-void *sub_08010870(void *ptr, void *base)
+void *WrapBufPtr(void *ptr, void *base)
 {
     u8 *pos = ptr;
     u8 *start = base;
@@ -191,7 +191,7 @@ void *sub_08010870(void *ptr, void *base)
     return end - (((s32)pos >> 1) << 1);
 }
 
-void sub_0801089C(void)
+void Anim_AdvanceFrameStep(void)
 {
     u32 *frameCounter = (u32 *)0x03005330;
     u8 *state = (u8 *)0x03006480;
@@ -221,7 +221,7 @@ void sub_0801089C(void)
     *(u32 *)(state + 4) = *frameCounter;
 }
 
-void sub_080108F8(void)
+void Anim_TickFrame(void)
 {
     u32 *frameCounter = (u32 *)0x03005330;
     u8 *state = (u8 *)0x03006480;
@@ -249,5 +249,5 @@ void sub_080108F8(void)
         *(u32 *)(state + 4) = *frameCounter;
     }
 
-    sub_08017000();
+    FrogStatusBar_Update();
 }

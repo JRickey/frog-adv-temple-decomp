@@ -1,6 +1,6 @@
 #include "types.h"
 
-void sub_08012F00(void)
+void RemapInputBits(void)
 {
     u8 *base;
     register u8 *dst asm("r0");

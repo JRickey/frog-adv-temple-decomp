@@ -360,7 +360,7 @@
 @   0x08019dae: 0000        movs	r0, r0
 @   0x08019db0: 4770        bx	lr
 
-        thumb_func_start sub_08019AEC
-sub_08019AEC: @ 0x08019aec
+        thumb_func_start Room_StreamOamAttribs
+Room_StreamOamAttribs: @ 0x08019aec
         .incbin "frog_us_baserom.gba", 0x19aec, 0x2c8
-        thumb_func_end sub_08019AEC
+        thumb_func_end Room_StreamOamAttribs

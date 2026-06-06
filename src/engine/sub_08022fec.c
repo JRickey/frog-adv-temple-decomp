@@ -1,21 +1,21 @@
 #include "iwram.h"
 #include "types.h"
 
-/* --- sub_08022FEC: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- UpdateLogPairEntities2: non-matching reference (asm slice provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "iwram.h"
 #include "types.h"
 
-extern void sub_08020CDC(struct Entity *entity, u8 sound, u8 a, u8 b);
+extern void Sound_PlayNearEntity(struct Entity *entity, u8 sound, u8 a, u8 b);
 extern void sub_080210A0(u16 a0, const void *a1, u16 a2, u8 a3, u16 a4, u8 a5, u8 a6, u8 a7);
-extern void sub_0800696C(void *p, s32 slot);
-extern void sub_08005D10(s32 a0, s32 a1);
-extern void sub_0800A580(void *m, u8 sel, u8 a, u8 b);
-extern void sub_08020FE4(s32 a0, s32 a1);
+extern void ModeControl_SetBit(void *p, s32 slot);
+extern void Entity_AdvanceAnimFrames(s32 a0, s32 a1);
+extern void MotionDesc_Set(void *m, u8 sel, u8 a, u8 b);
+extern void Entity_UpdateMovers(s32 a0, s32 a1);
 
 extern const u32 sLevelLayoutPtrs_311F28[2];
 
-void sub_08022FEC(void)
+void UpdateLogPairEntities2(void)
 {
     struct Entity *base;
     struct Entity *entity;
@@ -43,9 +43,9 @@ void sub_08022FEC(void)
             if ((entity->status & 2) == 0) {
                 if (entity->field_1B == entity->field_1C[0] - 2) {
                     if (i == 1)
-                        sub_08020CDC((struct Entity *)((s32)base + 0x5C * 56), 0x13, 3, 3);
+                        Sound_PlayNearEntity((struct Entity *)((s32)base + 0x5C * 56), 0x13, 3, 3);
                     sub_080210A0(i + 0x5D, (const void *)sLevelLayoutPtrs_311F28[i], 16, 24, 0x211, 12, 3, 3);
-                    sub_0800696C(&gIwram_6110, i + 0x5D);
+                    ModeControl_SetBit(&gIwram_6110, i + 0x5D);
                 }
                 entity = (struct Entity *)(slot * 56 + (s32)base);
                 if ((entity->status & 0x8000) != 0) {
@@ -58,7 +58,7 @@ void sub_08022FEC(void)
         i++;
     } while (i <= 1);
 
-    sub_08005D10(0x5B, 0x5C);
+    Entity_AdvanceAnimFrames(0x5B, 0x5C);
 
     base = gEntities;
     i = 0;
@@ -71,9 +71,9 @@ void sub_08022FEC(void)
                     if (entity->x > 0x86) {
                         entity->field_1A = 0;
                         entity->status |= 2;
-                        sub_0800A580((void *)((i + 0x5D) * 56 + (s32)base), 0, 0, 0);
+                        MotionDesc_Set((void *)((i + 0x5D) * 56 + (s32)base), 0, 0, 0);
                         if (i == 1)
-                            sub_08020CDC((struct Entity *)((s32)base + 0x5C * 56), 0x5E, 3, 3);
+                            Sound_PlayNearEntity((struct Entity *)((s32)base + 0x5C * 56), 0x5E, 3, 3);
                     }
                     entity = (struct Entity *)((i + 0x5D) * 56 + (s32)base);
                     if ((entity->status & 0x8000) != 0)
@@ -95,7 +95,7 @@ void sub_08022FEC(void)
         i++;
     } while (i <= 1);
 
-    sub_08020FE4(0x5D, 0x5E);
-    sub_08005D10(0x5D, 0x5E);
+    Entity_UpdateMovers(0x5D, 0x5E);
+    Entity_AdvanceAnimFrames(0x5D, 0x5E);
 }
 #endif /* NON_MATCHING */

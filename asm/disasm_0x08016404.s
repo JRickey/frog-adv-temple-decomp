@@ -301,7 +301,7 @@
 @   0x0801664c: 36b0        adds	r6, #176	@ 0xb0
 @   0x0801664e: 0300        lsls	r0, r0, #12
 
-        thumb_func_start sub_08016404
-sub_08016404: @ 0x08016404
+        thumb_func_start UpdateColumnClipSpans
+UpdateColumnClipSpans: @ 0x08016404
         .incbin "frog_us_baserom.gba", 0x16404, 0x24c
-        thumb_func_end sub_08016404
+        thumb_func_end UpdateColumnClipSpans

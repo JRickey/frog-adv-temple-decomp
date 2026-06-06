@@ -3,17 +3,17 @@
 #include "macros.h"
 #include "types.h"
 
-extern u32 sub_0800679C(u8 *base, u32 selector, u32 bit);
-extern void sub_0802C7EC(void);
-extern void sub_0802CA64(void);
-extern void sub_0802C000(void);
-extern void sub_0802BF58(void);
-extern void sub_0802CA70(void);
-extern u32 *sub_0800D070(u32 *out, s8 delta);
-extern void sub_080113E8(void);
-extern u32 sub_0800DA70(void);
+extern u32 ModeControl_GetFlag(u8 *base, u32 selector, u32 bit);
+extern void EnemySpawn_Tick(void);
+extern void EntityPool_UpdateOwner58(void);
+extern void EnemyWave_Update(void);
+extern void EnemyWave_TickGateTimer(void);
+extern void EntityPool_UpdateOwner5B(void);
+extern u32 *PadGrid_StepPackedCoord(u32 *out, s8 delta);
+extern void GenRandomTileMask(void);
+extern u32 FilterValidBits(void);
 
-void sub_0800D8A0(void)
+void SpawnControl_Dispatch(void)
 {
     register u8 *base asm("r4");
     register u8 *saved6110 asm("r5");
@@ -26,7 +26,7 @@ void sub_0800D8A0(void)
     u8 *ep;
 
     base = (u8 *)&gIwram_6110;
-    c = sub_0800679C(base, 3, 0) << 24;
+    c = ModeControl_GetFlag(base, 3, 0) << 24;
     saved6110 = base;
     if (c != 0) {
         new_var2 = saved6110;
@@ -44,21 +44,21 @@ void sub_0800D8A0(void)
         entry = new_var2;
         switch (*(u8 *)(entry + 0x33)) {
         case 0:
-            sub_0802CA64();
+            EntityPool_UpdateOwner58();
             break;
         case 1:
-            sub_0802C000();
+            EnemyWave_Update();
             break;
         case 2:
-            sub_0802BF58();
+            EnemyWave_TickGateTimer();
             break;
         case 3:
-            sub_0802CA70();
+            EntityPool_UpdateOwner5B();
             break;
         }
         return;
     }
-    sub_0802C7EC();
+    EnemySpawn_Tick();
 }
 
 u32 *sub_0800D924(u32 *out, u32 mask, u32 limit)
@@ -119,7 +119,7 @@ test:
     }
 
     if (sf == (s32)loopValue >> 24) {
-        sub_0800D070(&local, (s8)(i - 1));
+        PadGrid_StepPackedCoord(&local, (s8)(i - 1));
         result = local;
     } else {
         result &= 0xffff0000;
@@ -140,7 +140,7 @@ u32 sub_0800D9C8(void)
     register u32 offset2 asm("r3");
     register u32 addrOrValue asm("r1");
 
-    sub_080113E8();
+    GenRandomTileMask();
     dst = gEntities;
     src = &gIwram_35E0;
     offset2 = (u16)src->_field_8;
@@ -153,5 +153,5 @@ u32 sub_0800D9C8(void)
     asm("" : "+r"(offset2));
     dst = (struct Entity *)((u8 *)dst + offset2);
     *(u16 *)dst = addrOrValue;
-    return sub_0800DA70();
+    return FilterValidBits();
 }

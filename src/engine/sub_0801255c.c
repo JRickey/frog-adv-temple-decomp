@@ -1,26 +1,26 @@
-extern void sub_0800E85C(unsigned int arg);
-extern void sub_0800EE34(unsigned int arg);
-extern void sub_0800EE94(unsigned int arg);
-extern void sub_0800EB1C(void);
-extern void sub_08012100(void);
-extern void sub_0800F24C(unsigned int arg);
-extern void sub_0800EBDC(unsigned int arg);
-extern void sub_08016A40(void);
+extern void CharLayers_Upload(unsigned int arg);
+extern void BgLayer_Disable(unsigned int arg);
+extern void BgLayer_Enable(unsigned int arg);
+extern void FrogOam_Init(void);
+extern void Selector_ResetState(void);
+extern void Scroll_UpdateCamera(unsigned int arg);
+extern void BgScrollBlit(unsigned int arg);
+extern void StatusBar_Update(void);
 
-void sub_0801255C(void)
+void InitScrollScene(void)
 {
-    sub_0800E85C(3);
-    sub_0800EE34(2);
-    sub_0800EB1C();
-    sub_08012100();
-    sub_0800F24C(3);
-    sub_0800EBDC(3);
-    sub_08016A40();
+    CharLayers_Upload(3);
+    BgLayer_Disable(2);
+    FrogOam_Init();
+    Selector_ResetState();
+    Scroll_UpdateCamera(3);
+    BgScrollBlit(3);
+    StatusBar_Update();
 }
 
-void sub_08012588(void)
+void SetupBlendRegs(void)
 {
-    sub_0800EE94(2);
+    BgLayer_Enable(2);
     *(volatile unsigned short *)0x04000050 = 0x1744;
     *(volatile unsigned short *)0x04000052 = 0x020e;
 }

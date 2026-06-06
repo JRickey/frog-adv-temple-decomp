@@ -4,7 +4,7 @@
 extern void sub_080210A0(u16 a0, const void *a1, u16 a2, u8 a3, u16 a4, u8 a5, u8 a6, u8 a7);
 extern const u32 sLevelLayoutPtrs_310DD4[8];
 
-void sub_080221FC(void)
+void SpawnVarHeightEntities(void)
 {
     u8 i;
 

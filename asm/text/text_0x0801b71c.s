@@ -2,7 +2,7 @@
 @ Address-aligned bucket of unparsed baserom bytes.
 @ Range:  [0x0801b71c, 0x0801b954)  (0x238 bytes)
 @
-@ Code bucket (shrunk to make room for sub_0801B954 peel).
+@ Code bucket (shrunk to make room for Scene_SetupWindows peel).
 @
 @ This file holds raw bytes only; no instructions are assembled here.
 

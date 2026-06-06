@@ -11,11 +11,11 @@ typedef void (*GameProc)(void);
  *
  * The table is a linker-assigned symbol (gDispatchTable_08308AC8) so its
  * relocated array operand evaluates before the absolute index base, matching
- * the baserom's r1-before-r0 pool order — the same idiom as sub_08019540. */
+ * the baserom's r1-before-r0 pool order — the same idiom as GameMode_Menu26. */
 
 extern const GameProc gDispatchTable_08308AC8[];
 
-void sub_080201A8(void)
+void GameMode_Options(void)
 {
     gDispatchTable_08308AC8[gIwram_34A0.dispatchIdx]();
 }

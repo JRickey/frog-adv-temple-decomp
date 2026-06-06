@@ -1,29 +1,29 @@
 #include "game.h"
 #include "types.h"
 
-extern void sub_0800DC50(void);
-extern void sub_0800DD80(void);
-extern void sub_0800DF7C(void);
-extern void sub_0801BB54(u32 arg);
-extern void sub_08020B88(u32 arg);
-extern void sub_0802D8F8(void);
+extern void EntitySpawnDriver(void);
+extern void WorldMap_Init(void);
+extern void EntityProcE_Dispatch(void);
+extern void ShowWinLoseMessage(u32 arg);
+extern void Sound_PlayIfEnabled(u32 arg);
+extern void Sound_Reset(void);
 
 /* Mode-dispatched scene-step driver.
  *
- * Header: calls sub_0800DC50, sub_0800DF7C, sub_0802D8F8, then clears
+ * Header: calls EntitySpawnDriver, EntityProcE_Dispatch, Sound_Reset, then clears
  * bit 1 (mask 0xFD) of the byte at 0x03003570 (gStructAt3003570.flags
  * — see src/game/sub_08020b30.c).
  *
  * First dispatch on gGameStuff.pendingMode (1..16; out-of-range = no-op):
- *   modes 3, 6, 9, 12, 16 → sub_08020B88(1)
- *   all others 1..16     → sub_08020B88(2)
+ *   modes 3, 6, 9, 12, 16 → Sound_PlayIfEnabled(1)
+ *   all others 1..16     → Sound_PlayIfEnabled(2)
  *
  * Second dispatch on gGameStuff.pendingMode (1..16; out-of-range = no-op):
- *   modes 3, 6, 9, 12, 16 → sub_0801BB54(2)
+ *   modes 3, 6, 9, 12, 16 → ShowWinLoseMessage(2)
  *   mode 15              → (skipped)
- *   all others 1..16     → sub_0801BB54(1)
+ *   all others 1..16     → ShowWinLoseMessage(1)
  *
- * Tail: bl sub_0800DD80, return.
+ * Tail: bl WorldMap_Init, return.
  *
  * Matching notes (old_agbcc):
  *   - gGameStuff base is cached across the three opening BLs so
@@ -48,16 +48,16 @@ typedef struct {
 
 #define gStructAt3003570 (*(StructAt3003570 *)0x03003570)
 
-void sub_0800DE80(void)
+void Game_FrameEnd(void)
 {
     GameStuff *g;
     u8 t;
 
     g = &gGameStuff;
 
-    sub_0800DC50();
-    sub_0800DF7C();
-    sub_0802D8F8();
+    EntitySpawnDriver();
+    EntityProcE_Dispatch();
+    Sound_Reset();
 
     {
         StructAt3003570 *p1 = &gStructAt3003570;
@@ -78,14 +78,14 @@ void sub_0800DE80(void)
     case 13:
     case 14:
     case 15:
-        sub_08020B88(2);
+        Sound_PlayIfEnabled(2);
         break;
     case 3:
     case 6:
     case 9:
     case 12:
     case 16:
-        sub_08020B88(1);
+        Sound_PlayIfEnabled(1);
         break;
     default:
         break;
@@ -102,14 +102,14 @@ void sub_0800DE80(void)
     case 11:
     case 13:
     case 14:
-        sub_0801BB54(1);
+        ShowWinLoseMessage(1);
         break;
     case 3:
     case 6:
     case 9:
     case 12:
     case 16:
-        sub_0801BB54(2);
+        ShowWinLoseMessage(2);
         break;
     case 15:
         break;
@@ -117,5 +117,5 @@ void sub_0800DE80(void)
         break;
     }
 
-    sub_0800DD80();
+    WorldMap_Init();
 }

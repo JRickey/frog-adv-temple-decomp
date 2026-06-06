@@ -1,6 +1,6 @@
 #include "types.h"
 
-void sub_08015D54(void)
+void SetBgPriorities(void)
 {
     vu16 *reg = (vu16 *)0x0400000A;
     u16 val = *reg;

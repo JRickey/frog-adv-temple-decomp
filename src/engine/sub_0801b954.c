@@ -2,10 +2,10 @@
 #include "types.h"
 
 extern void sub_0801B374(u8 arg);
-extern void sub_08020BAC(void);
-extern void sub_08020B88(u8 arg);
+extern void Sound_DrainIfActive(void);
+extern void Sound_PlayIfEnabled(u8 arg);
 
-void sub_0801B954(u8 arg)
+void Scene_SetupWindows(u8 arg)
 {
     register u32 zero asm("r4");
     u16 *scroll;
@@ -31,6 +31,6 @@ void sub_0801B954(u8 arg)
     state[1] = zero;
     state[12] = zero;
 
-    sub_08020BAC();
-    sub_08020B88(16);
+    Sound_DrainIfActive();
+    Sound_PlayIfEnabled(16);
 }

@@ -2,7 +2,7 @@
 #include "macros.h"
 #include "types.h"
 
-/* sub_08008E84 — directional hit-test: probe a point 24px off the player
+/* Entity_ProbeDir — directional hit-test: probe a point 24px off the player
  * header in one of four cardinal directions against the active 56-byte entity
  * records, returning 1 if any record's axis-aligned box contains it.
  *
@@ -12,7 +12,7 @@
  *   2: ( header+2,        header+4 + 24 )
  *   4: ( header+2 - 24,   header+4      )
  *   8: ( header+2 + 24,   header+4      )
- * then matched against the same box test as sub_08008F98 (record+1 must be 3
+ * then matched against the same box test as Player_FindNearbyInteractable (record+1 must be 3
  * here, not 2), walking the active-entity index table at 0x03006160. */
 
 struct IndexEntry {
@@ -23,7 +23,7 @@ struct IndexEntry {
 extern struct Entity gEntities_03003720[];
 extern struct IndexEntry gEntityIndex_03006160[];
 
-u8 sub_08008E84(u8 dir)
+u8 Entity_ProbeDir(u8 dir)
 {
     s16 probeY;
     s16 probeX;

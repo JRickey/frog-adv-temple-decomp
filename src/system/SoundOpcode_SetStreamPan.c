@@ -1,12 +1,12 @@
 #include "sound.h"
 
-extern void sub_0802F8F0(s32 idx);
+extern void Sound_MarkChannelFullDirty(s32 idx);
 
 u32 SoundOpcode_SetStreamPan(s32 channelIdx, u8 **cursor)
 {
     u8 *ptr = *cursor;
 
-    sub_0802F8F0(channelIdx);
+    Sound_MarkChannelFullDirty(channelIdx);
 
     if (channelIdx > 3) {
         SoundSystem *ss = gpSoundSystem;

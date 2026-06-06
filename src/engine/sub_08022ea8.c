@@ -7,7 +7,7 @@ extern const u32 sLevelLayoutPtrs_311C80[12];
 
 extern struct Entity gEntities_03003720[];
 
-void sub_08022EA8(void)
+void LevelLayout_SpawnGroup311C80(void)
 {
     u8 i;
 

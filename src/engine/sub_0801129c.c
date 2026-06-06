@@ -10,7 +10,7 @@
  *     a signed `bge`, matching the baserom (unsigned pointers give `bcs`).
  *   - the store value is pinned to r2 and initialised first so agbcc emits
  *     `movs r2, #0` ahead of the pointer setup, matching instruction order. */
-void sub_0801129C(void)
+void Scroll_ResetDirStep(void)
 {
     u8 *state = (u8 *)0x03006540;
     s32 buf = 0x030063F0;

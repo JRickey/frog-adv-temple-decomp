@@ -1,9 +1,9 @@
 #include "sound.h"
 
-extern void sub_08035D8C(void);
-extern void sub_08035D94(void);
+extern void SoundIrqDisable(void);
+extern void SoundIrqEnable(void);
 
-void sub_0802D890(u16 a, u16 b, u16 c)
+void SoundSystem_SetPanParams(u16 a, u16 b, u16 c)
 {
     /* c in r8 so params a/b/c fit in r6/r7/r8 with r4=pSys, r5=mask free */
     u16 cReg = c;
@@ -20,7 +20,7 @@ void sub_0802D890(u16 a, u16 b, u16 c)
         (*pSys)->lockRefCount = v;
         mask = 0xff;
         if ((u8)v == 1)
-            sub_08035D8C();
+            SoundIrqDisable();
     }
 
     ss = *pSys;
@@ -40,6 +40,6 @@ void sub_0802D890(u16 a, u16 b, u16 c)
         ss->lockRefCount = v2;
         v2 &= mask;
         if (v2 == 0)
-            sub_08035D94();
+            SoundIrqEnable();
     }
 }

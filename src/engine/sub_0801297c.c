@@ -1,7 +1,7 @@
 #include "macros.h"
 #include "types.h"
 
-/* --- sub_0801297C: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- BlitEntityTileFrame2: non-matching reference (asm slice provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "iwram.h"
 #include "types.h"
@@ -20,9 +20,9 @@ struct BlitDesc {
 };
 
 extern const struct BlitDesc sBlitDesc_6e64;
-extern void sub_080100E4(u8 bank, u16 *src, u16 *dst);
+extern void Scroll_FlushTilemapWindow(u8 bank, u16 *src, u16 *dst);
 
-void sub_0801297C(void)
+void BlitEntityTileFrame2(void)
 {
     u16 srcX;
     u16 srcY;
@@ -60,9 +60,9 @@ void sub_0801297C(void)
     }
 
     if (bank & 1)
-        sub_080100E4(bank & 1, (u16 *)0x02010000, (u16 *)0x0600E800);
+        Scroll_FlushTilemapWindow(bank & 1, (u16 *)0x02010000, (u16 *)0x0600E800);
     else
-        sub_080100E4(bank & 1, (u16 *)0x02000000, (u16 *)0x0600E000);
+        Scroll_FlushTilemapWindow(bank & 1, (u16 *)0x02000000, (u16 *)0x0600E000);
 
     gIwram_64C0._field_0A = 0;
 }

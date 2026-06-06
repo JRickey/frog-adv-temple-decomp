@@ -1,6 +1,6 @@
 #include "types.h"
 
-/* --- sub_0801DEA0: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- Credits_DrawLineAlt: non-matching reference (asm slice provides the matching bytes) --- */
 #ifdef NON_MATCHING
 register u16 *dr2 asm("r2");
 dr2 = (u16 *)(rowBase << 6);

@@ -3,31 +3,31 @@
 #include "macros.h"
 #include "types.h"
 
-extern void sub_08020BC0(void);
-extern void sub_0800B7B0(void *sp_buf, void *r4_obj, u32 arg2);
-extern u8 sub_0800A104(u8 *localState, u32 callbackTable);
-extern u32 sub_08009D9C(u8 *localState);
-extern u16 sub_080004C4(void);
-extern void sub_0800E060(void);
-extern void sub_0800A2D8(void);
-extern void sub_080008DC(void);
-extern void sub_0800A328(void);
-extern void sub_080094F8(void);
-extern void sub_08009984(void);
-extern void sub_0800B918(void *ent, void *arg1, u32 kind);
-extern u32 sub_0800CD88(u8 col, u8 row, s32 tileX, s32 tileY);
-extern void sub_0800B8A8(void *ent, void *arg1, u32 kind, u32 tile);
-extern u32 sub_08009C14(void *p);
-extern u8 sub_0800E6A8(void);
-extern u8 sub_08010694(u8 arg);
-extern u8 sub_080106B8(void);
-extern void sub_0800A1C8(void);
-extern void sub_0800DE80(void);
+extern void Sound_ServiceQueue(void);
+extern void Entity_UpdateHitboxSlots(void *sp_buf, void *r4_obj, u32 arg2);
+extern u8 RunFadeTransition(u8 *localState, u32 callbackTable);
+extern u32 Scene_InitScan(u8 *localState);
+extern u16 Input_Poll(void);
+extern void Scene_LoadBg(void);
+extern void Game_RunEntityFrame(void);
+extern void WaitVblank(void);
+extern void Game_ForceRender(void);
+extern void Entity_CheckAllCollisions(void);
+extern void Player_CheckTileEvents(void);
+extern void Entity_UpdateHitboxWithTile(void *ent, void *arg1, u32 kind);
+extern u32 Tilemap_GetTileClass(u8 col, u8 row, s32 tileX, s32 tileY);
+extern void Entity_ActivateHitSlot(void *ent, void *arg1, u32 kind, u32 tile);
+extern u32 Scene_EntityTick(void *p);
+extern u8 Scene_FadeUpdate(void);
+extern u8 Blend_StartFade(u8 arg);
+extern u8 Blend_StepFade(void);
+extern void EntityParam_Reset(void);
+extern void Game_FrameEnd(void);
 
 extern u16 gIwram_5398;
 extern u8 gIwram_5328;
 
-void sub_08001508(void)
+void Scene11_AttractModeMain(void)
 {
     struct {
         u8 sp_buf[72];
@@ -43,7 +43,7 @@ void sub_08001508(void)
         return;
 
     do {
-        sub_08020BC0();
+        Sound_ServiceQueue();
         switch (frame.localState) {
         default:
             goto tail;
@@ -51,13 +51,13 @@ void sub_08001508(void)
             void *obj;
             obj = frame.r4_obj;
             gGameStuff.pendingMode = 4;
-            sub_0800B7B0(frame.sp_buf, obj, 4);
+            Entity_UpdateHitboxSlots(frame.sp_buf, obj, 4);
             frame.localState = 1;
             frame.spByte = 0;
             break;
         }
         case 1:
-            if (sub_0800A104((u8 *)&frame.spByte, 0x080017a9) == 0) {
+            if (RunFadeTransition((u8 *)&frame.spByte, 0x080017a9) == 0) {
                 goto finalize;
             }
             *(volatile u8 *)&frame.localState = 2;
@@ -65,7 +65,7 @@ void sub_08001508(void)
             frame.spByte = 0;
             goto finalize;
         case 2:
-            if (sub_08009D9C((u8 *)&frame.spByte) == 0)
+            if (Scene_InitScan((u8 *)&frame.spByte) == 0)
                 goto tail;
             *(volatile u8 *)&frame.localState = 3;
             gGameStuff._unk14 = 0;
@@ -74,10 +74,10 @@ void sub_08001508(void)
             register u32 nextState asm("r3");
             struct Entity *p3720;
             void *obj;
-            gIwram_5398 = sub_080004C4();
+            gIwram_5398 = Input_Poll();
             if (gIwram_5398 == 0x40) {
                 frame.localState = 5;
-                sub_0800E060();
+                Scene_LoadBg();
                 break;
             }
             p3720 = gEntities;
@@ -91,17 +91,17 @@ void sub_08001508(void)
                 break;
             }
             obj = frame.r4_obj;
-            sub_0800A2D8();
-            sub_080008DC();
-            sub_0800A328();
-            sub_080094F8();
-            sub_08009984();
-            sub_0800B918(frame.sp_buf, obj, 4);
+            Game_RunEntityFrame();
+            WaitVblank();
+            Game_ForceRender();
+            Entity_CheckAllCollisions();
+            Player_CheckTileEvents();
+            Entity_UpdateHitboxWithTile(frame.sp_buf, obj, 4);
             if ((p3720->status & 4) == 0) {
-                u8 tile = (u8)sub_0800CD88(gIwram_35E0._field_18, gIwram_35E0._field_19, gIwram_35E0._field_8,
-                                           gIwram_35E0._field_A);
+                u8 tile = (u8)Tilemap_GetTileClass(gIwram_35E0._field_18, gIwram_35E0._field_19, gIwram_35E0._field_8,
+                                                   gIwram_35E0._field_A);
                 if ((gIwram_35E0._field_10 & 0x10) != 0)
-                    sub_0800B8A8(frame.sp_buf, obj, 4, tile);
+                    Entity_ActivateHitSlot(frame.sp_buf, obj, 4, tile);
             }
             gGameStuff._unk14++;
             break;
@@ -109,9 +109,9 @@ void sub_08001508(void)
         case 4: {
             void *obj;
             obj = frame.r4_obj;
-            if (sub_08009C14(&frame.localState) == 0)
+            if (Scene_EntityTick(&frame.localState) == 0)
                 frame.localState = 7;
-            sub_0800B7B0(frame.sp_buf, obj, 4);
+            Entity_UpdateHitboxSlots(frame.sp_buf, obj, 4);
             if (gIwram_35E0._field_5 <= 1) {
                 gIwram_6110.scenePhase = 0;
                 gIwram_6110.selector5Flags = 0;
@@ -122,8 +122,8 @@ void sub_08001508(void)
             break;
         }
         case 5:
-            gIwram_5398 = sub_080004C4();
-            if (sub_0800E6A8() == 0) {
+            gIwram_5398 = Input_Poll();
+            if (Scene_FadeUpdate() == 0) {
                 frame.localState = 6;
                 frame.spByte = 0;
             }
@@ -133,13 +133,13 @@ void sub_08001508(void)
         case 6: {
             s32 counter;
             if ((s8)frame.spByte == 0) {
-                sub_08010694(0xBF);
+                Blend_StartFade(0xBF);
                 frame.spByte += 1;
             }
             counter = (s8)frame.spByte;
             if (counter != 1)
                 break;
-            if (sub_080106B8() != 0)
+            if (Blend_StepFade() != 0)
                 break;
             gIwram_3480._data[0] = 4;
             gIwram_3480._data[6] = counter;
@@ -147,17 +147,17 @@ void sub_08001508(void)
             break;
         }
         case 7:
-            if (sub_0800A104((u8 *)&frame.spByte, 0x0800a26d) != 0) {
+            if (RunFadeTransition((u8 *)&frame.spByte, 0x0800a26d) != 0) {
                 *(volatile u8 *)&frame.localState = 2;
                 gGameStuff._unk14 = 0;
                 frame.spByte = 0;
-                sub_0800A1C8();
+                EntityParam_Reset();
             }
         finalize:
-            sub_080008DC();
+            WaitVblank();
             break;
         case 8:
-            sub_0800DE80();
+            Game_FrameEnd();
             break;
         }
 
@@ -166,11 +166,11 @@ void sub_08001508(void)
 }
 
 /* Mode-4 re-arm thunk: queues pendingMode = 4, then forwards its two
- * (untouched) register arguments plus the same literal 4 to sub_0800B7B0.
+ * (untouched) register arguments plus the same literal 4 to Entity_UpdateHitboxSlots.
  * agbcc reuses the 4 it materialised for the strb as the third call arg,
  * so the constant is loaded once. */
-void sub_08001794(void *a, void *b)
+void Scene11_ArmModeTransition(void *a, void *b)
 {
     gGameStuff.pendingMode = 4;
-    sub_0800B7B0(a, b, 4);
+    Entity_UpdateHitboxSlots(a, b, 4);
 }

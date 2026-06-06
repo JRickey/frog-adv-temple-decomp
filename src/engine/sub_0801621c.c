@@ -11,7 +11,7 @@ struct BlitDesc {
     u8 rows;
 };
 
-void sub_0801621C(u16 dstX, u16 dstY, u8 *src, struct BlitDesc *desc)
+void Mode4_BlitRect(u16 dstX, u16 dstY, u8 *src, struct BlitDesc *desc)
 {
     register u8 *dst asm("r2");
     u8 *srcBase;

@@ -14,7 +14,7 @@ struct TilemapTableEntry {
 
 extern void sub_08012BC4(u8 mode, u16 a, u16 b, u16 c, u16 d, void *tiles, u8 e);
 
-void sub_080139BC(u8 idx)
+void ScaleAnim_BlitDescIdx1(u8 idx)
 {
     struct TilemapTableEntry *table = (struct TilemapTableEntry *)0x0830702c;
     struct TilemapTableEntry *desc;

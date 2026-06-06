@@ -715,7 +715,7 @@
 @   0x08016ffc: 6110        str	r0, [r2, #16]
 @   0x08016ffe: 0300        lsls	r0, r0, #12
 
-        thumb_func_start sub_08016A40
-sub_08016A40: @ 0x08016a40
+        thumb_func_start StatusBar_Update
+StatusBar_Update: @ 0x08016a40
         .incbin "frog_us_baserom.gba", 0x16a40, 0x5c0
-        thumb_func_end sub_08016A40
+        thumb_func_end StatusBar_Update

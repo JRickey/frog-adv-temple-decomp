@@ -11,7 +11,7 @@
  * divide, which is what forces the matching copy. */
 
 /* 8.8 fixed-point multiply: (a * b) / 256, round toward zero. */
-s16 sub_0800DFFC(s16 a, s16 b)
+s16 Fixed8Mul(s16 a, s16 b)
 {
     s32 prod;
     s16 t;
@@ -23,7 +23,7 @@ s16 sub_0800DFFC(s16 a, s16 b)
 }
 
 /* 16.16 fixed-point multiply: (a * b) / 0x10000, round toward zero. */
-s16 sub_0800E014(s16 a, s16 b)
+s16 Fixed16Mul(s16 a, s16 b)
 {
     s32 prod;
     s16 t;
@@ -35,7 +35,7 @@ s16 sub_0800E014(s16 a, s16 b)
 }
 
 /* 8.8 fixed-point divide: (a << 8) / b. */
-s16 sub_0800E030(s16 a, s16 b)
+s16 Fixed8Div(s16 a, s16 b)
 {
     return ((s32)a << 8) / b;
 }

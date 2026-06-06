@@ -4,8 +4,8 @@
 #include "save.h"
 #include "types.h"
 
-/* 16-byte screen-install argument block passed by value to sub_08018898.
- * Same shape as sub_0801FD0C's installer (the sibling screen-setup routine). */
+/* 16-byte screen-install argument block passed by value to Screen_Install.
+ * Same shape as WinPoseScreen_Init's installer (the sibling screen-setup routine). */
 struct ScreenInstallArgs {
     u32 _unk00;
     const void *tilemap1;
@@ -13,16 +13,16 @@ struct ScreenInstallArgs {
     u32 _unk0C;
 };
 
-extern void sub_0801844C(void);
-extern void sub_08018648(s32 a, s32 b, s32 c, s32 d);
-extern void sub_080185C0(s32 a, s32 b, s32 c, s32 d);
-extern void sub_08018898(s32 flag, s32 a, s32 b, struct ScreenInstallArgs args, s32 last);
-extern void sub_08018C0C(s32 mode);
-extern u8 sub_0801C900(s32 a, s32 b, const void *c, s32 d, s32 e, s32 f);
-extern void sub_0801F684(void);
-extern s32 sub_0801F8BC(u8 idx);
-extern u16 sub_080004C4(void);
-extern void sub_08020C78(u32 sound);
+extern void Bg_InitMode0(void);
+extern void Screen_InstallOamA(s32 a, s32 b, s32 c, s32 d);
+extern void Sprite_CycleDmaFrame(s32 a, s32 b, s32 c, s32 d);
+extern void Screen_Install(s32 flag, s32 a, s32 b, struct ScreenInstallArgs args, s32 last);
+extern void Screen_ClearBlocks(s32 mode);
+extern u8 Scene_DrawWindow(s32 a, s32 b, const void *c, s32 d, s32 e, s32 f);
+extern void SaveSlot_DrawAllSlots(void);
+extern s32 SaveSlot_DrawSelectionCursor(u8 idx);
+extern u16 Input_Poll(void);
+extern void Sound_Play(u32 sound);
 
 extern u16 gIwram_5398;
 extern const u32 sOamDmaCfg_08100[4];
@@ -30,12 +30,12 @@ extern const u32 sOamDmaCfg_08100[4];
 /* ROM tables anchored inside the sprite-frame-pointer block, indexed by the
  * scene id in gIwram_34B0._data (see linker.ld). sScreenTilemapTable[id] is
  * the tilemap2 source for the screen install; sSceneRecordTable[id] points at
- * a record whose [1]/[2] entries are handed to sub_0801C900. Linker-assigned
+ * a record whose [1]/[2] entries are handed to Scene_DrawWindow. Linker-assigned
  * so each base load is a relocation that agbcc materialises before the index. */
 extern const void *const sScreenTilemapTable_308EF4[];
 extern const void *const *const sSceneRecordTable_308110[];
 
-void sub_0801F418(void)
+void FileSelect_Init(void)
 {
     struct ScreenInstallArgs args;
 
@@ -47,7 +47,7 @@ void sub_0801F418(void)
     gIwram_3480._unk14 = 0;
 
     if (gIwram_34A0._field_08 == 0) {
-        sub_0801844C();
+        Bg_InitMode0();
 
         REG_DMA3.src = (const void *)0x081dab98;
         REG_DMA3.dst = (void *)0x05000000;
@@ -66,10 +66,10 @@ void sub_0801F418(void)
     } else {
         s32 flag;
 
-        sub_08018C0C(14);
+        Screen_ClearBlocks(14);
 
         flag = (gIwram_34A0._field_08 == 0);
-        sub_08018898(flag, 29, 6, args, 2);
+        Screen_Install(flag, 29, 6, args, 2);
 
         REG_DISPCNT |= DISPCNT_BG3_ON;
     }
@@ -81,19 +81,19 @@ void sub_0801F418(void)
     REG_DMA3.cnt = DMA_ENABLE | 0x400;
     (void)REG_DMA3.cnt;
 
-    sub_0801F684();
+    SaveSlot_DrawAllSlots();
 
     if (gIwram_34A0._field_08 != 0) {
         const void *const *rec = sSceneRecordTable_308110[gIwram_34B0._data];
-        sub_0801C900(0, 6, rec[1], 28, 0, 1);
+        Scene_DrawWindow(0, 6, rec[1], 28, 0, 1);
     }
 
     gIwram_3480._data[2]++;
 }
 
-void sub_0801F560(void)
+void FileSelect_Update(void)
 {
-    gIwram_5398 = sub_080004C4();
+    gIwram_5398 = Input_Poll();
 
     switch (gIwram_5398) {
     case 16:
@@ -102,23 +102,23 @@ void sub_0801F560(void)
         u8 poseIdx;
         u8 finalIdx;
 
-        sub_08020C78(1);
+        Sound_Play(1);
 
         rec = sSceneRecordTable_308110[gIwram_34B0._data];
         if ((*(u8 *)&gSaveData >> (poseIdx = gIwram_3480._unk14)) & 1) {
-            if (sub_0801C900(0, 6, rec[2], 28, 0, 0) == 0)
+            if (Scene_DrawWindow(0, 6, rec[2], 28, 0, 0) == 0)
                 break;
             finalIdx = gIwram_3480._unk14;
         } else {
             finalIdx = poseIdx;
         }
 
-        if (sub_0801F8BC(finalIdx) == 0)
-            sub_0801F684();
+        if (SaveSlot_DrawSelectionCursor(finalIdx) == 0)
+            SaveSlot_DrawAllSlots();
         break;
     }
     case 1:
-        sub_08020C78(2);
+        Sound_Play(2);
         if (gIwram_3480._unk14 == 0) {
             gIwram_3480._unk14 = 3;
             break;
@@ -134,7 +134,7 @@ void sub_0801F560(void)
         register u8 three asm("r1");
         register u8 reloaded asm("r2");
 
-        sub_08020C78(2);
+        Sound_Play(2);
         gIwram_3480._unk14++;
         three = 3;
         reloaded = *(volatile u8 *)&gIwram_3480._unk14;
@@ -145,14 +145,14 @@ void sub_0801F560(void)
 
     if (gIwram_5398 == 32) {
         gIwram_5398 = 0;
-        sub_08020C78(0);
+        Sound_Play(0);
         gIwram_34A0._field_08 = 0;
-        sub_08018648(0, 30, 6, 2);
+        Screen_InstallOamA(0, 30, 6, 2);
         gIwram_3480._data[2]++;
     } else if (gIwram_5398 != 0 && gIwram_5398 != 16 && gIwram_5398 != 64) {
         gIwram_5398 = 0;
-        sub_0801F684();
+        SaveSlot_DrawAllSlots();
     } else {
-        sub_080185C0(sOamDmaCfg_08100[0], sOamDmaCfg_08100[1], sOamDmaCfg_08100[2], sOamDmaCfg_08100[3]);
+        Sprite_CycleDmaFrame(sOamDmaCfg_08100[0], sOamDmaCfg_08100[1], sOamDmaCfg_08100[2], sOamDmaCfg_08100[3]);
     }
 }

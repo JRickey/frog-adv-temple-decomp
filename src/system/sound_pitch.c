@@ -1,9 +1,9 @@
 #include "macros.h"
 #include "sound.h"
 
-/* sub_0802E5D8 — per-tone-channel pitch / frequency setter.
+/* Sound_EmitPsgPitch — per-tone-channel pitch / frequency setter.
  *
- * Called from the per-VBlank mixer (sub_0802F4B0) once per active
+ * Called from the per-VBlank mixer (SoundMixer_VBlankUpdate) once per active
  * "fade-request" slot, for each of the three programmable-frequency
  * PSG channels (square1, square2, wave). Channel 3 (noise) goes
  * through a separate path and is filtered out here by the cmp ch, #2.
@@ -28,7 +28,7 @@
  *      value. Bit 15 (initial/start) is cleared by the write — the
  *      channel keeps playing without retriggering.
  *
- * Companion to sub_0802E684 in sound_volume.c (volume setter, called
+ * Companion to SoundVolume_Emit in sound_volume.c (volume setter, called
  * for the same channels by the same mixer dispatch).
  *
  * Shipped as NAKED inline asm + a NON_MATCHING reference C body. The
@@ -45,7 +45,7 @@
  * register variable is not counted for the callee-save prologue. The compiler
  * therefore omits the target's r7 save, then colors the LUT loads and final
  * MMIO OR differently. Same family as the other NAKED sound functions in this
- * cluster (sub_0802EC7C, sub_0802EDF0, sub_0802EA80).
+ * cluster (Sound_UpdateChannelEnvelopesA, Sound_TickStreamHead, SoundEnvelope_TickA0).
  *
  * Negative experiments: removing the cache casts or assigning the final
  * MMIO OR back through work destabilizes the literal pool/control flow;
@@ -93,7 +93,7 @@ extern vu16 *const sChannelFreqRegTable[4];
 extern const u16 sPsgPitchLut[86];
 
 #if defined(NON_MATCHING) || defined(NON_MATCHING_sub_0802E5D8)
-void sub_0802E5D8(s32 x, s32 y, s32 ch)
+void Sound_EmitPsgPitch(s32 x, s32 y, s32 ch)
 {
     register u32 work asm("r4");
     register SoundSystem **gpsp asm("r7");
@@ -192,7 +192,7 @@ check_high:
 }
 #else
 NAKED
-void sub_0802E5D8(s32 x, s32 y, s32 ch)
+void Sound_EmitPsgPitch(s32 x, s32 y, s32 ch)
 {
     asm(".syntax unified\n"
         "    push    {r4, r5, r6, r7, lr}\n"

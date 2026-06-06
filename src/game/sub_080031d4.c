@@ -1,7 +1,7 @@
 #include "iwram.h"
 #include "types.h"
 
-/* sub_080031D4 — nudge the active entity (and the player header record) along
+/* Player_UpdateHorizontalInput — nudge the active entity (and the player header record) along
  * the X sub-coordinate in response to the held button bits in gIwram_5398.
  *
  * Element 0 of the 56-byte entity array at 0x03003720 doubles as the player
@@ -10,7 +10,7 @@
  *   - bit 0x2000 held & header X <= 236 -> step both records right by 3.
  * Skips entirely while bit 4 of the header's flag halfword (+0x34) is set.
  *
- * Called from sub_08003254 with an (ignored) argument.
+ * Called from GameMode_SceneTick with an (ignored) argument.
  *
  * Matching notes (old_agbcc):
  *   - Keeping `mask` in r0 plus `mask = K; mask &= field; if (mask)`
@@ -32,7 +32,7 @@
 
 extern u16 gIwram_5398;
 
-void sub_080031D4(void)
+void Player_UpdateHorizontalInput(void)
 {
     register u32 mask asm("r0");
     struct Entity *p = gEntities;

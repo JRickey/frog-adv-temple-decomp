@@ -371,7 +371,7 @@
 @   0x080052bc: 5330        strh	r0, [r6, r4]
 @   0x080052be: 0300        lsls	r0, r0, #12
 
-        thumb_func_start sub_08004FAC
-sub_08004FAC: @ 0x08004fac
+        thumb_func_start SceneLoop_22
+SceneLoop_22: @ 0x08004fac
         .incbin "frog_us_baserom.gba", 0x4fac, 0x314
-        thumb_func_end sub_08004FAC
+        thumb_func_end SceneLoop_22

@@ -202,7 +202,7 @@
 @   0x0800d44c: bc01        pop	{r0}
 @   0x0800d44e: 4700        bx	r0
 
-        thumb_func_start sub_0800D2C0
-sub_0800D2C0: @ 0x0800d2c0
+        thumb_func_start PadGrid_DeactivateEntityAtPos
+PadGrid_DeactivateEntityAtPos: @ 0x0800d2c0
         .incbin "frog_us_baserom.gba", 0xd2c0, 0x190
-        thumb_func_end sub_0800D2C0
+        thumb_func_end PadGrid_DeactivateEntityAtPos

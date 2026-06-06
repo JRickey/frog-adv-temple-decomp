@@ -1,13 +1,13 @@
 #include "types.h"
 
-/* --- sub_0800FE88: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- Credits_RenderStep: non-matching reference (asm slice provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "game.h"
 #include "gba/dma.h"
 #include "gba/io.h"
 #include "types.h"
 
-extern u16 sub_080004C4(void);
+extern u16 Input_Poll(void);
 extern const u8 sCreditsTilemapEng[];
 extern u16 gIwram_5398;
 
@@ -23,7 +23,7 @@ enum {
 
 #define DMA_BLIT_ROW 0x8100001C
 
-u8 sub_0800FE88(void)
+u8 Credits_RenderStep(void)
 {
     u8 *state;
     register u16 *flag asm("r9");
@@ -76,7 +76,7 @@ u8 sub_0800FE88(void)
                         *(u16 *)(*(u8 **)(gp + 20) + 0x76) = toggle;
                     toggle = toggle ? 0 : 1;
                     lastTick = *clock;
-                    *gateFlag = sub_080004C4();
+                    *gateFlag = Input_Poll();
                 }
                 if (*gateFlag == INPUT_B)
                     goto clear_and_wait;
@@ -147,7 +147,7 @@ eol:
                     *(u16 *)(*(u8 **)(state + 20) + 0x76) = toggle;
                 toggle = toggle ? 0 : 1;
                 lastTick = *clock;
-                gIwram_5398 = sub_080004C4();
+                gIwram_5398 = Input_Poll();
             }
             flag = &gIwram_5398;
             if (*flag == INPUT_A)

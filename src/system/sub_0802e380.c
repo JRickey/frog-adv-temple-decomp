@@ -9,7 +9,7 @@ typedef struct SoundRngState {
 
 u32 __umodsi3(u32 dividend, u32 divisor);
 
-void sub_0802E380(u8 *dst, u32 len)
+void MemZero(u8 *dst, u32 len)
 {
     u32 zero;
 
@@ -23,7 +23,7 @@ void sub_0802E380(u8 *dst, u32 len)
     }
 }
 
-void sub_0802E394(u8 *dst, u8 *src, u32 len)
+void Sound_MemCopy(u8 *dst, u8 *src, u32 len)
 {
     u8 *out;
 
@@ -38,7 +38,7 @@ void sub_0802E394(u8 *dst, u8 *src, u32 len)
     }
 }
 
-u32 sub_0802E3AC(void)
+u32 SoundRng_Step(void)
 {
     SoundRngState *ss;
     u32 seed;
@@ -49,7 +49,7 @@ u32 sub_0802E3AC(void)
     return (seed << 11) >> 17;
 }
 
-u32 sub_0802E3C8(u32 arg)
+u32 Sound_Rand(u32 arg)
 {
     SoundRngState *ss;
     u32 value;

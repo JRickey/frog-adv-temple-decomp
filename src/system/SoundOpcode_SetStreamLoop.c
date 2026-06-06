@@ -4,7 +4,7 @@
 /* SoundOpcode_SetStreamLoop — stream opcode that (re)defines a sample loop region.
  *
  * A 10-byte sequencer opcode handler in the software-mix family
- * (signature shared with sub_0803030C / sub_0803038C / sub_0803045C:
+ * (signature shared with SoundOp_RetireChannel / SoundOp_SetPeriod / SoundOp_GateOff:
  * channel index in r0, &cursor in r1, returns 1 and advances the
  * cursor). Only the software-mixed slots (channel > 3) carry a stream
  * loop; channels 0..3 fall straight through to the cursor advance.
@@ -62,8 +62,8 @@ typedef struct StreamLoopSystem {
 
 #define gpStreamLoopSystem (*(StreamLoopSystem **)0x030065e0)
 
-extern void sub_0802E418(void);
-extern void sub_0802E3F8(void);
+extern void Sound_Lock(void);
+extern void Sound_Unlock(void);
 
 s32 SoundOpcode_SetStreamLoop(s32 channel, u32 *cursor)
 {
@@ -164,12 +164,12 @@ s32 SoundOpcode_SetStreamLoop(s32 channel, u32 *cursor)
         }
     }
 
-    sub_0802E418();
+    Sound_Lock();
     entry->loopStart = loopStart;
     entry->loopEnd = loopEnd;
     entry->playPos = playPos;
     entry->tailLen = tailLen;
-    sub_0802E3F8();
+    Sound_Unlock();
 
 advance: {
     u32 *c;

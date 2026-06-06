@@ -1,4 +1,4 @@
-@ Remaining slice after peeling sub_080122E4 into src/engine/sub_0801223c.c
+@ Remaining slice after peeling RunScrollTransitionSequence into src/engine/sub_0801223c.c
 @ Range:  [0x08012504, 0x0801254c)
 
         .include "asm/macros.inc"

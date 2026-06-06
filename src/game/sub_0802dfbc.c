@@ -1,9 +1,9 @@
 #include "sound.h"
 
-/* sub_0802DFBC — set the period byte of a SW-slot identified by handle,
+/* SoundSlot_SetPitchScale — set the period byte of a SW-slot identified by handle,
  * then mark the slot dirty.
  *
- * handle: bits 16..23 carry the slot index (same layout as sub_0802E1C8 etc.)
+ * handle: bits 16..23 carry the slot index (same layout as SoundHandle_GetPeriod etc.)
  * scale:  the value to write as `scale << 1`; if that byte is non-zero,
  *         the period is further incremented by 1.
  *
@@ -18,7 +18,7 @@
  *     yielding `adds r1, r2, r1` / `adds r0, r2, r0` (Rn=dest form) instead of
  *     the wrong `adds r1, r1, r2` form.
  */
-void sub_0802DFBC(u32 handle, u32 scale)
+void SoundSlot_SetPitchScale(u32 handle, u32 scale)
 {
     u32 scaleSaved = scale;
     register u32 period asm("r0");

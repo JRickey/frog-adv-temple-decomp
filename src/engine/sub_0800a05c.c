@@ -1,15 +1,15 @@
 #include "types.h"
 
-extern void sub_0802D558(void *src, void *dst, u32 count);
+extern void BiosSwiTable(void *src, void *dst, u32 count);
 
-void sub_0800A05C(void)
+void EntityPool_Reset(void)
 {
     u32 scratch[2];
     void *fillSrc;
     register s32 idx asm("r5");
 
     scratch[0] = 0;
-    sub_0802D558(&scratch[0], (void *)0x06010000, 0x01000008);
+    BiosSwiTable(&scratch[0], (void *)0x06010000, 0x01000008);
 
     fillSrc = &scratch[1];
 
@@ -51,7 +51,7 @@ void sub_0800A05C(void)
 
             oamDst = (void *)0x07000000;
             oamCount = 0x100;
-            sub_0802D558(oamBase, oamDst, oamCount);
+            BiosSwiTable(oamBase, oamDst, oamCount);
         }
     }
 
@@ -77,7 +77,7 @@ void sub_0800A05C(void)
         register u32 mask asm("r1");
 
         ent = (u8 *)0x03003720;
-        sub_0802D558(fillSrc, ent, 0x01000700);
+        BiosSwiTable(fillSrc, ent, 0x01000700);
 
         mask = 8;
         ent += 0x34;

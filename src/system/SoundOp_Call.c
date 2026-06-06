@@ -1,6 +1,6 @@
 #include "types.h"
 
-extern void sub_0802EF7C(u8 clearAcc, u16 value, s32 channel);
+extern void Sound_ApplyEnvelopeC(u8 clearAcc, u16 value, s32 channel);
 
 u32 SoundOp_Call(u32 arg0, u8 **cursor)
 {
@@ -24,7 +24,7 @@ u32 SoundOp_Return(u32 arg0, u8 **cursor)
 
 u32 SoundOp_SetEnvelopeC(u32 arg0, u8 **cursor)
 {
-    sub_0802EF7C((*cursor)[1], *(u16 *)(*cursor + 2), (s32)arg0);
+    Sound_ApplyEnvelopeC((*cursor)[1], *(u16 *)(*cursor + 2), (s32)arg0);
     *cursor += 4;
     return 1;
 }

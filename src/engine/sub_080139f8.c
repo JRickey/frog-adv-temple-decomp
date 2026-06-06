@@ -17,7 +17,7 @@ extern const struct ScaleAnimDesc sScaleAnimDescriptors2[];
 
 void sub_08012BC4(u32 flags, u32 dstX, u32 dstY, u32 widthArg, u32 srcRowsArg, const u16 **srcTable, u32 srcIndex);
 
-void sub_080139F8(u8 idx)
+void ScaleAnim_BlitFromTable1(u8 idx)
 {
     const u8 *base = (const u8 *)sScaleAnimDescriptors;
     u32 offset;
@@ -32,7 +32,7 @@ void sub_080139F8(u8 idx)
                  (srcTableArr = (const u16 ***)(offset + (u32)(base += 16)), *srcTableArr), 2);
 }
 
-void sub_08013A34(u8 idx)
+void ScaleAnim_BlitFromTable2Bank0(u8 idx)
 {
     const u8 *base = (const u8 *)sScaleAnimDescriptors2;
     u32 offset;
@@ -47,7 +47,7 @@ void sub_08013A34(u8 idx)
                  (srcTableArr = (const u16 ***)(offset + (u32)(base += 16)), *srcTableArr), 0);
 }
 
-void sub_08013A70(u8 idx)
+void ScaleAnim_BlitFromTable2Bank2(u8 idx)
 {
     const u8 *base = (const u8 *)sScaleAnimDescriptors2;
     u32 offset;

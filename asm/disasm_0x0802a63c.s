@@ -349,7 +349,7 @@
 @   0x0802a8f6: 4700        bx	r0
 @   0x0802a8f8: 7fff        ldrb	r7, [r7, #31]
 
-        thumb_func_start sub_0802A63C
-sub_0802A63C: @ 0x0802a63c
+        thumb_func_start SpawnGrid_UpdateSection
+SpawnGrid_UpdateSection: @ 0x0802a63c
         .incbin "frog_us_baserom.gba", 0x2a63c, 0x2c0
-        thumb_func_end sub_0802A63C
+        thumb_func_end SpawnGrid_UpdateSection

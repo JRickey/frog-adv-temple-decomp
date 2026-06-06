@@ -3,7 +3,7 @@
 #include "macros.h"
 #include "types.h"
 
-extern void sub_08006A74(struct IwramAt35E0 *p, s8 a, s16 b, s8 c, s8 e);
+extern void PlayerState_Init(struct IwramAt35E0 *p, s8 a, s16 b, s8 c, s8 e);
 extern void Entity_Init(struct Entity *p, u8 a, s16 b, s16 c, u8 d, u16 e, u8 f, u8 g, u8 h, u16 i);
 
 struct SpawnRec {
@@ -16,14 +16,14 @@ struct SpawnRec {
     u8 _b8;
 };
 
-/* Same spawn-record path as sub_08007874, but the three caller-supplied fields
- * (a, b, c) are forwarded straight to sub_08006A74 instead of being re-read from
+/* Same spawn-record path as Entity_SpawnFromRecord, but the three caller-supplied fields
+ * (a, b, c) are forwarded straight to PlayerState_Init instead of being re-read from
  * gIwram_35E0. gIwram_6110 +0x34 holds the per-state table of SpawnRec arrays;
  * +0x32 (one back) selects the array. The record's two leading halfwords become
  * tile-to-pixel positions (n*24 + 11) forwarded to Entity_Init. Compiled with
- * old_agbcc to match (same as sub_08007874). */
+ * old_agbcc to match (same as Entity_SpawnFromRecord). */
 
-void sub_080077AC(s8 a, s16 b, s8 c)
+void Entity_SpawnFromConfig(s8 a, s16 b, s8 c)
 {
     struct SpawnRec *rec =
         (struct SpawnRec *)((const struct SpawnRec **)gIwram_6110.configTable)[gIwram_6110.state - 1];
@@ -41,7 +41,7 @@ void sub_080077AC(s8 a, s16 b, s8 c)
     gIwram_35E0._field_18 = rec->_b7;
     gIwram_35E0._field_19 = rec->_b8;
 
-    sub_08006A74(&gIwram_35E0, a, b, c, 0);
+    PlayerState_Init(&gIwram_35E0, a, b, c, 0);
 
     Entity_Init(gEntities, 0, px, py, b5, 1, 0, b6, b4, 16);
 }

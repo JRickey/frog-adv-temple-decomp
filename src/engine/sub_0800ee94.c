@@ -1,17 +1,17 @@
 #include "gba/io.h"
 #include "types.h"
 
-extern void sub_0800EE34(u8 layer);
+extern void BgLayer_Disable(u8 layer);
 
 /* Enables one of the four BG layers in REG_DISPCNT.
  *
  * Layer index 0..3 maps to DISPCNT_BG0_ON..DISPCNT_BG3_ON. Any other
  * index is a no-op return.
  *
- * Used during the title/scene teardown in sub_0800FD50 (calls with 3)
+ * Used during the title/scene teardown in Scene08_MapScreenTick (calls with 3)
  * to re-enable BG3 after the blend/window registers are cleared. */
 
-void sub_0800EE94(u8 layer)
+void BgLayer_Enable(u8 layer)
 {
     switch (layer) {
     case 0:
@@ -38,28 +38,28 @@ void sub_0800EE94(u8 layer)
  *   mode 3 -> BG0..BG3 all on.
  * Other modes leave only the OBJ bits set. */
 
-void sub_0800EEE8(u8 mode)
+void Bg_SetLayersByMode(u8 mode)
 {
     REG_DISPCNT = DISPCNT_OBJ_ON | DISPCNT_OBJ_1D;
 
     switch (mode) {
     case 1:
-        sub_0800EE94(0);
-        sub_0800EE34(1);
-        sub_0800EE34(2);
-        sub_0800EE94(3);
+        BgLayer_Enable(0);
+        BgLayer_Disable(1);
+        BgLayer_Disable(2);
+        BgLayer_Enable(3);
         break;
     case 2:
-        sub_0800EE94(0);
-        sub_0800EE94(1);
-        sub_0800EE34(2);
-        sub_0800EE94(3);
+        BgLayer_Enable(0);
+        BgLayer_Enable(1);
+        BgLayer_Disable(2);
+        BgLayer_Enable(3);
         break;
     case 3:
-        sub_0800EE94(0);
-        sub_0800EE94(1);
-        sub_0800EE94(2);
-        sub_0800EE94(3);
+        BgLayer_Enable(0);
+        BgLayer_Enable(1);
+        BgLayer_Enable(2);
+        BgLayer_Enable(3);
         break;
     }
 }

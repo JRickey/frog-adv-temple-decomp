@@ -4,13 +4,13 @@
 
 extern const u16 sScreenPaletteCD78[256];
 extern const u16 sScreenTilemapCF78[1024];
-extern u16 sub_080106EC(u16 arg);
-extern s32 sub_08010710(void);
-extern void sub_0801E270(u32 delay);
-extern u8 sub_08010694(u8 arg);
-extern s32 sub_080106B8(void);
+extern u16 Screen_BeginFlash(u16 arg);
+extern s32 Screen_TickFlash(void);
+extern void WaitFrames(u32 delay);
+extern u8 Blend_StartFade(u8 arg);
+extern s32 Blend_StepFade(void);
 
-void sub_0801E078(void)
+void Credits_FadeTransition(void)
 {
     volatile DmaChannel *dma;
 
@@ -33,12 +33,12 @@ void sub_0801E078(void)
     dma->cnt = DMA_ENABLE | 0x400;
     (void)dma->cnt;
 
-    sub_080106EC(0xBF);
-    while (sub_08010710() != 0)
-        sub_0801E270(2);
+    Screen_BeginFlash(0xBF);
+    while (Screen_TickFlash() != 0)
+        WaitFrames(2);
 
-    sub_0801E270(0x168);
-    sub_08010694(0xBF);
-    while (sub_080106B8() != 0)
-        sub_0801E270(2);
+    WaitFrames(0x168);
+    Blend_StartFade(0xBF);
+    while (Blend_StepFade() != 0)
+        WaitFrames(2);
 }

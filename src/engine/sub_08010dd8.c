@@ -1,6 +1,6 @@
 #include "types.h"
 
-/* --- sub_08010DD8: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- Scroll_PrepareBlitWork: non-matching reference (asm slice provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "game.h"
 #include "iwram.h"
@@ -42,7 +42,7 @@ struct SceneStride {
     u16 stride; /* +0x1A */
 };
 
-void sub_08010DD8(struct DrawRecord *records, u32 idxArg, u32 commit)
+void Scroll_PrepareBlitWork(struct DrawRecord *records, u32 idxArg, u32 commit)
 {
     register u32 i asm("r4") = (u8)idxArg;
     register u8 *control asm("r2") = (u8 *)&gIwram_6110;

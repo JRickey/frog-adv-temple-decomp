@@ -9,7 +9,7 @@ extern const u32 sLevelLayout_310E44[12];
 extern const u32 sLevelLayout_310E74[8];
 extern const u32 sLevelLayout_310E94[8];
 
-void sub_080222BC(void)
+void SpawnRowGroupEntities(void)
 {
     sub_080210A0(0x31, sLevelLayout_310DF4, 16, 13, 0xD5, 8, 2, 2);
     sub_080210A0(0x32, sLevelLayout_310E14, 16, 13, 0xE5, 8, 3, 3);

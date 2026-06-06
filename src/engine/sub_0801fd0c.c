@@ -6,10 +6,10 @@
 
 extern const u16 sWinPoseSpriteCoords[];
 
-/* sub_08018898 takes three leading scalars, a 16-byte struct by value, and a
+/* Screen_Install takes three leading scalars, a 16-byte struct by value, and a
  * trailing scalar. The struct is materialised on the caller's stack and passed
  * as r3 + [sp+0..8]; the trailing scalar lands in [sp+12]. Same call shape as
- * sub_0801F418's installer (the sibling screen-setup routine). */
+ * FileSelect_Init's installer (the sibling screen-setup routine). */
 struct ScreenInstallArgs {
     u32 _unk00;
     const void *tilemap1;
@@ -17,16 +17,16 @@ struct ScreenInstallArgs {
     u32 _unk0C;
 };
 
-extern void sub_08018C0C(s32 mode);
-extern void sub_08018898(s32 flag, s32 a, s32 b, struct ScreenInstallArgs args, s32 last);
-extern void sub_0801844C(void);
-extern void sub_08018CA8(void);
-extern void sub_080200B4(void);
-extern void sub_080185C0(u32 a, u32 b, u32 c, u32 d);
+extern void Screen_ClearBlocks(s32 mode);
+extern void Screen_Install(s32 flag, s32 a, s32 b, struct ScreenInstallArgs args, s32 last);
+extern void Bg_InitMode0(void);
+extern void WinPoseScreen_LoadSprites(void);
+extern void WinPoseScreen_DrawBg(void);
+extern void Sprite_CycleDmaFrame(u32 a, u32 b, u32 c, u32 d);
 
 extern u16 gIwram_5398;
 
-void sub_0801FD0C(void)
+void WinPoseScreen_Init(void)
 {
     struct ScreenInstallArgs args;
 
@@ -53,17 +53,17 @@ void sub_0801FD0C(void)
     if (gIwram_34A0._field_08 == 0) {
         s32 flag;
 
-        sub_08018C0C(14);
+        Screen_ClearBlocks(14);
 
         flag = (gIwram_34A0._field_08 == 0);
-        sub_08018898(flag, 0x21, 6, args, 2);
+        Screen_Install(flag, 0x21, 6, args, 2);
 
         REG_DMA3.src = (void *)0x081e5c18;
         REG_DMA3.dst = (void *)0x0600e800;
         REG_DMA3.cnt = DMA_ENABLE | 0x400;
         (void)REG_DMA3.cnt;
     } else {
-        sub_0801844C();
+        Bg_InitMode0();
 
         /* Four-stage screen install via DMA3 (see src/data/screen_d8b98.c):
          * palette -> BG palette RAM, char tiles -> charblock 0, then two
@@ -89,26 +89,26 @@ void sub_0801FD0C(void)
         (void)REG_DMA3.cnt;
     }
 
-    sub_08018CA8();
-    sub_080200B4();
+    WinPoseScreen_LoadSprites();
+    WinPoseScreen_DrawBg();
 
     gIwram_3480._data[2]++;
     gIwram_5398 = 0;
 }
 
-extern u16 sub_080004C4(void);
-extern void sub_08020C78(u32 sound);
-extern void sub_08019014(u32 a);
-extern void sub_08019958(u32 x);
-extern void sub_08019834(void *self, u16 u1, u16 u2, u8 u3, u8 count);
-extern void sub_08018648(u32 a, u16 b, u16 c, u8 d);
-extern void sub_08018EF0(void);
-extern void sub_08019228(void);
+extern u16 Input_Poll(void);
+extern void Sound_Play(u32 sound);
+extern void WinPoseScreen_ScrollStep(u32 a);
+extern void SetCurrentLevel(u32 x);
+extern void Sprite_AnimateFlip(void *self, u16 u1, u16 u2, u8 u3, u8 count);
+extern void Screen_InstallOamA(u32 a, u16 b, u16 c, u8 d);
+extern void WinPoseScreen_UpdateAnim(void);
+extern void WinPoseScreen_AnimAndScroll(void);
 extern const u32 sOamDmaCfg_08100[4];
 extern const u16 sWinPoseHeader[4];
 
 /* The OAM shadow buffer at IWRAM 0x030054A0 (sibling routines memset it to a
- * hidden-sprite sentinel). sub_0801FE68 stamps the same 8-byte record from
+ * hidden-sprite sentinel). WinPoseScreen_Update stamps the same 8-byte record from
  * sWinPoseHeader into its first seven slots; expressing the copy as an
  * 8-byte record assignment (rather than two scalar stores) is what makes
  * agbcc keep the source pointer / dest base in the baserom's register pair. */
@@ -118,7 +118,7 @@ struct OamPair {
 };
 extern struct OamPair gOamShadow_54A0[];
 
-void sub_0801FE68(void)
+void WinPoseScreen_Update(void)
 {
     u32 attr;
     u16 state;
@@ -129,12 +129,12 @@ void sub_0801FE68(void)
     attr = (attr & 0x00ffffff) | 0x03000000;
     attr = (attr & 0xff00ffff) | 0x000e0000;
 
-    gIwram_5398 = sub_080004C4();
+    gIwram_5398 = Input_Poll();
     state = gIwram_5398;
 
     switch (state) {
     case 1:
-        sub_08020C78(2);
+        Sound_Play(2);
         if (gIwram_3480._unk14 == 0)
             goto tail;
         gIwram_3480._unk14--;
@@ -142,23 +142,23 @@ void sub_0801FE68(void)
          * rather than materialising a fresh literal (case 2 below uses 1). */
         gIwram_34D0._field_10 = state;
         gIwram_34D0._field_08 = state;
-        sub_08019014(1);
+        WinPoseScreen_ScrollStep(1);
         goto tail;
 
     case 2:
-        sub_08020C78(2);
+        Sound_Play(2);
         if (gIwram_3480._unk14 == 4)
             goto tail;
         gIwram_3480._unk14++;
         gIwram_34D0._field_10 = 1;
         gIwram_34D0._field_08 = 1;
-        sub_08019014(0);
+        WinPoseScreen_ScrollStep(0);
         goto tail;
 
     case 16:
     case 64:
-        sub_08020C78(1);
-        sub_08019958(gIwram_3480._unk14);
+        Sound_Play(1);
+        SetCurrentLevel(gIwram_3480._unk14);
 
         switch (gIwram_3480._unk14) {
         case 0:
@@ -179,9 +179,9 @@ void sub_0801FE68(void)
         }
 
         if (gIwram_3480._unk14 != 3)
-            sub_08019834(&attr, 0, 1, 2, 10);
+            Sprite_AnimateFlip(&attr, 0, 1, 2, 10);
         else
-            sub_08019834(&attr, 2, 3, 2, 10);
+            Sprite_AnimateFlip(&attr, 2, 3, 2, 10);
 
         for (i = 0; i <= 6; i++) {
             struct OamPair rec = *(const struct OamPair *)sWinPoseHeader;
@@ -190,7 +190,7 @@ void sub_0801FE68(void)
 
         REG_DISPCNT &= ~DISPCNT_OBJ_ON;
         gIwram_34A0._field_08 = 1;
-        sub_08018648(1, 23, 6, 2);
+        Screen_InstallOamA(1, 23, 6, 2);
 
         gGameStuff.mode = GAME_MODE_ROUTER;
         gIwram_3480._data[0] = 8;
@@ -204,15 +204,15 @@ void sub_0801FE68(void)
 
 tail:
     if (gIwram_5398 == 32) {
-        sub_08020C78(0);
+        Sound_Play(0);
         REG_DISPCNT &= ~DISPCNT_OBJ_ON;
         gIwram_3480._data[2]++;
     } else if (gIwram_5398 != 0 && gIwram_5398 != 16 && gIwram_5398 != 64) {
-        sub_080200B4();
-        sub_08019228();
+        WinPoseScreen_DrawBg();
+        WinPoseScreen_AnimAndScroll();
     } else {
-        sub_080185C0(sOamDmaCfg_08100[0], sOamDmaCfg_08100[1], sOamDmaCfg_08100[2], sOamDmaCfg_08100[3]);
-        sub_08018EF0();
+        Sprite_CycleDmaFrame(sOamDmaCfg_08100[0], sOamDmaCfg_08100[1], sOamDmaCfg_08100[2], sOamDmaCfg_08100[3]);
+        WinPoseScreen_UpdateAnim();
     }
 
     gIwram_5398 = 0;

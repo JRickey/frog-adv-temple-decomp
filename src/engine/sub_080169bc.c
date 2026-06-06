@@ -15,7 +15,7 @@ extern const FrameDescriptor sFrogStatusBarFrames[];
  * screenblock 31 at VRAM 0x0600f800. The dst pointer is built in two
  * statements (base load, then add) so agbcc colours dst into r1 to match
  * the baserom's register allocation. */
-void sub_080169BC(void)
+void StatusBar_DrawTile24(void)
 {
     const u16 *src;
     u16 *dst;

@@ -3,15 +3,15 @@
 #include "macros.h"
 #include "types.h"
 
-extern u8 sub_0800679C(u8 *base, u32 selector, u32 bit);
-extern void sub_0800D808(u32 a);
-extern void sub_0800D450(u32 a, u32 b);
-extern void sub_0800D0F8(void);
-extern void sub_08020C78(u32 a);
-extern void sub_0802B9D4(void);
-extern void sub_0802BA64(void);
+extern u8 ModeControl_GetFlag(u8 *base, u32 selector, u32 bit);
+extern void PadGrid_RemoveRandom(u32 a);
+extern void PadGrid_FillGrid(u32 a, u32 b);
+extern void PadGrid_PlaceEntities(void);
+extern void Sound_Play(u32 a);
+extern void FrogPos_UpdateEntities(void);
+extern void FrogGoal_UpdateEntities(void);
 
-void sub_0800D1F8(void)
+void GateRoom_TickFrogUpdate(void)
 {
     GameStuff *gs;
     u8 *base;
@@ -21,7 +21,7 @@ void sub_0800D1F8(void)
     u8 *ctr;
     u8 val;
 
-    if (sub_0800679C((u8 *)&gIwram_6110, 3, 0) != 0) {
+    if (ModeControl_GetFlag((u8 *)&gIwram_6110, 3, 0) != 0) {
         gs = &gGameStuff;
         base = (u8 *)gEntities;
         counter = (u32 *)(base + 0xB1C);
@@ -29,10 +29,10 @@ void sub_0800D1F8(void)
         threshold = *(u8 *)(base + 0xB22);
 
         if (diff > threshold) {
-            sub_0800D808(5);
-            sub_0800D450(20, 10);
-            sub_0800D0F8();
-            sub_08020C78(0x38);
+            PadGrid_RemoveRandom(5);
+            PadGrid_FillGrid(20, 10);
+            PadGrid_PlaceEntities();
+            Sound_Play(0x38);
 
             ctr = base + 0xB20;
             val = *ctr;
@@ -42,6 +42,6 @@ void sub_0800D1F8(void)
             *counter = gs->_unk00;
         }
     }
-    sub_0802B9D4();
-    sub_0802BA64();
+    FrogPos_UpdateEntities();
+    FrogGoal_UpdateEntities();
 }

@@ -1,31 +1,31 @@
 #include "iwram.h"
 #include "types.h"
 
-extern void sub_080219BC(const void *a0, s32 slot);
-extern void sub_08020FE4(s32 a0, s32 a1);
-extern void sub_08005D10(s32 a0, s32 a1);
-extern void sub_08020E14(struct Entity *s, u8 idx, u8 halfW, u8 halfH);
-extern void sub_08021510(u8 a0, const void *a1, u8 a2, void *a3, u8 a4);
+extern void Entity_FollowPath(const void *a0, s32 slot);
+extern void Entity_UpdateMovers(s32 a0, s32 a1);
+extern void Entity_AdvanceAnimFrames(s32 a0, s32 a1);
+extern void Entity_CheckProximityAndPlaySound(struct Entity *s, u8 idx, u8 halfW, u8 halfH);
+extern void Entity_WalkCompactRecords(u8 a0, const void *a1, u8 a2, void *a3, u8 a4);
 
 extern const u32 sLevelLayoutPtrs_312DD4[38];
 extern const u32 sLevelLayout_312248[];
 
-void sub_080235C8(void)
+void LevelEntityBatch_SpawnAndClassify(void)
 {
     u8 i;
     struct Entity *base;
     struct Entity *entity;
 
     for (i = 0; i <= 0x25; i++) {
-        sub_080219BC((const void *)sLevelLayoutPtrs_312DD4[i], i + 0x33);
+        Entity_FollowPath((const void *)sLevelLayoutPtrs_312DD4[i], i + 0x33);
     }
 
-    sub_08020FE4(0x33, 0x34);
-    sub_08005D10(0x33, 0x34);
-    sub_08020FE4(0x35, 0x3A);
-    sub_08005D10(0x35, 0x3A);
-    sub_08020FE4(0x3B, 0x58);
-    sub_08005D10(0x3B, 0x58);
+    Entity_UpdateMovers(0x33, 0x34);
+    Entity_AdvanceAnimFrames(0x33, 0x34);
+    Entity_UpdateMovers(0x35, 0x3A);
+    Entity_AdvanceAnimFrames(0x35, 0x3A);
+    Entity_UpdateMovers(0x3B, 0x58);
+    Entity_AdvanceAnimFrames(0x3B, 0x58);
 
     i = 0x3B;
     base = gEntities;
@@ -48,7 +48,7 @@ void sub_080235C8(void)
     }
 }
 
-void sub_0802367C(void)
+void LevelEntity_AnimAndSpawn(void)
 {
     u8 i;
     struct Entity *entity;
@@ -57,18 +57,18 @@ void sub_0802367C(void)
         entity = (struct Entity *)(i * 56 + 0x1538 + (s32)gEntities);
         if (entity->field_1A == 0) {
             if (entity->field_1B == 1) {
-                sub_08020E14(entity, 8, 2, 2);
+                Entity_CheckProximityAndPlaySound(entity, 8, 2, 2);
             } else if (entity->field_1B == 7) {
-                sub_08020E14(entity, 9, 2, 2);
+                Entity_CheckProximityAndPlaySound(entity, 9, 2, 2);
             }
         } else if (entity->field_1A == 1) {
             if (entity->field_1B == 3) {
-                sub_08020E14(entity, 8, 2, 2);
+                Entity_CheckProximityAndPlaySound(entity, 8, 2, 2);
             } else if (entity->field_1B == 9) {
-                sub_08020E14(entity, 9, 2, 2);
+                Entity_CheckProximityAndPlaySound(entity, 9, 2, 2);
             }
         }
     }
 
-    sub_08021510(0x61, sLevelLayout_312248, 0x11, &gIwram_6110, 0);
+    Entity_WalkCompactRecords(0x61, sLevelLayout_312248, 0x11, &gIwram_6110, 0);
 }

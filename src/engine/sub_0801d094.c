@@ -3,14 +3,14 @@
 
 extern const u8 sLevelClearedLabels[124];
 
-extern void sub_0801BE7C(const u8 *str, int x, int y, int a, int b, int c, int d);
+extern void DrawTextGlyphs(const u8 *str, int x, int y, int a, int b, int c, int d);
 
-void sub_0801D094(void)
+void LevelCleared_ShowExtLabel(void)
 {
-    sub_0801BE7C(&sLevelClearedLabels[8], 8, 11, 10, 278, 14, 3);
+    DrawTextGlyphs(&sLevelClearedLabels[8], 8, 11, 10, 278, 14, 3);
 }
 
-void sub_0801D0BC(u32 data, u8 screen)
+void Screen_ClearRect(u32 data, u8 screen)
 {
     u32 base;
     u8 i;

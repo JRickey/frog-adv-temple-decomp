@@ -6,28 +6,28 @@
 /* Per-frame entity classifier / collision dispatch.
  *
  * Reads the current entity's tile-cache pair from gIwram_35E0 and feeds
- * it through two collision-style lookups (sub_0800CD88 / sub_0800CE54),
- * conditioned on the bit-test result of sub_08006BA4. The lookup result
+ * it through two collision-style lookups (Tilemap_GetTileClass / TileCell_GetPropertyB),
+ * conditioned on the bit-test result of IsFlagMaskSet. The lookup result
  * (`tile`) drives:
- *   - sub_080204A4(tile) — always called.
- *   - sub_08009884(tile) — called if sub_06BA4 returned the bit-16 mask
+ *   - TileSound_Update(tile) — always called.
+ *   - Player_HandleTileCollision(tile) — called if sub_06BA4 returned the bit-16 mask
  *     (probably "this tile is solid").
  *   - sub_06B88(gIwram_35E0, 0x800)  if tile == 7
  *   - sub_06B88(gIwram_35E0, 0x2000) if tile == 8 || tile == 11
  *
  * Entry-guard: if bit 4 of gEntities[0].status is set, the function
  * is a no-op. (That bit appears to be a "transition in progress" flag
- * raised by sub_080090B0's caller.)
+ * raised by Player_UpdateTileCache's caller.)
  */
 
-extern u32 sub_0800CD88(u8 col, u8 row, s32 tileX, s32 tileY);
-extern void sub_080204A4(u8 tile);
-extern u32 sub_08006BA4(struct IwramAt35E0 *p, u32 mask);
-extern void sub_08009884(u8 tile);
-extern u32 sub_0800CE54(u8 col, u8 row, s32 tileX, s32 tileY);
-extern void sub_08006B88(void *p, u16 mask);
+extern u32 Tilemap_GetTileClass(u8 col, u8 row, s32 tileX, s32 tileY);
+extern void TileSound_Update(u8 tile);
+extern u32 IsFlagMaskSet(struct IwramAt35E0 *p, u32 mask);
+extern void Player_HandleTileCollision(u8 tile);
+extern u32 TileCell_GetPropertyB(u8 col, u8 row, s32 tileX, s32 tileY);
+extern void PlayerFlags_Set(void *p, u16 mask);
 
-void sub_08009984(void)
+void Player_CheckTileEvents(void)
 {
     u8 tile;
     u8 tile2;
@@ -35,15 +35,16 @@ void sub_08009984(void)
     if ((gEntities[0].status & 4) != 0)
         return;
 
-    tile = (u8)sub_0800CD88(gIwram_35E0._field_18, gIwram_35E0._field_19, gIwram_35E0._field_8, gIwram_35E0._field_A);
-    sub_080204A4(tile);
+    tile = (u8)Tilemap_GetTileClass(gIwram_35E0._field_18, gIwram_35E0._field_19, gIwram_35E0._field_8,
+                                    gIwram_35E0._field_A);
+    TileSound_Update(tile);
 
-    if ((u8)sub_08006BA4(&gIwram_35E0, 16) != 0)
-        sub_08009884(tile);
+    if ((u8)IsFlagMaskSet(&gIwram_35E0, 16) != 0)
+        Player_HandleTileCollision(tile);
 
-    if ((u8)sub_08006BA4(&gIwram_35E0, 64) != 0) {
-        tile2 =
-            (u8)sub_0800CE54(gIwram_35E0._field_18, gIwram_35E0._field_19, gIwram_35E0._field_8, gIwram_35E0._field_A);
+    if ((u8)IsFlagMaskSet(&gIwram_35E0, 64) != 0) {
+        tile2 = (u8)TileCell_GetPropertyB(gIwram_35E0._field_18, gIwram_35E0._field_19, gIwram_35E0._field_8,
+                                          gIwram_35E0._field_A);
         if (tile2 == 1)
             gEntities[0].field_17 = tile2;
         if (tile2 == 2)
@@ -57,7 +58,7 @@ void sub_08009984(void)
             goto check8or11;
         if (gEntities[0].field_1A > 3)
             goto check8or11;
-        sub_08006B88(&gIwram_35E0, 0x800);
+        PlayerFlags_Set(&gIwram_35E0, 0x800);
         return;
     }
 check8or11:
@@ -67,7 +68,7 @@ check8or11:
         return;
     if (gEntities[0].field_1A > 3)
         return;
-    sub_08006B88(&gIwram_35E0, 0x2000);
+    PlayerFlags_Set(&gIwram_35E0, 0x2000);
 }
 
 /* Per-frame entity-vs-player AABB sweep.
@@ -76,7 +77,7 @@ check8or11:
  * 0x03006140[0]). For each entity:
  *   - Skip if bit 3 of entity[0x34] is already set (this-frame hit
  *     already recorded).
- *   - Skip and clear bit 0 of entity[0x34] if sub_0800D028(idx) says
+ *   - Skip and clear bit 0 of entity[0x34] if Entity_IsInProximity(idx) says
  *     the entity is not eligible.
  *   - Compute signed dx/dy between the entity center
  *     (entity[2], entity[4]) and the player center read once into the
@@ -87,7 +88,7 @@ check8or11:
  *     player center; on a hit set bits 0 and 8 of entity[0x34], append a
  *     {entity_idx, x_offset, 0xFFFF} record to the variable-stride hit
  *     log at 0x03006160 (count byte at 0x03006110[49]), and call
- *     sub_0800696C(0x03006110, idx).
+ *     ModeControl_SetBit(0x03006110, idx).
  *
  * Shipped NAKED. The baserom pins the loop's per-entity scratch into
  * the high registers sl (zero hold), r9 (pointer to the hit-count byte
@@ -99,11 +100,11 @@ check8or11:
  * intent for the phase-3 PC port.
  */
 
-extern u32 sub_0800D028(s32 idx);
-extern void sub_0800696C(void *p, s32 idx);
+extern u32 Entity_IsInProximity(s32 idx);
+extern void ModeControl_SetBit(void *p, s32 idx);
 
 #ifdef NON_MATCHING
-void sub_08009A58(void)
+void Entity_UpdateVisibility(void)
 {
     s16 player_cx;
     s16 player_cy;
@@ -136,7 +137,7 @@ void sub_08009A58(void)
         entity = (u8 *)(0x03003720 + i);
         if ((*(u16 *)(entity + 0x34) & 8) != 0)
             continue;
-        if (sub_0800D028(idx) == 0)
+        if (Entity_IsInProximity(idx) == 0)
             goto clear_bit;
 
         rx = *(u8 *)(entity + 24) >> 1;
@@ -163,7 +164,7 @@ void sub_08009A58(void)
         *(u16 *)(slot + 2) = (u16)(*(u16 *)(entity + 0x26) + ey);
         *(u16 *)(slot + 4) = 0xFFFF;
         (*hits_count_ptr)++;
-        sub_0800696C((void *)0x03006110, idx);
+        ModeControl_SetBit((void *)0x03006110, idx);
         continue;
 
     clear_bit:
@@ -171,7 +172,7 @@ void sub_08009A58(void)
     }
 }
 #else
-NAKED void sub_08009A58(void)
+NAKED void Entity_UpdateVisibility(void)
 {
     asm(".syntax unified\n"
         "    push    {r4, r5, r6, r7, lr}\n"
@@ -215,7 +216,7 @@ NAKED void sub_08009A58(void)
         "    cmp     r0, #0\n"
         "    bne     _sub_08009A58_step\n"
         "    mov     r0, r8\n"
-        "    bl      sub_0800D028\n"
+        "    bl      Entity_IsInProximity\n"
         "    cmp     r0, #0\n"
         "    beq     _sub_08009A58_clear_bit\n"
         "    ldrb    r4, [r5, #24]\n"
@@ -300,7 +301,7 @@ NAKED void sub_08009A58(void)
         "_sub_08009A58_call_696c:\n"
         "    ldr     r0, _sub_08009A58_pool_6110_b\n"
         "    mov     r1, r8\n"
-        "    bl      sub_0800696C\n"
+        "    bl      ModeControl_SetBit\n"
         "    b       _sub_08009A58_step\n"
         "    .align  2, 0\n"
         "_sub_08009A58_pool_60a0:   .4byte 0x030060a0\n"

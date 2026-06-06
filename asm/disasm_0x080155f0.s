@@ -309,7 +309,7 @@
 @   0x08015858: 0020        movs	r0, r4
 @   0x0801585a: 8000        strh	r0, [r0, #0]
 
-        thumb_func_start sub_080155F0
-sub_080155F0: @ 0x080155f0
+        thumb_func_start Scenery_BlitAndCyclePalette
+Scenery_BlitAndCyclePalette: @ 0x080155f0
         .incbin "frog_us_baserom.gba", 0x155f0, 0x26c
-        thumb_func_end sub_080155F0
+        thumb_func_end Scenery_BlitAndCyclePalette

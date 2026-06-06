@@ -2,7 +2,7 @@
 
 #define gpSoundSystem (*(u8 **)0x030065e0)
 
-u32 sub_0802E220(u32 handle)
+u32 Sound_GetChannelVolume(u32 handle)
 {
     u8 *ss;
     s32 idx;

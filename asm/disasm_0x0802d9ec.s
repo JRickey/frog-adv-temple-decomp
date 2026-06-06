@@ -1,7 +1,7 @@
 @ Auto-emitted by tools/disasm/peel.py — do not hand-edit this header.
 @ Range:  [0x0802dc1c, 0x0802dcbc)  (160 bytes, thumb mode)
 @ Re-peel:  python3 tools/disasm/peel.py --start 0x802dc1c --end 0x802dcbc --mode thumb
-@ Holds sub_0802DC1C [0x0802dc1c, 0x0802dcbc); sub_0802D9EC was decompiled to src/game/sub_0802d9ec.c.
+@ Holds SoundHandle_SetPan [0x0802dc1c, 0x0802dcbc); sub_0802D9EC was decompiled to src/game/sub_0802d9ec.c.
 
         .include "asm/macros.inc"
         .syntax unified
@@ -361,7 +361,7 @@
 @   0x0802dcb6: bc02        pop	{r1}
 @   0x0802dcb8: 4708        bx	r1
 
-        thumb_func_start sub_0802DC1C
-sub_0802DC1C: @ 0x0802dc1c
+        thumb_func_start SoundHandle_SetPan
+SoundHandle_SetPan: @ 0x0802dc1c
         .incbin "frog_us_baserom.gba", 0x2dc1c, 0xa0
-        thumb_func_end sub_0802DC1C
+        thumb_func_end SoundHandle_SetPan

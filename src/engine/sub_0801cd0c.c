@@ -25,8 +25,8 @@
 
 extern const u16 sUiWindowBorderTiles[9];
 
-extern void sub_080008DC(void);
-extern void sub_0801C078(const u8 *str, u8 count, u8 colBase, u8 rowBase, u16 tileBase, s32 palBank, u8 screen);
+extern void WaitVblank(void);
+extern void DrawTilemapString(const u8 *str, u8 count, u8 colBase, u8 rowBase, u16 tileBase, s32 palBank, u8 screen);
 
 /* new_var/new_var2/new_var3 are agbcc register-coloring anchors (permuter-found):
  * new_var pins cellOff into a C-fill scratch reg; new_var3 stages j*2 for the
@@ -67,7 +67,7 @@ void sub_0801CD0C(u8 col, u8 row, const u8 *str, u8 innerRows, u8 width, u16 pal
         j++;
 
         for (new_var2 = i; new_var2 > frames; i++)
-            sub_080008DC();
+            WaitVblank();
     }
 
     *(u16 *)(BG31_COL2 + width * 2 + (col * 2 + row * 64)) = sUiWindowBorderTiles[WINDOW_TR];
@@ -81,6 +81,6 @@ void sub_0801CD0C(u8 col, u8 row, const u8 *str, u8 innerRows, u8 width, u16 pal
     while (str[i] != '|')
         i++;
 
-    sub_0801C078(str, i, (u8)(col + 1), (u8)(row + 1), 0xa0, 14, 3);
+    DrawTilemapString(str, i, (u8)(col + 1), (u8)(row + 1), 0xa0, 14, 3);
 }
 #endif /* NON_MATCHING */

@@ -1,6 +1,6 @@
 #include "types.h"
 
-void sub_080125EC(void)
+void ScaleAnim_ResetState(void)
 {
     u8 *unk6410 = (u8 *)0x03006410;
     u32 zero = 0;

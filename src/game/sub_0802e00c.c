@@ -1,6 +1,6 @@
 #include "sound.h"
 
-/* sub_0802E00C — advance a SW-slot's stream cursor by one frame.
+/* SoundStream_UpdateCursor — advance a SW-slot's stream cursor by one frame.
  *
  * slotIndex: index into the SW-slot table.
  * cursor:    the stream cursor for that slot.
@@ -24,7 +24,7 @@ typedef struct StreamCursor {
 
 typedef s32 (*SoundGenerator)(s32 count, u32 *outStart, u32 *outFlag, u32 *outExtra, u32 chIdx);
 
-void sub_0802E00C(u32 slotIndex, StreamCursor *cursor)
+void SoundStream_UpdateCursor(u32 slotIndex, StreamCursor *cursor)
 {
     SoundSystem *ss;
     u8 *swSlots;
@@ -82,10 +82,10 @@ void sub_0802E00C(u32 slotIndex, StreamCursor *cursor)
         *work = 0;
 }
 
-extern void sub_0802FF58(void);
-extern void sub_08030290(void);
+extern void SoundMixer_VBlankTick(void);
+extern void Sound_StartDma(void);
 
-void sub_0802E0BC(u8 idx)
+void Sound_SetActiveCount(u8 idx)
 {
     SoundSystem *ss = gpSoundSystem;
     u32 oldCount = ss->count;
@@ -99,10 +99,10 @@ void sub_0802E0BC(u8 idx)
     ss->count = idx;
 
     if (idx == 0) {
-        sub_0802FF58();
+        SoundMixer_VBlankTick();
         return;
     }
 
     if (oldCount == 0)
-        sub_08030290();
+        Sound_StartDma();
 }

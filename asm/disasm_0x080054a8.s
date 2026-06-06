@@ -441,7 +441,7 @@
 @   0x08005868: 5330        strh	r0, [r6, r4]
 @   0x0800586a: 0300        lsls	r0, r0, #12
 
-        thumb_func_start sub_080054A8
-sub_080054A8: @ 0x080054a8
+        thumb_func_start GameMode_Scene23
+GameMode_Scene23: @ 0x080054a8
         .incbin "frog_us_baserom.gba", 0x54a8, 0x3c4
-        thumb_func_end sub_080054A8
+        thumb_func_end GameMode_Scene23

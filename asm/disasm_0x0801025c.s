@@ -431,7 +431,7 @@
 @   0x080105aa: 0000        movs	r0, r0
 @   0x080105ac: 0fff        lsrs	r7, r7, #31
 
-        thumb_func_start sub_0801025C
-sub_0801025C: @ 0x0801025c
+        thumb_func_start ScaleAnim_BlitFrameToVram
+ScaleAnim_BlitFrameToVram: @ 0x0801025c
         .incbin "frog_us_baserom.gba", 0x1025c, 0x354
-        thumb_func_end sub_0801025C
+        thumb_func_end ScaleAnim_BlitFrameToVram

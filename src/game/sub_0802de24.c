@@ -8,7 +8,7 @@
  * - chFlags: ss += 0x10 then ss += chOff (two separate increments of r1 in place)
  *   matches "adds r1, #16; adds r1, r1, r4; ldr/str [r1]"
  */
-u32 sub_0802DE24(u32 handle, u16 value)
+u32 SoundSlot_SetVolume(u32 handle, u16 value)
 {
     register SoundSystem *ss asm("r1");
     u32 chOff;

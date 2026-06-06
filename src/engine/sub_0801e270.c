@@ -1,13 +1,13 @@
 #include "types.h"
 
-extern u32 sub_08000900(void);
+extern u32 GetFrameTick(void);
 
-/* Busy-waits until the frame counter (sub_08000900) has advanced by at least
+/* Busy-waits until the frame counter (GetFrameTick) has advanced by at least
  * `delay` ticks since entry. */
-void sub_0801E270(u32 delay)
+void WaitFrames(u32 delay)
 {
-    u32 start = sub_08000900();
+    u32 start = GetFrameTick();
 
-    while (sub_08000900() - start < delay) {
+    while (GetFrameTick() - start < delay) {
     }
 }

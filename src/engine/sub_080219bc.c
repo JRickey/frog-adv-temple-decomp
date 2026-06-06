@@ -8,9 +8,9 @@ typedef struct {
     u16 d;
 } Entry_080219BC;
 
-extern void sub_08021838(u8 *src, int dstIdxArg, int selectorArg, int idxArg, int cmpValArg);
+extern void Entity_AdvanceWaypoint(u8 *src, int dstIdxArg, int selectorArg, int idxArg, int cmpValArg);
 
-void sub_080219BC(const void *base, u8 idx)
+void Entity_FollowPath(const void *base, u8 idx)
 {
     u8 *src;
     struct Entity *e;
@@ -41,7 +41,7 @@ void sub_080219BC(const void *base, u8 idx)
             goto tail;
         if ((s16)e->y > (s16)rec->b)
             goto tail;
-        sub_08021838(src, idx, selector, recIdx, count);
+        Entity_AdvanceWaypoint(src, idx, selector, recIdx, count);
         goto tail;
     }
     case 2: {
@@ -50,7 +50,7 @@ void sub_080219BC(const void *base, u8 idx)
             goto tail;
         if ((s16)e->y < (s16)rec->b)
             goto tail;
-        sub_08021838(src, idx, selector, recIdx, count);
+        Entity_AdvanceWaypoint(src, idx, selector, recIdx, count);
         goto tail;
     }
     case 3: {
@@ -59,7 +59,7 @@ void sub_080219BC(const void *base, u8 idx)
             goto tail;
         if ((u16)e->y != rec->b)
             goto tail;
-        sub_08021838(src, idx, selector, recIdx, count);
+        Entity_AdvanceWaypoint(src, idx, selector, recIdx, count);
         goto tail;
     }
     case 4: {
@@ -68,7 +68,7 @@ void sub_080219BC(const void *base, u8 idx)
             goto tail;
         if ((u16)e->y != rec->b)
             goto tail;
-        sub_08021838(src, idx, selector, recIdx, count);
+        Entity_AdvanceWaypoint(src, idx, selector, recIdx, count);
         break;
     }
     default:

@@ -1,15 +1,15 @@
 #include "iwram.h"
 #include "types.h"
 
-extern void sub_08020E14(struct Entity *s, u8 idx, u8 halfW, u8 halfH);
-extern void sub_080219BC(const void *a0, s32 slot);
-extern void sub_0800696C(void *p, s32 idx);
-extern void sub_08020FE4(s32 a0, s32 a1);
-extern void sub_08005D10(s32 a0, s32 a1);
+extern void Entity_CheckProximityAndPlaySound(struct Entity *s, u8 idx, u8 halfW, u8 halfH);
+extern void Entity_FollowPath(const void *a0, s32 slot);
+extern void ModeControl_SetBit(void *p, s32 idx);
+extern void Entity_UpdateMovers(s32 a0, s32 a1);
+extern void Entity_AdvanceAnimFrames(s32 a0, s32 a1);
 
 extern const u32 sLevelLayoutPtrs_312D80[10];
 
-void sub_08023AB4(void)
+void LevelEntities_SpawnGroup10(void)
 {
     u8 i;
     struct Entity *entity;
@@ -37,21 +37,21 @@ void sub_08023AB4(void)
             distFrom851 = 851 - entity->y;
 
         if (entity->x == 899) {
-            sub_08020E14(entity, 7, 10, 3);
+            Entity_CheckProximityAndPlaySound(entity, 7, 10, 3);
         } else if (distFrom827 <= 4) {
-            sub_08020E14(entity, 7, 5, 10);
+            Entity_CheckProximityAndPlaySound(entity, 7, 5, 10);
         } else if (distFrom851 <= 4 && i == 5) {
-            sub_08020E14(entity, 7, 3, 10);
+            Entity_CheckProximityAndPlaySound(entity, 7, 3, 10);
         }
 
-        sub_080219BC((const void *)sLevelLayoutPtrs_312D80[i], i + 10);
-        sub_0800696C(&gIwram_6110, i + 10);
+        Entity_FollowPath((const void *)sLevelLayoutPtrs_312D80[i], i + 10);
+        ModeControl_SetBit(&gIwram_6110, i + 10);
     }
 
-    sub_08020FE4(10, 14);
-    sub_08005D10(10, 14);
-    sub_08020FE4(15, 15);
-    sub_08005D10(15, 15);
-    sub_08020FE4(16, 19);
-    sub_08005D10(16, 19);
+    Entity_UpdateMovers(10, 14);
+    Entity_AdvanceAnimFrames(10, 14);
+    Entity_UpdateMovers(15, 15);
+    Entity_AdvanceAnimFrames(15, 15);
+    Entity_UpdateMovers(16, 19);
+    Entity_AdvanceAnimFrames(16, 19);
 }

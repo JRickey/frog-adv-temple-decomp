@@ -6,16 +6,16 @@
 /* Input/state gate that fans out into three independent subsystem pokes:
  *
  *   1. If gEntities[0].status & 4 is set, raise a single flag via
- *      sub_080066C4(0x03006110, 8, 1) and skip the rest of the function.
- *   2. Otherwise call the predicate sub_0800679C(0x03006110, 5, 15); when
+ *      ModeControl_ClearBit(0x03006110, 8, 1) and skip the rest of the function.
+ *   2. Otherwise call the predicate ModeControl_GetFlag(0x03006110, 5, 15); when
  *      it returns nonzero, OR bit 8 into the halfword at 0x03006110[+0x2e].
  *   3. If gIwram_35E0._field_10 & 0x10 is set, sample the cached tile
- *      coords (gIwram_35E0._field_18/19/8/A), run sub_0800CD88 to map
- *      them to a tile id, and hand the (u8)tile to sub_0800AB84.
+ *      coords (gIwram_35E0._field_18/19/8/A), run Tilemap_GetTileClass to map
+ *      them to a tile id, and hand the (u8)tile to FrogPad_CheckTile.
  *
- * Same gEntities[0].status & 4 gate appears in sub_08000B6C /
- * sub_08000E0C — this function looks like another per-entity probe in
- * the same family, with a lighter (single sub_0800CD88 / sub_0800AB84)
+ * Same gEntities[0].status & 4 gate appears in Scene08_UpdatePlayerEntity /
+ * Scene09_UpdatePlayerTile — this function looks like another per-entity probe in
+ * the same family, with a lighter (single Tilemap_GetTileClass / FrogPad_CheckTile)
  * tail instead of the &0x10 dispatch + bit-test guard those siblings
  * use.
  *
@@ -32,16 +32,16 @@
  *     (`t = 8; t |= load; store = t;`) to defeat the `ldrh ; orrs ; strh`
  *     fold and emit baserom's `movs #8 ; ldrh ; orrs ; strh` shape.
  *   - `base6110` as a local `u8 *` keeps r4 anchored to 0x03006110 across
- *     the BL to sub_0800679C so the post-call ldrh/strh reuse the same
+ *     the BL to ModeControl_GetFlag so the post-call ldrh/strh reuse the same
  *     base register at +0x2e instead of materializing a fresh
  *     0x0300613e pool entry. */
 
-extern void sub_080066C4(u32 base, u32 idx, u32 val);
-extern u32 sub_0800679C(u32 base, u32 a, u32 b);
-extern u32 sub_0800CD88(u8 col, u8 row, s32 tileX, s32 tileY);
-extern void sub_0800AB84(u8 tile);
+extern void ModeControl_ClearBit(u32 base, u32 idx, u32 val);
+extern u32 ModeControl_GetFlag(u32 base, u32 a, u32 b);
+extern u32 Tilemap_GetTileClass(u8 col, u8 row, s32 tileX, s32 tileY);
+extern void FrogPad_CheckTile(u8 tile);
 
-void sub_080011A4(void)
+void Entity_UpdateHudState(void)
 {
     register u32 mask asm("r0");
     register u16 field asm("r4");
@@ -53,12 +53,12 @@ void sub_080011A4(void)
     mask = 4;
     mask &= p3720->status;
     if (mask != 0) {
-        sub_080066C4(0x03006110, 8, 1);
+        ModeControl_ClearBit(0x03006110, 8, 1);
         return;
     }
 
     base6110 = (u8 *)0x03006110;
-    if ((u8)sub_0800679C((u32)base6110, 5, 15) != 0) {
+    if ((u8)ModeControl_GetFlag((u32)base6110, 5, 15) != 0) {
         u16 t = 8;
         t |= *(u16 *)(base6110 + 0x2e);
         *(u16 *)(base6110 + 0x2e) = t;
@@ -71,6 +71,6 @@ void sub_080011A4(void)
     if (mask == 0)
         return;
 
-    tile = (u8)sub_0800CD88(p35E0->_field_18, p35E0->_field_19, p35E0->_field_8, p35E0->_field_A);
-    sub_0800AB84(tile);
+    tile = (u8)Tilemap_GetTileClass(p35E0->_field_18, p35E0->_field_19, p35E0->_field_8, p35E0->_field_A);
+    FrogPad_CheckTile(tile);
 }

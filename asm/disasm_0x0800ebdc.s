@@ -304,7 +304,7 @@
 @   0x0800ee30: 0052        lsls	r2, r2, #1
 @   0x0800ee32: 0400        lsls	r0, r0, #16
 
-        thumb_func_start sub_0800EBDC
-sub_0800EBDC: @ 0x0800ebdc
+        thumb_func_start BgScrollBlit
+BgScrollBlit: @ 0x0800ebdc
         .incbin "frog_us_baserom.gba", 0xebdc, 0x258
-        thumb_func_end sub_0800EBDC
+        thumb_func_end BgScrollBlit

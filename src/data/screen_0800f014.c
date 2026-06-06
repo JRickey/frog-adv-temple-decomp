@@ -49,7 +49,7 @@
  * comes online via a sibling block whose anchor is not in the 1 MiB
  * scan window).
  *
- * TODO: rename sub_0800F014 once its surrounding function-table entry
+ * TODO: rename InitScreenBgGraphics once its surrounding function-table entry
  * lands in C -- it is almost certainly a screen-install entry point
  * (title / world map / cutscene background, etc).
  */

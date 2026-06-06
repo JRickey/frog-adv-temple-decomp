@@ -7,11 +7,11 @@
 extern u16 gIwram_5398;
 extern const void *const sUiAssetSlots[];
 
-u32 sub_08000900(void);
-u16 sub_080106EC(u16 arg);
+u32 GetFrameTick(void);
+u16 Screen_BeginFlash(u16 arg);
 void sub_0802D56C(const void *src, void *dst);
 
-void sub_08017ABC(void)
+void UiScreen_Init(void)
 {
     struct IwramAt34A0 *dispatch;
     u16 *fadeState;
@@ -36,8 +36,8 @@ void sub_08017ABC(void)
     dispatch = &gIwram_34A0;
     dispatch->dispatchIdx = zero;
 
-    state->_unk0C = sub_08000900();
-    sub_080106EC(0xBF);
+    state->_unk0C = GetFrameTick();
+    Screen_BeginFlash(0xBF);
 
     *(vu16 *)0x0400000E = 0x1E88;
 

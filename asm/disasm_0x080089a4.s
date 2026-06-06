@@ -99,7 +99,7 @@
 @   0x08008a58: 3720        adds	r7, #32
 @   0x08008a5a: 0300        lsls	r0, r0, #12
 
-        thumb_func_start sub_080089A4
-sub_080089A4: @ 0x080089a4
+        thumb_func_start Entity_GetDirHitbox
+Entity_GetDirHitbox: @ 0x080089a4
         .incbin "frog_us_baserom.gba", 0x89a4, 0xb8
-        thumb_func_end sub_080089A4
+        thumb_func_end Entity_GetDirHitbox

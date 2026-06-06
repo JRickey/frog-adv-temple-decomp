@@ -194,7 +194,7 @@
 @   0x08010258: bc01        pop	{r0}
 @   0x0801025a: 4700        bx	r0
 
-        thumb_func_start sub_080100E4
-sub_080100E4: @ 0x080100e4
+        thumb_func_start Scroll_FlushTilemapWindow
+Scroll_FlushTilemapWindow: @ 0x080100e4
         .incbin "frog_us_baserom.gba", 0x100e4, 0x178
-        thumb_func_end sub_080100E4
+        thumb_func_end Scroll_FlushTilemapWindow

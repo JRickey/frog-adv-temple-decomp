@@ -225,7 +225,7 @@
 @   0x08031fd8: bc02        pop	{r1}
 @   0x08031fda: 4708        bx	r1
 
-        thumb_func_start sub_08031E24
-sub_08031E24: @ 0x08031e24
+        thumb_func_start SoundSlot_Load
+SoundSlot_Load: @ 0x08031e24
         .incbin "frog_us_baserom.gba", 0x31e24, 0x1b8
-        thumb_func_end sub_08031E24
+        thumb_func_end SoundSlot_Load

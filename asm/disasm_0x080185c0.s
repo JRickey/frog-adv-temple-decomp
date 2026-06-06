@@ -1674,42 +1674,42 @@
 @   0x08019328: 54a0        strb	r0, [r4, r2]
 @   0x0801932a: 0300        lsls	r0, r0, #12
 
-        thumb_func_start sub_080185C0
-sub_080185C0: @ 0x080185c0
+        thumb_func_start Sprite_CycleDmaFrame
+Sprite_CycleDmaFrame: @ 0x080185c0
         .incbin "frog_us_baserom.gba", 0x185c0, 0x88
-        thumb_func_end sub_080185C0
+        thumb_func_end Sprite_CycleDmaFrame
 
-        thumb_func_start sub_08018648
-sub_08018648: @ 0x08018648
+        thumb_func_start Screen_InstallOamA
+Screen_InstallOamA: @ 0x08018648
         .incbin "frog_us_baserom.gba", 0x18648, 0x250
-        thumb_func_end sub_08018648
+        thumb_func_end Screen_InstallOamA
 
-        thumb_func_start sub_08018898
-sub_08018898: @ 0x08018898
+        thumb_func_start Screen_Install
+Screen_Install: @ 0x08018898
         .incbin "frog_us_baserom.gba", 0x18898, 0x374
-        thumb_func_end sub_08018898
+        thumb_func_end Screen_Install
 
-        thumb_func_start sub_08018C0C
-sub_08018C0C: @ 0x08018c0c
+        thumb_func_start Screen_ClearBlocks
+Screen_ClearBlocks: @ 0x08018c0c
         .incbin "frog_us_baserom.gba", 0x18c0c, 0x9c
-        thumb_func_end sub_08018C0C
+        thumb_func_end Screen_ClearBlocks
 
-        thumb_func_start sub_08018CA8
-sub_08018CA8: @ 0x08018ca8
+        thumb_func_start WinPoseScreen_LoadSprites
+WinPoseScreen_LoadSprites: @ 0x08018ca8
         .incbin "frog_us_baserom.gba", 0x18ca8, 0x248
-        thumb_func_end sub_08018CA8
+        thumb_func_end WinPoseScreen_LoadSprites
 
-        thumb_func_start sub_08018EF0
-sub_08018EF0: @ 0x08018ef0
+        thumb_func_start WinPoseScreen_UpdateAnim
+WinPoseScreen_UpdateAnim: @ 0x08018ef0
         .incbin "frog_us_baserom.gba", 0x18ef0, 0x124
-        thumb_func_end sub_08018EF0
+        thumb_func_end WinPoseScreen_UpdateAnim
 
-        thumb_func_start sub_08019014
-sub_08019014: @ 0x08019014
+        thumb_func_start WinPoseScreen_ScrollStep
+WinPoseScreen_ScrollStep: @ 0x08019014
         .incbin "frog_us_baserom.gba", 0x19014, 0x214
-        thumb_func_end sub_08019014
+        thumb_func_end WinPoseScreen_ScrollStep
 
-        thumb_func_start sub_08019228
-sub_08019228: @ 0x08019228
+        thumb_func_start WinPoseScreen_AnimAndScroll
+WinPoseScreen_AnimAndScroll: @ 0x08019228
         .incbin "frog_us_baserom.gba", 0x19228, 0x104
-        thumb_func_end sub_08019228
+        thumb_func_end WinPoseScreen_AnimAndScroll

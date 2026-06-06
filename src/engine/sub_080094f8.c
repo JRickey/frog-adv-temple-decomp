@@ -3,13 +3,13 @@
 #include "macros.h"
 #include "types.h"
 
-/* sub_080094F8 — per-frame entity "pose reaction" pass.
+/* Entity_CheckAllCollisions — per-frame entity "pose reaction" pass.
  *
  * Walks the active-entity index at 0x03006160 and, for every live record whose
  * box overlaps the player header (record 0), dispatches on the record's pose
  * byte (field_01, opcodes 1..11) to either: latch the record into the shared
  * input scratch at gIwram_35E0 (+0xC id, +0xD kind), raise a hop/move flag bit
- * on gIwram_35E0 via sub_08006B88, or just mark the record "seen" (status bit
+ * on gIwram_35E0 via PlayerFlags_Set, or just mark the record "seen" (status bit
  * 0x80). Each record's status bit 0x80 is cleared at the top of every iteration
  * before the dispatch decides whether to re-raise it. */
 
@@ -21,12 +21,12 @@ struct IndexEntry {
 extern struct Entity gEntities_03003720[];
 extern struct IndexEntry gEntityIndex_03006160[];
 
-extern void sub_080205D8(struct Entity *e);
-extern u8 sub_080097FC(struct Entity *p1, struct Entity *p2);
-extern u8 sub_0800A158(struct Entity *p1, struct Entity *p2);
-extern void sub_08006B88(void *p, u32 mask);
+extern void Entity_DispatchSound(struct Entity *e);
+extern u8 Entity_BBoxOverlap(struct Entity *p1, struct Entity *p2);
+extern u8 Entity_RectOverlap(struct Entity *p1, struct Entity *p2);
+extern void PlayerFlags_Set(void *p, u32 mask);
 
-void sub_080094F8(void)
+void Entity_CheckAllCollisions(void)
 {
     s32 i;
 
@@ -61,8 +61,8 @@ void sub_080094F8(void)
         if (gEntities_03003720[0].field_06 != e->field_06)
             continue;
 
-        sub_080205D8(e);
-        if (!sub_080097FC(&gEntities_03003720[0], e))
+        Entity_DispatchSound(e);
+        if (!Entity_BBoxOverlap(&gEntities_03003720[0], e))
             continue;
 
         switch (e->field_01 - 1) {
@@ -74,7 +74,7 @@ void sub_080094F8(void)
             break;
 
         case 1:
-            if (!sub_0800A158(&gEntities_03003720[0], &gEntities_03003720[id]))
+            if (!Entity_RectOverlap(&gEntities_03003720[0], &gEntities_03003720[id]))
                 continue;
             gIwram_35E0._field_C |= gEntities_03003720[id].field_01;
             gIwram_35E0._field_D = id;
@@ -90,7 +90,7 @@ void sub_080094F8(void)
                 continue;
             gIwram_35E0._field_C = gEntities_03003720[id].field_01;
             gIwram_35E0._field_D = gEntities_03003720[id].field_00;
-            sub_08006B88(&gIwram_35E0, 0x200);
+            PlayerFlags_Set(&gIwram_35E0, 0x200);
             return;
 
         case 6:
@@ -100,7 +100,7 @@ void sub_080094F8(void)
                 continue;
             gIwram_35E0._field_C = gEntities_03003720[id].field_01;
             gIwram_35E0._field_D = gEntities_03003720[id].field_00;
-            sub_08006B88(&gIwram_35E0, 0x400);
+            PlayerFlags_Set(&gIwram_35E0, 0x400);
             return;
 
         case 3:
@@ -109,7 +109,7 @@ void sub_080094F8(void)
                 continue;
             gIwram_35E0._field_C = gEntities_03003720[id].field_01;
             gIwram_35E0._field_D = gEntities_03003720[id].field_00;
-            sub_08006B88(&gIwram_35E0, 0x400);
+            PlayerFlags_Set(&gIwram_35E0, 0x400);
             return;
 
         case 5:
@@ -117,7 +117,7 @@ void sub_080094F8(void)
                 continue;
             gIwram_35E0._field_C = gEntities_03003720[id].field_01;
             gIwram_35E0._field_D = gEntities_03003720[id].field_00;
-            sub_08006B88(&gIwram_35E0, 0x800);
+            PlayerFlags_Set(&gIwram_35E0, 0x800);
             return;
 
         case 8:
@@ -125,7 +125,7 @@ void sub_080094F8(void)
                 continue;
             gIwram_35E0._field_C = gEntities_03003720[id].field_01;
             gIwram_35E0._field_D = gEntities_03003720[id].field_00;
-            sub_08006B88(&gIwram_35E0, 0x4000);
+            PlayerFlags_Set(&gIwram_35E0, 0x4000);
             return;
 
         case 9:
@@ -133,7 +133,7 @@ void sub_080094F8(void)
                 continue;
             gIwram_35E0._field_C = gEntities_03003720[id].field_01;
             gIwram_35E0._field_D = gEntities_03003720[id].field_00;
-            sub_08006B88(&gIwram_35E0, 0x8000);
+            PlayerFlags_Set(&gIwram_35E0, 0x8000);
             return;
 
         case 10:
@@ -143,7 +143,7 @@ void sub_080094F8(void)
                 continue;
             gIwram_35E0._field_C = gEntities_03003720[id].field_01;
             gIwram_35E0._field_D = gEntities_03003720[id].field_00;
-            sub_08006B88(&gIwram_35E0, 0x8000);
+            PlayerFlags_Set(&gIwram_35E0, 0x8000);
             return;
 
         case 2:

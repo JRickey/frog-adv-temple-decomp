@@ -9,9 +9,9 @@
  * tile/cell coordinates by dividing each by 24 (signed). If the resulting
  * (X, Y) differs from the previously-cached pair at gIwram_35E0+{8,0xA},
  * raises bit 0x40 in the flags halfword at gIwram_35E0+0x10 (via
- * sub_08006B88) and stores the new pair as the cache key.
+ * PlayerFlags_Set) and stores the new pair as the cache key.
  *
- * sub_08006B88(p, v) is a 3-instruction leaf: `(u16*)(p+16) |= (u16)v;`.
+ * PlayerFlags_Set(p, v) is a 3-instruction leaf: `(u16*)(p+16) |= (u16)v;`.
  *
  * `cached` is pinned to r1: the baserom reuses one register (r1) for both
  * cached-coord loads and emits `cmp cached, new` (cached operand first).
@@ -20,9 +20,9 @@
  * and compare ordering exactly.
  */
 
-extern u16 sub_08006B88(void *p, u16 v); /* OR-into-u16-at-offset-16 */
+extern u16 PlayerFlags_Set(void *p, u16 v); /* OR-into-u16-at-offset-16 */
 
-void sub_080090B0(void)
+void Player_UpdateTileCache(void)
 {
     register u16 cached asm("r1");
     u16 newX = (u16)(gEntities[0].x / 24);
@@ -35,22 +35,22 @@ void sub_080090B0(void)
             return;
     }
 
-    sub_08006B88(&gIwram_35E0, 64);
+    PlayerFlags_Set(&gIwram_35E0, 64);
     gIwram_35E0._field_8 = newX;
     gIwram_35E0._field_A = newY;
 }
 
 extern void Entity_Init(struct Entity *p, u8 a, s16 b, s16 c, u8 d, u16 e, u8 f, u8 g, u8 h, u16 i);
 
-void sub_080090FC(u16 x, u16 y, u8 g, u8 h)
+void Player_InitEntity(u16 x, u16 y, u8 g, u8 h)
 {
     Entity_Init(gEntities, 0, (s16)x, (s16)y, 3, 1, 0, g, h, 16);
 }
 
-extern void sub_080059C4(void *p);
+extern void Entity_Update(void *p);
 
 /* When the dispatch state at +0x1A is 0x23, normalise the flags halfword at
- * +0x34 before handing the record to sub_080059C4:
+ * +0x34 before handing the record to Entity_Update:
  *   - bit 1 set       -> clear bit 15
  *   - else bit 15 set -> clear bit 15 and set bit 1
  *   - else            -> leave unchanged
@@ -59,7 +59,7 @@ extern void sub_080059C4(void *p);
  * reg-equiv fold that would load it straight into the working register) and
  * copied to base in r2, matching the baserom's `ldr r0; adds r2, r0`. `f` is
  * pinned to r1 so the flag ANDs accumulate mask-first into the r0 scratch. */
-void sub_08009140(void)
+void Player_NormalizeStatusAndUpdate(void)
 {
     register struct Entity *src asm("r0") = gEntities;
     struct Entity *base;
@@ -81,5 +81,5 @@ void sub_08009140(void)
     base->status = (f & 0x7fff) | 2;
 
 do_call:
-    sub_080059C4(base);
+    Entity_Update(base);
 }

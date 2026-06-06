@@ -1,10 +1,10 @@
 #include "game.h"
 #include "types.h"
 
-/* VBlank semaphore wait. Spins until the VBlank IRQ handler (sub_08000790)
+/* VBlank semaphore wait. Spins until the VBlank IRQ handler (VBlankIntr)
  * sets bit 0 of *(u16*)0x03006148. Used as the shared per-frame finalize
  * (tail) by every mode-dispatch case in AgbMain. */
-void sub_080008DC(void)
+void WaitVblank(void)
 {
     register volatile u16 *p asm("r0") = (volatile u16 *)0x03006148;
     volatile u16 *q;
@@ -23,7 +23,7 @@ void sub_080008DC(void)
 
 /* Returns the global frame counter (gGameStuff._unk00). Used by Init1 to
  * read `now` for fade/timeout bookkeeping. */
-u32 sub_08000900(void)
+u32 GetFrameTick(void)
 {
     return gGameStuff._unk00;
 }

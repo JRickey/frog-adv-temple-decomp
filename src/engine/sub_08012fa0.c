@@ -1,7 +1,7 @@
 #include "macros.h"
 #include "types.h"
 
-void sub_08012FA0(void)
+void ScaleAnim_ClearActiveBits(void)
 {
     u8 i = 0;
     u8 *base = (u8 *)0x03003610;

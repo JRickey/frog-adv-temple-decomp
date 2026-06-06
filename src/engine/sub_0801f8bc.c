@@ -1,11 +1,11 @@
 #include "types.h"
 
-extern void *sub_0803578C(void *dst, const void *src, u32 n);
-extern void sub_080196EC(u32 *attr, const void *src, u8 arg2);
-extern void sub_080184DC(u32 *attr, u16 arg1, u16 arg2, u8 arg3);
-extern int sub_0801F970(u8 arg0);
+extern void *Memcpy(void *dst, const void *src, u32 n);
+extern void TileBlit(u32 *attr, const void *src, u8 arg2);
+extern void Tilemap_SwapPalette(u32 *attr, u16 arg1, u16 arg2, u8 arg3);
+extern int SaveSlot_UpdateScreen(u8 arg0);
 
-int sub_0801F8BC(u8 arg0)
+int SaveSlot_DrawSelectionCursor(u8 arg0)
 {
     struct {
         u8 name[10];
@@ -13,7 +13,7 @@ int sub_0801F8BC(u8 arg0)
         u32 attr;
     } s;
 
-    sub_0803578C(s.name, (const void *)0x081BE804, 10);
+    Memcpy(s.name, (const void *)0x081BE804, 10);
 
     {
         u32 mask = 0xffffff00;
@@ -38,7 +38,7 @@ int sub_0801F8BC(u8 arg0)
         break;
     }
 
-    sub_080196EC(&s.attr, (const void *)0x081D8398, 2);
-    sub_080184DC(&s.attr, 5, 4, 2);
-    return sub_0801F970(arg0);
+    TileBlit(&s.attr, (const void *)0x081D8398, 2);
+    Tilemap_SwapPalette(&s.attr, 5, 4, 2);
+    return SaveSlot_UpdateScreen(arg0);
 }

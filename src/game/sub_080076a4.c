@@ -16,9 +16,9 @@ struct PackedRect {
     s16 width;
 };
 
-extern s32 sub_0800CED0(void *ctx, struct PackedRect rect, s16 c, s16 d);
+extern s32 Rect_PointInRect(void *ctx, struct PackedRect rect, s16 c, s16 d);
 
-s32 sub_080076A4(void *ctx, struct CenterRect *rect)
+s32 Rect_PointInCenterRect(void *ctx, struct CenterRect *rect)
 {
     struct PackedRect packed;
     register void *c asm("ip") = ctx;
@@ -35,10 +35,10 @@ s32 sub_080076A4(void *ctx, struct CenterRect *rect)
     packed.height = r->height;
     packed.width = widthShift >> 16;
 
-    return sub_0800CED0(ctx, packed, 0, 0);
+    return Rect_PointInRect(ctx, packed, 0, 0);
 }
 
-s32 sub_08007714(void *ctx, struct CenterRect *rect, u16 c, u16 d)
+s32 Rect_PointInCenterRectEx(void *ctx, struct CenterRect *rect, u16 c, u16 d)
 {
     struct PackedRect packed;
     struct CenterRect *r;
@@ -59,5 +59,5 @@ s32 sub_08007714(void *ctx, struct CenterRect *rect, u16 c, u16 d)
     packed.height = r->height;
     packed.width = widthShift >> 16;
 
-    return sub_0800CED0(ctx, packed, c, d);
+    return Rect_PointInRect(ctx, packed, c, d);
 }

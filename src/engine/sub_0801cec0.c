@@ -1,7 +1,7 @@
 #include "macros.h"
 #include "types.h"
 
-s32 sub_0801CEC0(const char *str, u8 len)
+s32 ParseDecimalStr(const char *str, u8 len)
 {
     u32 i;
     u32 result;

@@ -2,14 +2,14 @@
 #include "macros.h"
 
 /* SoundSlot also has a SlotClampEnvelope "envelope A" block at +0x1c
- * (acc/step/limit s16s) that sub_0802EC7C ticks. The per-slot
- * SlotEnvelope at +0x2c is the "envelope B" block ticked by sub_0802ED5C.
+ * (acc/step/limit s16s) that Sound_UpdateChannelEnvelopesA ticks. The per-slot
+ * SlotEnvelope at +0x2c is the "envelope B" block ticked by Sound_TickSlotEnvelopeB.
  * Both share the same triangular-bounce shape and differ only in which
  * mix channel they modulate. This body keeps envelope-A as raw offsets
  * for now because typed SlotClampEnvelope access currently worsens
  * EC7C's linked codegen. */
 
-/* sub_0802EC7C — per-frame envelope-A tick + per-channel dirty flagging.
+/* Sound_UpdateChannelEnvelopesA — per-frame envelope-A tick + per-channel dirty flagging.
  *
  * Two stages run per call, both with the same triangular-bounce shape:
  *   Stage 1 (3 iterations, fixed): three inline channels embedded in
@@ -22,7 +22,7 @@
  *     0x40 ORd in unconditionally (whenever the slot is present and
  *     step is non-zero).
  *
- * Companion to sub_0802ED5C, which runs the same shape over the per-slot
+ * Companion to Sound_TickSlotEnvelopeB, which runs the same shape over the per-slot
  * envelope-B bank (offset +0x2c). The envelope-A and envelope-B blocks
  * coexist on every slot.
  *
@@ -102,7 +102,7 @@
  * corpus-validated unmatchable".
  */
 #if defined(NON_MATCHING) || defined(NON_MATCHING_sub_0802EC7C)
-void sub_0802EC7C(void)
+void Sound_UpdateChannelEnvelopesA(void)
 {
     register SoundSystem **gpsp asm("r8");
     register SoundSystem **gpspReload asm("ip");
@@ -237,7 +237,7 @@ void sub_0802EC7C(void)
 }
 #else
 NAKED
-void sub_0802EC7C(void)
+void Sound_UpdateChannelEnvelopesA(void)
 {
     asm(".syntax unified\n"
         "    push    {r4, r5, r6, r7, lr}\n"

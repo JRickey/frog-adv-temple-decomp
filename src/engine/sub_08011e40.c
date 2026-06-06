@@ -2,7 +2,7 @@
 #include "iwram.h"
 #include "types.h"
 
-/* --- sub_08011E40: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- Selector_TriggerWindowReveal: non-matching reference (asm slice provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "game.h"
 #include "gba/dma.h"
@@ -10,13 +10,13 @@
 #include "iwram.h"
 #include "types.h"
 
-extern void sub_08011984(const u8 *records, u8 idx);
-extern void sub_0800EE94(u8 layer);
-extern s8 sub_08011AA4(const u8 *records);
+extern void Selector_BlitTiles(const u8 *records, u8 idx);
+extern void BgLayer_Enable(u8 layer);
+extern s8 Selector_UpdateBlit(const u8 *records);
 extern u8 gIwram_6480[];
 extern const u8 gBlitRecord_08306d40[];
 
-s32 sub_08011E40(void)
+s32 Selector_TriggerWindowReveal(void)
 {
     struct IwramAt6110 *ctrl;
     volatile DmaChannel *dma;
@@ -47,8 +47,8 @@ s32 sub_08011E40(void)
                 dma->cnt = DMA_ENABLE | DMA_SRC_FIXED | 0x8000;
                 (void)dma->cnt;
 
-                sub_08011984(gBlitRecord_08306d40, (u8)(i * 3));
-                sub_0800EE94(2);
+                Selector_BlitTiles(gBlitRecord_08306d40, (u8)(i * 3));
+                BgLayer_Enable(2);
 
                 *(vu16 *)0x04000050 = 0x1744;
                 *(vu16 *)0x04000052 = 0x020e;
@@ -60,7 +60,7 @@ s32 sub_08011E40(void)
         } while (i <= 1);
     }
 
-    if ((s8)sub_08011AA4(gBlitRecord_08306d40) != 0)
+    if ((s8)Selector_UpdateBlit(gBlitRecord_08306d40) != 0)
         result = 1;
 
     return result;

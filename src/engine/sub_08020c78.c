@@ -11,9 +11,9 @@ typedef struct {
 
 extern u8 gIwram_3570;
 extern u32 sub_0802D9EC(u32 sound, u32 a, u32 b, u32 c);
-extern void sub_0802DC1C(u32 handle, u8 val);
+extern void SoundHandle_SetPan(u32 handle, u8 val);
 
-u32 sub_08020C78(u32 sound)
+u32 Sound_Play(u32 sound)
 {
     StructAt3003570 *p;
     int mask;
@@ -29,7 +29,7 @@ u32 sub_08020C78(u32 sound)
     return handle;
 }
 
-u32 sub_08020CA4(u32 sound)
+u32 Sound_PlayWithPan(u32 sound)
 {
     u32 snd;
     u32 handle;
@@ -54,16 +54,16 @@ u32 sub_08020CA4(u32 sound)
          * for the allocator to colour it r5; pinning it forces ldrb r2. */
         p = (StructAt3003570 *)(u32)p->c;
         pan &= (u32)p;
-        sub_0802DC1C(handle, pan);
+        SoundHandle_SetPan(handle, pan);
     }
     return result;
 }
 
 #include "iwram.h"
 
-extern u8 sub_08021E34(struct Entity *s, u8 halfW, u8 halfH);
+extern u8 Entity_IsInTileRange(struct Entity *s, u8 halfW, u8 halfH);
 
-u32 sub_08020CDC(struct Entity *entity, u32 sound, u8 halfW, u8 halfH)
+u32 Sound_PlayNearEntity(struct Entity *entity, u32 sound, u8 halfW, u8 halfH)
 {
     u32 result;
     u32 handle;
@@ -71,7 +71,7 @@ u32 sub_08020CDC(struct Entity *entity, u32 sound, u8 halfW, u8 halfH)
     register u32 r asm("r0");
     StructAt3003570 *p;
 
-    r = sub_08021E34(entity, halfW, halfH);
+    r = Entity_IsInTileRange(entity, halfW, halfH);
     r <<= 24;
     if (!r)
         return r;
@@ -86,12 +86,12 @@ u32 sub_08020CDC(struct Entity *entity, u32 sound, u8 halfW, u8 halfH)
         pan = 0x7f;
         p = (StructAt3003570 *)(u32)p->c;
         pan &= (u32)p;
-        sub_0802DC1C(handle, pan);
+        SoundHandle_SetPan(handle, pan);
     }
     return result;
 }
 
-u32 sub_08020D2C(struct Entity *entity, u32 sound, u8 halfW, u8 halfH)
+u32 Entity_PlaySoundOnScreenEnter(struct Entity *entity, u32 sound, u8 halfW, u8 halfH)
 {
     u32 r;
     u32 result;
@@ -101,7 +101,7 @@ u32 sub_08020D2C(struct Entity *entity, u32 sound, u8 halfW, u8 halfH)
     u32 pan;
     StructAt3003570 *p;
 
-    r = sub_08021E34(entity, halfW, halfH);
+    r = Entity_IsInTileRange(entity, halfW, halfH);
     r <<= 24;
     if (r) {
         f34 = entity->status;
@@ -125,7 +125,7 @@ u32 sub_08020D2C(struct Entity *entity, u32 sound, u8 halfW, u8 halfH)
             pan = 0x7f;
             p = (StructAt3003570 *)(u32)p->c;
             pan &= (u32)p;
-            sub_0802DC1C(handle, pan);
+            SoundHandle_SetPan(handle, pan);
         }
         return result;
     }
@@ -136,7 +136,7 @@ u32 sub_08020D2C(struct Entity *entity, u32 sound, u8 halfW, u8 halfH)
     return r;
 }
 
-void sub_08020DA0(u8 index)
+void Sound_ReplaySlotEntry(u8 index)
 {
     StructAt3003570 *p;
     u32 offset;
@@ -147,7 +147,7 @@ void sub_08020DA0(u8 index)
     offset = index * 8;
     slot = (u32 *)((u8 *)p + 4);
     slot = (u32 *)(offset + (u32)slot);
-    handle = sub_08020C78(*slot);
+    handle = Sound_Play(*slot);
     p = (StructAt3003570 *)((u8 *)p + 8);
     offset = (u32)((u8 *)p + offset);
     *(u32 *)offset = handle;

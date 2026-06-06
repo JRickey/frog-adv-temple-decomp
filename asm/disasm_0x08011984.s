@@ -149,7 +149,7 @@
 @   0x08011a9e: 0300        lsls	r0, r0, #12
 @   0x08011aa0: f000        0600 	and.w	r6, r0, #0
 
-        thumb_func_start sub_08011984
-sub_08011984: @ 0x08011984
+        thumb_func_start Selector_BlitTiles
+Selector_BlitTiles: @ 0x08011984
         .incbin "frog_us_baserom.gba", 0x11984, 0x120
-        thumb_func_end sub_08011984
+        thumb_func_end Selector_BlitTiles

@@ -1,11 +1,11 @@
 #include "types.h"
 
 extern u32 SoundSystem_IsActive(void);
-extern void sub_08031FDC(u32 a);
+extern void SoundRequest_Drain(u32 a);
 
-void sub_08020BAC(void)
+void Sound_DrainIfActive(void)
 {
     if (SoundSystem_IsActive()) {
-        sub_08031FDC(1);
+        SoundRequest_Drain(1);
     }
 }

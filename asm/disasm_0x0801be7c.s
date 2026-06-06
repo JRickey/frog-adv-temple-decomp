@@ -256,7 +256,7 @@
 @   0x0801c072: bc01        pop	{r0}
 @   0x0801c074: 4700        bx	r0
 
-        thumb_func_start sub_0801BE7C
-sub_0801BE7C: @ 0x0801be7c
+        thumb_func_start DrawTextGlyphs
+DrawTextGlyphs: @ 0x0801be7c
         .incbin "frog_us_baserom.gba", 0x1be7c, 0x1fc
-        thumb_func_end sub_0801BE7C
+        thumb_func_end DrawTextGlyphs

@@ -1,21 +1,21 @@
 #include "iwram.h"
 #include "types.h"
 
-extern void sub_0802321C(void);
-extern void sub_080233D4(void);
-extern void sub_08022F4C(void);
-extern void sub_08023334(void);
-extern void sub_08023384(void);
-extern void sub_08022EA8(void);
-extern void sub_080231F4(void);
-extern void sub_08022CD4(void);
-extern void sub_08022D4C(void);
-extern void sub_0802349C(void);
-extern void sub_080234E8(void);
+extern void LevelLayout_InitSlot6(void);
+extern void StreamInit_Slot3E(void);
+extern void LevelLayout_SpawnGroup311EC0(void);
+extern void StreamInit_Slot43(void);
+extern void StreamInit_Slot4E(void);
+extern void LevelLayout_SpawnGroup311C80(void);
+extern void StreamInit_Slot02_Alt(void);
+extern void SpawnEntityGroup_Slot0C(void);
+extern void SpawnEntityGroups_Slot1A_22_2A(void);
+extern void SpawnEntityPair_Slot5B_5C(void);
+extern void EntityGroup_LoadLayout_Slot0x5F(void);
 
 extern const u32 sLevelLayout_3120D8[24];
 
-void sub_08023538(void)
+void LevelLayout_SpawnInit(void)
 {
     u8 i;
 
@@ -30,15 +30,15 @@ void sub_08023538(void)
         i++;
     } while (i <= 11);
 
-    sub_0802321C();
-    sub_080233D4();
-    sub_08022F4C();
-    sub_08023334();
-    sub_08023384();
-    sub_08022EA8();
-    sub_080231F4();
-    sub_08022CD4();
-    sub_08022D4C();
-    sub_0802349C();
-    sub_080234E8();
+    LevelLayout_InitSlot6();
+    StreamInit_Slot3E();
+    LevelLayout_SpawnGroup311EC0();
+    StreamInit_Slot43();
+    StreamInit_Slot4E();
+    LevelLayout_SpawnGroup311C80();
+    StreamInit_Slot02_Alt();
+    SpawnEntityGroup_Slot0C();
+    SpawnEntityGroups_Slot1A_22_2A();
+    SpawnEntityPair_Slot5B_5C();
+    EntityGroup_LoadLayout_Slot0x5F();
 }

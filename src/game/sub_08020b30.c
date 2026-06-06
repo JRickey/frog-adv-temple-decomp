@@ -1,7 +1,7 @@
 #include "types.h"
 
-/* Struct at 0x03003570 in IWRAM. Touched by sub_08020B30 (called first from
- * sub_08000430 / Init1). Purpose TBD; field names are placeholders until
+/* Struct at 0x03003570 in IWRAM. Touched by SoundMixer_Init (called first from
+ * Init1 / Init1). Purpose TBD; field names are placeholders until
  * the subsystem is identified.
  */
 typedef struct {
@@ -21,7 +21,7 @@ typedef struct {
  * `movs r0, #1`. Without it the constant load floats ahead, breaking
  * the byte match.
  */
-void sub_08020B30(void)
+void SoundMixer_Init(void)
 {
     StructAt3003570 *p = &gStructAt3003570;
     u8 t;
@@ -35,11 +35,11 @@ void sub_08020B30(void)
     p->d = 0xF5;
 }
 
-extern void sub_0802E13C(void);
-extern void sub_08031FDC(u32 a);
+extern void Sound_DrainActiveSlots(void);
+extern void SoundRequest_Drain(u32 a);
 
-void sub_08020B50(void)
+void SoundMixer_Stop(void)
 {
-    sub_0802E13C();
-    sub_08031FDC(1);
+    Sound_DrainActiveSlots();
+    SoundRequest_Drain(1);
 }

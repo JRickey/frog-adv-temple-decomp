@@ -3,19 +3,19 @@
 #include "macros.h"
 #include "types.h"
 
-extern void sub_0800F398(u8 arg);
-extern void sub_0800F814(u8 arg);
+extern void ScrollUpdate_Pass1(u8 arg);
+extern void ScrollUpdate_Pass0(u8 arg);
 
-void sub_0800FCC8(u8 arg)
+void Scroll_RunSubtypeTicks(u8 arg)
 {
-    sub_0800F814(arg);
-    sub_0800F398(arg);
+    ScrollUpdate_Pass0(arg);
+    ScrollUpdate_Pass1(arg);
 }
 
 /* Switch returns a fixed EWRAM bank pointer. Default case is unreachable
  * in practice; baserom leaves r2 untouched and returns it as-is, so the
  * return value pins to r2 and is left undefined in default. */
-void *sub_0800FCE4(u8 idx)
+void *GetEwramBuffer(u8 idx)
 {
     void *ret;
     switch (idx) {
@@ -32,7 +32,7 @@ void *sub_0800FCE4(u8 idx)
     return ret;
 }
 
-void *sub_0800FD18(u8 idx)
+void *GetVramTilemapBuffer(u8 idx)
 {
     void *ret;
     switch (idx) {

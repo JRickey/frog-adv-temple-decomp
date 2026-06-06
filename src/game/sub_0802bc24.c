@@ -2,29 +2,29 @@
 #include "iwram.h"
 #include "types.h"
 
-extern void sub_08021140(s32 a0, const void *a1, s32 a2, s32 a3, s32 a4, s32 a5, s32 a6);
+extern void LevelLayout_WalkRecords(s32 a0, const void *a1, s32 a2, s32 a3, s32 a4, s32 a5, s32 a6);
 extern void sub_0802B3B0(void);
 extern void sub_0802B4B8(void);
-extern void sub_0800DA10(void);
-extern void sub_0800D1F8(void);
-extern u8 sub_0800679C(void *base, u32 selector, u32 bit);
-extern void sub_080066C4(void *base, u32 selector, u32 bit);
-extern void sub_08006600(void *base, u32 selector, u32 bit);
-extern void sub_08015D30(void);
-extern void sub_08020DC4(u32 arg0);
-extern void sub_08020E7C(u32 arg0);
-extern void sub_08020C78(u32 arg0);
-extern u8 sub_080142D4(void);
-extern void sub_08006B88(void *p, u16 mask);
+extern void GateRoom_ResetState(void);
+extern void GateRoom_TickFrogUpdate(void);
+extern u8 ModeControl_GetFlag(void *base, u32 selector, u32 bit);
+extern void ModeControl_ClearBit(void *base, u32 selector, u32 bit);
+extern void CtrlFlags_SetBit(void *base, u32 selector, u32 bit);
+extern void GateRoom_InitScrollParams(void);
+extern void SoundEntry_Play(u32 arg0);
+extern void SoundEntry_Stop(u32 arg0);
+extern void Sound_Play(u32 arg0);
+extern u8 GateRoom_UpdateSlide(void);
+extern void PlayerFlags_Set(void *p, u16 mask);
 
 extern const u32 sLevelLayout_317FD0[];
 
-void sub_0802BC24(void)
+void GateRoom_LoadLayout(void)
 {
-    sub_08021140(0x17, sLevelLayout_317FD0, 0x10, 0x57, 0x89, 3, 0);
+    LevelLayout_WalkRecords(0x17, sLevelLayout_317FD0, 0x10, 0x57, 0x89, 3, 0);
 }
 
-void sub_0802BC4C(void)
+void GateRoom_Init(void)
 {
     u8 i;
 
@@ -45,16 +45,16 @@ void sub_0802BC4C(void)
     }
 
     sub_0802B3B0();
-    sub_0800DA10();
+    GateRoom_ResetState();
 }
 
-void sub_0802BC84(void)
+void GateRoom_Update(void)
 {
     sub_0802B4B8();
-    sub_0800D1F8();
+    GateRoom_TickFrogUpdate();
 }
 
-void sub_0802BC94(void)
+void GateRoom_Tick(void)
 {
     struct IwramAt6110 *ctrl = &gIwram_6110;
     u8 gate;
@@ -65,11 +65,11 @@ void sub_0802BC94(void)
     if (gate != 0)
         return;
 
-    if (sub_0800679C(ctrl, 3, 5)) {
-        sub_08015D30();
+    if (ModeControl_GetFlag(ctrl, 3, 5)) {
+        GateRoom_InitScrollParams();
         gEntities[22].field_1A = gate;
         gEntities[22].status |= 2;
-        sub_080066C4(ctrl, 3, 5);
+        ModeControl_ClearBit(ctrl, 3, 5);
         return;
     }
 
@@ -85,16 +85,16 @@ void sub_0802BC94(void)
     if (delta < 0)
         delta = -delta;
     if ((s16)delta <= 71)
-        sub_08020DC4(2);
+        SoundEntry_Play(2);
     else
-        sub_08020E7C(2);
+        SoundEntry_Stop(2);
 
-    if (sub_080142D4()) {
-        sub_08020E7C(2);
+    if (GateRoom_UpdateSlide()) {
+        SoundEntry_Stop(2);
         if (++gIwram_6110.gateByte == 1)
-            sub_08006600(&gIwram_6110, 3, 6);
+            CtrlFlags_SetBit(&gIwram_6110, 3, 6);
         else
-            sub_08006600(&gIwram_6110, 3, 5);
+            CtrlFlags_SetBit(&gIwram_6110, 3, 5);
     }
 
     if (gGameStuff._unk10 & 1)
@@ -117,6 +117,6 @@ void sub_0802BC94(void)
     if ((u8)(gEntities[0].field_1A - 8) <= 3)
         return;
 
-    sub_08020C78(0x5b);
-    sub_08006B88(&gIwram_35E0, 0x4000);
+    Sound_Play(0x5b);
+    PlayerFlags_Set(&gIwram_35E0, 0x4000);
 }

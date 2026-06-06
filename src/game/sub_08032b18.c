@@ -70,7 +70,7 @@ s32 SoundSlot_PickByPriority(s32 a0, u32 priority, s32 a2, s32 idx)
     return bestIdx;
 }
 
-/* sub_08032BA0 — hardware-channel volume gate. Compares the stored hw control
+/* SoundChannel_CheckPriority — hardware-channel volume gate. Compares the stored hw control
  * halfword for channel idx against an adjusted threshold (threshold + 0x100 if
  * flag is set). Returns 1 if the stored value is <= the threshold (channel is
  * within the allowed range), 0 otherwise.
@@ -82,7 +82,7 @@ s32 SoundSlot_PickByPriority(s32 a0, u32 priority, s32 a2, s32 idx)
  *   - The inverted test (<=, return-1-first) matches the baserom's `bls`
  *     branch to the return-1 block with return-0 as the fall-through.
  */
-u32 sub_08032BA0(u32 flag, u32 threshold, u32 idx)
+u32 SoundChannel_CheckPriority(u32 flag, u32 threshold, u32 idx)
 {
     u32 adj;
 
@@ -95,7 +95,7 @@ u32 sub_08032BA0(u32 flag, u32 threshold, u32 idx)
     return 0;
 }
 
-/* sub_08032BC8 — initializes fields of a sound voice struct. Takes a pointer
+/* SoundVoice_Init — initializes fields of a sound voice struct. Takes a pointer
  * to the voice, a step value (stored shifted as step<<8 at +0x00), a flags
  * byte (doubled and conditionally incremented at +0x2b), and a priority
  * halfword (stored at +0x34). Also sets the secondary key to 0xC000 (+0x36),
@@ -119,7 +119,7 @@ typedef struct SoundVoice {
     u8 field_3f; /* +0x3f */
 } SoundVoice;
 
-void sub_08032BC8(SoundVoice *p, u32 a1, u32 a2, u32 a3)
+void SoundVoice_Init(SoundVoice *p, u32 a1, u32 a2, u32 a3)
 {
     s16 f00;
     s16 f1c;

@@ -2,17 +2,17 @@
 #include "types.h"
 
 extern void sub_080210A0(u16 a0, const void *a1, u16 a2, u8 a3, u16 a4, u8 a5, u8 a6, u8 a7);
-extern void sub_08021510(u8 a0, const void *a1, u8 a2, void *a3, u8 a4);
+extern void Entity_WalkCompactRecords(u8 a0, const void *a1, u8 a2, void *a3, u8 a4);
 
 extern const u32 sLevelLayout_312270[];
 extern const u32 sLevelLayoutPtrs_312C98[5];
 
-void sub_08024304(void)
+void InitEntitySlot65(void)
 {
-    sub_08021510(0x65, sLevelLayout_312270, 0x0b, &gIwram_6110, 0);
+    Entity_WalkCompactRecords(0x65, sLevelLayout_312270, 0x0b, &gIwram_6110, 0);
 }
 
-void sub_08024328(void)
+void InitEntitySlots67_6B(void)
 {
     sub_080210A0(0x67, (const void *)sLevelLayoutPtrs_312C98[0], 16, 28, 0x1f1, 10, 3, 2);
     sub_080210A0(0x6a, (const void *)sLevelLayoutPtrs_312C98[3], 16, 28, 0x251, 10, 3, 3);
@@ -21,7 +21,7 @@ void sub_08024328(void)
 
 extern const u32 sLevelLayoutPtrs_312D80[10];
 
-void sub_08024390(void)
+void InitEntitySlots0A_13(void)
 {
     u8 i;
 

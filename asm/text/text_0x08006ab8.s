@@ -2,7 +2,7 @@
 @ Address-aligned bucket of unparsed baserom bytes.
 @ Range:  [0x08006ab8, 0x08006adc)  (0x24 bytes)
 @
-@ Post-peel chunk after sub_08006AAC.
+@ Post-peel chunk after PlayerState_SetByte.
 @
 @ This file holds raw bytes only; no instructions are assembled here.
 

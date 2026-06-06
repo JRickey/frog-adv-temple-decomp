@@ -3,13 +3,13 @@
 
 extern const u8 sEepromSignatureBlock[64];
 
-extern void *sub_0803578C(void *dst, const void *src, u32 n);
-extern u32 sub_080338A8(u16 arg0);
-extern u32 sub_08033910(u8 idx, void *out);
-extern u16 sub_080178FC(u16 *buf, u16 start, u8 count);
-extern u16 sub_0801789C(u16 *buf, u16 start, u8 count);
+extern void *Memcpy(void *dst, const void *src, u32 n);
+extern u32 Eeprom_SetSizeConfig(u16 arg0);
+extern u32 Timer_SetIrqHandler(u8 idx, void *out);
+extern u16 SaveReadBlocks(u16 *buf, u16 start, u8 count);
+extern u16 SaveWriteBlocks(u16 *buf, u16 start, u8 count);
 
-int sub_080172F4(void)
+int SaveDetect(void)
 {
     struct {
         u16 *p;
@@ -18,7 +18,7 @@ int sub_080172F4(void)
     } s;
     u8 i;
 
-    sub_0803578C(s.tmp, sEepromSignatureBlock, 64);
+    Memcpy(s.tmp, sEepromSignatureBlock, 64);
 
     i = 0;
     {
@@ -30,11 +30,11 @@ int sub_080172F4(void)
         } while (i <= 3);
     }
 
-    sub_080338A8(4);
-    sub_08033910(3, (void *)0x08017939);
+    Eeprom_SetSizeConfig(4);
+    Timer_SetIrqHandler(3, (void *)0x08017939);
 
-    if (sub_080178FC(s.buf, 20, 1)) {
-        if (sub_0801789C(s.buf, 20, 1)) {
+    if (SaveReadBlocks(s.buf, 20, 1)) {
+        if (SaveWriteBlocks(s.buf, 20, 1)) {
             return 1;
         }
     }

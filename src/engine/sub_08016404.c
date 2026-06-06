@@ -1,7 +1,7 @@
 #include "macros.h"
 #include "types.h"
 
-/* --- sub_08016404: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- UpdateColumnClipSpans: non-matching reference (asm slice provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "macros.h"
 #include "types.h"
@@ -43,7 +43,7 @@ typedef struct {
 #define gFixedClipSpans  ((ClipSpan *)0x030063C0)
 #define gColumnClipSpans ((ClipSpan *)0x03006360)
 
-void sub_08016404(ColumnRange *columns, u8 count)
+void UpdateColumnClipSpans(ColumnRange *columns, u8 count)
 {
     vu16 fill;
     u8 *active;

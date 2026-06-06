@@ -387,7 +387,7 @@
 @   0x0801d87a: bc02        pop	{r1}
 @   0x0801d87c: 4708        bx	r1
 
-        thumb_func_start sub_0801D570
-sub_0801D570: @ 0x0801d570
+        thumb_func_start Credits_ScrollTick
+Credits_ScrollTick: @ 0x0801d570
         .incbin "frog_us_baserom.gba", 0x1d570, 0x310
-        thumb_func_end sub_0801D570
+        thumb_func_end Credits_ScrollTick

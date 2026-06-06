@@ -402,7 +402,7 @@
 @   0x08011284: e000        b.n	0x11288
 @   0x08011286: 0600        lsls	r0, r0, #24
 
-        thumb_func_start sub_08010F64
-sub_08010F64: @ 0x08010f64
+        thumb_func_start Scroll_TickBlitDir
+Scroll_TickBlitDir: @ 0x08010f64
         .incbin "frog_us_baserom.gba", 0x10f64, 0x324
-        thumb_func_end sub_08010F64
+        thumb_func_end Scroll_TickBlitDir

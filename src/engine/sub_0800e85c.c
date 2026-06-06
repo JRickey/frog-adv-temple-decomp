@@ -1,6 +1,6 @@
 #include "types.h"
 
-/* --- sub_0800E85C: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- CharLayers_Upload: non-matching reference (asm slice provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "gba/dma.h"
 #include "gba/intr.h"
@@ -33,10 +33,10 @@ extern const struct CharacterSpriteFrame sCharacterSpriteFrames[];
 /* svc 17 (LZ77UnCompVRAM) wrapper — expose via .thumb_set in
    src/game/sub_0802d558.c's NAKED asm (see top of this note). */
 extern void sub_0802D568(const void *src, void *dst);
-extern void sub_0800EE34(u8 layer);
-extern void sub_0800EE94(u8 layer);
+extern void BgLayer_Disable(u8 layer);
+extern void BgLayer_Enable(u8 layer);
 
-void sub_0800E85C(u8 count)
+void CharLayers_Upload(u8 count)
 {
     volatile DmaChannel *dma;
     struct CharacterLayerCtrl *layer;
@@ -138,22 +138,22 @@ void sub_0800E85C(u8 count)
 
     switch (count) {
     case 1:
-        sub_0800EE94(0);
-        sub_0800EE34(1);
-        sub_0800EE34(2);
-        sub_0800EE94(3);
+        BgLayer_Enable(0);
+        BgLayer_Disable(1);
+        BgLayer_Disable(2);
+        BgLayer_Enable(3);
         break;
     case 2:
-        sub_0800EE94(0);
-        sub_0800EE94(1);
-        sub_0800EE34(2);
-        sub_0800EE94(3);
+        BgLayer_Enable(0);
+        BgLayer_Enable(1);
+        BgLayer_Disable(2);
+        BgLayer_Enable(3);
         break;
     case 3:
-        sub_0800EE94(0);
-        sub_0800EE94(1);
-        sub_0800EE94(2);
-        sub_0800EE94(3);
+        BgLayer_Enable(0);
+        BgLayer_Enable(1);
+        BgLayer_Enable(2);
+        BgLayer_Enable(3);
         break;
     }
 

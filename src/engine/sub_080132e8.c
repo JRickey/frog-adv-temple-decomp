@@ -1,7 +1,7 @@
 #include "macros.h"
 #include "types.h"
 
-/* --- sub_080132E8: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- ScaleAnim_BlitSceneLayers: non-matching reference (asm slice provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "macros.h"
 #include "types.h"
@@ -20,7 +20,7 @@ struct TilemapTableEntry {
 
 extern void sub_08012BC4(u8 mode, u16 a, u16 b, u16 c, u16 d, void *tiles, u8 e);
 
-void sub_080132E8(void)
+void ScaleAnim_BlitSceneLayers(void)
 {
     register struct TilemapTableEntry *sceneA asm("r6");
     register struct TilemapTableEntry *sceneB asm("r5");

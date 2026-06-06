@@ -1,13 +1,13 @@
 #include "macros.h"
 #include "types.h"
 
-extern void sub_0800EE34(u8 layer);
+extern void BgLayer_Disable(u8 layer);
 /* Declared as extern symbols (not cast literals) so agbcc does not fold
  * gIwram_6580 = gIwram_6500 + 0x80 into an add instruction. */
 extern u8 gIwram_6500[];
 extern u8 gIwram_6580[];
 
-void sub_08014EA8(void)
+void Display_ResetLayers(void)
 {
     /* r3/r2 pins + inner scope for b: reproduce baserom's interleaved
      * pool-load order (ldr r3 first, then movs r0, #0, strb, ldr r2). */
@@ -24,6 +24,6 @@ void sub_08014EA8(void)
     }
     gIwram_6500[8] = one;
     gIwram_6580[8] = one;
-    sub_0800EE34(2);
+    BgLayer_Disable(2);
     *(u8 *)0x03003610 = 4;
 }

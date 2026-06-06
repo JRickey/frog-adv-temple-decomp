@@ -3,18 +3,18 @@
 #include "macros.h"
 #include "types.h"
 
-/* Three-entity-pair variant of the sub_08004508 tile-cache probe (kinds 6, 7
+/* Three-entity-pair variant of the Scene20_UpdateParts tile-cache probe (kinds 6, 7
  * and 22 instead of 11 and 16). Enqueues all three pairs, then — gated on
- * gEntities[0].status & 4 — maps the cached tile coords through sub_0800CD88
+ * gEntities[0].status & 4 — maps the cached tile coords through Tilemap_GetTileClass
  * and re-enqueues them with the resolved tile when gIwram_35E0._field_10 has
  * bit 0x10 set, also poking sub_0800C444.
  *
  * The tail does two coordinate-driven dispatches. The first, gated on
- * sub_08006BA4(&gIwram_35E0, 0x40), reads the packed tile coordinate
+ * IsFlagMaskSet(&gIwram_35E0, 0x40), reads the packed tile coordinate
  * (*(u32 *)&gIwram_35E0._field_8) and stamps gEntities[0].field_06 with a
  * scenery class (2 or 3) for a fixed set of coords. The second, gated on
  * gGameStuff._unk10 & 1 being clear, OR-bits 0x200 into gIwram_35E0 via
- * sub_08006B88 for another fixed coord set.
+ * PlayerFlags_Set for another fixed coord set.
  *
  * Matching notes (agbcc 2.x): arg1/arg2/arg3 and the two stack args survive
  * across the enqueue calls in the high callee-saved registers the allocator
@@ -27,16 +27,16 @@
  * pool load before that copy. The trailing block re-reads through `q asm("r4")`
  * each compare. */
 
-extern void sub_0800B918(void *ent, u32 arg1, u32 kind);
-extern void sub_0800B8A8(void *ent, u32 arg1, u32 kind, u32 tile);
+extern void Entity_UpdateHitboxWithTile(void *ent, u32 arg1, u32 kind);
+extern void Entity_ActivateHitSlot(void *ent, u32 arg1, u32 kind, u32 tile);
 extern void sub_0800BF24(void *ent, void *arg1, u8 kind);
 extern void sub_0800BEBC(void *ent, void *arg1, u8 kind, u8 tile);
 extern void sub_0800C444(u8 tile);
-extern u32 sub_0800CD88(u8 col, u8 row, s16 tileX, s16 tileY);
-extern u8 sub_08006BA4(struct IwramAt35E0 *p, u32 mask);
-extern void sub_08006B88(struct IwramAt35E0 *p, u32 mask);
+extern u32 Tilemap_GetTileClass(u8 col, u8 row, s16 tileX, s16 tileY);
+extern u8 IsFlagMaskSet(struct IwramAt35E0 *p, u32 mask);
+extern void PlayerFlags_Set(struct IwramAt35E0 *p, u32 mask);
 
-void sub_08003668(u32 arg0, u32 arg1, u32 arg2, u32 arg3, void *arg4, void *arg5)
+void Scene_UpdateCollisionAndTile(u32 arg0, u32 arg1, u32 arg2, u32 arg3, void *arg4, void *arg5)
 {
     struct Entity *p3720;
     struct IwramAt35E0 *p35E0;
@@ -48,8 +48,8 @@ void sub_08003668(u32 arg0, u32 arg1, u32 arg2, u32 arg3, void *arg4, void *arg5
     register u32 c asm("r1");
     u32 k0;
 
-    sub_0800B918((void *)arg0, arg1, 6);
-    sub_0800B918((void *)arg2, arg3, 7);
+    Entity_UpdateHitboxWithTile((void *)arg0, arg1, 6);
+    Entity_UpdateHitboxWithTile((void *)arg2, arg3, 7);
     sub_0800BF24(arg4, arg5, 22);
 
     p3720 = gEntities;
@@ -59,18 +59,18 @@ void sub_08003668(u32 arg0, u32 arg1, u32 arg2, u32 arg3, void *arg4, void *arg5
         return;
 
     p35E0 = &gIwram_35E0;
-    tile = (u8)sub_0800CD88(p35E0->_field_18, p35E0->_field_19, p35E0->_field_8, p35E0->_field_A);
+    tile = (u8)Tilemap_GetTileClass(p35E0->_field_18, p35E0->_field_19, p35E0->_field_8, p35E0->_field_A);
 
     mask = 0x10;
     mask &= p35E0->_field_10;
     if (mask != 0) {
-        sub_0800B8A8((void *)arg0, arg1, 6, tile);
-        sub_0800B8A8((void *)arg2, arg3, 7, tile);
+        Entity_ActivateHitSlot((void *)arg0, arg1, 6, tile);
+        Entity_ActivateHitSlot((void *)arg2, arg3, 7, tile);
         sub_0800BEBC(arg4, arg5, 22, tile);
         sub_0800C444(tile);
     }
 
-    if (sub_08006BA4(p35E0, 0x40)) {
+    if (IsFlagMaskSet(p35E0, 0x40)) {
         coord = *(u32 *)&p35E0->_field_8;
         /* Hoisting the first comparison constant into k0 before the copy makes
          * agbcc load it ahead of the `adds r1, r2` coord copy, matching the
@@ -101,23 +101,23 @@ void sub_08003668(u32 arg0, u32 arg1, u32 arg2, u32 arg3, void *arg4, void *arg5
 
     q = &gIwram_35E0;
     if (*(u32 *)&q->_field_8 == 0x001f0014)
-        sub_08006B88(q, 0x200);
+        PlayerFlags_Set(q, 0x200);
     if (*(u32 *)&q->_field_8 == 0x001f0016)
-        sub_08006B88(q, 0x200);
+        PlayerFlags_Set(q, 0x200);
     if (*(u32 *)&q->_field_8 == 0x001c0014)
-        sub_08006B88(q, 0x200);
+        PlayerFlags_Set(q, 0x200);
     if (*(u32 *)&q->_field_8 == 0x001c0015)
-        sub_08006B88(q, 0x200);
+        PlayerFlags_Set(q, 0x200);
     if (*(u32 *)&q->_field_8 == 0x00190015)
-        sub_08006B88(q, 0x200);
+        PlayerFlags_Set(q, 0x200);
     if (*(u32 *)&q->_field_8 == 0x00190016)
-        sub_08006B88(q, 0x200);
+        PlayerFlags_Set(q, 0x200);
     if (*(u32 *)&q->_field_8 == 0x00220014)
-        sub_08006B88(q, 0x200);
+        PlayerFlags_Set(q, 0x200);
     if (*(u32 *)&q->_field_8 == 0x00220015)
-        sub_08006B88(q, 0x200);
+        PlayerFlags_Set(q, 0x200);
     if (*(u32 *)&q->_field_8 == 0x00250015)
-        sub_08006B88(q, 0x200);
+        PlayerFlags_Set(q, 0x200);
     if (*(u32 *)&q->_field_8 == 0x00250016)
-        sub_08006B88(q, 0x200);
+        PlayerFlags_Set(q, 0x200);
 }

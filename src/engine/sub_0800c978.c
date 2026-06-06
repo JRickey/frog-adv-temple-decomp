@@ -19,7 +19,7 @@ struct SpriteAssetIndexEntry {
 
 extern struct SpriteAssetIndexEntry sSpriteAssetIndexTable[];
 
-u32 sub_0800C978(u8 col, u8 row, s16 tileX, s16 tileY, u8 dir)
+u32 SpriteGrid_GetNeighborTile(u8 col, u8 row, s16 tileX, s16 tileY, u8 dir)
 {
     s32 ny;
     s32 x;
@@ -87,22 +87,22 @@ u32 sub_0800C978(u8 col, u8 row, s16 tileX, s16 tileY, u8 dir)
             if ((s16)tileY - 2 < 0) {
                 return 0;
             }
-            return (u8)sub_0800C978(col, row, (s16)tileX, (s16)(tileY - 1), DIR_UP);
+            return (u8)SpriteGrid_GetNeighborTile(col, row, (s16)tileX, (s16)(tileY - 1), DIR_UP);
         case 1:
             if ((s16)tileY + 2 >= sSpriteAssetIndexTable[(u8)col].rows) {
                 return 0;
             }
-            return (u8)sub_0800C978(col, row, (s16)tileX, (s16)(tileY + 1), DIR_DOWN);
+            return (u8)SpriteGrid_GetNeighborTile(col, row, (s16)tileX, (s16)(tileY + 1), DIR_DOWN);
         case 2:
             if ((s16)tileX - 2 < 0) {
                 return 0;
             }
-            return (u8)sub_0800C978(col, row, (s16)(tileX - 1), (s16)tileY, DIR_LEFT);
+            return (u8)SpriteGrid_GetNeighborTile(col, row, (s16)(tileX - 1), (s16)tileY, DIR_LEFT);
         case 3:
             if ((s16)tileX + 2 >= sSpriteAssetIndexTable[(u8)col].stride) {
                 return 0;
             }
-            return (u8)sub_0800C978(col, row, (s16)(tileX + 1), (s16)tileY, DIR_RIGHT);
+            return (u8)SpriteGrid_GetNeighborTile(col, row, (s16)(tileX + 1), (s16)tileY, DIR_RIGHT);
         }
         return 0;
     }

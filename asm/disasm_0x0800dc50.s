@@ -151,7 +151,7 @@
 @   0x0800dd7c: 0e20        lsrs	r0, r4, #24
 @   0x0800dd7e: 080c        lsrs	r4, r1, #32
 
-        thumb_func_start sub_0800DC50
-sub_0800DC50: @ 0x0800dc50
+        thumb_func_start EntitySpawnDriver
+EntitySpawnDriver: @ 0x0800dc50
         .incbin "frog_us_baserom.gba", 0xdc50, 0x130
-        thumb_func_end sub_0800DC50
+        thumb_func_end EntitySpawnDriver

@@ -2,7 +2,7 @@
 #include "types.h"
 
 /* PSG channel register/LUT tables consumed by the sound subsystem
- * (sub_0802E684, sub_0802E5D8, sub_0802F4B0, …).
+ * (SoundVolume_Emit, Sound_EmitPsgPitch, SoundMixer_VBlankUpdate, …).
  *
  * The four DMG-style PSG channels each have two MMIO ports that the
  * mixer touches: a "duty/length/envelope" control register and a
@@ -26,7 +26,7 @@
  */
 
 /* 0x083dda1c — channel "frequency / control" MMIO registers.
- * Loaded by sub_0802E5D8 at instruction 0x0802e664 via
+ * Loaded by Sound_EmitPsgPitch at instruction 0x0802e664 via
  * `ldr r1, =sChannelFreqRegTable; ldr r2, [r1, r5, lsl #2]`. */
 vu16 *const sChannelFreqRegTable[4] = {
     (vu16 *)0x04000064,
@@ -36,7 +36,7 @@ vu16 *const sChannelFreqRegTable[4] = {
 };
 
 /* 0x083dda2c — channel "duty/length/envelope" MMIO registers.
- * Loaded by sub_0802E684 (sound_volume.c). */
+ * Loaded by SoundVolume_Emit (sound_volume.c). */
 vu16 *const sChannelRegTable[4] = {
     (vu16 *)0x04000062,
     (vu16 *)0x04000068,

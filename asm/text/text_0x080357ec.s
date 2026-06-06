@@ -2,7 +2,7 @@
 @ Address-aligned bucket of unparsed baserom bytes.
 @ Range:  [0x080357ec, 0x08035d7c)  (0x590 bytes)
 @
-@ Post-peel chunk after sub_0803578C.
+@ Post-peel chunk after Memcpy.
 @
 @ This file holds raw bytes only; no instructions are assembled here.
 

@@ -31,7 +31,7 @@ extern const struct SpriteAssetEntry_080063EC sSpriteAssetTable[];
 
 #define ENTITY_ANIM(e) (((const struct SpriteAnim_080063EC *)sSpriteAssetTable[(e).field_00].anims)[(e).field_1A])
 
-void sub_080063EC(u32 slot)
+void Entity_DmaLoadSprite(u32 slot)
 {
     register volatile DmaChannel *dma asm("r4");
     s32 shape;

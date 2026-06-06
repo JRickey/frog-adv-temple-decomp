@@ -1,17 +1,17 @@
 #include "iwram.h"
 #include "types.h"
 
-/* --- sub_0802A63C: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- SpawnGrid_UpdateSection: non-matching reference (asm slice provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "game.h"
 #include "iwram.h"
 #include "types.h"
 
-extern u8 sub_08000764(u8 range);
-extern void sub_08020C78(u32 sound);
-extern void sub_0800696C(struct IwramAt6110 *control, s32 slot);
-extern void sub_080059C4(struct Entity *e);
-extern void sub_08020F3C(u8 slot);
+extern u8 RandRange(u8 range);
+extern void Sound_Play(u32 sound);
+extern void ModeControl_SetBit(struct IwramAt6110 *control, s32 slot);
+extern void Entity_Update(struct Entity *e);
+extern void EntityMover_Tick(u8 slot);
 extern void Entity_Init(struct Entity *p, u8 a, u16 x, u16 y, u8 actorId, u16 e, u8 f, u8 g, u8 state, u16 initFlags);
 
 struct SpawnGridEntry {
@@ -32,7 +32,7 @@ struct SpawnGridSubtable {
 
 extern const struct SpawnGridSubtable sSpriteGridSubtable[8];
 
-void sub_0802A63C(void)
+void SpawnGrid_UpdateSection(void)
 {
     register u8 *base asm("r7");
     const struct SpawnGridEntry *slice;
@@ -49,11 +49,11 @@ void sub_0802A63C(void)
         *(u16 *)(base + 0x69a) = 0;
         *(u32 *)(base + 0x6b0) = gGameStuff._unk00;
         if (gIwram_6110.gateByte == 2)
-            *(s8 *)(base + 0x6aa) = sub_08000764(5) + 3;
+            *(s8 *)(base + 0x6aa) = RandRange(5) + 3;
         else if (gIwram_6110.gateByte == 1)
-            *(s8 *)(base + 0x6aa) = sub_08000764(5) + 3;
+            *(s8 *)(base + 0x6aa) = RandRange(5) + 3;
         else
-            *(s8 *)(base + 0x6aa) = sub_08000764(3);
+            *(s8 *)(base + 0x6aa) = RandRange(3);
 
         *(u32 *)(base + 0x6b0) = gGameStuff._unk00;
         *(u16 *)(base + 0x698) = 0;
@@ -83,7 +83,7 @@ void sub_0802A63C(void)
         Entity_Init(e, 0x51, slice[i].x, slice[i].y, 3, (i % 8) * 16 + 0x41, 1, 3, 2, 16);
 
         if (slice[i].flags & 1)
-            sub_08020C78(0x3d);
+            Sound_Play(0x3d);
 
         if (gIwram_6110.gateByte == 0) {
             e->field_32 = slice[i].mode;
@@ -95,8 +95,8 @@ void sub_0802A63C(void)
         e->field_30 = slice[i].col;
 
         *(u16 *)(base + 0x698) |= 1 << i;
-        sub_0800696C(&gIwram_6110, i + 2);
-        sub_080059C4(e);
+        ModeControl_SetBit(&gIwram_6110, i + 2);
+        Entity_Update(e);
         continue;
 
     age:
@@ -109,8 +109,8 @@ void sub_0802A63C(void)
         }
         if (e->status & 0x8000)
             e->status = (e->status & 0x7fff) | 2;
-        sub_08020F3C((u8)(i + 2));
-        sub_080059C4(e);
+        EntityMover_Tick((u8)(i + 2));
+        Entity_Update(e);
     }
 }
 #endif /* NON_MATCHING */

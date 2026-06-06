@@ -1,6 +1,6 @@
 #include "types.h"
 
-/* --- sub_08010F64: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- Scroll_TickBlitDir: non-matching reference (asm slice provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "game.h"
 #include "iwram.h"
@@ -47,16 +47,16 @@ typedef struct ScrollModeEntry {
     u8 _pad10[4];
 } ScrollModeEntry;
 
-extern void sub_08010DD8(void *records, u8 n, u32 arg2);
-extern void sub_080100E4(u32 mirror, void *src, void *dst);
-extern void sub_08020C78(u32 sound);
-extern void sub_08020DC4(u8 idx);
-extern void sub_08020E7C(u8 idx);
+extern void Scroll_PrepareBlitWork(void *records, u8 n, u32 arg2);
+extern void Scroll_FlushTilemapWindow(u32 mirror, void *src, void *dst);
+extern void Sound_Play(u32 sound);
+extern void SoundEntry_Play(u8 idx);
+extern void SoundEntry_Stop(u8 idx);
 
 extern u16 gIwram_60A0[];
 extern ScrollModeEntry gFrameCellTable_08307EAC[];
 
-void sub_08010F64(void *records, u8 n)
+void Scroll_TickBlitDir(void *records, u8 n)
 {
     register void *recordsReg asm("r9") = records;
     u32 dir = n;
@@ -187,7 +187,7 @@ void sub_08010F64(void *records, u8 n)
         const u8 *lut2 = *(const u8 *const *)((char *)col2 + (gGameStuff.pendingMode - 1) * 20);
         if (dirStep[dir] < lut2[n2 + 1] - 1) {
             dirStep[dir]++;
-            sub_08010DD8(recordsReg, dir, 0);
+            Scroll_PrepareBlitWork(recordsReg, dir, 0);
             goto refresh;
         }
     }
@@ -196,12 +196,12 @@ void sub_08010F64(void *records, u8 n)
 
 refresh:
     if (gGameStuff.pendingMode != 11)
-        sub_08020DC4(11);
+        SoundEntry_Play(11);
 
     if (scroll->active == 0) {
         if (gGameStuff.pendingMode != 11) {
-            sub_08020E7C(11);
-            sub_08020C78(0x82);
+            SoundEntry_Stop(11);
+            Sound_Play(0x82);
         }
         scroll->startBuf = 0;
         gIwram_35E0._field_10 &= 0xfffe;
@@ -216,6 +216,6 @@ refresh:
         scroll->dstRead = 0x0600e000;
     }
 
-    sub_080100E4(scroll->mirror, (void *)scroll->srcRead, (void *)scroll->dstRead);
+    Scroll_FlushTilemapWindow(scroll->mirror, (void *)scroll->srcRead, (void *)scroll->dstRead);
 }
 #endif /* NON_MATCHING */

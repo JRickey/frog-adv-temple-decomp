@@ -29,9 +29,9 @@ typedef struct EntitySlot {
 } EntitySlot;
 
 extern const EntityHitbox sEntityHitboxTable[];
-extern int sub_0800CB80(int xTile, int mode, int x, int y, int flags);
+extern int SpriteGrid_SetCellFlags(int xTile, int mode, int x, int y, int flags);
 
-void sub_0800AF50(EntitySlot *slots)
+void Entity_InitHitboxSlots(EntitySlot *slots)
 {
     u32 slotsStack;
     register u32 r0v asm("r0");
@@ -92,7 +92,8 @@ void sub_0800AF50(EntitySlot *slots)
             pointsBase = *(const u32 *)(offset + pointsBase);
             pt = (const EntityHitboxPoint *)(((u32)jShift >> 22) + pointsBase);
 
-            sub_0800CB80(xTile, 0, pt->x, pt->y, ((const EntityHitboxFlagBytes *)(offset + (u32)table))->primaryFlags);
+            SpriteGrid_SetCellFlags(xTile, 0, pt->x, pt->y,
+                                    ((const EntityHitboxFlagBytes *)(offset + (u32)table))->primaryFlags);
 
             j = (u32)((j << 16) + 0x10000) >> 16;
         } while ((s16)j < *(s8 *)((type * sizeof(EntityHitbox)) + (u32)table));
@@ -145,11 +146,11 @@ void sub_0800AF50(EntitySlot *slots)
     }
 }
 
-extern u8 sub_0800679C(u8 *base, u32 selector, u32 bit);
-extern void sub_080066C4(u8 *base, u32 selector, u32 bit);
-extern void sub_08020C78(u32 sound);
+extern u8 ModeControl_GetFlag(u8 *base, u32 selector, u32 bit);
+extern void ModeControl_ClearBit(u8 *base, u32 selector, u32 bit);
+extern void Sound_Play(u32 sound);
 
-void sub_0800B07C(EntitySlot *slots)
+void Gate_PollResult(EntitySlot *slots)
 {
     s32 result;
     u8 *base3720;
@@ -159,37 +160,37 @@ void sub_0800B07C(EntitySlot *slots)
      * to 0xff (not -1) emits `movs #255` and keeps the (s8) narrowing live. */
     result = 0xff;
 
-    if ((u8)sub_0800679C((u8 *)&gIwram_6110, 5, 8)) {
+    if ((u8)ModeControl_GetFlag((u8 *)&gIwram_6110, 5, 8)) {
         base3720 = (u8 *)gEntities;
         result = (*(s16 *)(base3720 + 0xb70) != 0);
-        sub_080066C4((u8 *)&gIwram_6110, 5, 8);
+        ModeControl_ClearBit((u8 *)&gIwram_6110, 5, 8);
     }
 
-    if ((u8)sub_0800679C((u8 *)&gIwram_6110, 5, 9)) {
+    if ((u8)ModeControl_GetFlag((u8 *)&gIwram_6110, 5, 9)) {
         base3720 = (u8 *)gEntities;
         counter = *(s16 *)(base3720 + 0xb70);
         result = 1;
         if (counter != 0)
             result = 2;
-        sub_080066C4((u8 *)&gIwram_6110, 5, 9);
+        ModeControl_ClearBit((u8 *)&gIwram_6110, 5, 9);
     }
 
-    if ((u8)sub_0800679C((u8 *)&gIwram_6110, 5, 10)) {
+    if ((u8)ModeControl_GetFlag((u8 *)&gIwram_6110, 5, 10)) {
         base3720 = (u8 *)gEntities;
         counter = *(s16 *)(base3720 + 0xb70);
         result = 2;
         if (counter != 0)
             result = 3;
-        sub_080066C4((u8 *)&gIwram_6110, 5, 10);
+        ModeControl_ClearBit((u8 *)&gIwram_6110, 5, 10);
     }
 
-    if ((u8)sub_0800679C((u8 *)&gIwram_6110, 5, 11)) {
+    if ((u8)ModeControl_GetFlag((u8 *)&gIwram_6110, 5, 11)) {
         base3720 = (u8 *)gEntities;
         counter = *(s16 *)(base3720 + 0xb70);
         result = 3;
         if (counter != 0)
             result = 0;
-        sub_080066C4((u8 *)&gIwram_6110, 5, 11);
+        ModeControl_ClearBit((u8 *)&gIwram_6110, 5, 11);
     }
 
     {
@@ -208,6 +209,6 @@ void sub_0800B07C(EntitySlot *slots)
         slot->field5 = 0;
         slot->field4 = 1;
         slot->field0 = gGameStuff._unk00;
-        sub_08020C78(0x6c);
+        Sound_Play(0x6c);
     }
 }

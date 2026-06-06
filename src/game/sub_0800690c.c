@@ -11,7 +11,7 @@
  * `str r4/r5; str r4/r5` store sequence seen in the baserom.
  * Without the pins old_agbcc collapses to a single r0=0 and only
  * pushes r4 (giving the wrong prologue and [sp,#8] vs [sp,#12]). */
-void sub_0800690C(u8 *s, u8 a, u8 unused, u32 b, u8 c)
+void Entity_InitMotionFields(u8 *s, u8 a, u8 unused, u32 b, u8 c)
 {
     register u32 z1 asm("r4");
     register u32 z2 asm("r5");
@@ -30,7 +30,7 @@ void sub_0800690C(u8 *s, u8 a, u8 unused, u32 b, u8 c)
     *(u32 *)(s + 0x34) = b;
 }
 
-void sub_0800693C(u8 *s, u16 v)
+void Entity_OrFlags(u8 *s, u16 v)
 {
     *(u16 *)(s + 0x2e) |= v;
 }

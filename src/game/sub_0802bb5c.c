@@ -2,7 +2,7 @@
 #include "iwram.h"
 #include "types.h"
 
-extern void sub_08021140(u32 a0, const void *a1, u32 a2, u32 a3, u32 a4, u32 a5, u32 a6);
+extern void LevelLayout_WalkRecords(u32 a0, const void *a1, u32 a2, u32 a3, u32 a4, u32 a5, u32 a6);
 
 extern const u32 sLevelLayout_317FA8[];
 
@@ -21,7 +21,7 @@ struct Pos2D {
     s16 y;
 };
 
-void sub_0802BB5C(u8 id, s8 tileX, s8 tileY)
+void Walker_SpawnAtTile(u8 id, s8 tileX, s8 tileY)
 {
     struct WalkerDesc desc;
 
@@ -32,10 +32,10 @@ void sub_0802BB5C(u8 id, s8 tileX, s8 tileY)
     desc.y = tileY * 24 + 11;
     desc.kind = 0x303;
 
-    sub_08021140((u16)(id + 0x17), &desc, 16, 0x57, 0x89, 3, 0);
+    LevelLayout_WalkRecords((u16)(id + 0x17), &desc, 16, 0x57, 0x89, 3, 0);
 }
 
-void sub_0802BBC0(struct Pos2D *pos)
+void Pos2D_ClampToBounds(struct Pos2D *pos)
 {
     if (pos->x <= 0x3a)
         pos->x = 0x3b;
@@ -48,7 +48,7 @@ void sub_0802BBC0(struct Pos2D *pos)
         pos->y = 0x149;
 }
 
-void sub_0802BBFC(void)
+void Walker_LoadLayout(void)
 {
-    sub_08021140(3, sLevelLayout_317FA8, 0x10, 0x56, 0x81, 2, 0);
+    LevelLayout_WalkRecords(3, sLevelLayout_317FA8, 0x10, 0x56, 0x81, 2, 0);
 }

@@ -3,19 +3,19 @@
 #include "save.h"
 #include "types.h"
 
-extern void sub_080196EC(u32 *attr, const void *src, u8 mode);
-extern void sub_080184DC(u32 *attr, u16 a, u16 b, u8 c);
-extern void sub_0801BE7C(const u8 *str, int len, int x, int y, int a, int b, int c);
-extern void sub_0801CF18(u8 value, u8 x, u8 y, u16 a, u16 b, u8 c);
-extern void sub_0801C2B4(u16 value, u8 x, u8 y, u16 a, u16 b, u8 c, u32 forceZeros);
-extern u8 sub_0801B188(u32 bits);
+extern void TileBlit(u32 *attr, const void *src, u8 mode);
+extern void Tilemap_SwapPalette(u32 *attr, u16 a, u16 b, u8 c);
+extern void DrawTextGlyphs(const u8 *str, int len, int x, int y, int a, int b, int c);
+extern void DrawByteDecimal(u8 value, u8 x, u8 y, u16 a, u16 b, u8 c);
+extern void DrawNumber(u16 value, u8 x, u8 y, u16 a, u16 b, u8 c, u32 forceZeros);
+extern u8 CountHighestBit(u32 bits);
 
-/* Twin of sub_0801F684 (same body, different call site): renders the four save
+/* Twin of SaveSlot_DrawAllSlots (same body, different call site): renders the four save
  * slots. For each populated slot draws its name, two counters and a completion
  * percentage; for each empty slot blits a placeholder sprite. The slot whose
  * index equals gIwram_3480._unk14 is highlighted. An OAM-style attribute word
  * is built on the stack and its address handed to the sprite helpers. */
-void sub_0801F1E0(void)
+void FileSelect_DrawSlots(void)
 {
     u32 attr;
     u8 slotMask;
@@ -52,18 +52,18 @@ void sub_0801F1E0(void)
             byte = (u8)(i * 4 + 3) << 8;
             attr = (attr & 0xffff00ff) | byte;
             y = i * 4 + 4; /* shares the i*4 subexpression with the attr byte */
-            sub_080196EC(attrp, (const void *)0x081D8398, 2);
+            TileBlit(attrp, (const void *)0x081D8398, 2);
 
-            sub_0801BE7C(gSaveData.slots[i].name, 3, 3, y, 0x140, 5, 2);
-            sub_0801BE7C((const u8 *)0x081BE800, 3, 12, y, 0x140, 5, 2);
-            sub_0801CF18(gSaveData.slots[i]._field5, 12, y, 0x140, 5, 2);
+            DrawTextGlyphs(gSaveData.slots[i].name, 3, 3, y, 0x140, 5, 2);
+            DrawTextGlyphs((const u8 *)0x081BE800, 3, 12, y, 0x140, 5, 2);
+            DrawByteDecimal(gSaveData.slots[i]._field5, 12, y, 0x140, 5, 2);
 
             if (gSaveData.slots[i]._field6 > 99) {
-                sub_0801C2B4(gSaveData.slots[i]._field6, 18, y, 0x140, 5, 2, 0);
+                DrawNumber(gSaveData.slots[i]._field6, 18, y, 0x140, 5, 2, 0);
             } else if (gSaveData.slots[i]._field6 > 9) {
-                sub_0801C2B4(gSaveData.slots[i]._field6, 19, y, 0x140, 5, 2, 0);
+                DrawNumber(gSaveData.slots[i]._field6, 19, y, 0x140, 5, 2, 0);
             } else {
-                sub_0801C2B4(gSaveData.slots[i]._field6, 20, y, 0x140, 5, 2, 0);
+                DrawNumber(gSaveData.slots[i]._field6, 20, y, 0x140, 5, 2, 0);
             }
 
             {
@@ -73,19 +73,19 @@ void sub_0801F1E0(void)
                    signed type makes the >>4 an arithmetic shift */
                 register int count asm("r1");
 
-                count = (u8)sub_0801B188(gSaveData.slots[i]._field0);
+                count = (u8)CountHighestBit(gSaveData.slots[i]._field0);
                 pct = (u8)((count * 100) >> 4);
 
                 if (pct != 100) {
-                    sub_0801CF18(pct, 23, y, 0x140, 5, 2);
+                    DrawByteDecimal(pct, 23, y, 0x140, 5, 2);
                 } else {
-                    sub_0801C2B4(100, 22, y, 0x140, 5, 2, 0);
+                    DrawNumber(100, 22, y, 0x140, 5, 2, 0);
                 }
             }
 
             if (gIwram_3480._unk14 == i) {
-                sub_080184DC(attrp, 5, 4, 2);
-                sub_080184DC(attrp, 7, 6, 2);
+                Tilemap_SwapPalette(attrp, 5, 4, 2);
+                Tilemap_SwapPalette(attrp, 7, 6, 2);
             }
         } else {
             const u32 *table = (const u32 *)0x08308ef4;
@@ -100,10 +100,10 @@ void sub_0801F1E0(void)
             /* load the table base before dereferencing gIwram_34B0._data as the
                index */
             asm("" : "+r"(table));
-            sub_080196EC((u32 *)ap, (const void *)table[gIwram_34B0._data], 2);
+            TileBlit((u32 *)ap, (const void *)table[gIwram_34B0._data], 2);
 
             if (gIwram_3480._unk14 == i) {
-                sub_080184DC((u32 *)ap, 5, 4, 2);
+                Tilemap_SwapPalette((u32 *)ap, 5, 4, 2);
             }
         }
     }

@@ -32,13 +32,13 @@ extern const struct ScaleAnimDesc_1310C sScaleAnimDescriptors[];
 extern const struct ScaleAnimDesc_1310C sScaleAnimDescriptors2[];
 
 void sub_08012BC4(u32 flags, u32 dstX, u32 dstY, u32 width, u32 rows, const u16 **srcTable, u32 srcIndex);
-void sub_08012F00(void);
-void sub_08012FA0(void);
-void sub_080132E8(void);
-void sub_08013040(void);
+void RemapInputBits(void);
+void ScaleAnim_ClearActiveBits(void);
+void ScaleAnim_BlitSceneLayers(void);
+void ScaleAnim_TickFrames(void);
 
 #ifdef NON_MATCHING
-void sub_0801310C(void)
+void ScaleAnim_SyncSelectors(void)
 {
     register struct IwramAt3610_1310C *base asm("r5") = &gIwram_3610;
     register u8 *state asm("r4") = &base->state;
@@ -207,17 +207,17 @@ void sub_0801310C(void)
         break;
     }
     case 1:
-        sub_08012F00();
-        sub_080132E8();
+        RemapInputBits();
+        ScaleAnim_BlitSceneLayers();
         *state = 0;
         break;
     case 2:
-        sub_08012FA0();
-        sub_080132E8();
+        ScaleAnim_ClearActiveBits();
+        ScaleAnim_BlitSceneLayers();
         *state = 0;
         break;
     }
 
-    sub_08013040();
+    ScaleAnim_TickFrames();
 }
 #endif

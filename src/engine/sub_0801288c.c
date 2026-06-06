@@ -2,7 +2,7 @@
 #include "iwram.h"
 #include "types.h"
 
-extern void sub_080100E4(u32, void *, void *);
+extern void Scroll_FlushTilemapWindow(u32, void *, void *);
 
 struct TileBlit_1288C {
     u8 _pad00[28];
@@ -22,7 +22,7 @@ struct BlitState_1288C {
     u16 stride;
 };
 
-void sub_0801288C(void)
+void BlitEntityTileFrame1(void)
 {
     const struct TileBlit_1288C *desc;
     const u8 *flagPtr;
@@ -133,7 +133,7 @@ void sub_0801288C(void)
         r0Work = 1;
         bank &= r0Work;
     }
-    sub_080100E4(bank, flushSrc, flushDst);
+    Scroll_FlushTilemapWindow(bank, flushSrc, flushDst);
     {
         u8 *sentinel = (u8 *)0x030064C0;
 

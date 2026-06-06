@@ -4,9 +4,9 @@
 #include "types.h"
 
 /* Item-pickup handler — on b == 23, looks up an entity slot via
- * sub_0800A7A8(a, gIwram_35E0.tileX, gIwram_35E0.tileY) and, if the
+ * EntityHitbox_FindPoint(a, gIwram_35E0.tileX, gIwram_35E0.tileY) and, if the
  * slot's flag byte at +4 is clear, claims it (clear +5, set +4, copy
- * gGameStuff._unk00 to +0), plays sfx #22 via sub_08020C78, and OR's
+ * gGameStuff._unk00 to +0), plays sfx #22 via Sound_Play, and OR's
  * (1 << idx) into the caller-supplied 64-bit mask.
  *
  * Matching notes (agbcc 2.x):
@@ -15,8 +15,8 @@
  *     first, base second). The natural `&arr[idx]` form folds to
  *     `adds r1, r5, r0` — byte_diff 2 from baserom. */
 
-extern s8 sub_0800A7A8(s8 a, s16 x, s16 y);
-extern void sub_08020C78(u32 a);
+extern s8 EntityHitbox_FindPoint(s8 a, s16 x, s16 y);
+extern void Sound_Play(u32 a);
 
 struct EntryB8A8 {
     u32 _field_0;
@@ -25,7 +25,7 @@ struct EntryB8A8 {
     u8 _pad6[2];
 };
 
-void sub_0800B8A8(struct EntryB8A8 *arr, unsigned long long *mask, u8 a, u8 b)
+void Entity_ActivateHitSlot(struct EntryB8A8 *arr, unsigned long long *mask, u8 a, u8 b)
 {
     s8 idx;
     struct EntryB8A8 *entry;
@@ -33,7 +33,7 @@ void sub_0800B8A8(struct EntryB8A8 *arr, unsigned long long *mask, u8 a, u8 b)
     if (b != 23)
         return;
 
-    idx = sub_0800A7A8((s8)a, gIwram_35E0._field_8, gIwram_35E0._field_A);
+    idx = EntityHitbox_FindPoint((s8)a, gIwram_35E0._field_8, gIwram_35E0._field_A);
     if (idx == -1)
         return;
 
@@ -44,6 +44,6 @@ void sub_0800B8A8(struct EntryB8A8 *arr, unsigned long long *mask, u8 a, u8 b)
     entry->_field_5 = 0;
     entry->_field_4 = 1;
     entry->_field_0 = gGameStuff._unk00;
-    sub_08020C78(22);
+    Sound_Play(22);
     *mask |= (unsigned long long)1 << idx;
 }

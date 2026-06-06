@@ -1,12 +1,12 @@
 #include "types.h"
 
-extern void sub_0800EF90(void);
-extern void sub_0802D8F8(void);
-extern void sub_08020B78(void);
+extern void Scene_DisableBg2(void);
+extern void Sound_Reset(void);
+extern void SoundSystem_FadeOut(void);
 
-void sub_08017AA8(void)
+void Attract_Cleanup(void)
 {
-    sub_0800EF90();
-    sub_0802D8F8();
-    sub_08020B78();
+    Scene_DisableBg2();
+    Sound_Reset();
+    SoundSystem_FadeOut();
 }

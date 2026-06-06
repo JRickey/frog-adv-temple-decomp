@@ -448,7 +448,7 @@
 @   0x08004070: 5330        strh	r0, [r6, r4]
 @   0x08004072: 0300        lsls	r0, r0, #12
 
-        thumb_func_start sub_08003CA8
-sub_08003CA8: @ 0x08003ca8
+        thumb_func_start GameMode_Scene19
+GameMode_Scene19: @ 0x08003ca8
         .incbin "frog_us_baserom.gba", 0x3ca8, 0x3cc
-        thumb_func_end sub_08003CA8
+        thumb_func_end GameMode_Scene19

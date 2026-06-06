@@ -6,7 +6,7 @@ extern int __modsi3(int num, int den);
 
 /* VCOUNT-seeded "pick a value in [0, range)" helper: scrambles the current
  * scanline with an LCG-style multiply-add, then folds it modulo `range`. */
-u8 sub_0801185C(u8 range)
+u8 GetVcountRandom(u8 range)
 {
     return (u8)__modsi3((u8)REG_VCOUNT * 107 + 7, range);
 }
@@ -26,17 +26,17 @@ typedef struct AnimDesc {
 extern const AnimDesc sAnimDesc_6e08;
 extern const AnimDesc sAnimDesc_6e28;
 
-extern void sub_0801223C(u32, u32, u32, u32, s32);
-extern void sub_08012180(void);
+extern void InitScrollAnimSequence(u32, u32, u32, u32, s32);
+extern void UpdateScrollFromAnimChannels(void);
 
-u32 sub_08011884(void)
+u32 Anim_CheckScreenIdle(void)
 {
     u32 result;
 
     result = 0;
-    sub_0801223C(sAnimDesc_6e08.field_04, sAnimDesc_6e08.field_14, sAnimDesc_6e28.field_04, sAnimDesc_6e28.field_04,
-                 sAnimDesc_6e28.field_0e);
-    sub_08012180();
+    InitScrollAnimSequence(sAnimDesc_6e08.field_04, sAnimDesc_6e08.field_14, sAnimDesc_6e28.field_04,
+                           sAnimDesc_6e28.field_04, sAnimDesc_6e28.field_0e);
+    UpdateScrollFromAnimChannels();
 
     if (gIwram_6150._field_04 != 0)
         goto done;
@@ -50,15 +50,15 @@ done:
     return result;
 }
 
-extern void sub_0800E85C(u8 arg);
-extern void sub_08011518(void);
-extern void sub_0800EB1C(void);
-extern void sub_0800F24C(u8 arg);
-extern void sub_0800EBDC(u8 arg);
-extern void sub_08016A40(void);
-extern void sub_080116B8(u32 arg);
-extern void sub_08017000(void);
-extern void sub_080135B8(s32 a, s32 b, s32 c, s32 d);
+extern void CharLayers_Upload(u8 arg);
+extern void Selector_InitState(void);
+extern void FrogOam_Init(void);
+extern void Scroll_UpdateCamera(u8 arg);
+extern void BgScrollBlit(u8 arg);
+extern void StatusBar_Update(void);
+extern void Selector_BlitStateMachine(u32 arg);
+extern void FrogStatusBar_Update(void);
+extern void Selector_StepScrollAxes(s32 a, s32 b, s32 c, s32 d);
 
 struct IwramAt60A0_sub1190C {
     u8 _pad00[12];
@@ -89,30 +89,30 @@ extern struct IwramAt60A0_sub1190C gIwram_60A0;
 extern struct IwramAt6480_sub1190C gIwram_6480;
 extern struct IwramAt6540_sub1190C gIwram_6540;
 
-void sub_080118D8(void)
+void Selector_InitScene(void)
 {
-    sub_0800E85C(2);
-    sub_08011518();
-    sub_0800EB1C();
-    sub_0800F24C(2);
-    sub_0800EBDC(2);
-    sub_08016A40();
+    CharLayers_Upload(2);
+    Selector_InitState();
+    FrogOam_Init();
+    Scroll_UpdateCamera(2);
+    BgScrollBlit(2);
+    StatusBar_Update();
 }
 
-void sub_080118FC(void)
+void Selector_Update(void)
 {
-    sub_080116B8(4);
-    sub_08017000();
+    Selector_BlitStateMachine(4);
+    FrogStatusBar_Update();
 }
 
-u32 sub_0801190C(void)
+u32 Selector_StepScroll(void)
 {
     u32 result;
     s32 x;
     s32 y;
 
     result = 0;
-    sub_080135B8(-24, 2, -72, 2);
+    Selector_StepScrollAxes(-24, 2, -72, 2);
     x = gIwram_60A0.field_c + gIwram_6540.field_2c;
     gIwram_60A0.field_c = x;
     y = gIwram_60A0.field_10 + gIwram_6480.field_2e;
@@ -129,12 +129,12 @@ u32 sub_0801190C(void)
     return result;
 }
 
-void sub_08011978(void)
+void Selector_VblankTick(void)
 {
-    sub_08017000();
+    FrogStatusBar_Update();
 }
 
-/* --- sub_08011984: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- Selector_BlitTiles: non-matching reference (asm slice provides the matching bytes) --- */
 #ifdef NON_MATCHING
 struct IwramAt60A0_sub1190C {
     u8 _pad00[12];
@@ -159,11 +159,11 @@ struct IwramAt6480_sub1190C {
     u32 field_18;
     u8 _pad1c[16];
     u16 field_2c;
-    s16 field_2e; /* field_2e MUST stay s16 (sub_0801190C) */
+    s16 field_2e; /* field_2e MUST stay s16 (Selector_StepScroll) */
     u16 field_30;
     u16 field_32;
     u16 field_34;
-    s16 field_36; /* field_36 MUST stay s16 (sub_0801190C) */
+    s16 field_36; /* field_36 MUST stay s16 (Selector_StepScroll) */
 };
 struct IwramAt6540_sub1190C {
     u8 field_0;
@@ -175,10 +175,10 @@ struct IwramAt6540_sub1190C {
     u32 field_10;
     u8 _pad14[24];
     s16 field_2c;
-    u16 field_2e; /* field_2c MUST stay s16 (sub_0801190C) */
+    u16 field_2e; /* field_2c MUST stay s16 (Selector_StepScroll) */
     u16 field_30;
     u16 field_32;
-    s16 field_34; /* field_34 MUST stay s16 (sub_0801190C) */
+    s16 field_34; /* field_34 MUST stay s16 (Selector_StepScroll) */
 };
 
 struct Unk11984Elem {
@@ -193,9 +193,9 @@ struct Unk11984Elem {
     u8 _pad14[8];
 };
 
-extern void sub_0801025C(u8 rows, u8 cols, u16 dstX, u16 dstY, u32 bank, u32 src, u32 vram);
+extern void ScaleAnim_BlitFrameToVram(u8 rows, u8 cols, u16 dstX, u16 dstY, u32 bank, u32 src, u32 vram);
 
-void sub_08011984(struct Unk11984Elem *elems, u8 idx)
+void Selector_BlitTiles(struct Unk11984Elem *elems, u8 idx)
 {
     u32 idx8;
     u32 ofs;
@@ -249,7 +249,8 @@ void sub_08011984(struct Unk11984Elem *elems, u8 idx)
         y = (u16)(y + 1);
     }
 
-    sub_0801025C((u8)gIwram_6540.field_32, (u8)gIwram_6540.field_30, gIwram_6480.field_34, gIwram_6480.field_36, 2,
-                 ((struct Unk11984Elem *)((u8 *)elems + ((idx8 - idx) << 2)))->field_10, 0x0600F000);
+    ScaleAnim_BlitFrameToVram((u8)gIwram_6540.field_32, (u8)gIwram_6540.field_30, gIwram_6480.field_34,
+                              gIwram_6480.field_36, 2,
+                              ((struct Unk11984Elem *)((u8 *)elems + ((idx8 - idx) << 2)))->field_10, 0x0600F000);
 }
 #endif /* NON_MATCHING */

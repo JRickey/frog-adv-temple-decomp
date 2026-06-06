@@ -400,7 +400,7 @@
 @   0x0800217e: 0000        movs	r0, r0
 @   0x08002180: 0282        lsls	r2, r0, #10
 
-        thumb_func_start sub_08001E24
-sub_08001E24: @ 0x08001e24
+        thumb_func_start Entity_CollisionProbe
+Entity_CollisionProbe: @ 0x08001e24
         .incbin "frog_us_baserom.gba", 0x1e24, 0x360
-        thumb_func_end sub_08001E24
+        thumb_func_end Entity_CollisionProbe

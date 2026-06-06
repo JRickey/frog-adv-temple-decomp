@@ -1,6 +1,6 @@
 #include "types.h"
 
-/* --- sub_080100E4: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- Scroll_FlushTilemapWindow: non-matching reference (asm slice provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "types.h"
 
@@ -16,7 +16,7 @@ struct ScrollState {
 
 #define gScrollState ((struct ScrollState *)0x030060a0)
 
-void sub_080100E4(u32 bankArg, const u16 *src, u16 *dst)
+void Scroll_FlushTilemapWindow(u32 bankArg, const u16 *src, u16 *dst)
 {
     struct ScrollState *state;
     u32 bank;

@@ -3,7 +3,7 @@
 #include "macros.h"
 #include "types.h"
 
-/* --- sub_0800DC50: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- EntitySpawnDriver: non-matching reference (asm slice provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "game.h"
 #include "iwram.h"
@@ -23,14 +23,14 @@ typedef struct EntityInitDesc {
 
 extern const EntityInitDesc sEntityInitTable[];
 
-extern void sub_0800A520(void);
-extern void sub_0800A2D8(void);
-extern void sub_080008DC(void);
-extern void sub_0800A328(void);
+extern void Game_UpdateSubsystems(void);
+extern void Game_RunEntityFrame(void);
+extern void WaitVblank(void);
+extern void Game_ForceRender(void);
 /* s16 (NOT u16) params -> register-offset ldrsh at the call site -> correct 304 B size */
-extern u32 sub_0800A458(s16 x, s16 y);
+extern u32 Scroll_StepTowardTile(s16 x, s16 y);
 
-void sub_0800DC50(void)
+void EntitySpawnDriver(void)
 {
     u8 flags;
     u32 origin;
@@ -42,10 +42,10 @@ void sub_0800DC50(void)
 
     while ((gGameStuff._unk00 - origin) < sEntityInitTable[gGameStuff.pendingMode].settleLimit &&
            gEntities[0].field_1A <= 3) {
-        sub_0800A520();
-        sub_0800A2D8();
-        sub_080008DC();
-        sub_0800A328();
+        Game_UpdateSubsystems();
+        Game_RunEntityFrame();
+        WaitVblank();
+        Game_ForceRender();
     }
 
     if (sEntityInitTable[gGameStuff.pendingMode].spawnCount == 0) {
@@ -61,7 +61,7 @@ void sub_0800DC50(void)
                 }
             } else {
                 const s16 *points = sEntityInitTable[gGameStuff.pendingMode].points + i * 2;
-                result = (u8)sub_0800A458(points[0], points[1]);
+                result = (u8)Scroll_StepTowardTile(points[0], points[1]);
                 if (result == 0xff) {
                     origin = gGameStuff._unk00;
                     flags |= SPAWN_FLAG_WAITING;
@@ -70,9 +70,9 @@ void sub_0800DC50(void)
                     flags |= SPAWN_FLAG_DONE;
                 }
             }
-            sub_0800A2D8();
-            sub_080008DC();
-            sub_0800A328();
+            Game_RunEntityFrame();
+            WaitVblank();
+            Game_ForceRender();
         }
     }
 }

@@ -1,6 +1,6 @@
 #include "sound.h"
 
-/* sub_0802E724 — per-channel silence/reset.
+/* SoundChannel_Reset — per-channel silence/reset.
  *
  * Counterpart to the volume/period/pan envelope setters in this cluster.
  * Stops a channel by clearing its dirty-flag bits, zeroing the per-channel
@@ -38,7 +38,7 @@ extern vu16 *const sChannelRegTable[4];
  *     the baserom uses — without the reinterpret, agbcc commutes to
  *     `adds r1, r0, r1`.
  */
-void sub_0802E724(s32 ch)
+void SoundChannel_Reset(s32 ch)
 {
     SoundSystem *ss;
 

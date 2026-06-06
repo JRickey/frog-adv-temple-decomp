@@ -25,7 +25,7 @@
  *     immediately after the r1=0 mov, dropping r2=0 between strb and
  *     the next stmt instead of before strb. */
 
-void sub_0800E600(u8 arg)
+void Scene08_MapScreenInit(u8 arg)
 {
     register vu16 *win asm("r2");
     u32 tableBase;

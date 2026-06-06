@@ -3,7 +3,7 @@
 
 /* sub_0802E7C4 — per-channel pan apply.
  *
- * Sister to sub_0802E724 (per-channel silence/reset). Same SoundSystem
+ * Sister to SoundChannel_Reset (per-channel silence/reset). Same SoundSystem
  * fields; the new ones here are:
  *   +0xBA (u8 panBits) — cached high byte of REG_SOUNDCNT_L (channel
  *                       L/R enable bitmap). Bit ch enables right (SO1),
@@ -25,7 +25,7 @@
  *     ch >= 4: write pan into swSlots[ch-4]+0x3c. If it changed, set
  *     slot.flags bit 0x80 (mixer reapplies on next tick).
  *
- * Companion sub_0802E874 (delta-pan, externally called from 0x08031148)
+ * Companion Sound_AdjustPan (delta-pan, externally called from 0x08031148)
  * shares the same pan-bit decode and slot dirtying paths.
  */
 
@@ -100,7 +100,7 @@ big_slot: {
 }
 }
 
-/* sub_0802E874 — delta-pan applicator. Externally called from 0x08031148.
+/* Sound_AdjustPan — delta-pan applicator. Externally called from 0x08031148.
  *
  * Takes a signed delta in the s8 range and applies it to channel `ch`:
  *   ch in 0..3 (small slot): decode current pan-bits {ch, ch+4} back to
@@ -116,7 +116,7 @@ big_slot: {
  * follows the baserom's register lifetimes.
  */
 
-void sub_0802E874(s8 delta, s32 ch)
+void Sound_AdjustPan(s8 delta, s32 ch)
 {
     SoundSystem *ss;
     s32 newPan;

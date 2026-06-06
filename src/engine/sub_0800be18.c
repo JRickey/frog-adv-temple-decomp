@@ -18,7 +18,7 @@ typedef struct CollisionSlot {
 } CollisionSlot;
 
 extern const EntityHitbox sEntityHitboxTable[];
-extern int sub_0800CB80(int xTile, int unused, int x, int y, int flags);
+extern int SpriteGrid_SetCellFlags(int xTile, int unused, int x, int y, int flags);
 
 /* Resets the first N collision slots of the per-entity array at `slots`
  * (8-byte records) and re-registers each as a collision point.
@@ -27,11 +27,11 @@ extern int sub_0800CB80(int xTile, int unused, int x, int y, int flags);
  * at +0). For each slot i: clears the u32 at +0 and the three bytes at
  * +4..+6, reads the (x, y) pair from sEntityHitboxTable[type].points[i],
  * loads the table entry's flag byte (+8), and calls
- *   sub_0800CB80(gIwram_35E0._field_18, 0, x, y, flags)
+ *   SpriteGrid_SetCellFlags(gIwram_35E0._field_18, 0, x, y, flags)
  * to register the point. `out` (arg1) is finally zeroed (two u32 writes).
  *
  * Matching note: old_agbcc must keep `type << 24` live in r9 across the
- * sub_0800CB80 call. The empty barrier prevents copy-prop from replacing it
+ * SpriteGrid_SetCellFlags call. The empty barrier prevents copy-prop from replacing it
  * with the sign-extended type index before the loop body.
  */
 
@@ -97,7 +97,7 @@ void sub_0800BE18(CollisionSlot *slotsArg, unsigned long long *outArg, s8 type)
         x = pt[0];
         y = pt[1];
         flag = *(u8 *)((u32)&tableBase->flags + offset);
-        sub_0800CB80(xTile, 0, x, y, flag);
+        SpriteGrid_SetCellFlags(xTile, 0, x, y, flag);
 
         pointIndex++;
         pointIndex <<= 24;
@@ -116,13 +116,13 @@ done:
     *outAddr = 0;
 }
 
-/* Twin of sub_0800B8A8 (item-pickup handler) without the SFX call: on
- * b == 23, looks up an entity slot via sub_0800A7A8(a, gIwram_35E0.tileX,
+/* Twin of Entity_ActivateHitSlot (item-pickup handler) without the SFX call: on
+ * b == 23, looks up an entity slot via EntityHitbox_FindPoint(a, gIwram_35E0.tileX,
  * gIwram_35E0.tileY) and, if the slot's flag byte at +4 is clear, claims
  * it (clear +5, set +4, copy gGameStuff._unk00 to +0) and OR's (1 << idx)
  * into the caller-supplied 64-bit mask. */
 
-extern s8 sub_0800A7A8(s8 a, s16 x, s16 y);
+extern s8 EntityHitbox_FindPoint(s8 a, s16 x, s16 y);
 
 struct EntryB8A8 {
     u32 _field_0;
@@ -139,7 +139,7 @@ void sub_0800BEBC(struct EntryB8A8 *arr, unsigned long long *mask, u8 a, u8 b)
     if (b != 23)
         return;
 
-    idx = sub_0800A7A8((s8)a, gIwram_35E0._field_8, gIwram_35E0._field_A);
+    idx = EntityHitbox_FindPoint((s8)a, gIwram_35E0._field_8, gIwram_35E0._field_A);
     if (idx == -1)
         return;
 

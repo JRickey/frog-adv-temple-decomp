@@ -18,9 +18,9 @@ extern u8 gIwram_3610;
 extern u8 gEntities[]; /* entity pool as a raw u8 byte-base (this TU uses byte offsets, not slots) */
 extern const struct ScaleAnimDescriptor sScaleAnimDescriptors2[];
 
-extern void sub_0801025C(u8 arg0, u8 arg1, u16 arg2, u16 arg3, u32 arg4, u32 arg5, u32 dst);
+extern void ScaleAnim_BlitFrameToVram(u8 arg0, u8 arg1, u16 arg2, u16 arg3, u32 arg4, u32 arg5, u32 dst);
 
-void sub_08013040(void)
+void ScaleAnim_TickFrames(void)
 {
     GameStuff *gs = &gGameStuff;
     u8 *base = gEntities;
@@ -99,16 +99,16 @@ void sub_08013040(void)
             framesBase = (const u8 *)descBase;
             framesBase += 16;
             frames = *(const u32 **)(offset + (u32)framesBase);
-            sub_0801025C(desc->field_06, desc->field_04, desc->field_00, desc->field_02, nibble, ({
-                             register u32 frameIndex asm("r5");
-                             register u32 frameOffset asm("r4");
+            ScaleAnim_BlitFrameToVram(desc->field_06, desc->field_04, desc->field_00, desc->field_02, nibble, ({
+                                          register u32 frameIndex asm("r5");
+                                          register u32 frameOffset asm("r4");
 
-                             frameIndex = (u32)counterRef;
-                             frameIndex = *(const u8 *)frameIndex;
-                             frameOffset = frameIndex << 2;
-                             *(const u32 *)((u32)frames + frameOffset);
-                         }),
-                         (dstScratch = dst, dstScratch));
+                                          frameIndex = (u32)counterRef;
+                                          frameIndex = *(const u8 *)frameIndex;
+                                          frameOffset = frameIndex << 2;
+                                          *(const u32 *)((u32)frames + frameOffset);
+                                      }),
+                                      (dstScratch = dst, dstScratch));
         }
         i = (u8)(i + 1);
     } while (i <= 7);

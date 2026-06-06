@@ -419,7 +419,7 @@
 @   0x0800e4b8: 0400        lsls	r0, r0, #16
 @   0x0800e4ba: 8100        strh	r0, [r0, #8]
 
-        thumb_func_start sub_0800E174
-sub_0800E174: @ 0x0800e174
+        thumb_func_start UpdateBgTilemapFrames
+UpdateBgTilemapFrames: @ 0x0800e174
         .incbin "frog_us_baserom.gba", 0xe174, 0x348
-        thumb_func_end sub_0800E174
+        thumb_func_end UpdateBgTilemapFrames

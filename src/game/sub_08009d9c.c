@@ -4,10 +4,10 @@
 #include "macros.h"
 #include "types.h"
 
-/* sub_08009D9C — per-tick entity-record advance. Called from sub_08000918
+/* Scene_InitScan — per-tick entity-record advance. Called from Scene08_Main
  * (the 14-case mode-state-machine). Drives a small state byte at [arg0]:
  *
- *   - First, calls sub_080004C4 to produce a value cached at
+ *   - First, calls Input_Poll to produce a value cached at
  *     0x03005398 (a "tick RNG" / per-frame seed).
  *   - If *(s8 *)arg0 == 0 (first-time init): load [gGameStuff], stash at
  *     +20 (snapshotted base?), set *arg0=1, bump gGameStuff[26] += 29,
@@ -15,16 +15,16 @@
  *   - Otherwise: r1=gUnk_03003720[0]; test 0x8000 bit of [r1+0x34]; if set,
  *     toggle to (val|2) & 0x7fff and bump *arg0.
  *   - Common tail:
- *     - bl sub_080059C4 with r7 as arg (frame setup / palette refresh)
+ *     - bl Entity_Update with r7 as arg (frame setup / palette refresh)
  *     - bl _call_via_r0 with ROM table 0x080c0cb8 indexed by
  *       gGameStuff[10]<<2 (state-keyed handler dispatch)
  *     - bl _call_via_r0 with ROM table 0x080c0d40 same index
- *     - bl sub_08009A58 (hit-test loop) + sub_08009188 (entity advance)
- *       + sub_080008DC (VBlank wait)
+ *     - bl Entity_UpdateVisibility (hit-test loop) + Entity_Advance (entity advance)
+ *       + WaitVblank (VBlank wait)
  *     - clear bit 0xfffe of [REG_IE] (top bit clear)
- *     - bl sub_0800FCC8 with arg0 = ROM byte-table 0x080c0d84[gGameStuff[10]]
- *     - bl sub_08005FC8 (?)
- *     - DMA-style call sub_0802D558 with src=0x030054a0, dst=0x07000000,
+ *     - bl Scroll_RunSubtypeTicks with arg0 = ROM byte-table 0x080c0d84[gGameStuff[10]]
+ *     - bl Game_CommitRender (?)
+ *     - DMA-style call BiosSwiTable with src=0x030054a0, dst=0x07000000,
  *       count=0x100 (probably sprite OAM copy)
  *     - manually copy 6 halfwords from 0x03003550[0..5] to REG_DISPSTAT+0xc
  *       and 5 successive halfwords (BG0/BG1 affine? bg-scroll DMA write)
@@ -39,27 +39,27 @@
  * loads, ROM-table indirection through _call_via_r0, and a control-flow
  * shape (two early exit paths, fallthroughs into a shared tail) that is
  * the same general pattern as the sibling fifth-class cluster
- * (sub_08009984/A58/BA0/C14 — all NAKED+NON_MATCHING). Recovering this
+ * (Player_CheckTileEvents/A58/BA0/C14 — all NAKED+NON_MATCHING). Recovering this
  * shape from pure C is out of scope for this pass; the NAKED body lands
  * byte-identical and the NON_MATCHING reference documents intent for the
  * phase-3 PC port.
  */
 
-extern u16 sub_080004C4(void);
-extern void sub_080059C4(void *a);
-extern void sub_08009A58(void);
-extern void sub_08009188(void);
-extern void sub_080008DC(void);
-extern void sub_0800FCC8(u32 a);
-extern void sub_08005FC8(void);
-extern void sub_0802D558(void *dst, void *src, u32 count);
+extern u16 Input_Poll(void);
+extern void Entity_Update(void *a);
+extern void Entity_UpdateVisibility(void);
+extern void Entity_Advance(void);
+extern void WaitVblank(void);
+extern void Scroll_RunSubtypeTicks(u32 a);
+extern void Game_CommitRender(void);
+extern void BiosSwiTable(void *dst, void *src, u32 count);
 
-NAKED u32 sub_08009D9C(u8 *arg)
+NAKED u32 Scene_InitScan(u8 *arg)
 {
     asm(".syntax unified\n"
         "    push    {r4, r5, r6, r7, lr}\n"
         "    adds    r6, r0, #0\n"
-        "    bl      sub_080004C4\n"
+        "    bl      Input_Poll\n"
         "    ldr     r1, _sub_08009D9C_pool_5398_a\n"
         "    strh    r0, [r1, #0]\n"
         "    ldrb    r3, [r6, #0]\n"
@@ -104,7 +104,7 @@ NAKED u32 sub_08009D9C(u8 *arg)
         "    strb    r0, [r6, #0]\n"
         "2:\n"
         "    adds    r0, r7, #0\n"
-        "    bl      sub_080059C4\n"
+        "    bl      Entity_Update\n"
         "    ldr     r1, _sub_08009D9C_pool_c0cb8\n"
         "    ldr     r4, _sub_08009D9C_pool_5330_b\n"
         "    ldrb    r2, [r4, #10]\n"
@@ -118,9 +118,9 @@ NAKED u32 sub_08009D9C(u8 *arg)
         "    adds    r0, r0, r1\n"
         "    ldr     r0, [r0, #0]\n"
         "    bl      _call_via_r0\n"
-        "    bl      sub_08009A58\n"
-        "    bl      sub_08009188\n"
-        "    bl      sub_080008DC\n"
+        "    bl      Entity_UpdateVisibility\n"
+        "    bl      Entity_Advance\n"
+        "    bl      WaitVblank\n"
         "    ldr     r5, _sub_08009D9C_pool_ie\n"
         "    ldrh    r1, [r5, #0]\n"
         "    ldr     r0, _sub_08009D9C_pool_fffe\n"
@@ -130,14 +130,14 @@ NAKED u32 sub_08009D9C(u8 *arg)
         "    ldrb    r4, [r4, #10]\n"
         "    adds    r0, r4, r0\n"
         "    ldrb    r0, [r0, #0]\n"
-        "    bl      sub_0800FCC8\n"
-        "    bl      sub_08005FC8\n"
+        "    bl      Scroll_RunSubtypeTicks\n"
+        "    bl      Game_CommitRender\n"
         "    ldr     r0, _sub_08009D9C_pool_54a0\n"
         "    movs    r1, #224\n"
         "    lsls    r1, r1, #19\n"
         "    movs    r2, #128\n"
         "    lsls    r2, r2, #1\n"
-        "    bl      sub_0802D558\n"
+        "    bl      BiosSwiTable\n"
         "    ldr     r1, _sub_08009D9C_pool_400010\n"
         "    ldr     r2, _sub_08009D9C_pool_3550\n"
         "    ldrh    r0, [r2, #0]\n"
@@ -227,11 +227,11 @@ NAKED u32 sub_08009D9C(u8 *arg)
  * The function still does NOT match in pure C — too many simultaneous
  * register-coloring choices. NAKED below is the source-of-truth.
  */
-u32 sub_08009D9C(u8 *arg)
+u32 Scene_InitScan(u8 *arg)
 {
     u8 *r7;
 
-    *(u16 *)0x03005398 = sub_080004C4();
+    *(u16 *)0x03005398 = Input_Poll();
 
     if (*(s8 *)arg == 0) {
         /* First-time init */
@@ -250,17 +250,17 @@ u32 sub_08009D9C(u8 *arg)
         }
     }
 
-    sub_080059C4(r7);
+    Entity_Update(r7);
     (*(void (**)(void))(0x080c0cb8 + (*(u8 *)(0x03005330 + 10) << 2)))();
     (*(void (**)(void))(0x080c0d40 + (*(u8 *)(0x03005330 + 10) << 2)))();
-    sub_08009A58();
-    sub_08009188();
-    sub_080008DC();
+    Entity_UpdateVisibility();
+    Entity_Advance();
+    WaitVblank();
 
     *(vu16 *)0x04000200 &= 0xfffe;
-    sub_0800FCC8(*(u8 *)(0x080c0d84 + *(u8 *)(0x03005330 + 10)));
-    sub_08005FC8();
-    sub_0802D558((void *)0x07000000, (void *)0x030054a0, 0x100);
+    Scroll_RunSubtypeTicks(*(u8 *)(0x080c0d84 + *(u8 *)(0x03005330 + 10)));
+    Game_CommitRender();
+    BiosSwiTable((void *)0x07000000, (void *)0x030054a0, 0x100);
 
     /* Manually copy 6 halfwords to MMIO at 0x04000010 (BG0 scroll regs) */
     {
@@ -290,7 +290,7 @@ u32 sub_08009D9C(u8 *arg)
 }
 #endif
 
-/* sub_08009EEC — per-tick mode-state advance (sibling of sub_08009D9C).
+/* Entity_UpdateFrame — per-tick mode-state advance (sibling of Scene_InitScan).
  *
  * Drives a small state byte at *arg. First refreshes the per-frame seed at
  * gIwram_5398, then either runs a one-time init (when *arg == 0) or a
@@ -307,7 +307,7 @@ u32 sub_08009D9C(u8 *arg)
  *     else-branch `+1`) and the signed `== 0` test stay separate loads.
  *   - The handler dispatch reads gGameStuff through the linker-assigned
  *     gIwram_5330 symbol with an explicit `(idx << 2) + table` so agbcc
- *     emits the baserom's pendingMode chain (same idiom as sub_0800A2D8).
+ *     emits the baserom's pendingMode chain (same idiom as Game_RunEntityFrame).
  *   - The else-branch flag rewrite is staged through an r0-pinned temp
  *     (`t = 2; t |= flags; t &= 0x7fff;`) so the mask result lands in r0
  *     and `& 0x7fff` loads the pooled constant instead of a shift pair.
@@ -315,7 +315,7 @@ u32 sub_08009D9C(u8 *arg)
  *     label so agbcc places it after the return-1 path (baserom layout).
  *
  * Built with -fforce-addr -fno-expensive-optimizations -fno-gcse (the same
- * state-byte-dispatcher flag combo as mode_15 / sub_080019B4).
+ * state-byte-dispatcher flag combo as mode_15 / Scene12_Main).
  */
 
 typedef void (*EntityProc)(void);
@@ -324,13 +324,13 @@ extern const EntityProc sEntityProcB[17];
 extern const EntityProc sEntityProcD[17];
 extern const u8 sEntitySubtypeLut[20];
 
-extern void sub_0800F24C(u8 arg);
-extern void sub_0801D048(u8 value);
-extern void sub_0801D094(void);
+extern void Scroll_UpdateCamera(u8 arg);
+extern void LevelCleared_ShowKindLabel(u8 value);
+extern void LevelCleared_ShowExtLabel(void);
 extern u8 gIwram_5330;
 extern u16 gIwram_5398;
 
-u32 sub_08009EEC(u8 *arg, u8 kind)
+u32 Entity_UpdateFrame(u8 *arg, u8 kind)
 {
     struct Entity *e3720;
     GameStuff *initGs;
@@ -348,14 +348,14 @@ u32 sub_08009EEC(u8 *arg, u8 kind)
     register vu16 *dst asm("r1");
     u16 *src;
 
-    gIwram_5398 = sub_080004C4();
+    gIwram_5398 = Input_Poll();
     stateByte = arg[0];
 
     if (*(s8 *)arg == 0) {
         initGs = (GameStuff *)&gIwram_5330;
         initGs->_unk14 = initGs->_unk00;
         *arg = 1;
-        sub_0801D048(kind);
+        LevelCleared_ShowKindLabel(kind);
         e3720init = gEntities;
         e3720init->field_1A += 29;
         e3720init->status |= 2;
@@ -374,7 +374,7 @@ u32 sub_08009EEC(u8 *arg, u8 kind)
     }
 
     e3720 = gEntities;
-    sub_080059C4(gEntities);
+    Entity_Update(gEntities);
 
     procs = sEntityProcB;
 
@@ -390,16 +390,16 @@ u32 sub_08009EEC(u8 *arg, u8 kind)
 
     lut = sEntitySubtypeLut;
     idx = gs->pendingMode;
-    sub_0800F24C(*(const u8 *)(idx + (u32)lut));
+    Scroll_UpdateCamera(*(const u8 *)(idx + (u32)lut));
 
-    sub_08009A58();
-    sub_08009188();
-    sub_080008DC();
+    Entity_UpdateVisibility();
+    Entity_Advance();
+    WaitVblank();
 
     REG_IE &= ~IRQ_VBLANK;
-    sub_0800FCC8(*(const u8 *)(gs->pendingMode + (u32)lut));
-    sub_08005FC8();
-    sub_0802D558((void *)0x030054a0, (void *)0x07000000, 0x100);
+    Scroll_RunSubtypeTicks(*(const u8 *)(gs->pendingMode + (u32)lut));
+    Game_CommitRender();
+    BiosSwiTable((void *)0x030054a0, (void *)0x07000000, 0x100);
 
     dst = (vu16 *)0x04000010;
     src = (u16 *)0x03003550;
@@ -428,7 +428,7 @@ check3720:
         gIwram_35E0._field_12 = gIwram_5398;
     }
 
-    sub_0801D094();
+    LevelCleared_ShowExtLabel();
     return 1;
 
 ret0:

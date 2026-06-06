@@ -8,7 +8,7 @@ extern const u16 sScreenTilemap_188EDC[1024];
  * 28 (0x0600E000). DMA_ENABLE | 0x400 = 1024 halfword transfers = one full
  * 32x32 screenblock. The read-back of cnt forces the store to retire before
  * returning. */
-void sub_08012B38(void)
+void LoadScreenTilemap_188EDC(void)
 {
     REG_DMA3.src = sScreenTilemap_188EDC;
     REG_DMA3.dst = (void *)0x0600E000;
@@ -19,8 +19,8 @@ void sub_08012B38(void)
 /* Resets the scene-scroll state block at 0x030060A0: clears the two offset
  * fields (0x0C, 0x2C) and seeds the two step fields (0x10, 0x30) to 8, then
  * clears the BG2-active sentinel byte at 0x03003610 (the same byte
- * sub_08013908 clears on teardown). */
-void sub_08012B5C(void)
+ * AnimTile_ResetAndClearBg clears on teardown). */
+void ScrollState_Reset(void)
 {
     u8 *state = (u8 *)0x030060A0;
 
@@ -31,17 +31,17 @@ void sub_08012B5C(void)
     *(u8 *)0x03003610 = 0;
 }
 
-extern void sub_0800E85C(u8 arg);
-extern void sub_0800EB1C(void);
-extern void sub_0800F24C(u8 arg);
-extern void sub_0800EBDC(u8 arg);
-extern void sub_08016A40(void);
+extern void CharLayers_Upload(u8 arg);
+extern void FrogOam_Init(void);
+extern void Scroll_UpdateCamera(u8 arg);
+extern void BgScrollBlit(u8 arg);
+extern void StatusBar_Update(void);
 
-void sub_08012B78(void)
+void Scene_Init2Layer(void)
 {
     u8 *state;
 
-    sub_0800E85C(2);
+    CharLayers_Upload(2);
 
     state = (u8 *)0x030060A0;
     *(u32 *)(state + 12) = 0;
@@ -50,8 +50,8 @@ void sub_08012B78(void)
     *(u32 *)(state + 48) = 8;
     *(u8 *)0x03003610 = 0;
 
-    sub_0800EB1C();
-    sub_0800F24C(2);
-    sub_0800EBDC(2);
-    sub_08016A40();
+    FrogOam_Init();
+    Scroll_UpdateCamera(2);
+    BgScrollBlit(2);
+    StatusBar_Update();
 }

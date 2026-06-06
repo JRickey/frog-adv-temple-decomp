@@ -2,17 +2,17 @@
 #include "types.h"
 #include "game.h"
 
-extern void sub_0800EE34(u8 layer);
+extern void BgLayer_Disable(u8 layer);
 
-/* Clears the byte at IWRAM 0x03003610, then turns off BG2 via sub_0800EE34. */
+/* Clears the byte at IWRAM 0x03003610, then turns off BG2 via BgLayer_Disable. */
 
-void sub_08013908(void)
+void AnimTile_ResetAndClearBg(void)
 {
     *(u8 *)0x03003610 = 0;
-    sub_0800EE34(2);
+    BgLayer_Disable(2);
 }
 
-void sub_08013920(u16 *arr, u8 thresh, u32 *out, u8 n)
+void Array_ThrottledRotate(u16 *arr, u8 thresh, u32 *out, u8 n)
 {
     GameStuff *gs;
     GameStuff *gsBase;

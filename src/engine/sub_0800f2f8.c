@@ -12,7 +12,7 @@ struct SceneScrollState_F2F8 {
     u8 _pad1c[4];
 };
 
-void sub_0800F2F8(u8 direction, u8 channel)
+void SaveBgScrollOffset(u8 direction, u8 channel)
 {
     u8 ch = channel;
 

@@ -9,16 +9,16 @@
  * Reads gGameStuff.pendingMode (the byte at offset 10 — used as a
  * global entity-type / pose index that also keys the
  * sEntityProc{A..E} / sEntitySubtypeLut tables in
- * src/data/entity_dispatch.c). Calls sub_0800A520 once, then
+ * src/data/entity_dispatch.c). Calls Game_UpdateSubsystems once, then
  * dispatches through sEntityProcB, sEntitySubtypeLut, sEntityProcD
- * by pendingMode, and finishes with sub_08009A58 + sub_08009188.
+ * by pendingMode, and finishes with Entity_UpdateVisibility + Entity_Advance.
  *
  * The two `sEntityProcB[id]()` / `sEntityProcD[id]()` indirect calls
  * go through libgcc's _call_via_r0 helper from libgcc.a:_call_via_rX.o;
  * agbcc lowers a Thumb function-pointer call to that helper rather than
  * emitting `bx r0` inline.
  *
- * Uses the same explicit table-offset idiom as sub_0800A26C: load the
+ * Uses the same explicit table-offset idiom as Entity_DispatchBC: load the
  * gGameStuff base through the linker-assigned IWRAM symbol, keep the
  * table base separate from the index, then call the loaded function
  * pointer. That gives agbcc the baserom's r2/r1/r4 pendingMode chain
@@ -31,25 +31,25 @@ extern const GameProc sEntityProcB[17];
 extern const GameProc sEntityProcD[17];
 extern const u8 sEntitySubtypeLut[20];
 
-extern void sub_0800A520(void);
-extern void sub_0800F24C(u8 arg);
-extern void sub_08009A58(void);
-extern void sub_08009188(void);
+extern void Game_UpdateSubsystems(void);
+extern void Scroll_UpdateCamera(u8 arg);
+extern void Entity_UpdateVisibility(void);
+extern void Entity_Advance(void);
 
-extern void sub_0800FCC8(u8 arg);
-extern void sub_08005FC8(void);
-/* sub_0802D558 is a thin wrapper around BIOS SWI 12 (CpuFastSet) — see init.c. */
-extern void sub_0802D558(void *src, void *dst, u32 mode);
+extern void Scroll_RunSubtypeTicks(u8 arg);
+extern void Game_CommitRender(void);
+/* BiosSwiTable is a thin wrapper around BIOS SWI 12 (CpuFastSet) — see init.c. */
+extern void BiosSwiTable(void *src, void *dst, u32 mode);
 extern u8 gIwram_5330;
 
-void sub_0800A2D8(void)
+void Game_RunEntityFrame(void)
 {
     const GameProc *procs;
     GameStuff *base;
     u8 idx;
     u32 offset;
 
-    sub_0800A520();
+    Game_UpdateSubsystems();
 
     procs = sEntityProcB;
     base = (GameStuff *)&gIwram_5330;
@@ -63,7 +63,7 @@ void sub_0800A2D8(void)
 
         lut = sEntitySubtypeLut;
         subtype = base->pendingMode;
-        sub_0800F24C(*(const u8 *)(subtype + (u32)lut));
+        Scroll_UpdateCamera(*(const u8 *)(subtype + (u32)lut));
     }
 
     procs = sEntityProcD;
@@ -71,15 +71,15 @@ void sub_0800A2D8(void)
     offset = ((u32)idx << 2) + (u32)procs;
     ((GameProc)(*(const u32 *)offset))();
 
-    sub_08009A58();
-    sub_08009188();
+    Entity_UpdateVisibility();
+    Entity_Advance();
 }
 
 /* Synchronous "force-render-now" tail: temporarily masks the VBlank IRQ,
- * runs subsystem ticks (sub_0800FCC8 with the per-entity subtype byte +
- * sub_08005FC8), then commits the deferred VRAM state itself — the same
+ * runs subsystem ticks (Scroll_RunSubtypeTicks with the per-entity subtype byte +
+ * Game_CommitRender), then commits the deferred VRAM state itself — the same
  * CpuFastSet(0x030054a0 → OAM, 0x100) + 6 halfword BG scroll write that
- * the VBlank handler (sub_08000790) does, but here it runs from the
+ * the VBlank handler (VBlankIntr) does, but here it runs from the
  * caller's context so the scene is up-to-date before whatever happens
  * next. Re-enables VBlank on the way out.
  *
@@ -95,7 +95,7 @@ void sub_0800A2D8(void)
  *   - `idx + (u32)lut` (index first, integer-space add) gives the
  *     `r1, r0` operand order; `lut[idx]` folds the pointer to the front
  *     and yields `adds r0, r0, r1` instead. */
-void sub_0800A328(void)
+void Game_ForceRender(void)
 {
     const u8 *lut;
     u32 idx;
@@ -105,9 +105,9 @@ void sub_0800A328(void)
     REG_IE &= ~IRQ_VBLANK;
     lut = sEntitySubtypeLut;
     idx = ((GameStuff *)&gIwram_5330)->pendingMode;
-    sub_0800FCC8(*(const u8 *)(idx + (u32)lut));
-    sub_08005FC8();
-    sub_0802D558((void *)0x030054a0, (void *)0x07000000, 0x100);
+    Scroll_RunSubtypeTicks(*(const u8 *)(idx + (u32)lut));
+    Game_CommitRender();
+    BiosSwiTable((void *)0x030054a0, (void *)0x07000000, 0x100);
     dst = (vu16 *)0x04000010;
     src = (u16 *)0x03003550;
     *dst++ = src[0];
@@ -139,7 +139,7 @@ typedef struct {
     u32 word1;
 } CmpPair;
 
-int sub_0800A3A4(const CmpPair *a, const CmpPair *b)
+int CmpPair_Compare(const CmpPair *a, const CmpPair *b)
 {
     CmpPair aa = *a;
     CmpPair bb = *b;
@@ -178,7 +178,7 @@ int sub_0800A3A4(const CmpPair *a, const CmpPair *b)
  *     matching baserom's `ldr r0; lsls r2; ldrh r4` order. Inlining the
  *     field read instead emits the cs shift first.
  */
-u8 sub_0800A3D0(u16 dir, s16 coord)
+u8 Scroll_CheckTileStep(u16 dir, s16 coord)
 {
     u16 field;
     int cs;
@@ -227,7 +227,7 @@ u8 sub_0800A3D0(u16 dir, s16 coord)
     return 1;
 }
 
-u32 sub_0800A458(u16 x, u16 y)
+u32 Scroll_StepTowardTile(u16 x, u16 y)
 {
     u32 xShift;
     u32 yShift;
@@ -269,7 +269,7 @@ u32 sub_0800A458(u16 x, u16 y)
 
     dir = 1;
 check_x_or_y_low:
-    switch (sub_0800A3D0(dir, coord)) {
+    switch (Scroll_CheckTileStep(dir, coord)) {
     case 1:
         goto return_ff;
     }
@@ -280,7 +280,7 @@ y_ge:
     if (coord <= field)
         return field;
 
-    result = sub_0800A3D0(2, coord);
+    result = Scroll_CheckTileStep(2, coord);
     if (result != 1)
         goto return_zero_after;
 return_ff:

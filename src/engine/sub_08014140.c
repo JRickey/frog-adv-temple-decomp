@@ -1,7 +1,7 @@
 #include "macros.h"
 #include "types.h"
 
-/* --- sub_08014140: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- AnimState_BlitStep: non-matching reference (asm slice provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "game.h"
 #include "macros.h"
@@ -46,7 +46,7 @@ struct BgFlag_14140 {
 
 #define gBgFlag_14140 (*(struct BgFlag_14140 *)0x03003610)
 
-u8 sub_08014140(struct AnimState *p0, u8 step)
+u8 AnimState_BlitStep(struct AnimState *p0, u8 step)
 {
     register struct AnimState *p asm("r4") = p0;
     register u32 counter asm("r2");

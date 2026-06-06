@@ -10,7 +10,7 @@ typedef struct SoundInlineAcc1View {
     SoundInlineAcc1ElementView inlineAcc1[SOUND_INLINE_CHANNEL_COUNT];
 } SoundInlineAcc1View;
 
-/* sub_0803079C — stream opcode handler. Programs a channel's acc1 "step"
+/* SoundOp_SetPitchRel — stream opcode handler. Programs a channel's acc1 "step"
  * from a 16-bit operand relative to the channel's current acc0, then flags
  * the channel's envelope dirty (SOUND_FLAG_ENV_DIRTY).
  *
@@ -24,7 +24,7 @@ typedef struct SoundInlineAcc1View {
  * consumes a 4-byte command and advances *state_ptr past it. The acc0/acc1
  * pair sits at offsets +0/+2 of both the 36-byte inline channel and the
  * 64-byte sw slot, so both branches reach them as raw u16 stores. */
-s32 sub_0803079C(s32 channel, u32 *state_ptr)
+s32 SoundOp_SetPitchRel(s32 channel, u32 *state_ptr)
 {
     u8 *stream;
 
@@ -50,7 +50,7 @@ s32 sub_0803079C(s32 channel, u32 *state_ptr)
     return 1;
 }
 
-s32 sub_0803080C(s32 channel, u32 *state_ptrArg)
+s32 SoundOp_SetAcc1(s32 channel, u32 *state_ptrArg)
 {
     u32 *state_ptr;
     u8 *stream;

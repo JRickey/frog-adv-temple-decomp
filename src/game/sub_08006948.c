@@ -5,30 +5,30 @@
  * input-flags / "keysJust" field, same offset that mode_15's NAKED case-3
  * code reads as `[r1, #0x2e]`. Both functions were peeled together as one
  * 36-byte slice; the second has no own thumb_func_start in baserom and is
- * given the name sub_08006958 here.
+ * given the name EntityRec_TestKeyFlags here.
  *
  * This whole TU is built with OLD_AGBCC_BIN (see the Makefile per-TU override):
  * baserom's codegen for this cluster is the older agbcc. The leaf epilogue is
  * the tell — old_agbcc emits a bare `bx lr` with no frame, while newer agbcc
  * wraps a branch-structured multi-return in `push {lr}` / `pop {r1}; bx r1`.
  *
- * sub_08006948: old_agbcc keeps the redundant `adds r1, r2, #0` move that
+ * EntityRec_ClearKeyFlags: old_agbcc keeps the redundant `adds r1, r2, #0` move that
  * recolours the BIC result into r1 before `strh r1` (newer agbcc coalesces it
  * away to the 2-byte-shorter `strh r2`).
  *
- * sub_08006958: written `mask & field` (not `field & mask`) so the AND lands
+ * EntityRec_TestKeyFlags: written `mask & field` (not `field & mask`) so the AND lands
  * `and r1, r1, r0` — dest r1, leaving r0 free for the `mov r0, #{0,1}` tail —
  * with the nonzero test first (`if (m & f) return 1; return 0;`) so the branch
  * is `bne` to the return-1 case.
  *
- * sub_0800696C: see the comment on the function itself for its matching shape. */
+ * ModeControl_SetBit: see the comment on the function itself for its matching shape. */
 
-void sub_08006948(u8 *rec, u16 mask)
+void EntityRec_ClearKeyFlags(u8 *rec, u16 mask)
 {
     *(u16 *)(rec + 0x2e) &= ~mask;
 }
 
-u8 sub_08006958(u8 *rec, u8 mask)
+u8 EntityRec_TestKeyFlags(u8 *rec, u8 mask)
 {
     if (mask & *(u16 *)(rec + 0x2e))
         return 1;
@@ -57,7 +57,7 @@ u8 sub_08006958(u8 *rec, u8 mask)
  *     pool literal — which is what makes agbcc emit two independent blocks;
  *   - The explicit r2 pin keeps the base in the slot `bits`
  *     vacates) so the shift result colours into r3:r4, matching baserom. */
-void sub_0800696C(void *unused, s32 bits)
+void ModeControl_SetBit(void *unused, s32 bits)
 {
     unsigned long long mask;
     register unsigned long long *bank asm("r2");
@@ -77,8 +77,8 @@ void sub_0800696C(void *unused, s32 bits)
 
 /* Clears bit `bits` in the 128-bit flag bank at 0x03006110+20..0x03006110+35.
  *
- * Mirror of sub_0800696C (which sets a bit); this function clears one. */
-void sub_080069BC(void *unused, s32 bits)
+ * Mirror of ModeControl_SetBit (which sets a bit); this function clears one. */
+void EventFlags_ClearBit(void *unused, s32 bits)
 {
     unsigned long long mask;
     unsigned long long nmask;

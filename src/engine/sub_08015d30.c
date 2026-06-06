@@ -1,6 +1,6 @@
 #include "types.h"
 
-void sub_08015D30(void)
+void GateRoom_InitScrollParams(void)
 {
     u8 *a = (u8 *)0x03006540;
     register u32 zero asm("r3") = 0;

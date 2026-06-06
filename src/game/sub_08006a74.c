@@ -1,7 +1,7 @@
 #include "macros.h"
 #include "types.h"
 
-void sub_08016A40(void);
+void StatusBar_Update(void);
 
 struct StructA74 {
     u8 _field_00;
@@ -20,14 +20,14 @@ struct StructA74 {
 
 /* Initializes the struct at *p from four args plus one stacked byte arg,
  * zeroing the +12/+13 byte fields and the +16/+18 halfwords and +20 word,
- * then calls sub_08016A40() between writing +4 and +5.
+ * then calls StatusBar_Update() between writing +4 and +5.
  */
-void sub_08006A74(struct StructA74 *p, u8 a, u16 b, u8 c, u8 e)
+void PlayerState_Init(struct StructA74 *p, u8 a, u16 b, u8 c, u8 e)
 {
     p->_field_00 = a;
     p->_field_02 = b;
     p->_field_04 = c;
-    sub_08016A40();
+    StatusBar_Update();
     p->_field_05 = (u8)e;
     p->_field_0D = 0;
     p->_field_0C = 0;
@@ -36,13 +36,13 @@ void sub_08006A74(struct StructA74 *p, u8 a, u16 b, u8 c, u8 e)
     p->_field_12 = 0;
 }
 
-void sub_08006AAC(u8 *p, u8 v)
+void PlayerState_SetByte(u8 *p, u8 v)
 {
     *p = v;
-    sub_08016A40();
+    StatusBar_Update();
 }
 
-u32 sub_08006AB8(u8 *p)
+u32 PlayerState_IncrByteMax10(u8 *p)
 {
     u32 v;
 
@@ -52,6 +52,6 @@ u32 sub_08006AB8(u8 *p)
         *p = 10;
         return 0;
     }
-    sub_08016A40();
+    StatusBar_Update();
     return 1;
 }

@@ -1,15 +1,15 @@
 #include "iwram.h"
 #include "types.h"
 
-/* --- sub_0802A8FC: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- Entity10_UpdateStatus: non-matching reference (asm slice provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "iwram.h"
 #include "types.h"
 
-extern void sub_08020C78(u32 sound);
-extern void sub_08005D10(s32 first, s32 last);
+extern void Sound_Play(u32 sound);
+extern void Entity_AdvanceAnimFrames(s32 first, s32 last);
 
-void sub_0802A8FC(void)
+void Entity10_UpdateStatus(void)
 {
     u8 *base;
     u32 off;
@@ -21,7 +21,7 @@ void sub_0802A8FC(void)
         if (base[off] == 2 || base[off] == 6 || base[off] == 10) {
             u16 *s = (u16 *)(base + 0x264);
             if (*s & 0x200) {
-                sub_08020C78(43);
+                Sound_Play(43);
                 *s &= 0xfdff;
             }
         } else {
@@ -62,6 +62,6 @@ void sub_0802A8FC(void)
         }
     }
 
-    sub_08005D10(10, 11);
+    Entity_AdvanceAnimFrames(10, 11);
 }
 #endif /* NON_MATCHING */

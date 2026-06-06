@@ -2,13 +2,13 @@
 #include "macros.h"
 #include "types.h"
 
-extern u8 sub_0800FE88(void);
-extern void sub_0800EE94(u8 layer);
-extern void sub_08016A40(void);
-extern void sub_08006948(u8 *rec, u16 mask);
+extern u8 Credits_RenderStep(void);
+extern void BgLayer_Enable(u8 layer);
+extern void StatusBar_Update(void);
+extern void EntityRec_ClearKeyFlags(u8 *rec, u16 mask);
 
 /* Title/scene tick: advance the room-state delay at 0x03006440, optionally
- * step its pose via sub_0800FE88, and on a transition signal tear down the
+ * step its pose via Credits_RenderStep, and on a transition signal tear down the
  * window/blend setup and DMA-clear OBJ-VRAM at 0x0600FB80.
  *
  * Returns 1 when the tick is in-progress / steady-state, 0 when the
@@ -20,14 +20,14 @@ extern void sub_08006948(u8 *rec, u16 mask);
  *     re-materializing zero.
  *   - The empty barrier after the BL keeps agbcc
  *     from re-emitting `movs r4, #0` — it relies on r4 being callee-saved
- *     across sub_0800EE94.
+ *     across BgLayer_Enable.
  *   - Extended-pool layout: the function's 10 pool literals don't all fit
  *     in 4-byte halfword load range, so the trailing 7 spill into the
  *     compiled .o past the natural function-end-at-bx-r1 epilogue. Total
  *     compiled size is 0xC0 (192 B), not 0xA4 (164 B). The linker.ld
  *     slot is sized accordingly. */
 
-u8 sub_0800FD50(void)
+u8 Scene08_MapScreenTick(void)
 {
     u8 *state;
     u8 ret;
@@ -43,7 +43,7 @@ u8 sub_0800FD50(void)
         state[11] = 8;
     }
     if (gGameStuff._unk00 - *(u32 *)(state + 4) >= state[11]) {
-        pose = sub_0800FE88();
+        pose = Credits_RenderStep();
         *(u32 *)(state + 4) = gGameStuff._unk00;
     }
     if (gGameStuff._unk00 - *(u32 *)(state + 4) > 255 || *(u16 *)0x03005398 == 32 || pose == 254) {
@@ -60,7 +60,7 @@ u8 sub_0800FD50(void)
         winh = (vu16 *)((u8 *)winh + 2);
         *winh = z;
 
-        sub_0800EE94(3);
+        BgLayer_Enable(3);
 
         asm volatile("" : "+r"(z));
         zero_buf = z;
@@ -70,15 +70,15 @@ u8 sub_0800FD50(void)
         dma[2] = 0x810000C0;
         (void)dma[2];
 
-        sub_08016A40();
+        StatusBar_Update();
         ret = 0;
-        sub_08006948((u8 *)0x03006110, 2);
+        EntityRec_ClearKeyFlags((u8 *)0x03006110, 2);
     }
     return ret;
 }
-extern void sub_08019AEC(s16 arg);
+extern void Room_StreamOamAttribs(s16 arg);
 
-void sub_0800FE10(void)
+void Credits_WriteRow(void)
 {
     u8 *state;
     u16 x;
@@ -125,5 +125,5 @@ void sub_0800FE10(void)
     *(u16 *)(state + 50) = t;
 
     state[8]++;
-    sub_08019AEC(*(s16 *)(state + 44));
+    Room_StreamOamAttribs(*(s16 *)(state + 44));
 }

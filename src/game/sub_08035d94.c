@@ -10,12 +10,12 @@
  * The NON_MATCHING block documents intent for the phase-3 PC port. */
 
 #ifdef NON_MATCHING
-void sub_08035D94(void)
+void SoundIrqEnable(void)
 {
     /* Delegates to the ARM-mode sound-IRQ enable routine at 0x08032e1c. */
 }
 #else
-NAKED void sub_08035D94(void)
+NAKED void SoundIrqEnable(void)
 {
     /* bx pc switches to ARM mode; .4byte encodes the ARM b 0x08032e1c directly
      * because the ARM branch offset is position-dependent (anchored at 0x08035d98). */

@@ -9,13 +9,13 @@
 /* Streams a fixed set of frog/sprite tile and palette blocks to VRAM and OBJ
  * palette RAM via DMA3. The character body tiles come from the 0x080C1254 ROM
  * table (24-byte stride) indexed by gIwram_34B0._data — same table/idx as the
- * sibling sub_0801D4CC. Each transfer reads back REG_DMA3.cnt to flush the
+ * sibling Credits_InitScrollPage1. Each transfer reads back REG_DMA3.cnt to flush the
  * write before the next channel setup.
  *
  * Matching: an input barrier on tableBase makes 0x080C1254 load first as an
  * opaque value, so the +4 stays a runtime `adds` on the base register instead
- * of folding into the load offset (mirrors the sibling sub_0801D4CC). */
-void sub_0801D268(void)
+ * of folding into the load offset (mirrors the sibling Credits_InitScrollPage1). */
+void Credits_LoadBgGfx(void)
 {
     u32 tableBase;
     const u32 *const *entry;

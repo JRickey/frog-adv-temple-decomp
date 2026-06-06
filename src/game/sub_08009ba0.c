@@ -5,9 +5,9 @@
 
 extern const u16 sModeLookupTable_2F9CF4[10];
 
-extern void sub_08020C78(u32 a);
+extern void Sound_Play(u32 a);
 
-u8 sub_08009BA0(void)
+u8 Player_CheckSpecialTileMatch(void)
 {
     struct IwramAt35E0 *player;
     s16 *xtab;
@@ -38,35 +38,35 @@ u8 sub_08009BA0(void)
 
 end:
     if ((match << 24) != 0) {
-        sub_08020C78(8);
+        Sound_Play(8);
         return (match << 24) >> 24;
     }
     return 0;
 }
 
-extern void sub_0800EF90(void);
-extern void sub_0800A05C(void);
-extern u32 sub_0801E28C(void);
-extern void sub_0802D8F8(void);
-extern void sub_08006ADC(struct IwramAt35E0 *p);
-extern void sub_08007874(s32 a);
+extern void Scene_DisableBg2(void);
+extern void EntityPool_Reset(void);
+extern u32 Level_Load(void);
+extern void Sound_Reset(void);
+extern void Timer_DecrByte(struct IwramAt35E0 *p);
+extern void Entity_SpawnFromRecord(s32 a);
 extern const u32 sEntityProcA[17];
 
-u8 sub_08009C14(u8 *flag)
+u8 Scene_EntityTick(u8 *flag)
 {
-    sub_0800EF90();
-    sub_0800A05C();
+    Scene_DisableBg2();
+    EntityPool_Reset();
 
     if (gIwram_35E0._data[0] == 1) {
         gEntities[0].status = 0;
-        if (sub_0801E28C() != 0) {
+        if (Level_Load() != 0) {
             gIwram_35E0._data[0] = gIwram_34B4._data[2];
             gIwram_35E0._field_5 = 0;
             *flag = 0;
-            sub_0802D8F8();
+            Sound_Reset();
             return 1;
         }
-        sub_0802D8F8();
+        Sound_Reset();
         gGameStuff.mode = GAME_MODE_MENU_25;
         return 0;
     }
@@ -75,8 +75,8 @@ u8 sub_08009C14(u8 *flag)
         register GameStuff *game asm("r4");
         game = &gGameStuff;
         if ((game->_unk10 & 1) == 0)
-            sub_08006ADC(&gIwram_35E0);
-        sub_08007874(gIwram_35E0._field_5);
+            Timer_DecrByte(&gIwram_35E0);
+        Entity_SpawnFromRecord(gIwram_35E0._field_5);
         {
             register const u32 *procA asm("r1");
             register u8 pendingMode asm("r2");
@@ -93,7 +93,7 @@ u8 sub_08009C14(u8 *flag)
             return 0;
         }
     }
-    sub_0802D8F8();
+    Sound_Reset();
     return 0;
 }
 typedef void (*GameProc)(void);
@@ -103,18 +103,18 @@ extern const u32 sEntityProcB[17];
 extern const u32 sEntityProcC[17];
 extern const u8 sEntitySubtypeLut[20];
 
-extern void sub_08020BAC(void);
-extern void sub_08020B88(u32 arg);
-extern void sub_0800A05C(void);
-extern void sub_080077AC(s8 a, s16 b, s8 c);
-extern void sub_0800F24C(u8 arg);
-extern void sub_0800A520(void);
-extern void sub_08009A58(void);
-extern void sub_08009188(void);
-extern void sub_080008DC(void);
-extern void sub_0800A328(void);
+extern void Sound_DrainIfActive(void);
+extern void Sound_PlayIfEnabled(u32 arg);
+extern void EntityPool_Reset(void);
+extern void Entity_SpawnFromConfig(s8 a, s16 b, s8 c);
+extern void Scroll_UpdateCamera(u8 arg);
+extern void Game_UpdateSubsystems(void);
+extern void Entity_UpdateVisibility(void);
+extern void Entity_Advance(void);
+extern void WaitVblank(void);
+extern void Game_ForceRender(void);
 
-void sub_08009CBC(void)
+void EntityDispatch_RunFrame(void)
 {
     struct IwramAt6110 *s;
     GameStuff *p;
@@ -127,18 +127,18 @@ void sub_08009CBC(void)
      * keeps the base in r4 (re-read each time), matching the baserom. */
     if ((u8)(p->pendingMode % 3) != 0 && ((volatile GameStuff *)p)->pendingMode != 16) {
         value = 0;
-        sub_08020BAC();
+        Sound_DrainIfActive();
         if (gIwram_6110.state == 1) {
             const u32 *table = sEntityParamTable;
             /* Reuse the now-dead base pointer so agbcc overwrites r4 with the index. */
             p = (GameStuff *)(u32)p->pendingMode;
             value = table[(u32)p];
         }
-        sub_08020B88(value);
+        Sound_PlayIfEnabled(value);
     }
 
-    sub_0800A05C();
-    sub_080077AC((s8)gIwram_35E0._data[0], *(s16 *)&gIwram_35E0._data[2], 0);
+    EntityPool_Reset();
+    Entity_SpawnFromConfig((s8)gIwram_35E0._data[0], *(s16 *)&gIwram_35E0._data[2], 0);
 
     {
         const u32 *procC;
@@ -157,7 +157,7 @@ void sub_08009CBC(void)
             register const u8 *lut asm("r0");
             lut = sEntitySubtypeLut;
             idx2 = base->pendingMode;
-            sub_0800F24C(*(const u8 *)(idx2 + (u32)lut));
+            Scroll_UpdateCamera(*(const u8 *)(idx2 + (u32)lut));
         }
 
         {
@@ -176,7 +176,7 @@ void sub_08009CBC(void)
         s->flagBank0 = -1;
         s->flagBank1 = -1;
 
-        sub_0800A520();
+        Game_UpdateSubsystems();
 
         {
             register const u32 *procB asm("r1");
@@ -186,10 +186,10 @@ void sub_08009CBC(void)
             ((GameProc)(*(const u32 *)offset))();
         }
 
-        sub_08009A58();
-        sub_08009188();
-        sub_080008DC();
-        sub_0800A328();
+        Entity_UpdateVisibility();
+        Entity_Advance();
+        WaitVblank();
+        Game_ForceRender();
 
         base->_unk14 = 0;
     }

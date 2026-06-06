@@ -8,9 +8,9 @@
 
 extern u32 __udivsi3(u32 num, u32 den);
 extern u32 __umodsi3(u32 num, u32 den);
-extern void sub_0801BE7C(const u8 *str, int len, int x, int y, int a, int b, int c);
+extern void DrawTextGlyphs(const u8 *str, int len, int x, int y, int a, int b, int c);
 
-void sub_0801C2B4(u16 value, u8 x, u8 y, u16 a, u16 b, u8 c, u32 forceZeros)
+void DrawNumber(u16 value, u8 x, u8 y, u16 a, u16 b, u8 c, u32 forceZeros)
 {
     u8 buf[4];
     u8 digit;
@@ -22,7 +22,7 @@ void sub_0801C2B4(u16 value, u8 x, u8 y, u16 a, u16 b, u8 c, u32 forceZeros)
 
     out = 0;
     if (value == 0) {
-        sub_0801BE7C(BLANK_DIGITS, 4, x, y, a, b, c);
+        DrawTextGlyphs(BLANK_DIGITS, 4, x, y, a, b, c);
     }
 
     if (value <= MAX_PRINTABLE_VALUE) {
@@ -96,5 +96,5 @@ void sub_0801C2B4(u16 value, u8 x, u8 y, u16 a, u16 b, u8 c, u32 forceZeros)
         }
     }
 
-    sub_0801BE7C(buf, 4, x, y, a, b, c);
+    DrawTextGlyphs(buf, 4, x, y, a, b, c);
 }

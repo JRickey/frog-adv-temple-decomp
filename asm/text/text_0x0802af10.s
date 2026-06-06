@@ -2,7 +2,7 @@
 @ Address-aligned bucket of unparsed baserom bytes.
 @ Range:  [0x0802af10, 0x0802b9d4)  (0xac4 bytes)
 @
-@ Post-peel chunk after sub_0802ACB4.
+@ Post-peel chunk after RoomFrogEntity_Update.
 @
 @ This file holds raw bytes only; no instructions are assembled here.
 

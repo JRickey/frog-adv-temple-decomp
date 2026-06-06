@@ -1,7 +1,7 @@
 #include "sound.h"
 #include "macros.h"
 
-/* sub_08032894 — sound slot initializer.
+/* SoundSlot_InitParams — sound slot initializer.
  *
  * Pure leaf (no callees, no globals). Clears the streaming/envelope state
  * of a SoundSlot-shaped object and primes the per-slot mixer constants:
@@ -20,7 +20,7 @@
  *     check; that's preserved here with an explicit `(u8)` cast.
  */
 
-void sub_08032894(SoundSlotInit *slot, u32 arg1, u32 arg2, u32 arg3, u32 arg4)
+void SoundSlot_InitParams(SoundSlotInit *slot, u32 arg1, u32 arg2, u32 arg3, u32 arg4)
 {
     slot->byte_3d = 0;
     slot->panReset = SOUND_CHANNEL_PAN_RESET;

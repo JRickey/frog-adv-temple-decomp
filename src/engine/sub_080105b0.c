@@ -1,6 +1,6 @@
 #include "types.h"
 
-/* --- sub_080105B0: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- Blit_CopyEntry: non-matching reference (asm slice provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "types.h"
 
@@ -30,7 +30,7 @@ struct SceneScroll {
 #define gBlitState   (*(struct BlitState *)0x03006500)
 #define gSceneScroll (*(struct SceneScroll *)0x030060A0)
 
-void sub_080105B0(struct BlitEntry *entries, u8 index, u8 srcIndex)
+void Blit_CopyEntry(struct BlitEntry *entries, u8 index, u8 srcIndex)
 {
     u32 i;
     u32 j;

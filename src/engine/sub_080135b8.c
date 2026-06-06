@@ -1,7 +1,7 @@
 #include "macros.h"
 #include "types.h"
 
-/* --- sub_080135B8: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- Selector_StepScrollAxes: non-matching reference (asm slice provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "macros.h"
 #include "types.h"
@@ -43,7 +43,7 @@ struct ScrollAxisY {
 extern struct ScrollAxisX gIwram_6540;
 extern struct ScrollAxisY gIwram_6480;
 
-void sub_080135B8(u16 maxX, u8 stepX, u16 maxY, u8 stepY)
+void Selector_StepScrollAxes(u16 maxX, u8 stepX, u16 maxY, u8 stepY)
 {
     struct ScrollAxisX *x;
     struct ScrollAxisY *y;

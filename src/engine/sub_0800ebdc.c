@@ -1,6 +1,6 @@
 #include "types.h"
 
-/* --- sub_0800EBDC: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- BgScrollBlit: non-matching reference (asm slice provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "gba/io.h"
 #include "iwram.h"
@@ -36,7 +36,7 @@ struct SceneScrollState_EBDC {
 
 extern struct SceneScrollState_EBDC gIwram_60A0[];
 
-void sub_0800EBDC(u8 count)
+void BgScrollBlit(u8 count)
 {
     register u32 i asm("r9");
     register u32 base asm("ip");

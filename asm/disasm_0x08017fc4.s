@@ -1,4 +1,4 @@
-@ Auto-emitted leftover slice — sub_08017F00 peeled to C (src/engine/sub_08017bfc.c).
+@ Auto-emitted leftover slice — Menu25_InstallBg peeled to C (src/engine/sub_08017bfc.c).
 @ Range:  [0x08017fc4, 0x080181d0)  (524 bytes, thumb mode)
 @ Contains two still-asm functions: sub_08017FC4 @ 0x08017fc4 and sub_08018188 @ 0x08018188.
 

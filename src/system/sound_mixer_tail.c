@@ -1,9 +1,9 @@
 #include "sound.h"
 #include "macros.h"
 
-/* sub_080325B0 — sound-mixer tail pass (per-VBlank streaming-buffer drain).
+/* Sound_ProcessRequests — sound-mixer tail pass (per-VBlank streaming-buffer drain).
  *
- * Called as the final step of sub_0802F4B0 (the per-VBlank mixer tick).
+ * Called as the final step of SoundMixer_VBlankUpdate (the per-VBlank mixer tick).
  * The mixer's earlier passes deal with fade requests, channel volume,
  * per-active-slot pitch/pan, and slot retire; this routine handles the
  * sample-streaming book-keeping that lives in the request/stream block
@@ -17,7 +17,7 @@
  *   1. Drain pass for the external 12-byte entries pointed to by
  *      request+0x110: subtract samples-this-frame from each entry's
  *      countdown field, and when it drops past zero, retire the buffer
- *      via sub_0802F9F0.
+ *      via Sound_RetireChannel.
  *
  *   2. Seventeen-entry main timer pass at request+0x00: walks cursor
  *      structures, resolves -2/-1 stream commands through the tables at
@@ -29,7 +29,7 @@
  *      pitch, and countdown halfwords to commit the channel mix LUT.
  *
  *   4. Final timer at request+0x108 that writes the half-word at
- *      request+0x14a and calls sub_08031DBC until its countdown is positive
+ *      request+0x14a and calls SoundSlot_CalcStreamTiming until its countdown is positive
  *      or it reaches a 0xFFFF/0xFFFF sentinel.
  *
  * Heavy use of high registers as concurrent loop state — r8 holds the
@@ -86,10 +86,10 @@ typedef void (*MixerTailCommitFunc)(u32 request, u32 idx, u32 panOrMode, u32 cou
 /* Thumb-bit entry for the still-raw inner mixer commit routine. */
 #define MIXER_TAIL_COMMIT ((MixerTailCommitFunc)SOUND_MIXER_TAIL_COMMIT_THUMB)
 
-extern void sub_0802F9F0(u32 idx);
-extern u32 sub_08031DBC(void);
+extern void Sound_RetireChannel(u32 idx);
+extern u32 SoundSlot_CalcStreamTiming(void);
 
-void sub_080325B0(void)
+void Sound_ProcessRequests(void)
 {
     SoundSystem *ss = gpSoundSystem;
     SoundRequestSlot *request = ss->slot;
@@ -115,7 +115,7 @@ void sub_080325B0(void)
         if (entry->live != 0) {
             entry->countdown -= samples;
             if (entry->countdown <= 0) {
-                sub_0802F9F0(i);
+                Sound_RetireChannel(i);
                 entry->live = 0;
             }
         }
@@ -261,7 +261,7 @@ void sub_080325B0(void)
 
     do {
         SOUND_REQUEST_FINAL_VALUE(requestBytes) = SOUND_STREAM_CURSOR_VALUE(cursor);
-        sub_08031DBC();
+        SoundSlot_CalcStreamTiming();
 
         oldCursor = timers->cursor;
         cursor = oldCursor + 1;
@@ -280,7 +280,7 @@ void sub_080325B0(void)
 
 #else
 NAKED
-void sub_080325B0(void)
+void Sound_ProcessRequests(void)
 {
     asm(".syntax unified\n"
         "    push    {r4, r5, r6, r7, lr}\n"
@@ -333,7 +333,7 @@ void sub_080325B0(void)
         "    cmp     r0, #0\n"
         "    bgt     _08032618\n"
         "    adds    r0, r7, #0\n"
-        "    .4byte  0xf9eef7fd        @ bl sub_0802F9F0 (still in raw text blob)\n"
+        "    .4byte  0xf9eef7fd        @ bl Sound_RetireChannel (still in raw text blob)\n"
         "    movs    r0, #0\n"
         "    strb    r0, [r4, #4]\n"
         "_08032618:\n"
@@ -635,7 +635,7 @@ void sub_080325B0(void)
         "    lsls    r3, r3, #1\n"
         "    adds    r1, r6, r3\n"
         "    strh    r0, [r1, #0]\n"
-        "    .4byte  0xfab4f7ff        @ bl sub_08031DBC (still in raw text blob)\n"
+        "    .4byte  0xfab4f7ff        @ bl SoundSlot_CalcStreamTiming (still in raw text blob)\n"
         "    ldr     r1, [r5, #0]\n"
         "    adds    r0, r1, #4\n"
         "    str     r0, [r5, #0]\n"

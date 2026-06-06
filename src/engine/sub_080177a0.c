@@ -1,18 +1,18 @@
 #include "macros.h"
 #include "types.h"
 
-extern int sub_080178FC(u16 *buf, u32 start, u32 count);
-extern int sub_0801789C(u16 *buf, u32 start, u32 count);
+extern int SaveReadBlocks(u16 *buf, u32 start, u32 count);
+extern int SaveWriteBlocks(u16 *buf, u32 start, u32 count);
 extern u32 sub_08033A70(u32 index, u16 *buf);
 extern u32 sub_08033B28(u32 index, u16 *buf);
 extern u32 sub_08033C0C(u32 index, u16 *buf);
 
-int sub_080177A0(u16 *dest)
+int SaveReadHeader(u16 *dest)
 {
     u16 buf[4];
     u8 i;
 
-    if (sub_080178FC(buf, 0, 1)) {
+    if (SaveReadBlocks(buf, 0, 1)) {
         i = 0;
         do {
             dest[i] = buf[i];
@@ -23,7 +23,7 @@ int sub_080177A0(u16 *dest)
     return 0;
 }
 
-int sub_080177D8(u16 *src)
+int SaveWriteHeader(u16 *src)
 {
     u16 buf[4];
     u8 i;
@@ -34,18 +34,18 @@ int sub_080177D8(u16 *src)
         i++;
     } while (i <= 3);
 
-    if (sub_0801789C(buf, 0, 1)) {
+    if (SaveWriteBlocks(buf, 0, 1)) {
         return 1;
     }
     return 0;
 }
 
-int sub_08017814(u16 *dest, u8 idx)
+int SaveReadSlot(u16 *dest, u8 idx)
 {
     u16 buf[8];
     u8 i;
 
-    if (sub_080178FC(buf, idx * 3 + 1, 2)) {
+    if (SaveReadBlocks(buf, idx * 3 + 1, 2)) {
         i = 0;
         do {
             dest[i] = buf[i];
@@ -56,7 +56,7 @@ int sub_08017814(u16 *dest, u8 idx)
     return 0;
 }
 
-int sub_08017858(u16 *src, u32 idx)
+int SaveWriteSlot(u16 *src, u32 idx)
 {
     volatile u16 *srcp;
     u32 ridx;
@@ -76,13 +76,13 @@ int sub_08017858(u16 *src, u32 idx)
         i++;
     } while (i <= 7);
 
-    if (sub_0801789C(buf, start, 2)) {
+    if (SaveWriteBlocks(buf, start, 2)) {
         return 1;
     }
     return 0;
 }
 
-int sub_0801789C(u16 *buf, u32 start, u32 count)
+int SaveWriteBlocks(u16 *buf, u32 start, u32 count)
 {
     u32 start16;
     u32 count8;
@@ -117,7 +117,7 @@ fail:
     return 0;
 }
 
-int sub_080178FC(u16 *buf, u32 start, u32 count)
+int SaveReadBlocks(u16 *buf, u32 start, u32 count)
 {
     u32 start16;
     u32 count8;

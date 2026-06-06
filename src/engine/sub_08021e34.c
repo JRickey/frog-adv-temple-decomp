@@ -1,7 +1,7 @@
 #include "iwram.h"
 #include "types.h"
 
-u8 sub_08021E34(struct Entity *s, u8 halfW, u8 halfH)
+u8 Entity_IsInTileRange(struct Entity *s, u8 halfW, u8 halfH)
 {
     s16 tileX = (s16)((s16)s->x / 24);
     s16 tileY = (s16)((s16)s->y / 24);

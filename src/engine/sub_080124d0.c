@@ -10,7 +10,7 @@ struct IwramAt6410 {
 extern struct IwramAt6410 gIwram_6410;
 extern u8 gIwram_53A0[];
 
-void sub_080124D0(void)
+void AnimChannels_Reset(void)
 {
     struct IwramAt5360 *chA;
     struct IwramAt6150 *chB;

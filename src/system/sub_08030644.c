@@ -1,14 +1,14 @@
 #include "sound.h"
 #include "macros.h"
 
-extern u32 sub_0802E3C8(u32 limit);
+extern u32 Sound_Rand(u32 limit);
 
 /* sub_08030644 — "wait N frames" sound-script opcode handler, dispatched from
- * sub_080315D8 through sSoundOpcodeHandlers. Structurally the +8 (waitTimer)
- * twin of sub_080304F4, which keys off +0xa (cursor).
+ * Sound_OpcodeDispatch through sSoundOpcodeHandlers. Structurally the +8 (waitTimer)
+ * twin of SoundOp_Wait, which keys off +0xa (cursor).
  *
  * On the first visit (waitTimer == 0) it latches the operand's frame count
- * into waitTimer — randomized via sub_0802E3C8 when SOUND_SEQ_WAIT_RANDOMIZE
+ * into waitTimer — randomized via Sound_Rand when SOUND_SEQ_WAIT_RANDOMIZE
  * is set — unless a stop/stream gate says to drop the wait entirely. On each
  * later visit it decrements waitTimer and, once it reaches zero (or a gate
  * fires), advances the script. A zero-duration operand and the SKIP gates
@@ -86,7 +86,7 @@ u32 sub_08030644(s32 channel, SoundChannelSeq *seq)
 
     latch:
         if (flags & SOUND_SEQ_WAIT_RANDOMIZE)
-            s->waitTimer = sub_0802E3C8(*(u16 *)(op + 2));
+            s->waitTimer = Sound_Rand(*(u16 *)(op + 2));
         else
             s->waitTimer = opHalf;
         goto advance;

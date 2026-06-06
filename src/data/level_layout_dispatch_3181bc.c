@@ -46,7 +46,7 @@
  *
  * --- Consumer ---
  *
- * sub_08020388 (still in asm/text):
+ * LevelLayout_InitManager (still in asm/text):
  *     r1 = 0x03000000
  *     *(u16*)(r1+0)  = 0x2000      ; manager state init
  *     *(u8*)(r1+3)   = 0
@@ -75,7 +75,7 @@
  *       callee) lands in C so per-record shape can be inferred from
  *       the walker code, not guessed from the byte pattern.
  *
- * TODO: rename to semantic names once sub_08020388 family is decompiled.
+ * TODO: rename to semantic names once LevelLayout_InitManager family is decompiled.
  * Working hypothesis: this is the level-layout *streaming* dispatcher
  * (vs the level-data dispatcher in level_layout_dispatch_315a48.c) --
  * the very large 93 KiB payload and the IWRAM[0] = 0x2000 (DMA-flag-

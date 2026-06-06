@@ -5,11 +5,11 @@
 
 extern u8 gIwram_53A0;
 
-extern void sub_0800DB04(u32 *out, u32 idx);
-extern void sub_0802BAF8(s32 a, s32 b, s32 c);
-extern void sub_0802BB5C(s32 a, s32 b, s32 c);
+extern void PadGrid_SlotToCoord(u32 *out, u32 idx);
+extern void PadGrid_SpawnTypeA(s32 a, s32 b, s32 c);
+extern void Walker_SpawnAtTile(s32 a, s32 b, s32 c);
 
-void sub_0800D0F8(void)
+void PadGrid_PlaceEntities(void)
 {
     u8 *base;
     u8 *b1;
@@ -36,12 +36,12 @@ void sub_0800D0F8(void)
     for (; i <= 63; i++) {
         b1 = &gIwram_53A0;
         if (b1[(s8)i] == 1 && (sx = (s8)x) <= 19) {
-            sub_0800DB04(&v0, (u8)i);
-            sub_0802BAF8(sx, (s16)v0, (s16)(v0 >> 16));
+            PadGrid_SlotToCoord(&v0, (u8)i);
+            PadGrid_SpawnTypeA(sx, (s16)v0, (s16)(v0 >> 16));
             x = (u8)(sx + 1);
         } else if (base[(s8)i] == 2 && (sy = (s8)y) <= 9) {
-            sub_0800DB04(&v1, (u8)i);
-            sub_0802BB5C(sy, (s16)v1, (s16)(v1 >> 16));
+            PadGrid_SlotToCoord(&v1, (u8)i);
+            Walker_SpawnAtTile(sy, (s16)v1, (s16)(v1 >> 16));
             y = (u8)(sy + 1);
         }
     }

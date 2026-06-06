@@ -4,9 +4,9 @@
 #include "types.h"
 
 /* Initializer for the per-room packed-halfword grid at EWRAM 0x02030000
- * (read by sister functions sub_0800CD88 / sub_0800CDCC / sub_0800CE10 /
- * sub_0800CE54). Copies sSpriteAssetIndexTable[a].dataPtr into the room
- * slot at 0x02030000 + b*0x5000 via BIOS CpuSet (SWI 11, sub_0802D554).
+ * (read by sister functions Tilemap_GetTileClass / SpriteAsset_GetCellFlag / SpriteAsset_GetTileAttr /
+ * TileCell_GetPropertyB). Copies sSpriteAssetIndexTable[a].dataPtr into the room
+ * slot at 0x02030000 + b*0x5000 via BIOS CpuSet (SWI 11, Bios_CpuSet).
  *
  * Match notes: register-pinned r4/r5 for stride/_field_5 (agbcc otherwise
  * inlines the reads and skips the push); separate `table` local anchors
@@ -23,9 +23,9 @@ struct SpriteAssetIndexEntry {
 
 extern const struct SpriteAssetIndexEntry sSpriteAssetIndexTable[];
 
-extern u32 sub_0802D554(const void *src, void *dst, u32 count);
+extern u32 Bios_CpuSet(const void *src, void *dst, u32 count);
 
-u32 sub_0800CE98(u8 a, u8 b)
+u32 SpriteAsset_LoadSheet(u8 a, u8 b)
 {
     const struct SpriteAssetIndexEntry *table = sSpriteAssetIndexTable;
     const struct SpriteAssetIndexEntry *entry;
@@ -38,10 +38,10 @@ u32 sub_0800CE98(u8 a, u8 b)
     dst = (void *)(0x02030000 + (u8)b * 0x5000);
     stride = entry->stride;
     field5 = entry->_field_5;
-    return sub_0802D554(src, dst, stride * field5);
+    return Bios_CpuSet(src, dst, stride * field5);
 }
 
-/* --- sub_0800CED0: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- Rect_PointInRect: non-matching reference (asm slice provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "game.h"
 #include "iwram.h"
@@ -55,7 +55,7 @@ struct Rect2 {
 };
 
 /* old_agbcc TU (sister grid functions all build under old_agbcc). */
-u32 sub_0800CED0(struct Rect2 *s, s32 a, s32 b, s16 c, s16 e)
+u32 Rect_PointInRect(struct Rect2 *s, s32 a, s32 b, s16 c, s16 e)
 {
     register s32 himask asm("r8");
     register s32 ee asm("r9"); /* s32 (not s16) — s16 adds a spurious (u16) ext */

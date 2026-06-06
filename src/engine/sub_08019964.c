@@ -3,19 +3,19 @@
 #include "macros.h"
 #include "types.h"
 
-extern int sub_0801185C(u8 arg);
-extern void sub_08020C78(u32 arg);
+extern int GetVcountRandom(u8 arg);
+extern void Sound_Play(u32 arg);
 extern u8 gIwram_3610;
 extern u8 gIwram_5330;
 extern u8 gIwram_53A0;
 
-void sub_08019964(void)
+void TitleScene_InitRng(void)
 {
-    gGameStuff.rngSeed = sub_0801185C(200);
+    gGameStuff.rngSeed = GetVcountRandom(200);
     gIwram_34A0.dispatchIdx = 2;
 }
 
-void sub_08019984(void)
+void FrogSelect_ValidateSelection(void)
 {
     u8 *src;
 
@@ -25,7 +25,7 @@ void sub_08019984(void)
 
         state = &gIwram_5330;
         state[16] = 0;
-        sub_08020C78(1);
+        Sound_Play(1);
         return;
     }
 
@@ -47,13 +47,13 @@ void sub_08019984(void)
             cmpByte = (u8 *)(i + (u32)cmp);
             if (*srcByte != *cmpByte) {
                 state[16] = 0;
-                sub_08020C78(1);
+                Sound_Play(1);
                 return;
             }
             i++;
         } while (i <= 11);
 
         state[16] = 1;
-        sub_08020C78(13);
+        Sound_Play(13);
     }
 }

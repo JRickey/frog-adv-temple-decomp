@@ -6,20 +6,20 @@
 
 extern const void *const sUiAssetSlots[];
 
-extern u32 sub_08000900(void);
-extern s32 sub_08010710(void);
-extern u16 sub_08010694(u16 arg);
-extern u16 sub_080106EC(u16 arg);
-extern void sub_0801621C(u16 dstX, u16 dstY, const void *src, void *desc);
-extern void sub_0802D8F8(void);
+extern u32 GetFrameTick(void);
+extern s32 Screen_TickFlash(void);
+extern u16 Blend_StartFade(u16 arg);
+extern u16 Screen_BeginFlash(u16 arg);
+extern void Mode4_BlitRect(u16 dstX, u16 dstY, const void *src, void *desc);
+extern void Sound_Reset(void);
 
 /* Title/attract input poll + auto-advance. Latches just-pressed keys into
- * gIwram_5358, then bails while a fade-out (sub_08010710) is still running.
+ * gIwram_5358, then bails while a fade-out (Screen_TickFlash) is still running.
  * Pressing A advances the attract step (_data[3]); otherwise the step
  * auto-advances once more than 0x383 ticks have elapsed since the last
- * advance. Each advance restarts the fade-in (sub_08010694). Sibling of
- * sub_080183D0, which advances _data[4] on a 0x257-tick timer. */
-void sub_080182CC(void)
+ * advance. Each advance restarts the fade-in (Blend_StartFade). Sibling of
+ * CreditsMenu_HandleInputB, which advances _data[4] on a 0x257-tick timer. */
+void CreditsMenu_HandleInputA(void)
 {
     u16 raw;
     u32 now;
@@ -28,22 +28,22 @@ void sub_080182CC(void)
     gIwram_5358.justPressed = raw & ~gIwram_3710.prevKeys;
     gIwram_3710.prevKeys = raw;
 
-    if (sub_08010710() != 0)
+    if (Screen_TickFlash() != 0)
         return;
 
     if (gIwram_5358.justPressed & KEY_A) {
         gIwram_3480._data[3]++;
-        sub_08010694(0xBF);
+        Blend_StartFade(0xBF);
         return;
     }
 
-    now = sub_08000900();
+    now = GetFrameTick();
     if (now - gIwram_3480._unk0C <= 0x383)
         return;
 
-    gIwram_3480._unk0C = sub_08000900();
+    gIwram_3480._unk0C = GetFrameTick();
     gIwram_3480._data[3]++;
-    sub_08010694(0xBF);
+    Blend_StartFade(0xBF);
 }
 
 /* Enters bitmap mode 4 and blits the next attract frame: timestamps the
@@ -51,12 +51,12 @@ void sub_080182CC(void)
  * (full-screen 0xF0 x 0xA0), DMAs the palette (sUiAssetSlots[52]) and
  * blits the pixels (sUiAssetSlots[51]) into the back buffer, then flips
  * the bitmap frame-select bit and advances _data[4]. */
-void sub_08018348(void)
+void CreditsScreen_Init(void)
 {
     volatile DmaChannel *dma;
 
-    gIwram_3480._unk0C = sub_08000900();
-    sub_080106EC(0xBF);
+    gIwram_3480._unk0C = GetFrameTick();
+    Screen_BeginFlash(0xBF);
 
     gIwram_3470[0] = 0;
     gIwram_3470[1] = 0;
@@ -72,17 +72,17 @@ void sub_08018348(void)
     dma->cnt = DMA_ENABLE | 0x100;
     (void)dma->cnt;
 
-    sub_0801621C(0, 0, sUiAssetSlots[51], gIwram_3470);
+    Mode4_BlitRect(0, 0, sUiAssetSlots[51], gIwram_3470);
 
     REG_DISPCNT ^= DISPCNT_FRAME1;
-    sub_0802D8F8();
+    Sound_Reset();
 
     gIwram_3480._data[4]++;
 }
 
-/* Same attract auto-advance as sub_080182CC, but drives _data[4] on a
+/* Same attract auto-advance as CreditsMenu_HandleInputA, but drives _data[4] on a
  * shorter 0x257-tick timer. */
-void sub_080183D0(void)
+void CreditsMenu_HandleInputB(void)
 {
     u16 raw;
     u32 now;
@@ -91,27 +91,27 @@ void sub_080183D0(void)
     gIwram_5358.justPressed = raw & ~gIwram_3710.prevKeys;
     gIwram_3710.prevKeys = raw;
 
-    if (sub_08010710() != 0)
+    if (Screen_TickFlash() != 0)
         return;
 
     if (gIwram_5358.justPressed & KEY_A) {
         gIwram_3480._data[4]++;
-        sub_08010694(0xBF);
+        Blend_StartFade(0xBF);
         return;
     }
 
-    now = sub_08000900();
+    now = GetFrameTick();
     if (now - gIwram_3480._unk0C <= 0x257)
         return;
 
-    gIwram_3480._unk0C = sub_08000900();
+    gIwram_3480._unk0C = GetFrameTick();
     gIwram_3480._data[4]++;
-    sub_08010694(0xBF);
+    Blend_StartFade(0xBF);
 }
 
 /* Clears screenblock 28 via DMA3 from a stack zero, then sets up
  * DISPCNT + BGxCNT and zeroes the BG scroll-offset shadow and MMIO. */
-void sub_0801844C(void)
+void Bg_InitMode0(void)
 {
     volatile DmaChannel *dma;
     volatile u16 zero; /* volatile prevents r2 from surviving as a live zero register,

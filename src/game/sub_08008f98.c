@@ -2,7 +2,7 @@
 #include "macros.h"
 #include "types.h"
 
-/* sub_08008F98 — hit-test the player header against the active 56-byte
+/* Player_FindNearbyInteractable — hit-test the player header against the active 56-byte
  * entity records.
  *
  * Walks the active-entity index table at 0x03006160 (8-byte stride, first
@@ -24,7 +24,7 @@
  * instead, so the high-reg save pair and `mov rN, r8/r9/sl/ip` forms cannot
  * be reproduced from pure C. This is the docs/codegen-notes.md "High
  * registers" (Class 1) unmatchable pattern — the same shape as the sibling
- * sub_08007228 in src/game/sub_08007228.c. The NON_MATCHING body documents
+ * LoadPartEntry in src/game/LoadPartEntry.c. The NON_MATCHING body documents
  * intent for the phase-3 PC port. */
 
 #ifdef NON_MATCHING
@@ -37,7 +37,7 @@ struct IndexEntry {
 extern struct Entity gEntities_03003720[];
 extern struct IndexEntry gEntityIndex_03006160[];
 
-void sub_08008F98(void)
+void Player_FindNearbyInteractable(void)
 {
     s16 headerY = gEntities[0].x;
     s16 headerX = gEntities[0].y;
@@ -81,7 +81,7 @@ void sub_08008F98(void)
     }
 }
 #else
-NAKED void sub_08008F98(void)
+NAKED void Player_FindNearbyInteractable(void)
 {
     asm(".syntax unified\n"
         "    push    {r4, r5, r6, r7, lr}\n"
@@ -209,12 +209,12 @@ NAKED void sub_08008F98(void)
 }
 #endif
 
-extern u8 sub_08007F88(void);
+extern u8 Entity_CheckAtTarget(void);
 
-u8 sub_0800908C(void)
+u8 Player_CheckReachable(void)
 {
-    if (sub_08007F88()) {
-        sub_08006B94(&gIwram_35E0, 1);
+    if (Entity_CheckAtTarget()) {
+        IwramFlags_Clear(&gIwram_35E0, 1);
         return 1;
     }
     return 0;

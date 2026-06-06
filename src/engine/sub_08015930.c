@@ -16,7 +16,7 @@ struct TilemapTableEntry {
 
 extern void sub_08012BC4(u8 mode, u16 a, u16 b, u16 c, u16 d, void *tiles, u8 e);
 
-void sub_08015930(void)
+void Tilemap_DispatchPendingBlits(void)
 {
     /* The baserom holds the loop constants (1, table base, table base + 16) in
      * high registers across the inner BL; pin them so agbcc does the same. */
@@ -43,7 +43,7 @@ void sub_08015930(void)
     } while (i <= 3);
 }
 
-/* Minimal struct views for the sub_080159B0 init pass. */
+/* Minimal struct views for the Scenery_InitScrollState init pass. */
 struct IwramInited6480 {
     u8 base; /* +0 */
     u8 _pad[7];
@@ -72,7 +72,7 @@ extern u8 gIwram_6500;
 extern u8 gIwram_6580;
 extern struct IwramInited3610 gIwram_3610;
 
-void sub_080159B0(void)
+void Scenery_InitScrollState(void)
 {
     /* r2 holds &gIwram_6540 throughout the paired init writes;
      * without the pin, agbcc assigns the wrong register. */
@@ -89,6 +89,6 @@ void sub_080159B0(void)
     gIwram_3610.field7 = 0;
     gIwram_3610.fielda = 0;
     gIwram_3610.fieldb = 0;
-    sub_08015930();
+    Tilemap_DispatchPendingBlits();
     REG_BG2CNT = 0x1e0d;
 }

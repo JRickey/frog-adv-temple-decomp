@@ -3,14 +3,14 @@
 #include "gba/dma.h"
 #include "iwram.h"
 
-/* --- sub_080185C0: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- Sprite_CycleDmaFrame: non-matching reference (asm slice provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "macros.h"
 #include "types.h"
 #include "gba/dma.h"
 #include "iwram.h"
 
-extern u32 sub_08000900(void);
+extern u32 GetFrameTick(void);
 
 typedef struct {
     u16 limit;
@@ -24,12 +24,12 @@ typedef struct {
 
 /* Time-gated cyclic DMA + alpha-blend setup. The 16-byte config record
  * (sOamDmaCfg_08100) is passed by value. */
-void sub_080185C0(DmaCycleCfg cfg)
+void Sprite_CycleDmaFrame(DmaCycleCfg cfg)
 {
     vu32 *dma;
     const u32 *src;
     u8 *state;
-    u32 now = sub_08000900();
+    u32 now = GetFrameTick();
 
     state = (u8 *)0x03006480;
 
@@ -45,7 +45,7 @@ void sub_080185C0(DmaCycleCfg cfg)
         dma[2];
 
         state[0xa]++;
-        *(u32 *)(state + 4) = sub_08000900();
+        *(u32 *)(state + 4) = GetFrameTick();
     }
 
     *(vu16 *)0x04000050 = 0x1142;

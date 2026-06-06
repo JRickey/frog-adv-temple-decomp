@@ -4,7 +4,7 @@
 
 extern int __modsi3(int num, int den);
 
-u32 sub_080113E8(void)
+u32 GenRandomTileMask(void)
 {
     u8 deck[28];
     u32 i;
@@ -84,7 +84,7 @@ struct BlitSrcEntry {
 
 extern struct BlitSrcEntry gBlitSrcTable_08306b84[];
 
-void sub_08011478(u8 count, struct BlitRecord *records, u8 srcIndex)
+void Blit_ApplyFlaggedRecords(u8 count, struct BlitRecord *records, u8 srcIndex)
 {
     u32 limit;
     register u8 idx asm("sl") = srcIndex;
@@ -150,7 +150,7 @@ extern struct IwramAt6540_sub11518 gIwram_6540;
 extern struct IwramAt6580_sub11518 gIwram_6580;
 extern struct BlitRecord gBlitInitTable_08306AD4[];
 
-void sub_08011518(void)
+void Selector_InitState(void)
 {
     u8 *base = &gIwram_3610;
     struct IwramAt6480_sub11518 *p6480;
@@ -170,5 +170,5 @@ void sub_08011518(void)
     p6480->field_9 = 2;
     gIwram_6580.field_b = 0x50;
     gIwram_6580.field_a = 3;
-    sub_08011478(4, gBlitInitTable_08306AD4, 1);
+    Blit_ApplyFlaggedRecords(4, gBlitInitTable_08306AD4, 1);
 }

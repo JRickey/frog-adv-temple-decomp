@@ -2,7 +2,7 @@
 @ Address-aligned bucket of unparsed baserom bytes.
 @ Range:  [0x08006a0c, 0x08006a74)  (0x68 bytes)
 @
-@ Post-peel chunk after sub_080069BC.
+@ Post-peel chunk after EventFlags_ClearBit.
 @
 @ This file holds raw bytes only; no instructions are assembled here.
 

@@ -7,7 +7,7 @@ typedef struct {
     u8 h;
 } TilemapRect;
 
-void sub_080184DC(const TilemapRect *rect, u16 oldPal, u16 newPal, u8 screen)
+void Tilemap_SwapPalette(const TilemapRect *rect, u16 oldPal, u16 newPal, u8 screen)
 {
     u16 *base;
     u16 *row;

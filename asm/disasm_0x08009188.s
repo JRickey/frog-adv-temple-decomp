@@ -439,7 +439,7 @@
 @   0x080094f4: 3720        adds	r7, #32
 @   0x080094f6: 0300        lsls	r0, r0, #12
 
-        thumb_func_start sub_08009188
-sub_08009188: @ 0x08009188
+        thumb_func_start Entity_Advance
+Entity_Advance: @ 0x08009188
         .incbin "frog_us_baserom.gba", 0x9188, 0x370
-        thumb_func_end sub_08009188
+        thumb_func_end Entity_Advance

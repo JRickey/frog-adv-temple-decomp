@@ -23,20 +23,20 @@
  * cvaos decomp spreads this idiom with that same allocator. The natural form of
  * our pattern funnels (corpus-confirmed); the C shape that spreads it hasn't
  * been found, so the asm slice provides the matching bytes. Full analysis in
- * docs/deferred-analysis/sub_08017364.md. */
+ * docs/deferred-analysis/SaveLoad.md. */
 #ifdef NON_MATCHING
 
-extern int sub_080172F4(void);
-extern int sub_080177A0(u16 *dest);
-extern int sub_080177D8(u16 *src);
-extern int sub_08017814(u16 *dest, u8 idx);
-extern void sub_0802D99C(u16 ie);
-extern void sub_08020388(void);
-extern void sub_08020BF0(void);
-extern void sub_08020C58(void);
-extern void sub_08020C3C(void);
+extern int SaveDetect(void);
+extern int SaveReadHeader(u16 *dest);
+extern int SaveWriteHeader(u16 *src);
+extern int SaveReadSlot(u16 *dest, u8 idx);
+extern void LevelLayout_SetupManager(u16 ie);
+extern void LevelLayout_InitManager(void);
+extern void Sound_ClearActiveFlag(void);
+extern void Music_Resume(void);
+extern void Music_Stop(void);
 
-int sub_08017364(void)
+int SaveLoad(void)
 {
     /* sav (r6) holds gSaveData across init + the header copy; saveBase (sl)
      * re-loads it for the slot loop, mirroring the baserom's live-range split.
@@ -59,7 +59,7 @@ int sub_08017364(void)
     iePtr = &savedIeBuf;
     ie = REG_IE;
     *iePtr = ie;
-    sub_0802D99C(ie);
+    LevelLayout_SetupManager(ie);
     REG_IE &= 0xfffe;
     REG_IE &= 0xfffd;
     REG_IE |= 0x40;
@@ -79,7 +79,7 @@ int sub_08017364(void)
     sav->header.slotMask = zero;
     savedIe = iePtr;
 
-    if (sub_080172F4() == 0) {
+    if (SaveDetect() == 0) {
         sav->valid = 0;
         goto restore;
     }
@@ -89,7 +89,7 @@ int sub_08017364(void)
         goto restore;
     }
     header = &headerBuf;
-    if (sub_080177A0((u16 *)header) == 0) {
+    if (SaveReadHeader((u16 *)header) == 0) {
         goto restore;
     }
 
@@ -113,7 +113,7 @@ int sub_08017364(void)
         header->version = ok;
         header->level = ok;
         header->tail.word = *(u32 *)&gIwram_34B4;
-        if (sub_080177D8((u16 *)header) == 0) {
+        if (SaveWriteHeader((u16 *)header) == 0) {
             goto restore;
         }
     }
@@ -125,7 +125,7 @@ int sub_08017364(void)
     i = 0;
     do {
         if ((header->slotMask >> i) & 1) {
-            sub_08017814((u16 *)&scratch[i], i);
+            SaveReadSlot((u16 *)&scratch[i], i);
         } else {
             scratch[i]._field5 = 0;
             scratch[i]._field6 = 0;
@@ -153,24 +153,24 @@ int sub_08017364(void)
     gIwram_34B4._data[1] = 1;
     gIwram_34B0._data = header->level;
     gSaveData.cursor = 0;
-    sub_08020388();
+    LevelLayout_InitManager();
     if (gIwram_34B4._data[0] == 0)
-        sub_08020BF0();
+        Sound_ClearActiveFlag();
     if (gIwram_34B4._data[1] != 0)
-        sub_08020C58();
+        Music_Resume();
     else
-        sub_08020C3C();
+        Music_Stop();
     REG_IE = *savedIe;
     return 1;
 
 restore:
-    sub_08020388();
+    LevelLayout_InitManager();
     if (gIwram_34B4._data[0] == 0)
-        sub_08020BF0();
+        Sound_ClearActiveFlag();
     if (gIwram_34B4._data[1] != 0)
-        sub_08020C58();
+        Music_Resume();
     else
-        sub_08020C3C();
+        Music_Stop();
     REG_IE = *savedIe;
     return 0;
 }

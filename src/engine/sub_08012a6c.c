@@ -1,7 +1,7 @@
 #include "macros.h"
 #include "types.h"
 
-/* --- sub_08012A6C: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- ScaleBlit_Tick: non-matching reference (asm slice provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "game.h"
 #include "types.h"
@@ -30,11 +30,11 @@ struct ScaleBlitState {
 };
 
 extern u8 gIwram_3610;
-extern void sub_0801025C(u8 rows, u8 cols, u16 x, u16 y, u32 bank, u32 frame, u32 dst);
-extern void sub_0800E7D4(void);
+extern void ScaleAnim_BlitFrameToVram(u8 rows, u8 cols, u16 x, u16 y, u32 bank, u32 frame, u32 dst);
+extern void SetModeBlendRegs(void);
 #define sScaleBlitDesc_6E64 (*(const struct ScaleBlitDescriptor *)0x08306E64)
 
-void sub_08012A6C(void)
+void ScaleBlit_Tick(void)
 {
     u8 *flag;
     GameStuff *gs;
@@ -82,12 +82,12 @@ void sub_08012A6C(void)
     y = *(s16 *)(coords + 0x694) * 3;
 
     /* postfix-in-cast emits the target's `lsls #24; lsrs #22` re-narrow (Wall B) */
-    sub_0801025C(rows, cols, x, y, bank, frames[(u8)(state->frameIndex++)], dst);
+    ScaleAnim_BlitFrameToVram(rows, cols, x, y, bank, frames[(u8)(state->frameIndex++)], dst);
 
     if (state->frameIndex >= desc->frameCount)
         *flag = 0;
 
 done:
-    sub_0800E7D4();
+    SetModeBlendRegs();
 }
 #endif /* NON_MATCHING */

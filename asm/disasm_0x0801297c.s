@@ -125,7 +125,7 @@
 @   0x08012a68: 64c0        str	r0, [r0, #76]	@ 0x4c
 @   0x08012a6a: 0300        lsls	r0, r0, #12
 
-        thumb_func_start sub_0801297C
-sub_0801297C: @ 0x0801297c
+        thumb_func_start BlitEntityTileFrame2
+BlitEntityTileFrame2: @ 0x0801297c
         .incbin "frog_us_baserom.gba", 0x1297c, 0xf0
-        thumb_func_end sub_0801297C
+        thumb_func_end BlitEntityTileFrame2

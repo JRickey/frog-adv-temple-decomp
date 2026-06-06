@@ -22,7 +22,7 @@
  *                 next  64 bytes  = 0x80 (-128)
  *
  * The PCM payload is a perfect square wave (half full-positive, half
- * full-negative). The mixer (sub_080315D8 / sub_0802F4B0) wraps it
+ * full-negative). The mixer (Sound_OpcodeDispatch / SoundMixer_VBlankUpdate) wraps it
  * with envelope + pitch state to synthesize PSG-style tones for
  * slots that do not map to the hardware PSG channels.
  *

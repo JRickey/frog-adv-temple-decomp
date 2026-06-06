@@ -4,34 +4,34 @@
 #include "types.h"
 
 /* Bit-set leaf on a u16 field at offset 16. Companion to the bit-clear
- * sub_08006948 (offset 0x2e in src/game/sub_08006948.c), called from
- * sub_080090B0 when the entity's tile-cache key changes (raises bit 0x40
+ * EntityRec_ClearKeyFlags (offset 0x2e in src/game/EntityRec_ClearKeyFlags.c), called from
+ * Player_UpdateTileCache when the entity's tile-cache key changes (raises bit 0x40
  * on the dirty-flags halfword at gIwram_35E0+0x10). */
 
-void sub_08006B88(void *p, u16 mask)
+void PlayerFlags_Set(void *p, u16 mask)
 {
     *(u16 *)((u8 *)p + 16) |= mask;
 }
 
-/* Bit-clear companion to sub_08006B88 - same u16 field at offset 16. Like the
- * matched sibling sub_08006948 (offset 0x2e), this whole TU is built with
+/* Bit-clear companion to PlayerFlags_Set - same u16 field at offset 16. Like the
+ * matched sibling EntityRec_ClearKeyFlags (offset 0x2e), this whole TU is built with
  * OLD_AGBCC_BIN (see the Makefile per-TU override): old_agbcc keeps the
  * redundant `adds r1, r2, #0` move that recolours the BIC result into r1
  * before `strh r1` (newer agbcc coalesces it away to the 2-byte-shorter
  * `strh r2`). */
 
-void sub_08006B94(void *p, u16 mask)
+void IwramFlags_Clear(void *p, u16 mask)
 {
     *(u16 *)((u8 *)p + 16) &= ~mask;
 }
 
 /* Bool predicate companion: tests the same u16 dirty-flags field as
- * sub_08006B88/sub_08006B94 (offset 16) against mask. Must test the nonzero
+ * PlayerFlags_Set/IwramFlags_Clear (offset 16) against mask. Must test the nonzero
  * case first (`!= 0 -> return 1`) so old_agbcc emits the baserom's `bne`
  * fall-through with the return-1 block trailing the return-0 block; phrasing
  * it as `== 0 -> return 0` flips the branch to `beq` and reorders the blocks. */
 
-u8 sub_08006BA4(void *p, u16 mask)
+u8 IsFlagMaskSet(void *p, u16 mask)
 {
     if ((*(u16 *)((u8 *)p + 16) & mask) != 0)
         return 1;
@@ -84,7 +84,7 @@ struct BB4Frame {
 
 #define gPartTable_080C0AB0 ((const struct PartEntry *)0x080C0AB0)
 
-void sub_08006BB4(u8 partId, u8 *out)
+void EntityScript_BuildSlotData(u8 partId, u8 *out)
 {
     register u8 *outCopy asm("r2");
     u8 *dst;
@@ -174,7 +174,7 @@ void sub_08006BB4(u8 partId, u8 *out)
     }
 }
 #else
-NAKED void sub_08006BB4(u8 partId, u8 *out)
+NAKED void EntityScript_BuildSlotData(u8 partId, u8 *out)
 {
     asm(".syntax unified\n"
         "    push    {r4, r5, r6, r7, lr}\n"
@@ -389,17 +389,17 @@ NAKED void sub_08006BB4(u8 partId, u8 *out)
  * threshold at +24, the per-frame counter at +25 is bumped (and snapped down
  * by 4 when it crosses a multiple of 4), then an inner loop walks the cell's
  * `count` (signed byte at +28) sub-records — each a {s16 col, s16 row} pair at
- * the pointer stored at +32 — classifying every tile via sub_0800CD88 and,
+ * the pointer stored at +32 — classifying every tile via Tilemap_GetTileClass and,
  * for class 8 with the cell's flag byte at +17 clear, enqueueing it through
- * sub_080112C0 (kinds 4/3 keyed on which tri-step encoding the sub-record
+ * BlitFrameCell (kinds 4/3 keyed on which tri-step encoding the sub-record
  * uses). The cell's last-stamp is refreshed to the current tick afterward.
  *
  * The NON_MATCHING branch is the current regular-C candidate. It matches the
  * 44-byte frame and most high-register state, but the asm fallback stays active
  * until the remaining scheduling and register-allocation drift is resolved. */
 
-extern u8 sub_0800CD88(u8 col, u8 row, s32 tileX, s32 tileY);
-extern void sub_080112C0(u32 frameArg, u32 rowsArg, u32 colsArg, u32 dstXArg, u32 dstYArg, u32 bankArg, u32 cellArg);
+extern u8 Tilemap_GetTileClass(u8 col, u8 row, s32 tileX, s32 tileY);
+extern void BlitFrameCell(u32 frameArg, u32 rowsArg, u32 colsArg, u32 dstXArg, u32 dstYArg, u32 bankArg, u32 cellArg);
 
 #ifdef NON_MATCHING
 struct Cell {
@@ -424,7 +424,7 @@ struct D24Frame {
     s32 rowByte;
 };
 
-void sub_08006D24(struct Cell *cells, s32 first, s32 last, u8 arg3)
+void Entity_TickCells(struct Cell *cells, s32 first, s32 last, u8 arg3)
 {
     register struct Cell *base asm("sl");
     register s32 i asm("r9");
@@ -492,13 +492,13 @@ void sub_08006D24(struct Cell *cells, s32 first, s32 last, u8 arg3)
                 row = (s16)(rec[1] + 1);
                 rowLocal = gIwram_35E0._field_19;
                 frame.rowByte = rowLocal;
-                if ((u8)sub_0800CD88(gIwram_35E0._field_18, rowLocal, col, row) == 8 &&
+                if ((u8)Tilemap_GetTileClass(gIwram_35E0._field_18, rowLocal, col, row) == 8 &&
                     *(s8 *)((u8 *)cell + 0x11) == 0) {
                     rec = (const s16 *)((u32)cell->records + recOff);
-                    sub_080112C0(1, 4, 3, (u16)(rec[0] * 3), (u16)(rec[1] * 3), frame.flag, sub);
+                    BlitFrameCell(1, 4, 3, (u16)(rec[0] * 3), (u16)(rec[1] * 3), frame.flag, sub);
                 } else {
                     rec = (const s16 *)((u32)cellReg->records + recOff);
-                    sub_080112C0(1, 3, 3, (u16)(rec[0] * 3), (u16)(rec[1] * 3), frame.flag, sub);
+                    BlitFrameCell(1, 3, 3, (u16)(rec[0] * 3), (u16)(rec[1] * 3), frame.flag, sub);
                 }
 
                 recOff += 4;
@@ -514,7 +514,7 @@ void sub_08006D24(struct Cell *cells, s32 first, s32 last, u8 arg3)
     } while (i <= frame.last);
 }
 #else
-NAKED void sub_08006D24(void *cells, s32 first, s32 last, u8 arg3)
+NAKED void Entity_TickCells(void *cells, s32 first, s32 last, u8 arg3)
 {
     asm(".syntax unified\n"
         "    push    {r4, r5, r6, r7, lr}\n"
@@ -619,7 +619,7 @@ NAKED void sub_08006D24(void *cells, s32 first, s32 last, u8 arg3)
         "    asrs    r3, r3, #16\n"
         "    ldr     r1, [sp, #40]\n"
         "    mov     r2, ip\n"
-        "    bl      sub_0800CD88\n"
+        "    bl      Tilemap_GetTileClass\n"
         "    lsls    r0, r0, #24\n"
         "    lsrs    r0, r0, #24\n"
         "    cmp     r0, #8\n"
@@ -649,7 +649,7 @@ NAKED void sub_08006D24(void *cells, s32 first, s32 last, u8 arg3)
         "    movs    r0, #1\n"
         "    movs    r1, #4\n"
         "    movs    r2, #3\n"
-        "    bl      sub_080112C0\n"
+        "    bl      BlitFrameCell\n"
         "    b       _06e56\n"
         "    .align  2, 0\n"
         "_pool_gIwram35E0: .4byte 0x030035e0\n"
@@ -675,7 +675,7 @@ NAKED void sub_08006D24(void *cells, s32 first, s32 last, u8 arg3)
         "    movs    r0, #1\n"
         "    movs    r1, #3\n"
         "    movs    r2, #3\n"
-        "    bl      sub_080112C0\n"
+        "    bl      BlitFrameCell\n"
         "_06e56:\n"
         "    movs    r1, #4\n"
         "    add     r8, r1\n"
@@ -719,7 +719,7 @@ NAKED void sub_08006D24(void *cells, s32 first, s32 last, u8 arg3)
  * For each ripe entry with flags bit 1 set (and the cursor's own dirty bit 1
  * at gIwram_35E0+0x10 set), the candidate tile is computed from the cursor's
  * gIwram_3720 sub-coords plus the entry's per-axis delta scaled by 4 then
- * divided by 24 (the sub-pixel-per-tile factor). sub_0800CD88 classifies that
+ * divided by 24 (the sub-pixel-per-tile factor). Tilemap_GetTileClass classifies that
  * tile against the gIwram_35E0 entity coords (+0x18/+0x19); class 2 (blocked)
  * aborts the step for this entry, leaving only the stamp refreshed. Otherwise
  * the cursor sub-coords advance by the raw delta and each axis is clamped to
@@ -745,7 +745,7 @@ struct GridEntry {
     u8 _pad1B[9];
 };
 
-void sub_08006E8C(struct GridEntry *entries, s8 first, s8 last)
+void Entity_ApplyGridMovement(struct GridEntry *entries, s8 first, s8 last)
 {
     u32 tick = gGameStuff._unk00;
     s8 i;
@@ -760,7 +760,7 @@ void sub_08006E8C(struct GridEntry *entries, s8 first, s8 last)
             s16 tileX = __divsi3(gEntities[0].x + e->deltaX * 4, 24);
             s16 tileY = __divsi3(gEntities[0].y + e->deltaY * 4, 24);
 
-            if ((u8)sub_0800CD88(gIwram_35E0._field_18, gIwram_35E0._field_19, tileX, tileY) != 2) {
+            if ((u8)Tilemap_GetTileClass(gIwram_35E0._field_18, gIwram_35E0._field_19, tileX, tileY) != 2) {
                 gEntities[0].x += e->deltaX;
                 gEntities[0].y += e->deltaY;
 
@@ -784,7 +784,7 @@ void sub_08006E8C(struct GridEntry *entries, s8 first, s8 last)
     }
 }
 #else
-NAKED void sub_08006E8C(void *entries, s8 first, s8 last)
+NAKED void Entity_ApplyGridMovement(void *entries, s8 first, s8 last)
 {
     asm(".syntax unified\n"
         "    push    {r4, r5, r6, r7, lr}\n"
@@ -863,7 +863,7 @@ NAKED void sub_08006E8C(void *entries, s8 first, s8 last)
         "    lsls    r3, r3, #16\n"
         "    asrs    r3, r3, #16\n"
         "    adds    r2, r4, #0\n"
-        "    bl      sub_0800CD88\n"
+        "    bl      Tilemap_GetTileClass\n"
         "    lsls    r0, r0, #24\n"
         "    lsrs    r0, r0, #24\n"
         "    cmp     r0, #2\n"
@@ -968,7 +968,7 @@ NAKED void sub_08006E8C(void *entries, s8 first, s8 last)
 }
 #endif
 
-/* Sweeps the same 36-byte (0x24) entry array as the sub_08006D24/sub_08006E8C
+/* Sweeps the same 36-byte (0x24) entry array as the Entity_TickCells/Entity_ApplyGridMovement
  * neighbours over the index range [0, count), looking for an entry that matches
  * the active actor and, when found, raises its "engaged" bit.
  *
@@ -976,13 +976,13 @@ NAKED void sub_08006E8C(void *entries, s8 first, s8 last)
  * +0x34 has bit 0x04 set. Otherwise each entry's transient bit 0x02 at +26 is
  * cleared up front; entries whose bit 0x01 (at +26) is set are skipped. A
  * candidate must also match the active id (gIwram_3720+6 == entry+8) and pass
- * sub_080076A4(gEntities, entry). A passing entry additionally requires, when
+ * Rect_PointInCenterRect(gEntities, entry). A passing entry additionally requires, when
  * the gIwram_3720 dispatch state at +0x1A is > 3, that the gIwram_35E0 flags
  * halfword at +0x10 have bit 0x10 set. Every fully-qualifying entry gets bit
  * 0x02 raised on both its +26 byte and the gIwram_35E0 +0x10 halfword, and the
  * routine records a hit (return value becomes 1) while scanning the rest. */
 
-extern s32 sub_080076A4(struct Entity *actor, void *entry);
+extern s32 Rect_PointInCenterRect(struct Entity *actor, void *entry);
 
 struct EngageEntry {
     u8 _pad00[8];
@@ -992,7 +992,7 @@ struct EngageEntry {
     u8 _pad1B[0x9]; /* +27..+0x23: pad to 36-byte (0x24) stride */
 };
 
-u8 sub_08006FEC(struct EngageEntry *entries, s8 count)
+u8 Entity_CheckEngage(struct EngageEntry *entries, s8 count)
 {
     u8 hit = 0;
     s8 i;
@@ -1013,7 +1013,7 @@ u8 sub_08006FEC(struct EngageEntry *entries, s8 count)
         if (gEntities[0].field_06 != e->matchId)
             continue;
 
-        if (!sub_080076A4(gEntities, e))
+        if (!Rect_PointInCenterRect(gEntities, e))
             continue;
 
         if (gEntities[0].field_1A > 3 && (gIwram_35E0._field_10 & 0x10) == 0)
@@ -1027,7 +1027,7 @@ u8 sub_08006FEC(struct EngageEntry *entries, s8 count)
     return hit;
 }
 
-/* --- sub_080070A0: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- Entity_ApplyScrollStep: non-matching reference (asm slice provides the matching bytes) --- */
 #ifdef NON_MATCHING
 struct ScrollStepEntry {
     u16 subX; /* +0x00 */
@@ -1042,7 +1042,7 @@ struct ScrollStepEntry {
     u8 _pad1B[9];
 };
 
-void sub_080070A0(struct ScrollStepEntry *entries, s32 first, s32 last)
+void Entity_ApplyScrollStep(struct ScrollStepEntry *entries, s32 first, s32 last)
 {
     register GameStuff *game asm("r8");
     struct ScrollStepEntry *entry;

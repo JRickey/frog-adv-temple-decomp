@@ -369,7 +369,7 @@
 @   0x0802cdcc: bc02        pop	{r1}
 @   0x0802cdce: 4708        bx	r1
 
-        thumb_func_start sub_0802CAFC
-sub_0802CAFC: @ 0x0802cafc
+        thumb_func_start Enemy_PickNextStep
+Enemy_PickNextStep: @ 0x0802cafc
         .incbin "frog_us_baserom.gba", 0x2cafc, 0x2d4
-        thumb_func_end sub_0802CAFC
+        thumb_func_end Enemy_PickNextStep

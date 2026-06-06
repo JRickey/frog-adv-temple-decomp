@@ -4,11 +4,11 @@
 #include "iwram.h"
 #include "types.h"
 
-extern void sub_080100E4(u32, void *, void *);
-extern void sub_0800A05C(void);
+extern void Scroll_FlushTilemapWindow(u32, void *, void *);
+extern void EntityPool_Reset(void);
 extern void sub_08019A14(void);
-extern void sub_08020B88(u32);
-extern void sub_08020BAC(void);
+extern void Sound_PlayIfEnabled(u32);
+extern void Sound_DrainIfActive(void);
 extern const u8 sRoomDmaTable_080C1254[];
 
 struct ScrollData {
@@ -34,7 +34,7 @@ extern struct Unk03006420 gUnk03006420;
 #define FIXED_ARG_PTR(reg, expr) ({ register void *_v asm(reg) = (void *)(expr); _v; })
 /* clang-format on */
 
-u32 sub_08019E6C(void)
+u32 BgBuffer_ApplyPending(void)
 {
     struct Unk03006420 *base = &gUnk03006420;
 
@@ -47,10 +47,10 @@ u32 sub_08019E6C(void)
 
     *(struct ScrollData *)0x03003550 = base->scroll;
 
-    sub_080100E4(FIXED_ARG_U32("r0", 0), FIXED_ARG_PTR("r1", 0x80 << 18), FIXED_ARG_PTR("r2", 0x0600e000));
-    sub_080100E4(FIXED_ARG_U32("r0", 1), FIXED_ARG_PTR("r1", 0x02010000), FIXED_ARG_PTR("r2", 0x0600e800));
-    sub_080100E4(FIXED_ARG_U32("r0", 2), FIXED_ARG_PTR("r1", 0x02020000), FIXED_ARG_PTR("r2", 0x0600f000));
-    sub_080100E4(FIXED_ARG_U32("r0", 3), FIXED_ARG_PTR("r1", 0x02030000), FIXED_ARG_PTR("r2", 0x0600f800));
+    Scroll_FlushTilemapWindow(FIXED_ARG_U32("r0", 0), FIXED_ARG_PTR("r1", 0x80 << 18), FIXED_ARG_PTR("r2", 0x0600e000));
+    Scroll_FlushTilemapWindow(FIXED_ARG_U32("r0", 1), FIXED_ARG_PTR("r1", 0x02010000), FIXED_ARG_PTR("r2", 0x0600e800));
+    Scroll_FlushTilemapWindow(FIXED_ARG_U32("r0", 2), FIXED_ARG_PTR("r1", 0x02020000), FIXED_ARG_PTR("r2", 0x0600f000));
+    Scroll_FlushTilemapWindow(FIXED_ARG_U32("r0", 3), FIXED_ARG_PTR("r1", 0x02030000), FIXED_ARG_PTR("r2", 0x0600f800));
 
     base->active = 0;
     return 1;
@@ -65,7 +65,7 @@ u32 sub_08019E6C(void)
  * offsets to the base register at runtime instead of folding each into a
  * separate pool constant. The zptr pointer-first store makes &zero (reused
  * as the fixed DMA source) materialize before the zero value. */
-void sub_08019EF0(void)
+void LoadRoomBg3Graphics(void)
 {
     u16 zero;
     u16 *zptr;
@@ -106,7 +106,7 @@ void sub_08019EF0(void)
     REG_BG3CNT = 0x1F08;
 }
 
-void sub_08019F70(u8 arg)
+void BgPlane_FillTilemap(u8 arg)
 {
     vu16 *dst;
     u16 i;
@@ -134,7 +134,7 @@ void sub_08019F70(u8 arg)
     } while (i <= 0x3FF);
 }
 
-void sub_08019FD8(void)
+void RoomSelect_InitDisplay(void)
 {
     u16 zero;
     vu32 *dma;
@@ -142,7 +142,7 @@ void sub_08019FD8(void)
     u32 idx24;
     u32 tableBase;
 
-    sub_0800A05C();
+    EntityPool_Reset();
 
     *(u16 *)&zero = 0;
 
@@ -183,8 +183,8 @@ void sub_08019FD8(void)
 
     gIwram_6110.inputFlags ^= 8;
 
-    sub_08020BAC();
-    sub_08020B88(15);
+    Sound_DrainIfActive();
+    Sound_PlayIfEnabled(15);
 }
 
 typedef void (*GameProc)(void);
@@ -194,26 +194,26 @@ extern const u32 sEntityProcC[17];
 extern const u16 sWinPoseScreenCoords[];
 extern const u8 sUnkPtrPair_82F998C[];
 
-extern u8 sub_0801B154(void);
-extern void sub_0801B278(u8 count);
-extern void sub_0801BADC(void);
+extern u8 GetHighestUnlockedWorld(void);
+extern void WorldMap_DrawPathTiles(u8 count);
+extern void LoadWorldLevelLayoutAlt(void);
 /* Declared with s32 coordinate params so the s16 x/y are sign-extended at
  * the call site (lsls #16 / asrs #16), matching the baserom. */
-extern void sub_080090FC(s32 x, s32 y, u8 g, u8 h);
-extern void sub_0800EBDC(u8 arg);
+extern void Player_InitEntity(s32 x, s32 y, u8 g, u8 h);
+extern void BgScrollBlit(u8 arg);
 extern void sub_08008174(void);
-extern void sub_08009A58(void);
-extern void sub_08009188(void);
-extern void sub_0800A328(void);
+extern void Entity_UpdateVisibility(void);
+extern void Entity_Advance(void);
+extern void Game_ForceRender(void);
 
 /* Win-pose / level-transition entry. Reads the transition state byte at
  * 0x03003540: state 0 drives the win-pose camera from gGameStuff.pendingMode,
- * state 2 from the highest live world flag (sub_0801B154). Seeds the player
+ * state 2 from the highest live world flag (GetHighestUnlockedWorld). Seeds the player
  * sprite at the chosen screen coords, primes the gIwram_6110 mode-control
  * block (the two flagBank words are set to 0xFFFFFFFF, not -1, so each pair
  * loads the 0xffffffff/0 pool constants), then runs the per-frame entity
  * dispatch tail. */
-void sub_0801A0A4(void)
+void WinPose_Init(void)
 {
     u8 idx;
     u8 idx2;
@@ -221,20 +221,20 @@ void sub_0801A0A4(void)
     s16 y;
     const u16 *coords;
 
-    sub_0800A05C();
+    EntityPool_Reset();
 
     switch (*(u8 *)0x03003540) {
     case 0:
         idx = gGameStuff.pendingMode;
         break;
     case 2:
-        idx = (u8)(sub_0801B154() + 1);
+        idx = (u8)(GetHighestUnlockedWorld() + 1);
         if (idx > 15)
             idx = 15;
         break;
     }
 
-    idx2 = sub_0801B154();
+    idx2 = GetHighestUnlockedWorld();
     if (idx2 > 14)
         idx2 = 15;
 
@@ -249,49 +249,49 @@ void sub_0801A0A4(void)
     gGameStuff.pendingMode = 0;
     ModeControl_Init(&gIwram_6110, 20, 2, sUnkPtrPair_82F998C, 1, 0);
 
-    sub_0800A05C();
-    sub_080090FC(x, y, 1, 0x23);
+    EntityPool_Reset();
+    Player_InitEntity(x, y, 1, 0x23);
 
     ((GameProc)sEntityProcC[0])();
 
     if (*(u8 *)0x03003540 == 0) {
         if (idx2 > idx)
-            sub_0801B278((u8)(idx2 + 1));
+            WorldMap_DrawPathTiles((u8)(idx2 + 1));
         else
-            sub_0801B278(idx);
+            WorldMap_DrawPathTiles(idx);
     } else if (*(u8 *)0x03003540 == 2) {
-        sub_0801B278((u8)(idx2 + 1));
+        WorldMap_DrawPathTiles((u8)(idx2 + 1));
     }
 
-    sub_0800EBDC(2);
-    sub_0801BADC();
+    BgScrollBlit(2);
+    LoadWorldLevelLayoutAlt();
 
     gIwram_6110.flagBank0 = 0xFFFFFFFFLL;
     gIwram_6110.flagBank1 = 0xFFFFFFFFLL;
 
     sub_08008174();
     ((GameProc)sEntityProcB[0])();
-    sub_08009A58();
-    sub_08009188();
-    sub_0800A328();
+    Entity_UpdateVisibility();
+    Entity_Advance();
+    Game_ForceRender();
 }
 
-void sub_0801B30C(u8 tileX, u8 tileY);
-void sub_0801B0AC(void);
-int sub_0801A614(u8 index, int useTableA);
+void WorldMap_SetPathTile(u8 tileX, u8 tileY);
+void Entity_UpdateAndRender(void);
+int ScriptStep_Advance(u8 index, int useTableA);
 
-u8 sub_0801A1C4(u8 index, u8 noSnap, int useTableA, int skipAdvance)
+u8 MapCursor_Step(u8 index, u8 noSnap, int useTableA, int skipAdvance)
 {
     u8 flags;
 
     flags = 0;
 
     if (noSnap == 0) {
-        sub_0801B30C((gEntities[0].x - 4) / 8, (gEntities[0].y + 4) / 8);
+        WorldMap_SetPathTile((gEntities[0].x - 4) / 8, (gEntities[0].y + 4) / 8);
     }
 
     if (skipAdvance == 0) {
-        flags = sub_0801A614(index, useTableA);
+        flags = ScriptStep_Advance(index, useTableA);
     }
 
     if (flags & 8) {
@@ -307,7 +307,7 @@ u8 sub_0801A1C4(u8 index, u8 noSnap, int useTableA, int skipAdvance)
         gEntities[0].y -= 2;
     }
 
-    sub_0801B0AC();
+    Entity_UpdateAndRender();
 
     if (flags == 0xFF) {
         return 0;

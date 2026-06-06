@@ -351,7 +351,7 @@
 @   0x080135b4: 6110        str	r0, [r2, #16]
 @   0x080135b6: 0300        lsls	r0, r0, #12
 
-        thumb_func_start sub_080132E8
-sub_080132E8: @ 0x080132e8
+        thumb_func_start ScaleAnim_BlitSceneLayers
+ScaleAnim_BlitSceneLayers: @ 0x080132e8
         .incbin "frog_us_baserom.gba", 0x132e8, 0x2d0
-        thumb_func_end sub_080132E8
+        thumb_func_end ScaleAnim_BlitSceneLayers

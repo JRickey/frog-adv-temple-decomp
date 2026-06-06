@@ -3,12 +3,12 @@
 #include "iwram.h"
 #include "types.h"
 
-extern void sub_080196EC(u32 *attr, const void *src, u8 mode);
+extern void TileBlit(u32 *attr, const void *src, u8 mode);
 
 /* Builds a 4-byte tilemap descriptor on the stack, refines its tile column by
  * gIwram_3480._unk14, kicks a DMA3 screenblock load, then blits the descriptor
- * via sub_080196EC. Sibling of sub_0801F8BC (same attr-build idiom). */
-void sub_080200B4(void)
+ * via TileBlit. Sibling of SaveSlot_DrawSelectionCursor (same attr-build idiom). */
+void WinPoseScreen_DrawBg(void)
 {
     u32 attr;
 
@@ -40,5 +40,5 @@ void sub_080200B4(void)
     REG_DMA3.cnt = DMA_ENABLE | 0x400;
     (void)REG_DMA3.cnt;
 
-    sub_080196EC(&attr, (const void *)0x081e5418, 2);
+    TileBlit(&attr, (const void *)0x081e5418, 2);
 }

@@ -2,18 +2,18 @@
 #include "macros.h"
 #include "types.h"
 
-/* Sibling script-step advance of sub_080179B8 (which uses gScriptPtrTable_08307fec).
+/* Sibling script-step advance of ScriptTick (which uses gScriptPtrTable_08307fec).
  * These two tables are still inside the ROM data blob; useTableA picks which one,
  * index picks an entry. Each entry points at a byte-stream of opcodes. */
 extern const u8 *const gScriptPtrTable_08308164[];
 extern const u8 *const gScriptPtrTable_083081A0[];
 
-u32 sub_08000900(void);
+u32 GetFrameTick(void);
 u32 __udivsi3(u32 num, u32 den);
 
-int sub_0801A614(u8 index, int useTableA)
+int ScriptStep_Advance(u8 index, int useTableA)
 {
-    /* Pins mirror the matching sibling sub_080179B8: script, the cursor state and
+    /* Pins mirror the matching sibling ScriptTick: script, the cursor state and
      * the opcode all stay live across the two BLs, giving the push {r4,r5,r6,lr}. */
     const u8 *script;
     struct IwramAt34C0 *s;
@@ -27,7 +27,7 @@ int sub_0801A614(u8 index, int useTableA)
 
     s = &gIwram_34C0;
     if (s->delay != 0) {
-        if (__udivsi3(sub_08000900() - s->stepTick, 60) < s->delay) {
+        if (__udivsi3(GetFrameTick() - s->stepTick, 60) < s->delay) {
             goto ret_zero;
         }
     }
@@ -57,7 +57,7 @@ int sub_0801A614(u8 index, int useTableA)
             idx = (u8)c1;
             idx = (u32)script + idx;
             s->delay = *(u8 *)idx;
-            s->stepTick = sub_08000900();
+            s->stepTick = GetFrameTick();
             return op;
         }
     }

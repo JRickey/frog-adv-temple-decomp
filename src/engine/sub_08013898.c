@@ -8,13 +8,13 @@ struct TransferDesc {
     u32 wordC;
 };
 
-extern void sub_0800E7D4(void);
-extern void sub_08012CAC(void);
-extern void sub_08013C60(struct TransferDesc desc, u8 mode, void *buf);
-extern void sub_0801310C(void);
-extern void sub_08017000(void);
+extern void SetModeBlendRegs(void);
+extern void BgScrollAnim_Update(void);
+extern void DmaJob_Advance(struct TransferDesc desc, u8 mode, void *buf);
+extern void ScaleAnim_SyncSelectors(void);
+extern void FrogStatusBar_Update(void);
 
-void sub_08013898(void)
+void ScaleAnim_UpdateFrame(void)
 {
     u8 state;
     u8 *statePtr;
@@ -29,10 +29,10 @@ void sub_08013898(void)
     case 1: {
         struct TransferDesc *desc0;
 
-        sub_0800E7D4();
-        sub_08012CAC();
+        SetModeBlendRegs();
+        BgScrollAnim_Update();
         desc0 = (struct TransferDesc *)0x08306f08;
-        sub_08013C60(*desc0, ((u8 *)desc0)[2], (void *)0x030064c0);
+        DmaJob_Advance(*desc0, ((u8 *)desc0)[2], (void *)0x030064c0);
         break;
     }
     }
@@ -40,9 +40,9 @@ void sub_08013898(void)
     {
         struct TransferDesc *desc1 = (struct TransferDesc *)0x08306f50;
 
-        sub_08013C60(*desc1, ((u8 *)desc1)[2], (void *)0x03006580);
+        DmaJob_Advance(*desc1, ((u8 *)desc1)[2], (void *)0x03006580);
     }
 
-    sub_0801310C();
-    sub_08017000();
+    ScaleAnim_SyncSelectors();
+    FrogStatusBar_Update();
 }

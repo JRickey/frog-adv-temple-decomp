@@ -1,7 +1,7 @@
 #include "types.h"
 
 /* Scene scroll/tile state block at IWRAM 0x030060A0 (the gIwram_60A0 linker
- * symbol). Same layout the scroll helpers (sub_0800F2F8) use; this blit only
+ * symbol). Same layout the scroll helpers (SaveBgScrollOffset) use; this blit only
  * needs tileWidth, the destination tilemap stride in u16 entries. */
 struct SceneScrollState_60A0 {
     u8 _pad00[12];
@@ -19,7 +19,7 @@ extern struct SceneScrollState_60A0 gIwram_60A0;
 /* Blit a cols x rows rectangle of u16 tile entries from src into one of three
  * EWRAM tilemap banks, placed at (dstX, dstY) and advancing by the bank stride
  * (tileWidth) between rows. */
-void sub_08015C24(u8 bank, u16 dstX, u16 dstY, u8 cols, u8 rows, const u16 *src)
+void BlitTilesRect(u8 bank, u16 dstX, u16 dstY, u8 cols, u8 rows, const u16 *src)
 {
     u16 *dst;
     struct SceneScrollState_60A0 *state;

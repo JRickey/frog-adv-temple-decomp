@@ -2,7 +2,7 @@
 @ Address-aligned bucket of unparsed baserom bytes.
 @ Range:  [0x08005960, 0x080059c4)  (0x64 bytes)
 @
-@ Post-peel chunk after sub_080058FC.
+@ Post-peel chunk after Stage_ResetPlayerSlots.
 @
 @ This file holds raw bytes only; no instructions are assembled here.
 

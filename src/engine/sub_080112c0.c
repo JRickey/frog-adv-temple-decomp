@@ -2,7 +2,7 @@
 #include "macros.h"
 #include "types.h"
 
-extern void sub_0801025C(u32 rows, u32 cols, u32 dstX, u32 dstY, u32 bank, const u16 *src, u16 *vram);
+extern void ScaleAnim_BlitFrameToVram(u32 rows, u32 cols, u32 dstX, u32 dstY, u32 bank, const u16 *src, u16 *vram);
 extern const u16 ***gFrameCellTable_08307EAC[];
 
 struct BlitState {
@@ -13,10 +13,10 @@ struct BlitState {
 /* Blits a cols x rows block of u16 tiles from the ROM cell table
  * (gFrameCellTable[(gGameStuff.pendingMode - 1) * 5][frame][cell]) into one of
  * three EWRAM banks selected by `bank`, at (dstX, dstY) scaled by the scene
- * stride at gIwram_60A0+26, then tail-calls sub_0801025C to flush the bank to
+ * stride at gIwram_60A0+26, then tail-calls ScaleAnim_BlitFrameToVram to flush the bank to
  * VRAM. Twin of the (already-matching) sub_08012BC4; like it, the register pins
  * mirror agbcc's prologue allocation and are load-bearing for the match. */
-void sub_080112C0(u32 frameArg, u32 rowsArg, u32 colsArg, u32 dstXArg, u32 dstYArg, u32 bankArg, u32 cellArg)
+void BlitFrameCell(u32 frameArg, u32 rowsArg, u32 colsArg, u32 dstXArg, u32 dstYArg, u32 bankArg, u32 cellArg)
 {
     u32 frame;
     register u32 rows asm("r8");
@@ -103,5 +103,5 @@ void sub_080112C0(u32 frameArg, u32 rowsArg, u32 colsArg, u32 dstXArg, u32 dstYA
         break;
     }
 
-    sub_0801025C(rows, cols, dstX, dstY, bank, (const u16 *)frame, vram);
+    ScaleAnim_BlitFrameToVram(rows, cols, dstX, dstY, bank, (const u16 *)frame, vram);
 }

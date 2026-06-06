@@ -3,13 +3,13 @@
 #include "gba/io.h"
 #include "iwram.h"
 
-extern void sub_08020B30(void);
-extern void sub_08017364(void);
-extern void sub_0800072C(void);
-extern void sub_08000820(void);
+extern void SoundMixer_Init(void);
+extern void SaveLoad(void);
+extern void ClearVramAndWorkram(void);
+extern void IrqHandler_Install(void);
 
-extern u32 sub_08000900(void);
-extern u32 sub_080179B8(void);
+extern u32 GetFrameTick(void);
+extern u32 ScriptTick(void);
 
 /* Init1: one-time setup called from AgbMain's prologue.
  *
@@ -25,9 +25,9 @@ extern u32 sub_080179B8(void);
  * `(T *)0x03003480` casts triggered agbcc 2.x's CSE-fold on adjacent
  * compile-time-constant addresses; opaque externs sidestep that. See
  * docs/codegen-notes.md "Adjacent IWRAM bases". */
-void sub_08000430(void)
+void Init1(void)
 {
-    sub_08020B30();
+    SoundMixer_Init();
     REG_IE = 0;
     gGameStuff.rngSeed = 13;
     gGameStuff._unk00 = 0;
@@ -46,8 +46,8 @@ void sub_08000430(void)
     gIwram_35E0._data[0] = 5;
     gIwram_35E0._data[4] = 0;
     gIwram_34B0._data = 0;
-    sub_08017364();
-    sub_0800072C();
+    SaveLoad();
+    ClearVramAndWorkram();
     gIwram_3550._data[0] = 0;
     gIwram_3550._data[1] = 0;
     gIwram_3550._data[2] = 0;
@@ -56,7 +56,7 @@ void sub_08000430(void)
     gIwram_3550._data[5] = 0;
     gIwram_3550._data[6] = 0;
     gIwram_3550._data[7] = 0;
-    sub_08000820();
+    IrqHandler_Install();
     REG_DISPCNT = DISPCNT_OBJ_1D | DISPCNT_BG0_ON | DISPCNT_BG1_ON | DISPCNT_BG2_ON | DISPCNT_BG3_ON | DISPCNT_OBJ_ON;
 }
 
@@ -82,7 +82,7 @@ void sub_08000430(void)
  * function). The r0-pinned `gs` local pairs with it
  * to anchor the gGameStuff load in the right register at the post-
  * remap mode check. */
-u32 sub_080004C4(void)
+u32 Input_Poll(void)
 {
     u16 raw;
     u16 mapped;
@@ -134,15 +134,15 @@ u32 sub_080004C4(void)
         }
     }
 
-    now = sub_08000900();
+    now = GetFrameTick();
     if (now - gIwram_34C0.lastTick <= 10) {
         return 0;
     }
-    gIwram_34C0.lastTick = sub_08000900();
-    return (u16)sub_080179B8();
+    gIwram_34C0.lastTick = GetFrameTick();
+    return (u16)ScriptTick();
 }
 
-u32 sub_080005D8(void)
+u32 PollInputAndAttract(void)
 {
     u16 raw;
     u16 mapped;
@@ -184,10 +184,10 @@ u32 sub_080005D8(void)
         }
 
         if (mapped == 0) {
-            now = sub_08000900();
+            now = GetFrameTick();
             if (now - gIwram_34C0.lastTick > 10) {
-                gIwram_34C0.lastTick = sub_08000900();
-                return (u16)sub_080179B8();
+                gIwram_34C0.lastTick = GetFrameTick();
+                return (u16)ScriptTick();
             }
             return 0;
         }
@@ -198,21 +198,21 @@ u32 sub_080005D8(void)
     }
 }
 
-/* Per-frame input poll variant: like sub_080004C4 / sub_080005D8 but with a
+/* Per-frame input poll variant: like Input_Poll / PollInputAndAttract but with a
  * different remap. START is edge-triggered (just-pressed) and maps to KEY_UP;
  * the four D-pad directions are level-triggered (currently-held `raw`) and map
  * to the game's extended virtual-button bits 10..13.
  *
  * In the mode==24 attract case: any remapped input forces mode 4 (return to
- * title); otherwise the attract step advances via sub_080179B8 (no timer gate,
+ * title); otherwise the attract step advances via ScriptTick (no timer gate,
  * unlike the two siblings).
  *
  * Matching trick: `rawShadow = raw` before the directional bit-test sequence
  * splits the held-key mask onto a separate value, defeating agbcc 2.x's
  * preemptive spill of `raw` into a second callee-saved register (which
  * otherwise widens the prologue to `push {r4, r5, lr}`). Same idiom the
- * `jpKeysShadow` copy uses in sub_080004C4. */
-u32 sub_08000678(void)
+ * `jpKeysShadow` copy uses in Input_Poll. */
+u32 PollKeys_DPad(void)
 {
     u16 raw;
     u16 rawShadow;
@@ -246,15 +246,15 @@ u32 sub_08000678(void)
     }
 
     if (mapped == 0) {
-        return (u16)sub_080179B8();
+        return (u16)ScriptTick();
     }
 
     gs->mode = GAME_MODE_ROUTER;
     return 0;
 }
 
-/* Empty stub in the 4-byte gap between sub_08000678's epilogue and
- * sub_0800072C. Caller TBD; kept as a separate symbol so the surrounding
+/* Empty stub in the 4-byte gap between PollKeys_DPad's epilogue and
+ * ClearVramAndWorkram. Caller TBD; kept as a separate symbol so the surrounding
  * layout stays byte-identical. The Makefile's trailing `.align 2, 0`
  * emits the 0x0000 halfword pad the baserom has after it. */
 void sub_08000728(void)

@@ -474,7 +474,7 @@
 @   0x0800d802: ffff        35e0 			@ <UNDEFINED> instruction: 0xffff35e0
 @   0x0800d806: 0300        lsls	r0, r0, #12
 
-        thumb_func_start sub_0800D450
-sub_0800D450: @ 0x0800d450
+        thumb_func_start PadGrid_FillGrid
+PadGrid_FillGrid: @ 0x0800d450
         .incbin "frog_us_baserom.gba", 0xd450, 0x3b8
-        thumb_func_end sub_0800D450
+        thumb_func_end PadGrid_FillGrid

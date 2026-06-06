@@ -12,7 +12,7 @@ struct BlitSource_15B6C {
     u16 srcStride;
 };
 
-void sub_08015B6C(u8 mode, s16 dstX, s16 dstY, u8 widthArg, u8 heightArg, struct BlitSource_15B6C *src)
+void BlitSpriteRect(u8 mode, s16 dstX, s16 dstY, u8 widthArg, u8 heightArg, struct BlitSource_15B6C *src)
 {
     register struct BlitSource_15B6C *srcp asm("r8");
     register u16 *dst asm("r6");

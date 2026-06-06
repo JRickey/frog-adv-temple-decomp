@@ -3,7 +3,7 @@
 #include "types.h"
 
 /* Expands one entry of the part-descriptor table at 0x080C0AB0 into a run of
- * 36-byte (0x24) output records. Companion to sub_08006BB4
+ * 36-byte (0x24) output records. Companion to EntityScript_BuildSlotData
  * (src/game/sub_08006b88.c), which operates on the same table; this variant
  * skips the per-record layout switch, always uses the raw `byte * 24` X/Y
  * origin, zeroes the two flag bytes at out+25/out+26, and stamps the caller's
@@ -41,7 +41,7 @@ struct PartEntry {
 
 extern const struct PartEntry gPartTable_080C0AB0[];
 
-void sub_08007228(u8 partId, u8 *out, u8 tag)
+void LoadPartEntry(u8 partId, u8 *out, u8 tag)
 {
     s8 id = (s8)partId;
     const struct PartEntry *entry = &gPartTable_080C0AB0[id];
@@ -68,7 +68,7 @@ void sub_08007228(u8 partId, u8 *out, u8 tag)
     }
 }
 #else
-NAKED void sub_08007228(u8 partId, u8 *out, u8 tag)
+NAKED void LoadPartEntry(u8 partId, u8 *out, u8 tag)
 {
     asm(".syntax unified\n"
         "    push    {r4, r5, r6, r7, lr}\n"
@@ -176,7 +176,7 @@ NAKED void sub_08007228(u8 partId, u8 *out, u8 tag)
 struct EntScript {
     s8 count; /* +0: signed loop bound */
     u8 _b1;
-    s8 _b2; /* +2: forwarded to sub_0800736C */
+    s8 _b2; /* +2: forwarded to CollisionTable_CheckAndTriggerScript */
     u8 _b3;
     const void *script; /* +4 */
 };
@@ -190,17 +190,17 @@ struct EntScriptExt {
 extern const struct EntScript sEntityScriptIndex[];
 extern const struct EntScriptExt sEntityScriptIndexExt[];
 
-extern void sub_0800736C(s8 a, s32 c, s32 r2, s32 r3, s8 b);
-extern s32 sub_08007138(s32 c, s8 count);
-extern void sub_08006B88(void *p, u16 mask);
+extern void CollisionTable_CheckAndTriggerScript(s8 a, s32 c, s32 r2, s32 r3, s8 b);
+extern s32 CollisionTable_ScanForPlayer(s32 c, s8 count);
+extern void PlayerFlags_Set(void *p, u16 mask);
 
 /* Looks up the per-script header in sEntityScriptIndex[b], hands it (plus the
- * caller's a/c) to sub_0800736C, then for scripts that pass the sub_08007138
+ * caller's a/c) to CollisionTable_CheckAndTriggerScript, then for scripts that pass the CollisionTable_ScanForPlayer
  * gate raises the dirty-flag mask from sEntityScriptIndexExt[a] on gIwram_35E0.
  * Script id 1 takes an extra branch guarding on gEntities[0].field_1A and reads
  * the dirty-flag mask from the constant entry sEntityScriptIndexExt[1]. */
 
-void sub_080072E0(s8 a, s8 b, s32 c)
+void EntityScript_Advance(s8 a, s8 b, s32 c)
 {
     const struct EntScript *entry;
     const struct EntScript *table;
@@ -217,18 +217,18 @@ void sub_080072E0(s8 a, s8 b, s32 c)
     entry = &table[b];
     count = entry->count;
 
-    sub_0800736C(a, c, 0, count - 1, entry->_b2);
+    CollisionTable_CheckAndTriggerScript(a, c, 0, count - 1, entry->_b2);
 
     if (a == 1) {
         if (gEntities[0].field_1A > 3)
             return;
-        if (!sub_08007138(c, count))
+        if (!CollisionTable_ScanForPlayer(c, count))
             return;
-        sub_08006B88(&gIwram_35E0, sEntityScriptIndexExt[1]._h2);
+        PlayerFlags_Set(&gIwram_35E0, sEntityScriptIndexExt[1]._h2);
         return;
     }
 
-    if (!sub_08007138(c, count))
+    if (!CollisionTable_ScanForPlayer(c, count))
         return;
-    sub_08006B88(&gIwram_35E0, sEntityScriptIndexExt[a]._h2);
+    PlayerFlags_Set(&gIwram_35E0, sEntityScriptIndexExt[a]._h2);
 }

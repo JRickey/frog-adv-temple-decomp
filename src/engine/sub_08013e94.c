@@ -1,12 +1,12 @@
 #include "types.h"
 #include "iwram.h"
 
-extern u8 sub_0801185C(u8 range);
+extern u8 GetVcountRandom(u8 range);
 extern u8 gIwram_53A0[];
 extern u8 gIwram_549F[];
 extern u8 gIwram_3610[];
 
-void sub_08013E94(u8 n)
+void Deck_DealRandom(u8 n)
 {
     u8 i;
 
@@ -15,7 +15,7 @@ void sub_08013E94(u8 n)
         u8 *arr = gIwram_53A0;
         u8 *limit = arr + 0xFF;
         u8 *writeIdx = arr + 0xFE;
-        u8 rnd = sub_0801185C(*limit);
+        u8 rnd = GetVcountRandom(*limit);
         u8 j = rnd;
         int dst;
 
@@ -36,7 +36,7 @@ void sub_08013E94(u8 n)
     }
 }
 
-void sub_08013F2C(void)
+void Deck_Init(void)
 {
     u8 i;
 
@@ -47,7 +47,7 @@ void sub_08013F2C(void)
     gIwram_53A0[0xFE] = 0;
 }
 
-void sub_08013F5C(void)
+void Deck_ResetFirst(void)
 {
     gIwram_3610[0] = 0;
 }

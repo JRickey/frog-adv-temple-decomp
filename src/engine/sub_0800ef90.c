@@ -2,40 +2,40 @@
 #include "gba/io.h"
 #include "types.h"
 
-extern void sub_0800E85C(u8 arg);
-extern void sub_0800EB1C(void);
-extern void sub_0801129C(void);
-extern void sub_08010958(u8 arg0, u8 arg1);
-extern void sub_0800F24C(u8 arg);
-extern void sub_0800EBDC(u8 arg);
-extern void sub_08016A40(void);
+extern void CharLayers_Upload(u8 arg);
+extern void FrogOam_Init(void);
+extern void Scroll_ResetDirStep(void);
+extern void ModeChannel_Apply(u8 arg0, u8 arg1);
+extern void Scroll_UpdateCamera(u8 arg);
+extern void BgScrollBlit(u8 arg);
+extern void StatusBar_Update(void);
 
 /* Tears down the HBlank-driven display effect: drops BG2 from REG_DISPCNT
  * and disables the HBlank IRQ at both the enable (REG_IE) and trigger
  * (REG_DISPSTAT) ends. */
-void sub_0800EF90(void)
+void Scene_DisableBg2(void)
 {
     REG_DISPCNT &= ~DISPCNT_BG2_ON;
     REG_IE &= ~IRQ_HBLANK;
     REG_DISPSTAT &= ~DISPSTAT_HBLANK_IRQ;
 }
 
-void sub_0800EFC8(void)
+void SceneInit_WithHud(void)
 {
-    sub_0800E85C(2);
-    sub_0800EB1C();
-    sub_0801129C();
-    sub_08010958(5, 3);
-    sub_0800F24C(2);
-    sub_0800EBDC(2);
-    sub_08016A40();
+    CharLayers_Upload(2);
+    FrogOam_Init();
+    Scroll_ResetDirStep();
+    ModeChannel_Apply(5, 3);
+    Scroll_UpdateCamera(2);
+    BgScrollBlit(2);
+    StatusBar_Update();
 }
 
-void sub_0800EFF4(void)
+void SceneInit(void)
 {
-    sub_0800E85C(2);
-    sub_0800EB1C();
-    sub_0800F24C(2);
-    sub_0800EBDC(2);
-    sub_08016A40();
+    CharLayers_Upload(2);
+    FrogOam_Init();
+    Scroll_UpdateCamera(2);
+    BgScrollBlit(2);
+    StatusBar_Update();
 }

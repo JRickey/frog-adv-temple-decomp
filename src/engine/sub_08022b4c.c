@@ -2,41 +2,41 @@
 #include "iwram.h"
 #include "types.h"
 
-extern void sub_080228FC(void);
-extern void sub_08022758(void);
-extern void sub_080227DC(void);
-extern void sub_080228AC(void);
-extern void sub_08022A28(void);
-extern void sub_0802277C(void);
-extern void sub_080229F0(void);
-extern void sub_08022800(void);
-extern void sub_08022434(void);
-extern void sub_08022160(void);
-extern void sub_08022920(void);
-extern void sub_08022AC8(void);
-extern void sub_08022958(void);
-extern void sub_080229A4(void);
+extern void SpawnZone_Slot47(void);
+extern void SpawnZone_Slot02(void);
+extern void SpawnZone_Slot2F(void);
+extern void SpawnZone_Slot05(void);
+extern void SpawnNearbyEntities(void);
+extern void UpdateZone_Slots36to3D(void);
+extern void UpdateZone_Slots3Eto44(void);
+extern void UpdateZone_Slots19to26(void);
+extern void UpdateLogPairEntities(void);
+extern void SpawnEntitiesIfScrolled(void);
+extern void UpdateZone_Slots4Cto53(void);
+extern void SpawnZone_Slot59(void);
+extern void StreamInit_Slot02(void);
+extern void StreamInit_Slot06(void);
 
-void sub_08022B4C(void)
+void LevelEntities_Init(void)
 {
     gIwram_6110.liveCount = 0;
-    sub_080228FC();
-    sub_08022758();
-    sub_080227DC();
-    sub_080228AC();
-    sub_08022A28();
-    sub_0802277C();
-    sub_080229F0();
-    sub_08022800();
-    sub_08022434();
-    sub_08022160();
-    sub_08022920();
-    sub_08022AC8();
+    SpawnZone_Slot47();
+    SpawnZone_Slot02();
+    SpawnZone_Slot2F();
+    SpawnZone_Slot05();
+    SpawnNearbyEntities();
+    UpdateZone_Slots36to3D();
+    UpdateZone_Slots3Eto44();
+    UpdateZone_Slots19to26();
+    UpdateLogPairEntities();
+    SpawnEntitiesIfScrolled();
+    UpdateZone_Slots4Cto53();
+    SpawnZone_Slot59();
 }
 
-void sub_08022B90(void)
+void LevelEntities_Start(void)
 {
     REG_DISPCNT |= DISPCNT_OBJ_ON;
-    sub_08022958();
-    sub_080229A4();
+    StreamInit_Slot02();
+    StreamInit_Slot06();
 }

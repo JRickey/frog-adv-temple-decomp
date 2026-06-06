@@ -462,7 +462,7 @@
 @   0x08011e3c: 00d4        lsls	r4, r2, #3
 @   0x08011e3e: 0400        lsls	r0, r0, #16
 
-        thumb_func_start sub_08011AA4
-sub_08011AA4: @ 0x08011aa4
+        thumb_func_start Selector_UpdateBlit
+Selector_UpdateBlit: @ 0x08011aa4
         .incbin "frog_us_baserom.gba", 0x11aa4, 0x39c
-        thumb_func_end sub_08011AA4
+        thumb_func_end Selector_UpdateBlit

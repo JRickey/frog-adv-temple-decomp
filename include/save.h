@@ -7,16 +7,16 @@
  *
  * Reconstructed clean-room from the already-decompiled driver/consumer
  * functions:
- *   sub_080172F4  detect EEPROM + verify signature  (probes block 20)
- *   sub_080177A0  read  SaveHeader  (EEPROM block 0)
- *   sub_080177D8  write SaveHeader  (EEPROM block 0)
- *   sub_08017814  read  one SaveSlot (idx -> blocks idx*3+1 .. idx*3+2)
- *   sub_08017858  write one SaveSlot
- *   sub_080178FC  read  N EEPROM blocks   (-> sub_08033A70 per block)
- *   sub_0801789C  write N EEPROM blocks   (-> sub_08033B28 write, sub_08033C0C verify)
- *   sub_080338A8  set EEPROM size: arg 4 => 4Kbit/512B, 0x40 => 64Kbit/8KB
- *   sub_08017364  load save file into the in-RAM SaveData mirror (gSaveData)
- *   sub_0801756C  the paired save/commit routine (sibling)
+ *   SaveDetect  detect EEPROM + verify signature  (probes block 20)
+ *   SaveReadHeader  read  SaveHeader  (EEPROM block 0)
+ *   SaveWriteHeader  write SaveHeader  (EEPROM block 0)
+ *   SaveReadSlot  read  one SaveSlot (idx -> blocks idx*3+1 .. idx*3+2)
+ *   SaveWriteSlot  write one SaveSlot
+ *   SaveReadBlocks  read  N EEPROM blocks   (-> sub_08033A70 per block)
+ *   SaveWriteBlocks  write N EEPROM blocks   (-> sub_08033B28 write, sub_08033C0C verify)
+ *   Eeprom_SetSizeConfig  set EEPROM size: arg 4 => 4Kbit/512B, 0x40 => 64Kbit/8KB
+ *   SaveLoad  load save file into the in-RAM SaveData mirror (gSaveData)
+ *   SaveCommit  the paired save/commit routine (sibling)
  *
  * EEPROM is addressed in 8-byte blocks (4 u16 each). On-chip layout:
  *   block 0          SaveHeader (8 bytes)
@@ -37,7 +37,7 @@
 #define SAVE_SLOT_NAME_LEN   3
 #define SAVE_NAME_DEFAULT    0x41 /* 'A' — empty-slot initials "AAA"   */
 
-/* 8-byte save header (EEPROM block 0). Validated on load by sub_08017364;
+/* 8-byte save header (EEPROM block 0). Validated on load by SaveLoad;
  * a failed field check rebuilds the header from current game state.
  *
  * Bytes [4..7] are accessed both per-byte (validation) and as one u32 (the
@@ -55,7 +55,7 @@ struct SaveHeader {
 };
 
 /* 12-byte save slot record. An empty slot defaults to initials "AAA",
- * every other byte zero (see the else branch of sub_08017364's slot loop). */
+ * every other byte zero (see the else branch of SaveLoad's slot loop). */
 struct SaveSlot {
     u32 _field0;                 /* +0..3 */
     u8 _field4;                  /* +4 */
@@ -66,13 +66,13 @@ struct SaveSlot {
     u8 _field11;                 /* +11 */
 };
 
-/* In-RAM working copy of the save file (0x03003500, 64 bytes). sub_08017364
+/* In-RAM working copy of the save file (0x03003500, 64 bytes). SaveLoad
  * populates this from EEPROM; if no valid save exists it stays at the
  * defaults seeded at the top of that routine. */
 struct SaveData {
     struct SaveHeader header;               /* +0x00 */
     struct SaveSlot slots[SAVE_SLOT_COUNT]; /* +0x08 .. +0x37 */
-    u8 cursor;                              /* +0x38: current slot index; read by sub_0800DD80 */
+    u8 cursor;                              /* +0x38: current slot index; read by WorldMap_Init */
     u8 _pad39[3];
     u32 valid; /* +0x3c: 0 = no save loaded, 1 = loaded */
 };

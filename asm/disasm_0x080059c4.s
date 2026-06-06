@@ -420,7 +420,7 @@
 @   0x08005d0c: 8ad8        ldrh	r0, [r3, #22]
 @   0x08005d0e: 082f        lsrs	r7, r5, #32
 
-        thumb_func_start sub_080059C4
-sub_080059C4: @ 0x080059c4
+        thumb_func_start Entity_Update
+Entity_Update: @ 0x080059c4
         .incbin "frog_us_baserom.gba", 0x59c4, 0x34c
-        thumb_func_end sub_080059C4
+        thumb_func_end Entity_Update

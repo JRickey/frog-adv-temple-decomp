@@ -16,11 +16,11 @@ struct Sub08012604State {
     s16 unk0E;
 };
 
-extern void sub_0801223C(u8 a, u8 b, u8 c, u8 d, u8 e);
-extern void sub_08012180(void);
-extern void sub_08015B20(u32 arg);
+extern void InitScrollAnimSequence(u8 a, u8 b, u8 c, u8 d, u8 e);
+extern void UpdateScrollFromAnimChannels(void);
+extern void FlushFramebufferBank(u32 arg);
 
-u32 sub_08012604(void)
+u32 TickScrollAnimUntilDone(void)
 {
     register u32 ret asm("r4") = 0;
     struct Sub08012604Args *a = (struct Sub08012604Args *)0x08306e08;
@@ -34,8 +34,8 @@ u32 sub_08012604(void)
     a0 = a->unk04;
     a1 = a->unk14;
     b = (struct Sub08012604Args *)0x08306e28;
-    sub_0801223C(a0, a1, b->unk04, b->unk04, b->unk0E);
-    sub_08012180();
+    InitScrollAnimSequence(a0, a1, b->unk04, b->unk04, b->unk0E);
+    UpdateScrollFromAnimChannels();
 
     state0 = (struct Sub08012604State *)0x03006150;
     if (state0->unk04 != 0) {
@@ -52,8 +52,8 @@ u32 sub_08012604(void)
         return ret;
     }
 
-    sub_08015B20(0);
-    sub_08015B20(1);
+    FlushFramebufferBank(0);
+    FlushFramebufferBank(1);
     ret = 1;
     return ret;
 }

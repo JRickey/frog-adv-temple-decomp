@@ -1,15 +1,15 @@
 #include "iwram.h"
 #include "types.h"
 
-extern int sub_0801185C(u8 range);
+extern int GetVcountRandom(u8 range);
 
 /* Spawn-tile picker for entity slot 30. Reads the cached player tile coords
  * (gIwram_35E0._field_8 / _field_A, low byte only), builds two exclusion bands
  * [coord-3 .. coord+1] (columns) and [coord-3 .. coord-1] (rows), collects the
  * tiles in 0..7 / 0..4 that fall outside each band, then random-picks one of
- * each via sub_0801185C (a VCOUNT LCG returning [0,count)) and writes the
+ * each via GetVcountRandom (a VCOUNT LCG returning [0,count)) and writes the
  * chosen spawn X/Y into gEntities[30], clamped to [1,8] / [2,6]. */
-void sub_08012664(void)
+void PickEntitySpawnPos(void)
 {
     u8 *coords;
     u8 colExcl[5];
@@ -78,7 +78,7 @@ void sub_08012664(void)
     /* The entity base is the raw integer address, not the gEntities symbol:
      * using the symbol lets agbcc hoist the base load into a callee-saved reg
      * (widening the prologue) and breaks the match. */
-    r = sub_0801185C(colCount);
+    r = GetVcountRandom(colCount);
     base = (u8 *)0x03003720;
     picked = colCand[r] + 1;
     offsetCol = 0x692; /* gEntities[30].x */
@@ -87,7 +87,7 @@ void sub_08012664(void)
 
     /* The Y pick indexes colCand (not rowCand) with a draw from the row count:
      * a genuine baserom quirk (the `add r0, r8` reuses the colCand base). */
-    picked = colCand[sub_0801185C(rowCount)] + 2;
+    picked = colCand[GetVcountRandom(rowCount)] + 2;
     offsetRow = 0x694; /* gEntities[30].y */
     rowDst = (s16 *)(base + offsetRow);
     *rowDst = picked;
@@ -107,9 +107,9 @@ void sub_08012664(void)
         *rowDst = 6;
 }
 
-extern void sub_080100E4(u32, void *, void *);
+extern void Scroll_FlushTilemapWindow(u32, void *, void *);
 
-/* Tilemap descriptor at ROM 0x08306e64. Same block sub_0801288C blits, viewed
+/* Tilemap descriptor at ROM 0x08306e64. Same block BlitEntityTileFrame1 blits, viewed
  * at the low offsets this routine uses (its srcIndex is fixed at 0). */
 struct TileBlit_12798 {
     u8 _pad00[4];
@@ -130,9 +130,9 @@ struct BlitState_12798 {
 };
 
 /* Specialized blit of descriptor row 0 to the EWRAM mirror selected by the
- * descriptor flags, then DMA-flushed to VRAM via sub_080100E4. Destination tile
+ * descriptor flags, then DMA-flushed to VRAM via Scroll_FlushTilemapWindow. Destination tile
  * is gEntities[30].(x,y)*3; the entity-slot reads are signed halfwords. */
-void sub_08012798(void)
+void BlitEntityTileFrame0(void)
 {
     const struct TileBlit_12798 *desc;
     u32 entityBase;
@@ -246,7 +246,7 @@ void sub_08012798(void)
         one = 1;
         bank &= one;
     }
-    sub_080100E4(bank, flushSrc, flushDst);
+    Scroll_FlushTilemapWindow(bank, flushSrc, flushDst);
     {
         u8 *sentinel = (u8 *)0x030064C0;
 

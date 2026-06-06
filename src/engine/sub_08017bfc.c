@@ -24,23 +24,23 @@ struct IwramAt5330 {
 
 extern struct IwramAt5330 gIwram_5330;
 
-u32 sub_08000900(void);
-int sub_080106B8(void);
-u16 sub_080106EC(u16 arg);
-u16 sub_08010694(u16 arg);
-int sub_08010710(void);
+u32 GetFrameTick(void);
+int Blend_StepFade(void);
+u16 Screen_BeginFlash(u16 arg);
+u16 Blend_StartFade(u16 arg);
+int Screen_TickFlash(void);
 void sub_08015EC4(u32 x, u32 y, const void *src, void *dst);
 void sub_08015F9C(u32 x, u32 y, const void *src, void *dst);
 void sub_0801629C(u32 x, u32 y, const void *src, void *dst);
 void sub_080162FC(u32 x, u32 y, const void *src, void *dst);
-void sub_080193D8(void);
-void sub_08019420(u8 arg);
-void sub_08019984(void);
-void sub_080199E4(void);
-void sub_08020B88(u32 arg);
-void sub_0802D8F8(void);
+void Menu25_InitKeyTable(void);
+void Menu25_PollInput(u8 arg);
+void FrogSelect_ValidateSelection(void);
+void FrogSelect_ClearInputState(void);
+void Sound_PlayIfEnabled(u32 arg);
+void Sound_Reset(void);
 
-void sub_08017BFC(void)
+void Menu25_LoadAssets(void)
 {
     vu16 *displayControl;
     const void *const volatile *assets;
@@ -60,12 +60,12 @@ void sub_08017BFC(void)
     state->_data[5] = 0;
     state->_data[8] = 0;
 
-    sub_080199E4();
-    sub_080193D8();
-    sub_0802D8F8();
-    sub_08020B88(20);
+    FrogSelect_ClearInputState();
+    Menu25_InitKeyTable();
+    Sound_Reset();
+    Sound_PlayIfEnabled(20);
 
-    fade = sub_080106B8();
+    fade = Blend_StepFade();
     if (fade != 0) {
         return;
     }
@@ -111,11 +111,11 @@ void sub_08017BFC(void)
         *displayControl = value;
     }
 
-    sub_080106EC(0xBF);
+    Screen_BeginFlash(0xBF);
     state->_data[0]++;
 }
 
-void sub_08017D10(void)
+void Menu25_WaitAndBlink(void)
 {
     struct IwramAt3480 *state;
     const void *tiles;
@@ -124,19 +124,19 @@ void sub_08017D10(void)
     state = &gIwram_3480;
     state->_data[5] = 0;
 
-    fade = sub_08010710();
+    fade = Screen_TickFlash();
     if (fade != 0) {
         return;
     }
 
     if (state->_data[6] == 0) {
-        if (sub_08000900() - state->_unk0C <= 59) {
+        if (GetFrameTick() - state->_unk0C <= 59) {
             return;
         }
 
         state->_data[0]++;
-        state->_unk0C = sub_08000900();
-        state->_unk10 = sub_08000900();
+        state->_unk0C = GetFrameTick();
+        state->_unk10 = GetFrameTick();
         gIwram_5398 = fade;
 
         if ((*(vu16 *)0x04000000 & 0x10) == 0) {
@@ -152,12 +152,12 @@ void sub_08017D10(void)
     }
 
     state->_data[0]++;
-    state->_unk0C = sub_08000900();
-    state->_unk10 = sub_08000900();
+    state->_unk0C = GetFrameTick();
+    state->_unk10 = GetFrameTick();
     gIwram_5398 = fade;
 }
 
-void sub_08017DB8(void)
+void Menu25_HandleInput(void)
 {
     struct IwramAt3480 *state;
     vu16 *inputState;
@@ -168,23 +168,23 @@ void sub_08017DB8(void)
     zero = 0;
     state->_data[6] = zero;
     inputState = &gIwram_5398;
-    sub_08019420(*(vu8 *)inputState);
+    Menu25_PollInput(*(vu8 *)inputState);
     input = *inputState;
 
     if (input == 0x40) {
-        sub_08019984();
+        FrogSelect_ValidateSelection();
         gIwram_34A0._field_08 = 1;
         gIwram_5330._field_09 = 0x1B;
         state->_data[0] += 2;
         state->_unk14 = zero;
-        sub_08010694(0xBF);
+        Blend_StartFade(0xBF);
         *inputState = zero;
         state->_data[5] = 0;
         return;
     }
 
     if (input == 0) {
-        if (sub_08000900() - state->_unk10 > 15) {
+        if (GetFrameTick() - state->_unk10 > 15) {
             if (state->_data[8] == 0) {
                 if ((*(vu16 *)0x04000000 & 0x10) != 0) {
                     *(vu16 *)0x04000000 ^= 0x10;
@@ -195,7 +195,7 @@ void sub_08017DB8(void)
                 struct IwramAt3480 *stateForTick;
                 u32 now;
 
-                now = sub_08000900();
+                now = GetFrameTick();
                 stateForTick = &gIwram_3480;
                 stateForTick->_unk10 = now;
             }
@@ -224,7 +224,7 @@ void sub_08017DB8(void)
         struct IwramAt3480 *stateForTimeout;
         u32 now;
 
-        now = sub_08000900();
+        now = GetFrameTick();
         stateForTimeout = &gIwram_3480;
         if (now - stateForTimeout->_unk0C > 599) {
             gIwram_5330._field_0A = 1;
@@ -235,16 +235,16 @@ void sub_08017DB8(void)
             gIwram_34C0.delay = 0;
             stateForTimeout->_data[5] = 4;
             stateForTimeout->_data[0] = 0;
-            stateForTimeout->_unk0C = sub_08000900();
-            sub_0802D8F8();
+            stateForTimeout->_unk0C = GetFrameTick();
+            Sound_Reset();
         }
     }
     } else {
-        state->_unk0C = sub_08000900();
+        state->_unk0C = GetFrameTick();
     }
 }
 
-void sub_08017ECC(void)
+void Menu25_SetupRects(void)
 {
     gIwram_3480._data[0]++;
 
@@ -266,14 +266,14 @@ struct ScreenInstallArgs {
     u32 _unk0C;
 };
 
-extern void sub_08018C0C(s32 mode);
-extern void sub_08018898(s32 flag, s32 a, s32 b, struct ScreenInstallArgs args, s32 last);
-extern void sub_08018CA8(void);
-extern void sub_080181D0(void);
+extern void Screen_ClearBlocks(s32 mode);
+extern void Screen_Install(s32 flag, s32 a, s32 b, struct ScreenInstallArgs args, s32 last);
+extern void WinPoseScreen_LoadSprites(void);
+extern void FrogSelect_LoadCharTilemap(void);
 
 extern const u16 sBgTilemap_E6C18[];
 
-void sub_08017F00(void)
+void Menu25_InstallBg(void)
 {
     struct IwramAt3480 *state;
     u32 field08;
@@ -286,7 +286,7 @@ void sub_08017F00(void)
 
     /* Anchor the ROM table literal into a register before the gIwram_34B0 index
        load; without the fence agbcc defers the table base and emits the index
-       load into r0 first (ARGUMENT_MISMATCH at +0x12). Same idiom as sub_080181D0. */
+       load into r0 first (ARGUMENT_MISMATCH at +0x12). Same idiom as FrogSelect_LoadCharTilemap. */
     tableBase = 0x08308f70;
     asm volatile("" : "+r"(tableBase));
     args.tilemap2 = (const void *)*(const u32 *)(tableBase + gIwram_34B0._data * 4);
@@ -300,19 +300,19 @@ void sub_08017F00(void)
         state->_unk14 = 0;
     }
 
-    sub_08018C0C(14);
+    Screen_ClearBlocks(14);
 
     field08 = gIwram_34A0._field_08;
     count = (field08 != 0) ? 23 : 25;
-    sub_08018898((field08 == 0), count, 6, args, 2);
+    Screen_Install((field08 == 0), count, 6, args, 2);
 
     REG_DMA3.src = sBgTilemap_E6C18;
     REG_DMA3.dst = (void *)0x0600e800;
     REG_DMA3.cnt = DMA_ENABLE | 0x400;
     (void)REG_DMA3.cnt;
 
-    sub_08018CA8();
+    WinPoseScreen_LoadSprites();
 
     REG_DISPCNT |= DISPCNT_BG3_ON;
-    sub_080181D0();
+    FrogSelect_LoadCharTilemap();
 }

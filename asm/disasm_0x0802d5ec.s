@@ -198,7 +198,7 @@
 @   0x0802d76c: bc02        pop	{r1}
 @   0x0802d76e: 4708        bx	r1
 
-        thumb_func_start sub_0802D5EC
-sub_0802D5EC: @ 0x0802d5ec
+        thumb_func_start SoundSystem_Transfer
+SoundSystem_Transfer: @ 0x0802d5ec
         .incbin "frog_us_baserom.gba", 0x2d5ec, 0x184
-        thumb_func_end sub_0802D5EC
+        thumb_func_end SoundSystem_Transfer

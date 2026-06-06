@@ -433,17 +433,17 @@
 @   0x0802c758: 3720        adds	r7, #32
 @   0x0802c75a: 0300        lsls	r0, r0, #12
 
-        thumb_func_start sub_0802C3E4
-sub_0802C3E4: @ 0x0802c3e4
+        thumb_func_start EntityPool_SpawnEntry
+EntityPool_SpawnEntry: @ 0x0802c3e4
         .incbin "frog_us_baserom.gba", 0x2c3e4, 0x1fc
-        thumb_func_end sub_0802C3E4
+        thumb_func_end EntityPool_SpawnEntry
 
-        thumb_func_start sub_0802C5E0
-sub_0802C5E0: @ 0x0802c5e0
+        thumb_func_start EntityPool_CheckSpawnable
+EntityPool_CheckSpawnable: @ 0x0802c5e0
         .incbin "frog_us_baserom.gba", 0x2c5e0, 0x60
-        thumb_func_end sub_0802C5E0
+        thumb_func_end EntityPool_CheckSpawnable
 
-        thumb_func_start sub_0802C640
-sub_0802C640: @ 0x0802c640
+        thumb_func_start EntityPool_AdvancePhase
+EntityPool_AdvancePhase: @ 0x0802c640
         .incbin "frog_us_baserom.gba", 0x2c640, 0x11c
-        thumb_func_end sub_0802C640
+        thumb_func_end EntityPool_AdvancePhase

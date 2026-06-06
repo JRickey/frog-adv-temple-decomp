@@ -1,10 +1,10 @@
 #include "sound.h"
 #include "macros.h"
 
-extern void sub_0802E724(s32 ch);
+extern void SoundChannel_Reset(s32 ch);
 extern void sub_0802E7C4(u8 pan, s32 ch);
 
-/* sub_08032904 — sound channel state primer (high-register variant of SoundChannel_Init).
+/* SoundChannel_SetState — sound channel state primer (high-register variant of SoundChannel_Init).
  *
  * Clears the channel dirty flag, stores the hw-control halfword (5th stack
  * arg) and the chMode bytes, then for channels 0-2 primes the SoundSlotInit
@@ -15,7 +15,7 @@ extern void sub_0802E7C4(u8 pan, s32 ch);
  *   original GCC 2.9 compiler (not our old_agbcc) kept it there rather than
  *   preloading it into a callee-saved register. This function now has its
  *   own translation unit, so linked experiments no longer perturb the
- *   preceding sub_08032894 initializer. Pinning &gpSoundSystem in r5
+ *   preceding SoundSlot_InitParams initializer. Pinning &gpSoundSystem in r5
  *   and ctrl in r9, then copying the control-byte store through r6, naming
  *   the direct-channel pan-reset halfword, and writing the dirty-flag clear as
  *   a literal zero improves the current best pure-C candidate to byte_diff 62 /
@@ -66,7 +66,7 @@ extern void sub_0802E7C4(u8 pan, s32 ch);
  *   copy, both of which add a non-target frame.
  */
 #if !defined(NON_MATCHING) && !defined(NON_MATCHING_sub_08032904)
-NAKED void sub_08032904(s32 ch, u32 step, u32 pan, u32 ctrl, u16 hwCtrl)
+NAKED void SoundChannel_SetState(s32 ch, u32 step, u32 pan, u32 ctrl, u16 hwCtrl)
 {
     asm("    .syntax unified\n"
         "    push {r4, r5, r6, r7, lr}\n"
@@ -77,7 +77,7 @@ NAKED void sub_08032904(s32 ch, u32 step, u32 pan, u32 ctrl, u16 hwCtrl)
         "    mov r8, r1\n"
         "    adds r4, r2, #0\n"
         "    mov r9, r3\n"
-        "    bl sub_0802E724\n"
+        "    bl SoundChannel_Reset\n"
         "    lsls r4, r4, #24\n"
         "    lsrs r4, r4, #24\n"
         "    adds r0, r4, #0\n"
@@ -147,7 +147,7 @@ NAKED void sub_08032904(s32 ch, u32 step, u32 pan, u32 ctrl, u16 hwCtrl)
         "    .syntax divided\n");
 }
 #else
-void sub_08032904(s32 ch, u32 step, u32 pan, u32 ctrl, u16 hwCtrl)
+void SoundChannel_SetState(s32 ch, u32 step, u32 pan, u32 ctrl, u16 hwCtrl)
 {
     SoundSystem *ss;
     register SoundSystem **gpsp asm("r5");
@@ -159,7 +159,7 @@ void sub_08032904(s32 ch, u32 step, u32 pan, u32 ctrl, u16 hwCtrl)
 
     ctrlLocal = ctrl;
 
-    sub_0802E724(ch);
+    SoundChannel_Reset(ch);
     sub_0802E7C4((u8)pan, ch);
 
     gpsp = &gpSoundSystem;

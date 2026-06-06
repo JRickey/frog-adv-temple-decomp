@@ -259,7 +259,7 @@
 @   0x080231f0: bc01        pop	{r0}
 @   0x080231f2: 4700        bx	r0
 
-        thumb_func_start sub_08022FEC
-sub_08022FEC: @ 0x08022fec
+        thumb_func_start UpdateLogPairEntities2
+UpdateLogPairEntities2: @ 0x08022fec
         .incbin "frog_us_baserom.gba", 0x22fec, 0x208
-        thumb_func_end sub_08022FEC
+        thumb_func_end UpdateLogPairEntities2

@@ -1,13 +1,13 @@
 #include "sound.h"
 #include "macros.h"
 
-/* sub_0802F054 — per-frame multi-mode envelope tick (envelope-C).
+/* Sound_TickEnvelopeC — per-frame multi-mode envelope tick (envelope-C).
  *
  * Largest of the per-frame envelope ticks in the sound cluster. Sister to
- * sub_0802EC7C (sound_channel.c, envelope-A at +0x1c), sub_0802ED5C
- * (sound_channel.c, envelope-B at +0x2c), sub_0802EA80 (sound_envelope.c,
- * envelope-A0 at +0x14), sub_0802E934 (sound_envelope_dual.c, dual at +4/+12),
- * sub_0802F2FC (sound_pan.c, pan envelope at +0x0a/+0x12). This one drives
+ * Sound_UpdateChannelEnvelopesA (sound_channel.c, envelope-A at +0x1c), Sound_TickSlotEnvelopeB
+ * (sound_channel.c, envelope-B at +0x2c), SoundEnvelope_TickA0 (sound_envelope.c,
+ * envelope-A0 at +0x14), Sound_TickDualEnvelopes (sound_envelope_dual.c, dual at +4/+12),
+ * SoundPan_Tick (sound_pan.c, pan envelope at +0x0a/+0x12). This one drives
  * a mode-dispatched envelope block at +0x24/+0x28 inside each
  * channel/slot — referred to in the codebase notes as "envelope-C".
  *
@@ -232,7 +232,7 @@
             *pFlags_ = *pFlags_ | dirty_;                                                                              \
     } while (0)
 
-void sub_0802F054(void)
+void Sound_TickEnvelopeC(void)
 {
     SoundSystem *ss;
     SoundSlot *slot;
@@ -304,7 +304,7 @@ void sub_0802F054(void)
 }
 #else
 NAKED
-void sub_0802F054(void)
+void Sound_TickEnvelopeC(void)
 {
     asm(".syntax unified\n"
         "    push    {r4, r5, r6, r7, lr}\n"

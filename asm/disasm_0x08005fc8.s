@@ -734,7 +734,7 @@
 @   0x08006586: 0000        movs	r0, r0
 @   0x08006588: ffff        0000 	vaddl.u<illegal width 64>	q8, d15, d0
 
-        thumb_func_start sub_08005FC8
-sub_08005FC8: @ 0x08005fc8
+        thumb_func_start Game_CommitRender
+Game_CommitRender: @ 0x08005fc8
         .incbin "frog_us_baserom.gba", 0x5fc8, 0x424
-        thumb_func_end sub_08005FC8
+        thumb_func_end Game_CommitRender

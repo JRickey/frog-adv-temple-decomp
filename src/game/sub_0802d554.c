@@ -1,9 +1,9 @@
 #include "macros.h"
 #include "types.h"
 
-/* sub_0802D554 is a thin Thumb wrapper around BIOS SWI 11 (CpuSet):
+/* Bios_CpuSet is a thin Thumb wrapper around BIOS SWI 11 (CpuSet):
  * copy/fill `control` words (or halfwords) from `src` to `dst`. It sits
- * one slot below the SWI 12 (CpuFastSet) wrapper sub_0802D558 in the
+ * one slot below the SWI 12 (CpuFastSet) wrapper BiosSwiTable in the
  * same libagbsyscall block.
  *
  * Shipped NAKED. agbcc 2.x has no SWI intrinsic, so `svc 11` can only
@@ -13,7 +13,7 @@
  * `svc 11; bx lr`, so this is unmatchable by construction, not a fold we
  * failed to crack. */
 
-NAKED void sub_0802D554(const void *src, void *dst, u32 control)
+NAKED void Bios_CpuSet(const void *src, void *dst, u32 control)
 {
     asm(".syntax unified\n"
         "    svc     11\n"

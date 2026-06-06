@@ -125,8 +125,8 @@
 @   0x0802d9ea: 0300        lsls	r0, r0, #12
         .thumb
         .thumb_func
-        .global sub_0802D99C
-        .type   sub_0802D99C, %function
-sub_0802D99C: @ 0x0802d99c
+        .global LevelLayout_SetupManager
+        .type   LevelLayout_SetupManager, %function
+LevelLayout_SetupManager: @ 0x0802d99c
         .incbin "frog_us_baserom.gba", 0x2d99c, 0x50
-        .size   sub_0802D99C, . - sub_0802D99C
+        .size   LevelLayout_SetupManager, . - LevelLayout_SetupManager

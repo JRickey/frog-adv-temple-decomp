@@ -9,8 +9,8 @@ extern s32 __modsi3(s32 num, s32 den);
 /* AABB proximity test between the reference entity (gIwram_3720[0]) and
  * entity `idx` in the stride-0x38 entity array. Returns 1 when the
  * entity lies within a 0x104 (X) by 0xB4 (Y) half-window of the
- * reference, else 0. Called per-entity from sub_08009A58. */
-u32 sub_0800D028(s32 idx)
+ * reference, else 0. Called per-entity from Entity_UpdateVisibility. */
+u32 Entity_IsInProximity(s32 idx)
 {
     s32 refX;
     u8 *entity;
@@ -42,7 +42,7 @@ u32 sub_0800D028(s32 idx)
  *             high 16 of *out = (field_694-2) + (delta / 5).
  * Returns out.
  */
-u32 *sub_0800D070(u32 *out, s8 delta)
+u32 *PadGrid_StepPackedCoord(u32 *out, s8 delta)
 {
     u32 *outp;
     u32 hiMask;

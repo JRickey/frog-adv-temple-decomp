@@ -1,11 +1,11 @@
 #include "types.h"
 
-extern void sub_0800DE80(void);
+extern void Game_FrameEnd(void);
 
-/* Thin forwarder to sub_0800DE80 — sibling of sub_08000D50, same shape
- * (push lr; bl sub_0800DE80; pop r0; bx r0). Likely another mode-dispatch
+/* Thin forwarder to Game_FrameEnd — sibling of Mode8_Teardown, same shape
+ * (push lr; bl Game_FrameEnd; pop r0; bx r0). Likely another mode-dispatch
  * "release / teardown" entry. */
-void sub_08001E18(void)
+void Scene06_Exit(void)
 {
-    sub_0800DE80();
+    Game_FrameEnd();
 }

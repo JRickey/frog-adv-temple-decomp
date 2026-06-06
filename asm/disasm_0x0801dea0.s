@@ -240,7 +240,7 @@
 @   0x0801e072: bc01        pop	{r0}
 @   0x0801e074: 4700        bx	r0
 
-        thumb_func_start sub_0801DEA0
-sub_0801DEA0: @ 0x0801dea0
+        thumb_func_start Credits_DrawLineAlt
+Credits_DrawLineAlt: @ 0x0801dea0
         .incbin "frog_us_baserom.gba", 0x1dea0, 0x1d8
-        thumb_func_end sub_0801DEA0
+        thumb_func_end Credits_DrawLineAlt

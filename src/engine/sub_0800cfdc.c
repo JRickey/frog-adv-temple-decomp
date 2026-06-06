@@ -16,7 +16,7 @@ struct Rect2 {
  * checks + cached-y assignment causes agbcc to emit `adds r1, r0, #0` (save
  * field_2 to r1) instead of reloading; without it agbcc chooses a memory
  * reload and the size grows by 4 bytes. */
-u32 sub_0800CFDC(struct Rect2 *s, s16 x, s16 y, s16 w, s16 h)
+u32 Rect2_ContainsPoint(struct Rect2 *s, s16 x, s16 y, s16 w, s16 h)
 {
     s16 y_cached;
     s16 f4;

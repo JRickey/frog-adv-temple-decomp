@@ -11,19 +11,19 @@ typedef struct {
 /* idxB is declared u32 (not u8) so agbcc passes idxReg straight through in r2
  * (mov r2,r9) instead of re-masking it at every call site — idxReg is already
  * a clean byte from each (u8)(...) assignment. */
-extern u8 sub_080217D4(Entry *base, u8 idxA, u32 idxB);
-extern void sub_0800A580(struct Entity *e, s8 param, s8 deltaX, s8 deltaY);
+extern u8 Entity_WaypointDirectionCompare(Entry *base, u8 idxA, u32 idxB);
+extern void MotionDesc_Set(struct Entity *e, s8 param, s8 deltaX, s8 deltaY);
 
 /* Seeds entity[dstIdx] from src record `idx`. `selector` chooses how the
- * comparison index (result, via sub_080217D4) is derived; `result` then picks a
- * unit step into the 2-byte (dx,dy) scratch handed to sub_0800A580.
+ * comparison index (result, via Entity_WaypointDirectionCompare) is derived; `result` then picks a
+ * unit step into the 2-byte (dx,dy) scratch handed to MotionDesc_Set.
  *
  * The four small params are int (not u8) so the selector dispatch stays a signed
  * `cmp/bgt` over r2 and cmpVal lands in a caller-saved reg. dyPtr aliases &buf[1]
  * across the result switch so its writes don't recopy sl each time; the leading
  * `zero` local forces the constant load ahead of the address in the first store
  * pair. */
-void sub_08021838(u8 *src, int dstIdxArg, int selectorArg, int idxArg, int cmpValArg)
+void Entity_AdvanceWaypoint(u8 *src, int dstIdxArg, int selectorArg, int idxArg, int cmpValArg)
 {
     u32 idxReg;
     int dstIdx;
@@ -60,18 +60,18 @@ void sub_08021838(u8 *src, int dstIdxArg, int selectorArg, int idxArg, int cmpVa
         if (idx == cmpVal + 1) {
             idx = 2;
             idxReg = 3;
-            result = sub_080217D4((Entry *)src, 2, idxReg);
+            result = Entity_WaypointDirectionCompare((Entry *)src, 2, idxReg);
             break;
         }
         idxReg = (u8)(idx + 1);
-        result = sub_080217D4((Entry *)src, idx, idxReg);
+        result = Entity_WaypointDirectionCompare((Entry *)src, idx, idxReg);
         break;
     case 2:
         if (idx == cmpVal + 1)
             idxReg = 2;
         else
             idxReg = (u8)(idx + 1);
-        result = sub_080217D4((Entry *)src, idx, idxReg);
+        result = Entity_WaypointDirectionCompare((Entry *)src, idx, idxReg);
         break;
     case 3:
         if (idx == cmpVal + 1)
@@ -82,7 +82,7 @@ void sub_08021838(u8 *src, int dstIdxArg, int selectorArg, int idxArg, int cmpVa
             idxReg = (u8)(idx - 1);
         else
             idxReg = (u8)(idx + 1);
-        result = sub_080217D4((Entry *)src, idx, idxReg);
+        result = Entity_WaypointDirectionCompare((Entry *)src, idx, idxReg);
         break;
     default:
         break;
@@ -110,7 +110,7 @@ void sub_08021838(u8 *src, int dstIdxArg, int selectorArg, int idxArg, int cmpVa
 
     entity = &gEntities[dstIdx];
     srcRecord = &src[idx * 8];
-    sub_0800A580(entity, srcRecord[4], buf[0], *dyPtr);
+    MotionDesc_Set(entity, srcRecord[4], buf[0], *dyPtr);
     entity->x = *(u16 *)&srcRecord[0];
     entity->y = *(u16 *)&srcRecord[2];
     entity->field_1A = result;

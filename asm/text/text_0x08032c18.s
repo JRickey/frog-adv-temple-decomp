@@ -2,7 +2,7 @@
 @ Address-aligned bucket of unparsed baserom bytes.
 @ Range:  [0x08032c18, 0x080338a8)  (0xc90 bytes)
 @
-@ Post-peel chunk after sub_08032BC8.
+@ Post-peel chunk after SoundVoice_Init.
 @
 @ This file holds raw bytes only; no instructions are assembled here.
 

@@ -1,7 +1,7 @@
 #include "sound.h"
 
-/* Sound-system mutation lock — acquire (sub_0802E418) and release
- * (sub_0802E3F8).
+/* Sound-system mutation lock — acquire (Sound_Lock) and release
+ * (Sound_Unlock).
  *
  * The sound subsystem keeps a refcount byte at SoundSystem+0xbb that
  * brackets every mutator of the SoundState block (per-channel envelope
@@ -15,40 +15,40 @@
  * DMA. See docs/subsystems.md "Audio / sound" for the broader cluster
  * picture.
  *
- * The three slot-descriptor helpers below (sub_0802E43C / sub_0802E470 /
- * sub_0802E4B4) take a packed descriptor word: bits 16..23 are a slot
+ * The three slot-descriptor helpers below (SoundLock_SlotOpen / SoundLock_SlotClose /
+ * SoundLock_SetPan) take a packed descriptor word: bits 16..23 are a slot
  * index, the low 16 bits a per-channel work index.
- *   sub_0802E43C: point slotStateA[idx] at the slot's slice of mixTable.
- *   sub_0802E470: tear that wiring back down (clear slotStateA[idx], the
+ *   SoundLock_SlotOpen: point slotStateA[idx] at the slot's slice of mixTable.
+ *   SoundLock_SlotClose: tear that wiring back down (clear slotStateA[idx], the
  *                 chanWork entry, and the slot's flags).
- *   sub_0802E4B4: set a slot's pan byte and flag it dirty for the mixer.
+ *   SoundLock_SetPan: set a slot's pan byte and flag it dirty for the mixer.
  */
 
 /* Thumb-callable interwork veneers that branch to the ARM-mode
  * sound-IRQ toggle routines. Both are 8-byte `bx pc; nop; b TARGET`
  * thunks living at the named addresses. */
-extern void sub_08035D8C(void); /* sound-IRQ disable; b 0x08032e38 */
-extern void sub_08035D94(void); /* sound-IRQ enable;  b 0x08032e1c */
+extern void SoundIrqDisable(void); /* sound-IRQ disable; b 0x08032e38 */
+extern void SoundIrqEnable(void);  /* sound-IRQ enable;  b 0x08032e1c */
 
-void sub_0802E3F8(void)
+void Sound_Unlock(void)
 {
     u8 *p = &gpSoundSystem->lockRefCount;
     s32 v = *p - 1;
     *p = v;
     if ((u8)v == 0)
-        sub_08035D94();
+        SoundIrqEnable();
 }
 
-void sub_0802E418(void)
+void Sound_Lock(void)
 {
     u8 *p = &gpSoundSystem->lockRefCount;
     s32 v = *p + 1;
     *p = v;
     if ((u8)v == 1)
-        sub_08035D8C();
+        SoundIrqDisable();
 }
 
-void sub_0802E43C(u32 desc)
+void SoundLock_SlotOpen(u32 desc)
 {
     s32 idx;
     SoundLockSystem *ss;
@@ -61,7 +61,7 @@ void sub_0802E43C(u32 desc)
     ss->slotStateA[idx] = (u32)(ss->mixTable + idx * 7);
 }
 
-void sub_0802E470(u32 desc)
+void SoundLock_SlotClose(u32 desc)
 {
     s32 idx;
     s32 lo;
@@ -82,7 +82,7 @@ void sub_0802E470(u32 desc)
  * `(*pPool)->swSlots[idx]` reloads the pool word — the baserom derefs
  * gpSoundLockSystem twice. Caching the base in one local lets agbcc CSE the
  * second reload away and breaks the match. */
-void sub_0802E4B4(u32 desc, u32 pan)
+void SoundLock_SetPan(u32 desc, u32 pan)
 {
     SoundLockSystem **pPool;
     s32 idx;
@@ -96,7 +96,7 @@ void sub_0802E4B4(u32 desc, u32 pan)
     (*pPool)->swSlots[idx].flags |= SOUND_FLAG_UPDATE_DIRTY;
 }
 
-void sub_0802E4E8(u32 desc, u32 enable)
+void SoundLock_SetEnable(u32 desc, u32 enable)
 {
     s32 idx;
     SoundLockSystem *ss;
@@ -124,7 +124,7 @@ void sub_0802E4E8(u32 desc, u32 enable)
 /* libgcc unsigned-int division helper (0x08033ee4). */
 extern u32 __udivsi3(u32 num, u32 den);
 
-u32 sub_0802E528(u32 period)
+u32 SoundLock_CalcPeriod(u32 period)
 {
     return (__udivsi3(period << 12, gpSoundSystem->divisor) >> 5) + 2;
 }

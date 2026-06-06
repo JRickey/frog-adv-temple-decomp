@@ -2,30 +2,30 @@
 #include "macros.h"
 #include "types.h"
 
-/* Per-frame helper called once from sub_0800A2D8 (the entity-dispatch
+/* Per-frame helper called once from Game_RunEntityFrame (the entity-dispatch
  * tail). Runs five fixed subsystem updates in sequence. The single
  * non-zero argument (24, 24) to sub_0800793C is preserved literally;
  * its meaning is unknown until that callee is decompiled.
  *
  * Lives in its own .c rather than dispatch_helpers.c because the
- * sibling sub_0800A2D8 sits at 0x0800a2d8 with multiple intervening
+ * sibling Game_RunEntityFrame sits at 0x0800a2d8 with multiple intervening
  * asm functions before this one — one .o cannot span both slots
  * without -ffunction-sections, which agbcc isn't built with here.
  */
 
-extern void sub_08007DD0(void);
+extern void Entity_ProcessEvents(void);
 extern void sub_0800793C(u32 a, u32 b);
 extern void sub_08008174(void);
-extern void sub_080090B0(void);
-extern void sub_0800A4D0(void);
+extern void Player_UpdateTileCache(void);
+extern void Entity_UpdateSlot1Status(void);
 
-void sub_0800A520(void)
+void Game_UpdateSubsystems(void)
 {
-    sub_08007DD0();
+    Entity_ProcessEvents();
     sub_0800793C(24, 24);
     sub_08008174();
-    sub_080090B0();
-    sub_0800A4D0();
+    Player_UpdateTileCache();
+    Entity_UpdateSlot1Status();
 }
 
 struct ClusterA710;
@@ -40,15 +40,15 @@ extern void Entity_Init(struct ClusterA710 *p, u8 a, s16 b, s16 c, u8 d, u16 e, 
  * emits register-offset ldrsh instead of folding to a second literal. The
  * b/c parameters are declared s16 here (the canonical Entity_Init stores
  * them into u16 fields) so the caller sign-extends the position values. */
-void sub_0800A540(void)
+void Entity_InitShadow(void)
 {
     struct ClusterA710 *dst = (struct ClusterA710 *)0x03003758;
     u8 *src = (u8 *)dst - 0x38;
 
     Entity_Init(dst, 84, *(s16 *)(src + 2), (s16)(*(u16 *)(src + 4) - 24), 3, 992, 15, 2, 0, 32);
 }
-/* The same entity record sub_0800A540 seeds, viewed only through the four
- * fields sub_0800A580 writes. Kept as a dedicated typed view (rather than a
+/* The same entity record Entity_InitShadow seeds, viewed only through the four
+ * fields MotionDesc_Set writes. Kept as a dedicated typed view (rather than a
  * cast off the opaque ClusterA710) so each store derives its address from the
  * base pointer in ip afresh, matching the baserom. */
 struct MotionDesc {
@@ -69,7 +69,7 @@ struct MotionDesc {
  * r2/r3 and never spills into a callee-saved register: the function then needs no
  * push/pop frame and caches the record pointer in ip the whole way. Cases run
  * high-to-low to match the baserom's descending case-body layout. */
-void sub_0800A580(struct MotionDesc *m, u8 sel, u8 a, u8 b)
+void MotionDesc_Set(struct MotionDesc *m, u8 sel, u8 a, u8 b)
 {
     m->sel = sel;
 

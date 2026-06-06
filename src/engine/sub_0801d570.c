@@ -1,14 +1,14 @@
 #include "types.h"
 
-/* --- sub_0801D570: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- Credits_ScrollTick: non-matching reference (asm slice provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "game.h"
 #include "macros.h"
 #include "types.h"
 
-extern u16 sub_080004C4(void);
-extern void sub_0801D438(u8 arg);
-extern void sub_0801D4CC(u8 arg);
+extern u16 Input_Poll(void);
+extern void Credits_InitScrollPage2(u8 arg);
+extern void Credits_InitScrollPage1(u8 arg);
 
 extern u16 gIwram_5398;
 extern const u16 sCreditsTilemapEng[];
@@ -18,10 +18,10 @@ extern const u16 sCreditsTilemapEng[];
 /* Credits-roll renderer: walk state[12] cursor over sCreditsTilemapEng,
  * draw one column per step into the double-buffered OBJ tilemap
  * (state[20]/state[36]), blink a cursor (state[20]+0x6C) while polling
- * sub_080004C4 for the advance/skip key (gIwram_5398: 16=advance, 32=skip).
+ * Input_Poll for the advance/skip key (gIwram_5398: 16=advance, 32=skip).
  * Markers: 0xFFFF end-page, 0xFFFE page-wait, 0xFFFD glyph-pair,
  * 0xFFFC/0xFFFB scene-command. Returns 0xFE on skip. */
-u16 sub_0801D570(void)
+u16 Credits_ScrollTick(void)
 {
     register u8 *state asm("r6");
     register u16 *out asm("r9");
@@ -65,7 +65,7 @@ loop:
                 *(u16 *)(*(u32 *)(state + 20) + 0x6C) = toggle ? 0xE0E4 : 0;
                 toggle = toggle ? 0 : 1;
                 saved = gGameStuff._unk00;
-                *outw = sub_080004C4();
+                *outw = Input_Poll();
             }
             k = *outw;
             if (k == 16 || k == 32) {
@@ -85,7 +85,7 @@ loop:
                 *(u16 *)(*(u32 *)(state + 20) + 0x6C) = toggle ? 0xE0E4 : 0;
                 toggle = toggle ? 0 : 1;
                 saved = gGameStuff._unk00;
-                *outw = sub_080004C4();
+                *outw = Input_Poll();
             }
             k = *outw;
             if (k == 16) {
@@ -101,14 +101,14 @@ loop:
             cmd = (u8 *)0x03003540;
             *(u32 *)(cmd + 4) = 0;
             cmd[1]++;
-            sub_0801D4CC(cmd[1]);
+            Credits_InitScrollPage1(cmd[1]);
             goto endcheck;
         }
         if (c == 0xFFFC) {
             cmd = (u8 *)0x03003540;
             *(u32 *)(cmd + 4) = 1;
             cmd[1]++;
-            sub_0801D438(cmd[1]);
+            Credits_InitScrollPage2(cmd[1]);
         }
         goto endcheck;
     }
@@ -178,7 +178,7 @@ page2:
                 *(u16 *)(*(u32 *)(state + 20) + 0x6C) = toggle ? 0xE0E4 : 0;
                 toggle = toggle ? 0 : 1;
                 saved = gGameStuff._unk00;
-                *out = sub_080004C4();
+                *out = Input_Poll();
             }
             k = *out;
             if (k == 32) {

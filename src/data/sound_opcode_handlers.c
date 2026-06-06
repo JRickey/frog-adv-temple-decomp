@@ -1,7 +1,7 @@
 #include "macros.h"
 #include "types.h"
 
-/* 54-entry Thumb function-pointer table used by sub_080315D8 as an
+/* 54-entry Thumb function-pointer table used by Sound_OpcodeDispatch as an
  * opcode dispatch LUT — each active sound slot reads a u8 from its
  * own state, multiplies by 4, indexes into this table, and calls the
  * resulting handler.
@@ -13,7 +13,7 @@
  * to a typed `void (*sSoundOpcodeHandlers[54])(...)` once the slot
  * struct and handler signatures are known.
  *
- * TODO: confirm purpose once sub_080315D8 / sub_0802F4B0 land in C
+ * TODO: confirm purpose once Sound_OpcodeDispatch / SoundMixer_VBlankUpdate land in C
  *       and the slot opcode byte gets a name.
  */
 

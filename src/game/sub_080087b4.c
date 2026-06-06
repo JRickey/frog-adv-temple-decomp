@@ -4,7 +4,7 @@
 
 extern int __divsi3(int num, int den);
 
-void sub_080087B4(void)
+void Entity_LerpPosition(void)
 {
     u8 *gA0 = (u8 *)gEntities;
     s32 hi = gA0[0x1c];
@@ -55,9 +55,9 @@ void sub_080087B4(void)
     *(u16 *)(gA + 2) = num;
 }
 
-/* sub_0800885C — directional area attack. Switches on the dispatch state
+/* Entity_CheckTouchEnemy — directional area attack. Switches on the dispatch state
  * gEntities[0].field_1A (cases 12..15) to fill an axis-aligned box via
- * sub_080089A4, then walks the active-entity index table for the first
+ * Entity_GetDirHitbox, then walks the active-entity index table for the first
  * record (kind 11) whose centre falls strictly inside the box, latches it
  * (record+0x34 |= 0x84) and returns 1. */
 
@@ -68,9 +68,9 @@ struct IndexEntry {
 
 extern struct Entity gEntities_03003720[];
 extern struct IndexEntry gEntityIndex_03006160[];
-extern void sub_080089A4(u8 sel, s8 d1, s8 d2, s8 d3, s16 *x0, s16 *x1, s16 *y0, s16 *y1);
+extern void Entity_GetDirHitbox(u8 sel, s8 d1, s8 d2, s8 d3, s16 *x0, s16 *x1, s16 *y0, s16 *y1);
 
-u8 sub_0800885C(u8 arg0, u8 arg1)
+u8 Entity_CheckTouchEnemy(u8 arg0, u8 arg1)
 {
     s8 a = (s8)arg0;
     s8 b = (s8)arg1;
@@ -82,16 +82,16 @@ u8 sub_0800885C(u8 arg0, u8 arg1)
 
     switch (gEntities[0].field_1A) {
     case 12:
-        sub_080089A4(0, b, a, b, &xLo, &xHi, &yLo, &yHi);
+        Entity_GetDirHitbox(0, b, a, b, &xLo, &xHi, &yLo, &yHi);
         break;
     case 13:
-        sub_080089A4(1, b, a, b, &xLo, &xHi, &yLo, &yHi);
+        Entity_GetDirHitbox(1, b, a, b, &xLo, &xHi, &yLo, &yHi);
         break;
     case 14:
-        sub_080089A4(2, a, a, b, &xLo, &xHi, &yLo, &yHi);
+        Entity_GetDirHitbox(2, a, a, b, &xLo, &xHi, &yLo, &yHi);
         break;
     case 15:
-        sub_080089A4(3, a, a, b, &xLo, &xHi, &yLo, &yHi);
+        Entity_GetDirHitbox(3, a, a, b, &xLo, &xHi, &yLo, &yHi);
         break;
     }
 

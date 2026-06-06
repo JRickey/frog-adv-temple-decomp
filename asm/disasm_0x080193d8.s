@@ -5,7 +5,7 @@
         .include "asm/macros.inc"
         .syntax unified
 
-        thumb_func_start sub_08019420
-sub_08019420: @ 0x08019420
+        thumb_func_start Menu25_PollInput
+Menu25_PollInput: @ 0x08019420
         .incbin "frog_us_baserom.gba", 0x19420, 0xe0
-        thumb_func_end sub_08019420
+        thumb_func_end Menu25_PollInput

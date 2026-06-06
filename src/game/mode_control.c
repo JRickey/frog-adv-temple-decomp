@@ -1,7 +1,7 @@
 #include "iwram.h"
 
 /* Resets the gIwram_6110 mode-control block and installs the per-mode config
- * table. Called once per dispatcher case in sub_08000918's mode select; the
+ * table. Called once per dispatcher case in Scene08_Main's mode select; the
  * (limit, table, state, threshold) tuple varies by mode. `modeId` is accepted
  * by every caller but unused here. See src/data/mode_config_2f99e8.c for the
  * per-mode anchor inventory.

@@ -10,14 +10,14 @@ enum TextGlyph {
     GLYPH_TILDE = 0xE0EA,
 };
 
-extern void sub_0801DEA0(const u8 *str, u8 count, u8 colBase, u8 rowBase, u16 tileBase, s32 palBank, u8 screen);
-extern s32 sub_0801CEC0(const char *str, u8 len);
+extern void Credits_DrawLineAlt(const u8 *str, u8 count, u8 colBase, u8 rowBase, u16 tileBase, s32 palBank, u8 screen);
+extern s32 ParseDecimalStr(const char *str, u8 len);
 
 extern const u8 sCreditsTilemapEng[];
 
-void sub_0801DBB4(const u8 *str, u32 dst, u8 colBase, u8 rowBase)
+void Credits_DrawLine(const u8 *str, u32 dst, u8 colBase, u8 rowBase)
 {
-    /* base=r6 and palBits=sl pins keep the loop state live across sub_0801CEC0; digitDst=r0
+    /* base=r6 and palBits=sl pins keep the loop state live across ParseDecimalStr; digitDst=r0
      * doubles as the colBase*2 staging scratch (see the base setup below). */
     s32 col;
     s32 row;
@@ -71,7 +71,7 @@ void sub_0801DBB4(const u8 *str, u32 dst, u8 colBase, u8 rowBase)
     }
 
     if (mode == 1) {
-        sub_0801DEA0(str + 1, count - 1, colBase + 1, rowBase, tileBase, 14, 0);
+        Credits_DrawLineAlt(str + 1, count - 1, colBase + 1, rowBase, tileBase, 14, 0);
         return;
     }
 
@@ -105,7 +105,7 @@ void sub_0801DBB4(const u8 *str, u32 dst, u8 colBase, u8 rowBase)
             *(u16 *)(((row * 2 + rowBase) << 6) + (u32)((u8 *)base + col * 2) + 0x40) =
                 (u16)(t + GLYPH_LOWERCASE_OFFSET) + tileBase + palBits;
         } else if (c == '[' && str[i + 4] == ']') {
-            n = sub_0801CEC0((const char *)(str + i + 1), 3) - 0xC0;
+            n = ParseDecimalStr((const char *)(str + i + 1), 3) - 0xC0;
             if ((u32)n <= 63) {
                 u16 *escapeDst;
                 const u8 *table;

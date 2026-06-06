@@ -1,7 +1,7 @@
 #include "types.h"
 
 /* Generic bit-clear accessor on a struct at `base` — the "clear bit"
- * companion to sub_0800679C ("test bit"). Same (selector, bit) shape;
+ * companion to ModeControl_GetFlag ("test bit"). Same (selector, bit) shape;
  * ten populated cases (selector >= 10 falls through to the shared
  * pop/bx epilogue, leaving the struct untouched).
  *
@@ -31,7 +31,7 @@
  *     so the shared `clear_byte` block ships as
  *     `adds r0, r4, #N` for each, without spurious r0/r1 copies. */
 
-void sub_080066C4(void *baseIn, u32 selectorIn, u32 bitIn)
+void ModeControl_ClearBit(void *baseIn, u32 selectorIn, u32 bitIn)
 {
     u8 *base = (u8 *)baseIn;
     u32 selector = (u8)selectorIn;

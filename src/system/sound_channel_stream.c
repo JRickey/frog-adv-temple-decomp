@@ -1,7 +1,7 @@
 #include "sound.h"
 #include "macros.h"
 
-/* sub_0802EDF0 — per-frame stream-cursor advancer.
+/* Sound_TickStreamHead — per-frame stream-cursor advancer.
  *
  * Iterates `gpSoundSystem->count` slots. For each slot that is (a) active
  * (flag 0x800), (b) has a non-NULL SoundStream in `(*gpSoundSystem)->
@@ -84,7 +84,7 @@
  * removes a target-used register, so it is not a landable flag.
  */
 #if defined(NON_MATCHING) || defined(NON_MATCHING_sub_0802EDF0)
-void sub_0802EDF0(void)
+void Sound_TickStreamHead(void)
 {
     SoundSystem **gpsp;
     register SoundSystem *ss asm("r4");
@@ -223,7 +223,7 @@ loop_count_check:
 }
 #else
 NAKED
-void sub_0802EDF0(void)
+void Sound_TickStreamHead(void)
 {
     asm(".syntax unified\n"
         "    push    {r4, r5, r6, r7, lr}\n"
@@ -373,7 +373,7 @@ void sub_0802EDF0(void)
 }
 #endif
 
-/* sub_0802EEF8 — kick off envelope-C on a channel.
+/* SoundChannel_SetEnvelopeC — kick off envelope-C on a channel.
  *
  * Resets the envelope-C state bits in the channel's flags word (clearing
  * the active bit, the 2-bit mode field and the inactive bit), then re-arms
@@ -387,7 +387,7 @@ void sub_0802EDF0(void)
  * SOUND_SYSTEM_SW_SLOT_FOR_CHANNEL, with flags at slot+0x38 and the
  * envelope-C block at slot+0x24.
  */
-void sub_0802EEF8(EnvelopeCConfig *cfg, u8 setMode, s32 channel)
+void SoundChannel_SetEnvelopeC(EnvelopeCConfig *cfg, u8 setMode, s32 channel)
 {
     SoundSystem *ss;
     SoundSlot *slot;
@@ -438,7 +438,7 @@ sw_slot:
     block->param.cfg = cfg;
 }
 
-void sub_0802EF7C(u8 clearAcc, u16 value, s32 channel)
+void Sound_ApplyEnvelopeC(u8 clearAcc, u16 value, s32 channel)
 {
     register u32 cf asm("r2");           /* keeps the first inline flag offset in r2 for the flag load */
     register u32 cfReload asm("ip");     /* preserves the later flags update as `[r2, ip]` */

@@ -15,10 +15,10 @@ typedef struct {
 
 extern u8 gIwram_3570;
 
-extern u32 sub_0802E100(u32 handle);
+extern u32 SoundHandle_Retire(u32 handle);
 
-void sub_08020E7C(u8 idx)
+void SoundEntry_Stop(u8 idx)
 {
     StructAt3003570 *p = (StructAt3003570 *)&gIwram_3570;
-    sub_0802E100(p->entries[idx].fieldB);
+    SoundHandle_Retire(p->entries[idx].fieldB);
 }

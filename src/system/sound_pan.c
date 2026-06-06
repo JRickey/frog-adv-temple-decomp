@@ -1,8 +1,8 @@
 #include "sound.h"
 
-/* sub_0802F2FC — per-frame pan-envelope tick.
+/* SoundPan_Tick — per-frame pan-envelope tick.
  *
- * Sister of sub_0802ED5C (envelope B at +0x2c) and sub_0802EC7C (envelope A
+ * Sister of Sound_TickSlotEnvelopeB (envelope B at +0x2c) and Sound_UpdateChannelEnvelopesA (envelope A
  * at +0x1c). This one drives the per-slot pan envelope: a triangular-bounce
  * accumulator at slot+0xa (acc) / slot+0x12 (step) clamped against byte limits
  * stored in slot+0x1a (negLimit) / slot+0x1b (posLimit), scaled << 8. The
@@ -14,8 +14,8 @@
  * slot.flags & 0x2000; that non-zero value is replaced with -oldStep, while a
  * clear flag stores 0.
  *
- * Companion to sub_0802ED5C (volume envelope, +0x2c block) and sub_0802EC7C
- * (envelope A at +0x1c). Called sequentially from sub_0802F4B0, the
+ * Companion to Sound_TickSlotEnvelopeB (volume envelope, +0x2c block) and Sound_UpdateChannelEnvelopesA
+ * (envelope A at +0x1c). Called sequentially from SoundMixer_VBlankUpdate, the
  * per-VBlank mixer driver.
  *
  * Matching notes: the register pins keep the loop state in the same registers
@@ -27,7 +27,7 @@
  * them shrinks the function and shifts branches to byte_diff 97.
  */
 
-void sub_0802F2FC(void)
+void SoundPan_Tick(void)
 {
     SoundSystem **gpsp;
     register SoundSystem **gpspCache asm("ip");
@@ -107,16 +107,16 @@ advance:
     if (i < (*gpsp)->count)
         goto body;
 }
-/* sub_0802F398 — recompute and commit one slot's stereo pan into its mix entry.
+/* SoundPan_UpdateMixEntry — recompute and commit one slot's stereo pan into its mix entry.
  *
- * Standalone form of the per-slot pan stage that the mixer (sub_0802F4B0)
+ * Standalone form of the per-slot pan stage that the mixer (SoundMixer_VBlankUpdate)
  * also runs inline. Given a slot index it advances the slot's volume scale,
  * maps the slot's 8-bit pan position (slot+0x3c) through a 3-segment bounce
  * curve into left/right gains scaled by that volume, then multiplies each
  * gain by the master pan base (gpSoundSystem+0xbe when slot flag 0x10000 is
  * set, else +0xbc) and commits the two gain bytes plus a mono flag into the
  * mix entry at gpSoundSystem[0xc0] + index*28, bracketed by the sound
- * mutation lock (sub_0802E418 / sub_0802E3F8).
+ * mutation lock (Sound_Lock / Sound_Unlock).
  *
  *   pan in [0x00,0x3f]  — left-biased segment   (mono = 0)
  *   pan in [0x40,0x7f]  — right-biased segment   (mono = 0)
@@ -126,7 +126,7 @@ advance:
  * re-dereferenced at every use (never cached) so agbcc emits one pool load;
  * the slot pointer lives in ip, idx/vol/mix in r5/r4/r7, and the mono flag in
  * r8 across the lock BL (high-register local), mirroring the void-return /
- * save-r8 prologue shape used throughout this sound cluster (sub_0802F2FC).
+ * save-r8 prologue shape used throughout this sound cluster (SoundPan_Tick).
  * vol and panBase share r4 (vol is dead once the gains are scaled). The
  * baserom loads panBase into r0 then recolours it into r4 with an explicit
  * `adds r4, r0, #0`; agbcc would otherwise load straight into r4, so the
@@ -168,10 +168,10 @@ typedef struct PanSoundSystem {
 
 #define gpPanSystem (*(PanSoundSystem **)0x030065e0)
 
-extern void sub_0802E418(void);
-extern void sub_0802E3F8(void);
+extern void Sound_Lock(void);
+extern void Sound_Unlock(void);
 
-void sub_0802F398(s32 index)
+void SoundPan_UpdateMixEntry(s32 index)
 {
     s32 idx;
     register PanSoundSystem **gpsp asm("r2");
@@ -233,9 +233,9 @@ void sub_0802F398(s32 index)
         asm("" : "=r"(panBase) : "0"(pbLoaded));
     }
 
-    sub_0802E418();
+    Sound_Lock();
     mix->gainL = (s32)(gainL * panBase) >> 8;
     mix->gainR = (s32)(gainR * panBase) >> 8;
     mix->mono = mono;
-    sub_0802E3F8();
+    Sound_Unlock();
 }

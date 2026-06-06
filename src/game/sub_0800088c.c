@@ -10,7 +10,7 @@ extern u8 gIwram_53A0;
 #define BG0_RASTER_SCROLL (&gIwram_53A0)
 #define BG1_RASTER_SCROLL (&gIwram_3610)
 
-void sub_0800088C(void)
+void IntrHBlank(void)
 {
     u8 scanline;
     vu16 *dst;

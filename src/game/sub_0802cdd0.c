@@ -9,10 +9,10 @@ typedef struct {
     s16 d;
 } Entry;
 
-extern u32 sub_08020C78(u32 sound);
-extern u8 sub_0802CAFC(Entry *e, s16 *out);
-extern u8 sub_08021EC0(Entry *a, Entry *b);
-extern void sub_08021F1C(u8 dir, s8 *outX, s8 *outY);
+extern u32 Sound_Play(u32 sound);
+extern u8 Enemy_PickNextStep(Entry *e, s16 *out);
+extern u8 TileEntry_CalcDirection(Entry *a, Entry *b);
+extern void DirToMotion(u8 dir, s8 *outX, s8 *outY);
 
 struct MotionDesc {
     u8 _pad00[0x2a];
@@ -23,15 +23,15 @@ struct MotionDesc {
     u8 mode;
 };
 
-extern void sub_0800A580(struct MotionDesc *m, s8 sel, s8 a, s8 b);
+extern void MotionDesc_Set(struct MotionDesc *m, s8 sel, s8 a, s8 b);
 
-void sub_0802CDD0(struct Entity *ent, u8 dir, Entry *e)
+void Entity_MoveToEntry(struct Entity *ent, u8 dir, Entry *e)
 {
     s8 out[4];
     s16 buf[2];
 
-    sub_08020C78(0x6b);
-    if (!sub_0802CAFC(e, buf))
+    Sound_Play(0x6b);
+    if (!Enemy_PickNextStep(e, buf))
         return;
 
     {
@@ -46,12 +46,12 @@ void sub_0802CDD0(struct Entity *ent, u8 dir, Entry *e)
         }
     }
 
-    ent->field_1A = sub_08021EC0(e, (Entry *)buf);
+    ent->field_1A = TileEntry_CalcDirection(e, (Entry *)buf);
     {
         u8 fa = ent->field_1A;
         register s8 *outY asm("r4") = &out[1];
-        sub_08021F1C(fa, &out[0], outY);
-        sub_0800A580((struct MotionDesc *)ent, dir, out[0], *outY);
+        DirToMotion(fa, &out[0], outY);
+        MotionDesc_Set((struct MotionDesc *)ent, dir, out[0], *outY);
     }
     ent->status |= 2;
 }

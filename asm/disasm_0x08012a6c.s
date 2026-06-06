@@ -105,7 +105,7 @@
 @   0x08012b32: 0000        movs	r0, r0
 @   0x08012b34: 0694        lsls	r4, r2, #26
 
-        thumb_func_start sub_08012A6C
-sub_08012A6C: @ 0x08012a6c
+        thumb_func_start ScaleBlit_Tick
+ScaleBlit_Tick: @ 0x08012a6c
         .incbin "frog_us_baserom.gba", 0x12a6c, 0xcc
-        thumb_func_end sub_08012A6C
+        thumb_func_end ScaleBlit_Tick

@@ -25,9 +25,9 @@ union PackedPointUnion07138 {
 };
 
 extern struct Entity gEntities_03003720[];
-extern s32 sub_0800CED0(void *ctx, u32 point, u32 size, s32 arg3);
+extern s32 Rect_PointInRect(void *ctx, u32 point, u32 size, s32 arg3);
 
-s32 sub_08007138(unsigned int baseIn, s8 count)
+s32 CollisionTable_ScanForPlayer(unsigned int baseIn, s8 count)
 {
     register u32 maskHi asm("sl");
     u32 maskLo;
@@ -131,7 +131,7 @@ s32 sub_08007138(unsigned int baseIn, s8 count)
 
                                 callPlayer = player;
                                 callSize = size.w;
-                                if (sub_0800CED0(callPlayer, point.w, callSize, 0) != 0) {
+                                if (Rect_PointInRect(callPlayer, point.w, callSize, 0) != 0) {
                                     stateByte = 1;
                                     hit = stateByte;
                                 }

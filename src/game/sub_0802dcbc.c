@@ -2,7 +2,7 @@
 
 #define REG_SOUNDCNT_L (*(vu16 *)0x04000080)
 
-/* sub_0802DCBC — set the pan position of a sound channel identified by
+/* Sound_SetChannelPan — set the pan position of a sound channel identified by
  * handle, returning the channel's *previous* pan (clamped to 0x80).
  *
  * handle: bits 16..23 carry the channel index (same handle layout as the
@@ -23,7 +23,7 @@
  *     channel bitmap; `0x80u << 21 >> 24` and `0x80u << 17 >> 24` reproduce
  *     the single-bit forms without agbcc collapsing the shifts.
  */
-s32 sub_0802DCBC(u32 handle, s32 vol)
+s32 Sound_SetChannelPan(u32 handle, s32 vol)
 {
     u32 handleR = handle;
     s32 volR = vol;
@@ -129,10 +129,10 @@ tail:
     return old;
 }
 
-/* sub_0802DDB0 — read the current pan position of a channel by handle.
- * Read-only counterpart of sub_0802DCBC; decodes panBits (PSG) or reads the
+/* Sound_GetChannelPan — read the current pan position of a channel by handle.
+ * Read-only counterpart of Sound_SetChannelPan; decodes panBits (PSG) or reads the
  * SW slot's panCache, clamped to 0x80. Returns -1 for an invalid handle. */
-s32 sub_0802DDB0(u32 handle)
+s32 Sound_GetChannelPan(u32 handle)
 {
     register SoundSystem *ss asm("r4");
     u32 channel;

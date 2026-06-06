@@ -5,7 +5,7 @@
 
 extern u8 gIwram_53A0;
 
-u8 sub_0800D270(u32 x, u32 y)
+u8 TileMap_GetCell(u32 x, u32 y)
 {
     register s32 sx asm("r2");
     s32 dcol;

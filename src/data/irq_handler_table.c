@@ -7,14 +7,14 @@
  * matching Thumb handler via the standard Thumb-ABI low-bit
  * convention.
  *
- *   idx 0  (VBlank)  -> 0x08000791 — sub_08000790 (per-frame mixer)
- *   idx 1  (HBlank)  -> 0x0800088d — sub_0800088C
+ *   idx 0  (VBlank)  -> 0x08000791 — VBlankIntr (per-frame mixer)
+ *   idx 1  (HBlank)  -> 0x0800088d — IntrHBlank
  *   idx 2  (VCount)  -> 0x08000889 — sub_08000888 (empty stub)
  *   idx 3  (Timer0)  -> 0x08000885 — sub_08000884 (empty stub)
  *   idx 4  (Timer1)  -> 0x0800090d — sub_0800090C (sound DMA timer)
  *   idx 5  (Timer2)  -> 0x08000885 — sub_08000884 (empty stub)
  *   idx 6  (Timer3)  -> 0x08000885 — sub_08000884 — patched at runtime by
- *                                    sub_08033910(3, &sIrqHandlerTable[6])
+ *                                    Timer_SetIrqHandler(3, &sIrqHandlerTable[6])
  *                                    to 0x080338ed when the timer-IRQ
  *                                    subsystem registers itself
  *   idx 7..12 (DMA0..3, Serial, Keypad) -> sub_08000884 stubs

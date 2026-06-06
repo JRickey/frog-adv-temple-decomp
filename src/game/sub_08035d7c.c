@@ -5,7 +5,7 @@ void IntrEnable(void);
 
 /* Thumb-callable interwork thunk: switches to ARM mode and branches to IntrEnable.
  * Emits: bx pc; nop (Thumb), then ARM `b IntrEnable`. */
-NAKED void sub_08035D7C(void)
+NAKED void IntrEnable_Thunk(void)
 {
     asm(".syntax unified\n"
         "    bx      pc\n"

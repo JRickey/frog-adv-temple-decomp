@@ -1,7 +1,7 @@
 #include "macros.h"
 #include "types.h"
 
-extern void sub_080100E4(u32, void *, void *);
+extern void Scroll_FlushTilemapWindow(u32, void *, void *);
 
 struct BlitState {
     u8 _pad00[26];
@@ -86,7 +86,7 @@ void sub_08012BC4(u32 flags, u32 dstX, u32 dstY, u32 widthArg, u32 srcRowsArg, c
         one = 1;
         bank = (bank & one) + scratch - scratch;
     }
-    sub_080100E4(bank, flushSrc, flushDst);
+    Scroll_FlushTilemapWindow(bank, flushSrc, flushDst);
 
     {
         u8 *sentinel = (u8 *)0x030064C0;

@@ -16,19 +16,19 @@
  *                              include/constants/game_mode.h.
  *  offset 10  `pendingMode`  - MISNAMED. Not a queued game mode: it is a
  *                              scene/entity-type id (the scene handlers set it
- *                              to `mode - 7` and ModeControl/sub_0800DE80
+ *                              to `mode - 7` and ModeControl/Game_FrameEnd
  *                              dispatch on it; it also keys the sEntityProc*
  *                              tables in src/data/entity_dispatch.c). The
  *                              Set*Mode_NN helpers actually set this scene id.
  *                              Rename pending (-> SetSceneType_NN); see
  *                              docs/unknowns.md.
- *  offset 12  `_unk0C`       - unlocked-worlds bitmap (set by sub_0800DD80;
- *                              read by sub_0801B154 to bound the world map).
- *  offset 28  `rngSeed`      - LCG state stepped by sub_08000764
+ *  offset 12  `_unk0C`       - unlocked-worlds bitmap (set by WorldMap_Init;
+ *                              read by GetHighestUnlockedWorld to bound the world map).
+ *  offset 28  `rngSeed`      - LCG state stepped by RandRange
  *                              (seed = seed * 109 + 1021).
- *  offset 34  `_unk22`       - halfword; written by sub_0801932C.
+ *  offset 34  `_unk22`       - halfword; written by TitleLogo_Display.
  *  offset 36  `_step24`      - 3-step cycle counter (0→1→2→0) used by
- *                              sub_0801793C to index gHandlerTable_08308028
+ *                              GameMode_Attract to index gHandlerTable_08308028
  *                              and select a pendingMode value.
  */
 typedef struct GameStuff {

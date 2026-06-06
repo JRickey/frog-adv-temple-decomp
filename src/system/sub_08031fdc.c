@@ -5,10 +5,10 @@ enum SoundDrainMode {
     SOUND_DRAIN_MODE_RETIRE = 1,
 };
 
-extern void sub_0802F9F0(u32 idx);
-extern void sub_0802E724(s32 channel);
+extern void Sound_RetireChannel(u32 idx);
+extern void SoundChannel_Reset(s32 channel);
 
-u32 sub_08031FDC(u32 mode)
+u32 SoundRequest_Drain(u32 mode)
 {
     SoundSystem **soundSystemPtr = &gpSoundSystem;
     SoundSystem *soundSystem = *soundSystemPtr;
@@ -41,10 +41,10 @@ u32 sub_08031FDC(u32 mode)
                     drain = (SoundDrainEntry *)(byteOffset + (u32)*drainBase);
                     if (drain->live != 0) {
                         if (mode == SOUND_DRAIN_MODE_RETIRE) {
-                            sub_0802F9F0(i);
+                            Sound_RetireChannel(i);
                         } else {
                             gpSoundSystem->channelSeqs[i].opPtr = (u32 *)zero;
-                            sub_0802E724(i);
+                            SoundChannel_Reset(i);
                         }
 
                         drain = (SoundDrainEntry *)(byteOffset + (u32)*drainBase);

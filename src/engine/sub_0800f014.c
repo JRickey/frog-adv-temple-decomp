@@ -5,8 +5,8 @@
 #include "iwram.h"
 #include "types.h"
 
-extern void sub_0800EF58(void);
-extern u32 sub_080107D0(u8 layer);
+extern void SceneReset(void);
+extern u32 Render_DmaLoadTileset(u8 layer);
 
 extern const u16 sScreenPalette_F72C4[256];
 extern const u16 sScreenTilemapBg0_F74C4[1024];
@@ -25,7 +25,7 @@ struct SceneScrollState_F014 {
     u16 tileWidth;  /* +0x36 */
 };
 
-void sub_0800F014(void)
+void InitScreenBgGraphics(void)
 {
     volatile DmaChannel *dma;
     vu16 *regs;
@@ -89,7 +89,7 @@ void sub_0800F014(void)
     REG_DISPSTAT = DISPSTAT_VBLANK_IRQ;
 }
 
-void sub_0800F114(void)
+void InitCharacterBgGraphics(void)
 {
     volatile DmaChannel *dma;
     struct IwramAt3550 *r;
@@ -146,13 +146,13 @@ void sub_0800F114(void)
     *regs = (u16)zero;
     *regs = 0xB40;
 
-    sub_0800EF58();
+    SceneReset();
 }
 
-void sub_0800F22C(void)
+void InitAllBgTilemapLayers(void)
 {
-    sub_080107D0(0);
-    sub_080107D0(1);
-    sub_080107D0(2);
-    sub_080107D0(3);
+    Render_DmaLoadTileset(0);
+    Render_DmaLoadTileset(1);
+    Render_DmaLoadTileset(2);
+    Render_DmaLoadTileset(3);
 }

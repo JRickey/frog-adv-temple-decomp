@@ -2,11 +2,11 @@
 #include "macros.h"
 #include "types.h"
 
-void sub_08017AA8(void);
+void Attract_Cleanup(void);
 
-void sub_08017A88(void)
+void Attract_StepFinish(void)
 {
-    sub_08017AA8();
+    Attract_Cleanup();
     gIwram_35E0._data[0] = gIwram_34B4._data[2];
     *(u16 *)&gIwram_35E0._data[2] = 0;
 }

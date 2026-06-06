@@ -1,6 +1,6 @@
 #include "types.h"
 
-/* --- sub_08019AEC: non-matching reference (asm slice provides the matching bytes) --- */
+/* --- Room_StreamOamAttribs: non-matching reference (asm slice provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "iwram.h"
 #include "types.h"
@@ -12,7 +12,7 @@ extern const u8 sRoomDmaTable_080C1254[];
 #define ROOM_DATA ((const u32 *)*(const u32 *)(gbase->_data * 24 + tb4))
 #define DAT(N)    (*(const u32 *)((k << 2) + ((rec << 7) + (u32)ROOM_DATA) + (N)))
 
-void sub_08019AEC(u8 arg)
+void Room_StreamOamAttribs(u8 arg)
 {
     u32 dispatchIdx;
     u8 *state;

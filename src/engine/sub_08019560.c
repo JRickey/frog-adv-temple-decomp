@@ -11,39 +11,39 @@
 extern void (*const gHandlerTable_08308058[])(void);
 
 /* Dispatch through a ROM handler table indexed by gIwram_3480._data[3].
- * Class-sibling of sub_08019540 (which indexes by _data[4]); both share
+ * Class-sibling of GameMode_Menu26 (which indexes by _data[4]); both share
  * the 0x08308058 table and discard the handler's return value (the popped
  * lr lands in r0 before bx). */
 
-void sub_08019560(void)
+void GameMode_Menu25(void)
 {
     gHandlerTable_08308058[gIwram_3480._data[3]]();
 }
 
-extern void sub_08020B50(void);
-extern s32 sub_08010710(void);
-extern u32 sub_08000900(void);
-extern u8 sub_08010694(u8 arg);
+extern void SoundMixer_Stop(void);
+extern s32 Screen_TickFlash(void);
+extern u32 GetFrameTick(void);
+extern u8 Blend_StartFade(u8 arg);
 
-void sub_08019580(void)
+void Menu25_WaitFadeIn(void)
 {
     u32 now;
 
-    sub_08020B50();
+    SoundMixer_Stop();
     gIwram_3480._data[5] = 0;
     gIwram_3608._data = 0;
 
-    if (sub_08010710() != 0)
+    if (Screen_TickFlash() != 0)
         return;
 
-    now = sub_08000900();
+    now = GetFrameTick();
     now -= gIwram_3480._unk0C;
     if (now <= 0x77)
         return;
 
-    gIwram_3480._unk0C = sub_08000900();
+    gIwram_3480._unk0C = GetFrameTick();
     gIwram_3480._data[0]++;
-    sub_08010694(0xBF);
+    Blend_StartFade(0xBF);
 }
 
 extern const void *const sUiAssetSlots[];
@@ -51,21 +51,21 @@ extern const void *const sUiAssetSlots[];
 /* Declared s32 (canonical type is u8) so agbcc compares the return value
  * directly with `cmp r0, #0` instead of zero-extending via `lsls #24`,
  * matching the baserom's branch. */
-extern s32 sub_080106B8(void);
-extern u16 sub_080106EC(u16 arg);
+extern s32 Blend_StepFade(void);
+extern u16 Screen_BeginFlash(u16 arg);
 
 /* Reload the status-bar BG3 graphics (DMA3 from sUiAssetSlots[3..5] into
  * tile/palette/map VRAM), arm BG3 + 1D-OBJ, and re-init the fade-out
- * (sub_080106EC). Skips the whole reload while the fade-in ticker
- * (sub_080106B8) is still counting down. Sibling of sub_08017ABC, which
+ * (Screen_BeginFlash). Skips the whole reload while the fade-in ticker
+ * (Blend_StepFade) is still counting down. Sibling of UiScreen_Init, which
  * does the same DMA3 sequence with sUiAssetSlots[0..2]. */
-void sub_080195C4(void)
+void Menu25_ReloadStatusBarBg(void)
 {
     volatile DmaChannel *dma;
 
     gIwram_3480._data[5] = 0;
 
-    if (sub_080106B8() != 0)
+    if (Blend_StepFade() != 0)
         return;
 
     REG_BG3CNT = 0x1E08;
@@ -88,16 +88,16 @@ void sub_080195C4(void)
 
     REG_DISPCNT = DISPCNT_OBJ_1D | DISPCNT_BG3_ON;
 
-    sub_080106EC(0xBF);
+    Screen_BeginFlash(0xBF);
     gIwram_3480._data[0]++;
 }
 
 /* Resets the status-bar dispatch state (clears _data[7] and _data[0])
  * once the fade-in ticker has finished. Same guard idiom as
- * sub_080195C4. */
-void sub_0801964C(void)
+ * Menu25_ReloadStatusBarBg. */
+void Menu25_ResetAfterFade(void)
 {
-    if (sub_080106B8() != 0)
+    if (Blend_StepFade() != 0)
         return;
 
     gIwram_3480._data[7] = 0;
@@ -105,21 +105,21 @@ void sub_0801964C(void)
 }
 
 /* Bumps the status-bar sub-state counter (_data[3]). Companion to
- * sub_08019678, which does the same _data[3]++ but also seeds _data[9]
+ * Menu25_AdvanceAndReturn, which does the same _data[3]++ but also seeds _data[9]
  * and clears _data[0]. */
-void sub_08019668(void)
+void Menu25_AdvanceSubstate(void)
 {
     gIwram_3480._data[3]++;
 }
 
 /* Advances the status-bar dispatch sub-state (_data[3]++) and seeds the
  * game-state machine into mode 4, clearing _data[0], once the fade-in
- * ticker (sub_080106B8) finishes. Companion of sub_08019668 (no mode
+ * ticker (Blend_StepFade) finishes. Companion of Menu25_AdvanceSubstate (no mode
  * seed). r stores the ticker result so r3 holds 0 when we later clear
  * _data[0], letting agbcc emit `strb r3,[r1,#0]` directly. */
-void sub_08019678(void)
+void Menu25_AdvanceAndReturn(void)
 {
-    s32 r = sub_080106B8();
+    s32 r = Blend_StepFade();
 
     if (r != 0)
         return;
@@ -130,12 +130,12 @@ void sub_08019678(void)
 }
 
 /* Sets the game-state mode to 4 and zeros the dispatch index and two
- * related state bytes, once the fade-in ticker (sub_080106B8) finishes.
+ * related state bytes, once the fade-in ticker (Blend_StepFade) finishes.
  * r stores the ticker result so r2 holds 0 when agbcc emits the
- * strb-of-register stores. Sibling of sub_080196C8 (mode=25 path). */
-void sub_080196A0(void)
+ * strb-of-register stores. Sibling of Menu25_Enter (mode=25 path). */
+void Menu25_ReturnToRouter(void)
 {
-    s32 r = sub_080106B8();
+    s32 r = Blend_StepFade();
 
     if (r != 0)
         return;
@@ -147,8 +147,8 @@ void sub_080196A0(void)
 }
 
 /* Sets the game-state mode to 25 (0x19) and seeds the dispatch state:
- * clears _data[0,5,4], sets _data[3]=2. Sibling of sub_080196A0. */
-void sub_080196C8(void)
+ * clears _data[0,5,4], sets _data[3]=2. Sibling of Menu25_ReturnToRouter. */
+void Menu25_Enter(void)
 {
     gGameStuff.mode = GAME_MODE_MENU_25;
     gIwram_3480._data[0] = 0;
@@ -165,8 +165,8 @@ void sub_080196E8(void)
  * count. mode picks the destination screenblock (28..31 at 0x0600E000 +
  * mode*0x800); src and dst are both biased by the (x + y*32) tile offset and
  * advance one screenblock row (0x40 bytes) per iteration. Called from
- * sub_0801F8BC. */
-void sub_080196EC(u8 *attr, const u16 *src, u8 mode)
+ * SaveSlot_DrawSelectionCursor. */
+void TileBlit(u8 *attr, const u16 *src, u8 mode)
 {
     u16 *dst;
     u8 row;
@@ -203,12 +203,12 @@ void sub_080196EC(u8 *attr, const u16 *src, u8 mode)
 
 /* Copies the overlapping rectangle between two tilemap descriptors into a BG
  * screenblock via DMA3. Both descriptors share the [0]=x, [1]=y, [2]=halfwords
- * per row, [3]=row count layout (see sub_080196EC); the copied rectangle uses
+ * per row, [3]=row count layout (see TileBlit); the copied rectangle uses
  * the per-field minimum of the two, so the smaller of source/destination wins.
  * src is read from base (biased by the source descriptor's tile offset); dst is
  * the mode-selected screenblock (28..31 at 0x0600E000 + mode*0x800), biased by
- * the destination descriptor's tile offset. Sibling of sub_080196EC. */
-void sub_0801977C(const u8 *dstAttr, const u8 *srcAttr, const u16 *base, u8 mode)
+ * the destination descriptor's tile offset. Sibling of TileBlit. */
+void BgTilemap_BlitRectClipped(const u8 *dstAttr, const u8 *srcAttr, const u16 *base, u8 mode)
 {
     const u16 *src;
     u16 *dst;

@@ -3,10 +3,10 @@
 #include "types.h"
 
 extern const u32 sEntityParamTable[17];
-extern void sub_08020BAC(void);
-extern void sub_08020B88(u32 arg);
+extern void Sound_DrainIfActive(void);
+extern void Sound_PlayIfEnabled(u32 arg);
 
-void sub_0800A1C8(void)
+void EntityParam_Reset(void)
 {
     u8 m;
     u32 value;
@@ -21,17 +21,17 @@ void sub_0800A1C8(void)
         return;
 
     value = 0;
-    sub_08020BAC();
+    Sound_DrainIfActive();
     if (gIwram_6110.state == 1) {
         const u32 *table = sEntityParamTable;
         /* Reuse the now-dead base pointer so agbcc overwrites r5 with the table index. */
         p = (GameStuff *)(u32)p->pendingMode;
         value = table[(u32)p];
     }
-    sub_08020B88(value);
+    Sound_PlayIfEnabled(value);
 }
 
-int sub_0800A214(void)
+int Scene_SelectEntityLimit(void)
 {
     /* result pinned to r5 so the &gGameStuff pointer lands in r4 — baserom
      * keeps the base live across both BLs; the natural allocation swaps r4/r5. */
@@ -53,14 +53,14 @@ int sub_0800A214(void)
     if ((u8)(p->pendingMode - 15) <= 1)
         result = 7;
 
-    sub_08020BAC();
+    Sound_DrainIfActive();
     return result;
 }
 
-void sub_0800A258(u32 arg)
+void EntityParam_Apply(u32 arg)
 {
-    sub_08020BAC();
-    sub_08020B88(arg);
+    Sound_DrainIfActive();
+    Sound_PlayIfEnabled(arg);
 }
 
 typedef void (*GameProc)(void);
@@ -69,16 +69,16 @@ extern const GameProc sEntityProcB[17];
 extern const GameProc sEntityProcC[17];
 extern const u8 sEntitySubtypeLut[20];
 
-extern void sub_0800A520(void);
-extern void sub_0800F24C(u8 arg);
-extern void sub_08009A58(void);
-extern void sub_08009188(void);
-extern void sub_080008DC(void);
-extern void sub_0800A328(void);
+extern void Game_UpdateSubsystems(void);
+extern void Scroll_UpdateCamera(u8 arg);
+extern void Entity_UpdateVisibility(void);
+extern void Entity_Advance(void);
+extern void WaitVblank(void);
+extern void Game_ForceRender(void);
 
 extern u8 gIwram_5330;
 
-void sub_0800A26C(void)
+void Entity_DispatchBC(void)
 {
     struct IwramAt6110 *s = &gIwram_6110;
     const GameProc *t1;
@@ -89,7 +89,7 @@ void sub_0800A26C(void)
     s->flagBank0 = -1;
     s->flagBank1 = -1;
 
-    sub_0800A520();
+    Game_UpdateSubsystems();
 
     /* sEntityProcB dispatch — t1 loads first (r1), then base (r4).
      * idx (r2) holds pendingMode temporarily; shift and add route through r0
@@ -110,11 +110,11 @@ void sub_0800A26C(void)
         u32 lastidx;
         lut = sEntitySubtypeLut;
         lastidx = base->pendingMode;
-        sub_0800F24C(*(const u8 *)(lastidx + (u32)lut));
+        Scroll_UpdateCamera(*(const u8 *)(lastidx + (u32)lut));
     }
 
-    sub_08009A58();
-    sub_08009188();
-    sub_080008DC();
-    sub_0800A328();
+    Entity_UpdateVisibility();
+    Entity_Advance();
+    WaitVblank();
+    Game_ForceRender();
 }

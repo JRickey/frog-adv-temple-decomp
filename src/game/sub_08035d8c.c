@@ -7,7 +7,7 @@
  * there is no C construct agbcc can lower to this shape. */
 extern void SoundIrqDisable_ARM(void);
 
-NAKED void sub_08035D8C(void)
+NAKED void SoundIrqDisable(void)
 {
     asm(".syntax unified\n"
         "    bx      pc\n"

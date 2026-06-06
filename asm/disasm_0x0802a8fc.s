@@ -131,7 +131,7 @@
 @   0x0802a9f6: 0000        movs	r0, r0
 @   0x0802a9f8: 7fff        ldrb	r7, [r7, #31]
 
-        thumb_func_start sub_0802A8FC
-sub_0802A8FC: @ 0x0802a8fc
+        thumb_func_start Entity10_UpdateStatus
+Entity10_UpdateStatus: @ 0x0802a8fc
         .incbin "frog_us_baserom.gba", 0x2a8fc, 0x100
-        thumb_func_end sub_0802A8FC
+        thumb_func_end Entity10_UpdateStatus

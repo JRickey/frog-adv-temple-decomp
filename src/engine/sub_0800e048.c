@@ -4,7 +4,7 @@
  * __divsi3 BL). The dividend is held in an int local so agbcc materializes the
  * 0x10000 constant before sign-extending the divisor — matches the baserom's
  * operand-evaluation order. */
-s16 sub_0800E048(s16 x)
+s16 Fixed16Recip(s16 x)
 {
     int n = 0x10000;
 

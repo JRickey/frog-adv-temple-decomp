@@ -21,9 +21,9 @@ u32 *EntityHitbox_GetPoint(u32 *out, s8 type, s8 point)
     return out;
 }
 
-extern int sub_0800CB80(int xTile, int mode, int x, int y, int flags);
+extern int SpriteGrid_SetCellFlags(int xTile, int mode, int x, int y, int flags);
 
-/* Looks up sEntityHitboxTable[type] and calls sub_0800CB80 with the (x, y)
+/* Looks up sEntityHitboxTable[type] and calls SpriteGrid_SetCellFlags with the (x, y)
  * pair at index `subtype` and the flags byte (low or high byte, controlled
  * by useAltFlags). Two pool loads of the same table address are required (one per
  * branch), which naturally arises from the two branches.
@@ -53,7 +53,7 @@ void EntityHitbox_RegisterHitPoint(u8 type, u8 xTile, u8 mode, u8 subtype, u8 us
         x = ((const s16 *)pa)[0];
         y = ((const s16 *)pa)[1];
         flagByte = *(u8 *)(offset + (u32)table + 8u);
-        sub_0800CB80(xTile, mode, x, y, flagByte);
+        SpriteGrid_SetCellFlags(xTile, mode, x, y, flagByte);
     } else {
         table = sEntityHitboxTable;
         offset = (u32)((s32)(s8)type * (s32)sizeof(EntityHitbox));
@@ -65,6 +65,6 @@ void EntityHitbox_RegisterHitPoint(u8 type, u8 xTile, u8 mode, u8 subtype, u8 us
         x = ((const s16 *)pa)[0];
         y = ((const s16 *)pa)[1];
         flagByte = *(u8 *)(offset + (u32)table + 9u);
-        sub_0800CB80(xTile, mode, x, y, flagByte);
+        SpriteGrid_SetCellFlags(xTile, mode, x, y, flagByte);
     }
 }

@@ -21,11 +21,11 @@ struct PanelCellSrc {
 };
 
 extern void sub_08012BC4(u32 flags, u32 dstX, u32 dstY, u32 width, u32 rows, const u16 **srcTable, u32 cellBit);
-extern void sub_08020C78(u32 sound);
-extern void sub_080152B0(void);
-extern void sub_0801549C(void);
+extern void Sound_Play(u32 sound);
+extern void Screen_LoadForMode(void);
+extern void SceneLoad_DmaUpdate(void);
 
-void sub_0801585C(void)
+void Scenery_UpdateSelectorCells(void)
 {
     u8 i;
 
@@ -46,15 +46,15 @@ void sub_0801585C(void)
 
             if ((gIwram_6110.selector5Flags >> i) & 1) {
                 gIwram_6110.selector6Flags |= 1 << i;
-                sub_08020C78(0x19);
+                Sound_Play(0x19);
                 *(u8 *)0x03003610 = i + 1;
             } else {
                 *(u8 *)0x03003610 = 0;
                 gIwram_6110.selector6Flags &= ~(1 << i);
             }
-            sub_080152B0();
+            Screen_LoadForMode();
         }
     }
 
-    sub_0801549C();
+    SceneLoad_DmaUpdate();
 }

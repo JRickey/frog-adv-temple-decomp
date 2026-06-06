@@ -1,10 +1,10 @@
 #include "sound.h"
 #include "macros.h"
 
-extern void sub_0802F398(s32 index);
-extern void sub_0802FA60(s32 index);
+extern void SoundPan_UpdateMixEntry(s32 index);
+extern void Sound_UpdateStreamPeriod(s32 index);
 
-void sub_080308B0(s32 index, u32 sampleId, u32 startOffset, u32 mode)
+void Sound_LoadStreamSlot(s32 index, u32 sampleId, u32 startOffset, u32 mode)
 {
     SoundSystem **gpsp;
     u32 lengthCopy;
@@ -79,9 +79,9 @@ void sub_080308B0(s32 index, u32 sampleId, u32 startOffset, u32 mode)
         *(u8 *)(entry + 27) = pan;
     }
 
-    sub_0802F398(index);
+    SoundPan_UpdateMixEntry(index);
     if (mode == 0) {
-        sub_0802FA60(index);
+        Sound_UpdateStreamPeriod(index);
     } else {
         u16 prio;
 

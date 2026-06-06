@@ -13,7 +13,7 @@
  * `value` is 0 both cells are cleared; otherwise the top cell gets the entry
  * `palBank | tile [| HFLIP]` and the bottom cell gets entry+1.
  */
-void sub_0801CFA0(u32 hflip, u8 col, u8 row, u16 tile, u32 palBank, u8 screen, u32 value)
+void Bg_WriteTilePair(u32 hflip, u8 col, u8 row, u16 tile, u32 palBank, u8 screen, u32 value)
 {
     /* low nibble of palBank into the bit12-15 palette field */
     u32 pal = (palBank << 28) >> 16;
