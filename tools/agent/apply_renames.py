@@ -78,6 +78,45 @@ def word_replace(text, old, new):
     return pat.subn(new, text)
 
 
+def word_replace_linker(text, old, new):
+    """Word-boundary replace for linker.ld: skips .o( file-path references.
+
+    The file-path tokens like `src/game/sub_08000820.o` embed function names
+    but the actual files haven't been renamed yet (that is a separate phase).
+    Replace only in comments and symbol-assignment contexts, not in `.o(`
+    inclusion lines.
+    """
+    pat = re.compile(r"\b" + re.escape(old) + r"\b")
+    # Process line by line: protect lines whose non-comment part contains .o(
+    lines = text.split("\n")
+    count = 0
+    result = []
+    for line in lines:
+        # Check if this line has a .o( reference (linker input section)
+        # Strip /* */ comments to find the actual linker directive
+        stripped = re.sub(r"/\*.*?\*/", "", line)
+        if re.search(r"\S+\.o\(", stripped):
+            # Only replace in the comment part (after /*)
+            def replace_in_comment(m):
+                nonlocal count
+                # Find /* */ comment boundaries in original line
+                comment_pat = re.compile(r"/\*.*?\*/", re.DOTALL)
+                new_line = line
+                for cm in comment_pat.finditer(line):
+                    comment_text = cm.group()
+                    new_comment, n = pat.subn(new, comment_text)
+                    if n:
+                        count += n
+                        new_line = new_line[:cm.start()] + new_comment + new_line[cm.end():]
+                return new_line
+            result.append(replace_in_comment(None))
+        else:
+            new_line, n = pat.subn(new, line)
+            count += n
+            result.append(new_line)
+    return "\n".join(result), count
+
+
 def find_function_body_span(text, fn_name):
     """Return (start, end) char offsets covering `<fn_name>(...) { ... }`.
 
@@ -218,10 +257,15 @@ def apply_manifest(manifest, dry_run):
     for ds in manifest.get("data_symbols", []):
         global_renames.append((ds["old"], ds["new"], f"data {ds['old']}->{ds['new']}"))
 
+    linker_ld = (REPO / "linker.ld").resolve()
     for old, new, label in global_renames:
         for p in list(contents.keys()):
             text = contents[p]
-            new_text, n = word_replace(text, old, new)
+            # linker.ld: protect .o( file-path tokens (file renaming is a separate phase)
+            if p == linker_ld:
+                new_text, n = word_replace_linker(text, old, new)
+            else:
+                new_text, n = word_replace(text, old, new)
             if n:
                 contents[p] = new_text
                 note(p, f"{label} x{n}")
