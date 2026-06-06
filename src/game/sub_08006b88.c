@@ -1026,3 +1026,58 @@ u8 sub_08006FEC(struct EngageEntry *entries, s8 count)
 
     return hit;
 }
+
+/* --- sub_080070A0: non-matching reference (asm slice provides the matching bytes) --- */
+#ifdef NON_MATCHING
+struct ScrollStepEntry {
+    u16 subX; /* +0x00 */
+    u16 subY; /* +0x02 */
+    u8 _pad04[8];
+    u32 stamp; /* +0x0C */
+    s8 deltaX; /* +0x10 */
+    s8 deltaY; /* +0x11 */
+    u8 ageMax; /* +0x12 */
+    u8 _pad13[7];
+    u8 flags; /* +0x1A */
+    u8 _pad1B[9];
+};
+
+void sub_080070A0(struct ScrollStepEntry *entries, s32 first, s32 last)
+{
+    register GameStuff *game asm("r8");
+    struct ScrollStepEntry *entry;
+    u16 active;
+    s32 i;
+    register s32 mask asm("r9");
+
+    if (gGameStuff._unk00 - entries[first].stamp < entries[first].ageMax)
+        return;
+
+    game = &gGameStuff;
+
+    i = first;
+    if (i > last)
+        return;
+
+    active = (u16)(gIwram_35E0._field_10 & 2); /* literal &2 keeps base in r2 */
+    mask = 2;                                  /* assigned AFTER active, pinned r9 */
+
+    entry = &entries[first];
+    do {
+        s8 dy = entry->deltaY; /* TAIL A: this lowers to ldrb+sext, not indexed ldrsb */
+        s8 dx = entry->deltaX;
+
+        entry->subX += dx;
+        entry->subY += dy;
+
+        if (active != 0 && (entry->flags & mask) != 0) {
+            gEntities[0].x += dx;
+            gEntities[0].y += dy;
+        }
+
+        entry->stamp = game->_unk00;
+        entry++;
+        i++;
+    } while (i <= last);
+}
+#endif /* NON_MATCHING */
