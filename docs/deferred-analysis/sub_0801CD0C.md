@@ -1,124 +1,107 @@
-# sub_0801CD0C — deferred analysis (round 22 update)
+# sub_0801CD0C — deferred analysis (round 29 update — Opus escalation)
 
 UI window-frame draw + inner-string render. Range [0x0801cd0c, 0x0801cec0),
 436 bytes, asm/disasm_0x0801cd0c.s -> src/engine/sub_0801cd0c.c.
 
-## Semantics (fully understood — geometry is correct)
+## Status: byte_diff 135 (down from round-22's 319). Frame size + string-scan
+## + C-fill + j+1-coalesce ALL SOLVED. Two residual agbcc fixpoints remain.
 
-Draws a 3x3-tile bordered window into BG screenblock 31 (VRAM 0x0600F800)
-using the 9-tile stamp `sUiWindowBorderTiles[9]` (in src/data/ui_text_tables.c;
-column-major TL,L,BL,T,C,B,TR,R,BR at 0x081bdf70), scans the inner string up
-to '|', renders it via sub_0801C078.
+This round RE-DERIVED the C from scratch (NOT a tweak of the old minimum-B) and
+cut byte_diff 319 -> 135 by switching to an **all-inline `(col*2 + row*64)`**
+body (no `cellOff` local) plus four targeted matching tricks (below). The
+old note's "two mutually-exclusive minima" framing was the wrong frame: the
+real blockers were (a) j+1 crossing the VBlank `bl`, and (b) the string scan
+register — both now fixed. What's LEFT is narrower.
 
-Signature (verified against prologue + sub_0801C078 tail call):
-`void sub_0801CD0C(u8 col, u8 row, const u8 *str, u8 innerRows, u8 width,
-                   u16 palColor, u16 frames)`
-- `*(u16*)0x05000000 = palColor;`  (BG palette entry 0)
-- `rows2 = ((u32)innerRows << 25) >> 24;`  (= 2*(innerRows & 0x7F))
-- cellOff = `row*64 + col*2`
-- VRAM literals: BG31=0x0600F800, BG31_ROW2=0x0600F840, BG31_COL2=0x0600F802,
-  BG31_ROW2_COL2=0x0600F842.
-- Tail call: `sub_0801C078(str, len, col+1, row+1, 0xa0, 14, 3);`
-- Callee sub_080008DC = VBlankWait. The per-column VBlank loop reuses the
-  interior fill counter `i` (left at rows2), back-edge `bhi` (continue while
-  `i > frames`): `for (; i > frames; i++) VBlankWait();`.
+## Semantics (verified, unchanged)
 
-## Two distinct register-coloring LOCAL MINIMA (the whole problem)
+Signature: `void sub_0801CD0C(u8 col, u8 row, const u8 *str, u8 innerRows,
+u8 width, u16 palColor, u16 frames)`. Draws a 3x3 bordered window into BG
+screenblock 31 using sUiWindowBorderTiles[9] (column-major TL,L,BL,T,C,B,TR,R,BR
+at 0x081bdf70), scans the inner string to '|', tail-calls
+`sub_0801C078(str, len, col+1, row+1, 0xa0, 14, 3)`. VRAM bases BG31=0x0600F800,
+ROW2=0x0600F840, COL2=0x0600F802, ROW2_COL2=0x0600F842. `rows2 = (innerRows&0x7F)*2`.
+`*(u16*)0x05000000 = palColor` (BG palette entry 0). sub_080008DC = VBlankWait.
 
-The target needs ALL FIVE of these simultaneously:
-  col->r9, row->r8, rows2->r7, col*2->sl, frames->SPILLED([sp,#20]).
-No source shape tried gets all five at once. There are exactly two reachable
-minima and they are MUTUALLY EXCLUSIVE under every lever tried:
+## SOLVED this round (keep ALL of these — they are load-bearing)
 
-### Minimum A — "pure cellOff" (prior round, byte_diff 333, frame 48)
-C body uses a single `cellOff = row*64 + col*2` local EVERYWHERE.
-  - col->r9 ✓, row->r8 ✓, rows2->r7 ✓   (ALL correct)
-  - frames->sl ✗  (col*2 never exists as a separate value, so sl is free and
-    frames grabs it; target wants col*2->sl and frames spilled)
+1. **Frame 48->44 (the j+1 spill).** ROOT CAUSE found via instrumenting agbcc
+   gcc/global.c find_reg: the j+1 pseudo's live range CROSSED the VBlank `bl`,
+   and find_reg REJECTS the (call-clobbered) ip for a pseudo that crosses a
+   call (`allocno_calls_crossed && HARD_REGNO_CALL_PART_CLOBBERED`), so it
+   spilled j+1 to [sp,#44] (+1 slot => frame 48). FIX: **move `j++` to BEFORE
+   the VBlank loop** in the source (semantically identical — the VBlank touches
+   only i/frames, never j). Then j+1's last use precedes the bl, it no longer
+   crosses the call, agbcc gives it ip (`mov ip,r6`), frame collapses to 44.
+   Confirmed: deleting the VBlank loop entirely also yields frame 44.
+2. **String scan in r5 (was r1).** REUSE the loop var `i` for the '|' scan
+   (`i = 0; while (str[i] != '|') i++; sub_0801C078(str, i, ...)`) instead of a
+   separate `len`. Baserom keeps len in r5 (i's reg); a fresh local gets r1.
+3. **`row*64 + col*2` operand order.** Write the offset as
+   **`(col * 2 + row * 64)`** everywhere — agbcc then evaluates row*64 first
+   (reusing r1=row's home reg) like the baserom. Writing `row*64 + col*2`
+   computes col*2 first => mismatch (369 vs 213).
+4. **C-fill scratch / cellOff-vs-j*2 order.** Use a per-iteration local
+   `new_var = col*2 + row*64;` inside the C-fill loop and write the address as
+   `BG31_ROW2 + i*64 + j*2 + new_var` (permuter-discovered). A `s32 new_var3 = j*2;`
+   in the B-edge shaves 2 more (135).
+5. **VBlank frame-44 keeper.** `for (new_var2 = i; new_var2 > frames; i++)`
+   (new_var2 = u8 copy of i) keeps frame 44 AND minimizes the VBlank diff. The
+   plain `for(; i > frames; i++)` REGRESSES to frame 48 (j+1 re-crosses the bl).
 
-### Minimum B — "split row*64+col*2" (THIS round, byte_diff 319, frame 52) <-- NEW BEST
-C body uses `cellOff` local for TL+L only, and the raw inline
-`(row * 64 + col * 2)` everywhere else (BL/T/B parenthesised; C-fill/TR/R/BR
-unparenthesised).
-  - frames->[sp,#20] SPILLED ✓ (exactly target's 0x2a `str r4,[sp,#20]`)
-  - col*2->sl ✓ (exactly target's 0x86 `mov sl,r3`)
-  - frame intent right (the sl/frames swap that blocked round 1 is SOLVED)
-  - col->ip ✗, row->r9 ✗  (col*2 being a live value steals the priority that
-    in minimum A let col/row claim r9/r8; they fall to ip/r9)
+## Drift — the TWO residual fixpoints (byte_diff 135, 50 diffs)
 
-Region diff of minimum B (byte_diff 319, 173 differing instrs):
-  prologue=6  TL=19  L=16  BL+setup=28  T=9  C=35  B=20  VBlank=28
-  TR+R+BR=73  strscan+call=58
+### A. VBlank loop is DEAD CODE in the baserom (~18 of the 50 diffs)
+The baserom's VBlank loop body (0x1ce10) is UNREACHABLE: the width-body ends
+`mov r6,ip; <mask>; b 0x1ce1c` (UNCONDITIONAL jump to the outer width test),
+and the only edge into 0x1ce10 is its own back-edge. i.e. agbcc DEAD-CODED the
+`for(; i > frames; i++)` guard to an unconditional skip. Our build keeps the
+loop LIVE (a conditional `cmp i,frames; bls SKIP` guard + inline body). agbcc
+must have proven the loop never runs (i increases while the cond is `i>frames`,
+so it would be infinite if entered => provably never entered). We could not
+reproduce the dead-coding from any source form tried (plain for, while,
+do-while+if, new_var2=i, new_var2=frames, frames-cached). This is a
+loop-deletion / jump-thread decision in gcc/loop.c + gcc/jump.c we could not
+trigger. **This is the biggest remaining cluster and the highest-value target.**
 
-So round 1's blocker (sl=frames) is now FIXED in minimum B; the residual is a
-DIFFERENT coloring decision: col/row no longer get the high callee-saved regs.
+### B. rows2*64 <-> width*2 stack-slot SWAP (~7 diffs)
+Baserom: rows2*64 -> [sp,#36], width*2 -> [sp,#40]. Ours: reversed
+(rows2*64 -> [sp,#40], width*2 -> [sp,#36]). Same store order, same pseudo
+first-use order (rows2*64 in BL before the loop, width*2 in TR after); the slot
+NUMBER assignment in reload (gcc/reload1.c alter_reg/assign_stack_local) picks
+the opposite direction. A reload1.c slot probe did NOT fire on these two (they
+spill via a different path — likely reg_equiv_mem), so the exact lever is
+unidentified. Resists: 10+ algebraic/reorder source variants, explicit locals
+(all WORSE), every -fXXX flag (all inert), shift-vs-mul CSE-break (inert).
 
-## The genuine remaining barrier: cellOff register-COALESCING
-
-The target, at the width-loop preheader (0xa2-0xa4), does
-  `mov r9, r5`  (r9 = cellOff, REUSING col's now-dead register)
-  `mov r8, ip`  (r8 = rows2*64+cellOff, REUSING row's now-dead register)
-i.e. it COALESCES the cellOff pseudo into the freed col/row hard registers and
-keeps cellOff resident in r9/r8 across the whole width loop. agbcc instead
-SPILLS cellOff and rows2*64+cellOff to fresh stack slots (the 2 extra slots =>
-frame 52 vs 44). col/row ARE dead at the preheader in minimum B (verified:
-TR/R/BR read precomputed slot+sl, no `lsl #6`/`lsl #1` recompute), yet the
-allocator refuses to coalesce cellOff into r9. This is a reload/coalesce
-decision in global.c/reload1.c, not something the C source exposes.
-
-Target's exact structure (for the next attempt to match):
-  cellOff (r5) is computed ONCE at the BL corner (0x72 `adds r5,r2,r3`), kept
-  live in r5 through the entire setup (0x84-0x9a stores), then moved to r9 at
-  0xa2. agbcc recomputes cellOff at the preheader and immediately spills it.
-
-## Levers tried this round (none beat 319)
-
-- `-fno-strength-reduce`: REQUIRED (keeps recomputed i*64, u8-masked counters,
-  bcs/bcc unsigned bounds). KEEP for any resume.
-- Flag sweep on the minimum-B base, ALL identical 319 (no perturbation):
-  -fno-gcse, -fno-schedule-insns, -fno-schedule-insns2, -fno-cse-follow-jumps,
-  -f[no-]caller-saves, -fno-expensive-optimizations, -fno-force-mem,
-  -fforce-addr, -fno-rerun-cse-after-loop, -fno-thread-jumps,
-  -fomit-frame-pointer, -ffixed-r4/r5/r6/r7, -ffixed-ip.
-- compiler swap OLD_AGBCC <-> AGBCC_BIN: no change (default OLD_AGBCC).
-- Pins all THRASH (cascade worse): col=r9/row=r8 (404); rows2=r7 (370);
-  cellOff=r9 or =sl (348); colX2=sl explicit (377/378). Every pin fixes one
-  reg and the rest cascade.
-- Structural variants and their byte_diff (minimum B = 319 is the floor):
-  cellOff-everywhere 392; cellOff for BL/T/B too 416; exact target
-  combined/split mix (cellOff for T-edge, split C-fill) 416; rowX64 local for
-  splits 384; rowX64+colX2 locals 382; two cellOff vars (cellOff + cellOff2)
-  398; cellOff reassigned at BL 381; BL reuses cellOff local 413;
-  no-cellOff all-inline (frame 44 but col->ip) 354.
-
-## Corpus
-
-`corpus_asm_search.py search --asm 'mov +(r8|r9|sl), *ip' --require-c` confirms
-the dead-param-register-REUSE idiom (`mov sl,ip` etc.) IS matched in pure C in
-metroidret/mzm, fireemblem8u, katam, mother3 (9-14 commits each). So the
-coalescing IS reproducible from pure C — it is a coloring search, not an
-impossibility. This is ATTEMPT_MATCH, NOT a NAKED candidate.
+### Levers tried this round (none reached 0)
+- 25+ source-structure variants (operand orders, locals, loop forms, do-while).
+- 25+ -fXXX combos on the 135 base — ALL inert (incl -fno-strength-reduce,
+  which is a NO-OP for this all-inline structure; the old note REQUIRED it for
+  minimum-B but it does nothing here — do NOT add it back).
+- 10+ register pins (i, j, frames, col2) — ALL worse (frames-pin 406, i-pin 358).
+- agbcc compiler swap OLD<->new: inert.
+- decomp-permuter: ran ~15k iterations from the 135 base (j3). Plateaued at the
+  same fixpoint — it found tricks #4/#5 (new_var/new_var2/new_var3) but could
+  NOT crack the VBlank dead-coding or the slot swap. CAUTION: the permuter's
+  raw `score` is INFLATED ~10x for this pool-heavy fn (≈1590 for byte_diff 135);
+  a true match is score 0. `make_permuter_target.py` regenerated target.o from
+  the candidate mid-run, which made an `output-*/` cmp falsely read 0 — VERIFY
+  any "match" with compile_and_view_assembly.py against the BASEROM, not the
+  scratch target.o.
 
 ## Resume hint
+Start from the "## Best-effort C" below (byte_diff 135, frame 44 correct). The
+ONE decision that unlocks most of it: make agbcc DEAD-CODE the VBlank loop
+(fixpoint A) — its body is unreachable in the baserom. If A resolves, the j+1
+coalesce stays valid with the PLAIN `for(; i > frames; i++)` form too (no
+new_var2 needed), and the frame stays 44. Try: a private instrumented agbcc with
+a probe in gcc/loop.c (loop-invariant / loop-deletion) or gcc/jump.c
+(thread_jumps) to see why our guard stays conditional while the baserom's is
+threaded to unconditional. Slot swap (B) is secondary (~7 diffs) — probe
+reg_equiv_mem slot assignment in gcc/global.c / gcc/reload1.c.
 
-Start from minimum B (the "## Best-effort C" below) WITH
-`-fno-strength-reduce`. byte_diff 319; round 1's sl=frames blocker is solved.
-The ONE decision left to crack: force agbcc to COALESCE cellOff into the freed
-col(r9)/row(r8) registers at the width-loop preheader instead of spilling to
-2 fresh slots (which inflates frame 44->52 and shifts every [sp,#N]).
-- The permuter is the right tool and was UNAVAILABLE in this worktree
-  (vendor/decomp-permuter symlinks to main, whose .venv is not installed).
-  Run it from minimum B once .venv exists, or hand to codex.
-- Or: build a private instrumented agbcc (codegen-notes "Instrumenting agbcc")
-  and trace why the cellOff allocno is denied r9 in global_alloc/find_reg even
-  though col is dead there — the coalesce condition is the lever.
-- Secondary, independent win (58 of the 319): the '|' string scan. Target uses
-  goto-test-first (`movs r5,#0; ldr str; b TEST; BODY: len++; TEST: ldr str;
-  add len; ldrb; cmp; bne BODY`) with len in r5; agbcc emits a pre-test guard
-  + bottom test in r1. `while`/`for` produced identical guarded code; this is
-  downstream of the same coloring so it may resolve with the main fix.
-
-## Best-effort C (minimum B, byte_diff 319)
+## Best-effort C (byte_diff 135, frame 44, all major barriers solved)
 
 ```c
 #include "macros.h"
@@ -144,52 +127,61 @@ extern const u16 sUiWindowBorderTiles[9];
 extern void sub_080008DC(void);
 extern void sub_0801C078(const u8 *str, u8 count, u8 colBase, u8 rowBase, u16 tileBase, s32 palBank, u8 screen);
 
+/* new_var/new_var2/new_var3 are agbcc register-coloring anchors (permuter-found):
+ * new_var pins cellOff into a C-fill scratch reg; new_var3 stages j*2 for the
+ * B-edge; new_var2 caches i so j+1 (carried in ip) does not cross the VBlank bl
+ * (keeps the frame at 0x2c). j++ MUST sit before the VBlank loop for the same
+ * reason. Do not rename/inline without re-checking the byte match. */
 void sub_0801CD0C(u8 col, u8 row, const u8 *str, u8 innerRows, u8 width, u16 palColor, u16 frames)
 {
     u32 rows2;
-    s32 cellOff;
     u8 i;
+    s32 new_var;
+    u8 new_var2;
+    s32 new_var3;
     u8 j;
-    u8 len;
 
     *(u16 *)0x05000000 = palColor;
 
     rows2 = ((u32)innerRows << 25) >> 24;
-    cellOff = row * 64 + col * 2;
 
-    *(u16 *)(BG31 + cellOff) = sUiWindowBorderTiles[WINDOW_TL];
+    *(u16 *)(BG31 + (col * 2 + row * 64)) = sUiWindowBorderTiles[WINDOW_TL];
 
     for (i = 0; i < rows2; i++)
-        *(u16 *)(BG31_ROW2 + i * 64 + cellOff) = sUiWindowBorderTiles[WINDOW_L];
+        *(u16 *)(BG31_ROW2 + i * 64 + (col * 2 + row * 64)) = sUiWindowBorderTiles[WINDOW_L];
 
-    *(u16 *)(BG31_ROW2 + rows2 * 64 + (row * 64 + col * 2)) = sUiWindowBorderTiles[WINDOW_BL];
+    *(u16 *)(BG31_ROW2 + rows2 * 64 + (col * 2 + row * 64)) = sUiWindowBorderTiles[WINDOW_BL];
 
-    for (j = 1; j <= width; j++) {
-        *(u16 *)(BG31 + j * 2 + (row * 64 + col * 2)) = sUiWindowBorderTiles[WINDOW_T];
+    j = 1;
+    while (j <= width) {
+        *(u16 *)(BG31 + j * 2 + (col * 2 + row * 64)) = sUiWindowBorderTiles[WINDOW_T];
 
-        for (i = 0; i < rows2; i++)
-            *(u16 *)(BG31_ROW2 + i * 64 + row * 64 + col * 2 + j * 2) = sUiWindowBorderTiles[WINDOW_C];
+        for (i = 0; i < rows2; i++) {
+            new_var = col * 2 + row * 64;
+            *(u16 *)(BG31_ROW2 + i * 64 + j * 2 + new_var) = sUiWindowBorderTiles[WINDOW_C];
+        }
 
-        *(u16 *)(BG31_ROW2 + (rows2 * 64 + (row * 64 + col * 2)) + j * 2) = sUiWindowBorderTiles[WINDOW_B];
+        new_var3 = j * 2;
+        *(u16 *)(BG31_ROW2 + rows2 * 64 + (col * 2 + row * 64) + new_var3) = sUiWindowBorderTiles[WINDOW_B];
+        j++;
 
-        for (; i > frames; i++)
+        for (new_var2 = i; new_var2 > frames; i++)
             sub_080008DC();
     }
 
-    *(u16 *)(BG31_COL2 + width * 2 + row * 64 + col * 2) = sUiWindowBorderTiles[WINDOW_TR];
+    *(u16 *)(BG31_COL2 + width * 2 + (col * 2 + row * 64)) = sUiWindowBorderTiles[WINDOW_TR];
 
     for (i = 0; i < rows2; i++)
-        *(u16 *)(BG31_ROW2_COL2 + i * 64 + row * 64 + col * 2 + width * 2) = sUiWindowBorderTiles[WINDOW_R];
+        *(u16 *)(BG31_ROW2_COL2 + i * 64 + width * 2 + (col * 2 + row * 64)) = sUiWindowBorderTiles[WINDOW_R];
 
-    *(u16 *)(BG31_ROW2_COL2 + rows2 * 64 + row * 64 + col * 2 + width * 2) = sUiWindowBorderTiles[WINDOW_BR];
+    *(u16 *)(BG31_ROW2_COL2 + rows2 * 64 + (col * 2 + row * 64) + width * 2) = sUiWindowBorderTiles[WINDOW_BR];
 
-    len = 0;
-    while (str[len] != '|')
-        len++;
+    i = 0;
+    while (str[i] != '|')
+        i++;
 
-    sub_0801C078(str, len, (u8)(col + 1), (u8)(row + 1), 0xa0, 14, 3);
+    sub_0801C078(str, i, (u8)(col + 1), (u8)(row + 1), 0xa0, 14, 3);
 }
 ```
 
-Makefile flag (required when resuming):
-`src/engine/sub_0801cd0c.s: CFLAGS += -fno-strength-reduce`
+No Makefile flag needed (-fno-strength-reduce is a no-op for this structure).
