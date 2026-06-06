@@ -225,7 +225,7 @@ SECTIONS {
         src/game/sub_0800088c.o(.text);  /* 0x0800088c - 0x080008dc, IntrHBlank */
         src/system/vblank.o(.text);      /* 0x080008dc - 0x0800090c, WaitVblank + GetFrameTick */
         asm/disasm_0x0800090c.o(.text);  /* 0x0800090c - 0x08000918, sub_0800090C (auto-peeled) */
-        src/system/sub_08000918.o(.text);  /* 0x08000918 - 0x08000b6c, Scene08_Main (NAKED + NON_MATCHING; mode-X cluster mov-pc-rN dispatcher) */
+        src/system/sub_08000918.o(.text);  /* 0x08000918 - 0x08000b6c, Scene08_Main (matched pure C; mode-X cluster mov-pc-rN dispatcher) */
         src/system/sub_08000b6c.o(.text);  /* 0x08000b6c - 0x08000c98, Scene08_UpdatePlayerEntity */
         src/system/sub_08000c98.o(.text);  /* 0x08000c98 - 0x08000cec, Scene08_StartIntro + Scene08_InitModeControl */
         src/system/sub_08000cec.o(.text);  /* 0x08000cec - 0x08000d2c, Scene08_PlayFrameTick */
