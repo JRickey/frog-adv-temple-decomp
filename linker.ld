@@ -841,20 +841,31 @@ SECTIONS {
         asm/text/text_0x0803175c.o(.text);  /* 0x0803175c - 0x08031798, raw bytes */
         src/system/sub_08031798.o(.text);  /* 0x08031798 - 0x080317e0, sub_08031798 + sub_080317B0 + sub_080317C0 */
         asm/disasm_0x080317e0.o(.text);  /* 0x080317e0 - 0x08031824, sub_080317E0 (auto-peeled) */
+        src/system/sub_08031824.o(.text);
         asm/disasm_0x08031824.o(.text);  /* 0x08031824 - 0x08031868, sub_08031824 (auto-peeled) */
         src/system/sub_08031868.o(.text);
         asm/disasm_0x08031868.o(.text);  /* 0x08031868 - 0x0803189c, sub_08031868 (auto-peeled) */
         src/system/sub_0803189c.o(.text);
         asm/disasm_0x080318a8.o(.text);  /* 0x080318a8 - 0x080318f0, sub_080318A8 (auto-peeled) */
+        src/system/sub_080318f0.o(.text);
         asm/disasm_0x080318f0.o(.text);  /* 0x080318f0 - 0x08031910, sub_080318F0 (auto-peeled) */
+        src/system/sub_08031910.o(.text);
         asm/disasm_0x08031910.o(.text);  /* 0x08031910 - 0x0803194c, sub_08031910 (auto-peeled) */
+        src/system/sub_0803194c.o(.text);
         asm/disasm_0x0803194c.o(.text);  /* 0x0803194c - 0x08031998, sub_0803194C (auto-peeled) */
+        src/system/sub_08031998.o(.text);
         asm/disasm_0x08031998.o(.text);  /* 0x08031998 - 0x080319c0, sub_08031998 (auto-peeled) */
+        src/system/sub_080319c0.o(.text);
         asm/disasm_0x080319c0.o(.text);  /* 0x080319c0 - 0x080319fc, sub_080319C0 (auto-peeled) */
+        src/system/sub_080319fc.o(.text);
         asm/disasm_0x080319fc.o(.text);  /* 0x080319fc - 0x08031a48, sub_080319FC (auto-peeled) */
+        src/system/sub_08031a48.o(.text);
         asm/disasm_0x08031a48.o(.text);  /* 0x08031a48 - 0x08031ab4, sub_08031A48 (auto-peeled) */
+        src/system/sub_08031ab4.o(.text);
         asm/disasm_0x08031ab4.o(.text);  /* 0x08031ab4 - 0x08031b84, sub_08031AB4 (auto-peeled) */
+        src/system/sub_08031b84.o(.text);
         asm/disasm_0x08031b84.o(.text);  /* 0x08031b84 - 0x08031bb8, sub_08031B84 (auto-peeled) */
+        src/system/sub_08031bb8.o(.text);
         asm/disasm_0x08031bb8.o(.text);  /* 0x08031bb8 - 0x08031c04, sub_08031BB8 (auto-peeled) */
         asm/disasm_0x08031c04.o(.text);  /* 0x08031c04 - 0x08031c64, sub_08031C04 (auto-peeled) */
         asm/disasm_0x08031c64.o(.text);  /* 0x08031c64 - 0x08031c84, sub_08031C64 (auto-peeled) */
