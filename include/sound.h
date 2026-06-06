@@ -105,7 +105,7 @@ typedef struct StreamSlot {
 typedef struct SoundChannelSeq {
     u32 *opPtr;
     u32 *queuedOpPtr;
-    u8 _pad08[2];
+    u16 waitTimer;
     u16 cursor;
     u8 _pad0c[4];
 } SoundChannelSeq;
