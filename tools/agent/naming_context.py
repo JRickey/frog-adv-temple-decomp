@@ -159,6 +159,49 @@ def packet_for(con, name, body_idx, fnrow_cache) -> dict | None:
     }
 
 
+def plan_clusters(con, scope: str) -> list[dict]:
+    """Group nameable functions by src_file and order files leaf-first
+    (callees before callers) so naming a caller sees its callees already named.
+    Returns [{file, functions:[names]}] in that order."""
+    names = set(select_names(con, scope))
+    cur = con.cursor()
+    file_of = {n: f for n, f in cur.execute("SELECT name,src_file FROM functions")}
+    # file-level edges A->B (A calls B), A!=B, both with nameable members.
+    files = {file_of[n] for n in names}
+    fadj = {f: set() for f in files}
+    for a, b in cur.execute("SELECT caller,callee FROM edges WHERE kind!='swi'"):
+        fa, fb = file_of.get(a), file_of.get(b)
+        if fa in files and fb in files and fa != fb:
+            fadj[fa].add(fb)
+    # Kahn topo on the file DAG (ignoring cycles), then reverse for leaf-first.
+    indeg = {f: 0 for f in files}
+    for f in files:
+        for g in fadj[f]:
+            indeg[g] += 1
+    from collections import deque
+    q = deque(sorted(f for f in files if indeg[f] == 0))
+    order, seen = [], set()
+    while q:
+        f = q.popleft()
+        if f in seen:
+            continue
+        seen.add(f); order.append(f)
+        for g in sorted(fadj[f]):
+            indeg[g] -= 1
+            if indeg[g] == 0:
+                q.append(g)
+    for f in sorted(files):  # any cycle remnants
+        if f not in seen:
+            order.append(f)
+    order.reverse()  # callees (leaves) first
+    funcs_by_file: dict[str, list] = {}
+    for n in names:
+        funcs_by_file.setdefault(file_of[n], []).append(n)
+    addr_of = {n: a for n, a in cur.execute("SELECT name,addr FROM functions")}
+    return [{"file": f, "functions": sorted(funcs_by_file[f], key=lambda x: addr_of.get(x, 0))}
+            for f in order if f in funcs_by_file]
+
+
 def select_names(con, scope: str) -> list[str]:
     cur = con.cursor()
     if scope == "all":
@@ -174,6 +217,8 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("name", nargs="?", help="single function -> packet on stdout")
     ap.add_argument("--scope", choices=["all", "withbody"], help="batch: which functions")
+    ap.add_argument("--plan", action="store_true",
+                    help="emit leaf-first clusters JSON for --scope (no packets)")
     ap.add_argument("--names", help="batch: comma-separated explicit function names")
     ap.add_argument("--file", help="emit a FILE packet (its functions + collective context)")
     ap.add_argument("--out-dir", default=str(ROOT / ".callgraph_packets"))
@@ -184,6 +229,15 @@ def main() -> int:
         raise SystemExit(f"{args.db} missing — run build_callgraph.py first.")
     con = sqlite3.connect(args.db)
     cur = con.cursor()
+
+    if args.plan:
+        clusters = plan_clusters(con, args.scope or "withbody")
+        print(json.dumps({"scope": args.scope or "withbody",
+                          "clusters": clusters,
+                          "total_functions": sum(len(c["functions"]) for c in clusters),
+                          "total_files": len(clusters)}, indent=2))
+        return 0
+
     fnrow_cache = {n: k for n, k in cur.execute("SELECT name,kind FROM functions")}
     body_idx = build_body_index()
 

@@ -227,6 +227,47 @@ def git_clean(paths):
     subprocess.run(["git", "-C", str(REPO), "checkout", "--"] + rels, check=False)
 
 
+_CONF = {"high": 3, "medium": 2, "low": 1, "": 0, None: 0}
+
+
+def merge_manifests(manifests):
+    """Merge several fragment manifests into one, deterministically.
+
+    The call-graph naming workflow fans out per-cluster fragments; this folds
+    them. Dedup rules: function/data_symbol entries are keyed by `old` (keep the
+    highest-confidence); a `new` name claimed by two different `old`s keeps the
+    highest-confidence claimant and DROPS the rest (those stay unnamed — a
+    collision is never silently applied). Variables/fields are scoped, so they
+    just concatenate. Returns (merged_manifest, dropped_list)."""
+    merged = {"cluster": "callgraph-merge", "functions": [], "variables": [],
+              "struct_fields": [], "struct_types": [], "data_symbols": []}
+    dropped = []
+    for key in ("functions", "data_symbols", "struct_types"):
+        by_old = {}
+        for man in manifests:
+            for e in man.get(key, []):
+                old = e["old"]
+                if old not in by_old or _CONF.get(e.get("confidence")) > _CONF.get(by_old[old].get("confidence")):
+                    by_old[old] = e
+        # resolve new-name collisions across distinct olds
+        by_new = {}
+        for old, e in sorted(by_old.items()):
+            new = e["new"]
+            if new in by_new:
+                keep = by_new[new]
+                loser = e if _CONF.get(e.get("confidence")) <= _CONF.get(keep.get("confidence")) else keep
+                win = keep if loser is e else e
+                by_new[new] = win
+                dropped.append(f"{key}: {loser['old']}->{new} (collides with {win['old']})")
+            else:
+                by_new[new] = e
+        merged[key] = sorted(by_new.values(), key=lambda x: x["old"])
+    for key in ("variables", "struct_fields"):
+        for man in manifests:
+            merged[key].extend(man.get(key, []))
+    return merged, dropped
+
+
 def report_leftovers(manifest, changed_paths):
     """Grep changed files for old UNIQUE identifiers that survived the rename.
     make check only compiles live code, so a rename left dangling inside an
@@ -255,12 +296,19 @@ def report_leftovers(manifest, changed_paths):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("manifest")
+    ap.add_argument("manifest", nargs="+", help="one manifest, or several fragments to merge")
     ap.add_argument("--dry-run", action="store_true", help="show the plan, modify nothing")
     ap.add_argument("--no-check", action="store_true", help="apply but skip make check (not recommended)")
     args = ap.parse_args()
 
-    manifest = json.loads(Path(args.manifest).read_text())
+    mans = [json.loads(Path(m).read_text()) for m in args.manifest]
+    if len(mans) == 1:
+        manifest = mans[0]
+    else:
+        manifest, dropped = merge_manifests(mans)
+        print(f"merged {len(mans)} fragments; {len(dropped)} dropped on collision")
+        for d in dropped[:30]:
+            print("   drop:", d)
     cluster = manifest.get("cluster", "?")
 
     # Require a clean tree so revert-on-failure restores the committed state.

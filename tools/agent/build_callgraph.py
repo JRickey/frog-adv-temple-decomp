@@ -347,6 +347,12 @@ def main() -> int:
         # status + nameability
         body_src = c_bodies.get(nm)
         f["has_c_body"] = 1 if body_src else 0
+        # src_file = where the READABLE C lives (the home .c), even when the
+        # matching bytes come from an asm slice (a NON_MATCHING reference). This
+        # is the right unit for clustering + file renaming; object-derived path
+        # only when there is no C body (pure asm-only function).
+        if body_src:
+            f["src_file"] = body_src
         if f["kind"] == "libgcc":
             f["status"], f["nameable"] = "libgcc", 0
         elif f["kind"] == "raw":
