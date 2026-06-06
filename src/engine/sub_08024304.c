@@ -18,3 +18,14 @@ void sub_08024328(void)
     sub_080210A0(0x6a, (const void *)sLevelLayoutPtrs_312C98[3], 16, 28, 0x251, 10, 3, 3);
     sub_080210A0(0x6b, (const void *)sLevelLayoutPtrs_312C98[4], 16, 28, 0x271, 10, 3, 3);
 }
+
+extern const u32 sLevelLayoutPtrs_312D80[10];
+
+void sub_08024390(void)
+{
+    u8 i;
+
+    for (i = 0; i <= 9; i++) {
+        sub_080210A0(i + 10, (const void *)sLevelLayoutPtrs_312D80[i], 16, 30, (u16)(((i & 1) << 4) + 0x81), 2, 3, 3);
+    }
+}
