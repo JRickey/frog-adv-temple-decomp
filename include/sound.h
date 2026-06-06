@@ -436,6 +436,7 @@ typedef struct SoundLockSystem {
 #define SOUND_SYSTEM_PAN_BITS_OFFSET          0xba
 #define SOUND_SYSTEM_STREAM_PAN_BYTE_OFFSET   0x10e
 #define SOUND_SYSTEM_MUTE_MASK_OFFSET         0x10f
+#define SOUND_SYSTEM_SAMPLE_BANK_OFFSET       0x110
 #define SOUND_SYSTEM_DMA_SRC_OFFSET           0xd0
 #define SOUND_SYSTEM_PERIOD_STATE_OFFSET      0xf4
 #define SOUND_SYSTEM_SLOT_HANDLE_TABLE_OFFSET 0x120
@@ -486,6 +487,7 @@ typedef struct SoundLockSystem {
 #define SOUND_SYSTEM_CHANNEL_WORK(ss)         ((u32 *)((u8 *)(ss) + SOUND_SYSTEM_CHANNEL_WORK_OFFSET))
 #define SOUND_SYSTEM_SLOT_PTR_TABLE(ss)       (*(SoundSlot ***)((u8 *)(ss) + SOUND_SYSTEM_SLOT_PTR_TABLE_OFFSET))
 #define SOUND_SYSTEM_SLOT_HANDLE_TABLE(ss)    (*(void ***)((u8 *)(ss) + SOUND_SYSTEM_SLOT_HANDLE_TABLE_OFFSET))
+#define SOUND_SYSTEM_SAMPLE_BANK(ss)          (*(u8 **)((u8 *)(ss) + SOUND_SYSTEM_SAMPLE_BANK_OFFSET))
 #define SOUND_SYSTEM_SW_SLOT(ss, i)           ((SoundSlotAcc *)((u8 *)(ss)->swSlots + (i) * SOUND_SW_SLOT_STRIDE))
 #define SOUND_SYSTEM_SW_SLOT_FOR_CHANNEL(ss, ch)                                                                       \
     ((SoundSlot *)((u8 *)(ss)->swSlots + ((ch) * SOUND_SW_SLOT_STRIDE - SOUND_SW_SLOT_STRIDE * 4)))
