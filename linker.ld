@@ -219,7 +219,7 @@ SECTIONS {
         src/game/sub_08000820.o(.text);  /* 0x08000820 - 0x0800088c, sub_08000820 + sub_08000884/sub_08000888 stubs */
         src/game/sub_0800088c.o(.text);  /* 0x0800088c - 0x080008dc, sub_0800088C */
         src/system/vblank.o(.text);      /* 0x080008dc - 0x0800090c, sub_080008DC + sub_08000900 */
-        asm/text/text_0x0800090c.o(.text);  /* 0x0800090c - 0x08000918, raw bytes */
+        asm/disasm_0x0800090c.o(.text);  /* 0x0800090c - 0x08000918, sub_0800090C (auto-peeled) */
         src/system/sub_08000918.o(.text);  /* 0x08000918 - 0x08000b6c, sub_08000918 (NAKED + NON_MATCHING; mode-X cluster mov-pc-rN dispatcher) */
         src/system/sub_08000b6c.o(.text);  /* 0x08000b6c - 0x08000c98, sub_08000B6C */
         src/system/sub_08000c98.o(.text);  /* 0x08000c98 - 0x08000cec, sub_08000C98 + sub_08000CB0 */
@@ -247,14 +247,14 @@ SECTIONS {
         src/game/sub_08002184.o(.text);  /* 0x08002184 - 0x08002444, sub_08002184 (mode-13 handler) */
         src/game/game_mode.o(.text);     /* 0x08002444 - 0x08002450, SetGameMode_06 */
         src/game/sub_08002450.o(.text);
-        asm/text/text_0x08002518.o(.text);  /* 0x08002518 - 0x08002524, raw bytes */
+        asm/disasm_0x08002518.o(.text);  /* 0x08002518 - 0x08002524, sub_08002518 (auto-peeled) */
         src/game/sub_08002524.o(.text);  /* 0x08002524 - 0x08002760, sub_08002524 (mode-14 handler) */
         src/game/set_game_mode_07.o(.text);  /* 0x08002760 - 0x0800276c, SetGameMode_07 */
         src/game/sub_0800276c.o(.text);  /* 0x0800276c - 0x08002844, sub_0800276C + sub_080027A0 + sub_080027F0 + sub_08002808 + sub_08002814 */
         src/game/mode_15.o(.text);       /* 0x08002844 - 0x08002a5c, sub_08002844 (mode-15 handler) */
         src/game/set_game_mode_08.o(.text);  /* 0x08002a5c - 0x08002a68, SetGameMode_08 */
         src/game/sub_08002a68.o(.text);  /* 0x08002a68 - 0x08002adc, sub_08002A68 + sub_08002A9C + sub_08002AC4 */
-        asm/text/text_0x08002adc.o(.text);  /* 0x08002adc - 0x08002ae8, raw bytes */
+        asm/disasm_0x08002adc.o(.text);  /* 0x08002adc - 0x08002ae8, sub_08002ADC (auto-peeled) */
         src/game/sub_08002ae8.o(.text);  /* 0x08002ae8 - 0x08002b58, sub_08002AE8 */
         src/game/sub_08002b58.o(.text);  /* 0x08002b58 - 0x08002e04, sub_08002B58 */
         src/game/set_game_mode_09.o(.text);  /* 0x08002e04 - 0x08002e10, SetGameMode_09 */
@@ -271,7 +271,7 @@ SECTIONS {
         src/game/sub_08003b8c.o(.text);  /* 0x08003b8c - 0x08003bfc, sub_08003B8C */
         src/game/sub_08003bfc.o(.text);  /* 0x08003bfc - 0x08003c38, sub_08003BFC */
         src/game/sub_08003c38.o(.text);  /* 0x08003c38 - 0x08003c9c, sub_08003C38 */
-        asm/text/text_0x08003c9c.o(.text);  /* 0x08003c9c - 0x08003ca8, raw bytes */
+        asm/disasm_0x08003c9c.o(.text);  /* 0x08003c9c - 0x08003ca8, sub_08003C9C (auto-peeled) */
         src/game/sub_08003ca8.o(.text);
         asm/disasm_0x08003ca8.o(.text);  /* 0x08003ca8 - 0x08004074, sub_08003CA8 (auto-peeled) */
         src/game/set_game_mode_12.o(.text);  /* 0x08004074 - 0x08004080, SetGameMode_12 */
@@ -282,7 +282,7 @@ SECTIONS {
         src/game/sub_0800441c.o(.text);
         src/game/sub_08004470.o(.text);
         src/game/sub_08004508.o(.text);  /* 0x08004508 - 0x080045e0, sub_08004508 + sub_08004588 */
-        asm/text/text_0x080045e0.o(.text);  /* 0x080045e0 - 0x080045ec, raw bytes */
+        asm/disasm_0x080045e0.o(.text);  /* 0x080045e0 - 0x080045ec, sub_080045E0 (auto-peeled) */
         src/game/sub_080045ec.o(.text);
         asm/disasm_0x080045ec.o(.text);  /* 0x080045ec - 0x08004938, sub_080045EC (auto-peeled) */
         src/game/sub_08004938.o(.text);
@@ -469,7 +469,7 @@ SECTIONS {
         src/engine/sub_08012a6c.o(.text);
         asm/disasm_0x08012a6c.o(.text);  /* 0x08012a6c - 0x08012b38, sub_08012A6C (force-peeled) */
         src/engine/sub_08012b38.o(.text);  /* 0x08012b38 - 0x08012bb4, sub_08012B38 + sub_08012B5C + sub_08012B78 */
-        asm/text/text_0x08012bb4.o(.text);  /* 0x08012bb4 - 0x08012bc4, raw bytes */
+        asm/disasm_0x08012bb4.o(.text);  /* 0x08012bb4 - 0x08012bc4, sub_08012BB4 (auto-peeled) */
         src/engine/sub_08012bc4.o(.text);  /* 0x08012bc4 - 0x08012cac, sub_08012BC4 */
         src/engine/sub_08012cac.o(.text);
         src/engine/sub_08012d40.o(.text);
