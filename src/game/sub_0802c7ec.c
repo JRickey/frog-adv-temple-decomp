@@ -77,3 +77,103 @@ void sub_0802C7EC(void)
         break;
     }
 }
+
+/* --- sub_0802C910: non-matching reference (asm slice provides the matching bytes) --- */
+#ifdef NON_MATCHING
+#include "game.h"
+#include "iwram.h"
+#include "types.h"
+
+struct MotionDesc {
+    u8 _pad00[0x2a];
+    u8 sel;
+    u8 _pad2b[5];
+    u8 dx;
+    u8 dy;
+    u8 mode;
+};
+
+extern void sub_0800A580(struct MotionDesc *m, s8 sel, s8 a, s8 b);
+extern void sub_08021F1C(u8 dir, s8 *outX, s8 *outY);
+extern void sub_08020F3C(u8 idx);
+extern void sub_080059C4(void *p);
+
+void sub_0802C910(void)
+{
+    struct Entity *entity = &gEntities[22];
+    s8 out[2];
+    u8 nextState;
+
+    switch (entity->field_1A) {
+    case 0:
+        sub_0800A580((struct MotionDesc *)entity, 0, 0, 0);
+        if ((entity->status & 0x8000) == 0)
+            goto done;
+
+        entity->field_1A = *((u8 *)entity + 0x6aa);
+        entity->status |= 2;
+        {
+            u8 dir = entity->field_1A;
+            register s8 *outY asm("r4") = &out[1];
+            sub_08021F1C(dir, &out[0], outY);
+            sub_0800A580((struct MotionDesc *)entity, 2, out[0], *outY);
+        }
+        entity->status &= 0x7fff;
+        goto done;
+
+    case 3: {
+        u16 status;
+        sub_08020F3C(22);
+        status = entity->status;
+        if (status & 0x8000) {
+            /* r0 pin threads the (2|status)&0x7fff accumulator through r0,
+               matching `movs r0,#2; orrs r0,r1; ldr r1,=0x7fff; ands r0,r1`. */
+            register u16 t asm("r0");
+            t = 2;
+            t |= status;
+            t &= 0x7fff;
+            entity->status = t;
+        }
+
+        if (entity->x > 0x77)
+            goto done;
+        nextState = 4;
+        break;
+    }
+
+    case 4: {
+        u16 status;
+        sub_08020F3C(22);
+        status = entity->status;
+        if (status & 0x8000) {
+            register u16 t asm("r0");
+            t = 2;
+            t |= status;
+            t &= 0x7fff;
+            entity->status = t;
+        }
+
+        if (entity->x <= 0xc0)
+            goto done;
+        nextState = 3;
+        break;
+    }
+
+    default:
+        goto done;
+    }
+
+    entity->field_1A = nextState;
+    *((u8 *)entity + 0x6aa) = nextState;
+    {
+        u8 dir = entity->field_1A;
+        register s8 *outY asm("r4") = &out[1];
+        sub_08021F1C(dir, &out[0], outY);
+        sub_0800A580((struct MotionDesc *)entity, 2, out[0], *outY);
+    }
+    entity->status |= 2;
+
+done:
+    sub_080059C4(entity);
+}
+#endif /* NON_MATCHING */
