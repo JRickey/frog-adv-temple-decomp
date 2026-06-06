@@ -125,17 +125,16 @@ Current `main` builds a byte-identical ROM: `make check` passes, the built
 SHA1 equals the baserom SHA1, and `tools/agent/progress.py --per-function`
 reports `0` ROM-diff bytes with no nonmatching functions.
 
-There is still decompilation work remaining. At the current checkpoint:
+There is still decompilation work remaining. As of my last check, I use ~400 register pins, there are a few instances of volatile asm,
+which will be cleaned up. I am trying my best to minimize the number of register pins used.
 
-- `154` functions remain in asm stubs or asm slices (`42,823` asm lines,
-  most of which are objdump preview comments rather than hand-written code).
-- `30` compiled functions are still `NAKED` / `NON_MATCHING` asm fallbacks.
-  They byte-match the baserom, but are not yet true pure C.
-- Most non-code ROM bytes are still raw assets or data blobs.
+More importantly, a large majority of the symbols are not named. A lot of locals are not properly named either.
 
-The generated estimate block below is the broader progress snapshot. The
+The generated estimate block below is the broader progress snapshot. It's original midpoint estimate is out of date, the
 `peeled-but-still-asm` count is file/slice-based, so it can differ from the
 function count reported by `progress.py`.
+
+The total number of functions as of now is at the high end of the original estimate, probably a little over 1000 functions.
 
 <!-- BEGIN PROGRESS (managed by tools/agent/progress_stats.py) -->
 
@@ -169,3 +168,33 @@ Tooling and prompts adapted from:
   (`tools/preproc`, `tools/gbafix`)
 - [Mizuchi](https://github.com/macabeus/mizuchi) (MIT) — agent prompt
   structure, attribution in `tools/agent/prompts/ATTRIBUTION.md`
+
+Corpus of GBA decompilations git mirrors that agents are allowed to search inside for hard asm patterns, then review the matching C idioms to defeat those patterns. Huge thanks to every author and team below — some very tricky functions were matched using idioms found in these repositories.
+
+| Game | Repository | Author / team |
+|---|---|---|
+| Boktai 2: Solar Boy Django | [akatsuki105/boktai2](https://github.com/akatsuki105/boktai2) | akatsuki105 |
+| Rhythm Tengoku | [arthurtilly/rhythmtengoku](https://github.com/arthurtilly/rhythmtengoku) | arthurtilly |
+| Fire Emblem: The Binding Blade (FE6) | [FireEmblemUniverse/fireemblem6j](https://github.com/FireEmblemUniverse/fireemblem6j) | FireEmblemUniverse |
+| Fire Emblem: The Sacred Stones (FE8) | [FireEmblemUniverse/fireemblem8u](https://github.com/FireEmblemUniverse/fireemblem8u) | FireEmblemUniverse |
+| Mario Kart: Super Circuit | [jellees/mksc](https://github.com/jellees/mksc) | jellees |
+| Summon Night: Swordcraft Story 3 | [jiangzhengwenjz/csm3](https://github.com/jiangzhengwenjz/csm3) | jiangzhengwenjz |
+| Kirby & The Amazing Mirror | [jiangzhengwenjz/katam](https://github.com/jiangzhengwenjz/katam) | jiangzhengwenjz |
+| Tactics Ogre: The Knight of Lodis | [jiangzhengwenjz/totkol](https://github.com/jiangzhengwenjz/totkol) | jiangzhengwenjz |
+| Advance Wars | [ketsuban/advancewars](https://github.com/ketsuban/advancewars) | ketsuban |
+| Mother 3 | [Kurausukun/mother3](https://github.com/Kurausukun/mother3) | Kurausukun |
+| Metroid Fusion | [metroidret/mf](https://github.com/metroidret/mf) | metroidret |
+| Metroid: Zero Mission | [metroidret/mzm](https://github.com/metroidret/mzm) | metroidret |
+| Mega Man Zero 3 | [mmzret/rmz3](https://github.com/mmzret/rmz3) | mmzret |
+| Fire Emblem: The Blazing Blade (Rekka no Ken, JP) | [MokhaLeee/FireEmblem7J](https://github.com/MokhaLeee/FireEmblem7J) | MokhaLeee |
+| Harvest Moon: Friends of Mineral Town | [not-alons/hmfomt](https://github.com/not-alons/hmfomt) | not-alons |
+| Pokémon Emerald | [pret/pokeemerald](https://github.com/pret/pokeemerald) | pret |
+| Pokémon FireRed | [pret/pokefirered](https://github.com/pret/pokefirered) | pret |
+| Pokémon Pinball: Ruby & Sapphire | [pret/pokepinballrs](https://github.com/pret/pokepinballrs) | pret |
+| Pokémon Ruby | [pret/pokeruby](https://github.com/pret/pokeruby) | pret |
+| Castlevania: Aria of Sorrow | [testyourmine/cvaos](https://github.com/testyourmine/cvaos) | testyourmine |
+| Hamtaro: Ham-Ham Games | [XOlifreX/hhg-decompilation](https://github.com/XOlifreX/hhg-decompilation) | XOlifreX |
+| Mario Kart: Super Circuit | [XOlifreX/mksc-decompilation](https://github.com/XOlifreX/mksc-decompilation) | XOlifreX |
+| The Legend of Zelda: The Minish Cap | [zeldaret/tmc](https://github.com/zeldaret/tmc) | zeldaret |
+
+These mirrors are kept locally under `tools/agent/corpus-mirrors/` (gitignored); the corpus is searched but never copied into this project.
