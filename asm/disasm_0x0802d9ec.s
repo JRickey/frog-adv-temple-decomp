@@ -1,7 +1,7 @@
 @ Auto-emitted by tools/disasm/peel.py — do not hand-edit this header.
-@ Range:  [0x0802d9ec, 0x0802dcbc)  (720 bytes, thumb mode)
-@ Re-peel:  python3 tools/disasm/peel.py --start 0x802d9ec --end 0x802dcbc --mode thumb
-@ Split into sub_0802D9EC [0x0802d9ec, 0x0802dc1c) and sub_0802DC1C [0x0802dc1c, 0x0802dcbc).
+@ Range:  [0x0802dc1c, 0x0802dcbc)  (160 bytes, thumb mode)
+@ Re-peel:  python3 tools/disasm/peel.py --start 0x802dc1c --end 0x802dcbc --mode thumb
+@ Holds sub_0802DC1C [0x0802dc1c, 0x0802dcbc); sub_0802D9EC was decompiled to src/game/sub_0802d9ec.c.
 
         .include "asm/macros.inc"
         .syntax unified
@@ -360,11 +360,6 @@
 @   0x0802dcb4: bc70        pop	{r4, r5, r6}
 @   0x0802dcb6: bc02        pop	{r1}
 @   0x0802dcb8: 4708        bx	r1
-
-        thumb_func_start sub_0802D9EC
-sub_0802D9EC: @ 0x0802d9ec
-        .incbin "frog_us_baserom.gba", 0x2d9ec, 0x230
-        thumb_func_end sub_0802D9EC
 
         thumb_func_start sub_0802DC1C
 sub_0802DC1C: @ 0x0802dc1c
