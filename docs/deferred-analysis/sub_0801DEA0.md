@@ -1,109 +1,115 @@
-# sub_0801DEA0 — deferred analysis (Round 24, Opus escalation)
+# sub_0801DEA0 — deferred analysis (Round 31, Opus escalation)
 
 Two-row glyph text writer into one of four EWRAM tilemap scratch buffers
 (`0x02000000 + screen * 0x800`). Each glyph occupies one tilemap column over two
 rows: top tile at `(rowBase<<6) + colBase*2 + base`, bottom tile at `top + 0x40`.
-Direct sibling of the already-matched `sub_0801C078` (same `sub_0801CEC0` escape
-decoder, same `sCreditsTilemapEng` bracket table at ROM 0x081bee64). Callee
-`sub_0801CEC0` is already peeled.
+Sibling of the matched single-row writers `sub_0801C078` / `sub_0801DBB4` (same
+`sub_0801CEC0` escape decoder + `sCreditsTilemapEng` bracket table at ROM
+0x081bee64). Callee `sub_0801CEC0` is peeled.
 
-## STATUS: re-derived from scratch this round. Best byte_diff **256** (size 472
-exact, diff_count 123) — IMPROVED from the prior Round-19 plateau of 284. TWO of
-the prior note's THREE named residuals are now SOLVED in pure C with NO register
-pins. Only the third (a global/local register-allocation interaction) remains.
+## STATUS: re-derived from scratch this round. Best byte_diff **172** (size 476,
+1 extra instruction, diff confined to per-branch register coloring). This is an
+84-byte IMPROVEMENT over the Round-24 plateau of 256 and a *qualitatively better
+base* — the digit AND letter branches now match the baserom BYTE-FOR-BYTE. The
+remaining diff is one allocator-version divergence (local-reuse of dead globals)
+that needs decomp-permuter — UNAVAILABLE this run (the `vendor/decomp-permuter`
+submodule is an empty mountpoint on main, no `.venv`; cannot init from a worktree
+without racing siblings).
 
-The "## Best-effort C" below is a *better base* than the prior note's — resume
-from it, not from the r8-pinned 284 version.
+Resume from the "## Best-effort C" below (byte_diff 172). Do NOT restart from the
+256 version.
 
-## What was SOLVED this round (do NOT re-derive these)
+## What is now SOLVED byte-for-byte (do NOT re-derive)
 
-1. **palLow on the stack (prior residual #2).** The bottom store value is
-   `palLow + glyph + 1` where `palLow = (s16)palBits` is a loop-invariant the
-   baserom computes ONCE in the loop preheader and reads from `[sp,#16]` each
-   iteration. The ROOT CAUSE the prior attempt missed: pinning `palBits` to r5
-   with `register s32 palBits asm("r5")` makes `(s16)palBits` read a HARD
-   register, which gcc-2.x LICM (`loop.c` `move_movables`) refuses to hoist.
-   Instrumenting `loop.c` (private debug `old_agbcc`, fprintf at the
-   `threshold*savings*lifetime >= insn_count` decision) showed the `(s16)palBits`
-   set was NOT EVEN in the movables list because its operand was a hard reg.
-   **FIX: do NOT pin palBits.** Leave it a plain `s32 palBits;`. It then
-   colors to r5 NATURALLY (the prologue `lsls r5,#28; lsrs r5,#16` matches
-   byte-for-byte), and `(s16)palBits` becomes a hoistable pseudo invariant →
-   LICM moves it to the preheader → spills to `[sp,#16]` (all 6 callee-saved
-   regs r5–sl are taken). `sub sp,#20`, no `mov ip`, palLow read from stack.
-   NO PINS AT ALL is the winning configuration — every pin the prior attempt
-   added was compensating for the wrong-compiler / hard-reg-LICM-block.
+1. **`i` is `u8`, not u32.** The baserom masks `i` on every increment
+   (`mov r0,sl; adds r0,#1; lsls #24; lsrs #24; mov sl,r0`) AND on the bracket
+   `i += 4`. The prior note's "u32 is correct" was WRONG — u32 drops the mask
+   (size 468, 4 short). Declare `u8 i;` and write the bracket advance as
+   `i = (u8)(i + 4);`. Gives the masked increments + the unsigned `bcc`/`bcs`
+   loop guard. Size becomes 472-correct.
 
-2. **Switch case0+case3 `mov r8,r0` cross-jump merge (prior residual #1).**
-   With the palBits pin removed, the natural allocation makes case0
-   (`movs r0,#0x80; lsls#18`) and case3 (`ldr r0,[far pool]`) both land their
-   value in r0 and SHARE the `mov r8,r0` tail (case0 `b 0x6a`, case3 falls
-   through to 0x6a) — exactly the baserom. case1→r1, case2→r2 stay distinct.
-   This required NO `-fno-thread-jumps`/case-reorder gymnastics; it falls out
-   of the unpinned coloring. (Writing the switch as the explicit 4-case
-   `switch(screen)` is correct; do NOT use `base = 0x02000000 + screen*0x800`
-   — agbcc compiles THAT to a runtime multiply, not the cmp-tree, ~half the
-   time and is unstable.)
+2. **digit dst → r2 via a SPLIT dst assignment + an `asm("r2")` pin.** The dst
+   pointer must be built `rowBase<<6` FIRST into the pinned reg, THEN add
+   `colBase*2+base`, as two statements:
+   ```c
+   register u16 *dr2 asm("r2");
+   dr2 = (u16 *)(rowBase << 6);
+   dr2 = (u16 *)((u32)dr2 + (u32)(colBase * 2 + (u32)(u8 *)base));
+   ```
+   The split is load-bearing: the one-expression form `(rowBase<<6)+(col..+base)`
+   evaluates the SECOND operand into r2 first (`adds r2,r0,r2`); the split forces
+   the baserom's `adds r2,r2,r0`. WITH the split + pin, the digit index `t` also
+   colors to **r1** (baserom), not r4. The digit branch then matches exactly.
+   Bottom store value is `palLow + (glyph + 1)` (parenthesize so `+1` is on
+   glyph, matching `adds r0,#1` before the palLow add).
 
-   Also solved: the `i < count` loop guard is `bcc` (unsigned) iff `i` is
-   declared `u32` (not s32/u8). The digit/letter A+a branches MERGE into one
-   shared body automatically (cross-jump) when their store bodies are textually
-   identical, matching baserom 0x1df78 — BUT only if the bottom letter store
-   adds tileBase SEPARATELY (see below), which also fixes the tileBase ref count.
+3. **letter branch matches** with the same split + `t` MUTATED in place for the
+   bottom (mirrors the baserom's `add r1,r9; adds r1,#21` in-place on the t reg):
+   ```c
+   u = t + GLYPH_LETTER_OFFSET; u += (u32)tileBase; *dr2 = palBits + u;   /* top */
+   t += (u32)tileBase; t += 21; *(u16 *)((u8*)dr2+0x40) = palLow + t;     /* bottom */
+   ```
+   Staging top into `u` forces `adds r0,r1,#0; adds r0,#20; add r0,r9` (t copied
+   to r0, NOT `mov r0,r9`); mutating `t` for the bottom keeps t in r1 and does the
+   in-place `add r1,r9`. The `(u32)tileBase` casts are load-bearing (u16 tileBase
+   promotes wrong: byte_diff explodes to 339 without them).
 
-3. **tileBase in r9, not spilled.** The letter case in the baserom references
-   tileBase (r9) TWICE — once for the top (`add r0,r9`) and once for the bottom
-   (`add r1,r9`) — it does NOT reuse the top's `glyph` for the bottom. That gives
-   tileBase 3 refs vs palLow's 2, so tileBase out-prioritizes palLow for r9
-   (`global.c allocno_compare`, prio = log2(refs)*refs/live_length). Writing the
-   letter stores as two independent `t + tileBase + K` expressions (NOT
-   `glyph`/`glyph+1` reuse) is load-bearing for tileBase→r9.
+4. **switch + count-guard are CORRECT only WITHOUT the pin.** See drift below.
 
-## Drift — the ONE remaining residual (prior residual #3, "cascading ripple")
+## Drift — the ONE remaining residual: agbcc local-reuses dead global regs
 
-All 123 remaining diff instructions are ONE register-coloring divergence in the
-digit + letter case bodies, plus its ripple:
+ROOT CAUSE (confirmed by reading `tools/agbcc-src/gcc_arm/config/arm/arm.h`
+`REG_ALLOC_ORDER = {3,2,1,0,12,14,4,5,...}` and `local-alloc.c find_free_reg`):
+the baserom's original compiler **globally reserves** r2 for `c` (the char) and
+r3 for `p`=`str+i` across the WHOLE loop body and does NOT locally reuse them in a
+block where they are dead — EXCEPT it reuses r2 in the digit/letter branches.
+agbcc's `local-alloc` AGGRESSIVELY reuses any dead register inside a block (r3
+first per alloc order), so:
 
-- baserom: char `c`→r2, digit-index→**r1**, dst→**r2** (reused after c dies),
-  glyph→r0.
-- agbcc (mine): `c`→r2, digit-index→**r4** (a callee-saved reg!), dst→**r3**,
-  glyph→r1.
+- **digit/letter dst** naturally wants r3 (p's dead reg) → wrong; the `asm("r2")`
+  pin fixes it (→ 172).
+- BUT the `asm("r2")` pin is a FUNCTION-GLOBAL reservation (block-scoping the
+  `register` decl does NOT narrow it — verified). So it pushes the switch case-2
+  literal and BOTH `i<count` guard loads from r2 (baserom) to r3 (~6 bytes).
+- **space/star/tilde dst** = r3 in BOTH pin and no-pin builds; baserom = r0/r0/r1
+  (because baserom holds r2=c AND r3=p reserved, forcing dst to r0/r1). agbcc
+  reuses the dead r3. ~the bulk of the residual.
+- **bracket** dst/table are an r2↔r3 swap, same cause.
 
-ROOT CAUSE (confirmed by instrumenting `local-alloc.c` `find_free_reg`): `c` is a
-global pseudo (live across the mutually-exclusive digit/letter/… branches), so
-global-alloc reserves **r2** for it across the WHOLE loop body. The baserom's
-original compiler reuses r2 for the per-branch `dst` temp *after c's local death*
-within the digit branch; agbcc keeps r2 reserved, so the dst rowBase<<6 temp
-takes r1, which pushes the digit index out to r4 (r1/r2/r3 all live during the
-index's lifetime → `find_free_reg` returns r4). Every downstream digit/letter
-instruction then differs only in register NUMBER (r4↔r1, r3↔r2), which is why
-byte_diff is high (256) but diff_count is structural-zero — the shape is correct.
+The remaining 172 is ALL register-NUMBER renumbering (r0↔r3, r1↔r2, r2↔r3) with
+identical instruction shape (233 vs 233 lines, 1 extra insn). diff_count is
+structural-near-zero.
 
-This is the textbook **decomp-permuter** case (reorder statements/scope to flip
-which scratch a per-block temp gets, freeing r2's local reuse). The matched
-sibling sub_0801C078 sidesteps it because it keeps `c` in a CALLEE-SAVED reg (r5)
-— but THIS function's baserom keeps c in r2, so that escape isn't available here.
+### The decisive un-tried lever: extend `p`=str+i liveness across the branches
+If `p` (str+i) were genuinely LIVE across the digit/letter/space/star/tilde
+bodies, r3 would be busy everywhere and the WHOLE function would color like the
+baserom with NO pins (dst→r2 in digit/letter where c dies; dst→r0/r1 in
+space/star/tilde where both c,p reserved; t→r1). The baserom achieves this via
+global reservation; agbcc kills p locally because p's only uses are the loop-top
+read and the bracket case (dead on every other path). NO pin or `-fXXX` flag
+extends liveness (verified: pinning p to r3 is still locally reused; an
+`asm("" ::"r"(p))` barrier forces reloads, +instructions, 361). This is the
+exact statement-reorder/scope mutation decomp-permuter is built for.
 
-### Levers TRIED this round (none flipped the c/index/dst coloring)
-- NO pins (256, best), base=r8 only (270), +i=sl (305), +palBits=r5 (307, but
-  that REINTRODUCES the palLow-in-ip bug — do not pin palBits), all-6-pins (402).
-- digit store order: glyph-first+mutate-dst (256/257) vs dst-first+glyph-reuse
-  (259); dst-expr operand reorder `(colBase*2+base)+(rowBase<<6)` (−1 to 256).
-- i type: u32 (fixes bcc), s32 (blt, wrong), u8 (re-masks). u32 is correct.
-- separate digit-index var, block-scoped locals, u8 c, inline `(s16)palBits`,
-  `s16 palLow`, volatile palLow, `-fmove-all-movables` (hoists ALL invariants,
-  512B, wrong), `-ffixed-r3/r4` (447), compiler swap to newer agbcc (298,
-  same coloring), and the full `-fno-{gcse,cse-*,thread-jumps,schedule-insns,
-  expensive-opt,force-mem,defer-pop,strength-reduce}` set — all left the c/r2
-  coloring unchanged.
-- **decomp-permuter UNAVAILABLE this round**: `vendor/decomp-permuter` is a
-  self-referential/recursive symlink with no `.venv` (main has no venv either).
-  This function is the canonical permuter target; re-run with a working permuter
-  from the Best-effort C below (it is byte_diff 256, all diff confined to the
-  digit/letter scratch coloring), or instrument `global.c`/`local-alloc.c` to
-  force r2's local reuse.
+### Levers TRIED this round (none closed the local-reuse gap)
+- Best path: `u8 i` + split-dst + `asm("r2")` pin on digit/letter dst + staged
+  letter top + mutated letter t  → **172**.
+- no-pin (digit dst→r2 via split alone, but t→r3; switch/guard correct) → 229.
+- block-scoped `asm("r2")` (still global reservation) → 172, no change.
+- pin t to r1 (no-pin base) → 236. pin p to r3 + live pointer → 172/229 (no-op,
+  p locally reused regardless). unify all branches to one `dst` (no pin) → 210.
+- pin space/star/tilde dst to r0/r0/r1 → 311 (conflicts with the store-value
+  scratch; spills).
+- flags swept (all no-op on the coloring): `-fno-{gcse,cse-follow-jumps,
+  thread-jumps,rerun-cse-after-loop,strength-reduce,schedule-insns,defer-pop,
+  function-cse,peephole,caller-saves}`; `-ffixed-r3` → 420; `-fno-omit-frame-
+  pointer` → 481.
+- `(u32)tileBase` casts REQUIRED (dropping → 339). dst operand order REQUIRED
+  (rowBase<<6 first via split). col/row update: original order `if (colBase<=30)
+  colBase++; else if (rowBase>30) break; else {colBase=0;rowBase++;}` matches the
+  baserom's `bls` (do NOT invert to colBase>30-first; that's +1).
 
-## Best-effort C (byte_diff 256, NO pins — resume from THIS, not the 284 version)
+## Best-effort C (byte_diff 172, ONE `asm("r2")` pin — resume from THIS)
 
 ```c
 #include "macros.h"
@@ -124,7 +130,7 @@ extern const u8 sCreditsTilemapEng[];
 void sub_0801DEA0(const u8 *str, u8 count, u8 colBase, u8 rowBase, u16 tileBase, s32 palBank, u8 screen)
 {
     u16 *base;
-    u32 i;
+    u8 i;
     s32 palBits;
     s32 col;
     s32 row;
@@ -133,8 +139,10 @@ void sub_0801DEA0(const u8 *str, u8 count, u8 colBase, u8 rowBase, u16 tileBase,
     s32 glyph;
     s32 palLow;
     u16 *dst;
+    register u16 *dr2 asm("r2"); /* digit/letter dst must reuse c's r2; pin reserves it */
     s32 n;
     int letterIndex;
+    s32 u;
 
     palBits = (u32)(palBank << 28) >> 16;
 
@@ -163,21 +171,32 @@ void sub_0801DEA0(const u8 *str, u8 count, u8 colBase, u8 rowBase, u16 tileBase,
             } else {
                 t = (u16)(c - '1');
             }
+            dr2 = (u16 *)(rowBase << 6);
+            dr2 = (u16 *)((u32)dr2 + (u32)(colBase * 2 + (u32)(u8 *)base));
             glyph = t * 2 + (u32)tileBase;
-            dst = (u16 *)((u32)(colBase * 2 + (u32)(u8 *)base) + (rowBase << 6));
-            *dst = palBits + glyph;
-            dst = (u16 *)((u8 *)dst + 0x40);
-            *dst = palLow + glyph + 1;
+            *dr2 = palBits + glyph;
+            dr2 = (u16 *)((u8 *)dr2 + 0x40);
+            *dr2 = palLow + (glyph + 1);
         } else if ((letterIndex = c - 'A'), (u8)letterIndex <= 25) {
             t = (u16)letterIndex * 2;
-            dst = (u16 *)((u32)(colBase * 2 + (u32)(u8 *)base) + (rowBase << 6));
-            *dst = palBits + (t + GLYPH_LETTER_OFFSET + (u32)tileBase);
-            *(u16 *)((u8 *)dst + 0x40) = palLow + (t + (u32)tileBase + 21);
+            dr2 = (u16 *)(rowBase << 6);
+            dr2 = (u16 *)((u32)dr2 + (u32)(colBase * 2 + (u32)(u8 *)base));
+            u = t + GLYPH_LETTER_OFFSET;
+            u += (u32)tileBase;
+            *dr2 = palBits + u;
+            t += (u32)tileBase;
+            t += 21;
+            *(u16 *)((u8 *)dr2 + 0x40) = palLow + t;
         } else if ((letterIndex = c - 'a'), (u8)letterIndex <= 25) {
             t = (u16)letterIndex * 2;
-            dst = (u16 *)((u32)(colBase * 2 + (u32)(u8 *)base) + (rowBase << 6));
-            *dst = palBits + (t + GLYPH_LETTER_OFFSET + (u32)tileBase);
-            *(u16 *)((u8 *)dst + 0x40) = palLow + (t + (u32)tileBase + 21);
+            dr2 = (u16 *)(rowBase << 6);
+            dr2 = (u16 *)((u32)dr2 + (u32)(colBase * 2 + (u32)(u8 *)base));
+            u = t + GLYPH_LETTER_OFFSET;
+            u += (u32)tileBase;
+            *dr2 = palBits + u;
+            t += (u32)tileBase;
+            t += 21;
+            *(u16 *)((u8 *)dr2 + 0x40) = palLow + t;
         } else if (c == '[' && str[i + 4] == ']') {
             n = sub_0801CEC0((const char *)(str + i + 1), 3) - 0xC0;
             if ((u32)n <= 63) {
@@ -186,17 +205,17 @@ void sub_0801DEA0(const u8 *str, u8 count, u8 colBase, u8 rowBase, u16 tileBase,
                 *dst = *(u16 *)(sCreditsTilemapEng + ((n * 3 + 1) << 1));
                 *(u16 *)((u8 *)dst + 0x40) = *(u16 *)(sCreditsTilemapEng + ((n * 3 + 2) << 1));
             }
-            i += 4;
+            i = (u8)(i + 4);
         } else if (c == ' ') {
-            dst = (u16 *)((u32)(colBase * 2 + (u32)(u8 *)base) + (rowBase << 6));
+            dst = (u16 *)((rowBase << 6) + (u32)(colBase * 2 + (u32)(u8 *)base));
             *dst = 0;
             *(u16 *)((u8 *)dst + 0x40) = 0;
         } else if (c == '*') {
-            dst = (u16 *)((u32)(colBase * 2 + (u32)(u8 *)base) + (rowBase << 6));
+            dst = (u16 *)((rowBase << 6) + (u32)(colBase * 2 + (u32)(u8 *)base));
             *dst = palBits + GLYPH_STAR_TOP;
             *(u16 *)((u8 *)dst + 0x40) = palBits + GLYPH_STAR_BOTTOM;
         } else if (c == '~') {
-            dst = (u16 *)((u32)(colBase * 2 + (u32)(u8 *)base) + (rowBase << 6));
+            dst = (u16 *)((rowBase << 6) + (u32)(colBase * 2 + (u32)(u8 *)base));
             *dst = palBits + GLYPH_TILDE;
         }
 
@@ -212,15 +231,18 @@ void sub_0801DEA0(const u8 *str, u8 count, u8 colBase, u8 rowBase, u16 tileBase,
 }
 ```
 
-`col`/`row` are deliberately-uninitialised locals (only read in the bracket-case
-address, mirroring sub_0801C078). The bracket case is the only one using them.
+`col`/`row` are deliberately-uninitialised (only read in the bracket-case address,
+mirroring the matched siblings).
 
 ## Next attempt
-- Resume from the Best-effort C (256, no pins). DO NOT re-pin palBits — that
-  re-breaks LICM/palLow. The only open problem is the c/r2 local-reuse coloring.
-- With a working permuter: `make_permuter_target.py` then a bounded run from the
-  256 base; the mutation it needs is statement-reorder/scope within the digit &
-  letter bodies to free r2 for the dst temp.
-- Without a permuter: instrument `local-alloc.c`/`global.c` (private debug
-  old_agbcc — recipe worked this round) to see why r2 isn't locally reused after
-  c's death in the digit branch, then find the C shape that lets it.
+- Resume from the Best-effort C (172). The whole residual is the dead-global
+  local-reuse coloring (space/star/tilde dst r3 vs r0/r1; switch case-2 + guards
+  r3 vs r2). It is register-renumbering only.
+- WITH a working permuter: `make_permuter_target.py`, then a bounded run from the
+  172 base. The mutation needed is statement-reorder/scope so `p`=str+i stays live
+  across the branch bodies (→ r3 busy everywhere → baserom coloring with NO pins).
+  Try BOTH the pinned-172 base AND the no-pin-229 base as permuter seeds.
+- WITHOUT a permuter: the only lever left is instrumenting `local-alloc.c`
+  `block_alloc`/`wipe_dead_reg` to suppress dead-global local reuse for this TU —
+  but there is no `-fXXX` for it, so it would require a private patched agbcc and
+  is not byte-stable. Permuter is the right tool.
