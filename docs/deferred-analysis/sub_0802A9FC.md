@@ -1,147 +1,178 @@
 # sub_0802A9FC — deferred
 
-State machine for entity slot 12 (`&gEntities_03003720[12]` == 0x030039c0).
-Dispatches on the slot's `field_1A` state byte; normalizes the slot `status`
-halfword around bit 1 (queued) and bit 15 (busy); fires a sound on states 2/3
-when bit 1 is set; always tail-calls `sub_080059C4(slot)`.
+Entity slot-12 state machine (`gEntities[12]` == 0x030039c0; base `gEntities`
+== 0x03003720). Switches on `gEntities[12].field_1A` (offset 0x2ba) and
+normalizes `gEntities[12].status` (offset 0x2d4) around bit 1 (queued) and bit
+15 (busy); fires sounds 0x22 (state 2) / 0x73 (state 3) when bit 1 is set;
+state 3 also sets `gIwram_6110.inputFlags |= 8`; always tail-calls
+`sub_080059C4(&gEntities[12])`.
 
-VERDICT: ATTEMPT_MATCH (`classify_unmatchable.py`). No NAKED fallback is
-justified.
+VERDICT: ATTEMPT_MATCH. NOT NAKED-able — this is a single-scratch-register
+coloring tail, matchable in principle.
 
 ## Drift
 
-Best reached this round: **byte_diff 44, diff_count 35, size 236 exact** with
-pure C register pins and **old_agbcc**. This improves the previous `48/37`
-floor and removes the old inline `asm("")` base barrier: using
-`extern u8 gEntities_03003720[]` plus explicit offsets is enough to keep the
-baserom's `0x03003720 + 0x2ba/0x2d4` address form.
+Best reached this round: **byte_diff 4, diff_count 4, size 236 exact** — a
+DRAMATIC improvement over the prior round's 44/35. The structure is now fully
+correct; the ONLY remaining mismatch is one scratch register in case 1.
 
-The remaining mismatch is still the same structural wall:
+Re-derived from scratch (NOT extending the prior near-match). Key structural
+findings that the prior attempt missed:
 
-- Case 0 wants `offset=r4`, `statusPtr=r2`, `status=r1`, and an inline
-  `newStatus=r0` store. The best C colors `offset=r3` and then cross-jumps the
-  store through the shared commit tail.
-- Cases 1/2 want `statusPtr=r4` and `queued=r2`, while case 0 wants the status
-  pointer in `r2`. A single function-scope status-pointer pin cannot express
-  that non-uniform allocation.
-- Case 3 wants `statusPtr=r3`, `status=r2` because `gIwram_6110.inputFlags |= 8`
-  uses `r1` for the 0x03006110 base. The best C keeps `status=r1`.
+1. **Base must be `gEntities` (0x03003720) + big offsets 0x2ba/0x2d4**, NOT
+   `&gEntities[12]` (which folds to slot base 0x030039c0 + small offsets 0x1A/
+   0x34 → size 204/224, too short). Use a byte-base local
+   `u8 *base = (u8*)gEntities;` and `base + SLOT12_STATUS_OFFSET`.
+2. **`statePtr = base + 0x2ba` computed ONCE at top, kept (r3)** for the
+   switch AND the commit's `*statePtr = queued` (`strb r2,[r3]`). This is what
+   lets cases 1+2 share the commit tail without the gEntities base needing to
+   survive the merge (which otherwise spills to `ip` — `mov ip, r2` — or forces
+   `push {r4,r5,lr}`).
+3. **Shared commit via `goto commit`** (case 1 falls through, case 2 falls in)
+   — matches baserom's `b 0x2aa7e`. statusPtr (r4) set per-case before the merge.
+4. **Case 0 must use a DIFFERENT statusPtr register (r2) than the commit (r4)**
+   so the two stores DON'T tail-merge (target keeps them separate; with status
+   pinned r1 and case-0 statusPtr unpinned they cross-jump → size 224). Pin
+   case-0's pointer `asm("r2")`.
+5. **Staged store to defeat the recolour-before-store fold**: write
+   `newStatus = status | 2; status = 0x7fff; newStatus &= status; *p = newStatus;`
+   (reusing the dead `status` reg for the 0x7fff mask, `newStatus asm("r0")`).
+   The naive `*p = (status|2)&0x7fff` emits an extra `adds r0,r4,#0` copy.
+6. **Case 1 needs a u32 temp** `q = status & 2; queued = (u16)q;` to emit the
+   `lsls #16; lsrs #16` u16-cast that the baserom has in case 1 (case 2 elides
+   it by reusing r0=2 from the dispatch `cmp r0,#2`). Without the temp the cast
+   is optimized away → byte_diff 134.
 
-Levers tried:
+### The remaining 4-byte wall (case 1 scratch register)
 
-- Clean readable `&gEntities[12]` switch with newer agbcc: folded to
-  `gEntities+0x2a0`, size 192, byte_diff 184.
-- Byte-base source rewrite (`gEntities_03003720 + 0x2ba/0x2d4`), no pins: size
-  232, byte_diff 116.
-- Pure-C pins `base=r1`, `state=r3`, `statusPtr=r2`, `status=r1`: size 236,
-  byte_diff 48 with newer agbcc, **44 with old_agbcc**.
-- Per-case/block-scope pins to force case 0/3 offset registers and case 1/2
-  commit registers: worsened to byte_diff ~142/143 and size 232.
-- Unpinned status pointer with `queued=r2`: worsened to size 220, byte_diff 161.
-- Per-TU flags on the 48-byte floor: `-fno-gcse` neutral; `-fforce-addr
-  -fno-expensive-optimizations -fno-gcse`, `-fno-cse-follow-jumps`, and `-O1`
-  all regressed size and diff.
-- Corpus current-tree grep did not surface a useful analogue. History search
-  could not run because `tools/agent/corpus-mirrors/` is not populated in this
-  worktree.
-- `agbcc_oracle.py --pass greg` confirms the allocator is juggling the same
-  low-register set (`r0`-`r4`) across many short basic blocks; no single global
-  pin surfaced that matches the per-case coloring.
+Target case 1:  `movs r0,#2; ands r0,r1; lsls r0,#16; lsrs r2,r0,#16`
+Built  case 1:  `movs r2,#2; ands r2,r1; lsls r2,#16; lsrs r2,r2,#16`
 
-Next ideas:
+The `status & 2` scratch (`q`) lands in **r2** (queued's pinned reg) instead of
+**r0** (the freed statusPtr-offset const reg, which the target reuses). agbcc's
+local-alloc gives `q` a **copy-suggestion** toward queued's r2 (from the near-copy
+`queued = (u16)q`), and `find_free_reg` honors that suggestion over reusing the
+free r0. Confirmed by an instrumented old_agbcc build (printed
+`qty ... copy_sugg=1 sugg=1 -> phys=2` for the case-1 `& 2`/queued quantity).
 
-- Use a populated `corpus_asm_search.py` mirror to find a deleted asm
-  four-state dispatcher where one arm touches a second IWRAM base and forces a
-  per-arm recolor.
-- Build a private instrumented agbcc and trace local-alloc/jump cross-jump
-  decisions for the case 0 store tail. The useful probe is around
-  `jump.c:find_cross_jump`/`do_cross_jump` plus local-alloc hard-reg assignment
-  for the status pointer and queued mask pseudos.
+Levers tried (all left byte_diff at 4 or worse):
+- `register u32 q asm("r0")` pin: forces `q` into r0 but then agbcc copies
+  r0→r2 BEFORE truncating (`adds r2,r0; lsls r0,r2,#16`) or truncates r0
+  in-place then copies (`lsrs r0,r0; adds r2,r0`) — never the fused
+  `lsls r0; lsrs r2,r0`. (byte_diff 5 / 136)
+- q types: u8/u16/u32/s32/int — all byte_diff 4.
+- Explicit `(q<<16)>>16` / `q<<=16; queued=q>>16`: agbcc adds a redundant
+  second cast (size 240, byte_diff 136).
+- `if (q)` vs `if (queued)`, fused read `q=(status=*sp)&2`, separate test
+  expr, fresh `*statusPtr` re-read, block-local intermediates: all 4 / worse.
+- Per-TU flags: -fno-gcse, -fno-cse-follow-jumps, -fno-expensive-optimizations,
+  -fno-schedule-insns[2], -fno-rerun-cse-after-loop/-loop-opt, -fno-strength-reduce,
+  -fno-force-mem — ALL still byte_diff 4. Newer agbcc (CC=AGBCC_BIN): also 4.
+- decomp-permuter: ~17,000 iterations across two runs (-j4 and -j6,
+  --stop-on-zero --better-only), base score 25, never improved below base.
+  This coloring is not reachable by source-statement mutation.
+
+## Next ideas (for the reclamation pass)
+
+- The fix is to make `q` (the `status & 2` scratch) prefer r0 over the copy-
+  suggestion to r2. The instrumented-agbcc trace location is
+  `gcc/local-alloc.c` `find_free_reg` / the `qty_phys_copy_sugg` honor order
+  (~line 1340 and ~1619-1675). A source shape that gives `q` a STRONGER r0
+  hard-reg preference than the copy-suggestion (e.g. tying `q` to a value that
+  must be r0 for an unrelated reason) would flip it. corpus_asm_search for a
+  deleted asm `(u16)(x & k)` cast whose scratch is the freed pointer-offset
+  reg (idiom regex `movs r[0-7], #2 ; ands r[0-7], r[0-7] ; lsls .* #16 ; lsrs r[0-7], r[0-7], #16`).
+- Or: an instrumented old_agbcc with the copy-suggestion DISABLED for this
+  qty to confirm it then produces the byte-match, proving the lever.
 
 ## Best-effort C
 
-Best score: byte_diff 44 / diff_count 35 / size 236, using default old_agbcc
-(no `src/engine/sub_0802a9fc.s: CC = $(AGBCC_BIN)` override).
+byte_diff 4 / diff_count 4 / size 236, default OLD_AGBCC (no Makefile override),
+linker.ld collapses the scaffold+asm into the single src .o (asm slice removed).
 
 ```c
 #include "iwram.h"
 #include "types.h"
 
+extern void sub_08020C78(u32 sound);
+extern void sub_080059C4(void *p);
+
 enum {
-    ENTITY_SLOT_12 = 12,
-    ENTITY_SLOT_12_STATE_OFFSET = 0x2ba,
-    ENTITY_SLOT_12_STATUS_OFFSET = 0x2d4,
-    ENTITY_SLOT_12_OFFSET = ENTITY_SLOT_12 * sizeof(struct Entity),
-    ENTITY_STATUS_QUEUED = 2,
+    SLOT12_STATE_OFFSET = 0x2ba,
+    SLOT12_STATUS_OFFSET = 0x2d4,
+    ENTITY_STATUS_QUEUED = 0x0002,
     ENTITY_STATUS_BUSY = 0x8000,
     ENTITY_STATUS_BUSY_CLEAR = 0x7fff,
-    MODE_INPUT_FLAG_8 = 8,
-    SOUND_22 = 0x22,
-    SOUND_73 = 0x73,
 };
-
-extern u8 gEntities_03003720[];
-extern u32 sub_08020C78(u32 sound);
-extern void sub_080059C4(void *p);
 
 void sub_0802A9FC(void)
 {
-    register u8 *base asm("r1") = gEntities_03003720;
-    register u8 *state asm("r3") = base + ENTITY_SLOT_12_STATE_OFFSET;
-    register u16 *statusPtr asm("r2");
+    u8 *base;
+    u8 *statePtr;
+    register u16 *statusPtr asm("r4");
     register u16 status asm("r1");
-    struct Entity *entity;
-    u16 queued;
+    register u16 queued asm("r2");
+    register u16 newStatus asm("r0");
 
-    switch (*state) {
-    case 0:
-        statusPtr = (u16 *)(base + ENTITY_SLOT_12_STATUS_OFFSET);
-        status = *statusPtr;
-        if ((status & ENTITY_STATUS_QUEUED) != 0)
-            break;
-        if ((status & ENTITY_STATUS_BUSY) == 0)
-            break;
+    base = (u8 *)gEntities;
+    statePtr = base + SLOT12_STATE_OFFSET;
 
-        *statusPtr = (status | ENTITY_STATUS_QUEUED) & ENTITY_STATUS_BUSY_CLEAR;
+    switch (*statePtr) {
+    case 0: {
+        register u16 *sp asm("r2") = (u16 *)(base + SLOT12_STATUS_OFFSET);
+        status = *sp;
+        if (status & ENTITY_STATUS_QUEUED)
+            break;
+        if (!(status & ENTITY_STATUS_BUSY))
+            break;
+        newStatus = status | ENTITY_STATUS_QUEUED;
+        status = ENTITY_STATUS_BUSY_CLEAR;
+        newStatus &= status;
+        *sp = newStatus;
         break;
-    case 1:
-        statusPtr = (u16 *)(base + ENTITY_SLOT_12_STATUS_OFFSET);
+    }
+    case 1: {
+        u32 q;
+        statusPtr = (u16 *)(base + SLOT12_STATUS_OFFSET);
         status = *statusPtr;
-        queued = (u16)(status & ENTITY_STATUS_QUEUED);
-        if (queued != 0)
+        q = status & ENTITY_STATUS_QUEUED;
+        queued = (u16)q;
+        if (queued)
             break;
         goto commit;
+    }
     case 2:
-        statusPtr = (u16 *)(base + ENTITY_SLOT_12_STATUS_OFFSET);
+        statusPtr = (u16 *)(base + SLOT12_STATUS_OFFSET);
         status = *statusPtr;
-        queued = status & ENTITY_STATUS_QUEUED;
-        if (queued != 0) {
-            sub_08020C78(SOUND_22);
+        queued = (u16)(status & ENTITY_STATUS_QUEUED);
+        if (queued) {
+            sub_08020C78(0x22);
             break;
         }
     commit:
-        if ((status & ENTITY_STATUS_BUSY) == 0)
+        if (!(status & ENTITY_STATUS_BUSY))
             break;
-
-        *state = queued;
-        *statusPtr = (status | ENTITY_STATUS_QUEUED) & ENTITY_STATUS_BUSY_CLEAR;
+        *statePtr = (u8)queued;
+        newStatus = status | ENTITY_STATUS_QUEUED;
+        status = ENTITY_STATUS_BUSY_CLEAR;
+        newStatus &= status;
+        *statusPtr = newStatus;
         break;
-    case 3:
-        statusPtr = (u16 *)(base + ENTITY_SLOT_12_STATUS_OFFSET);
-        status = *statusPtr;
-        if ((status & ENTITY_STATUS_QUEUED) != 0) {
-            sub_08020C78(SOUND_73);
+    case 3: {
+        register u16 *sp asm("r3") = (u16 *)(base + SLOT12_STATUS_OFFSET);
+        queued = *sp;
+        if (queued & ENTITY_STATUS_QUEUED) {
+            sub_08020C78(0x73);
             break;
         }
-        if ((status & ENTITY_STATUS_BUSY) == 0)
+        if (!(queued & ENTITY_STATUS_BUSY))
             break;
-
-        gIwram_6110.inputFlags |= MODE_INPUT_FLAG_8;
-        *statusPtr = status & ENTITY_STATUS_BUSY_CLEAR;
+        gIwram_6110.inputFlags |= 8;
+        *sp = queued & ENTITY_STATUS_BUSY_CLEAR;
         break;
     }
+    }
 
-    entity = (struct Entity *)(gEntities_03003720 + ENTITY_SLOT_12_OFFSET);
-    sub_080059C4(entity);
+    sub_080059C4(&gEntities[12]);
 }
 ```
