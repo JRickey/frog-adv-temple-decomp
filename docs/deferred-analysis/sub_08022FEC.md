@@ -10,77 +10,103 @@ minimum, not a structural wall.
 
 ## Drift
 
-**Best result this round: `byte_diff 285`, `diff_count 82`, built size 508.**
-(Prior round plateaued at `byte_diff 317`.) Loop 2 and the function tail are
-BYTE-IDENTICAL — every remaining diff is in loop 1 (offsets 0x0a..0xd4). The
-control-flow / semantic model is fully solved; only loop-1 register coloring
-diverges.
+**Best result (two rounds running): `byte_diff 285`, `diff_count 82`, built size 508.**
+Loop 2 and the function tail are BYTE-IDENTICAL — every remaining diff is in loop 1
+(offsets 0x0a..0xd4). The control-flow / semantic model is fully solved; only loop-1
+register coloring + the case-0 OR-seed operand order diverge.
 
 ### What is fully solved (do not re-derive)
 - The whole control-flow shape, all callee args, all struct offsets, both loops.
-- **The `i`/saved-slot r5/r6 assignment** (was the dominant prior-round drift):
-  fixed by declaring `register u8 slot asm("r6") = i + 0x5B;` and using `slot`
-  ONLY in the case-1 re-fetch (NOT the loop-top entity compute, which stays a
-  fresh `(i + 0x5B) * 56` temp). This reproduces the target's `adds r1,r5,#0;
-  adds r1,#0x5b; ... adds r6,r1,#0` (compute-in-temp, save-to-r6) with NO `(u8)`
-  truncation. Pinning `i` itself, or making `slot` wider than `u8`, or using
-  `slot` for the loop-top compute, all REGRESS (truncation or 442+).
-- Loop 2 (slot pinned implicitly via natural alloc) matches with zero pins.
+- **The `i`/saved-slot r5/r6 assignment**: `register u8 slot asm("r6") = i + 0x5B;`
+  used ONLY in the case-1 re-fetch (NOT the loop-top entity compute, which stays a
+  fresh `(i + 0x5B) * 56` temp). Reproduces target's compute-in-temp / save-to-r6
+  split. Pinning `i`, widening `slot`, or using `slot` in the loop-top compute all
+  REGRESS (verified again this round: s32 slot → 404, no-pin single-slot → 370/406).
+- Loop 2 + tail match with zero pins.
 
-### The two coupled residuals (loop 1 only)
-1. **`0x8000` is hoisted into r9** (a callee-saved reg) and reused at both loop-1
-   uses, instead of the target's per-use `movs r4,#0x80; lsls #8` re-materialize.
-   ROOT CAUSE confirmed via `-da` loop dump: `combine_movables` (loop.c ~line
-   1454) unifies the case-0 and case-1-tail `0x8000` HImode movables (each
-   `n_times_set==1`, equal const) into one; the combined lifetime then crosses
-   `move_movables`' threshold `(threshold*savings*lifetime) >= insn_count` and it
-   is hoisted to the loop preheader. The target does NOT combine them (each stays
-   a "not desirable" solo movable, life 2, savings 2). loop.c on OUR source ALSO
-   marks each solo as "not desirable" — the hoist appears ONLY after the combine.
-   - DEFEATING the combine works (`u32 st = entity->status; if (st & 0x8000)…`
-     forces SImode and breaks the HImode-pair combine → per-use materialize, pool
-     realigns toward 520) BUT the extra `st` register copy costs more than the
-     hoist saves → net `byte_diff 316` (worse than 285). `(u32)status` cast alone
-     is optimized back to HImode (no effect). Operand-order flip (`0x8000 &
-     status`) is canonicalized away (no effect).
-2. **case-0 OR-seed order**: target emits `adds r0,r3(=2),#0; orrs r0,r1(status)`
-   (the fresh `2` is the carrier); ours emits `adds r0,r1(status),#0; orrs
-   r0,r3(=2)` because agbcc canonicalizes `2 | status` to put the constant
-   second. A staged write (`u32 t = 2; t |= entity->status; entity->status = t &
-   0x7FFF;`) DOES fix the seed (`adds r0,r3,#0; orrs r0,r1`) BUT perturbs the rest
-   of loop-1 coloring (`0x7fff` moves r3→r4, cascade) → `byte_diff 430`. Applying
-   it to loop 2 BREAKS loop 2's match. So it must be applied to loop-1-case-0
-   ONLY and reconciled with the rest — not achieved this round.
+### ROOT CAUSE re-confirmed at the agbcc-source level (loop dump `-dL`)
+The two `entity->status & 0x8000` HImode tests (case-0 at asm 0x54, case-1-tail at
+0xd2) are EACH a `reg <- const_int 32768` movable with `n_times_set==1`, equal const.
+`combine_movables` (loop.c ~1456) unifies them (identical RTL `set_src`, both HImode).
+The combined movable (savings 2, lifetime 2+2=4) then crosses `move_movables`' hoist
+test `threshold*savings*lifetime >= insn_count` (loop.c ~1835; `threshold =
+(loop_has_call?1:2)*(1+n_non_fixed_regs)`, loop-1 HAS calls). → `0x8000` is hoisted to
+a callee-saved reg (r9) and reused at both sites. The TARGET does NOT combine: each
+`0x8000` stays a SOLO "not desirable" movable (savings 1, lifetime 2) → re-materialized
+per use (`movs r4,#0x80; lsls #8` in case-0; `movs r3,#0x80; lsls #8` in case-1-tail,
+different regs). The `2` mask (used 3x) DOES combine into one movable → hoisted to r8 —
+the target wants this. So loop 1 must keep `2` hoisted AND `0x8000` un-combined.
 
-These two are COUPLED: each individual fix perturbs the global loop-1 allocation,
-so no single source edit lowers the total below 285. This is the textbook
+### The TWO coupled residuals (loop 1 only)
+1. **`0x8000` combine+hoist** (dominant; accounts for the size delta).
+2. **case-0 OR-seed operand order**: target `adds r0,r3(=2); orrs r0,r1(status)`
+   (the fresh `2` is the carrier); agbcc canonicalizes `status|2` → status carrier
+   (`add r0,r1; orr r0,r3`). gcc-2.9 normalizes commutative operand order regardless
+   of source order (`2 | status` ≡ `status | 2`, verified no-op).
+
+### Levers tried this round — ALL three hoist-defeats WORK but cost > savings
+The hoist CAN be defeated three independent ways (each verified via `-dL` preheader
+dump showing no `0x8000` hoisted), but each perturbs the coupled coloring so total
+byte_diff RISES above 285:
+- **SImode break on case-1-tail ONLY** (`u32 st = entity->status; if (st & 0x8000)`):
+  the FIRST movable (case-0) stays HImode, the SECOND (case-1-tail) is SImode, so
+  `combine_movables`' `BITSIZE(m) >= BITSIZE(m1)` gate (16>=32 = false) FAILS → no
+  combine → no hoist, AND case-0 re-materializes 0x8000 per-use exactly like target.
+  BUT the `st` SImode load costs a register copy → **byte_diff 316** (was the closest
+  hoist-defeated variant). (Forcing case-0 SImode instead = wrong direction, combine
+  still succeeds. `(u32)status` cast alone is folded back to HImode = no-op.)
+- **s32 slot + SImode st**: ALSO removes the `(u8)` truncation in the re-fetch
+  (`lsl r6,#24; lsr r6,#24` → clean `lsl r0,r6,#3`), giving the CLEANEST loop-1
+  STRUCTURE (case-0 0x8000 ✓, re-fetch ✓, no trunc ✓; only 4 small diffs remain) but
+  **byte_diff 404** — almost all of it is BRANCH-OFFSET CASCADE from the 16-byte size
+  delta, diff_count only 86. This is the most promising base for the permuter.
+- **Pinned 0x8000 carriers** (`register u16 hi asm("r4")=0x8000` in case-0,
+  `asm("r3")` in case-1-tail): defeats the hoist (pinned reg is not a movable) but
+  the pins clobber slot/OR regs → **byte_diff 416**.
+- **Staged OR seed** (`u32 t=2; t|=status; status=t&0x7fff`) applied to case-0 ONLY:
+  FIXES the carrier flip (`add r0,r3(2); orr r0,r1` ✓) BUT INVERTS the hoist
+  (now `0x8000`→r8 hoisted, `2` fresh) and moves `0x7fff` r3→r4 → **byte_diff 430**.
+- **Combinations** (SImode + staged seed; s32 + SImode + staged seed): 451–459 (the
+  fixes perturb each other, never reconcile).
+- **Flags**: `-ffixed-r9/-r4/-sl/-ip`, `-fno-force-mem`, `-fcaller-saves`,
+  `-fno-thread-jumps` — none defeat the hoist (agbcc just hoists to another reg;
+  lowering `n_non_fixed_regs` via fixing high regs doesn't flip the threshold).
+  OLD_AGBCC (default, correct) rejects `-fschedule-insns*` (no scheduler).
+- **mask-local reuse** to disqualify the movable (`u32 mask=0x8000`): 454 (each gets
+  its own movable, re-combines/hoists differently).
+- **Recompute re-fetch fresh** (no slot save): 370 (agbcc CSEs, structure diverges).
+
+### Why 285 is the floor without the permuter
+The two residuals are COUPLED through agbcc's single loop-invariant hoist slot and the
+commutative OR canonicalizer: every source edit that fixes one inverts/perturbs the
+other (the hoist of `2` vs `0x8000`, and `0x7fff` register coloring, all move
+together). No SINGLE source shape lowers the total below 285. This is exactly the
 "sharp register-coloring local minimum" the agent guide describes.
 
-### Levers tried and ruled out (don't repeat)
-- All of: `-fno-gcse`, `-fno-rerun-cse-after-loop`, `-fno-rerun-loop-opt`,
-  `-fno-strength-reduce`, `-fno-cse-skip-blocks`, `-fno-cse-follow-jumps`,
-  `-ffixed-r9`, `-fno-loop-optimize`, `-fno-caller-saves`, `-fomit-frame-pointer`
-  — none beat 285 on the clean-slot-pin source (most are no-ops; `-fno-gcse`
-  breaks loop-2's `8`→r9 hoist that the target WANTS).
-- Whole-function pins for `bit2 asm("r8")`/`bit8 asm("r9")`: 416–489 (worse —
-  they force the bad alloc).
-- Array indexing `&base[i+0x5B]`: adds a `0x5B*0x38` pool literal (target uses
-  `(i+0x5B)*56` direct) → 366, worse structure.
-- The OLD_AGBCC vs AGBCC swap: OLD_AGBCC (the default) is correct; AGBCC is worse.
+### Recommended next work — PERMUTER (was UNAVAILABLE both rounds)
+This is squarely a permuter problem (statement-ordering / variable-scope coloring the
+permuter is built for). **The permuter is BROKEN in BOTH main and worktrees:**
+`vendor/decomp-permuter` is a SELF-REFERENTIAL symlink
+(`-> /Users/.../vendor/decomp-permuter`, i.e. it points at its own path), the git
+submodule is UNINITIALIZED, and there is NO real checkout anywhere on disk — so
+`.venv/permuter.py` resolves to "Too many levels of symbolic links". A worktree cannot
+fix this safely (cloning into main's `vendor/` races the shared run). **FIX FIRST:**
+de-init the bad symlink and `git submodule update --init vendor/decomp-permuter` (or
+clone simonlindholm/decomp-permuter) in MAIN, run `scripts/setup-permuter.sh` to build
+the .venv, THEN regenerate the permuter target (`make_permuter_target.py` — there was a
+$t/$d bug; regen target.o before trusting scores) and permute from the **s32-slot +
+SImode-st base (byte_diff 404, diff_count 86, structurally cleanest)** — NOT the 285
+base. The 404 base has only 4 real diffs (preheader order, slot-save schedule
+position, OR-seed carrier, case-1-tail status/0x8000 order); the rest is offset
+cascade the permuter resolves once it matches the missing instructions. Bounded ~2000
+iters, `--stop-on-zero --better-only`, process-group kill per docs/permuter-howto.md.
 
-### Recommended next work
-- **Permuter from the 285 base** — this is now well within range (`byte_diff <=
-  ~40`-tier reasoning does not apply; the residual is pure statement-ordering /
-  scope coloring the permuter is built for). NOTE: the permuter was UNAVAILABLE
-  this run (`vendor/decomp-permuter` is a self-referential broken symlink in BOTH
-  main and the worktree — `.venv` resolves to "Too many levels of symbolic
-  links"). FIX THE SUBMODULE/symlink first, then permute the "## Best-effort C"
-  below.
-- If hand-finishing: the goal is to make loop-1-case-0's `0x8000` re-materialize
-  per-use AND its OR seed be the fresh `2`, WITHOUT perturbing the slot/`0x7fff`
-  coloring. Likely needs a `register u32 two asm("r3")` + a `register`-pinned
-  `0x8000` carrier, reconciled by reading `local-alloc.c`/`global.c` coloring
-  priority (instrument the hard-reg pick for the case-0 block).
+If hand-finishing without the permuter: the unsolved scheduling diff is the slot-save
+`add r6,r1,#0` position — target emits it AFTER the `ldrb field_1A` load (asm 0x38),
+agbcc emits it at the declaration (early). OLD_AGBCC has no instruction scheduler, so
+this is RTL/reload insn-emission order — read `local-alloc.c`/`reload.c` to learn where
+the live-range-split copy is inserted, then shape the C so the copy is "born" after the
+load.
 
 ## Best-effort C (byte_diff 285, diff_count 82; loop 2 + tail byte-identical)
 
@@ -181,3 +207,12 @@ void sub_08022FEC(void)
     sub_08005D10(0x5D, 0x5E);
 }
 ```
+
+## Alternate base for the permuter (byte_diff 404, diff_count 86 — STRUCTURALLY CLEANEST)
+Same as above but with two changes that DEFEAT the 0x8000 hoist + remove the (u8)
+truncation (only 4 real diffs remain; the rest is offset cascade):
+- `register s32 slot asm("r6") = i + 0x5B;` (s32, not u8 — kills the re-fetch `(u8)`
+  truncation; re-fetch stays `slot * 56`, loop-top stays fresh `(i+0x5B)*56`).
+- case-1-tail wrapped: `{ u32 st = entity->status; if ((st & 0x8000) != 0) {
+  entity->field_1A = 0; entity->status |= 2; } }` (SImode `st` breaks the
+  combine_movables HImode-pair → no hoist; case-0 then re-materializes 0x8000 per-use).
