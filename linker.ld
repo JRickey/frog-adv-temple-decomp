@@ -71,8 +71,6 @@ sIconFramePal3 = 0x08173938;
 sIconFrameTiles3 = 0x08173958;
 sIconFramePal4 = 0x081739F8;
 sIconFrameTiles4 = 0x08173A18;
-
-
 /* Sprite animation descriptor instances within the sSpriteAnimBlock_06838 blob.
  * Both at offset 0x5d0 / 0x5f0 into the block (addresses 0x08306e08 / 0x08306e28).
  * Linker-assigned so agbcc emits two separate pool loads instead of folding
@@ -809,8 +807,7 @@ SECTIONS {
         src/system/sound_channel_stream.o(.text);  /* 0x0802edf0 - 0x0802f054, sub_0802EDF0 (NAKED+NON_MATCHING) + sub_0802EEF8 + sub_0802EF7C */
         src/system/sound_envelope_slide.o(.text);  /* 0x0802f054 - 0x0802f2fc, sub_0802F054 (NAKED+NON_MATCHING) */
         src/system/sound_pan.o(.text);  /* 0x0802f2fc - 0x0802f4b0, sub_0802F2FC (NAKED+NON_MATCHING) + sub_0802F398 */
-        src/system/sound_mixer.o(.text);  /* 0x0802f4b0 - 0x0802f930, sub_0802F4B0 + sub_0802F870 + sub_0802F884 + sub_0802F890 + sub_0802F8F0 */
-        asm/disasm_0x0802f930.o(.text);  /* 0x0802f930 - 0x0802f99c, sub_0802F930 (auto-peeled) */
+        src/system/sound_mixer.o(.text);  /* 0x0802f4b0 - 0x0802f99c, sub_0802F4B0 + sub_0802F870 + sub_0802F884 + sub_0802F890 + sub_0802F8F0 + sub_0802F930 */
         asm/text/text_0x0802f99c.o(.text);  /* 0x0802f99c - 0x0802f9f0, raw bytes */
         src/system/sub_0802f9f0.o(.text);  /* 0x0802f9f0 - 0x0802fab8, sub_0802F9F0 + sub_0802FA60 */
         asm/disasm_0x0802fab8.o(.text);  /* 0x0802fab8 - 0x08030158, sub_0802FAB8 (auto-peeled) */

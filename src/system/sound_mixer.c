@@ -887,3 +887,37 @@ void sub_0802F8F0(int channelIdx)
         ((SoundSlotAcc *)slot)->flags |= SOUND_SLOT_FLAG_RETIRE_PENDING;
     }
 }
+
+void sub_0802F930(void *streamDesc)
+{
+    u32 *desc = (u32 *)streamDesc;
+    vu32 *waveRam = (vu32 *)0x04000090;
+
+    if (desc[0] == 16) {
+        vu8 *waveCnt = (vu8 *)0x04000070;
+        *waveCnt = 0x40;
+        *waveRam++ = desc[4];
+        *waveRam++ = desc[5];
+        *waveRam++ = desc[6];
+        *waveRam = desc[7];
+        *waveCnt = 0x80;
+        return;
+    }
+
+    {
+        vu8 *waveCnt = (vu8 *)0x04000070;
+        *waveCnt = 0x60;
+        *waveRam = desc[4];
+        waveRam = (vu32 *)0x04000094;
+        *waveRam++ = desc[5];
+        *waveRam++ = desc[6];
+        *waveRam = desc[7];
+        waveRam = (vu32 *)0x04000090;
+        *waveCnt = 0x20;
+        *waveRam++ = desc[8];
+        *waveRam++ = desc[9];
+        *waveRam++ = desc[10];
+        *waveRam = desc[11];
+        *waveCnt = 0xa0;
+    }
+}
