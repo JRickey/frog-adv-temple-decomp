@@ -13,6 +13,11 @@ frog_us_baserom.gba
 *.dump
 *.o
 *.map
+
+# Derived call-graph DB + per-function naming packets (rebuilt from the ELF in
+# seconds by tools/agent/build_callgraph.py / naming_context.py). Never committed.
+callgraph.db
+.callgraph_packets
 *.bin
 *.sav
 

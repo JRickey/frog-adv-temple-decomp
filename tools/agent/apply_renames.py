@@ -20,12 +20,15 @@ Manifest schema (JSON):
   "struct_fields": [{"old": "_field_34", "new": "flags", "type": "Entity", ...}],
   "functions":     [{"old": "sub_0800A710", "new": "Entity_Init",
                      "file": "src/engine/sub_0800a710.c", ...}],
+  "data_symbols":  [{"old": "gFoo_08308028", "new": "gHandlerTable", ...}],
   "variables":     [{"function": "sub_0800A710", "old": "a", "new": "kind",
                      "file": "src/engine/sub_0800a710.c", ...}]
 }
-  - struct_types / functions: GLOBAL word-boundary identifier replace across
-    all src + include sources (also updates call sites, extern decls, comments
-    — desirable: keeps docs in sync). Safe because these identifiers are unique.
+  - struct_types / functions / data_symbols: GLOBAL word-boundary identifier
+    replace across all src + include sources AND linker.ld (data symbols are
+    DEFINED there as `gFoo_08308028 = 0x...;` and used in C via extern; renaming
+    must update both). Also updates call sites, extern decls, comments — desirable:
+    keeps docs in sync. Safe because these identifiers are unique.
   - struct_fields: FILE-SCOPED word-boundary replace, restricted to the entry's
     `files` list (defaults to [header_file]). This is mandatory, not an
     optimization: `_field_NN` / `_unkNN` names are POSITIONAL placeholders reused
@@ -152,6 +155,12 @@ def apply_manifest(manifest, dry_run):
     """Mutate sources per the manifest. Returns dict path->new_text for changed files."""
     sources = repo_sources()
     contents = {p: p.read_text() for p in sources}
+    # linker.ld participates in GLOBAL renames only (data symbols are defined
+    # there; function/type aliases may appear too). Scoped var/field loops key
+    # off manifest file paths, so they never touch it.
+    linker = (REPO / "linker.ld").resolve()
+    if linker.exists():
+        contents[linker] = linker.read_text()
     touched = {}  # path -> count summary list
 
     def note(p, label):
@@ -192,13 +201,14 @@ def apply_manifest(manifest, dry_run):
                 contents[p] = new_text
                 note(p, f"field {sf.get('type','?')}.{sf['old']}->{sf['new']} x{n}")
 
-    # 3. Struct type names — global (unique identifiers).
-    # 4. Function names — global (unique identifiers).
+    # 3. Struct types / 4. functions / 5. data symbols — global (unique ids).
     global_renames = []
     for st in manifest.get("struct_types", []):
         global_renames.append((st["old"], st["new"], f"type {st['old']}->{st['new']}"))
     for fn in manifest.get("functions", []):
         global_renames.append((fn["old"], fn["new"], f"fn {fn['old']}->{fn['new']}"))
+    for ds in manifest.get("data_symbols", []):
+        global_renames.append((ds["old"], ds["new"], f"data {ds['old']}->{ds['new']}"))
 
     for old, new, label in global_renames:
         for p in list(contents.keys()):
@@ -215,6 +225,32 @@ def apply_manifest(manifest, dry_run):
 def git_clean(paths):
     rels = [str(p.relative_to(REPO)) for p in paths]
     subprocess.run(["git", "-C", str(REPO), "checkout", "--"] + rels, check=False)
+
+
+def report_leftovers(manifest, changed_paths):
+    """Grep changed files for old UNIQUE identifiers that survived the rename.
+    make check only compiles live code, so a rename left dangling inside an
+    `#ifdef NON_MATCHING` body (never compiled) passes silently — this catches
+    it. Variables are skipped (short names like `a` are not unique). Returns a
+    list of warning strings."""
+    checks = []  # (old, scope_paths_or_None)  None => all changed files
+    for key in ("functions", "struct_types", "data_symbols"):
+        for e in manifest.get(key, []):
+            checks.append((e["old"], None))
+    for sf in manifest.get("struct_fields", []):
+        scope = sf.get("files") or ([sf["header_file"]] if sf.get("header_file") else [])
+        checks.append((sf["old"], [(REPO / r).resolve() for r in scope]))
+    warnings = []
+    for old, scope in checks:
+        pat = re.compile(r"\b" + re.escape(old) + r"\b")
+        for p in (scope if scope else list(changed_paths)):
+            try:
+                if pat.search(p.read_text(errors="replace")):
+                    warnings.append(f"{old} still present in {p.relative_to(REPO)} "
+                                    "(likely inside #ifdef NON_MATCHING — not compiled)")
+            except OSError:
+                continue
+    return warnings
 
 
 def main():
@@ -243,7 +279,8 @@ def main():
     print(f"   {len(manifest.get('functions', []))} functions, "
           f"{len(manifest.get('variables', []))} variables, "
           f"{len(manifest.get('struct_fields', []))} struct fields, "
-          f"{len(manifest.get('struct_types', []))} struct types")
+          f"{len(manifest.get('struct_types', []))} struct types, "
+          f"{len(manifest.get('data_symbols', []))} data symbols")
 
     changed, touched = apply_manifest(manifest, args.dry_run)
 
@@ -279,6 +316,13 @@ def main():
         print("reverted. The manifest contains a name collision or scoping error; "
               "inspect the failing function and fix the offending entry.", file=sys.stderr)
         return 1
+
+    leftovers = report_leftovers(manifest, list(changed.keys()))
+    if leftovers:
+        print("\n⚠  leftover old identifiers (make check could not see these — verify manually):",
+              file=sys.stderr)
+        for w in leftovers[:40]:
+            print("   -", w, file=sys.stderr)
 
     print("\nmake check PASSED — rename is byte-identical. Refreshing caches ...")
     subprocess.run(["python3", "tools/agent/snapshot_addresses.py"], cwd=REPO, check=False)
