@@ -120,3 +120,11 @@ void sub_0802E4E8(u32 desc, u32 enable)
     }
     dst[27] = value;
 }
+
+/* libgcc unsigned-int division helper (0x08033ee4). */
+extern u32 __udivsi3(u32 num, u32 den);
+
+u32 sub_0802E528(u32 period)
+{
+    return (__udivsi3(period << 12, gpSoundSystem->divisor) >> 5) + 2;
+}

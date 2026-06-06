@@ -1,24 +1,11 @@
 @ Auto-emitted by tools/disasm/peel.py — do not hand-edit this header.
-@ Range:  [0x0802e528, 0x0802e5d8)  (176 bytes, thumb mode)
-@ Re-peel:  python3 tools/disasm/peel.py --start 0x802e528 --end 0x802e5d8 --mode thumb
+@ Range:  [0x0802e544, 0x0802e5d8)  (148 bytes, thumb mode)
+@ Re-peel:  python3 tools/disasm/peel.py --start 0x802e544 --end 0x802e5d8 --mode thumb
 
         .include "asm/macros.inc"
         .syntax unified
 
 @ Disassembly preview (the bytes come from the INCBIN below):
-@   0x0802e528: b500        push	{lr}
-@   0x0802e52a: 0300        lsls	r0, r0, #12
-@   0x0802e52c: 4904        ldr	r1, [pc, #16]	@ (0x2e540)
-@   0x0802e52e: 6809        ldr	r1, [r1, #0]
-@   0x0802e530: 8849        ldrh	r1, [r1, #2]
-@   0x0802e532: f005        fcd7 	bl	0x33ee4
-@   0x0802e536: 0940        lsrs	r0, r0, #5
-@   0x0802e538: 3002        adds	r0, #2
-@   0x0802e53a: bc02        pop	{r1}
-@   0x0802e53c: 4708        bx	r1
-@   0x0802e53e: 0000        movs	r0, r0
-@   0x0802e540: 65e0        str	r0, [r4, #92]	@ 0x5c
-@   0x0802e542: 0300        lsls	r0, r0, #12
 @   0x0802e544: 491d        ldr	r1, [pc, #116]	@ (0x2e5bc)
 @   0x0802e546: 2080        movs	r0, #128	@ 0x80
 @   0x0802e548: 8008        strh	r0, [r1, #0]
@@ -79,21 +66,8 @@
 @   0x0802e5b6: 1c10        adds	r0, r2, #0
 @   0x0802e5b8: 8008        strh	r0, [r1, #0]
 @   0x0802e5ba: 4770        bx	lr
-@   0x0802e5bc: 0084        lsls	r4, r0, #2
-@   0x0802e5be: 0400        lsls	r0, r0, #16
-@   0x0802e5c0: 0000        movs	r0, r0
-@   0x0802e5c2: 9a0d        ldr	r2, [sp, #52]	@ 0x34
-@   0x0802e5c4: 0062        lsls	r2, r4, #1
-@   0x0802e5c6: 0400        lsls	r0, r0, #16
-@   0x0802e5c8: 0070        lsls	r0, r6, #1
-@   0x0802e5ca: 0400        lsls	r0, r0, #16
-@   0x0802e5cc: 0072        lsls	r2, r6, #1
-@   0x0802e5ce: 0400        lsls	r0, r0, #16
-@   0x0802e5d0: 0080        lsls	r0, r0, #2
-@   0x0802e5d2: 0400        lsls	r0, r0, #16
-@   0x0802e5d4: ff77        0000 	vhadd.u<illegal width 64>	d16, d7, d0
 
-        thumb_func_start sub_0802E528
-sub_0802E528: @ 0x0802e528
-        .incbin "frog_us_baserom.gba", 0x2e528, 0xb0
-        thumb_func_end sub_0802E528
+        thumb_func_start sub_0802E544
+sub_0802E544: @ 0x0802e544
+        .incbin "frog_us_baserom.gba", 0x2e544, 0x94
+        thumb_func_end sub_0802E544
