@@ -1,106 +1,117 @@
-# sub_0802A8FC — deferred (round 11, Opus)
+# sub_0802A8FC — deferred (round 36, Opus)
 
 `void sub_0802A8FC(void)` at 0x0802a8fc, 256 bytes. Operates on entity-pool
 slots 10 and 11 (`gEntities[10]`/`gEntities[11]`), then calls
-`sub_08005D10(10, 11)`. Callees `sub_08020C78` and `sub_08005D10` are peeled.
-`classify_unmatchable.py` = `ATTEMPT_MATCH` (not NAKED).
+`sub_08005D10(10, 11)`. Callees `sub_08020C78` (sound 43) and `sub_08005D10`
+are peeled. `classify_unmatchable.py` = `ATTEMPT_MATCH` (not NAKED).
 
-## Status — best is now 88/32 in PURE C (one flag, ZERO pins)
+Makefile lever: `src/engine/sub_0802a8fc.s: CFLAGS += -fno-gcse` (mandatory —
+defeats the fresh-`0x24b`-literal and synthesises the `0x200 = 0x264 - 0x64`
+mask; every other `-fXXX` is a no-op for this fn).
 
-Round 11 (Opus) re-derived from scratch and reached **byte_diff 88,
-diff_count 32, size 260** with `-fno-gcse` and **no register pins** — strictly
-better structurally than the prior round's 85/39 (which needed ~5 pins). The
-opening + mode/clear block + most logic match BYTE-FOR-BYTE; the entire
-remaining drift is one register-coloring tie (see "Root cause").
+## Status — best is now 42/30 in PURE C (no pins, no asm) — DOWN from 88/32
 
-This best-effort C (below) is the resume base. Do NOT re-add the prior round's
-pins — they bloat the prologue (size 268, push gains r6) and regress.
+Round 36 (Opus) re-derived from the round-11 base (88/32) and reached
+**byte_diff 42, diff_count 30, size 256** with `-fno-gcse` and **no register
+pins**. The improvement over the prior 88/32 came from ONE discovery: the
+toggle-set and else status-mutations must be written as the **staged-temp RMW
+idiom** that sibling `src/engine/sub_0800a4d0.c` uses, NOT as a fused
+`*s |= 0x200` / `*s = (*s | 2) & 0x7fff`:
 
-### Key idioms that were SOLVED this round (keep these)
+```c
+u16 *s = (u16 *)(base + 0x264);
+u16 t = *s;
+t |= 0x200;       /* staged, not  *s |= 0x200  */
+*s = t;
+```
+and for the else `(status | 2) & 0x7fff`:
+```c
+u16 t10 = *s10;
+if (t10 & 0x8000) { t10 |= 2; *s10 = t10 & 0x7fff; }
+```
+This made the entire else branch SHAPE-perfect (no extra/missing instructions —
+only register-number renames remain) and removed the spurious `0x7fff`-copy
+instructions the fused form emitted. Opening, the three field_1B `==` checks,
+the toggle-CLEAR (call) path, and the promote pointer registers all match
+BYTE-FOR-BYTE. The resume base below is this 42/30 C.
 
-1. **`-fno-gcse` is mandatory and sufficient for the opening + 0x200 mask.**
-   - The opening reads `gEntities[10].field_1A` (off 0x24a) then `.field_1B`
-     (0x24b) through a `u8 *base` + `u32 off` with `off++`. With gcse ON,
-     agbcc materialises a fresh `0x24b` literal; with `-fno-gcse` it emits the
-     baserom's `adds r1, #1`.
-   - `-fno-gcse` ALSO produces the `subs r0, #0x64` derivation of the mask
-     `0x200 = 0x264 - 0x64` in the mode block (the toggle-clear path), matching
-     baserom. (Typed `gEntities[10].status` access instead of byte-offset
-     REGRESSES — it forces the 0x24b literal; the byte-offset model is correct.)
-   - No other flag flips anything (`-fno-cse-follow-jumps`, `-fno-strength-reduce`,
-     `-fno-rerun-cse-after-loop`, `-fno-schedule-insns`, `-O1`, `-fno-caller-saves`,
-     newer agbcc — all leave the remaining tie unchanged).
+## Root cause of the remaining 30 diffs — backend rematerialised-const coloring
 
-2. **Split `base` into two locals** (one for the opening/mode/L_set/else, a
-   fresh `u8 *b = (u8 *)gEntities` reloaded inside the promote block — the
-   baserom reloads gEntities into r3 after the `bl`). Reusing one `base` keeps
-   it callee-saved (r4/r5) and regresses; the split puts base in r2 like the
-   target. 181→100.
+Every residual diff is the thumb backend (gcc/, NOT gcc_arm/) coloring three
+short-lived *rematerialised* constants into callee-saved regs where the
+baserom uses caller-saved:
 
-3. **Block-scoped `u16 *s` per status access** (mode, L_set, else-slot10,
-   else-slot11) instead of one shared `status` variable. 100→88.
+- **toggle-set offset** `0x264`: baserom r1 (reusing the freed opening-`off`
+  reg), built r3 → cascades the ptr (r0 ok) and status-load (r2 vs r3).
+  (0x4c-0x5a in the diff.)
+- **else offset** `0x264`/`0x29c` + the `0x8000` mask + `0x7fff` mask: baserom
+  keeps offset/mask in r1/r4 (low/held), built uses r0/r1 swapped. The else is
+  otherwise shape-perfect — pure r0<->r1 / r4<->r1 renames (0xb4-0xea).
+- **promote** `*s11 |= moved` (0x94-0x98, 1 INSERTION): baserom
+  `ldrh r0,[r1]; orrs r0,r4`; agbcc commutes the IOR and emits
+  `adds r0,r4,#0; ldrh r3,[r1]; orrs r0,r3`. Robust to every operand-order /
+  temp / named-ptr rewrite (agbcc normalises them identically). Plus the
+  `& moved` test at 0x6a (baserom literal `movs r0,#2`; built `ands r0,r4`) —
+  using literal `2` in the test REGRESSES to size 264 (forces `moved` to a pool
+  load), so the test MUST stay `& moved`. Net: the promote costs ~3 diffs that
+  no source shape removes.
 
-4. **`u16 moved = 2;` reused** for the promote `v |= moved` / `*s11 |= moved`
-   AND in the `!(v & moved)` test. Using literal `2` in the test regresses
-   (size 264). 88.
+### Instrumented-agbcc finding (ground truth, this round)
+Built a private debug `old_agbcc` (probe in `gcc/local-alloc.c` find_free_reg
+AND `gcc/global.c` find_reg via the existing `AGBCC_DUMP_ALLOC` env gate — note
+the thumb compiler is built from **gcc/** with `thumb.md`, which has **NO
+`REG_ALLOC_ORDER`**, so find_reg walks hardregs r0,r1,r2,r3… in NATURAL order
+by `allocno_compare` priority = `floor_log2(nrefs)*nrefs/live_length * size`).
+The greg conflict graph shows:
+- `base` = pseudo 22 → r2 (refs 7, live 43) — correct, matches baserom.
+- The toggle-set offset const is allocated AFTER the long-lived else/promote
+  pointers (pseudos 64→r3, 69→r4, 65→r5, 108→r3, 114→r4) have already taken
+  r3/r4/r5, so the natural-order walk hands the offset r3 — r1 is free in that
+  block (opening `off`/pseudo 23 dies at insn 26) but the allocator never tries
+  it because r3 comes first in the residual-free set after the high-priority
+  pointers grabbed the low regs in OTHER blocks.
+- A `register u32 so asm("r1")` pin on the offset is **ignored** — agbcc
+  rematerialises the const inline (the pin binds the pseudo, which is then
+  remat'd into a fresh r3), so pins cannot steer these consts.
 
-## Root cause of the remaining 32 diffs (the ONE blocker)
+### Levers tried and REJECTED this round (do NOT repeat)
+- All `-fXXX`: `-ffixed-r3/r4/r5` (no-op), `-fno-schedule-insns(2)`,
+  `-fno-peephole`, `-fcaller-saves`, `-fno-force-mem`, `-fno-cse-follow-jumps`,
+  `-fno-strength-reduce`, `-fno-rerun-cse-after-loop`, `-O1` — ALL 42/30.
+- Newer AGBCC (`CC = $(AGBCC_BIN)`): 103/44 (worse).
+- Typed `gEntities[10].status` access (drops the held base, reloads per
+  access): 218/59. `((u16*)base)[0x132]` array-index: 42/30 (no change).
+- Single shared `base` (no promote `b` reload): 133/50 — promote MUST reload
+  via a fresh `b = (u8*)gEntities` (the call clobbers the base reg).
+- Single shared `s10` across the field_1A==3 block: 244/73 (kills the reload).
+- `moved` literal `2` everywhere / dropped: 135/83. `moved`-set-first +
+  literal test: 264/138. Held `u16 hi = 0x8000` in else: 51/35.
+- Separate `0x24b` const (no `off++`): 180/51 — the `off++` increment is
+  mandatory.
+- Register pin on the toggle-set ptr (`asm("r0")`) / offset (`asm("r1")`):
+  no effect (ptr already r0; offset const ignores the pin).
+- Permuter: UNAVAILABLE — `vendor/decomp-permuter` is a self-referential
+  symlink in main, no `.venv`. (Prior round noted its oracle was miscalibrated
+  ~8x for this fn anyway.)
 
-All remaining drift is `local-alloc` **combining two non-overlapping pseudos
-into r3** where the baserom keeps them split:
+## Next-attempt suggestions
+1. The residual is purely the natural-order allocator handing r3/r4/r5 to the
+   short toggle-set/else offset consts because the long-lived else/promote
+   POINTERS grabbed the low regs first. The only known route is to RAISE the
+   offset consts' priority (shorter live / more refs) or LOWER the competing
+   pointers' priority so r1/r2 are free when the consts are colored. Try a
+   structure where the else/promote pointers are recomputed per-use (more,
+   shorter-lived pointer quantities) instead of one held pointer per block —
+   this might free r1 for the consts. (Counter-risk: more reloads.)
+2. The promote `*s11 |= moved` commute and the `& moved` test (~3 diffs) appear
+   genuinely irreducible in pure C; a true match likely needs the consts fixed
+   FIRST (suggestion 1), after which the promote may fall out.
+3. Re-confirm with the instrumented `old_agbcc` (recipe in codegen-notes
+   "Instrumenting agbcc itself") — build from **gcc/** not gcc_arm/, use the
+   `AGBCC_DUMP_ALLOC=1` env gate, read the `;; NN conflicts` graph + `Register
+   dispositions` in the `.greg` dump (`-dg`).
 
-- The **L_set offset** pseudo (`movs #0x99; lsls #2` → 0x264 in the set path)
-  and the **promote base** pseudo (`ldr =gEntities` reloaded after the call)
-  have disjoint live ranges, so agbcc colours BOTH to r3 (REG_ALLOC_ORDER puts
-  r3 first — see `tools/agbcc-src/gcc_arm/config/arm/arm.h:833`). The baserom
-  instead keeps the L_set offset in **r1** (reusing the just-freed `off`
-  register) and the promote base in r3.
-- Same shape repeats in the **else block**: baserom offset → r1, built → r5;
-  and the `0x7fff` literal: baserom `ldr r1; ands r0,r1` vs built `ldr r5;
-  adds r1,r5,#0; ands` (an extra copy because the literal landed in a
-  callee-saved reg).
-- The promote `*s11 |= moved`: baserom `ldrh r0,[r1]; orrs r0,r4` (2 insns,
-  loads `*s` first) vs built `adds r0,r4,#0; ldrh r3,[r1]; orrs r0,r3` (3
-  insns — agbcc commutes the `|=` and starts from `moved` in r4). Source
-  reordering / explicit temp / named ptr do NOT change this (agbcc normalises
-  all forms identically).
-
-The priority that decides who gets r3 first is
-`global.c:allocno_compare` = `log2(n_refs)*n_refs/live_length * size`; the
-combine itself is `local-alloc.c:combine_regs`. No C source shape tried (≈15
-variants: operand order, condition inversion, temps, named ptrs, off type,
-promote-base reuse, slot-typed access) breaks the combine, because L_set and
-promote are genuinely SEQUENTIAL (disjoint ranges) so combining them is
-legal+cheaper. The baserom's split looks like it came from a compiler build
-where the two pseudos conflicted (overlapping ranges) — possibly because the
-original C kept the L_set status POINTER live into the promote block, or a
-different inlining made the ranges overlap.
-
-### Levers tried and rejected this round
-- `register asm("rN")` pins (base=r2, off=r1, b=r3, moved=r4, etc.): every pin
-  that lands on a caller-saved reg forces an extra prologue save (size 268,
-  push gains a reg) and regresses to 110-238. The natural allocation already
-  puts base in r2 / off in r1 WITHOUT a pin.
-- Permuter: oracle is **miscalibrated ~8×** for this fn (base score 1240 for a
-  32-diff fn; should be ~160 per docs/permuter-howto.md). It hovers at ~1230
-  and never approaches 0 — its statement-reorder/scope mutations don't reach
-  the cross-block `combine_regs` decision. Do not trust permuter scores here.
-- corpus_asm_search for the `0x7fff`-mask and index-increment idioms: 0 hits.
-
-### Next-attempt suggestions
-1. Try to force a live-range OVERLAP between the L_set offset and the promote
-   base so `combine_regs` refuses r3 for both (e.g. make the promote block
-   genuinely depend on a value computed in L_set, if a semantically-equivalent
-   shape exists). This is the only known route to flip r3→r1.
-2. Build an **instrumented private agbcc** (copy tools/agbcc-src to a private
-   prefix — NEVER rebuild the shared symlink), add an `fprintf` in
-   `combine_regs`/`find_reg` to confirm exactly which two pseudos combine into
-   r3, then look for the C condition that splits them. (Recipe in
-   docs/codegen-notes.md "Instrumenting agbcc itself".)
-3. Fix the permuter oracle for this fn (target.o $t/$d + relocs) so a real run
-   can search the coloring — the structure IS right, only coloring drifts.
-
-## Best-effort C (resume base — 88/32, `-fno-gcse`, no pins)
+## Best-effort C (resume base — 42/30, `-fno-gcse`, no pins)
 
 Makefile needs: `src/engine/sub_0802a8fc.s: CFLAGS += -fno-gcse`
 
@@ -117,18 +128,20 @@ void sub_0802A8FC(void)
     u32 off;
 
     base = (u8 *)gEntities;
-    off = 0x24a; /* &gEntities[10].field_1A */
+    off = 0x24a;
     if (base[off] == 3) {
-        off++; /* &gEntities[10].field_1B */
+        off++;
         if (base[off] == 2 || base[off] == 6 || base[off] == 10) {
-            u16 *s = (u16 *)(base + 0x264); /* gEntities[10].status */
+            u16 *s = (u16 *)(base + 0x264);
             if (*s & 0x200) {
                 sub_08020C78(43);
                 *s &= 0xfdff;
             }
         } else {
             u16 *s = (u16 *)(base + 0x264);
-            *s |= 0x200;
+            u16 t = *s;
+            t |= 0x200;
+            *s = t;
         }
 
         {
@@ -137,22 +150,28 @@ void sub_0802A8FC(void)
             u16 v = *st10;
             u16 moved = 2;
             if (!(v & moved) && (v & 0x8000)) {
-                b[0x24a] = 5;            /* gEntities[10].field_1A = 5 */
+                b[0x24a] = 5;
                 v |= moved;
-                b[0x282] = 6;            /* gEntities[11].field_1A = 6 */
-                *(u16 *)(b + 0x29c) |= moved; /* gEntities[11].status |= 2 */
+                b[0x282] = 6;
+                *(u16 *)(b + 0x29c) |= moved;
                 v &= 0x7fff;
                 *st10 = v;
             }
         }
     } else {
         u16 *s10 = (u16 *)(base + 0x264);
-        if (*s10 & 0x8000)
-            *s10 = (*s10 | 2) & 0x7fff;
+        u16 t10 = *s10;
+        if (t10 & 0x8000) {
+            t10 |= 2;
+            *s10 = t10 & 0x7fff;
+        }
         {
             u16 *s11 = (u16 *)(base + 0x29c);
-            if (*s11 & 0x8000)
-                *s11 = (*s11 | 2) & 0x7fff;
+            u16 t11 = *s11;
+            if (t11 & 0x8000) {
+                t11 |= 2;
+                *s11 = t11 & 0x7fff;
+            }
         }
     }
 
