@@ -4,3 +4,4 @@
 [submodule "vendor/decomp-permuter"]
 	path = vendor/decomp-permuter
 	url = https://github.com/JRickey/decomp-permuter.git
+	branch = frog-permuter-patches
