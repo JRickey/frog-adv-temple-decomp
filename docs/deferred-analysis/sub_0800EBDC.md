@@ -2,72 +2,106 @@
 
 Per-scene scroll commit + visible-screenblock blit. Slice
 `[0x0800ebdc, 0x0800ee34)` also carries trivial `sub_0800EE0C`
-(`REG_BLDCNT` / `REG_BLDALPHA` setter), which matched as plain C in prior
-rounds but remains in the asm slice until `sub_0800EBDC` lands.
+(`REG_BLDCNT`/`REG_BLDALPHA` setter: `*(vu16*)0x04000050 = targets | 0x1740;
+*(vu16*)0x04000052 = coeff;` — matches as plain C, but stays in the asm
+slice until `sub_0800EBDC` lands).
 
-## Drift
+Classifier verdict: `ATTEMPT_MATCH` (NOT `STRONG_UNMATCHABLE`). No callees
+(pure leaf). High-reg advisory only (`r9`, `sl`). NAKED is NOT justified —
+do not ship it. The honest asm slice is better than a fake match until the
+remaining register-coloring shape is solved.
 
-Classifier verdict: `ATTEMPT_MATCH`. This is not `STRONG_UNMATCHABLE`.
-There are no callees. `classify_unmatchable.py` only reported high-register
-advisory (`r9`, `sl`), so NAKED is not justified.
+## Fully-decoded semantics (ground truth from the disasm)
 
-New best this round:
+Loop `for i in 0..count` over BG layers, `base = 0x030060A0` (linker symbol
+`gIwram_60A0`), record stride 0x20 (`idx = i<<5`). Per record:
+  - +0x04 committedX (w), +0x08 committedY (w)
+  - +0x0C scrollX, +0x10 scrollY   (note scrollX is read via a SEPARATE pool
+    literal `0x030060AC = base+0xC`, indexed by `idx`; scrollY is read via
+    `base + idx + 0x10`. This asymmetry is real in the baserom.)
+  - +0x14 bgHofs (published low16 of scrollX), +0x16 bgVofs (low16 scrollY)
+  - +0x18 tileHeight, +0x1A tileWidth
+Per iteration: commit X/Y, clamp srcRow against tileHeight (>47 / `(h<<3)-0xD0`
+window, signed-round `>>3`), publish bgVofs + second srcRow clamp
+(`h>31 → h-32`), same for srcCol/tileWidth (`>7` / `(w<<3)-0xF8` / -8 round,
+`w>31 → w-32`). Then a `switch(i)` (mov-pc/casesi → a real C `switch`):
+case 0 reuses `base` (ip) for bgVofs/bgHofs read; cases 1/2 load fresh record
+bases `0x030060C0`/`0x030060E0` and read `[r1,#22]`/`[r1,#20]` — so the switch
+bodies MUST be `((struct *)0x030060C0)->bgVofs` (struct-pointer addressing),
+NOT raw `*(u16*)0x030060D6` (agbcc folds the constant and emits a separate
+literal → wrong). Each case writes a different `gIwram_3550._data[]` pair and
+sets srcBase (EWRAM tilemap 0x0200xxxx) / dstBase (BG screenblock 0x0600xxxx;
+case 0's srcBase 0x02000000 is an immediate `0x80<<18`, not a pool load).
+Then a 32x32 tile blit from src to dst with screenblock wrap
+(`dst >= dstBase+0x800` → wrap; `remain==0` → `dst-=0x40`, underflow →
+`dstBase+0x7C0`); per-row src advance `+= tileWidth*2 - 0x40`.
 
-- `byte_diff 387`, `diff_count 179`, size `544` vs baserom `600`.
-- Compiler flags tried on this TU: `CC=$(AGBCC_BIN)` plus
-  `-fno-strength-reduce -fno-gcse`. Newer agbcc did not change the result
-  versus old agbcc for the best source shape.
-- Clean no-pin typed C: `byte_diff 399`, `diff_count 266`.
-- Guarded high-reg/address-staged C before extra pins: `byte_diff 476`,
-  `diff_count 221`.
-- Reduced-pin variant (only `i`/`base`/`idx`): `byte_diff 462`,
-  `diff_count 272` and an extra stack slot. Worse.
-- Best version uses a guard + `do` loop to place `base = 0x030060A0`
-  after the `count` guard, and pins the field-section registers enough to
-  reproduce much of the front block:
-  `r9` outer index, `ip` base, `r3` byte offset, `r5` copied offset,
-  `sl` source row, `r7` source col / loop counter, `r6` source base,
-  `r8` destination base, plus scoped `r1`/`r2` address pins.
+## Drift (this round — escalation/Opus retry)
 
-New findings to build on:
+New best: **byte_diff 381, diff_count 176** (size 544 vs baserom 600).
+Marginal improvement over the prior 387/179 plateau, same basin.
 
-- Explicit guard + `do` loop fixes the previous preheader problem:
-  the base literal load moves after the `count` check, matching the
-  baserom's control-flow shape.
-- `srcCol = i; idx = srcCol << 5;` with `srcCol` pinned to `r7` emits the
-  baserom `mov r7, r9; lsls r3, r7, #5`.
-- Scoped pins for committed-X (`r1`) and committed-Y (`r2`) remove the
-  earlier base+4 to base+8 CSE fold. The front commit block now matches
-  structurally through the two stores, aside from pool-distance shifts.
-- Keeping the scroll-Y pointer in scoped `r1` across the committed-Y store
-  reproduces the immediate post-store reload and improves the field section.
-- Copying `idx` to an `r5` alias after that reload reproduces the baserom's
-  retained byte offset for later field accesses.
-- Writing the tile-row and tile-col division as explicit signed-rounding
-  temporaries keeps the `cmp adjusted, #0` / add-before-shift checks that
-  agbcc otherwise proves dead.
+Compiler/flag findings (TU = `src/engine/sub_0800ebdc.s`):
+  - `CFLAGS += -fno-gcse` → 387/179 (the prior best). `-fcaller-saves` ties it.
+  - `-fno-strength-reduce`, `-fno-schedule-insns(2)`, `-fforce-addr`,
+    `-ffixed-r4/r10`, `-fno-force-mem`, `-frerun-cse-after-loop`,
+    `-fcse-follow-jumps`: NO further effect.
+  - Compiler swap `CC = $(AGBCC_BIN)` (newer agbcc): no change vs old_agbcc.
 
-Remaining wall:
+Source-shape findings that HELPED (cumulative, the 176/381 base):
+  - First Y-clamp and first X-clamp must read tileHeight/tileWidth INLINE
+    (`limit = (*(u16*)(idxCopy+base+0x18) << 3) - 0xD0;`) — a transient r0,
+    NOT a named `tileHeight` variable (which forces r2). The SECOND
+    (publish) clamp DOES keep the value in a variable (baserom keeps it in r2
+    for the `>31` test). This split dropped 180→176.
+  - Blit setup must compute `src` first, then mask `srcRow &= 31; srcCol &= 31`
+    in place, then `colSpan = 32 - srcCol`, then `dst` — matching the baserom
+    order. (mask-as-fresh-temps is no better.)
+  - Switch cases 1/2 use struct-pointer addressing (see above).
+  - prologue is now `sub sp, #8` (2 slots, == baserom) in the 176 version.
 
-- The clamp publish sections still choose different scratch registers around
-  `ldrh [base+idx,#0x18/#0x1a]` and the second scrollY/scrollX reloads.
-  Current best uses `r2`/`r4` where baserom wants `r0`/`r2`/`r3` in several
-  places.
-- The blit setup still spills/reuses badly: generated C reaches `mov r5, sp`
-  in the source-pointer calculation, showing the same register-pressure wall
-  noted before. The field half and blit half want different register budgets.
-- `agbcc_oracle.py --pass greg` confirms heavy pressure and many spill
-  decisions around the blit loop; further progress probably needs either RTL
-  dump mapping of the source/dest/colSpan pseudos or private reload/local-alloc
-  instrumentation.
-- Required history search could not run because
-  `tools/agent/corpus-mirrors` is absent in this worktree. Current-tree corpus
-  grep found no useful C analogue for this screenblock wrap loop.
+Source-shape findings that DID NOT help (escaped basins all worse):
+  - Clean no-pin (246/465). struct `rec->field` model for the whole front
+    (210/438) — breaks the scrollX-via-0x60AC asymmetry.
+  - `nextI = i+1` saved before blit + `recPtr = idxCopy + 0x60A0` to free `i`
+    (r9) for reuse as recPtr in the blit (mirroring baserom `adds r5,r5,lit;
+    mov r9,r5`): every variant 185–392, WORSE. agbcc will not cleanly retire
+    the pinned `i`/`idxCopy` to enable the r9/r5 reuse.
+  - Reading blit-body width from a `recPtr` instead of cached `tileWidth`:
+    worse.
+  - Removing the `idxCopy asm("r5")` pin: 422 (front needs it).
 
-Do not ship NAKED for this function. The honest asm slice is better until the
-remaining allocation shape is solved.
+## The remaining wall (precise)
 
-## Best-effort C
+Two coupled register-coloring minima, both in the BLIT half:
+  1. **idxCopy(r5) preservation spill.** At blit setup the baserom reads
+     `tileWidth` via `mov r1,ip; adds r0,r5,r1; ldrh r1,[r0,#26]` (fresh r0,
+     preserves r5=idxCopy). agbcc instead MUTATES the pinned r5
+     (`add r5, ip; ldrh r4,[r5,#26]`), so it must spill idxCopy → emits the
+     bogus-looking `mov r7, sp` / `mov r2, sp` (sp-as-base reloads of the
+     spilled mask/idxCopy). This is the `sub sp` pressure leak.
+  2. **The i→recPtr (r9) and idxCopy→recPtr (r5→r9) reuses** the baserom does
+     to keep the blit in registers require those pinned front-block values to
+     be DEAD by blit setup. No source shape tried gets agbcc to retire them at
+     the right point; explicit nextI/recPtr modelling makes it worse.
+
+This is a sharp register-coloring local minimum (front wants idxCopy/i pinned;
+blit wants those registers reused) that no single source shape escapes — the
+documented remedy is `vendor/decomp-permuter` (statement-reorder/scope
+mutation). **The permuter `.venv` is ABSENT (missing on main too, not just the
+worktree)**, so that lever could not run this round. Re-attempt once the
+permuter venv exists (`scripts/setup-permuter.sh`): start from the 176/381
+base below + `-fno-gcse`, target the blit-setup region (`idx 0x15a–0x1a0`).
+Corpus history `--idiom highreg-spread` confirms high-reg spread is reachable
+from plain C but offered no structure that escapes THIS coloring.
+
+Next levers to try (in order): (a) permuter from the base below; (b) private
+agbcc reload/local-alloc instrumentation (codegen-notes "Instrumenting agbcc
+itself") to see WHICH pseudo spills at blit setup and find the source edit
+that retires idxCopy(r5) before it; (c) RTL pseudo→hardreg mapping via
+`agbcc_oracle.py --pass greg`.
+
+## Best-effort C (byte_diff 381, diff_count 176; needs `-fno-gcse` on the TU)
 
 ```c
 #include "gba/io.h"
@@ -161,8 +195,7 @@ void sub_0800EBDC(u8 count)
             idxCopy = idx;
         }
         if (scrollY > 47) {
-            tileHeight = *(u16 *)(idxCopy + base + 0x18);
-            limit = (tileHeight << 3) - 0xD0;
+            limit = (*(u16 *)(idxCopy + base + 0x18) << 3) - 0xD0;
             if (scrollY <= limit) {
                 s32 adjusted = scrollY;
                 adjusted -= 0x30;
@@ -184,8 +217,7 @@ void sub_0800EBDC(u8 count)
 
         scrollX = *(s32 *)(idxCopy + SCROLL_X_BASE);
         if (scrollX > 7) {
-            tileWidth = *(u16 *)(idxCopy + base + 0x1A);
-            limit = (tileWidth << 3) - 0xF8;
+            limit = (*(u16 *)(idxCopy + base + 0x1A) << 3) - 0xF8;
             if (scrollX <= limit) {
                 s32 adjusted = scrollX;
                 adjusted -= 8;
@@ -232,9 +264,10 @@ void sub_0800EBDC(u8 count)
 
         tileWidth = *(u16 *)(idxCopy + base + 0x1A);
         src = (u16 *)(srcBase + (srcRow * tileWidth) * 2 + srcCol * 2);
-        dst = (u16 *)(dstBase + (srcRow & SCREENBLOCK_TILE_MASK) * SCREENBLOCK_ROW_BYTES +
-                      (srcCol & SCREENBLOCK_TILE_MASK) * 2);
-        colSpan = (u16)(SCREENBLOCK_ROW_TILES - (srcCol & SCREENBLOCK_TILE_MASK));
+        srcRow &= SCREENBLOCK_TILE_MASK;
+        srcCol &= SCREENBLOCK_TILE_MASK;
+        colSpan = (u16)(SCREENBLOCK_ROW_TILES - srcCol);
+        dst = (u16 *)(dstBase + srcRow * SCREENBLOCK_ROW_BYTES + srcCol * 2);
         for (row = 0; row <= SCREENBLOCK_TILE_MASK; row++) {
             s32 remain = colSpan;
 
@@ -265,7 +298,14 @@ void sub_0800EBDC(u8 count)
 
 void sub_0800EE0C(u16 targets, u16 coeff)
 {
-    REG_BLDCNT = targets | BLDCNT_EBDC_TARGETS;
-    REG_BLDALPHA = coeff;
+    *(vu16 *)0x04000050 = targets | 0x1740;
+    *(vu16 *)0x04000052 = coeff;
 }
 ```
+
+Note: this best-effort uses `gIwram_60A0` as a `u8*` base + byte
+offsets + the `SCROLL_X_BASE`/`SCROLL_STATE_BASE` literals (mirrors the
+baserom asymmetry), the switch struct-pointer form for cases 1/2, and the
+`-fno-gcse` per-TU CFLAG. Pins: i(r9), base(ip), idx(r3), idxCopy(r5),
+srcRow(sl), srcCol(r7), srcBase(r6), dstBase(r8), plus scoped r1/r2 in the
+commit block.
