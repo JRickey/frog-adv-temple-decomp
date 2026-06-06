@@ -88,6 +88,69 @@ classic sharp register-coloring local minimum: the right next step is
 was MISSING in this run — `scripts/setup-permuter.sh` first), mutating var
 scope / statement order to explore the coloring the C surface cannot reach.
 
+## Round 39 (Opus escalation) — agbcc-instrumented root cause + ruled-out levers
+
+Re-derived from scratch (full asm trace of all 8 leaves + the 2 store funnels)
+and INSTRUMENTED agbcc's global allocator (`fprintf` in a private
+`gcc/global.c` debug build, then thrown away) to find WHY the coloring will not
+move. The prior "sharp register-coloring local minimum" diagnosis is CONFIRMED
+and now has a precise mechanism:
+
+**The single decisive fact: `out` (arg1) must land in r3, but it cannot win r3
+by priority.** agbcc's `allocno_compare` (global.c) ranks pseudos by
+`floor_log2(n_refs)*n_refs / live_length` (higher = allocated first; REG_ALLOC_ORDER
+puts r3 FIRST so the top-priority pseudo grabs r3). Traced values for the note's
+byte_diff-448 C:
+  - `out`  = pseudo23: n_refs=9,  live_len=350 -> priority 0.077  (assigned LAST -> r7)
+  - `e`    = pseudo22: n_refs=3,  live_len=33  -> 0.09            (-> r6, then reload spills to r3)
+  - `cur`  = pseudo34: n_refs=22, live_len=74  -> 1.19            (grabs r3)
+  - `nr`   = pseudo35: n_refs=44, live_len=110 -> 2.0             (-> r1)
+  - `sr`   = pseudo33: n_refs=29..33, len~271  -> 0.43            (-> r2/r3)
+  - `sc`   = pseudo32: n_refs=25, len~283      -> 0.35            (-> r5)
+`out`'s range is the whole function (350) but its ref count is tiny (9, the
+stores CSE-merge into the 2 funnels), so its priority is rock-bottom. It is
+ALWAYS allocated last and takes whatever callee-saved reg is left (r7). Whatever
+high-ref leaf pseudo is function-scope (cur, or sr when cur is block-scoped)
+grabs r3 instead. Baserom instead has out->r3 / e->r7 / sc->r1 / sr->r4 /
+cur->r5-or-r2 / nr->r2 / grid->r6 — a clean partition with r3 reserved for out.
+
+For baserom's coloring, `out` (low priority) must be allocated when r3 is FREE —
+i.e. NO long-lived high-ref pseudo may hold r3. But the shared store-tail
+structure (the 2 funnels `store_lr {sc±1, sr}` at 0x2cda6 and
+`store_ud {sc, nr}` at 0x2cdc0, which give the correct 596-byte size) forces
+`sc` and `sr` to be FUNCTION-SCOPE (live to the tails) and high-ref -> one of
+them (or `cur`) outranks `out` for r3. No pure-C surface shape breaks this:
+
+**Ruled out this round (reliable oracle = touch .c; rm .s; make -j4; compile_and_view):**
+- Full 2-funnel restructure with explicit goto labels: 561-641 (size grows to
+  716-804; agbcc does NOT re-merge, so the SHARED-TAIL note structure is what
+  yields the correct 596 size — keep it).
+- Fully inlined `out[]` writes per leaf (max out refs): 568 (size 632); agbcc
+  re-merges stores anyway, refs stay ~9, no priority gain.
+- Block-scoping `cur`+`nr` per leaf (frees r3 from cur): 484 — but then `sr`
+  (pseudo33) immediately takes r3. Block-scoping + inlining everything: 653
+  (size 792).
+- Pin `out`->r3 via local `register s16 *o asm("r3")`: 463 — out DOES get r3,
+  but the `o=out` copy + freed r1 perturbs the dx/dy prologue (p0 base -> r1
+  not r2; e -> r2 not r7).
+- Pin BOTH e->r7 (`ep`) and out->r3 (`o`): 513 — args match but the copies
+  wreck the dx/dy block coloring.
+- Pin `sc`->r1 + `sr`->r4 (baserom leaf regs): 459 (size 616) — reserving r4
+  collides with `(s16)dy` which baserom puts in r4 during the prologue.
+- Flags (full-rebuild oracle): `-ffixed-r3` 477, new-agbcc (`CC=$(AGBCC_BIN)`)
+  477, `-fno-strength-reduce`/`-fno-schedule-insns` 448 (no effect),
+  `-fno-gcse` 514. None < 448.
+
+**Conclusion: this is genuinely permuter-shaped** (mutate var scope / statement
+order to explore the r3-for-out coloring the C surface cannot reach), exactly as
+the original note said. The permuter `.venv` was MISSING again this run
+(`vendor/decomp-permuter/.venv` absent in BOTH worktree and main — run
+`scripts/setup-permuter.sh` first). Best start base remains the byte_diff-448 C
+below. classify_unmatchable = ATTEMPT_MATCH (NOT a STRONG class), so do NOT ship
+NAKED. The promising permuter seeds: from the 448 base, mutate the SCOPE of
+`cur`/`nr`/`sc`/`sr` and the statement order of the two store funnels to coax
+`out` into r3.
+
 ## Best-effort C (byte_diff 448, compiles, structurally correct, NON-matching)
 
 ```c
