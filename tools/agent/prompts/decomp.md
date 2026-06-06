@@ -22,11 +22,15 @@
 
 ## Goal
 
-Take one named target function from the still-asm cluster and ship a
-**matching** decompilation — either a pure-C definition that yields
-byte-identical output, or a NAKED inline-asm body in C with a parallel
-`#ifdef NON_MATCHING` reference body (for codegen the corpus has proven
-unmatchable in C).
+Take one named target function from the still-asm cluster and drive it to a
+**byte-identical match in pure C** — the only real success.
+
+If, after an honest hunt, it genuinely will not match, you DEFER — which now
+means: record the analysis AND map the function into `src/` as a
+NAKED+NON_MATCHING TU (your best-attempt C under `#ifdef NON_MATCHING`, the
+bytes supplied by an `#else` `.incbin`). That keeps the repo fully mapped and
+the target in the revisit queue (see "DEFER, and MAP it" below). Deferring is a
+fallback *after* the hunt, never a shortcut around it.
 
 Success criterion: `make check` exits 0 AND
 `python3 tools/agent/compile_and_view_assembly.py <FN> --human` reports
@@ -112,12 +116,14 @@ After step 4 (iteration), branch on the diff state:
   default is to keep iterating in pure C. NAKED is a LAST resort with
   hard prerequisites — see "NAKED gate" below.
 
-### NAKED gate — hard prerequisites, not guidance
+### NAKED gate — the honest-hunt bar before you defer-and-map
 
 A 9-iter retrospective (iters 16-28) found that ~9 of 10 NAKED commits
 shipped without honest evidence of unmatchability. Multiple were later
-shown to be matchable in pure C with simple source mutations. From now
-on, NAKED requires ALL of the following before the commit lands:
+shown to be matchable in pure C with simple source mutations. So before you
+DEFER (which ships a NAKED+NON_MATCHING TU + doc — see "DEFER, and MAP it"
+below), you MUST clear ALL of the following. They are the line between a
+legitimate defer-and-map and giving up early:
 
 1. **Permuter was actually run.** Set up `nonmatchings/<fn>/` with the
    pure-C base and the target asm. Run at least 1000 iterations OR
@@ -164,26 +170,76 @@ two-stage-loop classes). That case still goes through the full NAKED gate
 above (`classify_unmatchable.py` STRONG verdict + the four prerequisites),
 exactly like any other candidate. There is no fast path.
 
-### NAKED format (when justified)
+### NAKED format
 
-- Outer: `NAKED void <FN>(void) { asm(".syntax unified\n" … ".syntax divided\n"); }`
-- Inner: `#ifdef NON_MATCHING / void <FN>(void) { … readable goto-shaped C … } / #endif`
-- **CRITICAL**: every NAKED `asm()` block ends with `".syntax divided\n"`.
-  `.syntax unified` bleeds into following functions in the same .o
-  and breaks Thumb-1 syntax silently. See `docs/codegen-notes.md`.
+The `#ifdef NON_MATCHING` branch is **the agent's best attempt** — the
+closest-matching readable C you developed during the hunt, preserved as live
+source (NOT a vague paraphrase, NOT just a comment). The `#else` branch is the
+byte-providing fallback. The compiled branch is `#else`; `NON_MATCHING` is never
+defined in the build.
 
-### `byte_diff > 0` and gate not satisfied
+```c
+#ifdef NON_MATCHING
+<your best-attempt C — the near-match you drove to, kept verbatim>
+#else
+NAKED void <FN>(void)
+{
+    /* deferral/mapping form: byte-guaranteed, no asm transcription needed */
+    asm(".incbin \"frog_us_baserom.gba\", 0x<file_off>, 0x<len>\n");
+}
+#endif /* NON_MATCHING */
+```
 
-If you cannot satisfy the NAKED gate AND cannot reach byte_diff 0,
-STOP. Do not ship NAKED. Restore the asm slice + the refined-mnemonics
-version. Stage your best pure-C attempt in a docs/decisions.md entry
-or commit message describing what you tried and where you got stuck.
-The orchestrator (main conversation) will decide: run permuter
-longer, escalate to human review, or defer the target.
+- `<file_off>` = `addr − 0x08000000`; `<len>` is the byte count from the slice's
+  `.incbin` line. This is the **standard deferral form** — it maps the function
+  with zero risk of a transcription error.
+- **Alternative (only if you genuinely transcribed the asm):** an `#else` body of
+  real Thumb mnemonics, `asm(".syntax unified\n" … ".syntax divided\n")`. It has
+  NO advantage over `.incbin` for a deferred (un-matched) function, so reserve it
+  for the rare case you actually analyzed instruction-by-instruction.
+- **CRITICAL** (mnemonic form only): every NAKED `asm()` block MUST end with
+  `".syntax divided\n"` — `.syntax unified` bleeds into following functions in
+  the same .o and breaks Thumb-1 silently. See `docs/codegen-notes.md`. The
+  `.incbin` form does not use `.syntax` and is immune to this.
 
-This is a real change from earlier iters where NAKED was the default
-fallback. Going forward, NAKED is rare. If you ship one without
-satisfying all four prerequisites, the commit will be reverted.
+### `byte_diff > 0` after an honest hunt — DEFER, and MAP it
+
+When you genuinely cannot reach byte_diff 0 (the gate prerequisites are
+met: permuter actually run, ≥5 distinct pure-C structures tried, drift
+understood), you DEFER. A defer is **not** a bare give-up and no longer
+leaves the function as a raw asm slice — it does TWO things so the repo
+gets fully mapped and the work resumes warm:
+
+1. **Write the deferred-analysis doc** — `docs/deferred-analysis/<FN>.md`
+   with a `## Drift` section (best byte_diff/diff_count, WHICH
+   register/fold/schedule diverged, levers + permuter score tried, so the
+   next agent picks a DIFFERENT lever) and a `## Best-effort C` section
+   (your most-correct readable C in a ```c block).
+
+2. **Ship a NAKED+NON_MATCHING TU** — give the function a real home in
+   `src/`: the best-effort readable C under `#ifdef NON_MATCHING`, and an
+   `#else` NAKED body that supplies the bytes via `.incbin` (the
+   byte-guaranteed deferral form — see "NAKED format" below). Wire the TU
+   into `linker.ld` in the slot the asm slice held and delete the slice.
+   `make check` must stay green.
+
+Because the deferred-analysis doc is present, `function_status.py` reports
+the function as **`deferred`** (NOT terminal `naked`), so it stays in the
+revisit/escalation queue — a later pass or stronger model resumes from your
+drift note instead of starting cold. You are mapping the repo and recording
+intent, not abandoning the target.
+
+**The caveat that keeps this honest:** NAKED+NON_MATCHING is the OUTCOME of
+a real match hunt, NEVER a shortcut to skip it. Do not reach for the
+`.incbin` to dodge the pure-C work — the gate prerequisites ARE the line
+between a legitimate defer-and-map and giving up early. A function shipped
+NAKED without that hunt is the failure mode the gate exists to prevent; a
+function deferred-and-mapped *after* the hunt is correct and expected.
+
+If you cannot even ship the NAKED+NON_MATCHING TU for a mechanical reason
+(the asm slice needs mnemonic refinement too large to do safely), revert to
+a clean tree and report the blocker — never commit a broken/non-matching
+build.
 
 ## Common pitfalls
 

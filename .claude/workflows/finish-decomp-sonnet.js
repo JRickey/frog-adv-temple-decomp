@@ -392,19 +392,22 @@ hard-tier uses; it is the house style now.)
 - Ranking of done states: a clean match with ZERO levers > a match with EXPLAINED levers > a match
   with unexplained levers. Drive toward the left.
 
-== NAKED IS EXCEPTIONAL (asymmetric-cost rule) ==
-A function wrongly shipped as NAKED is a PERMANENT regression — nobody revisits it and it will not
-survive the phase-3 PC port. Wasted match tokens are cheap and recoverable. So when unsure → ATTEMPT.
-Ship NAKED+NON_MATCHING ONLY if classify_unmatchable.py returned STRONG_UNMATCHABLE (class3-libgcc)
-AND the corpus confirms the idiom lives ONLY in hand-asm:
-    python3 tools/agent/corpus.py grep '<exact idiom regex>' --asm   (expect MANY hits)
-    python3 tools/agent/corpus.py grep '<related C construct>'  --c   (expect NONE matched to C)
-    python3 tools/agent/corpus_asm_search.py search --asm '<idiom regex>' --require-c   (HISTORY pairing — if EVEN ONE repo replaced this exact asm with C, it is MATCHABLE: do NOT NAKED)
-"All corpus hits are NAKED" is NOT proof of impossibility — it is circular (everyone NAKED'd for the
-same wrong reason, as the movpc cluster proved). A direct compile probe beats a corpus census. If you
-DO ship NAKED: readable C under #ifdef NON_MATCHING, hand-asm NAKED under #else, and EVERY NAKED asm()
-block ends with the literal "    .syntax divided\\n" (the \`.syntax unified\` at the top bleeds into the
-rest of the .o otherwise). status="naked".
+== NAKED+NON_MATCHING = the DEFER-and-MAP form, NOT a fake match (do the hunt FIRST) ==
+The expensive mistake is shipping a NAKED to SKIP the match hunt and pass it off as done. So when
+unsure → ATTEMPT (wasted match tokens are cheap and recoverable; a GBA agbcc title matches game logic
+~100% in pure C). "All corpus hits are NAKED" is NOT proof of impossibility — it is circular (everyone
+NAKED'd for the same wrong reason, as the movpc cluster proved); a direct compile probe beats a corpus
+census, and \`corpus_asm_search.py search --asm '<idiom>' --require-c\` — if EVEN ONE repo replaced this
+exact asm with C, it is MATCHABLE, so KEEP HUNTING. Run permuter, try ≥5 distinct pure-C structures.
+
+When the hunt HONESTLY fails, you do NOT leave a bare asm slice and you do NOT pretend it matched —
+you DEFER and MAP it (full steps under "IF YOU CANNOT MATCH" below): a NAKED+NON_MATCHING TU (your
+best-attempt C under #ifdef NON_MATCHING, bytes via #else .incbin) PLUS the deferred-analysis doc.
+Because the doc is present, function_status reports the function \`deferred\` (NOT terminal \`naked\`), so
+it STAYS in the revisit/escalation queue — the OPPOSITE of "nobody revisits it": the doc + the #ifdef
+best-attempt ARE the resume points. (If you hand-transcribe mnemonics instead of .incbin — rare, only
+when you truly analyzed the asm — EVERY NAKED asm() block MUST end with "    .syntax divided\\n", or the
+\`.syntax unified\` at the top bleeds into the rest of the .o; the .incbin form is immune.)
 
 == DEFINITION OF DONE (structural, NOT byte_diff) ==
 byte_diff 0 alone does NOT mean matched — a NAKED ship is byte_diff 0 by construction. The status is
@@ -430,23 +433,33 @@ Never call a NAKED ship a "true match" — say "matches via the NAKED asm path".
   counts>, levers tried: <…>". Do NOT write "true match" for NAKED.
 
 == IF YOU CANNOT MATCH (after SEVERAL fundamentally-different structural approaches genuinely fail) ==
-Do NOT ship NAKED for a non-STRONG function — an honest un-decompiled asm slice beats a fake match.
-DEFER, preserving your work so the next attempt resumes instead of starting cold (the ONE commit a
-deferral makes):
+DEFER — which now MAPS the function into src/ (NOT a bare asm slice left behind) AND records your
+analysis, so the repo stays fully covered and the next attempt resumes warm. Do ALL of:
   i.   mkdir -p docs/deferred-analysis; write docs/deferred-analysis/${t.name}.md with a "## Drift"
        section (best byte_diff/diff_count, WHICH register/fold/schedule diverged, levers + permuter
        score tried — so the next agent picks a DIFFERENT lever) and a "## Best-effort C" section (your
        most-correct readable C in a \`\`\`c block).
-  ii.  git add docs/deferred-analysis/${t.name}.md && git commit -m "Stash deferred analysis: ${t.name}"
-       (docs-only — never compiled, make check stays green). Include its SHA in commits[].
-  iii. git checkout -- ${t.destC} (restore the stub); LEAVE the asm slice ${t.asmFile} and linker.ld
-       untouched.
-status="deferred". The stashed .md lets the reclamation pass (or a human) resume from your analysis.
+  ii.  Ship a NAKED+NON_MATCHING TU in ${t.destC}: YOUR BEST-ATTEMPT C (the closest near-match you
+       drove to — kept verbatim, not a paraphrase) under #ifdef NON_MATCHING, and the bytes under
+       #else as a .incbin:
+           #else
+           NAKED void ${t.name}(void)
+           { asm(".incbin \\"frog_us_baserom.gba\\", 0x<file_off>, 0x<len>\\n"); }
+           #endif /* NON_MATCHING */
+       (file_off = addr − 0x08000000; len = the byte count from the slice's .incbin line.) Then rm the
+       asm slice ${t.asmFile} and collapse linker.ld onto the single src .o(.text) entry for ${t.destC},
+       following the preceding sibling's pattern. make -j4 && make check MUST exit 0.
+  iii. git add -A && git commit -m "Decompile ${t.name} (deferred: NAKED+NON_MATCHING + analysis)".
+       ONE commit = the TU + linker + slice deletion + the .md. It builds green, so it lands like any
+       decomp; the .md keeps function_status reporting \`deferred\` (NOT terminal \`naked\`), so the
+       target stays in the revisit/escalation queue. Put the SHA in commits[].
+status="deferred". The #ifdef best-attempt + the .md ARE the resume points — a later pass or stronger
+model re-derives the match from them instead of starting cold. Don't reach for .incbin to SKIP the
+hunt: the defer is what you do AFTER several honest pure-C structures fail, never instead of them.
 
-IF YOU CANNOT MATCH OR NAKED-SHIP for a mechanical reason (e.g. the asm slice needs mnemonic
-refinement too large to do safely): revert to a clean tree (git reset --hard \$BASE; git clean -fd on
-untracked you added) and report status "reverted" with the blocker. DO NOT remove the asm slice, DO
-NOT commit a broken/non-matching build.
+IF YOU CANNOT EVEN SHIP THE TU for a mechanical reason (e.g. the asm slice needs mnemonic refinement
+too large to do safely): revert to a clean tree (git reset --hard \$BASE; git clean -fd on untracked
+you added) and report status "reverted" with the blocker. DO NOT commit a broken/non-matching build.
 ${WORKTREE_RULES}
 
 Return the structured object: target="${t.name}", status, worktreePath, commits (the
@@ -645,16 +658,19 @@ Steps:
    pending change). SELF-HEAL it: \`git checkout -- . && git clean -fd\` — this reverts stray
    tracked edits and removes stray untracked files; gitignored deps/worktrees are preserved.
    Confirm \`git status --short\` is now empty, then proceed.
-2. If status is "matched" or "naked" with commits: cherry-pick each SHA IN ORDER
+2. If status is "matched", "naked", or "deferred" with commits: cherry-pick each SHA IN ORDER
    (\`git cherry-pick <sha>\`), one at a time. On a conflict: \`git cherry-pick --abort\`,
    set reverted=true, status="reverted". After the LAST pick: \`make -j4 && make check\`.
    - make check FAILS → \`git reset --hard <pre-pick HEAD>\`, reverted=true, status="reverted".
+   - A "deferred" result now ships a REAL NAKED+NON_MATCHING TU (best-attempt C under #ifdef
+     NON_MATCHING + #else .incbin) plus its .md, in one commit — LAND IT exactly like naked,
+     make-check-guarded. The .md keeps function_status reporting it \`deferred\` (revisit queue).
    - Re-verify the STRUCTURAL status by grepping the committed .c for ${t.name}: matched ⟺
-     no \`NAKED\`/inline \`asm(\`/\`#ifdef NON_MATCHING\` for it; else naked. If the commit subject
-     is mislabeled (says "Decompile" but it's NAKED, or vice-versa), \`git commit --amend\` the
-     subject and set amendedSubject=true.
-3. If status is "deferred"/"reverted": the agent may have a "Stash deferred analysis" commit —
-   cherry-pick THAT one (docs-only, safe) if present in commits; otherwise nothing lands.
+     no \`NAKED\`/inline \`asm(\`/\`#ifdef NON_MATCHING\` for it; else it is naked/deferred. If a
+     "Decompile X" subject is actually NAKED (or vice-versa), \`git commit --amend\` the subject and
+     set amendedSubject=true (a "(deferred: NAKED+NON_MATCHING …)" subject IS correct — leave it).
+3. If status is "reverted" (or "deferred" with NO commits): cherry-pick a lone "Stash deferred
+   analysis" docs commit if present in commits; otherwise nothing lands.
 4. CLEAN UP the worktree: \`git worktree unlock ${dres.worktreePath} 2>/dev/null;
    git worktree remove --force ${dres.worktreePath} 2>/dev/null; git worktree prune\`, then
    \`git branch -D\` its branch if it lingers.
