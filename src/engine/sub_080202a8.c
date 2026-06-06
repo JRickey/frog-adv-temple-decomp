@@ -3,9 +3,7 @@
 #include "types.h"
 
 asm(".global sub_08032C18\n"
-    ".thumb_set sub_08032C18, 0x08032C19\n"
-    ".global sub_0802D5EC\n"
-    ".thumb_set sub_0802D5EC, 0x0802D5ED\n");
+    ".thumb_set sub_08032C18, 0x08032C19\n");
 
 /* Linker-assigned (docs/codegen-notes.md "Adjacent IWRAM bases"): keeping
  * the table opaque to agbcc holds its pool load ahead of the gIwram_3480

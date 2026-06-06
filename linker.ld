@@ -773,8 +773,10 @@ SECTIONS {
         asm/disasm_0x0802d548.o(.text);  /* 0x0802d548 - 0x0802d54c, sub_0802D548 (auto-peeled) */
         asm/text/text_0x0802d54c.o(.text);  /* 0x0802d54c - 0x0802d554, raw bytes */
         src/game/sub_0802d554.o(.text);  /* 0x0802d554 - 0x0802d558, sub_0802D554 */
-        src/game/sub_0802d558.o(.text);
-        asm/disasm_0x0802d558.o(.text);  /* 0x0802d558 - 0x0802d890, sub_0802D558 (auto-peeled) */
+        src/game/sub_0802d558.o(.text);  /* 0x0802d558 - 0x0802d5ec, sub_0802D558 (libagbsyscall thunk block, NAKED) */
+        asm/disasm_0x0802d5ec.o(.text);  /* 0x0802d5ec - 0x0802d770, sub_0802D5EC (auto-peeled) */
+        asm/disasm_0x0802d770.o(.text);  /* 0x0802d770 - 0x0802d800, sub_0802D770 (auto-peeled) */
+        asm/disasm_0x0802d800.o(.text);  /* 0x0802d800 - 0x0802d890, sub_0802D800 (auto-peeled) */
         src/game/sub_0802d890.o(.text);
         src/game/sub_0802d8f8.o(.text);
         asm/disasm_0x0802d8f8.o(.text);  /* 0x0802d8f8 - 0x0802d9ec, sub_0802D8F8 (auto-peeled) */
