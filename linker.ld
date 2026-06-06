@@ -823,7 +823,7 @@ SECTIONS {
         asm/text/text_0x08030b34.o(.text);  /* 0x08030b34 - 0x080315d8, raw bytes */
         src/system/sound_opcode_dispatch.o(.text);  /* 0x080315d8 - 0x08031638, sub_080315D8 */
         src/system/sub_08031638.o(.text);
-        asm/text/text_0x08031688.o(.text);  /* 0x08031688 - 0x080316dc, raw bytes */
+        asm/disasm_0x08031688.o(.text);  /* 0x08031688 - 0x080316dc, sub_08031688 (auto-peeled) */
         src/system/sub_080316dc.o(.text);
         asm/text/text_0x080316fc.o(.text);  /* 0x080316fc - 0x08031720, raw bytes */
         src/system/sub_08031720.o(.text);
