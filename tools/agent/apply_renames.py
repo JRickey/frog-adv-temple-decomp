@@ -155,12 +155,20 @@ def apply_manifest(manifest, dry_run):
     """Mutate sources per the manifest. Returns dict path->new_text for changed files."""
     sources = repo_sources()
     contents = {p: p.read_text() for p in sources}
-    # linker.ld participates in GLOBAL renames only (data symbols are defined
-    # there; function/type aliases may appear too). Scoped var/field loops key
-    # off manifest file paths, so they never touch it.
-    linker = (REPO / "linker.ld").resolve()
-    if linker.exists():
-        contents[linker] = linker.read_text()
+    # linker.ld + the asm slices participate in GLOBAL renames only. CRITICAL:
+    # an asm-slice / NON_MATCHING function's REAL exported symbol is defined in
+    # asm/disasm_*.s (`thumb_func_start sub_XXXX` / `sub_XXXX:`), NOT in the
+    # (non-compiled) C body — so a function rename must update the .s too, or the
+    # binary keeps the old symbol while the C references the new one. Renaming a
+    # symbol in asm is byte-safe (names are not in the ROM). Scoped var/field
+    # loops key off manifest file paths, so they never touch these.
+    for extra in [REPO / "linker.ld", *REPO.glob("asm/**/*.s"), *REPO.glob("sound/**/*.s")]:
+        rp = extra.resolve()
+        if extra.exists() and rp not in contents:
+            try:
+                contents[rp] = extra.read_text(errors="replace")
+            except OSError:
+                pass
     touched = {}  # path -> count summary list
 
     def note(p, label):
