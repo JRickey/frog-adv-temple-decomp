@@ -38,6 +38,14 @@ struct Rect2 {
     s16 _field_4;
 };
 
+typedef struct FrameDescriptor {
+    u16 x;
+    u16 y;
+    u16 w;
+    u16 h;
+    const u16 *tile_data;
+} FrameDescriptor;
+
 u8 TileMap_GetCell(u32 x, u32 y);
 
 void ScrollCamera_Update(u8 countArg);

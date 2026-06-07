@@ -1,13 +1,6 @@
+#include "gfx.h"
 #include "macros.h"
 #include "types.h"
-
-typedef struct {
-    u16 x;
-    u16 y;
-    u16 w;
-    u16 h;
-    const u16 *tile_data;
-} FrameDescriptor;
 
 extern const FrameDescriptor sFrogStatusBarFrames[];
 

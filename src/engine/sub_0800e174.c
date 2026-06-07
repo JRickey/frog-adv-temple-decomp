@@ -3,13 +3,7 @@
 
 /* --- UpdateBgTilemapFrames: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
 #ifdef NON_MATCHING
-typedef struct {
-    u16 x;
-    u16 y;
-    u16 w;
-    u16 h;
-    const u16 *tile_data;
-} FrameDescriptor;
+#include "gfx.h"
 
 extern const FrameDescriptor *const sSpriteAnimFrameSet_06824[];
 
