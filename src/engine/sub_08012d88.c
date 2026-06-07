@@ -2,13 +2,6 @@
 #include "gfx.h"
 #include "types.h"
 
-struct TransferDesc {
-    u32 word0;
-    u32 word4;
-    u32 word8;
-    u32 wordC;
-};
-
 extern u8 gIwram_60A0[];
 extern u8 gIwram_6410[];
 extern u8 gIwram_6400[];

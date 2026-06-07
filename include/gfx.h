@@ -7,6 +7,13 @@
  * helpers in src/engine, centralized from per-caller ad-hoc externs
  * (see tools/agent/unify_prototype.py). */
 
+struct TransferDesc {
+    u32 word0;
+    u32 word4;
+    u32 word8;
+    u32 wordC;
+};
+
 u8 TileMap_GetCell(u32 x, u32 y);
 
 void ScrollCamera_Update(u8 countArg);

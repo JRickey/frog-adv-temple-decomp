@@ -1,3 +1,4 @@
+#include "gfx.h"
 #include "macros.h"
 #include "types.h"
 
@@ -34,13 +35,6 @@ void sub_08013FCC(void)
  * staging the two transfers into IWRAM at 0x03006500 / 0x03006580. The
  * struct-by-value first argument is load-bearing for matching: it keeps agbcc
  * from precomputing the four word loads ahead of the stack-argument stores. */
-struct TransferDesc {
-    u32 word0;
-    u32 word4;
-    u32 word8;
-    u32 wordC;
-};
-
 extern void DmaJob_Advance(struct TransferDesc desc, u8 mode, void *buf);
 extern void sub_08010A44(u8 a, u8 b);
 extern void FrogStatusBar_Update(void);

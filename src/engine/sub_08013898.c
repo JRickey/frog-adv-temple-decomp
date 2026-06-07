@@ -1,12 +1,6 @@
+#include "gfx.h"
 #include "macros.h"
 #include "types.h"
-
-struct TransferDesc {
-    u32 word0;
-    u32 word4;
-    u32 word8;
-    u32 wordC;
-};
 
 extern void SetModeBlendRegs(void);
 extern void BgScrollAnim_Update(void);

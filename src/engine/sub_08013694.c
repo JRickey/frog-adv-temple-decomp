@@ -3,13 +3,6 @@
 #include "types.h"
 #include "game.h"
 
-struct TransferDesc {
-    u32 word0;
-    u32 word4;
-    u32 word8;
-    u32 wordC;
-};
-
 struct IwramAt64C0 {
     u8 _pad00[10];
     u8 field_a; /* +0x0a: cleared on init */

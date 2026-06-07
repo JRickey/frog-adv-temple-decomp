@@ -3,13 +3,6 @@
 #include "types.h"
 #include "iwram.h"
 
-struct TransferDesc {
-    u32 word0;
-    u32 word4;
-    u32 word8;
-    u32 wordC;
-};
-
 struct IwramAt6480 {
     u8 _pad00[4];
     u32 field_4;
