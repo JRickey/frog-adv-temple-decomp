@@ -84,18 +84,22 @@ grid levels, one tile at a time.
 ## Mapping onto known data (decomp ↔ game) — (inferred unless noted)
 - **Grid unit = 24**: entity X/Y are sub-coordinates; `coord / 24` = tile index
   (the `*24` / `/24` math throughout). A tile is 24 units. (verify exact unit.)
-- **Entity pool** `gEntities[128]` (0x03003720, 0x38 stride): `field_00` =
-  kind/type byte; `x`/`y` (+2/+4) = sub-coords; `field_06` = active actor id;
-  `field_0A` = entity-type id (keys the sEntityProc* tables); `field_1A` = move
-  opcode / dispatch state (the 4..11 directional move opcodes); `field_1B` =
-  active-entity count (slot 0 only); `field_24/26` = AABB half-extents (collision
+- **Entity pool** `gEntities[128]` (0x03003720, 0x38 stride): `kind` (+0) =
+  variant tag; `x`/`y` (+2/+4) = sub-coords; `actorId` (+6) = active actor id
+  (matched against a spawn record's +8 by Entity_CheckEngage); `field_0A` =
+  entity-type id (keys the sEntityProc* tables); `state` (+0x1A) = dispatch state
+  (the 4..11 directional move opcodes in slot 0); `field_1B` = active-entity
+  count (slot 0 only); `hitHalfW/H` (+0x24/26) = AABB half-extents (collision
   box); `field_2A/30/31/32` = MotionDesc (sel / dx / dy / mode = movement);
-  `status` (+0x34) = flag bits (0x04/0x08/0x40/0x8000).
+  `status` (+0x34) = flag bits (0x04/0x08/0x40/0x8000). [named: kind, actorId,
+  state, collisionType, hitHalfW/H, status — model-B common header in iwram.h]
 - **Player = entity slot 0** ("the player header"); other slots are
   enemies/objects/collectibles.
-- **`gGameStuff`** (0x03005330): `mode` = top-level GameMode; `pendingMode` =
-  scene/level-type id (keys sEntityProc*); `rngSeed`; `_unk0C` = unlocked-worlds
-  bitmap (→ the 5 worlds); `_step24` = attract-cycle counter.
+- **`gGameStuff`** (0x03005330): `mode` = top-level GameMode; `sceneType` (+0xA) =
+  scene/level-type id (keys sEntityProc*); `rngSeed`; `unlockedWorlds` (+0xC) =
+  progression bitmap (bit per stage; GetHighestUnlockedWorld reads the top bit);
+  `attractStep` (+0x24) = 0→1→2→0 attract-cycle counter. Still `_unkNN`: +0/+4/
+  +0x10/+0x14/+0x18/+0x22.
 - **`gIwram_35E0`** = player move/input scratch: tile coords (`_field_8/_A`),
   entity tile coords (`_field_18/19`), latched target id (`_field_1A`),
   committed move-destination tile (`_field_1C/1E`), flags (`_field_10`: bit
