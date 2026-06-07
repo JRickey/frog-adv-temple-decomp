@@ -67,6 +67,13 @@ struct DmaDesc2Entry {
     u16 _pad0e;
 };
 
+struct ScrollData {
+    u32 f0;
+    u32 f1;
+    u32 f2;
+    u32 f3;
+};
+
 u8 TileMap_GetCell(u32 x, u32 y);
 
 void ScrollCamera_Update(u8 countArg);

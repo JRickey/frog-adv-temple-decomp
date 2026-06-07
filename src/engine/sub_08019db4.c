@@ -1,14 +1,8 @@
+#include "gfx.h"
 #include "gba/io.h"
 #include "types.h"
 
 extern void Scroll_FlushTilemapWindow(u32, void *, void *);
-
-struct ScrollData {
-    u32 f0;
-    u32 f1;
-    u32 f2;
-    u32 f3;
-};
 
 struct Unk03006420 {
     u32 active;

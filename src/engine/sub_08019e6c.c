@@ -1,4 +1,5 @@
 #include "game.h"
+#include "gfx.h"
 #include "sound.h"
 #include "gba/dma.h"
 #include "gba/io.h"
@@ -10,13 +11,6 @@ extern void EntityPool_Reset(void);
 extern void sub_08019A14(void);
 extern void Sound_DrainIfActive(void);
 extern const u8 sRoomDmaTable_080C1254[];
-
-struct ScrollData {
-    u32 f0;
-    u32 f1;
-    u32 f2;
-    u32 f3;
-};
 
 struct Unk03006420 {
     u32 active;
