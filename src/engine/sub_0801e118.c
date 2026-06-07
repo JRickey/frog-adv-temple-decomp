@@ -1,4 +1,5 @@
 #include "game.h"
+#include "gfx.h"
 #include "types.h"
 #include "gba/dma.h"
 
@@ -13,7 +14,6 @@ extern void Credits_InitScrollPage1(u8 arg);
 extern u16 Input_Poll(void);
 extern u8 Credits_Tick(u8 arg);
 extern void IrisClose(u8 a, u8 b);
-extern u8 Blend_StartFade(u8 arg);
 extern s32 Blend_StepFade(void);
 extern u8 Credits_ScrollTick(u8 arg);
 

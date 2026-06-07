@@ -1,6 +1,6 @@
+#include "gfx.h"
 extern void ModeControl_Init(unsigned int a, unsigned int b, unsigned int c, unsigned int d, unsigned int e,
                              unsigned int f);
-extern void SpriteAsset_LoadSheet(unsigned int a, unsigned int b);
 extern void EntityDispatch_RunFrame(void);
 
 void Mode13_Init(void)

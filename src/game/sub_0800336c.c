@@ -1,4 +1,5 @@
 #include "game.h"
+#include "gfx.h"
 #include "sound.h"
 #include "iwram.h"
 #include "macros.h"
@@ -29,7 +30,6 @@ extern u16 PollKeys_DPad(void);
 extern void Scene_LoadBg(void);
 extern void GameMode_SceneTick(void *arg, void *buf);
 extern u8 Scene_FadeUpdate(void);
-extern u8 Blend_StartFade(u8 arg);
 extern u8 Blend_StepFade(void);
 extern void EntityParam_Reset(void);
 extern void WaitVblank(void);
@@ -158,7 +158,6 @@ void Scene17_LoadPart(void *buf)
     EntityScript_BuildSlotData(6, buf);
 }
 
-extern void SpriteAsset_LoadSheet(u32 a, u32 b);
 extern void EntityDispatch_RunFrame(void);
 
 /* Sibling of Scene06_Init/Scene_Init_04. Installs config table 0x082f9aec into

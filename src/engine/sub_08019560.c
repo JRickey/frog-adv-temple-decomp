@@ -1,4 +1,5 @@
 #include "game.h"
+#include "gfx.h"
 #include "iwram.h"
 #include "macros.h"
 #include "types.h"
@@ -23,7 +24,6 @@ void GameMode_Menu25(void)
 extern void SoundMixer_Stop(void);
 extern s32 Screen_TickFlash(void);
 extern u32 GetFrameTick(void);
-extern u8 Blend_StartFade(u8 arg);
 
 void Menu25_WaitFadeIn(void)
 {

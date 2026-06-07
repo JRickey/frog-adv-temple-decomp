@@ -1,4 +1,5 @@
 #include "game.h"
+#include "gfx.h"
 #include "iwram.h"
 #include "types.h"
 
@@ -49,8 +50,6 @@ void Dispatcher_ResetModeB(void)
     gIwram_3480._data[5] = 0;
     gIwram_34A0.dispatchIdx = 0;
 }
-
-extern u16 Blend_StartFade(u16 arg);
 
 void Dispatcher_ResetModeC(void)
 {

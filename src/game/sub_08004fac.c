@@ -1,4 +1,5 @@
 #include "game.h"
+#include "gfx.h"
 #include "entity.h"
 #include "iwram.h"
 #include "macros.h"
@@ -29,7 +30,6 @@ extern void Player_CheckTileEvents(void);
 extern void SpawnCycle_Update(u8 *buf0, u32 *out0, u8 *buf1, u32 *out1);
 extern void sub_0800BE18(u8 *slots, u32 *out, s8 type);
 extern u8 Scene_FadeUpdate(void);
-extern u8 Blend_StartFade(u8 arg);
 extern u8 Blend_StepFade(void);
 extern void BgTilemap_LoadScene(void);
 extern void Game_FrameEnd(void);

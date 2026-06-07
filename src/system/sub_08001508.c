@@ -1,4 +1,5 @@
 #include "game.h"
+#include "gfx.h"
 #include "iwram.h"
 #include "macros.h"
 #include "types.h"
@@ -18,7 +19,6 @@ extern void Entity_UpdateHitboxWithTile(void *ent, void *arg1, u32 kind);
 extern u32 Tilemap_GetTileClass(u8 col, u8 row, s32 tileX, s32 tileY);
 extern void Entity_ActivateHitSlot(void *ent, void *arg1, u32 kind, u32 tile);
 extern u8 Scene_FadeUpdate(void);
-extern u8 Blend_StartFade(u8 arg);
 extern u8 Blend_StepFade(void);
 extern void EntityParam_Reset(void);
 extern void Game_FrameEnd(void);

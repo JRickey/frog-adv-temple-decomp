@@ -1,4 +1,5 @@
 #include "game.h"
+#include "gfx.h"
 #include "entity.h"
 #include "iwram.h"
 #include "macros.h"
@@ -23,7 +24,6 @@ extern void TileArrival_UpdateModeFlags(u8 arg);
 extern void Scene_EnterLevel(void);
 extern void Entity_InitShadow(void);
 extern u8 Scene_FadeUpdate(void);
-extern u8 Blend_StartFade(u8 arg);
 extern u8 Blend_StepFade(void);
 extern void Game_FrameEnd(void);
 

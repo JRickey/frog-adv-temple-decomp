@@ -1,9 +1,9 @@
 #include "game.h"
+#include "gfx.h"
 #include "iwram.h"
 #include "macros.h"
 #include "types.h"
 
-extern void SpriteAsset_LoadSheet(u32 a, u32 b);
 extern void EntityDispatch_RunFrame(void);
 extern void BgMap_WriteTileAttr(u8 col, u8 row, u32 a, u32 b, u32 c);
 

@@ -1,4 +1,5 @@
 #include "game.h"
+#include "gfx.h"
 #include "iwram.h"
 #include "types.h"
 
@@ -23,7 +24,6 @@ struct EntityBounds0800A158 {
 };
 
 extern u8 Rect_PointInRect(void *ctx, struct PackedRect0800A158 rect, s16 c, s16 d);
-extern u16 Blend_StartFade(u16 arg);
 extern int Blend_StepFade(void);
 extern u16 Screen_BeginFlash(u16 arg);
 extern int Screen_TickFlash(void);

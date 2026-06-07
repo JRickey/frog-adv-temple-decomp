@@ -1,9 +1,9 @@
 #include "game.h"
+#include "gfx.h"
 #include "iwram.h"
 #include "macros.h"
 #include "types.h"
 
-extern void SpriteAsset_LoadSheet(u32 a, u32 b);
 extern void EntityDispatch_RunFrame(void);
 
 extern void Entity_InitHitboxSlots(u32 arg);

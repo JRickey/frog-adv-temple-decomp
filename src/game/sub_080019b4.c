@@ -1,4 +1,5 @@
 #include "game.h"
+#include "gfx.h"
 #include "iwram.h"
 #include "types.h"
 
@@ -19,7 +20,6 @@ extern void Player_CheckTileEvents(void);
 extern void Scene12_UpdateTileInteraction(void *buf, void *r4_obj);
 extern void ModeControl_ClearBit(void *base, u32 idx, u32 val);
 extern u8 Scene_FadeUpdate(void);
-extern u8 Blend_StartFade(u8 arg);
 extern u8 Blend_StepFade(void);
 extern void EntityParam_Reset(void);
 extern void Game_FrameEnd(void);

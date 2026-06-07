@@ -1,4 +1,5 @@
 #include "game.h"
+#include "gfx.h"
 #include "sound.h"
 #include "iwram.h"
 #include "macros.h"
@@ -17,7 +18,6 @@ void Mode14_Setup(u8 *buf, u32 arg1, u32 arg2)
     Entity_UpdateHitboxSlots(arg1, arg2, 17);
 }
 
-extern void SpriteAsset_LoadSheet(u32 a, u32 b);
 extern void EntityDispatch_RunFrame(void);
 
 void Mode15_Setup(void)

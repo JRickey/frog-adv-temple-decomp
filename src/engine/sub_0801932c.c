@@ -1,4 +1,5 @@
 #include "iwram.h"
+#include "gfx.h"
 #include "macros.h"
 #include "types.h"
 #include "gba/dma.h"
@@ -12,7 +13,6 @@ extern const void *const sUiAssetSlots[];
 extern s32 Blend_StepFade(void);
 extern s32 Screen_TickFlash(void);
 extern u16 Screen_BeginFlash(u16 arg);
-extern u16 Blend_StartFade(u16 arg);
 extern void WaitFrames(u32 delay);
 
 /* Status-bar reload + forced fade cycle. Bails while the fade-in ticker

@@ -1,4 +1,5 @@
 #include "game.h"
+#include "gfx.h"
 #include "entity.h"
 #include "iwram.h"
 #include "macros.h"
@@ -19,7 +20,6 @@ extern void Entity_CheckAllCollisions(void);
 extern void Player_CheckTileEvents(void);
 extern void Entity_UpdateHudState(void);
 extern u8 Scene_FadeUpdate(void);
-extern u8 Blend_StartFade(u8 arg);
 extern u8 Blend_StepFade(void);
 extern void BgMap_WriteTileAttr(u8 col, u8 row, u32 a, u32 b, u32 c);
 extern void Game_FrameEnd(void);

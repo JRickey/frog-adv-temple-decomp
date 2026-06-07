@@ -1,10 +1,10 @@
 #include "game.h"
+#include "gfx.h"
 #include "iwram.h"
 #include "types.h"
 
 extern void Entity_UpdateHitboxSlots(u32 a, u32 b, u8 c);
 
-extern void SpriteAsset_LoadSheet(u32 a, u32 b);
 extern void EntityDispatch_RunFrame(void);
 
 /* Thin wrapper around Entity_UpdateHitboxSlots — sets gGameStuff.pendingMode = 1 then

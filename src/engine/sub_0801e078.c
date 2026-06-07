@@ -1,4 +1,5 @@
 #include "gba/dma.h"
+#include "gfx.h"
 #include "gba/io.h"
 #include "types.h"
 
@@ -7,7 +8,6 @@ extern const u16 sScreenTilemapCF78[1024];
 extern u16 Screen_BeginFlash(u16 arg);
 extern s32 Screen_TickFlash(void);
 extern void WaitFrames(u32 delay);
-extern u8 Blend_StartFade(u8 arg);
 extern s32 Blend_StepFade(void);
 
 void Credits_FadeTransition(void)

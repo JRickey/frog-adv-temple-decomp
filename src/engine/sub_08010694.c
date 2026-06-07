@@ -1,4 +1,5 @@
 #include "macros.h"
+#include "gfx.h"
 #include "types.h"
 
 /* Fade/transition init helper. Sets the IWRAM countdown at 0x03006538

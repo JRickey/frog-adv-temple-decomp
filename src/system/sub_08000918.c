@@ -1,4 +1,5 @@
 #include "game.h"
+#include "gfx.h"
 #include "iwram.h"
 #include "types.h"
 
@@ -16,7 +17,6 @@ extern void Scene_DisableBg2(void);
 extern void Mode8_StateStep(u8 *state, u32 a, u32 b);
 extern u32 Scene08_MapScreenTick(void);
 extern u8 Scene_FadeUpdate(void);
-extern u8 Blend_StartFade(u8 arg);
 extern u8 Blend_StepFade(void);
 extern void EntityParam_Reset(void);
 extern void WaitVblank(void);
