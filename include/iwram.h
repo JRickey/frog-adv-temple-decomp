@@ -102,7 +102,7 @@ struct Entity {
     u8 collisionType; /* +0x01 */
     s16 x;            /* +0x02: X sub-coordinate (signed; /24 -> tile X) */
     s16 y;            /* +0x04: Y sub-coordinate (signed; /24 -> tile Y) */
-    u8 field_06;      /* +0x06: active actor id (matched against entry+8 by Entity_CheckEngage) */
+    u8 actorId;       /* +0x06: active actor id (matched against entry+8 by Entity_CheckEngage) */
     u8 field_07[3];   /* +0x07..+0x09 */
     u8 field_0A;      /* +0x0A: scene/entity-type id (keys sEntityProc* tables) */
     u8 field_0B[5];   /* +0x0B..+0x0F */

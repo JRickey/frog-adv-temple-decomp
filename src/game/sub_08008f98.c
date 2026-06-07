@@ -53,7 +53,7 @@ void Player_FindNearbyInteractable(void)
 
         if (e->status & 4)
             continue;
-        if (gEntities[0].field_06 != e->field_06)
+        if (gEntities[0].actorId != e->actorId)
             continue;
 
         right = (u16)(e->y + e->hitHalfH);

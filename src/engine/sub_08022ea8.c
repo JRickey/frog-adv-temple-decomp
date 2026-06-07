@@ -20,6 +20,6 @@ void LevelLayout_SpawnGroup311C80(void)
                          3);
 
         if (i <= 2)
-            gEntities_03003720[i + 0x32].field_06 = 2;
+            gEntities_03003720[i + 0x32].actorId = 2;
     }
 }

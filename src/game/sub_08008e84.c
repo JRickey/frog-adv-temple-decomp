@@ -62,7 +62,7 @@ u8 Entity_ProbeDir(u8 dir)
 
         if (e->status & 4)
             continue;
-        if (gEntities_03003720[0].field_06 != e->field_06)
+        if (gEntities_03003720[0].actorId != e->actorId)
             continue;
         if (e->collisionType != 3)
             continue;

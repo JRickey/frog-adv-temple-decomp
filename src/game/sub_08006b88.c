@@ -991,7 +991,7 @@ u8 Entity_CheckEngage(struct EngageEntry *entries, s8 count)
         if ((e->state & 1) != 0)
             continue;
 
-        if (gEntities[0].field_06 != e->matchId)
+        if (gEntities[0].actorId != e->matchId)
             continue;
 
         if (!Rect_PointInCenterRect(gEntities, e))

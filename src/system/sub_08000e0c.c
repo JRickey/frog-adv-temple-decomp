@@ -34,11 +34,11 @@ void Scene09_UpdatePlayerTile(void *ent, u32 arg1)
     firstCoord = 0x001c0006;
     coordAlias = coord;
     if (coordAlias == firstCoord)
-        gEntities[0].field_06 = 2;
+        gEntities[0].actorId = 2;
     if (coordAlias == 0x001c0007)
-        gEntities[0].field_06 = 3;
+        gEntities[0].actorId = 3;
     if (coordAlias == 0x001c000d)
-        gEntities[0].field_06 = 3;
+        gEntities[0].actorId = 3;
     if (coord == 0x001c000e)
-        gEntities[0].field_06 = 2;
+        gEntities[0].actorId = 2;
 }

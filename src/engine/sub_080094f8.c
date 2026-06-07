@@ -53,7 +53,7 @@ void Entity_CheckAllCollisions(void)
             continue;
         if (st & 4)
             continue;
-        if (gEntities_03003720[0].field_06 != e->field_06)
+        if (gEntities_03003720[0].actorId != e->actorId)
             continue;
 
         Entity_DispatchSound(e);

@@ -30,7 +30,7 @@ void LevelEntityBatch_SpawnAndClassify(void)
     base = gEntities;
     for (; i <= 0x58; i++) {
         entity = (struct Entity *)(i * 56 + (s32)base);
-        entity->field_06 = 3;
+        entity->actorId = 3;
 
         if (entity->y > 0x89)
             continue;
@@ -39,11 +39,11 @@ void LevelEntityBatch_SpawnAndClassify(void)
          * windowed range) so agbcc emits the signed load first, matching
          * the baserom's load order. */
         if (entity->x <= 940)
-            entity->field_06 = 2;
+            entity->actorId = 2;
         if ((u16)((u16)entity->x - 1050) <= 0x3A)
-            entity->field_06 = 2;
+            entity->actorId = 2;
         if (entity->x > 1193)
-            entity->field_06 = 2;
+            entity->actorId = 2;
     }
 }
 

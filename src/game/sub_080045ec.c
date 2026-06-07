@@ -15,7 +15,7 @@ extern u32 Tilemap_GetTileClass(u8 col, u8 row, s16 tileX, s16 tileY);
  *
  * Gated on IsFlagMaskSet(&gIwram_35E0, 0x40), a cascade of coordinate tests over
  * the cached tile X (gIwram_35E0._field_8) / Y (gIwram_35E0._field_A) stamps the
- * scenery class into gEntities[0].field_06 and clears gIwram_35E0._field_1A. The
+ * scenery class into gEntities[0].actorId and clears gIwram_35E0._field_1A. The
  * tail then fires IwramFlags_Clear for ten coord/x/y range gates.
  *
  * Matching notes (agbcc 2.x):
@@ -59,7 +59,7 @@ void Player_HandleTileTransitions(void *arg0, void *arg1)
     if (f8a == 13 || f8a == 6) {
         fAa = p35E0->_field_A;
         if (fAa == 23 || fAa == 21) {
-            gEntities->field_06 = 3;
+            gEntities->actorId = 3;
             p35E0->_field_1A = 0;
         }
     }
@@ -67,7 +67,7 @@ void Player_HandleTileTransitions(void *arg0, void *arg1)
     if (f8b == 12 || f8b == 5) {
         fAb = gIwram_35E0._field_A;
         if (fAb == 23 || fAb == 21) {
-            gEntities->field_06 = 2;
+            gEntities->actorId = 2;
             gIwram_35E0._field_1A = 0;
         }
     }
@@ -75,7 +75,7 @@ void Player_HandleTileTransitions(void *arg0, void *arg1)
     if (f8c == 8 || f8c == 2) {
         fAc = gIwram_35E0._field_A;
         if (fAc == 23 || fAc == 21) {
-            gEntities->field_06 = 3;
+            gEntities->actorId = 3;
             gIwram_35E0._field_1A = 0;
         }
     }
@@ -83,7 +83,7 @@ void Player_HandleTileTransitions(void *arg0, void *arg1)
     if (f8d == 9 || f8d == 3) {
         fAd = gIwram_35E0._field_A;
         if (fAd == 23 || fAd == 21) {
-            gEntities->field_06 = 2;
+            gEntities->actorId = 2;
             gIwram_35E0._field_1A = 0;
         }
     }
@@ -91,7 +91,7 @@ void Player_HandleTileTransitions(void *arg0, void *arg1)
     if (fAe == 3) {
         f8e = gIwram_35E0._field_8;
         if (f8e == 13 || f8e == 16 || f8e == 18 || f8e == 19 || f8e == 20) {
-            gEntities->field_06 = 2;
+            gEntities->actorId = 2;
             gIwram_35E0._field_1A = 0;
         }
     }
@@ -99,32 +99,32 @@ void Player_HandleTileTransitions(void *arg0, void *arg1)
     if (fAf == 5) {
         uf = gIwram_35E0._field_8;
         if ((u16)(uf - 12) <= 4 || (s16)uf == 19 || (s16)uf == 20) {
-            gEntities->field_06 = 2;
+            gEntities->actorId = 2;
             gIwram_35E0._field_1A = 0;
         }
     }
     if ((u16)((u16)gIwram_35E0._field_8 - 14) <= 1) {
         if (gIwram_35E0._field_A == 3) {
-            gEntities->field_06 = 3;
+            gEntities->actorId = 3;
             gIwram_35E0._field_1A = 0;
         }
     }
     if ((u16)((u16)gIwram_35E0._field_8 - 17) <= 1) {
         if ((u16)gIwram_35E0._field_A == 5) {
-            gEntities->field_06 = 3;
+            gEntities->actorId = 3;
             gIwram_35E0._field_1A = 0;
         }
     }
     if ((u16)((u16)gIwram_35E0._field_8 - 12) <= 9) {
         if ((u16)gIwram_35E0._field_A == 4) {
-            gEntities->field_06 = 3;
+            gEntities->actorId = 3;
             gIwram_35E0._field_1A = 0;
         }
     }
     p = &gIwram_35E0;
     coord = *(u32 *)&p->_field_8;
     if (coord == 0x00010010 || coord == 0x0005000b || coord == 0x0007000e || coord == 0x0007000f) {
-        gEntities->field_06 = 3;
+        gEntities->actorId = 3;
         gIwram_35E0._field_1A = 0;
     }
 

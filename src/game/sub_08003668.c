@@ -12,7 +12,7 @@
  *
  * The tail does two coordinate-driven dispatches. The first, gated on
  * IsFlagMaskSet(&gIwram_35E0, 0x40), reads the packed tile coordinate
- * (*(u32 *)&gIwram_35E0._field_8) and stamps gEntities[0].field_06 with a
+ * (*(u32 *)&gIwram_35E0._field_8) and stamps gEntities[0].actorId with a
  * scenery class (2 or 3) for a fixed set of coords. The second, gated on
  * gGameStuff._unk10 & 1 being clear, OR-bits 0x200 into gIwram_35E0 via
  * PlayerFlags_Set for another fixed coord set.
@@ -76,19 +76,19 @@ void Scene_UpdateCollisionAndTile(u32 arg0, u32 arg1, u32 arg2, u32 arg3, void *
         k0 = 0x005e0002;
         c = coord;
         if (c == k0)
-            p3720->field_06 = 2;
+            p3720->actorId = 2;
         if (c == 0x00590000)
-            p3720->field_06 = 2;
+            p3720->actorId = 2;
         if (c == 0x00590001)
-            p3720->field_06 = 2;
+            p3720->actorId = 2;
         if (c == 0x005d0002)
-            p3720->field_06 = 3;
+            p3720->actorId = 3;
         if (c == 0x005e0003)
-            p3720->field_06 = 3;
+            p3720->actorId = 3;
         if (c == 0x005f0002)
-            p3720->field_06 = 3;
+            p3720->actorId = 3;
         if (coord == 0x00580002)
-            p3720->field_06 = 3;
+            p3720->actorId = 3;
     }
 
     gs = &gGameStuff;

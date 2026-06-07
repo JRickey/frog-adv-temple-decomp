@@ -85,7 +85,7 @@ s32 CollisionTable_ScanForPlayer(unsigned int baseIn, s8 count)
                 shifted = shiftedTmp;
                 if (stateMask == 4) {
                     player = gEntities_03003720;
-                    playerKey = player->field_06;
+                    playerKey = player->actorId;
                     arg4 = playerKey;
                     if (arg4 == entry->matchKey) {
                         arg4 = 0;

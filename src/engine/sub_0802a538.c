@@ -39,7 +39,7 @@ struct Entity {
     u8 field_01;
     s16 x;
     s16 y;
-    u8 field_06;
+    u8 actorId;
     u8 field_07[3];
     u8 field_0A;
     u8 field_0B[5];

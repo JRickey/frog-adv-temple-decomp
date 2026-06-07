@@ -20,7 +20,7 @@ void SpawnVarHeightEntities(void)
     i = 5;
     do {
         struct Entity *elt = (struct Entity *)((i + 0x36) * 56 + (s32)gEntities);
-        elt->field_06 = 2;
+        elt->actorId = 2;
         i++;
     } while (i <= 7);
 }

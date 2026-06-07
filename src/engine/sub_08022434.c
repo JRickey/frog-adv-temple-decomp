@@ -46,7 +46,7 @@ void UpdateLogPairEntities(void)
             y = slot->y;
             if (y > 0x311) {
                 slot->field_17 = 2;
-                slot->field_06 = 2;
+                slot->actorId = 2;
             }
             if ((slot->y - 767) % 24 == 13) {
                 slot->state = (slot->state != 1);
@@ -69,7 +69,7 @@ void UpdateLogPairEntities(void)
             y = slot->y;
             if (y > 0x311) {
                 slot->field_17 = 2;
-                slot->field_06 = 2;
+                slot->actorId = 2;
             }
             if ((slot->y - 767) % 24 == 0) {
                 slot->state = (slot->state != 1);
@@ -101,7 +101,7 @@ void UpdateLogPairEntities(void)
                 Sound_PlayNearEntity(slot, 14, 3, 3);
             if (slot->status & 0x8000) {
                 slot->y = resetY;
-                slot->field_06 = 4;
+                slot->actorId = 4;
                 slot->field_17 = 3;
             }
             break;

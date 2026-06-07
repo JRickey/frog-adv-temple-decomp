@@ -100,7 +100,7 @@ void SpawnEntityGroup_Slot0C(void)
     for (; i < 6; i++) {
         slot = i;
         slot += 12;
-        ((struct Entity *)(slot * 56 + (s32)baseCopy))->field_06 = value;
+        ((struct Entity *)(slot * 56 + (s32)baseCopy))->actorId = value;
     }
 
     ptr = (u8 *)base + 0x57e;
@@ -146,15 +146,15 @@ void EntityGroup_UpdateMovers(void)
         if (i <= 3) {
             entity = (struct Entity *)((i + 42) * 56 + (s32)base);
             if (entity->state == 1)
-                entity->field_06 = 2;
+                entity->actorId = 2;
             else
-                entity->field_06 = 3;
+                entity->actorId = 3;
         } else {
             entity = (struct Entity *)((i + 42) * 56 + (s32)base);
             if (entity->state == 1)
-                entity->field_06 = 3;
+                entity->actorId = 3;
             else
-                entity->field_06 = 2;
+                entity->actorId = 2;
         }
     }
 

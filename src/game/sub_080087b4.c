@@ -108,7 +108,7 @@ u8 Entity_CheckTouchEnemy(u8 arg0, u8 arg1)
         flags = e->status;
         if (flags & 4)
             continue;
-        if (((struct Entity *)base)->field_06 != e->field_06)
+        if (((struct Entity *)base)->actorId != e->actorId)
             continue;
         if (e->x <= yLo)
             continue;
