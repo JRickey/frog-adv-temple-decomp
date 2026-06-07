@@ -1,18 +1,10 @@
 #include "gba/dma.h"
+#include "gfx.h"
 #include "sound.h"
 #include "gba/io.h"
 #include "iwram.h"
 #include "save.h"
 #include "types.h"
-
-/* 16-byte screen-install argument block passed by value to Screen_Install.
- * Same shape as WinPoseScreen_Init's installer (the sibling screen-setup routine). */
-struct ScreenInstallArgs {
-    u32 _unk00;
-    const void *tilemap1;
-    const void *tilemap2;
-    u32 _unk0C;
-};
 
 extern void Bg_InitMode0(void);
 extern void Screen_InstallOamA(s32 a, s32 b, s32 c, s32 d);

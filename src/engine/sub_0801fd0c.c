@@ -1,4 +1,5 @@
 #include "game.h"
+#include "gfx.h"
 #include "sound.h"
 #include "gba/dma.h"
 #include "gba/io.h"
@@ -6,17 +7,6 @@
 #include "types.h"
 
 extern const u16 sWinPoseSpriteCoords[];
-
-/* Screen_Install takes three leading scalars, a 16-byte struct by value, and a
- * trailing scalar. The struct is materialised on the caller's stack and passed
- * as r3 + [sp+0..8]; the trailing scalar lands in [sp+12]. Same call shape as
- * FileSelect_Init's installer (the sibling screen-setup routine). */
-struct ScreenInstallArgs {
-    u32 _unk00;
-    const void *tilemap1;
-    const void *tilemap2;
-    u32 _unk0C;
-};
 
 extern void Screen_ClearBlocks(s32 mode);
 extern void Screen_Install(s32 flag, s32 a, s32 b, struct ScreenInstallArgs args, s32 last);

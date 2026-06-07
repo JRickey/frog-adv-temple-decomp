@@ -25,6 +25,13 @@ struct TilemapTableEntry {
     u8 pad14[4];
 };
 
+struct ScreenInstallArgs {
+    u32 _unk00;
+    const void *tilemap1;
+    const void *tilemap2;
+    u32 _unk0C;
+};
+
 u8 TileMap_GetCell(u32 x, u32 y);
 
 void ScrollCamera_Update(u8 countArg);

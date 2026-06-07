@@ -258,13 +258,6 @@ void Menu25_SetupRects(void)
     gIwram_34B8._data[3] = 0x18;
 }
 
-struct ScreenInstallArgs {
-    u32 _unk00;
-    const void *tilemap1;
-    const void *tilemap2;
-    u32 _unk0C;
-};
-
 extern void Screen_ClearBlocks(s32 mode);
 extern void Screen_Install(s32 flag, s32 a, s32 b, struct ScreenInstallArgs args, s32 last);
 extern void WinPoseScreen_LoadSprites(void);
