@@ -6,7 +6,6 @@ extern void Entity_UpdateHitboxWithTile(void *ent, u32 arg1, u32 kind);
 extern void Entity_ActivateHitSlot(void *ent, u32 arg1, u32 kind, u32 tile);
 extern u32 Tilemap_GetTileClass(u8 col, u8 row, s32 tileX, s32 tileY);
 extern void Frog_ProcessTileContact(u8 tile);
-extern u32 IsFlagMaskSet(void *p, u16 mask);
 
 void Scene09_UpdatePlayerTile(void *ent, u32 arg1)
 {

@@ -7,7 +7,6 @@ extern void Entity_UpdateHitboxWithTile(void *ent, u32 arg1, u32 kind);
 extern void Entity_ActivateHitSlot(void *ent, u32 arg1, u32 kind, u32 tile);
 extern void Gate_HandleGateTile(u8 tile);
 extern u32 Tilemap_GetTileClass(u8 col, u8 row, s16 tileX, s16 tileY);
-extern u8 IsFlagMaskSet(struct IwramAt35E0 *p, u32 mask);
 extern void IwramFlags_Clear(struct IwramAt35E0 *p, u32 mask);
 
 /* Single-entity-pair variant of the Scene20_UpdateParts tile-cache probe (kind 17).

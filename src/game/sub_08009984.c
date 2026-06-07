@@ -22,7 +22,6 @@
 
 extern u32 Tilemap_GetTileClass(u8 col, u8 row, s32 tileX, s32 tileY);
 extern void TileSound_Update(u8 tile);
-extern u32 IsFlagMaskSet(struct IwramAt35E0 *p, u32 mask);
 extern void Player_HandleTileCollision(u8 tile);
 extern u32 TileCell_GetPropertyB(u8 col, u8 row, s32 tileX, s32 tileY);
 

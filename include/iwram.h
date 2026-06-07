@@ -218,4 +218,6 @@ void ModeControl_SetBit(void *unused, s32 bits);
 
 void PlayerFlags_Set(void *p, u16 mask);
 
+u8 IsFlagMaskSet(void *p, u16 mask);
+
 #endif /* GUARD_IWRAM_H */
