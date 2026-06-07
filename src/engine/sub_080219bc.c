@@ -29,7 +29,7 @@ void Entity_FollowPath(const void *base, u8 idx)
     ents = gEntities;
     e = ents + idx;
     recIdx = e->field_33;
-    dir = e->field_1A;
+    dir = e->state;
 
     if (e->status & 2)
         goto tail;

@@ -62,7 +62,7 @@ void GateRoom_Tick(void)
 
     if (ModeControl_GetFlag(ctrl, 3, 5)) {
         GateRoom_InitScrollParams();
-        gEntities[22].field_1A = gate;
+        gEntities[22].state = gate;
         gEntities[22].status |= 2;
         ModeControl_ClearBit(ctrl, 3, 5);
         return;
@@ -109,7 +109,7 @@ void GateRoom_Tick(void)
             return;
     }
 
-    if ((u8)(gEntities[0].field_1A - 8) <= 3)
+    if ((u8)(gEntities[0].state - 8) <= 3)
         return;
 
     Sound_Play(0x5b);

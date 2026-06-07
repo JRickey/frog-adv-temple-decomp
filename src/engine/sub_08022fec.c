@@ -32,7 +32,7 @@ void UpdateLogPairEntities2(void)
         register u8 slot asm("r6") = i + 0x5B;
 
         entity = (struct Entity *)((i + 0x5B) * 56 + (s32)base);
-        switch (entity->field_1A) {
+        switch (entity->state) {
         case 0:
             if ((entity->status & 2) == 0) {
                 if ((entity->status & 0x8000) != 0)
@@ -49,7 +49,7 @@ void UpdateLogPairEntities2(void)
                 }
                 entity = (struct Entity *)(slot * 56 + (s32)base);
                 if ((entity->status & 0x8000) != 0) {
-                    entity->field_1A = 0;
+                    entity->state = 0;
                     entity->status |= 2;
                 }
             }
@@ -65,11 +65,11 @@ void UpdateLogPairEntities2(void)
     do {
         entity = (struct Entity *)((i + 0x5D) * 56 + (s32)base);
         if ((entity->status & 8) == 0) {
-            switch (entity->field_1A) {
+            switch (entity->state) {
             case 4:
                 if ((u16)(entity->status & 2) == 0) {
                     if (entity->x > 0x86) {
-                        entity->field_1A = 0;
+                        entity->state = 0;
                         entity->status |= 2;
                         MotionDesc_Set((void *)((i + 0x5D) * 56 + (s32)base), 0, 0, 0);
                         if (i == 1)
@@ -85,7 +85,7 @@ void UpdateLogPairEntities2(void)
                     if ((entity->status & 0x8000) != 0) {
                         struct Entity *prev = (struct Entity *)((i + 0x5B) * 56 + (s32)base);
                         prev->status |= 2;
-                        prev->field_1A = 1;
+                        prev->state = 1;
                         entity->status |= 8;
                     }
                 }

@@ -68,7 +68,7 @@ void Player_NormalizeStatusAndUpdate(void)
     asm("" : "+r"(src));
     base = src;
 
-    if (base->field_1A != 0x23)
+    if (base->state != 0x23)
         goto do_call;
 
     f = base->status;

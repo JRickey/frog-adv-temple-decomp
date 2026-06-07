@@ -49,11 +49,11 @@ struct Entity {
     u8 field_16;
     u8 field_17;
     u8 field_18[2];
-    u8 field_1A;
+    u8 state;
     u8 field_1B;
     u8 field_1C[8];
-    s16 field_24;
-    s16 field_26;
+    s16 hitHalfW;
+    s16 hitHalfH;
     u8 field_28;
     u8 field_29;
     u8 field_2A;
@@ -93,11 +93,11 @@ void GateEvent_HandleEntity30(void)
         CtrlFlags_SetBit(&gIwram_6110, 8, 7);
 
         if (gIwram_6110.gateByte == 2) {
-            gEntities_03003720[30].field_1A = RandRange(5) + 3;
+            gEntities_03003720[30].state = RandRange(5) + 3;
         } else if (gIwram_6110.gateByte == 1) {
-            gEntities_03003720[30].field_1A = RandRange(5) + 3;
+            gEntities_03003720[30].state = RandRange(5) + 3;
         } else {
-            gEntities_03003720[30].field_1A = RandRange(3);
+            gEntities_03003720[30].state = RandRange(3);
         }
 
         /* Reload the entity base and index with flat offsets so each access

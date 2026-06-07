@@ -130,12 +130,12 @@ void EnemyWave_Update(void)
         return;
 
     if ((s16)(gIwram_6540.field_36 / 3) == gIwram_35E0._field_A) {
-        if ((u8)(gEntities[0].field_1A - 8) > 3)
+        if ((u8)(gEntities[0].state - 8) > 3)
             PlayerFlags_Set(&gIwram_35E0, 0x2000);
     }
 
     if ((s16)(gIwram_6540.field_34 / 3) == gIwram_35E0._field_8) {
-        if ((u8)(gEntities[0].field_1A - 8) > 3)
+        if ((u8)(gEntities[0].state - 8) > 3)
             PlayerFlags_Set(&gIwram_35E0, 0x2000);
     }
 }

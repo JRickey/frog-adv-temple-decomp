@@ -6,10 +6,10 @@ extern void Entity_Update(void *p);
 
 /* Slot-12 state machine over gEntities[12]. The matching code keeps the
  * gEntities base in a register and reaches the slot-12 fields with the full
- * byte offsets (field_1A at 0x2ba, status at 0x2d4 = 12*0x38 + field offset),
+ * byte offsets (state at 0x2ba, status at 0x2d4 = 12*0x38 + field offset),
  * rather than folding to the slot base 0x030039c0 with small offsets. */
 enum {
-    SLOT12_STATE_OFFSET = 0x2ba,  /* &gEntities[12].field_1A - (u8 *)gEntities */
+    SLOT12_STATE_OFFSET = 0x2ba,  /* &gEntities[12].state - (u8 *)gEntities */
     SLOT12_STATUS_OFFSET = 0x2d4, /* &gEntities[12].status   - (u8 *)gEntities */
     ENTITY_STATUS_QUEUED = 0x0002,
     ENTITY_STATUS_BUSY = 0x8000,

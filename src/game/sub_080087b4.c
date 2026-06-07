@@ -57,7 +57,7 @@ void Entity_LerpPosition(void)
 }
 
 /* Entity_CheckTouchEnemy — directional area attack. Switches on the dispatch state
- * gEntities[0].field_1A (cases 12..15) to fill an axis-aligned box via
+ * gEntities[0].state (cases 12..15) to fill an axis-aligned box via
  * Entity_GetDirHitbox, then walks the active-entity index table for the first
  * record (kind 11) whose centre falls strictly inside the box, latches it
  * (record+0x34 |= 0x84) and returns 1. */
@@ -76,7 +76,7 @@ u8 Entity_CheckTouchEnemy(u8 arg0, u8 arg1)
     s16 yHi;
     s32 i;
 
-    switch (gEntities[0].field_1A) {
+    switch (gEntities[0].state) {
     case 12:
         Entity_GetDirHitbox(0, b, a, b, &xLo, &xHi, &yLo, &yHi);
         break;

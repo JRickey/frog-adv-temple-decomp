@@ -66,8 +66,7 @@ void Entity_AdvanceAnimFrames(s32 slot, s32 endSlot)
     e = (struct Entity *)(base + offset);
     do {
         if ((e->status & 2) != 0) {
-            const SpriteAnimDesc *desc =
-                (const SpriteAnimDesc *)(sSpriteAssetTable[e->field_00].ptr + e->field_1A * 12);
+            const SpriteAnimDesc *desc = (const SpriteAnimDesc *)(sSpriteAssetTable[e->field_00].ptr + e->state * 12);
 
             frame = *(const AnimFrame *)desc->frames;
             e->field_1C[0] = desc->frameCount;
@@ -78,8 +77,8 @@ void Entity_AdvanceAnimFrames(s32 slot, s32 endSlot)
             e->field_01 = frame.field_09;
             e->x += frame.dx;
             e->y += frame.dy;
-            e->field_24 = frame.field_0A;
-            e->field_26 = frame.field_0C;
+            e->hitHalfW = frame.field_0A;
+            e->hitHalfH = frame.field_0C;
             field28[0] = frame.field_0E;
             field28[1] = frame.field_0F;
             e->field_1C[1] = frame.delay;
@@ -96,14 +95,14 @@ void Entity_AdvanceAnimFrames(s32 slot, s32 endSlot)
                 const SpriteAnimDesc *desc;
 
                 e->field_1B = e->field_1B + 1;
-                desc = (const SpriteAnimDesc *)(sSpriteAssetTable[e->field_00].ptr + e->field_1A * 12);
+                desc = (const SpriteAnimDesc *)(sSpriteAssetTable[e->field_00].ptr + e->state * 12);
                 frame = ((const AnimFrame *)desc->frames)[nextFrame];
 
                 e->field_01 = frame.field_09;
                 e->x += frame.dx;
                 e->y += frame.dy;
-                e->field_24 = frame.field_0A;
-                e->field_26 = frame.field_0C;
+                e->hitHalfW = frame.field_0A;
+                e->hitHalfH = frame.field_0C;
                 field28[0] = frame.field_0E;
                 field28[1] = frame.field_0F;
                 e->field_1C[1] = frame.delay;

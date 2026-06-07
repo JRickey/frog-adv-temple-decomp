@@ -130,41 +130,41 @@ void Player_HandleTileTransitions(void *arg0, void *arg1)
 
 tail:
     if ((u16)gIwram_35E0._field_A == 23) {
-        if (gEntities[0].field_1A <= 3 && (u16)(gEntities[0].x - 216) <= 11)
+        if (gEntities[0].state <= 3 && (u16)(gEntities[0].x - 216) <= 11)
             IwramFlags_Clear(&gIwram_35E0, 2);
     }
     if ((u16)gIwram_35E0._field_A == 23) {
-        if (gEntities[0].field_1A <= 3 && (u16)(gEntities[0].x - 72) <= 11)
+        if (gEntities[0].state <= 3 && (u16)(gEntities[0].x - 72) <= 11)
             IwramFlags_Clear(&gIwram_35E0, 2);
     }
     if ((u16)gIwram_35E0._field_A == 21) {
-        if (gEntities[0].field_1A <= 3 && (u16)(gEntities[0].x - 131) <= 13)
+        if (gEntities[0].state <= 3 && (u16)(gEntities[0].x - 131) <= 13)
             IwramFlags_Clear(&gIwram_35E0, 2);
     }
     if ((u16)gIwram_35E0._field_A == 21) {
-        if (gEntities[0].field_1A <= 3 && (u16)(gEntities[0].x - 299) <= 13)
+        if (gEntities[0].state <= 3 && (u16)(gEntities[0].x - 299) <= 13)
             IwramFlags_Clear(&gIwram_35E0, 2);
     }
     if ((u16)gIwram_35E0._field_A == 3) {
-        if (gEntities[0].field_1A <= 3 && (u16)(gEntities[0].x - 328) <= 8)
+        if (gEntities[0].state <= 3 && (u16)(gEntities[0].x - 328) <= 8)
             IwramFlags_Clear(&gIwram_35E0, 2);
     }
     if ((u16)gIwram_35E0._field_A == 3) {
-        if (gEntities[0].field_1A <= 3 && (u16)(gEntities[0].x - 384) <= 5)
+        if (gEntities[0].state <= 3 && (u16)(gEntities[0].x - 384) <= 5)
             IwramFlags_Clear(&gIwram_35E0, 2);
     }
     if ((u16)gIwram_35E0._field_A == 5) {
-        if (gEntities[0].field_1A <= 3 && (u16)(gEntities[0].x - 402) <= 6)
+        if (gEntities[0].state <= 3 && (u16)(gEntities[0].x - 402) <= 6)
             IwramFlags_Clear(&gIwram_35E0, 2);
     }
     if ((u16)gIwram_35E0._field_A == 5) {
-        if (gEntities[0].field_1A <= 3 && (u16)(gEntities[0].x - 456) <= 5)
+        if (gEntities[0].state <= 3 && (u16)(gEntities[0].x - 456) <= 5)
             IwramFlags_Clear(&gIwram_35E0, 2);
     }
     if ((u16)((u16)gIwram_35E0._field_8 - 6) <= 4) {
-        if (gEntities[0].field_1A <= 3 && (u16)(gEntities[0].y - 96) <= 11)
+        if (gEntities[0].state <= 3 && (u16)(gEntities[0].y - 96) <= 11)
             IwramFlags_Clear(&gIwram_35E0, 2);
-        if (gEntities[0].field_1A <= 3 && (u16)(gEntities[0].y - 301) <= 35)
+        if (gEntities[0].state <= 3 && (u16)(gEntities[0].y - 301) <= 35)
             IwramFlags_Clear(&gIwram_35E0, 2);
     }
 }

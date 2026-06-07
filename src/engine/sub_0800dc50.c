@@ -41,7 +41,7 @@ void EntitySpawnDriver(void)
     origin = gGameStuff._unk00;
 
     while ((gGameStuff._unk00 - origin) < sEntityInitTable[gGameStuff.sceneType].settleLimit &&
-           gEntities[0].field_1A <= 3) {
+           gEntities[0].state <= 3) {
         Game_UpdateSubsystems();
         Game_RunEntityFrame();
         WaitVblank();

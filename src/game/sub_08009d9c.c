@@ -356,7 +356,7 @@ u32 Entity_UpdateFrame(u8 *arg, u8 kind)
         *arg = 1;
         LevelCleared_ShowKindLabel(kind);
         e3720init = gEntities;
-        e3720init->field_1A += 29;
+        e3720init->state += 29;
         e3720init->status |= 2;
     } else {
         e3720else = gEntities;
@@ -418,8 +418,8 @@ u32 Entity_UpdateFrame(u8 *arg, u8 kind)
 
 check3720:
     e3720end = e3720;
-    if (e3720end->field_1A > 28) {
-        e3720end->field_1A -= 29;
+    if (e3720end->state > 28) {
+        e3720end->state -= 29;
         e3720end->status |= 2;
     }
 

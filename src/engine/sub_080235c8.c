@@ -54,13 +54,13 @@ void LevelEntity_AnimAndSpawn(void)
 
     for (i = 0; i < 4; i++) {
         entity = (struct Entity *)(i * 56 + 0x1538 + (s32)gEntities);
-        if (entity->field_1A == 0) {
+        if (entity->state == 0) {
             if (entity->field_1B == 1) {
                 Entity_CheckProximityAndPlaySound(entity, 8, 2, 2);
             } else if (entity->field_1B == 7) {
                 Entity_CheckProximityAndPlaySound(entity, 9, 2, 2);
             }
-        } else if (entity->field_1A == 1) {
+        } else if (entity->state == 1) {
             if (entity->field_1B == 3) {
                 Entity_CheckProximityAndPlaySound(entity, 8, 2, 2);
             } else if (entity->field_1B == 9) {

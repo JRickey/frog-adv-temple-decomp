@@ -107,7 +107,7 @@ void Entity_AdvanceWaypoint(u8 *src, int dstIdxArg, int selectorArg, int idxArg,
     MotionDesc_Set(entity, srcRecord[4], buf[0], *dyPtr);
     entity->x = *(u16 *)&srcRecord[0];
     entity->y = *(u16 *)&srcRecord[2];
-    entity->field_1A = result;
+    entity->state = result;
     entity->status |= 2;
     entity->field_33 = idxReg;
 }

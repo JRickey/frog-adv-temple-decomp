@@ -154,7 +154,7 @@ int CmpPair_Compare(const CmpPair *a, const CmpPair *b)
  * (1/2 = vertical, 4/8 = horizontal); coord is the candidate tile
  * coordinate along that axis. Reads the cached tile coords at
  * gIwram_35E0._field_8 (X) / _field_A (Y), and returns:
- *   0    when the actor isn't ready (gEntities[0].field_1A > 3),
+ *   0    when the actor isn't ready (gEntities[0].state > 3),
  *   0xff when the move is blocked by the cached coordinate,
  *   1    otherwise, after recording dir in gIwram_35E0._field_12.
  *
@@ -183,7 +183,7 @@ u8 Scroll_CheckTileStep(u16 dir, s16 coord)
     register int fs asm("r1");
     u16 tmp;
 
-    if (gEntities[0].field_1A > 3)
+    if (gEntities[0].state > 3)
         return 0;
 
     switch (dir) {

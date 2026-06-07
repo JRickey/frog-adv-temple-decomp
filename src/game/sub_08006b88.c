@@ -997,7 +997,7 @@ u8 Entity_CheckEngage(struct EngageEntry *entries, s8 count)
         if (!Rect_PointInCenterRect(gEntities, e))
             continue;
 
-        if (gEntities[0].field_1A > 3 && (gIwram_35E0._field_10 & 0x10) == 0)
+        if (gEntities[0].state > 3 && (gIwram_35E0._field_10 & 0x10) == 0)
             continue;
 
         e->state |= 2;

@@ -67,10 +67,10 @@ u8 Entity_ProbeDir(u8 dir)
         if (e->field_01 != 3)
             continue;
 
-        left = (u16)((e->y + e->field_26) - e->field_29);
-        right = (u16)(e->y + e->field_26);
-        top = (e->x + e->field_24) - (e->field_28 >> 1);
-        bottom = (u16)((e->x + e->field_24) + (e->field_28 >> 1));
+        left = (u16)((e->y + e->hitHalfH) - e->field_29);
+        right = (u16)(e->y + e->hitHalfH);
+        top = (e->x + e->hitHalfW) - (e->field_28 >> 1);
+        bottom = (u16)((e->x + e->hitHalfW) + (e->field_28 >> 1));
 
         if (probeY <= top)
             continue;

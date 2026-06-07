@@ -31,13 +31,13 @@ void EntityGroup_UpdatePickupsA(void)
 
     for (i = 0; i < 4; i++) {
         entity = (struct Entity *)(i * 56 + 0x70 + (s32)gEntities);
-        if (entity->field_1A == 0) {
+        if (entity->state == 0) {
             if (entity->field_1B == 1) {
                 Entity_CheckProximityAndPlaySound(entity, 6, 2, 2);
             } else if (entity->field_1B == 7) {
                 Entity_CheckProximityAndPlaySound(entity, 7, 2, 2);
             }
-        } else if (entity->field_1A == 1) {
+        } else if (entity->state == 1) {
             if (entity->field_1B == 3) {
                 Entity_CheckProximityAndPlaySound(entity, 6, 2, 2);
             } else if (entity->field_1B == 9) {
@@ -56,19 +56,19 @@ void EntityGroup_UpdatePickupsB(void)
 
     for (i = 0; i < 6; i++) {
         entity = (struct Entity *)(i * 56 + 0x150 + (s32)gEntities);
-        if (entity->field_1A == 2) {
+        if (entity->state == 2) {
             if (entity->field_1B == 3) {
                 Entity_CheckProximityAndPlaySound(entity, 9, 2, 2);
             } else if (entity->field_1B == 8) {
                 SoundEntry_Stop(9);
             }
-        } else if (entity->field_1A == 3) {
+        } else if (entity->state == 3) {
             if (entity->field_1B == 5) {
                 Entity_CheckProximityAndPlaySound(entity, 8, 2, 2);
             } else if (entity->field_1B == 10) {
                 SoundEntry_Stop(8);
             }
-        } else if (entity->field_1A == 4) {
+        } else if (entity->state == 4) {
             if (entity->field_1B == 3) {
                 Entity_CheckProximityAndPlaySound(entity, 8, 2, 2);
             } else if (entity->field_1B == 10) {
@@ -145,13 +145,13 @@ void EntityGroup_UpdateMovers(void)
 
         if (i <= 3) {
             entity = (struct Entity *)((i + 42) * 56 + (s32)base);
-            if (entity->field_1A == 1)
+            if (entity->state == 1)
                 entity->field_06 = 2;
             else
                 entity->field_06 = 3;
         } else {
             entity = (struct Entity *)((i + 42) * 56 + (s32)base);
-            if (entity->field_1A == 1)
+            if (entity->state == 1)
                 entity->field_06 = 3;
             else
                 entity->field_06 = 2;

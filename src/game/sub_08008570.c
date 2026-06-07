@@ -24,7 +24,7 @@ u8 Entity_UpdateJumpTarget(void)
     if (gEntities[0].status & 4)
         return 0;
 
-    switch (gEntities[0].field_1A) {
+    switch (gEntities[0].state) {
     case 4:
         Entity_GetDirHitbox(0, 24, 24, 24, &xLo, &xHi, &yLo, &yHi);
         break;
@@ -51,7 +51,7 @@ u8 Entity_UpdateJumpTarget(void)
         break;
     }
 
-    if (gEntities_03003720[0].field_1A <= 7) {
+    if (gEntities_03003720[0].state <= 7) {
         for (i = 0; i < gIwram_6110.liveCount; i++) {
             u8 id = gEntityIndex_03006160[i].id;
             struct Entity *e;
@@ -86,7 +86,7 @@ u8 Entity_UpdateJumpTarget(void)
     gIwram_35E0._field_1A = 0;
 
 commit:
-    switch (gEntities_03003720[0].field_1A) {
+    switch (gEntities_03003720[0].state) {
     case 4:
         gIwram_35E0._field_1C = gIwram_35E0._field_8;
         gIwram_35E0._field_1E = gIwram_35E0._field_A - 1;

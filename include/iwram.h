@@ -112,11 +112,11 @@ struct Entity {
     u8 field_16;    /* +0x16 */
     u8 field_17;    /* +0x17: tile-class result (Player_CheckTileEvents) */
     u8 field_18[2]; /* +0x18..+0x19 */
-    u8 field_1A;    /* +0x1A: dispatch state read often (also a move-opcode in slot 0) */
+    u8 state;       /* +0x1A: dispatch state read often (also a move-opcode in slot 0) */
     u8 field_1B;    /* +0x1B: active-entity count, loop bound (<= 4); slot 0 only */
     u8 field_1C[8]; /* +0x1C..+0x23 */
-    s16 field_24;   /* +0x24: signed half-extent (AABB collision probes) */
-    s16 field_26;   /* +0x26: signed half-extent */
+    s16 hitHalfW;   /* +0x24: signed half-extent (AABB collision probes) */
+    s16 hitHalfH;   /* +0x26: signed half-extent */
     u8 field_28;    /* +0x28 */
     u8 field_29;    /* +0x29 */
     u8 field_2A;    /* +0x2A: MotionDesc.sel (pool slot ptr in MotionDesc_Set) */

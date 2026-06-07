@@ -39,7 +39,7 @@ void UpdateLogPairEntities(void)
             slot->y == 0x36d)
             Sound_PlayNearEntity(slot, 14, 3, 3);
 
-        switch (slot->field_1A) {
+        switch (slot->state) {
         case 0:
             if (slot->status & 2)
                 break;
@@ -49,13 +49,13 @@ void UpdateLogPairEntities(void)
                 slot->field_06 = 2;
             }
             if ((slot->y - 767) % 24 == 13) {
-                slot->field_1A = (slot->field_1A != 1);
+                slot->state = (slot->state != 1);
                 slot->status |= 2;
             }
             if (y > 0x375) {
                 gEntities[69].x = 0x143;
                 gEntities[70].x = 0x15b;
-                slot->field_1A = 2;
+                slot->state = 2;
                 slot->status |= 2;
             }
             if (slot->status & 0x8000) {
@@ -72,13 +72,13 @@ void UpdateLogPairEntities(void)
                 slot->field_06 = 2;
             }
             if ((slot->y - 767) % 24 == 0) {
-                slot->field_1A = (slot->field_1A != 1);
+                slot->state = (slot->state != 1);
                 slot->status |= 2;
             }
             if (y > 0x376) {
                 gEntities[69].x = 0x143;
                 gEntities[70].x = 0x15b;
-                slot->field_1A = 2;
+                slot->state = 2;
                 slot->status |= 2;
             }
             if (slot->status & 0x8000) {
@@ -90,11 +90,11 @@ void UpdateLogPairEntities(void)
             if (slot->status & 2)
                 break;
             if (gEntities[69].y == resetY && gEntities[70].y > 0x339) {
-                gEntities[69].field_1A = 1;
+                gEntities[69].state = 1;
                 gEntities[69].status |= 2;
             }
             if (gEntities[70].y == resetY && gEntities[69].y > 0x339) {
-                gEntities[70].field_1A = 1;
+                gEntities[70].state = 1;
                 gEntities[70].status |= 2;
             }
             if (slot->field_1B == 1)
@@ -108,11 +108,11 @@ void UpdateLogPairEntities(void)
         }
     }
 
-    if (gEntities[69].field_1A == 2) {
+    if (gEntities[69].state == 2) {
         EntityMover_Tick(70);
         Entity_Update(&gEntities[69]);
         Entity_Update(&gEntities[70]);
-    } else if (gEntities[70].field_1A == 2) {
+    } else if (gEntities[70].state == 2) {
         EntityMover_Tick(69);
         Entity_Update(&gEntities[69]);
         Entity_Update(&gEntities[70]);

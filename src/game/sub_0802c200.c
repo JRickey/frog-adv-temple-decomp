@@ -63,18 +63,18 @@ void EntityPool_UpdateOwned(u8 owner)
         }
 
         e = &gEntities[j + 8];
-        if (e->field_1A > 5) {
+        if (e->state > 5) {
             if (e->status & 0x8000) {
                 e->status &= 0x7FFF;
-                switch (e->field_1A) {
+                switch (e->state) {
                 case 6:
-                    e->field_1A = 0;
+                    e->state = 0;
                     break;
                 case 7:
-                    e->field_1A = 2;
+                    e->state = 2;
                     break;
                 case 8:
-                    e->field_1A = 4;
+                    e->state = 4;
                     break;
                 default:
                     goto call_59c4;

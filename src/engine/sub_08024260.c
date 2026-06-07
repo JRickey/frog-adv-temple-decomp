@@ -13,7 +13,7 @@ void UpdateEntitySlot5F(void)
     u8 fieldB;
 
     entity = &gEntities[0x5f];
-    fieldA = entity->field_1A;
+    fieldA = entity->state;
     if (fieldA != 3) {
         goto done;
     }

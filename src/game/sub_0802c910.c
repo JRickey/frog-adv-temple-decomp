@@ -18,16 +18,16 @@ void Entity22_Update(void)
     s8 out[2];
     u8 nextState;
 
-    switch (entity->field_1A) {
+    switch (entity->state) {
     case 0:
         MotionDesc_Set((struct MotionDesc *)entity, 0, 0, 0);
         if ((entity->status & 0x8000) == 0)
             goto done;
 
-        entity->field_1A = *((u8 *)entity + 0x6aa);
+        entity->state = *((u8 *)entity + 0x6aa);
         entity->status |= 2;
         {
-            u8 dir = entity->field_1A;
+            u8 dir = entity->state;
             register s8 *outY asm("r4") = &out[1];
             DirToMotion(dir, &out[0], outY);
             MotionDesc_Set((struct MotionDesc *)entity, 2, out[0], *outY);
@@ -77,10 +77,10 @@ void Entity22_Update(void)
         goto done;
     }
 
-    entity->field_1A = nextState;
+    entity->state = nextState;
     *((u8 *)entity + 0x6aa) = nextState;
     {
-        u8 dir = entity->field_1A;
+        u8 dir = entity->state;
         register s8 *outY asm("r4") = &out[1];
         DirToMotion(dir, &out[0], outY);
         MotionDesc_Set((struct MotionDesc *)entity, 2, out[0], *outY);

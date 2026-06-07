@@ -60,7 +60,7 @@ void Entity2_Tick(void)
         }
     }
 
-    switch (e2->field_1A) {
+    switch (e2->state) {
     case 0:
         if (e2->status & 0x8000) {
             CtrlFlags_SetBit(&gIwram_6110, 8, 2);
@@ -91,7 +91,7 @@ void Entity2_Tick(void)
         }
         goto tail;
     despawn:
-        e2->field_1A = 0;
+        e2->state = 0;
         MotionDesc_Set(e2, 0, 0, 0);
         e2->status |= 2;
         gIwram_6110.scenePhase--;
@@ -107,7 +107,7 @@ void Entity2_Tick(void)
         if ((&gIwram_3610)[((s16 *)&buf)[1] * 14 + ((s16 *)&buf)[0]] != 0) {
             goto case4_move;
         }
-        e2->field_1A = 0;
+        e2->state = 0;
         MotionDesc_Set(e2, 0, 0, 0);
         e2->status |= 2;
         gIwram_6110.scenePhase--;

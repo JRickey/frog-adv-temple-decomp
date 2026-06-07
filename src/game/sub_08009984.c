@@ -55,7 +55,7 @@ void Player_CheckTileEvents(void)
     if (tile == 7) {
         if ((gIwram_35E0._field_C & 2) != 0)
             goto check8or11;
-        if (gEntities[0].field_1A > 3)
+        if (gEntities[0].state > 3)
             goto check8or11;
         PlayerFlags_Set(&gIwram_35E0, 0x800);
         return;
@@ -65,7 +65,7 @@ check8or11:
         return;
     if ((gIwram_35E0._field_C & 2) != 0)
         return;
-    if (gEntities[0].field_1A > 3)
+    if (gEntities[0].state > 3)
         return;
     PlayerFlags_Set(&gIwram_35E0, 0x2000);
 }

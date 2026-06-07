@@ -29,7 +29,7 @@ struct SpriteAssetEntry_080063EC {
 
 extern const struct SpriteAssetEntry_080063EC sSpriteAssetTable[];
 
-#define ENTITY_ANIM(e) (((const struct SpriteAnim_080063EC *)sSpriteAssetTable[(e).field_00].anims)[(e).field_1A])
+#define ENTITY_ANIM(e) (((const struct SpriteAnim_080063EC *)sSpriteAssetTable[(e).field_00].anims)[(e).state])
 
 void Entity_DmaLoadSprite(u32 slot)
 {

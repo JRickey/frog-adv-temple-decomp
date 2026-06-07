@@ -75,7 +75,7 @@ u32 SpriteGrid_GetNeighborTile(u8 col, u8 row, s16 tileX, s16 tileY, u8 dir)
     }
 
     case DIR_AUTO:
-        switch (gEntities[0].field_1A) {
+        switch (gEntities[0].state) {
         case 0:
             if ((s16)tileY - 2 < 0) {
                 return 0;

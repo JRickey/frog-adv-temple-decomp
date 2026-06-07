@@ -14,9 +14,9 @@ void InitEntitySlot71WithDifficulty(void)
     i = 0;
     do {
         if (gIwram_35E0._field_5 > 1) {
-            gEntities[0x71 + i].field_1A = 3;
+            gEntities[0x71 + i].state = 3;
         } else {
-            gEntities[0x71 + i].field_1A = 0;
+            gEntities[0x71 + i].state = 0;
         }
         i++;
     } while (i <= 2);

@@ -31,9 +31,9 @@ void Entity_MoveToEntry(struct Entity *ent, u8 dir, Entry *e)
         }
     }
 
-    ent->field_1A = TileEntry_CalcDirection(e, (Entry *)buf);
+    ent->state = TileEntry_CalcDirection(e, (Entry *)buf);
     {
-        u8 fa = ent->field_1A;
+        u8 fa = ent->state;
         register s8 *outY asm("r4") = &out[1];
         DirToMotion(fa, &out[0], outY);
         MotionDesc_Set((struct MotionDesc *)ent, dir, out[0], *outY);

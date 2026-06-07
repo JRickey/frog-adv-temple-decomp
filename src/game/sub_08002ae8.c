@@ -22,7 +22,7 @@ void Scene_EnterLevel(void)
     u8 state;
     u16 flags;
 
-    p->field_1A = 21;
+    p->state = 21;
     /* split into three statements so agbcc emits movs/ldrh/orrs/strh
      * instead of folding to ldrh/orrs/strh */
     flags = 2;

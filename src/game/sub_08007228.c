@@ -171,7 +171,7 @@ extern s32 CollisionTable_ScanForPlayer(s32 c, s8 count);
 /* Looks up the per-script header in sEntityScriptIndex[b], hands it (plus the
  * caller's a/c) to CollisionTable_CheckAndTriggerScript, then for scripts that pass the CollisionTable_ScanForPlayer
  * gate raises the dirty-flag mask from sEntityScriptIndexExt[a] on gIwram_35E0.
- * Script id 1 takes an extra branch guarding on gEntities[0].field_1A and reads
+ * Script id 1 takes an extra branch guarding on gEntities[0].state and reads
  * the dirty-flag mask from the constant entry sEntityScriptIndexExt[1]. */
 
 void EntityScript_Advance(s8 a, s8 b, s32 c)
@@ -194,7 +194,7 @@ void EntityScript_Advance(s8 a, s8 b, s32 c)
     CollisionTable_CheckAndTriggerScript(a, c, 0, count - 1, entry->_b2);
 
     if (a == 1) {
-        if (gEntities[0].field_1A > 3)
+        if (gEntities[0].state > 3)
             return;
         if (!CollisionTable_ScanForPlayer(c, count))
             return;

@@ -56,10 +56,10 @@ void Player_FindNearbyInteractable(void)
         if (gEntities[0].field_06 != e->field_06)
             continue;
 
-        right = (u16)(e->y + e->field_26);
-        left = (u16)((e->y + e->field_26) - e->field_29);
-        bottom = (u16)((e->x + e->field_24) + (e->field_28 >> 1));
-        top = (e->x + e->field_24) - (e->field_28 >> 1);
+        right = (u16)(e->y + e->hitHalfH);
+        left = (u16)((e->y + e->hitHalfH) - e->field_29);
+        bottom = (u16)((e->x + e->hitHalfW) + (e->field_28 >> 1));
+        top = (e->x + e->hitHalfW) - (e->field_28 >> 1);
 
         if (headerY < top)
             continue;

@@ -62,7 +62,7 @@ void Entity_CheckAllCollisions(void)
 
         switch (e->field_01 - 1) {
         case 0:
-            if (gEntities_03003720[0].field_1A > 3 && (gIwram_35E0._field_10 & 0x10) == 0)
+            if (gEntities_03003720[0].state > 3 && (gIwram_35E0._field_10 & 0x10) == 0)
                 continue;
             gIwram_35E0._field_C |= gEntities_03003720[id].field_01;
             gEntities_03003720[id].status |= 0x80;
@@ -73,7 +73,7 @@ void Entity_CheckAllCollisions(void)
                 continue;
             gIwram_35E0._field_C |= gEntities_03003720[id].field_01;
             gIwram_35E0._field_D = id;
-            if (gEntities_03003720[0].field_1A > 3 && (gIwram_35E0._field_10 & 0x10) == 0)
+            if (gEntities_03003720[0].state > 3 && (gIwram_35E0._field_10 & 0x10) == 0)
                 continue;
             gEntities_03003720[id].status |= 0x80;
             gIwram_35E0._field_10 |= 2;
@@ -91,7 +91,7 @@ void Entity_CheckAllCollisions(void)
         case 6:
             if (gGameStuff._unk10 & 1)
                 continue;
-            if ((u8)(gEntities_03003720[0].field_1A - 8) <= 3)
+            if ((u8)(gEntities_03003720[0].state - 8) <= 3)
                 continue;
             gIwram_35E0._field_C = gEntities_03003720[id].field_01;
             gIwram_35E0._field_D = gEntities_03003720[id].field_00;
@@ -134,7 +134,7 @@ void Entity_CheckAllCollisions(void)
         case 10:
             if (gGameStuff._unk10 & 1)
                 continue;
-            if ((u8)(gEntities_03003720[0].field_1A - 8) <= 3)
+            if ((u8)(gEntities_03003720[0].state - 8) <= 3)
                 continue;
             gIwram_35E0._field_C = gEntities_03003720[id].field_01;
             gIwram_35E0._field_D = gEntities_03003720[id].field_00;

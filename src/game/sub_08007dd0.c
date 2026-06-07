@@ -11,7 +11,7 @@
  * Bit map (tested against gIwram_35E0._field_10):
  *   0x0100 -> OR 0x08 into *(u16 *)(0x03006110 + 0x2e); set bit 0x01;
  *             clear bits 0x100, 0x10.
- *   0x0080 -> gEntities[0].field_1A += 0x24; gEntities[0].status |= 0x02;
+ *   0x0080 -> gEntities[0].state += 0x24; gEntities[0].status |= 0x02;
  *             clear bit 0x80.
  *   0x0800 -> Entity_PlayStateSound(); set _field_1A = 22, _field_34 = 6.
  *   0x0400 -> Entity_PlayStateSound(); set _field_1A = 20, _field_34 = 22.
@@ -72,7 +72,7 @@ void Entity_ProcessEvents(void)
 
     if ((u8)IsFlagMaskSet(p35E0, 0x800) != 0) {
         Entity_PlayStateSound();
-        gEntities[0].field_1A = 22;
+        gEntities[0].state = 22;
         gEntities[0].status = 6;
         IwramFlags_Clear(p35E0, 0x800);
         IwramFlags_Clear(p35E0, 2);
@@ -80,7 +80,7 @@ void Entity_ProcessEvents(void)
 
     if ((u8)IsFlagMaskSet(p35E0, 0x400) != 0) {
         Entity_PlayStateSound();
-        gEntities[0].field_1A = 20;
+        gEntities[0].state = 20;
         gEntities[0].status = 22;
         IwramFlags_Clear(p35E0, 0x400);
         IwramFlags_Clear(p35E0, 2);
@@ -88,7 +88,7 @@ void Entity_ProcessEvents(void)
 
     if ((u8)IsFlagMaskSet(p35E0, 0x200) != 0) {
         Entity_PlayStateSound();
-        gEntities[0].field_1A = 20;
+        gEntities[0].state = 20;
         gEntities[0].status = 6;
         IwramFlags_Clear(p35E0, 0x200);
         IwramFlags_Clear(p35E0, 2);
@@ -96,7 +96,7 @@ void Entity_ProcessEvents(void)
 
     if ((u8)IsFlagMaskSet(p35E0, 0x2000) != 0) {
         Entity_PlayStateSound();
-        gEntities[0].field_1A = 23;
+        gEntities[0].state = 23;
         gEntities[0].status = 54;
         IwramFlags_Clear(p35E0, 0x2000);
         IwramFlags_Clear(p35E0, 2);
@@ -105,7 +105,7 @@ void Entity_ProcessEvents(void)
     if ((u8)IsFlagMaskSet(p35E0, 0x4000) != 0) {
         u16 t;
         Entity_PlayStateSound();
-        gEntities[0].field_1A = 33;
+        gEntities[0].state = 33;
         t = 2;
         t |= gEntities[0].status;
         t |= 4;
@@ -117,7 +117,7 @@ void Entity_ProcessEvents(void)
     if ((u8)IsFlagMaskSet(p35E0, 0x8000) != 0) {
         u16 t;
         Entity_PlayStateSound();
-        gEntities[0].field_1A = 34;
+        gEntities[0].state = 34;
         t = 2;
         t |= gEntities[0].status;
         t |= 4;
