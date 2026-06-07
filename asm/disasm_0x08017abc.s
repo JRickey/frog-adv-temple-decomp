@@ -5,9 +5,6 @@
         .include "asm/macros.inc"
         .syntax unified
 
-        .global sub_0802D56C
-        .thumb_set sub_0802D56C, 0x0802D56D
-
 @ Disassembly preview (the bytes come from the INCBIN below):
 @   0x08017abc: b570        push	{r4, r5, r6, lr}
 @   0x08017abe: 4646        mov	r6, r8

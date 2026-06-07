@@ -736,20 +736,8 @@ SECTIONS {
         src/game/sub_0802d4f8.o(.text);
         asm/disasm_0x0802d4f8.o(.text);  /* 0x0802d4f8 - 0x0802d504, sub_0802D4F8 (auto-peeled) */
         src/game/sub_0802d504.o(.text);
-        asm/disasm_0x0802d504.o(.text);  /* 0x0802d504 - 0x0802d524, sub_0802D504 (auto-peeled) */
-        src/game/sub_0802d524.o(.text);
-        asm/disasm_0x0802d524.o(.text);  /* 0x0802d524 - 0x0802d534, sub_0802D524 (auto-peeled) */
-        src/game/sub_0802d534.o(.text);
-        asm/disasm_0x0802d534.o(.text);  /* 0x0802d534 - 0x0802d538, sub_0802D534 (auto-peeled) */
-        src/game/sub_0802d538.o(.text);
-        asm/disasm_0x0802d538.o(.text);  /* 0x0802d538 - 0x0802d53c, sub_0802D538 (auto-peeled) */
-        src/game/sub_0802d53c.o(.text);
-        asm/disasm_0x0802d53c.o(.text);  /* 0x0802d53c - 0x0802d548, sub_0802D53C (auto-peeled) */
-        src/game/sub_0802d548.o(.text);
-        asm/disasm_0x0802d548.o(.text);  /* 0x0802d548 - 0x0802d54c, sub_0802D548 (auto-peeled) */
-        asm/text/text_0x0802d54c.o(.text);  /* 0x0802d54c - 0x0802d554, raw bytes */
-        src/game/sub_0802d554.o(.text);  /* 0x0802d554 - 0x0802d558, Bios_CpuSet */
-        src/game/sub_0802d558.o(.text);  /* 0x0802d558 - 0x0802d5ec, BiosSwiTable (libagbsyscall thunk block, NAKED) */
+        asm/disasm_0x0802d504.o(.text);  /* 0x0802d504 - 0x0802d514, sub_0802D504 (game trampoline) */
+        asm/libagbsyscall.o(.text);  /* 0x0802d514 - 0x0802d5ec, public SDK BIOS SWI wrappers (libagbsyscall) */
         asm/disasm_0x0802d5ec.o(.text);  /* 0x0802d5ec - 0x0802d770, SoundSystem_Transfer (auto-peeled) */
         src/game/sub_0802d770.o(.text);
         asm/disasm_0x0802d770.o(.text);  /* 0x0802d770 - 0x0802d800, sub_0802D770 (auto-peeled) */
