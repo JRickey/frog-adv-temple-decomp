@@ -738,111 +738,111 @@ SECTIONS {
         src/game/sub_0802d504.o(.text);
         asm/disasm_0x0802d504.o(.text);  /* 0x0802d504 - 0x0802d514, sub_0802D504 (game trampoline) */
         asm/libagbsyscall.o(.text);  /* 0x0802d514 - 0x0802d5ec, public SDK BIOS SWI wrappers (libagbsyscall) */
-        asm/disasm_0x0802d5ec.o(.text);  /* 0x0802d5ec - 0x0802d770, SoundSystem_Transfer (auto-peeled) */
+        lib/gax/disasm_0x0802d5ec.o(.text);  /* 0x0802d5ec - 0x0802d770, SoundSystem_Transfer (auto-peeled) */
         src/game/sub_0802d770.o(.text);
-        asm/disasm_0x0802d770.o(.text);  /* 0x0802d770 - 0x0802d800, sub_0802D770 (auto-peeled) */
+        lib/gax/disasm_0x0802d770.o(.text);  /* 0x0802d770 - 0x0802d800, sub_0802D770 (auto-peeled) */
         src/game/sub_0802d800.o(.text);
-        asm/disasm_0x0802d800.o(.text);  /* 0x0802d800 - 0x0802d890, sub_0802D800 (auto-peeled) */
-        src/game/sub_0802d890.o(.text);
-        src/game/sub_0802d8f8.o(.text);
-        asm/disasm_0x0802d8f8.o(.text);  /* 0x0802d8f8 - 0x0802d9ec, Sound_Reset (auto-peeled) */
-        src/game/sub_0802d9ec.o(.text);
-        asm/disasm_0x0802d9ec.o(.text);  /* 0x0802dc1c - 0x0802dcbc, SoundHandle_SetPan (auto-peeled) */
-        src/game/sub_0802dcbc.o(.text);
-        src/game/sub_0802de24.o(.text);
-        src/game/sub_0802de9c.o(.text);  /* 0x0802de9c - 0x0802dfbc, Sound_OpenStream */
-        src/game/sub_0802dfbc.o(.text);  /* 0x0802dfbc - 0x0802e00c, SoundSlot_SetPitchScale */
-        src/game/sub_0802e00c.o(.text);  /* 0x0802e00c - 0x0802e100, SoundStream_UpdateCursor + Sound_SetActiveCount */
-        src/system/sub_0802e100.o(.text);  /* 0x0802e100 - 0x0802e13c, SoundHandle_Retire */
-        src/system/sub_0802e13c.o(.text);  /* 0x0802e13c - 0x0802e220, Sound_DrainActiveSlots + SoundHandle_GetPeriod */
-        src/system/sub_0802e220.o(.text);  /* 0x0802e220 - 0x0802e27c, Sound_GetChannelVolume */
-        src/system/sub_0802e27c.o(.text);  /* 0x0802e27c - 0x0802e380 */
-        src/system/sub_0802e380.o(.text);  /* 0x0802e380 - 0x0802e3f8 */
-        src/system/sound_lock.o(.text);  /* 0x0802e3f8 - 0x0802e544, Sound_Unlock + Sound_Lock + SoundLock_SlotOpen + SoundLock_SlotClose + SoundLock_SetPan + SoundLock_SetEnable + SoundLock_CalcPeriod */
-        asm/disasm_0x0802e544.o(.text);  /* 0x0802e544 - 0x0802e5d8, sub_0802E544 */
-        src/system/sound_pitch.o(.text);  /* 0x0802e5d8 - 0x0802e684, Sound_EmitPsgPitch (NAKED+NON_MATCHING) */
-        src/system/sound_volume.o(.text);  /* 0x0802e684 - 0x0802e724, SoundVolume_Emit */
-        src/system/sub_0802e724.o(.text);  /* 0x0802e724 - 0x0802e7c4, SoundChannel_Reset */
-        src/system/sub_0802e7c4.o(.text);  /* 0x0802e7c4 - 0x0802e934, sub_0802E7C4 + Sound_AdjustPan */
-        src/system/sound_envelope_dual.o(.text);  /* 0x0802e934 - 0x0802ea80, Sound_TickDualEnvelopes (NAKED+NON_MATCHING) + SoundEnvelope_SetOscillator */
-        src/system/sound_envelope.o(.text);  /* 0x0802ea80 - 0x0802ec7c, SoundEnvelope_TickA0 + SoundEnvelope_SetRamp (NAKED+NON_MATCHING) + SoundEnvelope_InitClamp (NAKED+NON_MATCHING) */
-        src/system/sound_channel_envelope_a.o(.text);  /* 0x0802ec7c - 0x0802ed5c, Sound_UpdateChannelEnvelopesA (NAKED+NON_MATCHING) */
-        src/system/sound_channel.o(.text);  /* 0x0802ed5c - 0x0802edf0, Sound_TickSlotEnvelopeB */
-        src/system/sound_channel_stream.o(.text);  /* 0x0802edf0 - 0x0802f054, Sound_TickStreamHead (NAKED+NON_MATCHING) + SoundChannel_SetEnvelopeC + Sound_ApplyEnvelopeC */
-        src/system/sound_envelope_slide.o(.text);  /* 0x0802f054 - 0x0802f2fc, Sound_TickEnvelopeC (NAKED+NON_MATCHING) */
-        src/system/sound_pan.o(.text);  /* 0x0802f2fc - 0x0802f4b0, SoundPan_Tick (NAKED+NON_MATCHING) + SoundPan_UpdateMixEntry */
-        src/system/sound_mixer.o(.text);  /* 0x0802f4b0 - 0x0802f99c, SoundMixer_VBlankUpdate + Sound_WritePsgDuty + Sound_WriteNoiseFreq + Sound_WritePsgVolume + Sound_MarkChannelFullDirty + Sound_LoadWaveRam */
-        asm/disasm_0x0802f99c.o(.text);  /* 0x0802f99c - 0x0802f9f0, sub_0802F99C (auto-peeled) */
-        src/system/sub_0802f9f0.o(.text);  /* 0x0802f9f0 - 0x0802fab8, Sound_RetireChannel + Sound_UpdateStreamPeriod */
-        asm/disasm_0x0802fab8.o(.text);  /* 0x0802fab8 - 0x08030158, sub_0802FAB8 (auto-peeled) */
+        lib/gax/disasm_0x0802d800.o(.text);  /* 0x0802d800 - 0x0802d890, sub_0802D800 (auto-peeled) */
+        lib/gax/sub_0802d890.o(.text);
+        lib/gax/sub_0802d8f8.o(.text);
+        lib/gax/disasm_0x0802d8f8.o(.text);  /* 0x0802d8f8 - 0x0802d9ec, Sound_Reset (auto-peeled) */
+        lib/gax/sub_0802d9ec.o(.text);
+        lib/gax/disasm_0x0802d9ec.o(.text);  /* 0x0802dc1c - 0x0802dcbc, SoundHandle_SetPan (auto-peeled) */
+        lib/gax/sub_0802dcbc.o(.text);
+        lib/gax/sub_0802de24.o(.text);
+        lib/gax/sub_0802de9c.o(.text);  /* 0x0802de9c - 0x0802dfbc, Sound_OpenStream */
+        lib/gax/sub_0802dfbc.o(.text);  /* 0x0802dfbc - 0x0802e00c, SoundSlot_SetPitchScale */
+        lib/gax/sub_0802e00c.o(.text);  /* 0x0802e00c - 0x0802e100, SoundStream_UpdateCursor + Sound_SetActiveCount */
+        lib/gax/sub_0802e100.o(.text);  /* 0x0802e100 - 0x0802e13c, SoundHandle_Retire */
+        lib/gax/sub_0802e13c.o(.text);  /* 0x0802e13c - 0x0802e220, Sound_DrainActiveSlots + SoundHandle_GetPeriod */
+        lib/gax/sub_0802e220.o(.text);  /* 0x0802e220 - 0x0802e27c, Sound_GetChannelVolume */
+        lib/gax/sub_0802e27c.o(.text);  /* 0x0802e27c - 0x0802e380 */
+        lib/gax/sub_0802e380.o(.text);  /* 0x0802e380 - 0x0802e3f8 */
+        lib/gax/sound_lock.o(.text);  /* 0x0802e3f8 - 0x0802e544, Sound_Unlock + Sound_Lock + SoundLock_SlotOpen + SoundLock_SlotClose + SoundLock_SetPan + SoundLock_SetEnable + SoundLock_CalcPeriod */
+        lib/gax/disasm_0x0802e544.o(.text);  /* 0x0802e544 - 0x0802e5d8, sub_0802E544 */
+        lib/gax/sound_pitch.o(.text);  /* 0x0802e5d8 - 0x0802e684, Sound_EmitPsgPitch (NAKED+NON_MATCHING) */
+        lib/gax/sound_volume.o(.text);  /* 0x0802e684 - 0x0802e724, SoundVolume_Emit */
+        lib/gax/sub_0802e724.o(.text);  /* 0x0802e724 - 0x0802e7c4, SoundChannel_Reset */
+        lib/gax/sub_0802e7c4.o(.text);  /* 0x0802e7c4 - 0x0802e934, sub_0802E7C4 + Sound_AdjustPan */
+        lib/gax/sound_envelope_dual.o(.text);  /* 0x0802e934 - 0x0802ea80, Sound_TickDualEnvelopes (NAKED+NON_MATCHING) + SoundEnvelope_SetOscillator */
+        lib/gax/sound_envelope.o(.text);  /* 0x0802ea80 - 0x0802ec7c, SoundEnvelope_TickA0 + SoundEnvelope_SetRamp (NAKED+NON_MATCHING) + SoundEnvelope_InitClamp (NAKED+NON_MATCHING) */
+        lib/gax/sound_channel_envelope_a.o(.text);  /* 0x0802ec7c - 0x0802ed5c, Sound_UpdateChannelEnvelopesA (NAKED+NON_MATCHING) */
+        lib/gax/sound_channel.o(.text);  /* 0x0802ed5c - 0x0802edf0, Sound_TickSlotEnvelopeB */
+        lib/gax/sound_channel_stream.o(.text);  /* 0x0802edf0 - 0x0802f054, Sound_TickStreamHead (NAKED+NON_MATCHING) + SoundChannel_SetEnvelopeC + Sound_ApplyEnvelopeC */
+        lib/gax/sound_envelope_slide.o(.text);  /* 0x0802f054 - 0x0802f2fc, Sound_TickEnvelopeC (NAKED+NON_MATCHING) */
+        lib/gax/sound_pan.o(.text);  /* 0x0802f2fc - 0x0802f4b0, SoundPan_Tick (NAKED+NON_MATCHING) + SoundPan_UpdateMixEntry */
+        lib/gax/sound_mixer.o(.text);  /* 0x0802f4b0 - 0x0802f99c, SoundMixer_VBlankUpdate + Sound_WritePsgDuty + Sound_WriteNoiseFreq + Sound_WritePsgVolume + Sound_MarkChannelFullDirty + Sound_LoadWaveRam */
+        lib/gax/disasm_0x0802f99c.o(.text);  /* 0x0802f99c - 0x0802f9f0, sub_0802F99C (auto-peeled) */
+        lib/gax/sub_0802f9f0.o(.text);  /* 0x0802f9f0 - 0x0802fab8, Sound_RetireChannel + Sound_UpdateStreamPeriod */
+        lib/gax/disasm_0x0802fab8.o(.text);  /* 0x0802fab8 - 0x08030158, sub_0802FAB8 (auto-peeled) */
         src/system/sub_08030158.o(.text);
-        asm/disasm_0x08030158.o(.text);  /* 0x08030158 - 0x080301c4, sub_08030158 (auto-peeled) */
-        src/system/sound_period.o(.text);  /* 0x080301c4 - 0x08030644, Sound_CalcNotePeriod (NAKED+NON_MATCHING — libgcc-BL class) + SoundPeriod_Reset + Sound_StartDma + SoundOp_RetireChannel + SoundOp_SetPeriod + SoundOp_GateOff + SoundOp_Wait */
-        src/system/sub_08030644.o(.text);  /* 0x08030644 - 0x0803079c, sub_08030644 */
-        src/system/sub_0803079c.o(.text);
+        lib/gax/disasm_0x08030158.o(.text);  /* 0x08030158 - 0x080301c4, sub_08030158 (auto-peeled) */
+        lib/gax/sound_period.o(.text);  /* 0x080301c4 - 0x08030644, Sound_CalcNotePeriod (NAKED+NON_MATCHING — libgcc-BL class) + SoundPeriod_Reset + Sound_StartDma + SoundOp_RetireChannel + SoundOp_SetPeriod + SoundOp_GateOff + SoundOp_Wait */
+        lib/gax/sub_08030644.o(.text);  /* 0x08030644 - 0x0803079c, sub_08030644 */
+        lib/gax/sub_0803079c.o(.text);
         asm/disasm_0x0803079c.o(.text);  /* 0x0803080c - 0x080308b0, SoundOp_SetAcc1 (auto-peeled) */
-        src/system/sub_080308b0.o(.text);  /* 0x080308b0 - 0x080309a0, Sound_LoadStreamSlot */
-        src/system/sub_080309a0.o(.text);
-        src/system/SoundOpcode_SetStreamLoop.o(.text);  /* 0x08030a44 - 0x08030b34, SoundOpcode_SetStreamLoop */
-        asm/text/text_0x08030b34.o(.text);  /* 0x08030b34 - 0x080315d8, raw bytes */
-        src/system/sound_opcode_dispatch.o(.text);  /* 0x080315d8 - 0x08031638, Sound_OpcodeDispatch */
-        src/system/SoundOpcode_SetStreamPan.o(.text);
-        asm/disasm_0x08031688.o(.text);  /* 0x08031688 - 0x080316dc, sub_08031688 (auto-peeled) */
-        src/system/SoundOp_SetEnvelopeOscillator.o(.text);
-        asm/disasm_0x080316fc.o(.text);  /* 0x080316fc - 0x08031720, sub_080316FC (auto-peeled) */
-        src/system/SoundOp_SetEnvelopeRamp.o(.text);
-        src/system/SoundOp_Jump.o(.text);
-        asm/text/text_0x0803175c.o(.text);  /* 0x0803175c - 0x08031798, raw bytes */
-        src/system/SoundOp_Call.o(.text);  /* 0x08031798 - 0x080317e0, SoundOp_Call + SoundOp_Return + SoundOp_SetEnvelopeC */
-        asm/disasm_0x080317e0.o(.text);  /* 0x080317e0 - 0x08031824, sub_080317E0 (auto-peeled) */
+        lib/gax/sub_080308b0.o(.text);  /* 0x080308b0 - 0x080309a0, Sound_LoadStreamSlot */
+        lib/gax/sub_080309a0.o(.text);
+        lib/gax/SoundOpcode_SetStreamLoop.o(.text);  /* 0x08030a44 - 0x08030b34, SoundOpcode_SetStreamLoop */
+        lib/gax/text_0x08030b34.o(.text);  /* 0x08030b34 - 0x080315d8, raw bytes */
+        lib/gax/sound_opcode_dispatch.o(.text);  /* 0x080315d8 - 0x08031638, Sound_OpcodeDispatch */
+        lib/gax/SoundOpcode_SetStreamPan.o(.text);
+        lib/gax/disasm_0x08031688.o(.text);  /* 0x08031688 - 0x080316dc, sub_08031688 (auto-peeled) */
+        lib/gax/SoundOp_SetEnvelopeOscillator.o(.text);
+        lib/gax/disasm_0x080316fc.o(.text);  /* 0x080316fc - 0x08031720, sub_080316FC (auto-peeled) */
+        lib/gax/SoundOp_SetEnvelopeRamp.o(.text);
+        lib/gax/SoundOp_Jump.o(.text);
+        lib/gax/text_0x0803175c.o(.text);  /* 0x0803175c - 0x08031798, raw bytes */
+        lib/gax/SoundOp_Call.o(.text);  /* 0x08031798 - 0x080317e0, SoundOp_Call + SoundOp_Return + SoundOp_SetEnvelopeC */
+        lib/gax/disasm_0x080317e0.o(.text);  /* 0x080317e0 - 0x08031824, sub_080317E0 (auto-peeled) */
         src/system/sub_08031824.o(.text);
-        asm/disasm_0x08031824.o(.text);  /* 0x08031824 - 0x08031868, sub_08031824 (auto-peeled) */
+        lib/gax/disasm_0x08031824.o(.text);  /* 0x08031824 - 0x08031868, sub_08031824 (auto-peeled) */
         src/system/sub_08031868.o(.text);
-        asm/disasm_0x08031868.o(.text);  /* 0x08031868 - 0x0803189c, sub_08031868 (auto-peeled) */
-        src/system/SoundOp_Skip2.o(.text);
-        asm/disasm_0x080318a8.o(.text);  /* 0x080318a8 - 0x080318f0, sub_080318A8 (auto-peeled) */
+        lib/gax/disasm_0x08031868.o(.text);  /* 0x08031868 - 0x0803189c, sub_08031868 (auto-peeled) */
+        lib/gax/SoundOp_Skip2.o(.text);
+        lib/gax/disasm_0x080318a8.o(.text);  /* 0x080318a8 - 0x080318f0, sub_080318A8 (auto-peeled) */
         src/system/sub_080318f0.o(.text);
-        asm/disasm_0x080318f0.o(.text);  /* 0x080318f0 - 0x08031910, sub_080318F0 (auto-peeled) */
+        lib/gax/disasm_0x080318f0.o(.text);  /* 0x080318f0 - 0x08031910, sub_080318F0 (auto-peeled) */
         src/system/sub_08031910.o(.text);
-        asm/disasm_0x08031910.o(.text);  /* 0x08031910 - 0x0803194c, sub_08031910 (auto-peeled) */
+        lib/gax/disasm_0x08031910.o(.text);  /* 0x08031910 - 0x0803194c, sub_08031910 (auto-peeled) */
         src/system/sub_0803194c.o(.text);
-        asm/disasm_0x0803194c.o(.text);  /* 0x0803194c - 0x08031998, sub_0803194C (auto-peeled) */
+        lib/gax/disasm_0x0803194c.o(.text);  /* 0x0803194c - 0x08031998, sub_0803194C (auto-peeled) */
         src/system/sub_08031998.o(.text);
-        asm/disasm_0x08031998.o(.text);  /* 0x08031998 - 0x080319c0, sub_08031998 (auto-peeled) */
+        lib/gax/disasm_0x08031998.o(.text);  /* 0x08031998 - 0x080319c0, sub_08031998 (auto-peeled) */
         src/system/sub_080319c0.o(.text);
-        asm/disasm_0x080319c0.o(.text);  /* 0x080319c0 - 0x080319fc, sub_080319C0 (auto-peeled) */
+        lib/gax/disasm_0x080319c0.o(.text);  /* 0x080319c0 - 0x080319fc, sub_080319C0 (auto-peeled) */
         src/system/sub_080319fc.o(.text);
-        asm/disasm_0x080319fc.o(.text);  /* 0x080319fc - 0x08031a48, sub_080319FC (auto-peeled) */
+        lib/gax/disasm_0x080319fc.o(.text);  /* 0x080319fc - 0x08031a48, sub_080319FC (auto-peeled) */
         src/system/sub_08031a48.o(.text);
-        asm/disasm_0x08031a48.o(.text);  /* 0x08031a48 - 0x08031ab4, sub_08031A48 (auto-peeled) */
+        lib/gax/disasm_0x08031a48.o(.text);  /* 0x08031a48 - 0x08031ab4, sub_08031A48 (auto-peeled) */
         src/system/sub_08031ab4.o(.text);
-        asm/disasm_0x08031ab4.o(.text);  /* 0x08031ab4 - 0x08031b84, sub_08031AB4 (auto-peeled) */
+        lib/gax/disasm_0x08031ab4.o(.text);  /* 0x08031ab4 - 0x08031b84, sub_08031AB4 (auto-peeled) */
         src/system/sub_08031b84.o(.text);
-        asm/disasm_0x08031b84.o(.text);  /* 0x08031b84 - 0x08031bb8, sub_08031B84 (auto-peeled) */
+        lib/gax/disasm_0x08031b84.o(.text);  /* 0x08031b84 - 0x08031bb8, sub_08031B84 (auto-peeled) */
         src/system/sub_08031bb8.o(.text);
-        asm/disasm_0x08031bb8.o(.text);  /* 0x08031bb8 - 0x08031c04, sub_08031BB8 (auto-peeled) */
+        lib/gax/disasm_0x08031bb8.o(.text);  /* 0x08031bb8 - 0x08031c04, sub_08031BB8 (auto-peeled) */
         src/system/sub_08031c04.o(.text);
-        asm/disasm_0x08031c04.o(.text);  /* 0x08031c04 - 0x08031c64, sub_08031C04 (auto-peeled) */
+        lib/gax/disasm_0x08031c04.o(.text);  /* 0x08031c04 - 0x08031c64, sub_08031C04 (auto-peeled) */
         src/system/sub_08031c64.o(.text);
-        asm/disasm_0x08031c64.o(.text);  /* 0x08031c64 - 0x08031c84, sub_08031C64 (auto-peeled) */
+        lib/gax/disasm_0x08031c64.o(.text);  /* 0x08031c64 - 0x08031c84, sub_08031C64 (auto-peeled) */
         src/system/sub_08031c84.o(.text);
-        asm/disasm_0x08031c84.o(.text);  /* 0x08031c84 - 0x08031d2c, sub_08031C84 (auto-peeled) */
+        lib/gax/disasm_0x08031c84.o(.text);  /* 0x08031c84 - 0x08031d2c, sub_08031C84 (auto-peeled) */
         src/system/sub_08031d2c.o(.text);
-        asm/disasm_0x08031d2c.o(.text);  /* 0x08031d2c - 0x08031dbc, sub_08031D2C (auto-peeled) */
-        src/system/sub_08031dbc.o(.text);
-        asm/disasm_0x08031e24.o(.text);  /* 0x08031e24 - 0x08031fdc, SoundSlot_Load (auto-peeled) */
-        src/system/sub_08031fdc.o(.text);
-        src/system/sub_08032094.o(.text);
-        src/system/SoundSystem_IsActive.o(.text);  /* 0x08032148 - 0x08032200, SoundSystem_IsActive */
-        asm/text/text_0x08032200.o(.text);  /* 0x08032200 - 0x080325b0, raw bytes */
-        src/system/sound_mixer_tail.o(.text);  /* 0x080325b0 - 0x08032894, Sound_ProcessRequests (NAKED+NON_MATCHING) */
-        src/system/sub_08032894.o(.text);  /* 0x08032894 - 0x08032904, SoundSlot_InitParams */
-        src/system/sound_channel_state.o(.text);  /* 0x08032904 - 0x0803299c, SoundChannel_SetState (NAKED+NON_MATCHING) */
-        src/game/sub_0803299c.o(.text);  /* 0x0803299c - 0x08032b18, sub_0803299C + sub_080329F4 + sub_08032A20 + sub_08032A54 + sub_08032A98 + SoundSystem_InitRequestSlot */
-        src/game/sub_08032b18.o(.text);  /* 0x08032b18 - 0x08032c18, SoundSlot_PickByPriority + SoundChannel_CheckPriority + SoundVoice_Init */
-        asm/text/text_0x08032c18.o(.text);  /* 0x08032c18 - 0x08032e04, raw bytes */
-        src/game/sub_08032e04.o(.text);
-        asm/text/text_0x08032e1c.o(.text);  /* 0x08032e1c - 0x080338a8, raw bytes */
+        lib/gax/disasm_0x08031d2c.o(.text);  /* 0x08031d2c - 0x08031dbc, sub_08031D2C (auto-peeled) */
+        lib/gax/sub_08031dbc.o(.text);
+        lib/gax/disasm_0x08031e24.o(.text);  /* 0x08031e24 - 0x08031fdc, SoundSlot_Load (auto-peeled) */
+        lib/gax/sub_08031fdc.o(.text);
+        lib/gax/sub_08032094.o(.text);
+        lib/gax/SoundSystem_IsActive.o(.text);  /* 0x08032148 - 0x08032200, SoundSystem_IsActive */
+        lib/gax/text_0x08032200.o(.text);  /* 0x08032200 - 0x080325b0, raw bytes */
+        lib/gax/sound_mixer_tail.o(.text);  /* 0x080325b0 - 0x08032894, Sound_ProcessRequests (NAKED+NON_MATCHING) */
+        lib/gax/sub_08032894.o(.text);  /* 0x08032894 - 0x08032904, SoundSlot_InitParams */
+        lib/gax/sound_channel_state.o(.text);  /* 0x08032904 - 0x0803299c, GAX SoundChannel_SetState (Shin'en lib — incbin) */
+        lib/gax/sub_0803299c.o(.text);  /* 0x0803299c - 0x08032b18, sub_0803299C + sub_080329F4 + sub_08032A20 + sub_08032A54 + sub_08032A98 + SoundSystem_InitRequestSlot */
+        lib/gax/sub_08032b18.o(.text);  /* 0x08032b18 - 0x08032c18, SoundSlot_PickByPriority + SoundChannel_CheckPriority + SoundVoice_Init */
+        lib/gax/text_0x08032c18.o(.text);  /* 0x08032c18 - 0x08032e04, raw bytes */
+        lib/gax/sub_08032e04.o(.text);
+        lib/gax/text_0x08032e1c.o(.text);  /* 0x08032e1c - 0x080338a8, raw bytes */
         src/game/sub_080338a8.o(.text);
         src/game/sub_08033910.o(.text);  /* 0x08033910 - 0x08033948, Timer_SetIrqHandler */
         asm/text/text_0x08033948.o(.text);  /* 0x08033948 - 0x08033ca4, raw bytes */

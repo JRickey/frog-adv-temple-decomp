@@ -82,7 +82,11 @@ PREPROCFLAGS = charmap.txt
 # Objects
 CSRC = $(wildcard src/**.c) $(wildcard src/**/**.c) $(wildcard src/**/**/**.c) $(wildcard src/**/**/**/**.c)
 .PRECIOUS: $(CSRC:.c=.s)
-ASMSRC = $(CSRC:.c=.s) $(wildcard asm/*.s) $(wildcard asm/**/*.s) $(wildcard sound/*.s) $(wildcard sound/**/*.s)
+# lib/ holds isolated third-party libraries (e.g. lib/gax — the GAX Sound
+# System). Their .text comes from labeled .incbin of the original ROM bytes, so
+# they need no per-TU compiler flags. Reference C under lib/**/reference/ is not
+# globbed and is never compiled.
+ASMSRC = $(CSRC:.c=.s) $(wildcard asm/*.s) $(wildcard asm/**/*.s) $(wildcard sound/*.s) $(wildcard sound/**/*.s) $(wildcard lib/*.s) $(wildcard lib/**/*.s)
 OBJ = $(ASMSRC:.s=.o)
 
 # Detect if agbcc was installed into the project
@@ -116,28 +120,17 @@ src/game/sub_080019b4.s \
 src/game/sub_08002184.s \
 src/game/sub_08002b58.s \
 src/game/sub_08004938.s \
-src/system/sub_08001508.s \
-src/system/sound_envelope_dual.s: CFLAGS += -fno-expensive-optimizations
+src/system/sub_08001508.s: CFLAGS += -fno-expensive-optimizations
 
 src/game/sub_080019b4.s \
 src/game/sub_08004938.s \
-src/engine/sub_08015930.s \
-src/system/sound_channel_stream.s: CFLAGS += -fno-gcse
+src/engine/sub_08015930.s: CFLAGS += -fno-gcse
 
 src/game/sub_08003254.s: CFLAGS += -ffixed-r3
 src/game/sub_08003b8c.s: CFLAGS += -fno-strength-reduce
 src/engine/sub_0801b9e4.s: CFLAGS += -O1
 src/engine/sub_0801a6d4.s: CC = $(AGBCC_BIN)
 src/engine/sub_0801a894.s: CFLAGS += -fno-rerun-cse-after-loop
-# Current forced-C lanes for split sound NON_MATCHING candidates.
-src/system/sound_pitch.s: CC = $(OLD_AGBCC_BIN)
-src/system/sound_channel_envelope_a.s: CC = $(OLD_AGBCC_BIN)
-src/system/sound_channel_stream.s: CC = $(OLD_AGBCC_BIN)
-src/system/sound_channel_stream.s: CFLAGS += -fno-cse-follow-jumps
-src/system/sound_envelope_dual.s: CFLAGS += -fforce-addr
-src/system/sound_envelope_slide.s: CC = $(AGBCC_BIN)
-src/system/sound_channel_state.s: CC = $(OLD_AGBCC_BIN)
-src/system/sound_mixer_tail.s: CC = $(OLD_AGBCC_BIN)
 # Enable verbose output
 ifeq ($(V),1)
 	Q =
