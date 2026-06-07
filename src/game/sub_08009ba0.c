@@ -103,7 +103,6 @@ extern const u32 sEntityProcC[17];
 extern const u8 sEntitySubtypeLut[20];
 
 extern void Sound_DrainIfActive(void);
-extern void Sound_PlayIfEnabled(u32 arg);
 extern void EntityPool_Reset(void);
 extern void Entity_SpawnFromConfig(s8 a, s16 b, s8 c);
 extern void Scroll_UpdateCamera(u8 arg);

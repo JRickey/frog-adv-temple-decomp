@@ -1,9 +1,9 @@
 #include "gba/io.h"
+#include "sound.h"
 #include "types.h"
 
 extern void sub_0801B374(u8 arg);
 extern void Sound_DrainIfActive(void);
-extern void Sound_PlayIfEnabled(u8 arg);
 
 void Scene_SetupWindows(u8 arg)
 {

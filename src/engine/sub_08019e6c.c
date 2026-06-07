@@ -1,4 +1,5 @@
 #include "game.h"
+#include "sound.h"
 #include "gba/dma.h"
 #include "gba/io.h"
 #include "iwram.h"
@@ -7,7 +8,6 @@
 extern void Scroll_FlushTilemapWindow(u32, void *, void *);
 extern void EntityPool_Reset(void);
 extern void sub_08019A14(void);
-extern void Sound_PlayIfEnabled(u32);
 extern void Sound_DrainIfActive(void);
 extern const u8 sRoomDmaTable_080C1254[];
 

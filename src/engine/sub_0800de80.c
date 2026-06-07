@@ -1,11 +1,11 @@
 #include "game.h"
+#include "sound.h"
 #include "types.h"
 
 extern void EntitySpawnDriver(void);
 extern void WorldMap_Init(void);
 extern void EntityProcE_Dispatch(void);
 extern void ShowWinLoseMessage(u32 arg);
-extern void Sound_PlayIfEnabled(u32 arg);
 extern void Sound_Reset(void);
 
 /* Mode-dispatched scene-step driver.

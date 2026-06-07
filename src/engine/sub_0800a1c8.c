@@ -1,11 +1,11 @@
 #include "game.h"
+#include "sound.h"
 #include "entity.h"
 #include "iwram.h"
 #include "types.h"
 
 extern const u32 sEntityParamTable[17];
 extern void Sound_DrainIfActive(void);
-extern void Sound_PlayIfEnabled(u32 arg);
 
 void EntityParam_Reset(void)
 {

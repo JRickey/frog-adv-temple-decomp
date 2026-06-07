@@ -5,7 +5,6 @@
 
 extern void sub_0801B374(u8 arg);
 extern void Sound_DrainIfActive(void);
-extern void Sound_PlayIfEnabled(u8 arg);
 extern void IrisOpen(u32 flags, u32 count);
 extern void Room_LoadSpriteTiles(u8 arg);
 extern void sub_0801B694(u8 arg);

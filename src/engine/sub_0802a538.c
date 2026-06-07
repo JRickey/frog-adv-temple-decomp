@@ -1,12 +1,76 @@
 #include "game.h"
 #include "sound.h"
-#include "iwram.h"
 #include "types.h"
 
-extern u32 ModeControl_GetFlag(void *base, u32 selector, u32 bit);
+/* iwram.h intentionally not included here: ModeControl_ClearBit is declared
+ * below with an empty param list so the 2-arg call at line 42 passes only
+ * r0 and r1, leaving r2 == 0 from the preceding halfword stores (matches
+ * the baserom). Including iwram.h's prototype would make agbcc reject the
+ * 2-arg call. The struct IwramAt6110 type is duplicated below for the same
+ * reason. */
+struct IwramAt6110 {
+    u16 flags0;
+    u8 threshold;
+    u8 _pad03;
+    s64 flags64;
+    u16 flags2;
+    u8 _pad0e[2];
+    u32 scenePhase;
+    s64 flagBank0;
+    s64 flagBank1;
+    u16 activeFlags;
+    u16 selector5Flags;
+    u16 selector6Flags;
+    u8 byteFlags8;
+    u8 gateByte;
+    u8 byteFlags7;
+    u8 _pad2d;
+    u16 inputFlags;
+    u8 limit;
+    u8 liveCount;
+    u8 state;
+    u8 spawnMask;
+    void *configTable;
+};
+extern struct IwramAt6110 gIwram_6110;
+
+struct Entity {
+    u8 field_00;
+    u8 field_01;
+    s16 x;
+    s16 y;
+    u8 field_06;
+    u8 field_07[3];
+    u8 field_0A;
+    u8 field_0B[5];
+    u16 field_10;
+    u16 field_12;
+    u16 field_14;
+    u8 field_16;
+    u8 field_17;
+    u8 field_18[2];
+    u8 field_1A;
+    u8 field_1B;
+    u8 field_1C[8];
+    s16 field_24;
+    s16 field_26;
+    u8 field_28;
+    u8 field_29;
+    u8 field_2A;
+    u8 field_2B[5];
+    u8 field_30;
+    u8 field_31;
+    u8 field_32;
+    u8 field_33;
+    u16 status;
+    u8 field_36[2];
+};
+
+extern void CtrlFlags_SetBit(void *baseIn, u32 selectorIn, u32 bitIn);
 /* Unprototyped: the gate-close call below passes only two args so r2 keeps
  * the 0 left over from the two halfword clears (matches the baserom). */
 extern void ModeControl_ClearBit();
+extern u32 ModeControl_GetFlag(void *base, u32 selector, u32 bit);
 extern void SpawnGrid_UpdateSection(void);
 
 extern struct Entity gEntities_03003720[];
