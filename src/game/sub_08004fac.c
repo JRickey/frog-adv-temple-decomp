@@ -1,4 +1,5 @@
 #include "game.h"
+#include "entity.h"
 #include "iwram.h"
 #include "macros.h"
 #include "types.h"
@@ -16,7 +17,6 @@ extern void Sound_ServiceQueue(void);
 extern u32 Scene_SelectEntityLimit(void);
 extern u8 RunFadeTransition(u8 *localState, u32 callbackTable);
 extern void RunWorldSelectTransition(u32 arg);
-extern void EntityParam_Apply(u32 handle);
 extern u32 Scene_InitScan(u8 *localState);
 extern void CtrlFlags_SetBit(void *base, u32 selector, u32 bit);
 extern u16 Input_Poll(void);

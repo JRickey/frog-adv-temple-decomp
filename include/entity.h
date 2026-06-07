@@ -38,4 +38,6 @@ void Entity_UpdateMovers(s32 start, s32 end);
 
 void EntityMover_Tick(u8 arg);
 
+void EntityParam_Apply(u32 arg);
+
 #endif /* GUARD_ENTITY_H */
