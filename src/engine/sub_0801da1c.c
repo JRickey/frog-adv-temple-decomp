@@ -1,11 +1,11 @@
 #include "game.h"
+#include "gfx.h"
 #include "gba/dma.h"
 #include "types.h"
 
 extern void Credits_LoadGfx(void);
 extern int Credits_FillPage(u8 row, u8 col);
 extern void WaitFrames(u8 arg);
-extern int Screen_BeginFlash(int arg);
 extern int Screen_TickFlash(void);
 extern void SoundMixer_Stop(void);
 extern void Credits_FadeTransition(void);

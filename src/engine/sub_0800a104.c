@@ -25,7 +25,6 @@ struct EntityBounds0800A158 {
 
 extern u8 Rect_PointInRect(void *ctx, struct PackedRect0800A158 rect, s16 c, s16 d);
 extern int Blend_StepFade(void);
-extern u16 Screen_BeginFlash(u16 arg);
 extern int Screen_TickFlash(void);
 
 int RunFadeTransition(s8 *phase, GameProc callback)

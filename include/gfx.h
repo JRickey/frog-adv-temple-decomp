@@ -11,4 +11,6 @@ u16 Blend_StartFade(u16 arg);
 
 u32 SpriteAsset_LoadSheet(u8 a, u8 b);
 
+u16 Screen_BeginFlash(u16 arg);
+
 #endif /* GUARD_GFX_H */

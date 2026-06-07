@@ -9,7 +9,6 @@ extern const void *const sUiAssetSlots[];
 
 extern u32 GetFrameTick(void);
 extern s32 Screen_TickFlash(void);
-extern u16 Screen_BeginFlash(u16 arg);
 extern void Mode4_BlitRect(u16 dstX, u16 dstY, const void *src, void *desc);
 extern void Sound_Reset(void);
 

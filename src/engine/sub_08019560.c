@@ -52,7 +52,6 @@ extern const void *const sUiAssetSlots[];
  * directly with `cmp r0, #0` instead of zero-extending via `lsls #24`,
  * matching the baserom's branch. */
 extern s32 Blend_StepFade(void);
-extern u16 Screen_BeginFlash(u16 arg);
 
 /* Reload the status-bar BG3 graphics (DMA3 from sUiAssetSlots[3..5] into
  * tile/palette/map VRAM), arm BG3 + 1D-OBJ, and re-init the fade-out

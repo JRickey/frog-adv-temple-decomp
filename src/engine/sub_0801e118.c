@@ -5,7 +5,6 @@
 
 extern void Credits_Init(u8 arg);
 extern void Credits_LoadBgGfx(u8 arg);
-extern u16 Screen_BeginFlash(u16 arg);
 extern void WaitFrames(u32 delay);
 extern s32 Screen_TickFlash(void);
 extern void IrisOpen(u8 a, u8 b);

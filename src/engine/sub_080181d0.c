@@ -1,4 +1,5 @@
 #include "gba/dma.h"
+#include "gfx.h"
 #include "iwram.h"
 #include "types.h"
 
@@ -43,7 +44,6 @@ void FrogSelect_LoadCharTilemap(void)
 }
 
 extern u32 GetFrameTick(void);
-extern u16 Screen_BeginFlash(u16 arg);
 
 void FrogSelect_InitDispatch(void)
 {

@@ -1,4 +1,5 @@
 #include "macros.h"
+#include "gfx.h"
 #include "types.h"
 
 /* Fade-in ticker. Decrements the fade countdown at 0x03006538; when
