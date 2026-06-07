@@ -3,6 +3,7 @@
 
 /* --- FrogStatusBar_Update: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
 #ifdef NON_MATCHING
+#include "gfx.h"
 #include "macros.h"
 #include "types.h"
 #include "gba/dma.h"
@@ -18,16 +19,6 @@ struct StatusBarFrame {
 };
 
 extern const struct StatusBarFrame sFrogStatusBarFrames[];
-
-struct DmaDesc2Entry {
-    u16 maxCount;
-    u8 threshold;
-    u8 _pad3;
-    u32 *srcPtrTable;
-    u32 destAddr;
-    u16 count;
-    u16 _pad0e;
-};
 
 extern u32 gDmaDescTable_08306888[];
 

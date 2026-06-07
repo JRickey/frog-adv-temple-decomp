@@ -1,3 +1,4 @@
+#include "gfx.h"
 #include "macros.h"
 #include "types.h"
 #include "gba/dma.h"
@@ -158,16 +159,6 @@ cont:
 /* DMA descriptor table at 0x08306888 with richer entry layout:
  * +0: u16 maxCount, +2: u8 threshold, +4: ptr to ptr array,
  * +8: u32 destAddr, +12: u16 count */
-struct DmaDesc2Entry {
-    u16 maxCount;
-    u8 threshold;
-    u8 _pad3;
-    u32 *srcPtrTable;
-    u32 destAddr;
-    u16 count;
-    u16 _pad0e;
-};
-
 void Icon_DmaUpdateSprite(void)
 {
     /* ip holds the gGameStuff base across the whole function; used to

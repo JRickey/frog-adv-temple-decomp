@@ -57,6 +57,16 @@ struct ScaleAnimDesc {
     u32 _pad20;
 };
 
+struct DmaDesc2Entry {
+    u16 maxCount;
+    u8 threshold;
+    u8 _pad3;
+    u32 *srcPtrTable;
+    u32 destAddr;
+    u16 count;
+    u16 _pad0e;
+};
+
 u8 TileMap_GetCell(u32 x, u32 y);
 
 void ScrollCamera_Update(u8 countArg);
