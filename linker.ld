@@ -783,7 +783,7 @@ SECTIONS {
         asm/disasm_0x0803079c.o(.text);  /* 0x0803080c - 0x080308b0, SoundOp_SetAcc1 (auto-peeled) */
         src/system/sub_080308b0.o(.text);  /* 0x080308b0 - 0x080309a0, Sound_LoadStreamSlot */
         src/system/sub_080309a0.o(.text);
-        src/system/sub_08030a44.o(.text);  /* 0x08030a44 - 0x08030b34, SoundOpcode_SetStreamLoop */
+        src/system/SoundOpcode_SetStreamLoop.o(.text);  /* 0x08030a44 - 0x08030b34, SoundOpcode_SetStreamLoop */
         asm/text/text_0x08030b34.o(.text);  /* 0x08030b34 - 0x080315d8, raw bytes */
         src/system/sound_opcode_dispatch.o(.text);  /* 0x080315d8 - 0x08031638, Sound_OpcodeDispatch */
         src/system/SoundOpcode_SetStreamPan.o(.text);
