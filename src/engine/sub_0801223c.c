@@ -135,8 +135,6 @@ extern struct CamTarget_6480 gIwram_6480;
 extern struct EntityPos_3720 gEntities_03003720;
 extern u8 gIwram_60A0[];
 
-extern void SoundEntry_Play(u32 idx);
-extern void SoundEntry_Stop(u32 idx);
 extern u8 Selector_TriggerWindowReveal(void);
 extern u8 Selector_StepColorFade(void);
 extern void UpdateScrollFromAnimChannels(void);

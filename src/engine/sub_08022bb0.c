@@ -1,12 +1,11 @@
 #include "iwram.h"
+#include "sound.h"
 #include "entity.h"
 #include "types.h"
 
 extern void Pickup_LoadSlotGroup_2(void);
 extern void Pickup_LoadSlotGroup_6(void);
 extern void Entity_CheckProximityAndPlaySound(struct Entity *s, u8 idx, u8 halfW, u8 halfH);
-extern void SoundEntry_Stop(u8 idx);
-extern void SoundEntry_Play(u8 idx);
 extern void Entity_FollowPath(const void *a0, s32 slot);
 extern void Entity_AdvanceAnimFrames(s32 a0, s32 a1);
 extern void sub_080210A0(u16 a0, const void *a1, u16 a2, u8 a3, u16 a4, u8 a5, u8 a6, u8 a7);

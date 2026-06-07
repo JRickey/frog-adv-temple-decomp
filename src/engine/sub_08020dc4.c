@@ -1,4 +1,5 @@
 #include "types.h"
+#include "sound.h"
 #include "iwram.h"
 
 typedef struct {

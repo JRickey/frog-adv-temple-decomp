@@ -10,8 +10,6 @@ extern void GateRoom_ResetState(void);
 extern void GateRoom_TickFrogUpdate(void);
 extern u8 ModeControl_GetFlag(void *base, u32 selector, u32 bit);
 extern void GateRoom_InitScrollParams(void);
-extern void SoundEntry_Play(u32 arg0);
-extern void SoundEntry_Stop(u32 arg0);
 extern u8 GateRoom_UpdateSlide(void);
 
 extern const u32 sLevelLayout_317FD0[];

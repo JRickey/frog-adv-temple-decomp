@@ -1,4 +1,5 @@
 #include "types.h"
+#include "sound.h"
 
 typedef struct {
     s32 fieldA;

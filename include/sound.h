@@ -548,4 +548,8 @@ u32 Sound_PlayNearEntity(struct Entity *entity, u32 sound, u8 halfW, u8 halfH);
 
 void Sound_PlayIfEnabled(u32 arg);
 
+void SoundEntry_Play(u8 idx);
+
+void SoundEntry_Stop(u8 idx);
+
 #endif
