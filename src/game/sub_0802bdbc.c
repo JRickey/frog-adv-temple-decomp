@@ -1,11 +1,11 @@
 #include "game.h"
+#include "gfx.h"
 #include "iwram.h"
 #include "types.h"
 
 extern u32 ModeControl_GetFlag(u8 *base, u32 selector, u32 bit);
 extern void ModeControl_ClearBit(u8 *base, u32 selector, u32 bit);
 extern void CtrlFlags_SetBit(u8 *base, u32 selector, u32 bit);
-extern void sub_08015194(void);
 extern void Display_ResetLayers(void);
 extern u8 sub_0801436C(void);
 

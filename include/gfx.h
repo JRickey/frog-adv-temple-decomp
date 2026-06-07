@@ -15,4 +15,6 @@ u16 Screen_BeginFlash(u16 arg);
 
 s32 Screen_TickFlash(void);
 
+void sub_08015194(void);
+
 #endif /* GUARD_GFX_H */

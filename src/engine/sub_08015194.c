@@ -1,4 +1,5 @@
 #include "types.h"
+#include "gfx.h"
 
 extern u8 gIwram_6540[];
 extern u8 gIwram_6480[];
