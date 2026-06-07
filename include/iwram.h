@@ -176,6 +176,25 @@ struct IwramAt5358 {
     u16 justPressed; /* +0: just-pressed raw key bitmask (active-high) */
 };
 
+/* Per-BG-layer scroll / tilemap-window state. gIwram_60A0 is an ARRAY of 3
+ * (stride 0x20): BG0 @0x030060A0, BG1 @0x030060C0, BG2 @0x030060E0. Replaces
+ * the ~13 per-file local dups (SceneScrollState*, ScrollState, ViewState, ...).
+ * NOTE: layer[0]'s byte 0 doubles as a standalone scroll-suppress flag (bit7),
+ * and base+0x40 (= layer[2]+0) is the standalone BgScrollAnim flag — both used
+ * as raw bytes, not through this struct. */
+struct BgScrollState {
+    u8 _pad00[4];   /* +0x00 */
+    s32 committedX; /* +0x04: snapshot of scrollX (BgScrollBlit) */
+    s32 committedY; /* +0x08: snapshot of scrollY */
+    s32 scrollX;    /* +0x0C: live H scroll in px (Entity_UpdateVisibility reads the low u16) */
+    s32 scrollY;    /* +0x10: live V scroll in px */
+    u16 bgHofs;     /* +0x14: committed HW H-offset -> REG_BGxHOFS */
+    u16 bgVofs;     /* +0x16: committed HW V-offset */
+    u16 tileRows;   /* +0x18: tilemap height in tiles */
+    u16 tileCols;   /* +0x1A: tilemap width in tiles (doubles as framebuffer row pitch) */
+    u8 _pad1c[4];   /* +0x1C */
+};
+
 struct IwramAt5360 {
     u8 _field_00; /* +0: state byte (written as 1/2/3/4 by InitScrollAnimSequence) */
     u8 _pad01[3];
