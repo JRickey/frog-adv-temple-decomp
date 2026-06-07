@@ -1,3 +1,4 @@
+#include "gfx.h"
 #include "macros.h"
 #include "types.h"
 #include "gba/dma.h"
@@ -26,9 +27,7 @@ extern struct IwramAt5330 gIwram_5330;
 
 u32 GetFrameTick(void);
 int Blend_StepFade(void);
-u16 Screen_BeginFlash(u16 arg);
 u16 Blend_StartFade(u16 arg);
-int Screen_TickFlash(void);
 void sub_08015EC4(u32 x, u32 y, const void *src, void *dst);
 void sub_08015F9C(u32 x, u32 y, const void *src, void *dst);
 void sub_0801629C(u32 x, u32 y, const void *src, void *dst);

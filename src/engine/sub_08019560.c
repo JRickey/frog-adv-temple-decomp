@@ -22,7 +22,6 @@ void GameMode_Menu25(void)
 }
 
 extern void SoundMixer_Stop(void);
-extern s32 Screen_TickFlash(void);
 extern u32 GetFrameTick(void);
 
 void Menu25_WaitFadeIn(void)

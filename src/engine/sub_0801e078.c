@@ -5,7 +5,6 @@
 
 extern const u16 sScreenPaletteCD78[256];
 extern const u16 sScreenTilemapCF78[1024];
-extern s32 Screen_TickFlash(void);
 extern void WaitFrames(u32 delay);
 extern s32 Blend_StepFade(void);
 

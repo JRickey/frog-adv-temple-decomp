@@ -58,7 +58,7 @@ u16 Screen_BeginFlash(u16 arg)
  * final block doesn't need the bldcnt/n pins because there's no
  * arithmetic on countdown before the store. */
 
-u8 Screen_TickFlash(void)
+s32 Screen_TickFlash(void)
 {
     vu8 *countdown = (vu8 *)0x03006538;
     vu8 *p3480 = (vu8 *)0x03003480;

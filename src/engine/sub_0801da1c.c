@@ -6,7 +6,6 @@
 extern void Credits_LoadGfx(void);
 extern int Credits_FillPage(u8 row, u8 col);
 extern void WaitFrames(u8 arg);
-extern int Screen_TickFlash(void);
 extern void SoundMixer_Stop(void);
 extern void Credits_FadeTransition(void);
 

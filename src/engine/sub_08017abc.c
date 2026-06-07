@@ -1,3 +1,4 @@
+#include "gfx.h"
 #include "macros.h"
 #include "types.h"
 #include "gba/dma.h"
@@ -9,7 +10,6 @@ extern u16 gIwram_5398;
 extern const void *const sUiAssetSlots[];
 
 u32 GetFrameTick(void);
-u16 Screen_BeginFlash(u16 arg);
 
 void UiScreen_Init(void)
 {
