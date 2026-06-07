@@ -38,9 +38,26 @@ MAP = ROOT / "frog_us.map"
 ROM_BASE = 0x08000000
 ROM_END  = 0x0A000000   # generous upper bound for GBA ROM
 
+# libgcc soft-float/arith helpers live in this contiguous tail (same range as
+# build_callgraph.py). Their members are multi-entry: __addsf3/__subsf3 bl into
+# a shared label partway through __unpack_f, etc. A bl into the interior of a
+# libgcc member, FROM another libgcc member, is expected — not a mis-encoding.
+LIBGCC_LO = 0x08033CA4
+LIBGCC_HI = 0x0803578C
+
 FUNCTION_HEADER_RE = re.compile(r"^([0-9a-f]+)\s+<(\S+)>:\s*$")
 INSN_RE = re.compile(r"^\s*([0-9a-f]+):\s+([0-9a-f][0-9a-f ]*?)\s*\t(\S+)(?:\s+(.*))?$")
 BRANCH_TARGET_RE = re.compile(r"(?:0x)?([0-9a-f]+)")
+
+
+def is_libgcc(name: str, addr: int) -> bool:
+    return name.startswith("__") or name.startswith("_call_via") or (LIBGCC_LO <= addr < LIBGCC_HI)
+
+
+def is_raw_bucket(name: str) -> bool:
+    """A still-unpeeled raw blob symbol (asm/text/text_0x*.o exports `text_<addr>`).
+    A bl into one means the callee just hasn't been peeled into its own symbol yet."""
+    return name.startswith("text_")
 
 
 def parse_map_addresses() -> dict[str, int]:
@@ -155,6 +172,7 @@ def main() -> int:
 
             ctn = containing_function(target)
             note = ""
+            category = "suspicious"
             if ctn is None:
                 note = "no containing symbol (target out of any function)"
             else:
@@ -164,9 +182,22 @@ def main() -> int:
                             f"offset +{target - ctn_addr})")
                 else:
                     note = f"target is interior of {ctn_name}"
+                # Two expected (non-suspicious) interior-branch classes:
+                #  - libgcc multi-entry: a member bl'ing into another member's
+                #    interior (both ends in the libgcc belt). Correct by design.
+                #  - un-peeled raw bucket: the callee is a real function still
+                #    inside a text_0x* blob; it gets its own symbol once peeled.
+                if is_raw_bucket(ctn_name):
+                    category = "unpeeled"
+                    note += " — callee not yet peeled (still in a raw text bucket)"
+                elif is_libgcc(current_fn, current_fn_addr) and is_libgcc(ctn_name, ctn_addr):
+                    category = "libgcc"
+                    note += " — libgcc multi-entry internal branch (expected)"
 
             # Suspicious values per the fa09acf incident: ~0x3F00xx range.
+            # This signature ALWAYS overrides the expected classes above.
             if 0x003F0000 <= target <= 0x003FFFFF or 0x803F0000 <= target <= 0x803FFFFF:
+                category = "suspicious"
                 note += " — looks like a Thumb-BL relocation failure (matches fa09acf signature)"
 
             violations.append({
@@ -176,19 +207,31 @@ def main() -> int:
                 "target": f"0x{target:08x}",
                 "note": note,
                 "raw": line.strip(),
+                "category": category,
             })
+
+    suspicious = [v for v in violations if v["category"] == "suspicious"]
+    expected = [v for v in violations if v["category"] != "suspicious"]
 
     if not args.quiet:
         print(f"Checked {checked} branch instructions.")
 
-    if not violations:
+    if expected and not args.quiet:
+        n_libgcc = sum(1 for v in expected if v["category"] == "libgcc")
+        n_unpeeled = sum(1 for v in expected if v["category"] == "unpeeled")
+        print(f"\n{len(expected)} expected interior branch(es) "
+              f"(libgcc multi-entry: {n_libgcc}, un-peeled bucket: {n_unpeeled}) — not failures:")
+        for v in expected:
+            print(f"  {v['from']}  in {v['from_fn']}: {v['mnemonic']} {v['target']}  — {v['note']}")
+
+    if not suspicious:
         if not args.quiet:
-            print("OK: all branch targets resolve to known symbols or "
-                  "intra-function locations.")
+            print("\nOK: all branch targets resolve to known symbols, "
+                  "intra-function locations, or expected interior branches.")
         return 0
 
-    print(f"\nFAIL: {len(violations)} suspicious branch target(s):\n")
-    for v in violations:
+    print(f"\nFAIL: {len(suspicious)} suspicious branch target(s):\n")
+    for v in suspicious:
         print(f"  {v['from']}  in {v['from_fn']}")
         print(f"    {v['mnemonic']} {v['target']}  — {v['note']}")
         print(f"    raw: {v['raw']}")
