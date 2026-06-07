@@ -121,10 +121,23 @@ grid levels, one tile at a time.
   Temple coin gates (50/75) check the persistent total.
 - `gGameStuff.sceneType` (off 10, formerly `pendingMode`) = the scene/level id
   that keys the `sEntityProc*` dispatch (set to `mode - 7`).
+- **HUD counters live in the player run-state `gIwram_35E0`** (0x030035E0, the
+  same struct as the former local `StructA74`): `lives` (+0, init 5, cap 99),
+  `coins` (+2, u16, cap 999, reset per level), `elementsCollected` (+4, drawn by
+  `FrogStatusBar_Update`, level clears at `>= gIwram_6110.threshold` = the goal).
+  lives/coins confirmed by the project owner.
+- **Pickup handler `sub_08021510` is keyed on entity `kind`**: kind **4** = element
+  (+1 elementsCollected, Sound 7), kind **2/3** = coin (+1 coins, Sound 6),
+  kind **11/12** = 1-up (+1 lives, Sound 13). (Partial entity-kind enumeration.)
 
 ## Open questions (still to resolve during deep naming)
-- Full entity/tile **type byte** enumeration (which value = spike / vehicle /
-  element / coin / checkpoint / …), and what the 17-entry `sEntityProc*` index
-  represents (level/scene id, given `sceneType` keys it).
-- Exact IWRAM/SRAM locations of the HUD/save counters (elements-collected,
-  coins, lives, continues) and the per-level goal storage.
+- Full entity/tile **type byte** enumeration — known so far: 2/3=coin, 4=element,
+  11/12=1-up (from sub_08021510). Still: spike / vehicle / checkpoint / hazard
+  kinds, and what the 17-entry `sEntityProc*` index represents.
+- **lives/coins game logic is NOT in decompiled C yet**: the death-decrement
+  (lives), the Temple 50/75 gate, and the SRAM coin commit are in asm/undecompiled
+  functions — so those specific interactions can't be confirmed from C; the names
+  rest on init values + the pickup handler + the project owner's confirmation.
+- `gGameStuff._unk00/_unk04/_unk10/_unk14/_unk18/_unk22` — deferred until emulator
+  traces are available (`_unk14` looks like a per-mode frame counter, `_unk00` a
+  global tick/timestamp, but not confirmed).
