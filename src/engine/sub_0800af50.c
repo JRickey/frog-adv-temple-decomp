@@ -11,11 +11,6 @@ typedef struct EntityHitboxFlagBytes {
     u8 _padA[3];
 } EntityHitboxFlagBytes;
 
-typedef struct EntityHitboxPoint {
-    s16 x;
-    s16 y;
-} EntityHitboxPoint;
-
 typedef struct EntitySlot {
     u32 field0;
     u8 field4;

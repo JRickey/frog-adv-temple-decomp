@@ -1,3 +1,4 @@
+#include "entity.h"
 #include "game.h"
 #include "sound.h"
 #include "iwram.h"
@@ -17,13 +18,6 @@
  *     `adds r1, r5, r0` — byte_diff 2 from baserom. */
 
 extern s8 EntityHitbox_FindPoint(s8 a, s16 x, s16 y);
-
-struct EntryB8A8 {
-    u32 _field_0;
-    u8 _field_4;
-    u8 _field_5;
-    u8 _pad6[2];
-};
 
 void Entity_ActivateHitSlot(struct EntryB8A8 *arr, unsigned long long *mask, u8 a, u8 b)
 {

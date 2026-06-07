@@ -4,14 +4,6 @@
 #include "macros.h"
 #include "types.h"
 
-typedef struct CollisionSlot {
-    u32 flags;
-    u8 active;
-    u8 touched;
-    u8 state;
-    u8 _pad7;
-} CollisionSlot;
-
 extern const EntityHitbox sEntityHitboxTable[];
 extern int SpriteGrid_SetCellFlags(int xTile, int mode, int x, int y, int flags);
 

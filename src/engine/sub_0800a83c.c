@@ -10,11 +10,6 @@ typedef struct EntityHitboxFlagBytes {
     u8 _padA[2];
 } EntityHitboxFlagBytes;
 
-typedef struct EntityHitboxPoint {
-    s16 x;
-    s16 y;
-} EntityHitboxPoint;
-
 extern const EntityHitbox sEntityHitboxTable[];
 extern int SpriteGrid_SetCellFlags(int gridId, int gridPlane, int x, int y, int flags);
 

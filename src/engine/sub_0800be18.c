@@ -4,14 +4,6 @@
 #include "macros.h"
 #include "types.h"
 
-typedef struct CollisionSlot {
-    u32 flags;
-    u8 active;
-    u8 touched;
-    u8 state;
-    u8 _pad7;
-} CollisionSlot;
-
 extern const EntityHitbox sEntityHitboxTable[];
 extern int SpriteGrid_SetCellFlags(int xTile, int unused, int x, int y, int flags);
 
@@ -118,13 +110,6 @@ done:
  * into the caller-supplied 64-bit mask. */
 
 extern s8 EntityHitbox_FindPoint(s8 a, s16 x, s16 y);
-
-struct EntryB8A8 {
-    u32 _field_0;
-    u8 _field_4;
-    u8 _field_5;
-    u8 _pad6[2];
-};
 
 void sub_0800BEBC(struct EntryB8A8 *arr, unsigned long long *mask, u8 a, u8 b)
 {

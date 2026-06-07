@@ -3,6 +3,29 @@
 
 #include "types.h"
 
+/* 8-byte hit-slot entry in the entity hit-slot array (base + idx*8). */
+struct EntryB8A8 {
+    u32 _field_0;
+    u8 _field_4;
+    u8 _field_5;
+    u8 _pad6[2];
+};
+
+/* Active collision slot in the hitbox-slot table (8 bytes per slot). */
+typedef struct CollisionSlot {
+    u32 flags;
+    u8 active;
+    u8 touched;
+    u8 state;
+    u8 _pad7;
+} CollisionSlot;
+
+/* Signed 2-D point (x, y) extracted from a hitbox descriptor's points array. */
+typedef struct EntityHitboxPoint {
+    s16 x;
+    s16 y;
+} EntityHitboxPoint;
+
 /* ROM hitbox/collision-point descriptor. One per entity shape; the dispatch
  * tables in entity_dispatch.c hand these to the collision-probe routines in
  * src/engine. */
