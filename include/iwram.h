@@ -82,11 +82,21 @@ struct IwramAt3608 {
     u8 _field_5; /* +0x5: byte accessed by CharLayers_Upload and ScrollUpdate_Pass0 */
 };
 
-/* Entity pool slot (0x03003720 + slot*0x38; 128 slots). Replaces the flat
- * struct IwramAt3720, which incorrectly modelled the whole pool as one struct
- * (its _field_38 was slot 1's +0x00, _field_692/_694 slot 30's x/y, etc.).
- * Fields stay offset-named except the established x/y/status; semantic naming
- * is a later pass. See docs/memory-map.md "Entity pool". */
+/* Entity: the fixed-size (0x38) actor-pool slot — gEntities[128] @0x03003720.
+ *
+ * MODEL B (tagged variant; see docs/game-model.md). Every actor is the SAME
+ * slot — Frogger (slot 0), enemies, items, tiles — distinguished by the `kind`
+ * tag at +0x00, not by a different struct. The slot has:
+ *   - a COMMON HEADER used by all kinds: kind(+0x00), x(+0x02), y(+0x04),
+ *     actorId(+0x06), state(+0x1A), hitHalfW/H(+0x24/+0x26), status(+0x34);
+ *   - a PER-BEHAVIOR PRIVATE REGION (~+0x07..+0x33) that each kind reinterprets
+ *     and accesses through cast-VIEW structs (e.g. MotionDesc over +0x2A and
+ *     +0x30..+0x32). Those bytes do NOT have one flat meaning — the offset-named
+ *     `field_NN` placeholders below are that private region; semantic names
+ *     there belong to each behavior's view struct, not to struct Entity.
+ * Evidence: struct_xref shows the common header constant-accessed broadly while
+ * the middle is reached via computed slot pointers (per-behavior). Restructuring
+ * to this model is byte-neutral (layout preserved). Replaces flat IwramAt3720. */
 struct Entity {
     u8 field_00;    /* +0x00: kind/type byte */
     u8 field_01;    /* +0x01 */
