@@ -1,3 +1,4 @@
+#include "entity.h"
 #include "game.h"
 #include "iwram.h"
 #include "macros.h"
@@ -5,16 +6,6 @@
 
 extern void PlayerState_Init(struct IwramAt35E0 *p, s8 a, s16 b, s8 c, s8 e);
 extern void Entity_Init(struct Entity *p, u8 a, s16 b, s16 c, u8 d, u16 e, u8 f, u8 g, u8 h, u16 i);
-
-struct SpawnRec {
-    s16 _h0;
-    s16 _h2;
-    u8 _b4;
-    u8 _b5;
-    u8 _b6;
-    u8 _b7;
-    u8 _b8;
-};
 
 /* Same spawn-record path as Entity_SpawnFromRecord, but the three caller-supplied fields
  * (a, b, c) are forwarded straight to PlayerState_Init instead of being re-read from

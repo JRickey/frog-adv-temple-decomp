@@ -3,6 +3,17 @@
 
 #include "types.h"
 
+/* Spawn record: two tile-coord halfwords + 5 config bytes (8 bytes + pad → 9 total, stride varies). */
+struct SpawnRec {
+    s16 _h0;
+    s16 _h2;
+    u8 _b4;
+    u8 _b5;
+    u8 _b6;
+    u8 _b7;
+    u8 _b8;
+};
+
 /* 8-byte hit-slot entry in the entity hit-slot array (base + idx*8). */
 struct EntryB8A8 {
     u32 _field_0;
