@@ -1,4 +1,5 @@
 #include "macros.h"
+#include "sound.h"
 #include "entity.h"
 #include "iwram.h"
 #include "types.h"
@@ -8,7 +9,6 @@
 #include "iwram.h"
 #include "types.h"
 
-extern void Sound_PlayNearEntity(struct Entity *entity, u8 sound, u8 a, u8 b);
 extern void sub_080210A0(u16 a0, const void *a1, u16 a2, u8 a3, u16 a4, u8 a5, u8 a6, u8 a7);
 extern void Entity_AdvanceAnimFrames(s32 a0, s32 a1);
 extern void MotionDesc_Set(void *m, u8 sel, u8 a, u8 b);

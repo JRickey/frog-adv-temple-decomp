@@ -3,6 +3,8 @@
 
 #include "types.h"
 
+struct Entity; /* forward declaration for Sound_PlayNearEntity */
+
 typedef struct SlotEnvelopeA0 {
     u16 acc;
     s16 step;
@@ -541,5 +543,7 @@ typedef struct SoundLockSystem {
      *(u16 *)((u8 *)(slot) + SOUND_ACC_SUM_4_OFFSET) + *(u16 *)((u8 *)(slot) + SOUND_ACC_SUM_5_OFFSET))
 
 u32 Sound_Play(u32 sound);
+
+u32 Sound_PlayNearEntity(struct Entity *entity, u32 sound, u8 halfW, u8 halfH);
 
 #endif
