@@ -20,4 +20,18 @@ typedef struct IndexEntry {
     u8 _pad[7];
 } IndexEntry;
 
+/* An entity record (gEntities slot) viewed only through the four fields
+ * MotionDesc_Set writes (sel @0x2A, dx/dy/mode @0x30-0x32). Kept as a dedicated
+ * typed view rather than a cast off the entity so each store derives its
+ * address from the base pointer afresh, matching the baserom (a single Entity*
+ * would let agbcc CSE-fold the base+offset and diverge). */
+struct MotionDesc {
+    u8 _pad00[0x2a];
+    u8 sel;
+    u8 _pad2b[5];
+    u8 dx;
+    u8 dy;
+    u8 mode;
+};
+
 #endif /* GUARD_ENTITY_H */

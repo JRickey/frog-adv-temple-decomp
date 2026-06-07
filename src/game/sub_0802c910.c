@@ -3,18 +3,10 @@
 
 /* --- Entity22_Update: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
 #ifdef NON_MATCHING
+#include "entity.h"
 #include "game.h"
 #include "iwram.h"
 #include "types.h"
-
-struct MotionDesc {
-    u8 _pad00[0x2a];
-    u8 sel;
-    u8 _pad2b[5];
-    u8 dx;
-    u8 dy;
-    u8 mode;
-};
 
 extern void MotionDesc_Set(struct MotionDesc *m, s8 sel, s8 a, s8 b);
 extern void DirToMotion(u8 dir, s8 *outX, s8 *outY);

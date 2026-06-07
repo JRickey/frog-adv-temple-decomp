@@ -1,3 +1,4 @@
+#include "entity.h"
 #include "game.h"
 #include "iwram.h"
 #include "types.h"
@@ -13,15 +14,6 @@ extern u32 Sound_Play(u32 sound);
 extern u8 Enemy_PickNextStep(Entry *e, s16 *out);
 extern u8 TileEntry_CalcDirection(Entry *a, Entry *b);
 extern void DirToMotion(u8 dir, s8 *outX, s8 *outY);
-
-struct MotionDesc {
-    u8 _pad00[0x2a];
-    u8 sel;
-    u8 _pad2b[5];
-    u8 dx;
-    u8 dy;
-    u8 mode;
-};
 
 extern void MotionDesc_Set(struct MotionDesc *m, s8 sel, s8 a, s8 b);
 

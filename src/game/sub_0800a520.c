@@ -1,3 +1,4 @@
+#include "entity.h"
 #include "game.h"
 #include "macros.h"
 #include "types.h"
@@ -47,19 +48,6 @@ void Entity_InitShadow(void)
 
     Entity_Init(dst, 84, *(s16 *)(src + 2), (s16)(*(u16 *)(src + 4) - 24), 3, 992, 15, 2, 0, 32);
 }
-/* The same entity record Entity_InitShadow seeds, viewed only through the four
- * fields MotionDesc_Set writes. Kept as a dedicated typed view (rather than a
- * cast off the opaque ClusterA710) so each store derives its address from the
- * base pointer in ip afresh, matching the baserom. */
-struct MotionDesc {
-    u8 _pad00[0x2a];
-    u8 sel;
-    u8 _pad2b[5];
-    u8 dx;
-    u8 dy;
-    u8 mode;
-};
-
 /* Records sel at offset 0x2a, then writes a 3-byte motion descriptor (mode at
  * 0x32, delta-x at 0x30, delta-y at 0x31) selected by sel. Each case scales the
  * two signed delta bytes a/b by a fixed per-case factor; sel outside 0..13
