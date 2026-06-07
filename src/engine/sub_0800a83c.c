@@ -2,14 +2,6 @@
 #include "iwram.h"
 #include "types.h"
 
-typedef struct EntityHitboxFlagBytes {
-    u32 count;
-    u32 points;
-    u8 primaryFlags;
-    u8 alternateFlags;
-    u8 _padA[2];
-} EntityHitboxFlagBytes;
-
 extern const EntityHitbox sEntityHitboxTable[];
 extern int SpriteGrid_SetCellFlags(int gridId, int gridPlane, int x, int y, int flags);
 

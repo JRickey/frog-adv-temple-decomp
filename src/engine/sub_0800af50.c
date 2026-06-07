@@ -4,13 +4,6 @@
 #include "types.h"
 #include "game.h"
 
-typedef struct EntityHitboxFlagBytes {
-    u32 count;
-    u32 points;
-    u8 primaryFlags;
-    u8 _padA[3];
-} EntityHitboxFlagBytes;
-
 typedef struct EntitySlot {
     u32 field0;
     u8 field4;

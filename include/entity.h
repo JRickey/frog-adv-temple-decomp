@@ -37,6 +37,17 @@ typedef struct EntityHitboxPoint {
     s16 y;
 } EntityHitboxPoint;
 
+/* Cast-overlay on the ROM hitbox table: the first 10 bytes of each entry
+ * viewed as flag bytes.  sub_0800a83c reads both flag fields; sub_0800af50
+ * only uses primaryFlags but the layout must stay identical. */
+typedef struct EntityHitboxFlagBytes {
+    u32 count;
+    u32 points;
+    u8 primaryFlags;
+    u8 alternateFlags;
+    u8 _padA[2];
+} EntityHitboxFlagBytes;
+
 /* ROM hitbox/collision-point descriptor. One per entity shape; the dispatch
  * tables in entity_dispatch.c hand these to the collision-probe routines in
  * src/engine. */
