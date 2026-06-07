@@ -3,16 +3,10 @@
 
 /* --- Selector_BlitTiles: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
 #ifdef NON_MATCHING
-struct IwramAt60A0_sub1190C {
-    u8 _pad00[12];
-    s32 field_c;
-    s32 field_10;
-    u8 _pad14[6];
-    u16 field_1a;
-    u8 _pad1c[16];
-    s32 field_2c;
-    s32 field_30;
-};
+#include "iwram.h"
+
+extern struct BgScrollState gIwram_60A0[3];
+
 struct IwramAt6480_sub1190C {
     u8 field_0;
     u8 _pad01[7];
@@ -98,7 +92,7 @@ void Selector_BlitTiles(struct Unk11984Elem *elems, u8 idx)
 
     /* lever #1: the `ofs` temp (multiply-first) lengthens the 60A0/dst base pseudo
      * to len 36, dropping its allocno priority below idx's -> idx wins ip, elems->r9 */
-    ofs = gIwram_60A0.field_1a * elems[idx + 1].field_2 + elems[idx + 1].field_0;
+    ofs = gIwram_60A0[0].tileCols * elems[idx + 1].field_2 + elems[idx + 1].field_0;
     dst = (u16 *)0x02020000 + ofs;
     gIwram_6480.field_18 = (u32)dst;
 
@@ -112,7 +106,7 @@ void Selector_BlitTiles(struct Unk11984Elem *elems, u8 idx)
             *dst++ = *src++;
             x = (u16)(x + 1);
         }
-        dst += gIwram_60A0.field_1a - width;
+        dst += gIwram_60A0[0].tileCols - width;
         y = (u16)(y + 1);
     }
 

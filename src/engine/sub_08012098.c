@@ -92,16 +92,7 @@ void Selector_ResetState(void)
     (void)REG_DMA3.cnt;
 }
 
-struct ScrollState_60A0 {
-    u8 _pad00[12];
-    s32 scrollX;
-    s32 scrollY;
-    u8 _pad14[24];
-    s32 scrollX2;
-    s32 scrollY2;
-};
-
-extern struct ScrollState_60A0 gIwram_60A0;
+extern struct BgScrollState gIwram_60A0[3];
 
 /* The position word lives at offset 0 of the 0x03005330 block (gGameStuff._unk00).
  * Read it through the linker symbol gIwram_5330 rather than the gGameStuff constant
@@ -158,10 +149,10 @@ void UpdateScrollFromAnimChannels(void)
         gIwram_5360._field_08 = gIwram_5330;
     }
 
-    x = gIwram_60A0.scrollX + (s32)gIwram_5360._field_04;
-    gIwram_60A0.scrollX = x;
-    y = gIwram_60A0.scrollY + (s32)gIwram_6150._field_04;
-    gIwram_60A0.scrollY = y;
-    gIwram_60A0.scrollX2 = x;
-    gIwram_60A0.scrollY2 = y;
+    x = gIwram_60A0[0].scrollX + (s32)gIwram_5360._field_04;
+    gIwram_60A0[0].scrollX = x;
+    y = gIwram_60A0[0].scrollY + (s32)gIwram_6150._field_04;
+    gIwram_60A0[0].scrollY = y;
+    gIwram_60A0[1].scrollX = x;
+    gIwram_60A0[1].scrollY = y;
 }

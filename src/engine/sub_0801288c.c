@@ -17,11 +17,6 @@ struct TileBlit_1288C {
 
 #define sTileBlit_1288C (*(const struct TileBlit_1288C *)0x08306e64)
 
-struct BlitState_1288C {
-    u8 _pad00[26];
-    u16 stride;
-};
-
 void BlitEntityTileFrame1(void)
 {
     const struct TileBlit_1288C *desc;
@@ -110,7 +105,7 @@ void BlitEntityTileFrame1(void)
                 u32 strideAdvance;
 
                 stride2 = ipWork;
-                stride2 = ((struct BlitState_1288C *)stride2)->stride;
+                stride2 = ((struct BgScrollState *)stride2)->tileCols;
                 strideAdvance = stride2 - width;
                 strideAdvance <<= 1;
                 r2Work += strideAdvance;

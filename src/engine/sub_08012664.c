@@ -123,11 +123,6 @@ struct TileBlit_12798 {
 
 #define sTileBlit_12798 (*(const struct TileBlit_12798 *)0x08306e64)
 
-struct BlitState_12798 {
-    u8 _pad00[26];
-    u16 stride; /* +0x1A */
-};
-
 /* Specialized blit of descriptor row 0 to the EWRAM mirror selected by the
  * descriptor flags, then DMA-flushed to VRAM via Scroll_FlushTilemapWindow. Destination tile
  * is gEntities[30].(x,y)*3; the entity-slot reads are signed halfwords. */
@@ -220,7 +215,7 @@ void BlitEntityTileFrame0(void)
                 u32 strideAdvance;
 
                 stride2 = ipWork;
-                stride2 = ((struct BlitState_12798 *)stride2)->stride;
+                stride2 = ((struct BgScrollState *)stride2)->tileCols;
                 strideAdvance = stride2 - width;
                 strideAdvance <<= 1;
                 r2Work += strideAdvance;

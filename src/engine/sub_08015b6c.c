@@ -1,9 +1,5 @@
+#include "iwram.h"
 #include "types.h"
-
-struct BlitState_15B6C {
-    u8 _pad00[26];
-    u16 stride;
-};
 
 struct BlitSource_15B6C {
     u8 _pad00[12];
@@ -22,7 +18,7 @@ void BlitSpriteRect(u8 mode, s16 dstX, s16 dstY, u8 widthArg, u8 heightArg, stru
     register u32 width asm("r5");
     register u32 height asm("r4");
     register u32 dyh asm("ip");
-    register struct BlitState_15B6C *loopState asm("r9");
+    register struct BgScrollState *loopState asm("r9");
     u8 col;
     register u16 dstStride asm("r3");
     u32 scratch2;
@@ -57,7 +53,7 @@ void BlitSpriteRect(u8 mode, s16 dstX, s16 dstY, u8 widthArg, u8 heightArg, stru
         row = (s32)row >> 16;
     }
     r1slot = 0x030060A0;
-    dstStride = ((struct BlitState_15B6C *)r1slot)->stride;
+    dstStride = ((struct BgScrollState *)r1slot)->tileCols;
     row *= dstStride;
     row = dx + row;
     dst += row;
@@ -65,7 +61,7 @@ void BlitSpriteRect(u8 mode, s16 dstX, s16 dstY, u8 widthArg, u8 heightArg, stru
     scratch2 = (u32)srcp;
     srcData = *(const u16 **)(scratch2 + 12);
     row = 0;
-    loopState = (struct BlitState_15B6C *)r1slot;
+    loopState = (struct BgScrollState *)r1slot;
     if (row < height) {
         do {
             col = 0;
@@ -78,7 +74,7 @@ void BlitSpriteRect(u8 mode, s16 dstX, s16 dstY, u8 widthArg, u8 heightArg, stru
             }
 
             dx = (u32)loopState;
-            dx = ((struct BlitState_15B6C *)dx)->stride;
+            dx = ((struct BgScrollState *)dx)->tileCols;
             dst += dx - width + scratch2 - scratch2;
             scratch2 = (u32)srcp;
             scratch2 = ((struct BlitSource_15B6C *)scratch2)->srcStride;

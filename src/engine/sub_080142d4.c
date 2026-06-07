@@ -18,21 +18,9 @@ struct IwramAt6540 {
     u16 field_36;
 };
 
-struct IwramAt60A0 {
-    u8 _pad00[12];
-    u32 field_c;
-    u32 field_10;
-    u8 _pad14[24];
-    u32 field_2c;
-    u32 field_30;
-    u8 _pad34[24];
-    u32 field_4c;
-    u32 field_50;
-};
-
 extern struct IwramAt6480 gIwram_6480;
 extern struct IwramAt6540 gIwram_6540;
-extern struct IwramAt60A0 gIwram_60A0;
+extern struct BgScrollState gIwram_60A0[3];
 
 extern void DmaJob_Advance(struct TransferDesc desc, u8 mode, void *buf);
 extern void Selector_StepScrollAxes(u16 a, u8 b, u16 c, u8 d);
@@ -52,12 +40,12 @@ u8 GateRoom_UpdateSlide(void)
     Selector_StepScrollAxes(0, 0, 0, 1);
 
     {
-        struct IwramAt60A0 *p60a0 = &gIwram_60A0;
+        struct BgScrollState *p60a0 = gIwram_60A0;
         u32 f10;
 
-        p60a0->field_4c += gIwram_6540.field_34;
-        f10 = p60a0->field_10;
-        p60a0->field_50 = f10 + (s16)gIwram_6480.field_36;
+        p60a0[2].scrollX += gIwram_6540.field_34;
+        f10 = p60a0[0].scrollY;
+        p60a0[2].scrollY = f10 + (s16)gIwram_6480.field_36;
 
         gIwram_6540.field_36 = 312 - gIwram_6480.field_36;
 

@@ -3,6 +3,7 @@
 
 /* --- Blit_CopyEntry: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
 #ifdef NON_MATCHING
+#include "iwram.h"
 #include "types.h"
 
 struct BlitEntry {
@@ -23,13 +24,8 @@ struct BlitEntryState {
     u16 *dst;
 };
 
-struct SceneScroll {
-    u8 _pad00[26];
-    u16 stride;
-};
-
 #define gBlitState   (*(struct BlitEntryState *)0x03006500)
-#define gSceneScroll (*(struct SceneScroll *)0x030060A0)
+#define gSceneScroll (*(struct BgScrollState *)0x030060A0)
 
 void Blit_CopyEntry(struct BlitEntry *entries, u8 index, u8 srcIndex)
 {
@@ -47,7 +43,7 @@ void Blit_CopyEntry(struct BlitEntry *entries, u8 index, u8 srcIndex)
         gBlitState.dst = (u16 *)0x02000000;
     }
 
-    gBlitState.dst += gSceneScroll.stride * entries[i].dstY + entries[i].dstX;
+    gBlitState.dst += gSceneScroll.tileCols * entries[i].dstY + entries[i].dstX;
     gBlitState.src = entries[i].srcTable[j];
 
     row = 0;
@@ -61,7 +57,7 @@ void Blit_CopyEntry(struct BlitEntry *entries, u8 index, u8 srcIndex)
                 } while (col < entries[i].cols);
             }
 
-            gBlitState.dst += gSceneScroll.stride - entries[i].cols;
+            gBlitState.dst += gSceneScroll.tileCols - entries[i].cols;
             row = (u8)(row + 1);
         } while (row < entries[i].rows);
     }

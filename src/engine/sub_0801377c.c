@@ -1,6 +1,7 @@
 #include "macros.h"
 #include "gfx.h"
 #include "sound.h"
+#include "iwram.h"
 #include "types.h"
 #include "game.h"
 #include "gba/dma.h"
@@ -28,17 +29,6 @@ struct IwramAt6540 {
     s16 field_34; /* +0x34: signed coord */
 };
 
-struct IwramAt60A0 {
-    u8 _pad00[12];
-    u32 field_c;  /* +0x0c */
-    u32 field_10; /* +0x10 */
-    u8 _pad14[24];
-    u32 field_2c; /* +0x2c */
-    u32 field_30; /* +0x30 */
-    u8 _pad34[4];
-    s16 field_38; /* +0x38 */
-};
-
 struct Rom306F6C {
     u8 _pad0[2];
     u8 byte2; /* +0x02 */
@@ -47,7 +37,7 @@ struct Rom306F6C {
 extern struct IwramAt6480 gIwram_6480;
 extern struct IwramAt6500 gIwram_6500;
 extern struct IwramAt6540 gIwram_6540;
-extern struct IwramAt60A0 gIwram_60A0;
+extern struct BgScrollState gIwram_60A0[3];
 
 extern void CharLayers_Upload(u8 arg);
 extern void FrogOam_Init(void);
@@ -56,7 +46,6 @@ extern void BgScrollBlit(u8 arg);
 extern void StatusBar_Update(void);
 extern void BgScrollAnim_InitPartial(void);
 extern u8 gIwram_3610;
-extern u8 gIwram_6110;
 
 void BgLayer_Init(void)
 {
@@ -66,10 +55,10 @@ void BgLayer_Init(void)
 
     Sound_Play(0x33);
 
-    gIwram_60A0.field_c = 24;
-    gIwram_60A0.field_10 = 40;
-    gIwram_60A0.field_2c = 24;
-    gIwram_60A0.field_30 = 40;
+    gIwram_60A0[0].scrollX = 24;
+    gIwram_60A0[0].scrollY = 40;
+    gIwram_60A0[1].scrollX = 24;
+    gIwram_60A0[1].scrollY = 40;
 
     scroll = (vu16 *)0x04000010;
     scroll[0] = 24;
@@ -87,7 +76,7 @@ void BgLayer_Init(void)
     gIwram_6540.field_9 = 0;
     gIwram_6480.field_9 = 1;
     gIwram_6500.field_b = ((struct Rom306F6C *)0x08306F6C)->byte2;
-    gIwram_60A0.field_38 = 66;
+    gIwram_60A0[1].tileRows = 66;
 
     dma = (vu32 *)0x040000D4;
     dma[0] = 0x0813DF68;

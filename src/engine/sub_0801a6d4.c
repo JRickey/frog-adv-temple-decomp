@@ -13,16 +13,6 @@ enum {
     TILE_PIXELS_SHIFT = 3,
 };
 
-struct SceneScrollState_A6D4 {
-    u8 _pad00[12];
-    s32 scrollX;
-    s32 scrollY;
-    u8 _pad14[4];
-    u16 tileHeight;
-    u16 tileWidth;
-    u8 _pad1c[4];
-};
-
 struct ScrollCameraTarget_A6D4 {
     u8 _pad00[2];
     s16 x;
@@ -35,12 +25,12 @@ void ScrollCamera_Update(u8 countArg)
      * scrollStates lands in ip, matching the baserom allocation. */
     register u32 count asm("r8");
 
-    struct SceneScrollState_A6D4 *scrollStates;
+    struct BgScrollState *scrollStates;
     struct ScrollCameraTarget_A6D4 *cameraTarget;
     register s32 r2v asm("r2");
     s32 *scrollX;
     s32 *scrollY;
-    struct SceneScrollState_A6D4 *state;
+    struct BgScrollState *state;
     s32 targetX;
     register s32 targetY asm("r1");
     u8 stateIndex;
@@ -50,12 +40,12 @@ void ScrollCamera_Update(u8 countArg)
     if (stateIndex >= count) {
         return;
     }
-    scrollStates = (struct SceneScrollState_A6D4 *)0x030060A0;
+    scrollStates = (struct BgScrollState *)0x030060A0;
     cameraTarget = (struct ScrollCameraTarget_A6D4 *)gEntities;
     do {
         u32 scrollXBase;
         u32 scrollYBase;
-        r2v = stateIndex * sizeof(struct SceneScrollState_A6D4);
+        r2v = stateIndex * sizeof(struct BgScrollState);
         scrollXBase = (u32)&scrollStates->scrollX;
         scrollX = (s32 *)(r2v + scrollXBase);
         *scrollX = cameraTarget->x - SCREEN_HALF_WIDTH;
@@ -70,12 +60,12 @@ void ScrollCamera_Update(u8 countArg)
         }
 
         targetX = cameraTarget->x;
-        state = (struct SceneScrollState_A6D4 *)(r2v + (u32)scrollStates);
+        state = (struct BgScrollState *)(r2v + (u32)scrollStates);
         {
             register u32 rawX asm("r0");
             s32 limitX;
 
-            rawX = state->tileWidth;
+            rawX = state->tileCols;
             r2v = rawX << TILE_PIXELS_SHIFT;
             limitX = r2v - SCREEN_HALF_WIDTH;
 
@@ -89,7 +79,7 @@ void ScrollCamera_Update(u8 countArg)
             register u32 rawY asm("r3");
             s32 limitY;
 
-            rawY = state->tileHeight;
+            rawY = state->tileRows;
             r2v = rawY << TILE_PIXELS_SHIFT;
             limitY = r2v - SCREEN_CLAMP_Y;
 

@@ -1,12 +1,8 @@
+#include "iwram.h"
 #include "macros.h"
 #include "types.h"
 
 extern void Scroll_FlushTilemapWindow(u32, void *, void *);
-
-struct BlitState {
-    u8 _pad00[26];
-    u16 stride;
-};
 
 void sub_08012BC4(u32 flags, u32 dstX, u32 dstY, u32 widthArg, u32 srcRowsArg, const u16 **srcTable, u32 srcIndex)
 {
@@ -61,7 +57,7 @@ void sub_08012BC4(u32 flags, u32 dstX, u32 dstY, u32 widthArg, u32 srcRowsArg, c
             }
             {
                 scratch = loopState;
-                scratch = ((struct BlitState *)scratch)->stride;
+                scratch = ((struct BgScrollState *)scratch)->tileCols;
                 dst += scratch - width;
             }
             row = (u8)nextRow;

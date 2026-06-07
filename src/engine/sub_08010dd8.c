@@ -38,11 +38,6 @@ struct BlitWork {
     u16 _unk32; /* +0x32 */
 };
 
-struct SceneStride {
-    u8 _pad00[26];
-    u16 stride; /* +0x1A */
-};
-
 void Scroll_PrepareBlitWork(struct DrawRecord *records, u32 idxArg, u32 commit)
 {
     register u32 i asm("r4") = (u8)idxArg;
@@ -102,16 +97,16 @@ void Scroll_PrepareBlitWork(struct DrawRecord *records, u32 idxArg, u32 commit)
 
     switch (rec->flags & 15) {
     case 2:
-        bw->srcOffset += 2 * (rec->x + ((struct SceneStride *)0x030060A0)->stride * (rec->_unk02 + rec->h - 1));
+        bw->srcOffset += 2 * (rec->x + ((struct BgScrollState *)0x030060A0)->tileCols * (rec->_unk02 + rec->h - 1));
         *(u32 *)((u8 *)bw + 16) = *rec->src + 2 * ((rec->h - 1) * rec->w);
         break;
     case 1:
     case 3:
-        bw->srcOffset += 2 * (rec->x + ((struct SceneStride *)0x030060A0)->stride * rec->_unk02);
+        bw->srcOffset += 2 * (rec->x + ((struct BgScrollState *)0x030060A0)->tileCols * rec->_unk02);
         *(u32 *)((u8 *)bw + 16) = *rec->src;
         break;
     case 4:
-        blit->srcOffset += 2 * (rec->x + ((struct SceneStride *)0x030060A0)->stride * rec->_unk02);
+        blit->srcOffset += 2 * (rec->x + ((struct BgScrollState *)0x030060A0)->tileCols * rec->_unk02);
         blit->srcOffset += rec->w * 2 - 2;
         *(u32 *)((u8 *)blit + 16) = *rec->src;
         *(u32 *)((u8 *)blit + 16) += rec->w * 2 - 2;

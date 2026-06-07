@@ -1,14 +1,10 @@
 #include "game.h"
+#include "iwram.h"
 #include "macros.h"
 #include "types.h"
 
 extern void ScaleAnim_BlitFrameToVram(u32 rows, u32 cols, u32 dstX, u32 dstY, u32 bank, const u16 *src, u16 *vram);
 extern const u16 ***gFrameCellTable_08307EAC[];
-
-struct BlitState {
-    u8 _pad00[26];
-    u16 stride;
-};
 
 /* Blits a cols x rows block of u16 tiles from the ROM cell table
  * (gFrameCellTable[(gGameStuff.sceneType - 1) * 5][frame][cell]) into one of
@@ -28,7 +24,7 @@ void BlitFrameCell(u32 frameArg, u32 rowsArg, u32 colsArg, u32 dstXArg, u32 dstY
     u32 cell;
     u16 *dst;
     const u16 *src;
-    register struct BlitState *state asm("r1");
+    register struct BgScrollState *state asm("r1");
     register u16 stride asm("r3");
     u32 row;
     u32 nextRow;
@@ -62,18 +58,18 @@ void BlitFrameCell(u32 frameArg, u32 rowsArg, u32 colsArg, u32 dstXArg, u32 dstY
     }
     src = (const u16 *)frame;
 
-    state = (struct BlitState *)0x030060A0;
-    stride = state->stride;
+    state = (struct BgScrollState *)0x030060A0;
+    stride = state->tileCols;
     dst += dstX + stride * dstY;
 
     /* Re-loading the state pointer here (instead of reusing the value above) is
      * a matching trick: the extra pool reload advances agbcc's reload-register
      * round-robin so the spilled dstX above reloads into r6, matching baserom. */
-    state = (struct BlitState *)0x030060A0;
+    state = (struct BgScrollState *)0x030060A0;
     rowCount = rows;
     row = 0;
     if (row < rowCount) {
-        register struct BlitState *loopState asm("r4") = state;
+        register struct BgScrollState *loopState asm("r4") = state;
 
         do {
             u8 col;
@@ -86,7 +82,7 @@ void BlitFrameCell(u32 frameArg, u32 rowsArg, u32 colsArg, u32 dstXArg, u32 dstY
                     col++;
                 } while (col < cols);
             }
-            dst += loopState->stride - cols;
+            dst += loopState->tileCols - cols;
             row = (u8)nextRow;
         } while (row < rows);
     }

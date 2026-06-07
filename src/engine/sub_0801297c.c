@@ -21,6 +21,7 @@ struct BlitDesc {
 
 extern const struct BlitDesc sBlitDesc_6e64;
 extern void Scroll_FlushTilemapWindow(u8 bank, u16 *src, u16 *dst);
+extern struct BgScrollState gIwram_60A0[3];
 
 void BlitEntityTileFrame2(void)
 {
@@ -47,7 +48,7 @@ void BlitEntityTileFrame2(void)
     if (bank & 1)
         destBase = 0x02010000;
 
-    dst = (u16 *)(destBase + (srcY * gIwram_60A0._pitch + srcX) * 2);
+    dst = (u16 *)(destBase + (srcY * gIwram_60A0[0].tileCols + srcX) * 2);
     src = srcRec[2];
 
     y = 0;
@@ -55,7 +56,7 @@ void BlitEntityTileFrame2(void)
         for (x = 0; x < width; x++) {
             *dst++ = *src++;
         }
-        dst += gIwram_60A0._pitch - width;
+        dst += gIwram_60A0[0].tileCols - width;
         y = (u8)(y + 1);
     }
 

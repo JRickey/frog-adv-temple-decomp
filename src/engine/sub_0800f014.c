@@ -16,15 +16,6 @@ extern const u8 sScreenCharTilesBg1_100CC4[16384];
 extern const u32 sCharacterSpriteFrames[51 * 4];
 extern const u8 sFrogTilePixels_E3AB6[0x4000];
 
-struct SceneScrollState_F014 {
-    u8 _pad00[20];
-    u16 bgHofs; /* +0x14 */
-    u16 bgVofs; /* +0x16 */
-    u8 _pad18[52 - 24];
-    u16 tileHeight; /* +0x34 */
-    u16 tileWidth;  /* +0x36 */
-};
-
 void InitScreenBgGraphics(void)
 {
     volatile DmaChannel *dma;
@@ -93,7 +84,7 @@ void InitCharacterBgGraphics(void)
 {
     volatile DmaChannel *dma;
     struct IwramAt3550 *r;
-    struct SceneScrollState_F014 *ss;
+    struct BgScrollState *ss;
     vu16 *regs;
     u32 enable4000;
     u32 zero;
@@ -111,7 +102,7 @@ void InitCharacterBgGraphics(void)
     (void)dma->cnt;
 
     r = (struct IwramAt3550 *)0x03003550;
-    ss = (struct SceneScrollState_F014 *)0x030060A0;
+    ss = (struct BgScrollState *)0x030060A0;
     r->_data[1] = ss->bgVofs;
     zero = 0;
     r->_data[0] = ss->bgHofs;
@@ -123,8 +114,8 @@ void InitCharacterBgGraphics(void)
     dma->cnt = enable4000;
     (void)dma->cnt;
 
-    r->_data[3] = ss->tileWidth;
-    r->_data[2] = ss->tileHeight;
+    r->_data[3] = ss[1].bgVofs;
+    r->_data[2] = ss[1].bgHofs;
 
     *(vu16 *)0x0400000A = 0x1D0A;
 

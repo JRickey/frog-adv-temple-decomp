@@ -22,21 +22,6 @@
 #define BLDCNT_EBDC_TARGETS                                                                                            \
     (BLDCNT_EFFECT_BLEND | BLDCNT_TARGET2_BG0 | BLDCNT_TARGET2_BG1 | BLDCNT_TARGET2_BG2 | BLDCNT_TARGET2_OBJ)
 
-struct SceneScrollState_EBDC {
-    u8 _pad00[4];
-    s32 committedX;
-    s32 committedY;
-    s32 scrollX;
-    s32 scrollY;
-    u16 bgHofs;
-    u16 bgVofs;
-    u16 tileHeight;
-    u16 tileWidth;
-    u8 _pad1c[4];
-};
-
-extern struct SceneScrollState_EBDC gIwram_60A0[];
-
 void BgScrollBlit(u8 count)
 {
     register u32 i asm("r9");
@@ -144,7 +129,7 @@ void BgScrollBlit(u8 count)
             shadow->_data[0] = *(u16 *)(base + 0x14);
             break;
         case 1: {
-            struct SceneScrollState_EBDC *state = (struct SceneScrollState_EBDC *)0x030060C0;
+            struct BgScrollState *state = (struct BgScrollState *)0x030060C0;
             srcBase = (u32)BG1_TILEMAP_BASE;
             dstBase = (u32)BG1_SCREENBLOCK_BASE;
             shadow->_data[3] = state->bgVofs;
@@ -152,7 +137,7 @@ void BgScrollBlit(u8 count)
             break;
         }
         case 2: {
-            struct SceneScrollState_EBDC *state = (struct SceneScrollState_EBDC *)0x030060E0;
+            struct BgScrollState *state = (struct BgScrollState *)0x030060E0;
             srcBase = (u32)BG2_TILEMAP_BASE;
             dstBase = (u32)BG2_SCREENBLOCK_BASE;
             shadow->_data[5] = state->bgVofs;

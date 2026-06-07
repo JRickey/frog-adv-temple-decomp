@@ -23,13 +23,6 @@ struct CharacterSpriteFrame {
     u16 height;
 };
 
-struct CharacterLayerCtrl {
-    u8 _pad00[0x18];
-    u16 width;
-    u16 height;
-    u8 _pad1C[4];
-};
-
 extern const struct CharacterSpriteFrame sCharacterSpriteFrames[];
 
 extern void LZ77UnCompWram(const void *src, void *dst); /* BIOS SWI 17 */
@@ -37,7 +30,7 @@ extern void LZ77UnCompWram(const void *src, void *dst); /* BIOS SWI 17 */
 void CharLayers_Upload(u8 count)
 {
     volatile DmaChannel *dma;
-    struct CharacterLayerCtrl *layer;
+    struct BgScrollState *layer;
     const struct CharacterSpriteFrame *frames;
     GameStuff *game;
     const void *tilesA;
@@ -66,10 +59,10 @@ void CharLayers_Upload(u8 count)
         frames = sCharacterSpriteFrames;
         game = &gGameStuff;
         dma = &REG_DMA3;
-        layer = (struct CharacterLayerCtrl *)0x030060A0;
+        layer = (struct BgScrollState *)0x030060A0;
 
-        layer[pose].width = frames[game->sceneType * 3 + pose].width;
-        layer[pose].height = frames[game->sceneType * 3 + pose].height;
+        layer[pose].tileRows = frames[game->sceneType * 3 + pose].width;
+        layer[pose].tileCols = frames[game->sceneType * 3 + pose].height;
 
         switch (pose) {
         case 0:

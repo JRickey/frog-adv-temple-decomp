@@ -4,6 +4,7 @@
 /* --- AnimState_BlitStep: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "game.h"
+#include "iwram.h"
 #include "macros.h"
 #include "types.h"
 
@@ -32,12 +33,7 @@ struct AnimState {
     u16 field_36;
 };
 
-struct BlitState_14140 {
-    u8 _pad00[26];
-    u16 stride;
-};
-
-#define gBlitState_14140 (*(struct BlitState_14140 *)0x030060A0)
+#define gBlitState_14140 (*(struct BgScrollState *)0x030060A0)
 
 struct BgFlag_14140 {
     u8 _pad00;
@@ -146,7 +142,7 @@ u8 AnimState_BlitStep(struct AnimState *p0, u8 step)
         break;
     }
 
-    dst += v34 + gBlitState_14140.stride * v36;
+    dst += v34 + gBlitState_14140.tileCols * v36;
     src = (u16 *)p->field_0c;
 
     row = 0;
@@ -155,7 +151,7 @@ u8 AnimState_BlitStep(struct AnimState *p0, u8 step)
         for (c = 0; c < cols; c++) {
             *dst++ = *src++;
         }
-        dst += gBlitState_14140.stride - cols;
+        dst += gBlitState_14140.tileCols - cols;
         src += p->field_30 - cols;
         row = next;
     }

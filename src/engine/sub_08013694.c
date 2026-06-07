@@ -1,5 +1,6 @@
 #include "macros.h"
 #include "gfx.h"
+#include "iwram.h"
 #include "types.h"
 #include "game.h"
 
@@ -27,21 +28,12 @@ struct IwramAt6540 {
     s16 field_34; /* +0x34: signed coord */
 };
 
-struct IwramAt60A0 {
-    u8 _pad00[12];
-    u32 field_c;  /* +0x0c */
-    u32 field_10; /* +0x10 */
-    u8 _pad14[24];
-    u32 field_2c; /* +0x2c */
-    u32 field_30; /* +0x30 */
-};
-
 extern struct IwramAt64C0 gIwram_64C0;
 extern struct IwramAt64C0 gIwram_6580;
 extern struct IwramAt6480 gIwram_6480;
 extern struct IwramAt6500 gIwram_6500;
 extern struct IwramAt6540 gIwram_6540;
-extern struct IwramAt60A0 gIwram_60A0;
+extern struct BgScrollState gIwram_60A0[3];
 
 extern void FrogStatusBar_Update(void);
 extern void Selector_StepScrollAxes(u16 a, u8 b, u16 c, u8 d);
@@ -76,10 +68,10 @@ u8 BgScroll_Step(void)
                 gIwram_6500.field_b--;
         }
 
-        gIwram_60A0.field_c = 24;
-        gIwram_60A0.field_10 = 40;
-        gIwram_60A0.field_2c = gIwram_6540.field_34 + 24;
-        gIwram_60A0.field_30 = gIwram_6480.field_36 + 40;
+        gIwram_60A0[0].scrollX = 24;
+        gIwram_60A0[0].scrollY = 40;
+        gIwram_60A0[1].scrollX = gIwram_6540.field_34 + 24;
+        gIwram_60A0[1].scrollY = gIwram_6480.field_36 + 40;
 
         desc = (struct TransferDesc *)0x08306f6c;
         DmaJob_Advance(*desc, gIwram_6500.field_b, &gIwram_64C0);
