@@ -46,6 +46,17 @@ typedef struct FrameDescriptor {
     const u16 *tile_data;
 } FrameDescriptor;
 
+struct ScaleAnimDesc {
+    u16 dstX;
+    u16 dstY;
+    u16 width;
+    u16 rows;
+    u8 flags;
+    u8 _pad09[7];
+    const u16 **srcTable;
+    u32 _pad20;
+};
+
 u8 TileMap_GetCell(u32 x, u32 y);
 
 void ScrollCamera_Update(u8 countArg);
