@@ -1,10 +1,10 @@
 #include "game.h"
+#include "entity.h"
 #include "iwram.h"
 #include "types.h"
 
 extern int __divsi3(int num, int den);
 extern u8 TileMap_GetCell(u32 x, u32 y);
-extern void Entity_WalkCompactRecords(u8 a0, const void *a1, u8 a2, void *a3, u8 a4);
 
 void FrogPos_UpdateEntities(void)
 {

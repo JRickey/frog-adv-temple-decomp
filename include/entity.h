@@ -42,4 +42,6 @@ void EntityParam_Apply(u32 arg);
 
 u32 Entity_IsInProximity(s32 idx);
 
+void Entity_WalkCompactRecords(u8 baseSlot, const void *pCount, u8 kind, void *unused, u8 bitBase);
+
 #endif /* GUARD_ENTITY_H */

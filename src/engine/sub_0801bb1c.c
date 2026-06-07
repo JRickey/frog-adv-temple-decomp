@@ -1,7 +1,7 @@
 #include "types.h"
+#include "entity.h"
 
 extern u8 GetHighestUnlockedWorld(void);
-extern void Entity_WalkCompactRecords(u8 a0, const void *a1, u8 a2, void *a3, u8 a4);
 extern const void *sLevelLayoutPtrs_308698[];
 
 void LoadWorldLevelLayout(void)

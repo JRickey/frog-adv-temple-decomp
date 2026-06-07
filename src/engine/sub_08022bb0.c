@@ -10,7 +10,6 @@ extern void SoundEntry_Play(u8 idx);
 extern void Entity_FollowPath(const void *a0, s32 slot);
 extern void Entity_AdvanceAnimFrames(s32 a0, s32 a1);
 extern void sub_080210A0(u16 a0, const void *a1, u16 a2, u8 a3, u16 a4, u8 a5, u8 a6, u8 a7);
-extern void Entity_WalkCompactRecords(u8 a0, const void *a1, u8 a2, void *a3, u8 a4);
 extern void Entity_DmaLoadSprite(u8 idx);
 extern const u8 sLevelLayout_311498[];
 extern const u8 sLevelLayoutData_3114C0[];

@@ -1,10 +1,10 @@
 #include "game.h"
+#include "entity.h"
 #include "iwram.h"
 #include "types.h"
 
 extern void SpawnGrid_SpawnWave1(void);
 extern u32 GetFrameTick(void);
-extern void Entity_WalkCompactRecords(u32 a0, const void *a1, u32 a2, void *a3, u8 a4);
 
 void EntityGroup16_Tick(void)
 {

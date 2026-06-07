@@ -1,8 +1,8 @@
 #include "iwram.h"
+#include "entity.h"
 #include "types.h"
 
 extern void sub_080210A0(u16 a0, const void *a1, u16 a2, u8 a3, u16 a4, u8 a5, u8 a6, u8 a7);
-extern void Entity_WalkCompactRecords(u8 a0, const void *a1, u8 a2, void *a3, u8 a4);
 
 extern const u32 sLevelLayout_312270[];
 extern const u32 sLevelLayoutPtrs_312C98[5];

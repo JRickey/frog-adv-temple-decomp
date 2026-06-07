@@ -1,4 +1,5 @@
 #include "types.h"
+#include "entity.h"
 #include "sound.h"
 #include "iwram.h"
 #include "game.h"
@@ -8,7 +9,7 @@ extern int __divsi3(int num, int den);
 extern void PadGrid_DeactivateEntityAtPos(s16 tileX, s16 tileY);
 extern void Entity_AdvanceAnimFrames(s32 first, s32 last);
 
-void Entity_WalkCompactRecords(u8 baseSlot, u8 *pCount, u8 kind, u8 unused, u8 bitBase)
+void Entity_WalkCompactRecords(u8 baseSlot, const void *pCount, u8 kind, void *unused, u8 bitBase)
 {
     u8 i;
     s32 firstSlot;
@@ -24,7 +25,7 @@ void Entity_WalkCompactRecords(u8 baseSlot, u8 *pCount, u8 kind, u8 unused, u8 b
     struct IwramAt6110 *ctrl;
 
     firstSlot = 0;
-    count = *pCount;
+    count = *(const u8 *)pCount;
 
     for (i = 0; i < count; i++) {
         base = gEntities;
