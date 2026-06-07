@@ -1,3 +1,4 @@
+#include "sound.h"
 #include "types.h"
 
 /* Decrements the offset-3 counter byte in the sound-channel struct at
@@ -17,11 +18,6 @@
  * the entries access reuses with `adds r1, #8`. See docs/codegen-notes.md
  * "Adjacent IWRAM bases". (Sibling Sound_IncrementChannelDepth reads only offset 3, so it
  * never triggers the fold and keeps the plain cast.) */
-
-typedef struct {
-    s32 fieldA;
-    u32 fieldB;
-} SoundChannelEntry;
 
 typedef struct {
     u8 flags;

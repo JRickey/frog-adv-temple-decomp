@@ -1,10 +1,5 @@
-#include "types.h"
 #include "sound.h"
-
-typedef struct {
-    s32 fieldA;
-    u32 fieldB;
-} SoundChannelEntry;
+#include "types.h"
 
 typedef struct {
     u8 flags;

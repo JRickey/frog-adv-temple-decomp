@@ -5,6 +5,11 @@
 
 struct Entity; /* forward declaration for Sound_PlayNearEntity */
 
+typedef struct SoundChannelEntry {
+    s32 fieldA;
+    u32 fieldB;
+} SoundChannelEntry;
+
 typedef struct SlotEnvelopeA0 {
     u16 acc;
     s16 step;

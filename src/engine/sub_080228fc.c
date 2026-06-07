@@ -1,5 +1,6 @@
 #include "iwram.h"
 #include "entity.h"
+#include "sound.h"
 #include "types.h"
 
 extern const u32 sLevelLayout_310C44[12];
@@ -101,11 +102,6 @@ void SpawnZone_Slot59(void)
 {
     Entity_WalkCompactRecords(0x59, sLevelLayout_310B54, 0x4c, &gIwram_6110, 0);
 }
-
-typedef struct {
-    s32 fieldA;
-    u32 fieldB;
-} SoundChannelEntry;
 
 typedef struct {
     u8 flags;

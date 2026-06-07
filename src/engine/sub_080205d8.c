@@ -1,10 +1,6 @@
+#include "sound.h"
 #include "types.h"
 #include "iwram.h"
-
-typedef struct {
-    s32 fieldA;
-    u32 fieldB;
-} SoundChannelEntry;
 
 typedef struct {
     u8 flags;

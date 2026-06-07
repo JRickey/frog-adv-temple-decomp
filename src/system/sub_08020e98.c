@@ -1,3 +1,4 @@
+#include "sound.h"
 #include "types.h"
 #include "macros.h"
 
@@ -7,11 +8,6 @@
  * offset 4: 12 entries × 8 B, each `{ s32 fieldA; u32 fieldB; }`. Entries
  * with fieldA == -1 are unused slots; for each live slot, fieldB is the
  * handle to forward into SoundHandle_SetPan. */
-
-typedef struct {
-    s32 fieldA;
-    u32 fieldB;
-} SoundChannelEntry;
 
 typedef struct {
     u8 flags;
