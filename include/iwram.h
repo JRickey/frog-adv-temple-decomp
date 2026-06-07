@@ -182,6 +182,36 @@ struct IwramAt5358 {
  * NOTE: layer[0]'s byte 0 doubles as a standalone scroll-suppress flag (bit7),
  * and base+0x40 (= layer[2]+0) is the standalone BgScrollAnim flag — both used
  * as raw bytes, not through this struct. */
+/* Scene-transition scroll/blit layer state (~0x38). THREE instances of this one
+ * type: gIwram_6540 (X-axis), gIwram_6480 (Y-axis), gIwram_6500 (sparse 3rd +
+ * render-blend flag). The +0x2C..+0x36 fields are AXIS-SPECIFIC, so they keep
+ * offset names: 6480 uses +0x2C/+0x30 as blit cols/rows and +0x2E/+0x36 as the
+ * Y step/target; 6540 uses +0x2C/+0x34 as the X step/target. 6540 also aliases
+ * +0x0C/+0x14 as a palette-rotate cursor (overlaps srcPtr). _field_2e/_field_36
+ * MUST stay s16 (drives ldrsh; Selector_StepScroll). Replaces the ~20 per-file
+ * local dups (IwramAt6480/6540/6500, ScrollBlitState, CamTarget, ...). */
+struct ScrollBlitLayer {
+    u8 active;    /* +0x00: 1 = blit active */
+    u8 _field_02; /* +0x02 */
+    u8 _pad03;
+    u32 lastTick;  /* +0x04: frame timestamp (vs 0x03005330) */
+    u8 pendingDma; /* +0x08: 2 = transfer pending */
+    u8 phase;      /* +0x09: state/phase byte */
+    u8 animFrame;  /* +0x0A: anim frame index (wraps at 24) */
+    u8 frameCtr;   /* +0x0B: frame counter */
+    u8 _pad0c[4];  /* +0x0C: 6540 palette-rotate cursor view */
+    u32 srcPtr;    /* +0x10: blit source ptr */
+    u8 _pad14[4];  /* +0x14: 6540 palette field */
+    u32 dstPtr;    /* +0x18: blit dest VRAM ptr */
+    u8 _pad1c[16]; /* +0x1C..+0x2B */
+    u16 _field_2c; /* +0x2C: 6480 blit cols / 6540 X-step */
+    s16 _field_2e; /* +0x2E: 6480 Y-step (s16) */
+    u16 _field_30; /* +0x30: 6480 blit rows */
+    u16 _field_32; /* +0x32 */
+    u16 _field_34; /* +0x34: 6480 dest X / 6540 X-target */
+    s16 _field_36; /* +0x36: signed target (s16) */
+};
+
 struct BgScrollState {
     u8 _pad00[4];   /* +0x00 */
     s32 committedX; /* +0x04: snapshot of scrollX (BgScrollBlit) */
