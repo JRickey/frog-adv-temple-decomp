@@ -5,14 +5,6 @@
 #include "iwram.h"
 #include "types.h"
 
-struct IwramAt6410 {
-    u8 _pad00[8];
-    u32 _field_08;
-    u8 _maxFrames;
-};
-
-extern struct IwramAt6410 gIwram_6410;
-
 /* The explicit gs/iw pointer vars force both pool loads before any
  * dereferences, which sets up the LIFO register reuse order that gives
  * r2=upper-byte and r3=lower-byte in the MMIO section. */
