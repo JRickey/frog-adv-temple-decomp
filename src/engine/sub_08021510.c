@@ -49,13 +49,13 @@ void Entity_WalkCompactRecords(u8 baseSlot, const void *pCount, u8 kind, void *u
                 entity->status = st | 4;
                 {
                     struct IwramAt35E0 *p35 = &gIwram_35E0;
-                    u16 value = ((u16 *)p35->_data)[1];
-                    if (((s16 *)p35->_data)[1] <= 998) {
+                    u16 value = p35->coins;
+                    if (*(s16 *)&p35->coins <= 998) {
                         goto case3_increment;
                     }
                     goto call_effect;
                 case3_increment:
-                    ((u16 *)p35->_data)[1] = value + 1;
+                    p35->coins = value + 1;
                 }
                 asm(".space 0");
                 goto call_effect;
@@ -66,11 +66,11 @@ void Entity_WalkCompactRecords(u8 baseSlot, const void *pCount, u8 kind, void *u
                 entity->status = st | 4;
                 {
                     struct IwramAt35E0 *p35 = &gIwram_35E0;
-                    u8 value = p35->_data[0];
-                    if ((s8)p35->_data[0] > 98) {
+                    u8 value = p35->lives;
+                    if ((s8)p35->lives > 98) {
                         goto call_effect;
                     }
-                    p35->_data[0] = value + 1;
+                    p35->lives = value + 1;
                 }
                 asm(".space 0");
                 goto call_effect;
@@ -82,8 +82,8 @@ void Entity_WalkCompactRecords(u8 baseSlot, const void *pCount, u8 kind, void *u
                 ctrl->flags64 |= (s64)(s32)(1 << (bitBase + i));
                 {
                     struct IwramAt35E0 *p35 = &gIwram_35E0;
-                    if (*(s16 *)&p35->_data[2] <= 998) {
-                        *(u16 *)&p35->_data[2] = *(u16 *)&p35->_data[2] + 1;
+                    if (*(s16 *)&p35->coins <= 998) {
+                        p35->coins = p35->coins + 1;
                     }
                 }
                 goto call_effect;
@@ -102,8 +102,8 @@ void Entity_WalkCompactRecords(u8 baseSlot, const void *pCount, u8 kind, void *u
                 }
                 {
                     struct IwramAt35E0 *p35 = &gIwram_35E0;
-                    if ((s8)p35->_data[0] <= 98) {
-                        p35->_data[0]++;
+                    if ((s8)p35->lives <= 98) {
+                        p35->lives++;
                     }
                 }
                 goto call_effect;
@@ -126,7 +126,7 @@ void Entity_WalkCompactRecords(u8 baseSlot, const void *pCount, u8 kind, void *u
                 ctrl->flags0 |= (1 << (bitBase + i));
                 {
                     struct IwramAt35E0 *p35 = &gIwram_35E0;
-                    p35->_data[4]++;
+                    p35->elementsCollected++;
                 }
                 goto call_effect;
             call_effect:

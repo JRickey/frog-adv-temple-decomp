@@ -103,11 +103,11 @@ void SpawnCycle_Update(u8 *arg0, u32 *arg1, u8 *arg2, u32 *arg3)
         ModeControl_ClearBit((u8 *)&gIwram_6110, 3, 4);
     }
 
-    if (gIwram_35E0._data[4] == 5) {
+    if (gIwram_35E0.elementsCollected == 5) {
         u32 mask = gIwram_6110.spawnMask + 1;
         gIwram_6110.spawnMask = mask;
         gIwram_6110.flags0 = 0;
-        gIwram_35E0._data[4] = 0;
+        gIwram_35E0.elementsCollected = 0;
         gIwram_6110.byteFlags8 = 0;
         gIwram_6110.gateByte = 0;
 

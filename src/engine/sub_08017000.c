@@ -67,7 +67,7 @@ void FrogStatusBar_Update(void)
         gIwram_6100.field4 = *(u32 *)&gGameStuff;
     }
 
-    if ((s8)gIwram_35E0._data[4] < ctrl->threshold)
+    if ((s8)gIwram_35E0.elementsCollected < ctrl->threshold)
         goto phase2;
     if (gGameStuff.sceneType == 15)
         goto phase2;
@@ -79,7 +79,7 @@ phase2:
     if (*(u32 *)&gGameStuff - cur5320->field4 <= 13)
         return;
 
-    for (idx = 0; (s8)idx < (s8)gIwram_35E0._data[4];) {
+    for (idx = 0; (s8)idx < (s8)gIwram_35E0.elementsCollected;) {
         if (cur5320->byte0 > 4)
             cur5320->byte0 = 0;
 

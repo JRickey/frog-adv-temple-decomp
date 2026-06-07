@@ -57,10 +57,10 @@ u32 Scene_EntityTick(u8 *flag)
     Scene_DisableBg2();
     EntityPool_Reset();
 
-    if (gIwram_35E0._data[0] == 1) {
+    if (gIwram_35E0.lives == 1) {
         gEntities[0].status = 0;
         if (Level_Load() != 0) {
-            gIwram_35E0._data[0] = gIwram_34B4._data[2];
+            gIwram_35E0.lives = gIwram_34B4._data[2];
             gIwram_35E0._field_5 = 0;
             *flag = 0;
             Sound_Reset();
@@ -136,7 +136,7 @@ void EntityDispatch_RunFrame(void)
     }
 
     EntityPool_Reset();
-    Entity_SpawnFromConfig((s8)gIwram_35E0._data[0], *(s16 *)&gIwram_35E0._data[2], 0);
+    Entity_SpawnFromConfig((s8)gIwram_35E0.lives, *(s16 *)&gIwram_35E0.coins, 0);
 
     {
         const u32 *procC;

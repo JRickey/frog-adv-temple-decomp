@@ -14,8 +14,8 @@ void GameMode_Attract(void)
     GameStuff *gs;
     u8 step;
 
-    gIwram_35E0._data[0] = gIwram_34B4._data[2];
-    *(u16 *)&gIwram_35E0._data[2] = 0;
+    gIwram_35E0.lives = gIwram_34B4._data[2];
+    gIwram_35E0.coins = 0;
 
     tmp = &gGameStuff;
     step = tmp->attractStep;

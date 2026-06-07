@@ -55,9 +55,19 @@ struct IwramAt3550 {
     u16 _data[8]; /* 8 halfword zero-fill */
 };
 
+/* Player run-state at 0x030035E0 (the local `struct StructA74` in sub_08006a74.c
+ * is a duplicate of this). The low 5 bytes are the HUD counters set/reset by
+ * PlayerState_* and the kind-keyed pickup handler (sub_08021510):
+ *   lives    (+0) starts at 5, +1 on a 1-up pickup (entity kind 11/12), cap 99;
+ *   coins    (+2) +1 on a coin pickup (kind 2/3), cap 999, reset per level;
+ *   elements (+4) +1 on an element pickup (kind 4), drawn by FrogStatusBar_Update,
+ *                 level clears when it reaches gIwram_6110.threshold. */
 struct IwramAt35E0 {
-    u8 _data[5]; /* writes at +0 and +4 */
-    s8 _field_5; /* +5: signed byte; read by entity-dispatch + passed to Entity_SpawnFromRecord */
+    u8 lives;             /* +0: player lives */
+    u8 _pad01;            /* +1 */
+    u16 coins;            /* +2: coin count (HUD 3-digit; Temple gate checks 50/75) */
+    u8 elementsCollected; /* +4: elements collected this level */
+    s8 _field_5;          /* +5: signed byte; read by entity-dispatch + passed to Entity_SpawnFromRecord */
     u8 _pad06[2];
     s16 _field_8;     /* +8: cached tile-X coord (signed read; from gIwram_3720.field_2 / 24) */
     s16 _field_A;     /* +A: cached tile-Y coord (signed read; from gIwram_3720.field_4 / 24) */

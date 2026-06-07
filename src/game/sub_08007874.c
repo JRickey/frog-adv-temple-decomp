@@ -31,7 +31,7 @@ void Entity_SpawnFromRecord(s8 id)
     gIwram_35E0._field_18 = rec->_b7;
     gIwram_35E0._field_19 = rec->_b8;
 
-    PlayerState_Init(&gIwram_35E0, (s8)gIwram_35E0._data[0], *(s16 *)&gIwram_35E0._data[2], (s8)gIwram_35E0._data[4],
+    PlayerState_Init(&gIwram_35E0, (s8)gIwram_35E0.lives, *(s16 *)&gIwram_35E0.coins, (s8)gIwram_35E0.elementsCollected,
                      gIwram_35E0._field_5);
 
     Entity_Init(gEntities, 0, px, py, b5, 1, 0, b6, b4, 16);

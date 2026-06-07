@@ -26,7 +26,7 @@ void Player_HandleTileCollision(u8 arg)
     t = arg;
     t = t - 30;
     if (cls == 3) {
-        if ((s8)gIwram_35E0._data[4] >= gIwram_6110.threshold) {
+        if ((s8)gIwram_35E0.elementsCollected >= gIwram_6110.threshold) {
             gIwram_35E0._field_10 |= 0x100;
         } else {
             u8 mod = gGameStuff.sceneType % 3;

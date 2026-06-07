@@ -43,8 +43,8 @@ void Init1(void)
     gIwram_34B4._data[1] = 1;
     gIwram_34B4._data[2] = 5;
     gIwram_34B4._data[3] = 5;
-    gIwram_35E0._data[0] = 5;
-    gIwram_35E0._data[4] = 0;
+    gIwram_35E0.lives = 5;
+    gIwram_35E0.elementsCollected = 0;
     gIwram_34B0._data = 0;
     SaveLoad();
     ClearVramAndWorkram();
