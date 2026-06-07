@@ -1,11 +1,11 @@
 #include "gba/dma.h"
+#include "game.h"
 #include "gfx.h"
 #include "gba/io.h"
 #include "types.h"
 
 extern const u16 sScreenPaletteCD78[256];
 extern const u16 sScreenTilemapCF78[1024];
-extern void WaitFrames(u32 delay);
 extern s32 Blend_StepFade(void);
 
 void Credits_FadeTransition(void)

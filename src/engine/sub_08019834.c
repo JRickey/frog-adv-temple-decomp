@@ -8,7 +8,6 @@
 extern const u32 sOamDmaCfg_08100[4];
 
 extern void Tilemap_SwapPalette(void *self, u16 a, u16 b, u8 c);
-extern void WaitFrames(u32 n);
 extern void Sprite_CycleDmaFrame(u32 a, u32 b, u32 c, u32 d);
 
 void Sprite_AnimateFlip(void *self, u16 u1, u16 u2, u8 u3, u8 count)

@@ -62,4 +62,6 @@ s32 GetVcountRandom(u8 range);
 
 s32 Scene08_MapScreenTick(void);
 
+void WaitFrames(u32 delay);
+
 #endif /* GUARD_GAME_H */

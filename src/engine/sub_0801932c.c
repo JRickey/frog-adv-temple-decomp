@@ -1,4 +1,5 @@
 #include "iwram.h"
+#include "game.h"
 #include "gfx.h"
 #include "macros.h"
 #include "types.h"
@@ -11,7 +12,6 @@ extern const void *const sUiAssetSlots[];
  * the previous fade is still running). Declared s32 (canonical type u8)
  * so agbcc compares the return directly with `cmp r0, #0`. */
 extern s32 Blend_StepFade(void);
-extern void WaitFrames(u32 delay);
 
 /* Status-bar reload + forced fade cycle. Bails while the fade-in ticker
  * (Blend_StepFade) is still counting down; otherwise reloads the BG3

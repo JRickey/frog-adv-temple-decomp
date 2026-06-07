@@ -1,4 +1,5 @@
 #include "types.h"
+#include "game.h"
 
 extern u32 GetFrameTick(void);
 
