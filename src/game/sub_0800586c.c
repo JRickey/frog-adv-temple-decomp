@@ -42,8 +42,6 @@ void Stage_UpdateTick(u32 arg)
     gGameStuff._unk14++;
 }
 
-extern void ModeControl_ClearBit(u32 base, u32 idx, u32 val);
-
 void Stage_ResetPlayerSlots(u8 *state, u32 arg)
 {
     u8 *base;
@@ -56,12 +54,12 @@ void Stage_ResetPlayerSlots(u8 *state, u32 arg)
     Entity_InitHitboxSlots(arg);
     base = (u8 *)0x03006110;
     base[0x2a] = 0;
-    ModeControl_ClearBit((u32)base, 5, 4);
+    ModeControl_ClearBit(base, 5, 4);
     i = 0;
     p = base;
     for (; i <= 3; i++) {
         if (!((p[0x33] >> i) & 1)) {
-            ModeControl_ClearBit((u32)p, 5, (u8)i);
+            ModeControl_ClearBit(p, 5, (u8)i);
         }
     }
 }
@@ -80,8 +78,8 @@ void Stage_WaitAndResetSpawnFlags(void)
     }
     {
         u8 *base = (u8 *)0x03006110;
-        ModeControl_ClearBit((u32)base, 8, 2);
+        ModeControl_ClearBit(base, 8, 2);
         base[0x2a] = 0;
-        ModeControl_ClearBit((u32)base, 5, 4);
+        ModeControl_ClearBit(base, 5, 4);
     }
 }

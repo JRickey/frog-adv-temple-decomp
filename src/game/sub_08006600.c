@@ -1,4 +1,5 @@
 #include "types.h"
+#include "iwram.h"
 
 /* Generic bit-set accessor on a struct at `base` — the "set bit" companion
  * to ModeControl_ClearBit ("clear bit") and ModeControl_GetFlag ("test bit"). Same

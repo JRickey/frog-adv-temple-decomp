@@ -6,8 +6,6 @@
 
 extern s8 EntityHitbox_FindPoint(s8 a, s16 x, s16 y);
 extern u8 ModeControl_GetFlag(u8 *base, u32 selector, u32 bit);
-extern void CtrlFlags_SetBit(u8 *base, u32 selector, u32 bit);
-extern void ModeControl_ClearBit(u8 *base, u32 selector, u32 bit);
 
 void FrogPad_CheckTile(u8 tile)
 {

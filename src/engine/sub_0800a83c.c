@@ -102,7 +102,6 @@ void EntityHitbox_RegisterGridPoints(u8 type, u32 gridId, u32 gridPlane, u32 use
 }
 
 extern u8 ModeControl_GetFlag(void *base, u32 selector, u32 bit);
-extern void CtrlFlags_SetBit(void *base, u32 selector, u32 bit);
 
 void Frog_UpdateContactHitboxes(void)
 {

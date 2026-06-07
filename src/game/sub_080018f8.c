@@ -31,7 +31,6 @@
 extern void Entity_UpdateHitboxWithTile(void *ent, u32 arg1, u32 kind);
 extern void Entity_ActivateHitSlot(void *ent, u32 arg1, u32 kind, u32 tile);
 extern u32 Tilemap_GetTileClass(u8 col, u8 row, s32 tileX, s32 tileY);
-extern void CtrlFlags_SetBit(u32 base, u32 idx, u32 val);
 
 void Scene12_UpdateTileInteraction(u32 arg0, u32 arg1)
 {
@@ -49,9 +48,9 @@ void Scene12_UpdateTileInteraction(u32 arg0, u32 arg1)
         if (mask != 0) {
             tile = (u8)Tilemap_GetTileClass(p->_field_18, p->_field_19, p->_field_8, p->_field_A);
             if (tile == 20)
-                CtrlFlags_SetBit(0x03006110, 8, 0);
+                CtrlFlags_SetBit(&gIwram_6110, 8, 0);
             if (tile == 21)
-                CtrlFlags_SetBit(0x03006110, 8, 1);
+                CtrlFlags_SetBit(&gIwram_6110, 8, 1);
         }
     }
 

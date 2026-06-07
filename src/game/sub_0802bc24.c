@@ -9,8 +9,6 @@ extern void sub_0802B4B8(void);
 extern void GateRoom_ResetState(void);
 extern void GateRoom_TickFrogUpdate(void);
 extern u8 ModeControl_GetFlag(void *base, u32 selector, u32 bit);
-extern void ModeControl_ClearBit(void *base, u32 selector, u32 bit);
-extern void CtrlFlags_SetBit(void *base, u32 selector, u32 bit);
 extern void GateRoom_InitScrollParams(void);
 extern void SoundEntry_Play(u32 arg0);
 extern void SoundEntry_Stop(u32 arg0);

@@ -4,7 +4,6 @@
 #include "types.h"
 
 extern void Entity_UpdateHitboxSlots(u32 a, u32 b, u8 c);
-extern void ModeControl_ClearBit(u32 base, u32 idx, u32 val);
 
 /* Sibling of Mode8_StateStep: when Scene_EntityTick fails the predicate, force
  * state=7 onto the caller's byte pointer, then forward to Entity_UpdateHitboxSlots
@@ -22,18 +21,18 @@ void Scene_UpdateAnimState(u8 *state, u32 a, u32 b)
     }
     Entity_UpdateHitboxSlots(a, b, 5);
     if (gIwram_35E0._field_5 <= 1) {
-        ModeControl_ClearBit(0x03006110, 8, 0);
-        ModeControl_ClearBit(0x03006110, 9, 0);
+        ModeControl_ClearBit(&gIwram_6110, 8, 0);
+        ModeControl_ClearBit(&gIwram_6110, 9, 0);
     }
     if ((u8)gIwram_35E0._field_5 == 2) {
-        ModeControl_ClearBit(0x03006110, 8, 1);
-        ModeControl_ClearBit(0x03006110, 9, 1);
+        ModeControl_ClearBit(&gIwram_6110, 8, 1);
+        ModeControl_ClearBit(&gIwram_6110, 9, 1);
     }
     {
         u8 lastState = (u8)gIwram_35E0._field_5;
         if (lastState == 3) {
-            ModeControl_ClearBit(0x03006110, 8, 1);
-            ModeControl_ClearBit(0x03006110, 9, 1);
+            ModeControl_ClearBit(&gIwram_6110, 8, 1);
+            ModeControl_ClearBit(&gIwram_6110, 9, 1);
         }
     }
 }

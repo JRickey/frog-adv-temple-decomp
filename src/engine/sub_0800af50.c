@@ -143,7 +143,6 @@ void Entity_InitHitboxSlots(EntitySlot *slots)
 }
 
 extern u8 ModeControl_GetFlag(u8 *base, u32 selector, u32 bit);
-extern void ModeControl_ClearBit(u8 *base, u32 selector, u32 bit);
 
 void Gate_PollResult(EntitySlot *slots)
 {

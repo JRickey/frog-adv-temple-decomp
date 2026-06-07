@@ -13,7 +13,6 @@ extern u32 Scene_InitScan(u8 *secondary);
 extern u16 Input_Poll(void);
 extern void Scene_LoadBg(void);
 extern u8 ModeControl_GetFlag(void *base, u32 selector, u32 bit);
-extern void ModeControl_ClearBit(void *base, u32 selector, u32 bit);
 extern void Game_RunEntityFrame(void);
 extern void WaitVblank(void);
 extern void Game_ForceRender(void);

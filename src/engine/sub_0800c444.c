@@ -14,7 +14,6 @@
  *   - p35E0 likewise pins 0x030035e0 in r4 for the two BgMap_WriteTileAttr calls. */
 
 extern u8 ModeControl_GetFlag(u8 *base, u32 selector, u32 bit);
-extern void CtrlFlags_SetBit(u8 *base, u32 selector, u32 bit);
 extern void BgMap_WriteTileAttr(u8 col, u8 row, u32 a, u32 b, u32 c);
 
 void sub_0800C444(u8 tile)

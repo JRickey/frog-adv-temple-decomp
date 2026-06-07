@@ -1,3 +1,4 @@
+#include "iwram.h"
 #include "types.h"
 
 /* Generic bit-clear accessor on a struct at `base` — the "clear bit"

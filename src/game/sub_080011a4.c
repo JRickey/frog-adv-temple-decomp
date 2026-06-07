@@ -36,7 +36,6 @@
  *     base register at +0x2e instead of materializing a fresh
  *     0x0300613e pool entry. */
 
-extern void ModeControl_ClearBit(u32 base, u32 idx, u32 val);
 extern u32 ModeControl_GetFlag(u32 base, u32 a, u32 b);
 extern u32 Tilemap_GetTileClass(u8 col, u8 row, s32 tileX, s32 tileY);
 extern void FrogPad_CheckTile(u8 tile);
@@ -53,7 +52,7 @@ void Entity_UpdateHudState(void)
     mask = 4;
     mask &= p3720->status;
     if (mask != 0) {
-        ModeControl_ClearBit(0x03006110, 8, 1);
+        ModeControl_ClearBit(&gIwram_6110, 8, 1);
         return;
     }
 

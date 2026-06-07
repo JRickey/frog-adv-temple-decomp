@@ -222,4 +222,8 @@ u8 IsFlagMaskSet(void *p, u16 mask);
 
 s64 CtrlFlags_ReadBitRange(void *unused, s32 lo, s32 hi);
 
+void CtrlFlags_SetBit(void *baseIn, u32 selectorIn, u32 bitIn);
+
+void ModeControl_ClearBit(void *baseIn, u32 selectorIn, u32 bitIn);
+
 #endif /* GUARD_IWRAM_H */

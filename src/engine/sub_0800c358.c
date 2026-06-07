@@ -4,7 +4,6 @@
 #include "types.h"
 
 extern u8 ModeControl_GetFlag(u8 *base, u32 selector, u32 bit);
-extern void CtrlFlags_SetBit(u8 *base, u32 selector, u32 bit);
 extern void Frog_UpdateContactHitboxes(void);
 
 /* agbcc register layout: mode stays in r4 throughout; cases 20/21 load

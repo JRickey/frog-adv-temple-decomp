@@ -10,7 +10,6 @@ extern u32 Scene_SelectEntityLimit(void);
 extern u8 RunFadeTransition(u8 *flag, u32 callbackTable);
 extern void RunWorldSelectTransition(u32 arg);
 extern u32 Scene_InitScan(u8 *flag);
-extern void CtrlFlags_SetBit(u32 base, u32 idx, u32 val);
 extern u16 Input_Poll(void);
 extern void Scene_LoadBg(void);
 extern void Game_RunEntityFrame(void);
@@ -67,7 +66,7 @@ void Scene10_Main(void)
                 goto tail;
             substate = 4;
             gGameStuff._unk14 = 0;
-            CtrlFlags_SetBit(0x03006110, 8, 1);
+            CtrlFlags_SetBit(&gIwram_6110, 8, 1);
             goto tail;
         case 4:
             gIwram_5398 = Input_Poll();

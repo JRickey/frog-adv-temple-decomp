@@ -4,7 +4,6 @@
 #include "types.h"
 
 extern u32 ModeControl_GetFlag(void *base, u32 selector, u32 bit);
-extern void CtrlFlags_SetBit(void *base, u32 selector, u32 bit);
 /* Unprototyped: the gate-close call below passes only two args so r2 keeps
  * the 0 left over from the two halfword clears (matches the baserom). */
 extern void ModeControl_ClearBit();

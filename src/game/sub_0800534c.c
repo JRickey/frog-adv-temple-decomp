@@ -4,8 +4,6 @@
 
 extern u32 ModeControl_GetFlag(u8 *base, u32 selector, u32 bit);
 extern u32 Anim_CheckScreenIdle(void);
-extern void CtrlFlags_SetBit(u8 *base, u32 selector, u32 bit);
-extern void ModeControl_ClearBit(u8 *base, u32 selector, u32 bit);
 
 void Gate_TryUnlock(void)
 {

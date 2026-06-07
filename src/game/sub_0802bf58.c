@@ -4,8 +4,6 @@
 #include "types.h"
 
 extern u32 ModeControl_GetFlag(u8 *base, u32 selector, u32 bit);
-extern void ModeControl_ClearBit(u8 *base, u32 selector, u32 bit);
-extern void CtrlFlags_SetBit(u8 *base, u32 selector, u32 bit);
 extern void EntityPool_UpdateOwned(u32 sound);
 extern u8 EnemySpawn_ProcessWaveA(const void *a0, u8 a1, const void *a2, u8 a3);
 extern u8 EnemySpawn_ProcessWaveB(const void *a0, u8 a1, const void *a2, u8 a3);

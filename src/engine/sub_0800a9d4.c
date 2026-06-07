@@ -5,7 +5,6 @@
 extern s8 EntityHitbox_FindPoint(s8 a, s16 x, s16 y);
 extern u8 ModeControl_GetFlag(u8 *base, u32 selector, u32 bit);
 extern void EntityHitbox_RegisterGridPoints(u8 a, u8 b, u8 c, u8 d);
-extern void CtrlFlags_SetBit(u8 *base, u32 selector, u32 bit);
 
 void TileCacheProbe_HandleTile20(u8 tile)
 {

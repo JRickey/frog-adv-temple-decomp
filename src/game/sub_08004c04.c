@@ -7,8 +7,6 @@
 
 extern void EntityScript_BuildSlotData(u8 partId, u8 *out);
 extern void Entity_UpdateHitboxSlots(u32 a, u32 b, u8 c);
-extern void CtrlFlags_SetBit(u8 *base, u32 selector, u32 bit);
-extern void ModeControl_ClearBit(u8 *base, u32 selector, u32 bit);
 extern void Game_FrameEnd(void);
 
 void Mode14_Setup(u8 *buf, u32 arg1, u32 arg2)

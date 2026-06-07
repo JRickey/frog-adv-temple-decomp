@@ -19,7 +19,6 @@ extern u32 Scene_SelectEntityLimit(void);
 extern u8 RunFadeTransition(u8 *localState, u32 callbackTable);
 extern void RunWorldSelectTransition(u32 arg);
 extern u32 Scene_InitScan(u8 *localState);
-extern void CtrlFlags_SetBit(void *base, u32 selector, u32 bit);
 extern u16 Input_Poll(void);
 extern void Scene_LoadBg(void);
 extern void Game_RunEntityFrame(void);
