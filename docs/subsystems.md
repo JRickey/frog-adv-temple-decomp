@@ -594,3 +594,30 @@ rather than a MIDI-event PCM mixer. **Do not port m4a structs** (`SoundChannel`
 and *break* matches. Keep the project's own reconstructed structs in
 `include/sound.h`. The stuck sound functions are register-allocation problems,
 not struct-typing problems.
+
+## libagbsyscall / BIOS SWI block (`0x0802D514 - 0x0802D5EC`)
+
+SDK library code, **not game logic** — the standard GBA libagbsyscall: thin
+Thumb thunks around the BIOS SWIs (`svc 0..37, 40, 41`) plus the
+sound-driver / music-player entry points. Lives in `asm/libagbsyscall.s`
+(one object spanning the whole block) with declarations in
+`include/gba/syscall.h`. Note this block holds only the BIOS *sound-driver
+SWI wrappers* (`SoundDriverInit/Main/VSync`, `MusicPlayer*`); the actual
+music engine is the custom driver in the section above — unrelated.
+
+- **Don't decompile it.** agbcc 2.x has no SWI intrinsic, so `svc N` only
+  comes from hand-written asm. Append new wrappers to `asm/libagbsyscall.s`
+  under the canonical SDK name (+ a `sub_0802DXXX` legacy alias); never
+  NAKED-decompile per function. Full how-to + the recognition pattern:
+  [`docs/codegen-notes.md`](codegen-notes.md) "SDK BIOS SWI wrappers
+  (libagbsyscall)".
+- **`0x0802D4F8` / `0x0802D504` are game trampolines**, not syscalls — they
+  `bl` into game functions (`sub_0802CE60`, `sub_0802D170`, `sub_0802D3C0`).
+  The first real SWI thunk is SoftResetExram at `0x0802D514`. (An earlier
+  peel mis-merged the `0x0802D504` trampoline with SoftResetExram.)
+- **Protected from the renamer:** pinned `kind=bios, nameable=0` in
+  `callgraph.db`, so `name-from-callgraph` never targets them and
+  `apply_renames.py` refuses a manifest that tries.
+- **Sibling belt:** the libgcc soft-float/arith run at
+  `0x08033CA4 - 0x0803578C` gets the same hands-off treatment (linked from
+  `libgcc.a`). Together these are most of the high-`.text` tail.

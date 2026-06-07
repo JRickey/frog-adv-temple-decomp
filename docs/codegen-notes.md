@@ -541,6 +541,52 @@ and comparing bytewise against the ROM range. Worked examples in
 `linker.ld`: `_call_via_rX.o`, `_divsi3.o`, `_umodsi3.o`, `fp-bit.o`,
 `_muldi3.o`, and `dp-bit.o`.
 
+## SDK BIOS SWI wrappers (libagbsyscall) — append asm thunks, don't decompile
+
+The ROM's libagbsyscall block lives at `0x0802D514 - 0x0802D5EC`
+(`asm/libagbsyscall.s`): a contiguous run of thin Thumb thunks around the
+BIOS SWIs (`svc 0..37, 40, 41`) plus the sound-driver / music-player
+entry points. The shape is unmistakable:
+
+```
+svc  #N        @ most wrappers are exactly this...
+bx   lr
+```
+
+with a few variants — a register set up before the SWI
+(`movs r0,#1; svc 25` = SoundBiasSet), the result unpacked after
+(`push {r0,r1}; svc 18; pop ...; strh` = LZ77UnCompVramAndGetSize), or a
+SoftReset-style preamble that loads `REG_IME` (`0x04000208`) and resets
+`sp`. A run of `svc N; bx lr` is **SDK library code, not a decomp
+target.**
+
+agbcc 2.x has no SWI intrinsic, so `svc N` can only come from
+hand-written asm — there is no pure-C body that lowers to `svc N; bx lr`.
+Do **not** NAKED-decompile these one function at a time (an earlier pass
+did, producing fragmented `Bios_CpuSet` / `BiosSwiTable` blobs). Instead
+**append the thunk to `asm/libagbsyscall.s`** under its canonical SDK
+name (cross-checked against pret/pokeemerald's `libagbsyscall.s` +
+GBATEK, clean-room) with a `sub_0802DXXX` legacy alias for existing call
+sites, declare it in `include/gba/syscall.h`, and wire `linker.ld` to the
+single `asm/libagbsyscall.o(.text)` span. C callers should
+`#include "gba/syscall.h"` and use the SDK name (`CpuFastSet`, `CpuSet`,
+`Div`, `LZ77UnCompWram`, `SoundDriverMain`, ...); a wrapper a caller
+relies on for its r0 return (e.g. `CpuSet` used as `u32`) keeps a local
+`extern` with the needed signature.
+
+These symbols are pinned `kind=bios, nameable=0` in `callgraph.db`
+(`build_callgraph.py`), so the call-graph namer never renames them, and
+`apply_renames.py` refuses a manifest that tries (a rename is
+byte-neutral, so `make check` would not catch it). See
+[`docs/subsystems.md`](subsystems.md) "libagbsyscall / BIOS SWI block".
+
+**Reaching the ROM tail:** the high `.text` is mostly library belts, not
+game logic — the libgcc soft-float/arith run at `0x08033CA4 - 0x0803578C`
+(link archive members, previous section) and this libagbsyscall block.
+When a peel near the end decodes as `svc N; bx lr` or byte-matches a
+`libgcc.a` member, route it to the right belt instead of attempting a C
+decomp.
+
 ## Thumb-callable ARM interwork thunks: declare `thumb_func_start`
 
 Some baserom symbols are 8-byte interwork trampolines: 4 bytes of Thumb
