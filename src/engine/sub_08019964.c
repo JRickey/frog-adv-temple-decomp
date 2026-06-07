@@ -4,7 +4,6 @@
 #include "macros.h"
 #include "types.h"
 
-extern int GetVcountRandom(u8 arg);
 extern u8 gIwram_3610;
 extern u8 gIwram_5330;
 extern u8 gIwram_53A0;

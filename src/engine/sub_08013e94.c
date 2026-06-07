@@ -1,7 +1,7 @@
 #include "types.h"
+#include "game.h"
 #include "iwram.h"
 
-extern u8 GetVcountRandom(u8 range);
 extern u8 gIwram_53A0[];
 extern u8 gIwram_549F[];
 extern u8 gIwram_3610[];

@@ -1,7 +1,6 @@
 #include "iwram.h"
+#include "game.h"
 #include "types.h"
-
-extern int GetVcountRandom(u8 range);
 
 /* Spawn-tile picker for entity slot 30. Reads the cached player tile coords
  * (gIwram_35E0._field_8 / _field_A, low byte only), builds two exclusion bands

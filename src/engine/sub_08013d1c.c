@@ -1,4 +1,5 @@
 #include "types.h"
+#include "game.h"
 #include "iwram.h"
 
 extern void CharLayers_Upload(unsigned int arg);
@@ -12,7 +13,6 @@ extern void BgLayer_Enable(u8 layer);
 extern void sub_08010A44(u8 a, u8 b);
 extern void ModeChannel_Apply(u8 a, u8 b);
 extern void FrogStatusBar_Update(void);
-extern u8 GetVcountRandom(u8 range);
 extern u8 gIwram_53A0[];
 extern u8 gIwram_549F[];
 extern u8 gIwram_3610[];

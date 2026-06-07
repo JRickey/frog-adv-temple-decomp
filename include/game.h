@@ -58,4 +58,6 @@ u32 Timer_SetIrqHandler(u8 idx, void *out);
 
 u32 Scene_EntityTick(u8 *flag);
 
+s32 GetVcountRandom(u8 range);
+
 #endif /* GUARD_GAME_H */
