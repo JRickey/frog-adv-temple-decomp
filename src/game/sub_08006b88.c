@@ -70,13 +70,6 @@ struct SrcRec {
     u32 _w12;
 };
 
-struct PartEntry {
-    s8 count;
-    u8 _b1;
-    u8 _pad[2];
-    const struct SrcRec *records;
-};
-
 struct BB4Frame {
     struct SrcRec s;
     s32 i;

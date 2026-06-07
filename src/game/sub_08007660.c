@@ -1,20 +1,8 @@
 #include "entity.h"
+#include "game.h"
 #include "iwram.h"
 #include "macros.h"
 #include "types.h"
-
-/* Per-script header table at 0x080C0AB0 (sEntityScriptIndex, 7 entries x 8 B,
- * extracted as a flat u32 array in src/data/entity_dispatch.c). Re-typed here
- * as records so this consumer can index by the signed script id and read the
- * per-entry signed-byte fields. Same family as the EntityScript_Advance consumer in
- * src/game/LoadPartEntry.c. */
-struct EntScript {
-    s8 count; /* +0: signed loop bound */
-    u8 _b1;
-    s8 _b2; /* +2: forwarded to Entity_TickCells */
-    u8 _b3;
-    const void *script; /* +4 */
-};
 
 extern const struct EntScript sEntityScriptIndex[];
 

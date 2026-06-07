@@ -31,6 +31,25 @@
  *                              GameMode_Attract to index gHandlerTable_08308028
  *                              and select a pendingMode value.
  */
+struct SrcRec; /* forward declaration — layout varies per TU; PartEntry holds a pointer only */
+
+/* Part-descriptor table entry (0x080C0AB0 / 0x080C0AE8). */
+struct PartEntry {
+    s8 count;
+    u8 _b1;
+    u8 _pad[2];
+    const struct SrcRec *records;
+};
+
+/* Per-script header record (sEntityScriptIndex table). */
+struct EntScript {
+    s8 count; /* +0: signed loop bound */
+    u8 _b1;
+    s8 _b2;
+    u8 _b3;
+    const void *script; /* +4 */
+};
+
 typedef struct GameStuff {
     u32 _unk00;
     u32 _unk04;

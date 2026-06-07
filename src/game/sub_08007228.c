@@ -1,3 +1,4 @@
+#include "game.h"
 #include "iwram.h"
 #include "macros.h"
 #include "types.h"
@@ -30,13 +31,6 @@ struct SrcRec {
     u8 _b9;
     u8 _pad0A[2];
     u32 _w12;
-};
-
-struct PartEntry {
-    s8 count;
-    u8 _b1;
-    u8 _pad[2];
-    const struct SrcRec *records;
 };
 
 extern const struct PartEntry gPartTable_080C0AB0[];
@@ -173,14 +167,6 @@ NAKED void LoadPartEntry(u8 partId, u8 *out, u8 tag)
  * cluster in src/data/entity_dispatch.c, exported there as flat u32 arrays).
  * Re-typed here as records so this consumer can index by the signed script id
  * and read the per-entry signed-byte fields. */
-struct EntScript {
-    s8 count; /* +0: signed loop bound */
-    u8 _b1;
-    s8 _b2; /* +2: forwarded to CollisionTable_CheckAndTriggerScript */
-    u8 _b3;
-    const void *script; /* +4 */
-};
-
 struct EntScriptExt {
     u16 _h0;
     u16 _h2; /* +2: dirty-flag mask raised on gIwram_35E0 */
