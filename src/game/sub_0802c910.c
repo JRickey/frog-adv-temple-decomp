@@ -10,7 +10,6 @@
 
 extern void MotionDesc_Set(struct MotionDesc *m, s8 sel, s8 a, s8 b);
 extern void DirToMotion(u8 dir, s8 *outX, s8 *outY);
-extern void EntityMover_Tick(u8 idx);
 extern void Entity_Update(void *p);
 
 void Entity22_Update(void)

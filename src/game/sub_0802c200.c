@@ -1,4 +1,5 @@
 #include "macros.h"
+#include "entity.h"
 #include "game.h"
 #include "iwram.h"
 #include "types.h"
@@ -12,7 +13,6 @@
 extern u32 RandRange(u8 range);
 extern u32 ModeControl_GetFlag(void *base, u32 selector, u32 bit);
 extern void Entity_Update(struct Entity *p);
-extern void EntityMover_Tick(u8 idx);
 
 extern void EntityPool_SpawnEntry(u8 owner, u8 group, u8 idx);
 extern s32 EntityPool_CheckSpawnable(u8 group, u8 idx);

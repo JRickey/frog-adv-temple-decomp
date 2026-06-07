@@ -1,4 +1,5 @@
 #include "macros.h"
+#include "entity.h"
 #include "game.h"
 #include "iwram.h"
 #include "types.h"
@@ -15,7 +16,6 @@ extern u32 ModeControl_GetFlag(void *base, u32 selector, u32 bit);
 extern void ModeControl_ClearBit(void *base, u32 selector, u32 bit);
 extern void CtrlFlags_SetBit(void *base, u32 selector, u32 bit);
 extern void sub_080210A0(u16 a0, const void *a1, u16 a2, u8 a3, u16 a4, u8 a5, u8 a6, u8 a7);
-extern void EntityMover_Tick(u8 idx);
 extern void MotionDesc_Set(struct Entity *e, s8 sel, s8 a, s8 b);
 extern void Sound_Play(u32 sound);
 extern void Entity_Update(void *p);

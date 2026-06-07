@@ -1,7 +1,7 @@
 #include "iwram.h"
+#include "entity.h"
 #include "types.h"
 
-extern void EntityMover_Tick(u8 idx);
 extern void Entity_FollowPath(void *obj, u8 idx);
 extern void Entity_Update(void *p);
 
