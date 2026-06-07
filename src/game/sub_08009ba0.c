@@ -1,3 +1,4 @@
+#include "entity.h"
 #include "game.h"
 #include "gfx.h"
 #include "sound.h"
@@ -49,7 +50,6 @@ extern void EntityPool_Reset(void);
 extern u32 Level_Load(void);
 extern void Sound_Reset(void);
 extern void Timer_DecrByte(struct IwramAt35E0 *p);
-extern void Entity_SpawnFromRecord(s32 a);
 extern const u32 sEntityProcA[17];
 
 u32 Scene_EntityTick(u8 *flag)

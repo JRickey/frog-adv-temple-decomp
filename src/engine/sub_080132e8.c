@@ -8,8 +8,6 @@
 #include "types.h"
 #include "iwram.h"
 
-extern void sub_08012BC4(u8 mode, u16 a, u16 b, u16 c, u16 d, void *tiles, u8 e);
-
 void ScaleAnim_BlitSceneLayers(void)
 {
     register struct TilemapTableEntry *sceneA asm("r6");

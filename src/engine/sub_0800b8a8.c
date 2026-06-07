@@ -19,7 +19,7 @@
 
 extern s8 EntityHitbox_FindPoint(s8 a, s16 x, s16 y);
 
-void Entity_ActivateHitSlot(struct EntryB8A8 *arr, unsigned long long *mask, u8 a, u8 b)
+void Entity_ActivateHitSlot(void *arr, void *mask, u8 a, u8 b)
 {
     s8 idx;
     struct EntryB8A8 *entry;
@@ -39,5 +39,5 @@ void Entity_ActivateHitSlot(struct EntryB8A8 *arr, unsigned long long *mask, u8 
     entry->_field_4 = 1;
     entry->_field_0 = gGameStuff._unk00;
     Sound_Play(22);
-    *mask |= (unsigned long long)1 << idx;
+    *(unsigned long long *)mask |= (unsigned long long)1 << idx;
 }

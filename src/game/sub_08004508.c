@@ -19,7 +19,6 @@
  *     reloading the pool literal. */
 
 extern void Entity_UpdateHitboxWithTile(void *ent, u32 arg1, u32 kind);
-extern void Entity_ActivateHitSlot(void *ent, u32 arg1, u32 kind, u32 tile);
 extern u32 Tilemap_GetTileClass(u8 col, u8 row, s32 tileX, s32 tileY);
 extern void TileCacheProbe_HandleTile20(u8 tile);
 
@@ -49,8 +48,8 @@ void Scene20_UpdateParts(u32 arg0, u32 arg1, u32 arg2, u32 arg3)
     if (mask == 0)
         return;
 
-    Entity_ActivateHitSlot((void *)arg0, arg1, 11, tile);
-    Entity_ActivateHitSlot((void *)arg2, arg3, 16, tile);
+    Entity_ActivateHitSlot((void *)arg0, (void *)arg1, 11, tile);
+    Entity_ActivateHitSlot((void *)arg2, (void *)arg3, 16, tile);
     TileCacheProbe_HandleTile20(tile);
 }
 

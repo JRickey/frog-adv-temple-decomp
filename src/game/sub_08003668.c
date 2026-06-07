@@ -1,3 +1,4 @@
+#include "entity.h"
 #include "game.h"
 #include "iwram.h"
 #include "macros.h"
@@ -28,7 +29,6 @@
  * each compare. */
 
 extern void Entity_UpdateHitboxWithTile(void *ent, u32 arg1, u32 kind);
-extern void Entity_ActivateHitSlot(void *ent, u32 arg1, u32 kind, u32 tile);
 extern void sub_0800BF24(void *ent, void *arg1, u8 kind);
 extern void sub_0800BEBC(void *ent, void *arg1, u8 kind, u8 tile);
 extern void sub_0800C444(u8 tile);
@@ -62,8 +62,8 @@ void Scene_UpdateCollisionAndTile(u32 arg0, u32 arg1, u32 arg2, u32 arg3, void *
     mask = 0x10;
     mask &= p35E0->_field_10;
     if (mask != 0) {
-        Entity_ActivateHitSlot((void *)arg0, arg1, 6, tile);
-        Entity_ActivateHitSlot((void *)arg2, arg3, 7, tile);
+        Entity_ActivateHitSlot((void *)arg0, (void *)arg1, 6, tile);
+        Entity_ActivateHitSlot((void *)arg2, (void *)arg3, 7, tile);
         sub_0800BEBC(arg4, arg5, 22, tile);
         sub_0800C444(tile);
     }

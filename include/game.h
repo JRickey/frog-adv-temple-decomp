@@ -83,4 +83,10 @@ s32 Scene08_MapScreenTick(void);
 
 void WaitFrames(u32 delay);
 
+/* Both params are entity/object pointers; void* avoids pointer-type drift
+ * across callers that receive them typed as u32. */
+void Scene12_UpdateTileInteraction(void *buf, void *r4_obj);
+
+void Player_HandleTileTransitions(void *a, void *b);
+
 #endif /* GUARD_GAME_H */

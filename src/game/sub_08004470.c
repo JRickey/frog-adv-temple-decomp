@@ -1,9 +1,8 @@
+#include "entity.h"
 #include "gfx.h"
 extern void ModeControl_Init(unsigned int a, unsigned int b, unsigned int c, unsigned int d, unsigned int e,
                              unsigned int f);
 extern void EntityDispatch_RunFrame(void);
-extern void Entity_RunScript(unsigned int a, unsigned int b);
-extern void EntityScript_Advance(unsigned int a, unsigned int b, unsigned int c);
 extern void Game_RunEntityFrame(void);
 extern void WaitVblank(void);
 extern void Game_ForceRender(void);
@@ -26,7 +25,7 @@ void Scene14_Init(void)
 void Scene_FrameUpdateWithLayers(unsigned int a, unsigned int b, unsigned int c, unsigned int d, unsigned int e,
                                  unsigned int f, unsigned int g)
 {
-    Entity_RunScript(2, a);
+    Entity_RunScript(2, (void *)a);
     EntityScript_Advance(0, 3, b);
     EntityScript_Advance(1, 4, c);
     Game_RunEntityFrame();

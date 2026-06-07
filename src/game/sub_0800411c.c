@@ -21,7 +21,7 @@ extern u32 Scene_InitScan(u8 *localState);
 extern u16 Input_Poll(void);
 extern void Scene_LoadBg(void);
 extern void Entity_RunScript(u32 a, u32 b);
-extern void EntityScript_Advance(u32 a, u32 b, u32 c);
+extern void EntityScript_Advance(s8 a, s8 b, s32 c);
 extern void Game_RunEntityFrame(void);
 extern void WaitVblank(void);
 extern void Game_ForceRender(void);

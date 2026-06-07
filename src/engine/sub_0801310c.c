@@ -32,7 +32,7 @@ extern struct IwramAt6110_1310C gIwram_6110;
 extern const struct ScaleAnimDesc_1310C sScaleAnimDescriptors[];
 extern const struct ScaleAnimDesc_1310C sScaleAnimDescriptors2[];
 
-void sub_08012BC4(u32 flags, u32 dstX, u32 dstY, u32 width, u32 rows, const u16 **srcTable, u32 srcIndex);
+void sub_08012BC4(u32 flags, u32 dstX, u32 dstY, u32 width, u32 rows, void *srcTable, u32 srcIndex);
 void RemapInputBits(void);
 void ScaleAnim_ClearActiveBits(void);
 void ScaleAnim_BlitSceneLayers(void);

@@ -4,8 +4,6 @@
 
 extern const struct ScaleAnimDesc sScaleAnimDescriptors[];
 
-void sub_08012BC4(u32 flags, u32 dstX, u32 dstY, u32 widthArg, u32 srcRowsArg, const u16 **srcTable, u32 srcIndex);
-
 void ScaleAnim_BlitDescIdx0(u8 idx)
 {
     const u8 *base = (const u8 *)sScaleAnimDescriptors;

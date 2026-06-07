@@ -21,7 +21,6 @@ struct Queue_64C0 {
     u8 _cursor;
 };
 
-extern void sub_08012BC4(u8 mode, u16 a, u16 b, u16 c, u16 d, void *tiles, u8 e);
 extern void SetModeBlendRegs(void);
 extern void BgScrollAnim_Update(void);
 extern u8 DmaJob_Advance(struct DmaJob_13BA4 job, u8 mode, struct Queue_64C0 *queue);

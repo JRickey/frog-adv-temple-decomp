@@ -1,3 +1,4 @@
+#include "entity.h"
 #include "game.h"
 #include "iwram.h"
 #include "types.h"
@@ -6,7 +7,6 @@ extern void Game_RunEntityFrame(void);
 extern void WaitVblank(void);
 extern void Game_ForceRender(void);
 extern void AnimTile_ResetAndClearBg(void);
-extern void Entity_SpawnFromRecord(s8 id);
 extern u8 RunFadeTransition(u8 *state, u32 callbackTable);
 
 /* Mode entry that seeds the entity-dispatch state, ticks the per-frame

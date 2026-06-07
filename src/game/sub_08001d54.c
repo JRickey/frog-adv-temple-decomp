@@ -7,7 +7,6 @@ extern void WaitVblank(void);
 extern void Game_ForceRender(void);
 extern void Entity_CheckAllCollisions(void);
 extern void Player_CheckTileEvents(void);
-extern void Scene12_UpdateTileInteraction(u32 a, u32 b);
 
 /* Per-frame tick for one of the mode handlers: drives shared input
  * (Entity_RunScript), per-frame state services (Game_RunEntityFrame / WaitVblank /
@@ -22,6 +21,6 @@ void Scene06_Tick(u32 a, u32 b, u32 c)
     Game_ForceRender();
     Entity_CheckAllCollisions();
     Player_CheckTileEvents();
-    Scene12_UpdateTileInteraction(b, c);
+    Scene12_UpdateTileInteraction((void *)b, (void *)c);
     gGameStuff._unk14++;
 }

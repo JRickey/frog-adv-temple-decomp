@@ -15,8 +15,6 @@ struct TilemapRegionDesc {
     void *tiles;
 };
 
-extern void sub_08012BC4(u8 mode, u16 a, u16 b, u16 c, u16 d, void *tiles, u8 e);
-
 void BgTilemap_LoadScreen(void)
 {
     struct TilemapRegionDesc *desc = (struct TilemapRegionDesc *)0x083072f8;

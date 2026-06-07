@@ -30,7 +30,6 @@ extern void WaitVblank(void);
 extern void Game_ForceRender(void);
 extern void Entity_CheckAllCollisions(void);
 extern void Player_CheckTileEvents(void);
-extern void Player_HandleTileTransitions(u32 a, u32 b);
 
 void Mode17_RunFrame(u32 a, u32 b, u32 c)
 {
@@ -40,7 +39,7 @@ void Mode17_RunFrame(u32 a, u32 b, u32 c)
     Game_ForceRender();
     Entity_CheckAllCollisions();
     Player_CheckTileEvents();
-    Player_HandleTileTransitions(b, c);
+    Player_HandleTileTransitions((void *)b, (void *)c);
     gGameStuff._unk14++;
 }
 

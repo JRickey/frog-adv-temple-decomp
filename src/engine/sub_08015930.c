@@ -4,8 +4,6 @@
 #include "iwram.h"
 #include "gba/io.h"
 
-extern void sub_08012BC4(u8 mode, u16 a, u16 b, u16 c, u16 d, void *tiles, u8 e);
-
 void Tilemap_DispatchPendingBlits(void)
 {
     /* The baserom holds the loop constants (1, table base, table base + 16) in

@@ -1,9 +1,9 @@
+#include "entity.h"
 #include "game.h"
 #include "iwram.h"
 #include "types.h"
 
 extern void Entity_UpdateHitboxWithTile(void *ent, u32 arg1, u32 kind);
-extern void Entity_ActivateHitSlot(void *ent, u32 arg1, u32 kind, u32 tile);
 extern u32 Tilemap_GetTileClass(u8 col, u8 row, s32 tileX, s32 tileY);
 extern void Frog_ProcessTileContact(u8 tile);
 
@@ -24,7 +24,7 @@ void Scene09_UpdatePlayerTile(void *ent, u32 arg1)
 
     if ((gIwram_35E0._field_10 & 0x10) != 0) {
         Frog_ProcessTileContact(tile);
-        Entity_ActivateHitSlot(ent, arg1, 3, tile);
+        Entity_ActivateHitSlot(ent, (void *)arg1, 3, tile);
     }
 
     if ((u8)IsFlagMaskSet(&gIwram_35E0, 0x40) == 0)

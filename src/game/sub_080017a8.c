@@ -14,7 +14,6 @@ extern void Game_ForceRender(void);
 extern void Entity_CheckAllCollisions(void);
 extern void Player_CheckTileEvents(void);
 extern void Entity_UpdateHitboxWithTile(void *ent, u32 arg1, u32 kind);
-extern void Entity_ActivateHitSlot(void *ent, u32 arg1, u32 kind, u32 tile);
 extern u32 Tilemap_GetTileClass(u8 col, u8 row, s32 tileX, s32 tileY);
 
 /* Mode-setup entry, sibling of Scene06_Init: installs config table
@@ -64,7 +63,7 @@ void Scene05_Tick(u32 arg0, u32 arg1)
     if (mask == 0)
         goto done;
 
-    Entity_ActivateHitSlot((void *)arg0, arg1, 4, tile);
+    Entity_ActivateHitSlot((void *)arg0, (void *)arg1, 4, tile);
 
 done:
     gGameStuff._unk14++;
@@ -118,7 +117,7 @@ void Scene05_EntityDispatch(u32 arg0, u32 arg1)
     if (mask == 0)
         goto done;
 
-    Entity_ActivateHitSlot((void *)arg0, arg1, 4, tile);
+    Entity_ActivateHitSlot((void *)arg0, (void *)arg1, 4, tile);
 
 done:;
 }

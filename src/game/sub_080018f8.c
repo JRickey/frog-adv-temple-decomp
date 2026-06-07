@@ -1,3 +1,4 @@
+#include "entity.h"
 #include "game.h"
 #include "iwram.h"
 #include "macros.h"
@@ -29,17 +30,16 @@
  *     0x030064b6. ldrsh has no immediate form in Thumb-1. */
 
 extern void Entity_UpdateHitboxWithTile(void *ent, u32 arg1, u32 kind);
-extern void Entity_ActivateHitSlot(void *ent, u32 arg1, u32 kind, u32 tile);
 extern u32 Tilemap_GetTileClass(u8 col, u8 row, s32 tileX, s32 tileY);
 
-void Scene12_UpdateTileInteraction(u32 arg0, u32 arg1)
+void Scene12_UpdateTileInteraction(void *arg0, void *arg1)
 {
     u32 mask;
     struct IwramAt35E0 *p35E0;
     struct Entity *p3720;
     u8 tile;
 
-    Entity_UpdateHitboxWithTile((void *)arg0, arg1, 5);
+    Entity_UpdateHitboxWithTile(arg0, (u32)arg1, 5);
 
     {
         struct IwramAt35E0 *p = &gIwram_35E0;
@@ -59,7 +59,7 @@ void Scene12_UpdateTileInteraction(u32 arg0, u32 arg1)
     mask = 0x10;
     mask &= p35E0->_field_10;
     if (mask != 0)
-        Entity_ActivateHitSlot((void *)arg0, arg1, 5, tile);
+        Entity_ActivateHitSlot(arg0, arg1, 5, tile);
 
     p3720 = gEntities;
     mask = 4;

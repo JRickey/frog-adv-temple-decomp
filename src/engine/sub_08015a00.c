@@ -5,7 +5,6 @@
 #include "iwram.h"
 #include "gba/dma.h"
 
-extern void sub_08012BC4(u8 mode, u16 a, u16 b, u16 c, u16 d, void *tiles, u8 e);
 extern void SetModeBlendRegs(void);
 extern void GateRoom_Tick(void);
 extern void FrogStatusBar_Update(void);

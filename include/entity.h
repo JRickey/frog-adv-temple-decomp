@@ -82,4 +82,12 @@ void Entity_WalkCompactRecords(u8 baseSlot, const void *pCount, u8 kind, void *u
 
 void Entity_RunScript(u32 id, void *obj);
 
+/* arg1 (mask) is a pointer to a u64 bit-field; void* avoids pointer-type
+ * drift across callers that receive it as a generic u32/void* parameter. */
+void Entity_ActivateHitSlot(void *ent, void *mask, u8 kind, u8 tile);
+
+void Entity_SpawnFromRecord(s8 id);
+
+void EntityScript_Advance(s8 a, s8 b, s32 c);
+
 #endif /* GUARD_ENTITY_H */

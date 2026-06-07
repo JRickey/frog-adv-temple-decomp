@@ -1,9 +1,9 @@
+#include "entity.h"
 #include "game.h"
 #include "iwram.h"
 #include "types.h"
 
 extern void Entity_UpdateHitboxWithTile(void *ent, u32 arg1, u32 kind);
-extern void Entity_ActivateHitSlot(void *ent, u32 arg1, u32 kind, u32 tile);
 extern u32 Tilemap_GetTileClass(u8 col, u8 row, s32 tileX, s32 tileY);
 extern u32 SpriteAsset_GetCellFlag(u8 col, u8 row, s32 tileX, s32 tileY);
 
@@ -22,7 +22,7 @@ void Scene08_UpdatePlayerEntity(void *ent, u32 arg1)
                                     gIwram_35E0._field_A);
 
     if ((gIwram_35E0._field_10 & 0x10) != 0)
-        Entity_ActivateHitSlot(ent, arg1, 18, tile);
+        Entity_ActivateHitSlot(ent, (void *)arg1, 18, tile);
 
     if ((gIwram_35E0._field_10 & 0x40) != 0) {
         if ((u8)SpriteAsset_GetCellFlag(gIwram_35E0._field_18, gIwram_35E0._field_19, gIwram_35E0._field_8,

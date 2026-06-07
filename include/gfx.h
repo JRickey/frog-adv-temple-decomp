@@ -96,4 +96,11 @@ void BgLayer_Disable(u8 layer);
 
 void BgLayer_Enable(u8 layer);
 
+/* Tile-blit engine: copies srcTable[srcIndex] rows into VRAM at (dstX, dstY).
+ * Scalar params are declared u32 because agbcc generates the entry-narrowing masks
+ * (lsls/lsrs) only for u32 params; narrower types at the call site are safe.
+ * srcTable is void* to accommodate callers passing TilemapTableEntry.tiles (void*)
+ * or const u16** from ScaleAnimDesc; ABI-identical either way. */
+void sub_08012BC4(u32 flags, u32 dstX, u32 dstY, u32 widthArg, u32 srcRowsArg, void *srcTable, u32 srcIndex);
+
 #endif /* GUARD_GFX_H */

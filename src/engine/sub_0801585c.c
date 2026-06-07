@@ -21,7 +21,7 @@ struct PanelCellSrc {
     u8 _pad[20];
 };
 
-extern void sub_08012BC4(u32 flags, u32 dstX, u32 dstY, u32 width, u32 rows, const u16 **srcTable, u32 cellBit);
+extern void sub_08012BC4(u32 flags, u32 dstX, u32 dstY, u32 width, u32 rows, void *srcTable, u32 cellBit);
 extern void Screen_LoadForMode(void);
 extern void SceneLoad_DmaUpdate(void);
 

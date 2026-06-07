@@ -1,10 +1,10 @@
+#include "entity.h"
 #include "game.h"
 #include "iwram.h"
 #include "macros.h"
 #include "types.h"
 
 extern void Entity_UpdateHitboxWithTile(void *ent, u32 arg1, u32 kind);
-extern void Entity_ActivateHitSlot(void *ent, u32 arg1, u32 kind, u32 tile);
 extern void Gate_HandleGateTile(u8 tile);
 extern u32 Tilemap_GetTileClass(u8 col, u8 row, s16 tileX, s16 tileY);
 
@@ -32,7 +32,7 @@ extern u32 Tilemap_GetTileClass(u8 col, u8 row, s16 tileX, s16 tileY);
  *     so the bases land in caller-saved registers and reload after each call
  *     rather than being kept across it in r4/r5. */
 
-void Player_HandleTileTransitions(u32 arg0, u32 arg1)
+void Player_HandleTileTransitions(void *arg0, void *arg1)
 {
     struct IwramAt35E0 *p35E0;
     struct IwramAt35E0 *p;
@@ -42,13 +42,13 @@ void Player_HandleTileTransitions(u32 arg0, u32 arg1)
     u16 uf;
     u32 coord;
 
-    Entity_UpdateHitboxWithTile((void *)arg0, arg1, 17);
+    Entity_UpdateHitboxWithTile(arg0, (u32)arg1, 17);
 
     p35E0 = &gIwram_35E0;
     tile = (u8)Tilemap_GetTileClass(p35E0->_field_18, p35E0->_field_19, p35E0->_field_8, p35E0->_field_A);
 
     if ((0x10 & p35E0->_field_10) != 0) {
-        Entity_ActivateHitSlot((void *)arg0, arg1, 17, tile);
+        Entity_ActivateHitSlot(arg0, arg1, 17, tile);
         Gate_HandleGateTile(tile);
     }
 

@@ -13,7 +13,7 @@ extern void Entity_Init(struct Entity *p, u8 a, s16 b, s16 c, u8 d, u16 e, u8 f,
  * positions (n*24 + 11) seeded into gIwram_35E0 / forwarded to Entity_Init,
  * while PlayerState_Init re-reads the bytes just stored into gIwram_35E0. */
 
-void Entity_SpawnFromRecord(u8 id)
+void Entity_SpawnFromRecord(s8 id)
 {
     struct SpawnRec *rec =
         (struct SpawnRec *)((const struct SpawnRec **)gIwram_6110.configTable)[gIwram_6110.state - 1] + (s8)id;
