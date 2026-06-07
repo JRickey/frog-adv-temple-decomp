@@ -77,9 +77,9 @@ struct IwramAt35E0 {
     u8 _pad0F;
     u16 _field_10; /* +10: flags; bit 0x40 raised when tile coords change */
     u16 _field_12;
-    u8 _pad14[4];
-    u8 _field_18; /* +18: entity coord (X tile) */
-    u8 _field_19; /* +19: entity coord (Y tile) */
+    u32 _field_14; /* +14: word zeroed by PlayerState_Init */
+    u8 _field_18;  /* +18: entity coord (X tile) */
+    u8 _field_19;  /* +19: entity coord (Y tile) */
     u8 _field_1A;
     u8 _pad1B;
     s16 _field_1C; /* +0x1C: committed move tile X (gIwram_35E0._field_8 +/- 0,1,2) */
