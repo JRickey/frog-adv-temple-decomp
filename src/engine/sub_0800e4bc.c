@@ -1,7 +1,7 @@
 #include "game.h"
+#include "sound.h"
 #include "types.h"
 
-extern void Sound_Play(u32 sound);
 extern void Sound_Reset(void);
 
 /* Two-player link-cable handshake state machine.

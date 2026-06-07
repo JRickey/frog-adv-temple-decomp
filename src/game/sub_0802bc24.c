@@ -1,4 +1,5 @@
 #include "game.h"
+#include "sound.h"
 #include "iwram.h"
 #include "types.h"
 
@@ -13,7 +14,6 @@ extern void CtrlFlags_SetBit(void *base, u32 selector, u32 bit);
 extern void GateRoom_InitScrollParams(void);
 extern void SoundEntry_Play(u32 arg0);
 extern void SoundEntry_Stop(u32 arg0);
-extern void Sound_Play(u32 arg0);
 extern u8 GateRoom_UpdateSlide(void);
 extern void PlayerFlags_Set(void *p, u16 mask);
 

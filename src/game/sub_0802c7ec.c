@@ -1,4 +1,5 @@
 #include "game.h"
+#include "sound.h"
 #include "iwram.h"
 #include "types.h"
 
@@ -6,7 +7,6 @@ extern void EnemyLayout_Reset(void);
 extern u32 ModeControl_GetFlag(u8 *base, u32 selector, u32 bit);
 extern void CtrlFlags_SetBit(u8 *base, u32 selector, u32 bit);
 extern void ModeControl_ClearBit(u8 *base, u32 selector, u32 bit);
-extern void Sound_Play(u32 arg);
 extern void Entity_WalkCompactRecords(u8 a0, const void *a1, u8 a2, void *a3, u8 a4);
 
 extern const u32 sLevelLayout_31807C[12];

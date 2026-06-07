@@ -1,4 +1,5 @@
 #include "entity.h"
+#include "sound.h"
 #include "game.h"
 #include "iwram.h"
 #include "types.h"
@@ -10,7 +11,6 @@ typedef struct {
     s16 d;
 } Entry;
 
-extern u32 Sound_Play(u32 sound);
 extern u8 Enemy_PickNextStep(Entry *e, s16 *out);
 extern u8 TileEntry_CalcDirection(Entry *a, Entry *b);
 extern void DirToMotion(u8 dir, s8 *outX, s8 *outY);

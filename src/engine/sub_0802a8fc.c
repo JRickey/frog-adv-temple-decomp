@@ -1,4 +1,5 @@
 #include "macros.h"
+#include "sound.h"
 #include "iwram.h"
 #include "types.h"
 
@@ -7,7 +8,6 @@
 #include "iwram.h"
 #include "types.h"
 
-extern void Sound_Play(u32 sound);
 extern void Entity_AdvanceAnimFrames(s32 first, s32 last);
 
 void Entity10_UpdateStatus(void)

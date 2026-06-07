@@ -1,4 +1,5 @@
 #include "game.h"
+#include "sound.h"
 #include "entity.h"
 #include "iwram.h"
 #include "types.h"
@@ -91,7 +92,6 @@ void RoomEntities_Init(void)
 
 extern u32 ModeControl_GetFlag(void *base, u32 selector, u32 bit);
 extern void ModeControl_ClearBit(void *base, u32 selector, u32 bit);
-extern void Sound_Play(u32 sound);
 extern void Entity_FollowPath(const void *a0, s32 slot);
 extern void Entity_AdvanceAnimFrames(s32 a0, s32 a1);
 

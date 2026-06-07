@@ -1,9 +1,9 @@
 #include "gba/dma.h"
+#include "sound.h"
 #include "iwram.h"
 #include "types.h"
 
 extern void Credits_DmaLoadTiles(u8 arg);
-extern u32 Sound_Play(u32 sound);
 
 void Credits_InitStateA(u8 arg)
 {

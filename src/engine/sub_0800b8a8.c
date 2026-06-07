@@ -1,4 +1,5 @@
 #include "game.h"
+#include "sound.h"
 #include "iwram.h"
 #include "macros.h"
 #include "types.h"
@@ -16,7 +17,6 @@
  *     `adds r1, r5, r0` — byte_diff 2 from baserom. */
 
 extern s8 EntityHitbox_FindPoint(s8 a, s16 x, s16 y);
-extern void Sound_Play(u32 a);
 
 struct EntryB8A8 {
     u32 _field_0;

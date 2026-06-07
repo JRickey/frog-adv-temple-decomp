@@ -1,10 +1,10 @@
 #include "gba/dma.h"
+#include "sound.h"
 #include "iwram.h"
 #include "macros.h"
 #include "types.h"
 
 extern void Sound_DrainActiveSlots(void);
-extern void Sound_Play(u32 a);
 extern void Credits_LoadFrogGfx(u8 arg);
 
 /* Per-room/scene state init + double DMA3 OBJ-VRAM clear. Sibling of

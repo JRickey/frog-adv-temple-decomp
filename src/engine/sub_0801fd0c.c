@@ -1,4 +1,5 @@
 #include "game.h"
+#include "sound.h"
 #include "gba/dma.h"
 #include "gba/io.h"
 #include "iwram.h"
@@ -97,7 +98,6 @@ void WinPoseScreen_Init(void)
 }
 
 extern u16 Input_Poll(void);
-extern void Sound_Play(u32 sound);
 extern void WinPoseScreen_ScrollStep(u32 a);
 extern void SetCurrentLevel(u32 x);
 extern void Sprite_AnimateFlip(void *self, u16 u1, u16 u2, u8 u3, u8 count);

@@ -1,4 +1,5 @@
 #include "types.h"
+#include "sound.h"
 #include "gba/dma.h"
 #include "gba/io.h"
 
@@ -24,7 +25,6 @@ extern u8 gIwram_6580[];
 extern void BgLayer_Disable(u8 layer);
 extern void BgLayer_Enable(u8 layer);
 extern void AnimChannels_Reset(void);
-extern void Sound_Play(u32 sound);
 extern void DmaJob_Advance(struct DmaJob_152B0 job, u8 mode, void *buf);
 
 void Screen_LoadForMode(void)

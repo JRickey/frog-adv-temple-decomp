@@ -1,4 +1,5 @@
 #include "gba/dma.h"
+#include "sound.h"
 #include "iwram.h"
 #include "types.h"
 
@@ -77,7 +78,6 @@ void Credits_LoadFrogGfx(u8 arg)
 }
 
 extern void Sound_DrainActiveSlots(void);
-extern void Sound_Play(u32 a);
 
 void Credits_InitScrollPage2(u8 arg)
 {

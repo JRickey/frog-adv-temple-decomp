@@ -1,4 +1,5 @@
 #include "gba/dma.h"
+#include "sound.h"
 #include "gba/io.h"
 #include "iwram.h"
 #include "save.h"
@@ -22,7 +23,6 @@ extern u8 Scene_DrawWindow(s32 a, s32 b, const void *c, s32 d, s32 e, s32 f);
 extern void SaveSlot_DrawAllSlots(void);
 extern s32 SaveSlot_DrawSelectionCursor(u8 idx);
 extern u16 Input_Poll(void);
-extern void Sound_Play(u32 sound);
 
 extern u16 gIwram_5398;
 extern const u32 sOamDmaCfg_08100[4];

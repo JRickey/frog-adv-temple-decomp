@@ -1,4 +1,5 @@
 #include "macros.h"
+#include "sound.h"
 #include "types.h"
 
 /* --- Scroll_TickBlitDir: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
@@ -50,7 +51,6 @@ typedef struct ScrollModeEntry {
 
 extern void Scroll_PrepareBlitWork(void *records, u8 n, u32 arg2);
 extern void Scroll_FlushTilemapWindow(u32 mirror, void *src, void *dst);
-extern void Sound_Play(u32 sound);
 extern void SoundEntry_Play(u8 idx);
 extern void SoundEntry_Stop(u8 idx);
 

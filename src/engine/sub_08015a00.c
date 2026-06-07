@@ -1,4 +1,5 @@
 #include "macros.h"
+#include "sound.h"
 #include "types.h"
 #include "iwram.h"
 #include "gba/dma.h"
@@ -78,7 +79,6 @@ void Scene_Init(void)
 
 extern void Scenery_UpdateSelectorCells(void);
 extern void Scenery_BlitAndCyclePalette(void);
-extern void Sound_Play(u32 arg);
 
 void Scene_UpdateFrame(void)
 {

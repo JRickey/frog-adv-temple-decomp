@@ -1,4 +1,5 @@
 #include "game.h"
+#include "sound.h"
 #include "iwram.h"
 #include "macros.h"
 #include "types.h"
@@ -73,7 +74,6 @@ extern void Entity_CheckAllCollisions(void);
 extern void Player_CheckTileEvents(void);
 extern u8 Tilemap_GetTileClass();
 extern void PlayerFlags_Set(void *a, u32 b);
-extern void Sound_Play(u32 arg);
 
 void GameMode_SceneTick(void *arg)
 {

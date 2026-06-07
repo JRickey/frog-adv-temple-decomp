@@ -1,11 +1,10 @@
 #include "game.h"
+#include "sound.h"
 #include "iwram.h"
 #include "macros.h"
 #include "types.h"
 
 extern const u16 sModeLookupTable_2F9CF4[10];
-
-extern void Sound_Play(u32 a);
 
 u8 Player_CheckSpecialTileMatch(void)
 {

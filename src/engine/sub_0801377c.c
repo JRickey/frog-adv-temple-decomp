@@ -1,4 +1,5 @@
 #include "macros.h"
+#include "sound.h"
 #include "types.h"
 #include "game.h"
 #include "gba/dma.h"
@@ -47,7 +48,6 @@ extern struct IwramAt6500 gIwram_6500;
 extern struct IwramAt6540 gIwram_6540;
 extern struct IwramAt60A0 gIwram_60A0;
 
-extern void Sound_Play(u32 arg);
 extern void CharLayers_Upload(u8 arg);
 extern void FrogOam_Init(void);
 extern void Scroll_UpdateCamera(u8 arg);

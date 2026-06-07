@@ -1,4 +1,5 @@
 #include "game.h"
+#include "sound.h"
 #include "iwram.h"
 #include "types.h"
 
@@ -134,7 +135,6 @@ extern struct CamTarget_6480 gIwram_6480;
 extern struct EntityPos_3720 gEntities_03003720;
 extern u8 gIwram_60A0[];
 
-extern void Sound_Play(u32 sound);
 extern void SoundEntry_Play(u32 idx);
 extern void SoundEntry_Stop(u32 idx);
 extern u8 Selector_TriggerWindowReveal(void);

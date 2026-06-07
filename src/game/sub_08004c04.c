@@ -1,4 +1,5 @@
 #include "game.h"
+#include "sound.h"
 #include "iwram.h"
 #include "macros.h"
 #include "types.h"
@@ -79,7 +80,6 @@ extern void BgTilemap_DmaVariantA(void);
 extern void BgTilemap_DmaVariantB(void);
 extern void AnimChannels_Reset(void);
 extern void StatusBar_Update(void);
-extern void Sound_Play(u32 arg);
 
 void SpawnCycle_Update(u8 *arg0, u32 *arg1, u8 *arg2, u32 *arg3)
 {

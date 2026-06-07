@@ -1,4 +1,5 @@
 #include "game.h"
+#include "sound.h"
 #include "iwram.h"
 #include "types.h"
 
@@ -7,7 +8,6 @@ extern void CtrlFlags_SetBit(void *base, u32 selector, u32 bit);
 /* Unprototyped: the gate-close call below passes only two args so r2 keeps
  * the 0 left over from the two halfword clears (matches the baserom). */
 extern void ModeControl_ClearBit();
-extern void Sound_Play(u32 sound);
 extern s32 RandRange(s32 range);
 extern void SpawnGrid_UpdateSection(void);
 

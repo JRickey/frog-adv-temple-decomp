@@ -1,4 +1,5 @@
 #include "game.h"
+#include "sound.h"
 #include "iwram.h"
 #include "macros.h"
 #include "types.h"
@@ -7,7 +8,6 @@ extern u8 ModeControl_GetFlag(u8 *base, u32 selector, u32 bit);
 extern void PadGrid_RemoveRandom(u32 a);
 extern void PadGrid_FillGrid(u32 a, u32 b);
 extern void PadGrid_PlaceEntities(void);
-extern void Sound_Play(u32 a);
 extern void FrogPos_UpdateEntities(void);
 extern void FrogGoal_UpdateEntities(void);
 

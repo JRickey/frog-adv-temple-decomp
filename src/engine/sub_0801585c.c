@@ -1,4 +1,5 @@
 #include "macros.h"
+#include "sound.h"
 #include "types.h"
 #include "iwram.h"
 
@@ -21,7 +22,6 @@ struct PanelCellSrc {
 };
 
 extern void sub_08012BC4(u32 flags, u32 dstX, u32 dstY, u32 width, u32 rows, const u16 **srcTable, u32 cellBit);
-extern void Sound_Play(u32 sound);
 extern void Screen_LoadForMode(void);
 extern void SceneLoad_DmaUpdate(void);
 

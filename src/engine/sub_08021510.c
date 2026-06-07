@@ -1,8 +1,8 @@
 #include "types.h"
+#include "sound.h"
 #include "iwram.h"
 #include "game.h"
 
-extern void Sound_Play(u32 effect);
 extern void StatusBar_Update(void);
 extern int __divsi3(int num, int den);
 extern void PadGrid_DeactivateEntityAtPos(s16 tileX, s16 tileY);

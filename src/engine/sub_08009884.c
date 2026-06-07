@@ -1,4 +1,5 @@
 #include "game.h"
+#include "sound.h"
 #include "iwram.h"
 #include "macros.h"
 #include "types.h"
@@ -9,7 +10,6 @@ extern void WaitVblank(void);
 extern u32 Scene08_MapScreenTick(void);
 extern u8 Player_CheckSpecialTileMatch(void);
 extern void Entity_InitShadow(void);
-extern void Sound_Play(u32 a);
 
 void Player_HandleTileCollision(u8 arg)
 {

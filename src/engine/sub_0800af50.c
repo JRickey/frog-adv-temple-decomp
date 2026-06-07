@@ -1,4 +1,5 @@
 #include "entity.h"
+#include "sound.h"
 #include "iwram.h"
 #include "types.h"
 #include "game.h"
@@ -143,7 +144,6 @@ void Entity_InitHitboxSlots(EntitySlot *slots)
 
 extern u8 ModeControl_GetFlag(u8 *base, u32 selector, u32 bit);
 extern void ModeControl_ClearBit(u8 *base, u32 selector, u32 bit);
-extern void Sound_Play(u32 sound);
 
 void Gate_PollResult(EntitySlot *slots)
 {

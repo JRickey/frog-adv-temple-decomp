@@ -540,4 +540,6 @@ typedef struct SoundLockSystem {
      *(u16 *)((u8 *)(slot) + SOUND_ACC_SUM_2_OFFSET) + *(u16 *)((u8 *)(slot) + SOUND_ACC_SUM_3_OFFSET) +               \
      *(u16 *)((u8 *)(slot) + SOUND_ACC_SUM_4_OFFSET) + *(u16 *)((u8 *)(slot) + SOUND_ACC_SUM_5_OFFSET))
 
+u32 Sound_Play(u32 sound);
+
 #endif

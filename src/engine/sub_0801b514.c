@@ -1,4 +1,5 @@
 #include "gba/dma.h"
+#include "sound.h"
 #include "iwram.h"
 #include "types.h"
 
@@ -124,8 +125,6 @@ void sub_0801B620(u8 arg)
 
     Room_LoadSpriteTiles(arg);
 }
-
-extern void Sound_Play(u32 arg);
 
 /* Sibling of sub_0801B620 and Credits_InitScrollPage1: look up a value from the
  * 0x081BDA70 ROM table at index arg+7 (pinned to r5 across function body),

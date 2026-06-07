@@ -1,4 +1,5 @@
 #include "game.h"
+#include "sound.h"
 #include "iwram.h"
 #include "macros.h"
 #include "types.h"
@@ -185,7 +186,6 @@ void sub_080035F8(void)
 
 extern u32 Tilemap_GetTileClass(u8 col, u8 row, s16 tileX, s16 tileY);
 extern void PlayerFlags_Set(struct IwramAt35E0 *p, u32 mask);
-extern void Sound_Play(u32 arg);
 
 void Scene17_TileCheck(void)
 {

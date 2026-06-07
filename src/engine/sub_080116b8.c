@@ -1,9 +1,9 @@
 #include "game.h"
+#include "sound.h"
 #include "iwram.h"
 #include "types.h"
 
 extern void SetModeBlendRegs(void);
-extern void Sound_Play(u32 sound);
 extern void sub_08012BC4(u32 flags, u32 dstX, u32 dstY, u32 widthArg, u32 srcRowsArg, const u16 **srcTable,
                          u32 srcIndex);
 extern void AnimChannels_Reset(void);

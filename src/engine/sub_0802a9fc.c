@@ -1,7 +1,7 @@
 #include "iwram.h"
+#include "sound.h"
 #include "types.h"
 
-extern void Sound_Play(u32 sound);
 extern void Entity_Update(void *p);
 
 /* Slot-12 state machine over gEntities[12]. The matching code keeps the

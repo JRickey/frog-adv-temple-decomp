@@ -1,9 +1,9 @@
 #include "game.h"
+#include "sound.h"
 #include "gba/dma.h"
 #include "types.h"
 
 extern void SoundSystem_StopAll(void);
-extern void Sound_Play(u32 a);
 
 /* Scene/mode teardown dispatched on gGameStuff.pendingMode. Modes 3, 6, 9, 15
  * additionally clear REG_BLDCNT before the shared teardown body; all other
