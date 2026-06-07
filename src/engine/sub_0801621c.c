@@ -4,14 +4,14 @@
 
 #define DISPCNT_FRAME1 (1U << 4)
 
-struct BlitDesc {
+struct Mode4BlitRect {
     u8 x;
     u8 y;
     u8 width;
     u8 rows;
 };
 
-void Mode4_BlitRect(u16 dstX, u16 dstY, u8 *src, struct BlitDesc *desc)
+void Mode4_BlitRect(u16 dstX, u16 dstY, u8 *src, struct Mode4BlitRect *desc)
 {
     register u8 *dst asm("r2");
     u8 *srcBase;
