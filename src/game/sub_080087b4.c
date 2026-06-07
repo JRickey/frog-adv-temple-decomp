@@ -1,3 +1,4 @@
+#include "entity.h"
 #include "iwram.h"
 #include "macros.h"
 #include "types.h"
@@ -60,11 +61,6 @@ void Entity_LerpPosition(void)
  * Entity_GetDirHitbox, then walks the active-entity index table for the first
  * record (kind 11) whose centre falls strictly inside the box, latches it
  * (record+0x34 |= 0x84) and returns 1. */
-
-struct IndexEntry {
-    u8 id;
-    u8 _pad[7];
-};
 
 extern struct Entity gEntities_03003720[];
 extern struct IndexEntry gEntityIndex_03006160[];

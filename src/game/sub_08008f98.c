@@ -1,3 +1,4 @@
+#include "entity.h"
 #include "iwram.h"
 #include "macros.h"
 #include "types.h"
@@ -28,11 +29,6 @@
  * intent for the phase-3 PC port. */
 
 #ifdef NON_MATCHING
-
-struct IndexEntry {
-    s8 id;
-    u8 _pad[7];
-};
 
 extern struct Entity gEntities_03003720[];
 extern struct IndexEntry gEntityIndex_03006160[];

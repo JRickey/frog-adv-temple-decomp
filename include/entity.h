@@ -12,4 +12,12 @@ typedef struct EntityHitbox {
     u32 flags;  /* +0x08 -- bit-packed (low byte = size class, 0x10000 = extended) */
 } EntityHitbox;
 
+/* Element of the active-entity index table at 0x03006160 (8-byte stride).
+ * `id` indexes the entity pool gEntities[] (stride 0x38); the asm reads it
+ * unsigned (ldrb). */
+typedef struct IndexEntry {
+    u8 id;
+    u8 _pad[7];
+} IndexEntry;
+
 #endif /* GUARD_ENTITY_H */

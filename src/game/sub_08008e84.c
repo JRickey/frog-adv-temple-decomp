@@ -1,3 +1,4 @@
+#include "entity.h"
 #include "iwram.h"
 #include "macros.h"
 #include "types.h"
@@ -14,11 +15,6 @@
  *   8: ( header+2 + 24,   header+4      )
  * then matched against the same box test as Player_FindNearbyInteractable (record+1 must be 3
  * here, not 2), walking the active-entity index table at 0x03006160. */
-
-struct IndexEntry {
-    u8 id;
-    u8 _pad[7];
-};
 
 extern struct Entity gEntities_03003720[];
 extern struct IndexEntry gEntityIndex_03006160[];

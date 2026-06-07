@@ -1,3 +1,4 @@
+#include "entity.h"
 #include "iwram.h"
 #include "macros.h"
 #include "types.h"
@@ -9,11 +10,6 @@
  * records at 0x03003720 for a blocker (kind 2) inside the box, latches its id
  * into gIwram_35E0+0x1A, then commits the tile delta into gIwram_35E0+0x1C/+0x1E
  * per the cardinal direction and hop length encoded in the opcode. */
-
-struct IndexEntry {
-    u8 id;
-    u8 _pad[7];
-};
 
 extern struct Entity gEntities_03003720[];
 extern struct IndexEntry gEntityIndex_03006160[];

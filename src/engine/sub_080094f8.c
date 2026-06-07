@@ -1,3 +1,4 @@
+#include "entity.h"
 #include "game.h"
 #include "iwram.h"
 #include "macros.h"
@@ -12,11 +13,6 @@
  * on gIwram_35E0 via PlayerFlags_Set, or just mark the record "seen" (status bit
  * 0x80). Each record's status bit 0x80 is cleared at the top of every iteration
  * before the dispatch decides whether to re-raise it. */
-
-struct IndexEntry {
-    u8 id;
-    u8 _pad[7];
-};
 
 extern struct Entity gEntities_03003720[];
 extern struct IndexEntry gEntityIndex_03006160[];
