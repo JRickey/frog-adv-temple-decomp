@@ -346,6 +346,43 @@ def report_leftovers(manifest, changed_paths):
     return warnings
 
 
+PROTECTED_KINDS = {"bios", "libgcc", "raw"}
+
+
+def protected_function_renames(functions: list[dict]) -> list[tuple[str, str]]:
+    """Return [(old, reason)] for function renames that target a non-nameable
+    library symbol — SDK BIOS wrappers (asm/libagbsyscall.s, kind 'bios'),
+    libgcc helpers (kind 'libgcc'), or raw blobs (kind 'raw').
+
+    These must never be renamed: a rename to a same-address symbol is
+    byte-neutral, so `make check` (apply_renames' usual safety net) would NOT
+    catch it, and it would silently undo the canonical SDK/libgcc naming. The
+    call-graph namer already skips them (nameable=0), so a manifest reaching
+    here with one is hand-authored or stale — refuse it. Kinds come from
+    callgraph.db when present; library name prefixes are a DB-independent floor.
+    """
+    import sqlite3
+
+    kinds: dict[str, str] = {}
+    db = REPO / "callgraph.db"
+    if db.exists():
+        try:
+            con = sqlite3.connect(str(db))
+            kinds = {n: k for n, k in con.execute("SELECT name, kind FROM functions")}
+            con.close()
+        except Exception:
+            kinds = {}
+    bad: list[tuple[str, str]] = []
+    for f in functions:
+        old = f.get("old", "")
+        k = kinds.get(old)
+        if k in PROTECTED_KINDS:
+            bad.append((old, f"kind={k} in callgraph.db"))
+        elif old.startswith(("__", "_call_via", "Bios_")):
+            bad.append((old, "library symbol prefix"))
+    return bad
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("manifest", nargs="+", help="one manifest, or several fragments to merge")
@@ -362,6 +399,17 @@ def main():
         for d in dropped[:30]:
             print("   drop:", d)
     cluster = manifest.get("cluster", "?")
+
+    # Refuse to rename protected library symbols (SDK BIOS wrappers, libgcc,
+    # raw). These renames are byte-neutral, so make check would not catch them.
+    protected = protected_function_renames(manifest.get("functions", []))
+    if protected:
+        print("error: manifest renames protected library symbols (refusing — a "
+              "rename here is byte-neutral so make check would not catch it, and "
+              "it would undo the canonical SDK/libgcc naming):", file=sys.stderr)
+        for old, reason in protected:
+            print(f"   {old}  ({reason})", file=sys.stderr)
+        return 2
 
     # Require a clean tree so revert-on-failure restores the committed state.
     if not args.dry_run:

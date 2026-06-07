@@ -167,6 +167,12 @@ def classify_kind(name: str, obj: str, addr: int) -> str:
         return "libgcc"
     if LIBGCC_LO <= addr < LIBGCC_HI:
         return "libgcc"
+    # SDK BIOS SWI wrappers (asm/libagbsyscall.s): hand-written thunks with
+    # canonical SDK names + sub_0802DXXX legacy aliases. Like libgcc, these are
+    # library code that must never be renamed by the call-graph namer — pin them
+    # to a non-nameable kind so neither the SDK names nor the aliases drift.
+    if obj.startswith("asm/libagbsyscall"):
+        return "bios"
     # 64KB unpeeled ROM blobs (asm/text/text_0x*.o), asm/rom.o, header — raw,
     # not functions (the "black box until peeled" region).
     if obj.startswith("asm/rom") or obj.startswith("asm/header") or obj.startswith("asm/text"):
@@ -355,6 +361,8 @@ def main() -> int:
             f["src_file"] = body_src
         if f["kind"] == "libgcc":
             f["status"], f["nameable"] = "libgcc", 0
+        elif f["kind"] == "bios":
+            f["status"], f["nameable"] = "bios", 0
         elif f["kind"] == "raw":
             f["status"], f["nameable"] = "raw", 0
         elif f["kind"] == "asm":
