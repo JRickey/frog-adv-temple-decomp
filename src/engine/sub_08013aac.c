@@ -4,17 +4,6 @@
 #include "game.h"
 #include "gba/dma.h"
 
-struct TilemapTableEntry {
-    u16 unk00;
-    u16 unk02;
-    u16 unk04;
-    u16 unk06;
-    u8 unk08;
-    u8 pad09[7];
-    void *tiles;
-    u8 pad14[4];
-};
-
 struct DmaJob_13BA4 {
     u16 count;
     u16 _hw02;

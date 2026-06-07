@@ -14,6 +14,17 @@ struct TransferDesc {
     u32 wordC;
 };
 
+struct TilemapTableEntry {
+    u16 unk00;
+    u16 unk02;
+    u16 unk04;
+    u16 unk06;
+    u8 unk08;
+    u8 pad09[7];
+    void *tiles;
+    u8 pad14[4];
+};
+
 u8 TileMap_GetCell(u32 x, u32 y);
 
 void ScrollCamera_Update(u8 countArg);
