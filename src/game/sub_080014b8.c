@@ -8,7 +8,6 @@ extern void Entity_CheckAllCollisions(void);
 extern void Player_CheckTileEvents(void);
 extern void Entity_UpdateHudState(void);
 extern void Game_FrameEnd(void);
-extern u32 Scene_EntityTick(u8 *state);
 
 /* Per-frame gameplay tick: runs the entity-dispatch / render pipeline once
  * and bumps the frame counter. Same 6-call sequence + counter bump as the

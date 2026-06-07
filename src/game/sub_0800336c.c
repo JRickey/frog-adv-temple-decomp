@@ -27,7 +27,6 @@ extern u16 Input_Poll(void);
 extern u16 PollKeys_DPad(void);
 extern void Scene_LoadBg(void);
 extern void GameMode_SceneTick(void *arg, void *buf);
-extern u32 Scene_EntityTick(u8 *state);
 extern u8 Scene_FadeUpdate(void);
 extern u8 Blend_StartFade(u8 arg);
 extern u8 Blend_StepFade(void);

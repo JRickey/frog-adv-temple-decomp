@@ -5,7 +5,6 @@
 
 extern void SpriteAsset_LoadSheet(u32 a, u32 b);
 extern void EntityDispatch_RunFrame(void);
-extern u32 Scene_EntityTick(u8 *state);
 extern void Entity_UpdateHitboxSlots(u32 a, u32 b, u8 c);
 extern void Game_FrameEnd(void);
 

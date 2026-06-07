@@ -52,7 +52,7 @@ extern void Timer_DecrByte(struct IwramAt35E0 *p);
 extern void Entity_SpawnFromRecord(s32 a);
 extern const u32 sEntityProcA[17];
 
-u8 Scene_EntityTick(u8 *flag)
+u32 Scene_EntityTick(u8 *flag)
 {
     Scene_DisableBg2();
     EntityPool_Reset();

@@ -19,7 +19,6 @@ extern void Game_ForceRender(void);
 extern void Entity_CheckAllCollisions(void);
 extern void Player_CheckTileEvents(void);
 extern void Entity_CollisionProbe(void *obj, void *r4_obj);
-extern u32 Scene_EntityTick(u8 *state);
 extern void EntitySlot17_Init(void);
 extern u8 Scene_FadeUpdate(void);
 extern u8 Blend_StartFade(u8 arg);

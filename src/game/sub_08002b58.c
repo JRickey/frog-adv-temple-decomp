@@ -20,7 +20,6 @@ extern void Entity_CheckAllCollisions(void);
 extern void Player_CheckTileEvents(void);
 extern u32 Tilemap_GetTileClass(u8 col, u8 row, s32 tileX, s32 tileY);
 extern void TileArrival_UpdateModeFlags(u8 arg);
-extern u32 Scene_EntityTick(u8 *state);
 extern void Scene_EnterLevel(void);
 extern void Entity_InitShadow(void);
 extern u8 Scene_FadeUpdate(void);

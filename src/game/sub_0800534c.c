@@ -27,7 +27,6 @@ void Gate_TryUnlock(void)
     ModeControl_ClearBit(base6110, 3, 8);
 }
 
-extern u32 Scene_EntityTick(u8 *state);
 extern void sub_0800BE18(u8 *slots, u32 *out, s8 type);
 
 void Gate_ResetSceneState(u8 *arg0, u8 *arg1, u32 *arg2, u8 *arg3, u32 *arg4)

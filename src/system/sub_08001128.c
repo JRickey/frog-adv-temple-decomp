@@ -31,7 +31,6 @@ extern void Game_ForceRender(void);
 extern void Entity_CheckAllCollisions(void);
 extern void Player_CheckTileEvents(void);
 extern void Scene09_UpdatePlayerTile(void *ent, u32 arg1);
-extern u32 Scene_EntityTick(u8 *p);
 extern void Game_FrameEnd(void);
 
 void EntityProbe_SetMode2(void *a, void *b)

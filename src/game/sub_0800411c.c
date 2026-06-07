@@ -27,7 +27,6 @@ extern void Game_ForceRender(void);
 extern void Entity_CheckAllCollisions(void);
 extern void Player_CheckTileEvents(void);
 extern void Scene20_UpdateParts(u32 a, u32 b, u32 c, u32 d);
-extern u32 Scene_EntityTick(u8 *localState);
 extern u8 Scene_FadeUpdate(void);
 extern u8 Blend_StartFade(u8 arg);
 extern u8 Blend_StepFade(void);

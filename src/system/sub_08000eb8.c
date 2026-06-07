@@ -109,7 +109,6 @@ extern void Game_ForceRender(void);
 extern void Entity_CheckAllCollisions(void);
 extern void Player_CheckTileEvents(void);
 extern void Scene09_UpdatePlayerTile(void *sp_buf, void *r4_obj);
-extern u32 Scene_EntityTick(void *sp_buf);
 extern u8 Scene_FadeUpdate(void);
 extern u8 Blend_StartFade(u8 arg);
 extern u8 Blend_StepFade(void);

@@ -3,7 +3,6 @@
 #include "macros.h"
 #include "types.h"
 
-extern u32 Scene_EntityTick(u8 *state);
 extern void Entity_UpdateHitboxSlots(u32 a, u32 b, u8 c);
 extern void ModeControl_ClearBit(u32 base, u32 idx, u32 val);
 

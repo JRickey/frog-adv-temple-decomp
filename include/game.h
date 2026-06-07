@@ -56,4 +56,6 @@ void UpdateSceneGate(u8 mode);
 
 u32 Timer_SetIrqHandler(u8 idx, void *out);
 
+u32 Scene_EntityTick(u8 *flag);
+
 #endif /* GUARD_GAME_H */

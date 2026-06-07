@@ -13,7 +13,6 @@ extern void WaitVblank(void);
 extern void Game_ForceRender(void);
 extern void Entity_CheckAllCollisions(void);
 extern void Player_CheckTileEvents(void);
-extern u32 Scene_EntityTick(u8 *localState);
 extern u8 Scene_FadeUpdate(void);
 extern u8 Blend_StartFade(u8 arg);
 extern u8 Blend_StepFade(void);

@@ -3,7 +3,6 @@
 #include "macros.h"
 #include "types.h"
 
-extern u32 Scene_EntityTick(u8 *state);
 extern void Entity_UpdateHitboxSlots(u32 a, u32 b, u8 c);
 
 /* Two-entity variant of the Entity_UpdateHudState / Scene12_UpdateTileInteraction tile-cache probe:

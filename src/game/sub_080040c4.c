@@ -8,7 +8,6 @@ extern void Entity_CheckAllCollisions(void);
 extern void Player_CheckTileEvents(void);
 extern void BgTilemap_LoadScreen(void);
 extern void Game_FrameEnd(void);
-extern u32 Scene_EntityTick(u8 *state);
 
 void Mode_RunFrameBasic(void)
 {

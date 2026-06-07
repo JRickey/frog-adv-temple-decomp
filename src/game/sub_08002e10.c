@@ -41,8 +41,6 @@ void GameMode10_Tick(void)
     gGameStuff._unk14++;
 }
 
-extern u32 Scene_EntityTick(u8 *state);
-
 void GameMode10_StateCallback(u8 *state)
 {
     if (Scene_EntityTick(state) == 0)

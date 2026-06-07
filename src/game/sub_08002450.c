@@ -64,7 +64,6 @@ void Scene_FrameUpdate(void *arg0, void *arg1)
     g->_unk14++;
 }
 
-extern u32 Scene_EntityTick(u8 *state);
 extern void EntitySlot17_Init(void);
 
 void Scene_CleanupOnExit(u8 *state)

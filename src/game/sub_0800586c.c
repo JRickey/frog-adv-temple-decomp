@@ -42,7 +42,6 @@ void Stage_UpdateTick(u32 arg)
     gGameStuff._unk14++;
 }
 
-extern u32 Scene_EntityTick(u8 *state);
 extern void ModeControl_ClearBit(u32 base, u32 idx, u32 val);
 
 void Stage_ResetPlayerSlots(u8 *state, u32 arg)

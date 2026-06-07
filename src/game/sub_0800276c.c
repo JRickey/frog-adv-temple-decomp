@@ -40,8 +40,6 @@ void Scene08_Tick(void)
     gGameStuff._unk14++;
 }
 
-extern u32 Scene_EntityTick(u8 *state);
-
 void Scene08_StateGuard(u8 *state)
 {
     if (Scene_EntityTick(state) == 0)

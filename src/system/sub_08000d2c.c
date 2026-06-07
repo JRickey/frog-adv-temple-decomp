@@ -1,7 +1,6 @@
 #include "game.h"
 #include "types.h"
 
-extern u32 Scene_EntityTick(u8 *state);
 extern void Entity_UpdateHitboxSlots(u32 a, u32 b, u8 c);
 
 /* When Scene_EntityTick returns 0 (the failure / "not handled" path), write
