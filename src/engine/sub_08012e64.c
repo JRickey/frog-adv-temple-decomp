@@ -11,7 +11,6 @@ struct TransferDesc {
 
 extern u8 gIwram_60A0[];
 
-extern void BgLayer_Enable(u8 layer);
 extern void BgScrollAnim_Update(void);
 extern void DmaJob_Advance(struct TransferDesc desc, u8 mode, void *buf);
 extern void FrogStatusBar_Update(void);
@@ -44,7 +43,6 @@ void Scene_UpdateWithBlend(void)
 }
 
 extern void CharLayers_Upload(u8 arg);
-extern void BgLayer_Disable(u8 layer);
 extern void FrogOam_Init(void);
 extern void BgScrollAnim_InitPartial(void);
 extern void BgScrollBlit(u8 arg);

@@ -19,4 +19,8 @@ void sub_08015194(void);
 
 void Scroll_UpdateCamera(u8 countArg);
 
+void BgLayer_Disable(u8 layer);
+
+void BgLayer_Enable(u8 layer);
+
 #endif /* GUARD_GFX_H */

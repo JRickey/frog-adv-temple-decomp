@@ -1,7 +1,7 @@
 #include "macros.h"
+#include "gfx.h"
 #include "types.h"
 
-extern void BgLayer_Disable(u8 layer);
 /* Declared as extern symbols (not cast literals) so agbcc does not fold
  * gIwram_6580 = gIwram_6500 + 0x80 into an add instruction. */
 extern u8 gIwram_6500[];

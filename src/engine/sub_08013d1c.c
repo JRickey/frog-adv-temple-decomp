@@ -9,7 +9,6 @@ extern void ResetBgAnimState(void);
 extern void BgScrollBlit(unsigned int arg);
 extern void BgScrollAnim_Update(void);
 extern void StatusBar_Update(void);
-extern void BgLayer_Enable(u8 layer);
 extern void sub_08010A44(u8 a, u8 b);
 extern void ModeChannel_Apply(u8 a, u8 b);
 extern void FrogStatusBar_Update(void);

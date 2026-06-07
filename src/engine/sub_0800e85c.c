@@ -1,4 +1,5 @@
 #include "macros.h"
+#include "gfx.h"
 #include "types.h"
 
 /* --- CharLayers_Upload: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
@@ -32,8 +33,6 @@ struct CharacterLayerCtrl {
 extern const struct CharacterSpriteFrame sCharacterSpriteFrames[];
 
 extern void LZ77UnCompWram(const void *src, void *dst); /* BIOS SWI 17 */
-extern void BgLayer_Disable(u8 layer);
-extern void BgLayer_Enable(u8 layer);
 
 void CharLayers_Upload(u8 count)
 {

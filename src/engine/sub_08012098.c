@@ -1,4 +1,5 @@
 #include "game.h"
+#include "gfx.h"
 #include "gba/dma.h"
 #include "gba/io.h"
 #include "iwram.h"
@@ -11,7 +12,6 @@ struct IwramAt6410 {
 };
 
 extern struct IwramAt6410 gIwram_6410;
-extern void BgLayer_Disable(u8 layer);
 
 /* The explicit gs/iw pointer vars force both pool loads before any
  * dereferences, which sets up the LIFO register reuse order that gives

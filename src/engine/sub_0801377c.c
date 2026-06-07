@@ -55,7 +55,6 @@ extern void ScaleAnim_SyncSelectors(void);
 extern void BgScrollBlit(u8 arg);
 extern void StatusBar_Update(void);
 extern void BgScrollAnim_InitPartial(void);
-extern void BgLayer_Disable(u8 layer);
 extern u8 gIwram_3610;
 extern u8 gIwram_6110;
 

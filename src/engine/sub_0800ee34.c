@@ -1,4 +1,5 @@
 #include "gba/io.h"
+#include "gfx.h"
 #include "types.h"
 
 /* Disables one of the four BG layers in REG_DISPCNT.

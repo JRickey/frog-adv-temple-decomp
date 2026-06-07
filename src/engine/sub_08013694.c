@@ -1,4 +1,5 @@
 #include "macros.h"
+#include "gfx.h"
 #include "types.h"
 #include "game.h"
 
@@ -49,7 +50,6 @@ extern struct IwramAt6500 gIwram_6500;
 extern struct IwramAt6540 gIwram_6540;
 extern struct IwramAt60A0 gIwram_60A0;
 
-extern void BgLayer_Disable(u8 layer);
 extern void FrogStatusBar_Update(void);
 extern void Selector_StepScrollAxes(u16 a, u8 b, u16 c, u8 d);
 extern void DmaJob_Advance(struct TransferDesc desc, u8 mode, void *buf);

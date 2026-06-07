@@ -14,7 +14,6 @@ extern u8 gIwram_6410[];
 extern u8 gIwram_6400[];
 extern u8 gIwram_6480[];
 
-extern void BgLayer_Enable(u8 layer);
 extern void DmaJob_Advance(struct TransferDesc desc, u8 mode, void *buf);
 extern void BgScrollAnim_Update(void);
 extern void sub_08010A44(u8 a, u8 b);
@@ -40,7 +39,6 @@ void sub_08012D88(void)
 }
 
 extern void CharLayers_Upload(u8 arg);
-extern void BgLayer_Disable(u8 layer);
 extern void FrogOam_Init(void);
 extern void BgScrollAnim_Init(void);
 extern void BgScrollBlit(u8 arg);

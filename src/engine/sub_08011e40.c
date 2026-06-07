@@ -1,4 +1,5 @@
 #include "macros.h"
+#include "gfx.h"
 #include "gba/io.h"
 #include "iwram.h"
 #include "types.h"
@@ -12,7 +13,6 @@
 #include "types.h"
 
 extern void Selector_BlitTiles(const u8 *records, u8 idx);
-extern void BgLayer_Enable(u8 layer);
 extern s8 Selector_UpdateBlit(const u8 *records);
 extern u8 gIwram_6480[];
 extern const u8 gBlitRecord_08306d40[];

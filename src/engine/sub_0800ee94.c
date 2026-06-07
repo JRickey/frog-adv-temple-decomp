@@ -1,7 +1,6 @@
 #include "gba/io.h"
+#include "gfx.h"
 #include "types.h"
-
-extern void BgLayer_Disable(u8 layer);
 
 /* Enables one of the four BG layers in REG_DISPCNT.
  *

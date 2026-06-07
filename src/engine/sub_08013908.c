@@ -1,8 +1,7 @@
 #include "macros.h"
+#include "gfx.h"
 #include "types.h"
 #include "game.h"
-
-extern void BgLayer_Disable(u8 layer);
 
 /* Clears the byte at IWRAM 0x03003610, then turns off BG2 via BgLayer_Disable. */
 

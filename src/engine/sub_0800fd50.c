@@ -1,9 +1,9 @@
 #include "game.h"
+#include "gfx.h"
 #include "macros.h"
 #include "types.h"
 
 extern u8 Credits_RenderStep(void);
-extern void BgLayer_Enable(u8 layer);
 extern void StatusBar_Update(void);
 extern void EntityRec_ClearKeyFlags(u8 *rec, u16 mask);
 
