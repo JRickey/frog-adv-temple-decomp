@@ -105,10 +105,22 @@ grid levels, one tile at a time.
   `flagBank0/1` (event/collision flag banks, init -1), `configTable` (per-state
   spawn-record table), `threshold`, `limit`.
 
-## Open questions (to resolve before deep naming)
-- Exact direction encoding (bitmask 1/2/4/8 = U/D/L/R, or index 0-3?).
-- Full enemy/object **type** enumeration (to name the entity-type byte + the
-  17-entry sEntityProc* dispatch tables — is that index the level/scene, the
-  entity type, or the game mode?).
-- Where the HUD counters live (orbs collected, coins, butterflies, lives,
-  continues) and the per-level goal (3-orb / 5-orb / boss-kind).
+## Resolved facts (confirmed)
+- **Direction has TWO encodings** (binary-confirmed): a **1..4 index** (1=up,
+  2=down, 3=left, 4=right) used by `DirToMotion`; and a **1/2/4/8 bitmask**
+  (`DIRBIT_*`) used by the directional hit-test (`Entity_ProbeDir`). See
+  `include/game_constants.h` (`enum Direction` vs `enum DirBit`).
+- **Element = one orb sprite, recolored per world**: fire=red, earth=brown,
+  water=blue, wind=light blue, temple=green. So the entity-type byte has ONE
+  element value; color is keyed by world.
+- **Coins persist in SRAM** (the save block — `save.h` / `SaveReadBlocks`); the
+  Temple coin gates (50/75) check the persistent total.
+- `gGameStuff.sceneType` (off 10, formerly `pendingMode`) = the scene/level id
+  that keys the `sEntityProc*` dispatch (set to `mode - 7`).
+
+## Open questions (still to resolve during deep naming)
+- Full entity/tile **type byte** enumeration (which value = spike / vehicle /
+  element / coin / checkpoint / …), and what the 17-entry `sEntityProc*` index
+  represents (level/scene id, given `sceneType` keys it).
+- Exact IWRAM/SRAM locations of the HUD/save counters (elements-collected,
+  coins, lives, continues) and the per-level goal storage.
