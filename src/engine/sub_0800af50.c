@@ -4,18 +4,18 @@
 #include "types.h"
 #include "game.h"
 
-typedef struct EntitySlot {
+typedef struct HitboxSlot {
     u32 field0;
     u8 field4;
     u8 field5;
     u8 field6;
     u8 _pad7;
-} EntitySlot;
+} HitboxSlot;
 
 extern const EntityHitbox sEntityHitboxTable[];
 extern int SpriteGrid_SetCellFlags(int xTile, int mode, int x, int y, int flags);
 
-void Entity_InitHitboxSlots(EntitySlot *slots)
+void Entity_InitHitboxSlots(HitboxSlot *slots)
 {
     u32 slotsStack;
     register u32 r0v asm("r0");
@@ -30,13 +30,13 @@ void Entity_InitHitboxSlots(EntitySlot *slots)
     type = 24;
     i = 0;
     do {
-        EntitySlot *slot;
+        HitboxSlot *slot;
         s32 typeIndex;
         const EntityHitbox *table;
         const EntityHitbox *base;
         u32 initOffset;
 
-        slot = (EntitySlot *)((u32)(((s32)(i << 16)) >> 13) + slotsStack);
+        slot = (HitboxSlot *)((u32)(((s32)(i << 16)) >> 13) + slotsStack);
         slot->field4 = 0;
         slot->field5 = 0;
         slot->field6 = 0;
@@ -132,7 +132,7 @@ void Entity_InitHitboxSlots(EntitySlot *slots)
 
 extern u8 ModeControl_GetFlag(u8 *base, u32 selector, u32 bit);
 
-void Gate_PollResult(EntitySlot *slots)
+void Gate_PollResult(HitboxSlot *slots)
 {
     s32 result;
     u8 *base3720;
@@ -177,13 +177,13 @@ void Gate_PollResult(EntitySlot *slots)
 
     {
         s32 type = (s8)result;
-        EntitySlot *slot;
+        HitboxSlot *slot;
 
         if (type == -1)
             return;
 
         /* index-first add so the `type * 8` lands as the lead `adds` operand. */
-        slot = (EntitySlot *)((type << 3) + (u32)slots);
+        slot = (HitboxSlot *)((type << 3) + (u32)slots);
 
         if (slot->field4 != 0)
             return;
