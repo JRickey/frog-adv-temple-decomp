@@ -1,6 +1,5 @@
 #include "macros.h"
 #include "gfx.h"
-#include "iwram.h"
 #include "sound.h"
 #include "types.h"
 #include "game.h"
@@ -13,6 +12,11 @@ struct IwramAt6480 {
     u8 field_b; /* +0x0b: frame counter */
     u8 _pad0C[42];
     s16 field_36; /* +0x36: signed coord */
+};
+
+struct IwramAt6500 {
+    u8 _pad00[11];
+    u8 field_b; /* +0x0b: frame counter */
 };
 
 struct IwramAt6540 {
@@ -41,6 +45,7 @@ struct Rom306F6C {
 };
 
 extern struct IwramAt6480 gIwram_6480;
+extern struct IwramAt6500 gIwram_6500;
 extern struct IwramAt6540 gIwram_6540;
 extern struct IwramAt60A0 gIwram_60A0;
 
@@ -51,6 +56,7 @@ extern void BgScrollBlit(u8 arg);
 extern void StatusBar_Update(void);
 extern void BgScrollAnim_InitPartial(void);
 extern u8 gIwram_3610;
+extern u8 gIwram_6110;
 
 void BgLayer_Init(void)
 {

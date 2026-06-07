@@ -1,6 +1,5 @@
 #include "macros.h"
 #include "gfx.h"
-#include "iwram.h"
 #include "types.h"
 #include "game.h"
 
@@ -16,6 +15,11 @@ struct IwramAt6480 {
     u8 field_b; /* +0x0b: frame counter (floored at 2) */
     u8 _pad0C[42];
     s16 field_36; /* +0x36: signed coord */
+};
+
+struct IwramAt6500 {
+    u8 _pad00[11];
+    u8 field_b; /* +0x0b: frame counter (floored at 0) */
 };
 
 struct IwramAt6540 {
@@ -35,6 +39,7 @@ struct IwramAt60A0 {
 extern struct IwramAt64C0 gIwram_64C0;
 extern struct IwramAt64C0 gIwram_6580;
 extern struct IwramAt6480 gIwram_6480;
+extern struct IwramAt6500 gIwram_6500;
 extern struct IwramAt6540 gIwram_6540;
 extern struct IwramAt60A0 gIwram_60A0;
 

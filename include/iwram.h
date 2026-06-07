@@ -163,17 +163,6 @@ struct IwramAt6150 {
     u8 _maxFrames; /* +12: frame-count limit (copied from ROM AnimDesc.maxFrames) */
 };
 
-struct IwramAt6410 {
-    u8 _pad00[8];
-    u32 _field_08;
-    u8 _maxFrames;
-};
-
-struct IwramAt6500 {
-    u8 _pad00[11];
-    u8 field_b; /* +0x0b: frame counter (floored at 0) */
-};
-
 struct IwramAt6110 {
     u16 flags0;
     u8 threshold; /* +0x02: compared (signed) against gIwram_35E0[4] in Player_HandleTileCollision */
@@ -225,8 +214,6 @@ extern struct IwramAt6110 gIwram_6110;
 
 extern struct IwramAt5360 gIwram_5360;
 extern struct IwramAt6150 gIwram_6150;
-extern struct IwramAt6410 gIwram_6410;
-extern struct IwramAt6500 gIwram_6500;
 void ModeControl_SetBit(void *unused, s32 bits);
 
 void IwramFlags_Clear(void *p, u16 mask);
