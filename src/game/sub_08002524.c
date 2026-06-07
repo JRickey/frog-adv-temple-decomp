@@ -14,7 +14,6 @@ extern void Game_ForceRender(void);
 extern void Entity_CheckAllCollisions(void);
 extern void Player_CheckTileEvents(void);
 extern u8 Tilemap_GetTileClass(u8 a, u8 b, s16 c, s16 d);
-extern void UpdateSceneGate(u8 a);
 extern u32 Scene_EntityTick(u8 *state);
 extern u8 Scene_FadeUpdate(void);
 extern u8 Blend_StartFade(u8 arg);

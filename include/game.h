@@ -52,4 +52,6 @@ typedef struct GameStuff {
 
 #define gGameStuff (*(GameStuff *)0x03005330)
 
+void UpdateSceneGate(u8 mode);
+
 #endif /* GUARD_GAME_H */

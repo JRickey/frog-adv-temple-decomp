@@ -19,7 +19,6 @@ extern void Game_ForceRender(void);
 extern void Entity_CheckAllCollisions(void);
 extern void Player_CheckTileEvents(void);
 extern u32 Tilemap_GetTileClass(u8 col, u8 row, s16 tileX, s16 tileY);
-extern void UpdateSceneGate(u8 mode);
 
 void Scene08_Tick(void)
 {
