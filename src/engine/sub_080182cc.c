@@ -30,17 +30,17 @@ void CreditsMenu_HandleInputA(void)
         return;
 
     if (gIwram_5358.justPressed & KEY_A) {
-        gIwram_3480._data[3]++;
+        gIwram_3480.menu25Step++;
         Blend_StartFade(0xBF);
         return;
     }
 
     now = GetFrameTick();
-    if (now - gIwram_3480._unk0C <= 0x383)
+    if (now - gIwram_3480.lastAdvanceTick <= 0x383)
         return;
 
-    gIwram_3480._unk0C = GetFrameTick();
-    gIwram_3480._data[3]++;
+    gIwram_3480.lastAdvanceTick = GetFrameTick();
+    gIwram_3480.menu25Step++;
     Blend_StartFade(0xBF);
 }
 
@@ -53,7 +53,7 @@ void CreditsScreen_Init(void)
 {
     volatile DmaChannel *dma;
 
-    gIwram_3480._unk0C = GetFrameTick();
+    gIwram_3480.lastAdvanceTick = GetFrameTick();
     Screen_BeginFlash(0xBF);
 
     gIwram_3470[0] = 0;
@@ -75,7 +75,7 @@ void CreditsScreen_Init(void)
     REG_DISPCNT ^= DISPCNT_FRAME1;
     Sound_Reset();
 
-    gIwram_3480._data[4]++;
+    gIwram_3480.menu26Step++;
 }
 
 /* Same attract auto-advance as CreditsMenu_HandleInputA, but drives _data[4] on a
@@ -93,17 +93,17 @@ void CreditsMenu_HandleInputB(void)
         return;
 
     if (gIwram_5358.justPressed & KEY_A) {
-        gIwram_3480._data[4]++;
+        gIwram_3480.menu26Step++;
         Blend_StartFade(0xBF);
         return;
     }
 
     now = GetFrameTick();
-    if (now - gIwram_3480._unk0C <= 0x257)
+    if (now - gIwram_3480.lastAdvanceTick <= 0x257)
         return;
 
-    gIwram_3480._unk0C = GetFrameTick();
-    gIwram_3480._data[4]++;
+    gIwram_3480.lastAdvanceTick = GetFrameTick();
+    gIwram_3480.menu26Step++;
     Blend_StartFade(0xBF);
 }
 

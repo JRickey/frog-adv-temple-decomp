@@ -52,12 +52,12 @@ void Menu25_LoadAssets(void)
     gIwram_5398 = 0;
 
     state = &gIwram_3480;
-    state->_data[3] = 0;
-    state->_data[1] = 0;
-    state->_data[2] = 0;
-    state->_data[7] = 0;
-    state->_data[5] = 0;
-    state->_data[8] = 0;
+    state->menu25Step = 0;
+    state->_unk01 = 0;
+    state->menuStep = 0;
+    state->blinkCounter = 0;
+    state->routerSelection = 0;
+    state->blinkState = 0;
 
     FrogSelect_ClearInputState();
     Menu25_InitKeyTable();
@@ -95,7 +95,7 @@ void Menu25_LoadAssets(void)
     layout = gIwram_3474;
     sub_08015F9C(0x28, 0x21, tiles, layout);
 
-    if (state->_data[6] != 0) {
+    if (state->reloadFlag != 0) {
         sub_08015EC4(0x28, 0x21, tiles, layout);
 
         {
@@ -111,7 +111,7 @@ void Menu25_LoadAssets(void)
     }
 
     Screen_BeginFlash(0xBF);
-    state->_data[0]++;
+    state->subState++;
 }
 
 void Menu25_WaitAndBlink(void)
@@ -121,21 +121,21 @@ void Menu25_WaitAndBlink(void)
     int fade;
 
     state = &gIwram_3480;
-    state->_data[5] = 0;
+    state->routerSelection = 0;
 
     fade = Screen_TickFlash();
     if (fade != 0) {
         return;
     }
 
-    if (state->_data[6] == 0) {
-        if (GetFrameTick() - state->_unk0C <= 59) {
+    if (state->reloadFlag == 0) {
+        if (GetFrameTick() - state->lastAdvanceTick <= 59) {
             return;
         }
 
-        state->_data[0]++;
-        state->_unk0C = GetFrameTick();
-        state->_unk10 = GetFrameTick();
+        state->subState++;
+        state->lastAdvanceTick = GetFrameTick();
+        state->blinkTick = GetFrameTick();
         gIwram_5398 = fade;
 
         if ((*(vu16 *)0x04000000 & 0x10) == 0) {
@@ -150,9 +150,9 @@ void Menu25_WaitAndBlink(void)
         return;
     }
 
-    state->_data[0]++;
-    state->_unk0C = GetFrameTick();
-    state->_unk10 = GetFrameTick();
+    state->subState++;
+    state->lastAdvanceTick = GetFrameTick();
+    state->blinkTick = GetFrameTick();
     gIwram_5398 = fade;
 }
 
@@ -165,7 +165,7 @@ void Menu25_HandleInput(void)
 
     state = &gIwram_3480;
     zero = 0;
-    state->_data[6] = zero;
+    state->reloadFlag = zero;
     inputState = &gIwram_5398;
     Menu25_PollInput(*(vu8 *)inputState);
     input = *inputState;
@@ -174,21 +174,21 @@ void Menu25_HandleInput(void)
         FrogSelect_ValidateSelection();
         gIwram_34A0.reentryFlag = 1;
         gIwram_5330._field_09 = 0x1B;
-        state->_data[0] += 2;
-        state->_unk14 = zero;
+        state->subState += 2;
+        state->cursorIndex = zero;
         Blend_StartFade(0xBF);
         *inputState = zero;
-        state->_data[5] = 0;
+        state->routerSelection = 0;
         return;
     }
 
     if (input == 0) {
-        if (GetFrameTick() - state->_unk10 > 15) {
-            if (state->_data[8] == 0) {
+        if (GetFrameTick() - state->blinkTick > 15) {
+            if (state->blinkState == 0) {
                 if ((*(vu16 *)0x04000000 & 0x10) != 0) {
                     *(vu16 *)0x04000000 ^= 0x10;
                 }
-                state->_data[8] = 1;
+                state->blinkState = 1;
             }
             {
                 struct IwramAt3480 *stateForTick;
@@ -196,15 +196,15 @@ void Menu25_HandleInput(void)
 
                 now = GetFrameTick();
                 stateForTick = &gIwram_3480;
-                stateForTick->_unk10 = now;
+                stateForTick->blinkTick = now;
             }
-        } else if (state->_data[7] == 50) {
-            if (state->_data[8] != 0) {
+        } else if (state->blinkCounter == 50) {
+            if (state->blinkState != 0) {
                 if ((*(vu16 *)0x04000000 & 0x10) == 0) {
                     *(vu16 *)0x04000000 ^= 0x10;
                 }
-                state->_data[8] = input;
-                state->_data[7] = input;
+                state->blinkState = input;
+                state->blinkCounter = input;
             } else {
                 goto checkTimeout;
             }
@@ -214,8 +214,8 @@ void Menu25_HandleInput(void)
             struct IwramAt3480 *stateForBlink;
 
             stateForBlink = &gIwram_3480;
-            if (stateForBlink->_data[8] != 0) {
-                stateForBlink->_data[7]++;
+            if (stateForBlink->blinkState != 0) {
+                stateForBlink->blinkCounter++;
             }
         }
 
@@ -225,27 +225,27 @@ void Menu25_HandleInput(void)
 
         now = GetFrameTick();
         stateForTimeout = &gIwram_3480;
-        if (now - stateForTimeout->_unk0C > 599) {
+        if (now - stateForTimeout->lastAdvanceTick > 599) {
             gIwram_5330._field_0A = 1;
             gIwram_34C0.holdFlag = 0;
             gIwram_34C0.cursor = 0;
             gIwram_34C0.stepTick = 0;
             gIwram_34C0.lastTick = 0;
             gIwram_34C0.delay = 0;
-            stateForTimeout->_data[5] = 4;
-            stateForTimeout->_data[0] = 0;
-            stateForTimeout->_unk0C = GetFrameTick();
+            stateForTimeout->routerSelection = 4;
+            stateForTimeout->subState = 0;
+            stateForTimeout->lastAdvanceTick = GetFrameTick();
             Sound_Reset();
         }
     }
     } else {
-        state->_unk0C = GetFrameTick();
+        state->lastAdvanceTick = GetFrameTick();
     }
 }
 
 void Menu25_SetupRects(void)
 {
-    gIwram_3480._data[0]++;
+    gIwram_3480.subState++;
 
     gIwram_3470[0] = 0;
     gIwram_3470[1] = 0;
@@ -287,9 +287,9 @@ void Menu25_InstallBg(void)
     REG_DISPCNT &= ~DISPCNT_BG1_ON;
 
     state = &gIwram_3480;
-    state->_data[0] = 10;
+    state->subState = 10;
     if (gIwram_34A0.reentryFlag != 0) {
-        state->_unk14 = 0;
+        state->cursorIndex = 0;
     }
 
     Screen_ClearBlocks(14);

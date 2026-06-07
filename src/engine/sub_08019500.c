@@ -14,7 +14,7 @@ extern void TitleLogo_Display(void);
 
 /* Scene-dispatch tail keyed by gIwram_34A0.dispatchIdx (the byte at +1 of
  * the IWRAM state struct at 0x030034a0). When that selector is 0, dispatch
- * through the ROM handler table at 0x0830806c indexed by gIwram_3480._data[0]
+ * through the ROM handler table at 0x0830806c indexed by gIwram_3480.subState
  * (class-sibling of GameMode_Menu26 / GameMode_Menu25, which index the adjacent
  * 0x0830804c / 0x08308058 tables). Selectors 1 and 2 route to dedicated
  * handlers instead.
@@ -25,7 +25,7 @@ extern void TitleLogo_Display(void);
 void GameMode_Router(void)
 {
     if (gIwram_34A0.dispatchIdx == 0) {
-        gHandlerTable_0830806C[gIwram_3480._data[0]]();
+        gHandlerTable_0830806C[gIwram_3480.subState]();
     } else if (gIwram_34A0.dispatchIdx == 1) {
         TitleScene_InitRng();
     } else if (gIwram_34A0.dispatchIdx == 2) {

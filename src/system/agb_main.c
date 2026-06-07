@@ -50,15 +50,15 @@ void AgbMain(void)
         case GAME_MODE_ROUTER: {
             gIwram_5398 = Input_Poll();
             GameMode_Router();
-            /* Read gIwram_3480._data[5] twice in baserom — the second load
+            /* Read gIwram_3480.routerSelection twice in baserom — the second load
              * is used for the {3, 2, 4} compares. */
-            if (gIwram_3480._data[5] == 1)
+            if (gIwram_3480.routerSelection == 1)
                 gGameStuff.mode = GAME_MODE_FILE_SELECT;
-            if (gIwram_3480._data[5] == 3)
+            if (gIwram_3480.routerSelection == 3)
                 gGameStuff.mode = GAME_MODE_MENU_07;
-            if (gIwram_3480._data[5] == 2)
+            if (gIwram_3480.routerSelection == 2)
                 gGameStuff.mode = GAME_MODE_OPTIONS;
-            if (gIwram_3480._data[5] == 4)
+            if (gIwram_3480.routerSelection == 4)
                 gGameStuff.mode = GAME_MODE_ATTRACT;
             break;
         }

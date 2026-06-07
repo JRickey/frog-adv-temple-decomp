@@ -24,19 +24,19 @@ void UiScreen_Init(void)
     *fadeState = zero;
 
     state = &gIwram_3480;
-    state->_data[0] = zero;
-    state->_data[3] = zero;
-    state->_data[1] = zero;
-    state->_data[2] = zero;
-    state->_data[7] = zero;
-    state->_data[5] = zero;
-    state->_data[6] = zero;
-    state->_data[4] = zero;
+    state->subState = zero;
+    state->menu25Step = zero;
+    state->_unk01 = zero;
+    state->menuStep = zero;
+    state->blinkCounter = zero;
+    state->routerSelection = zero;
+    state->reloadFlag = zero;
+    state->menu26Step = zero;
 
     dispatch = &gIwram_34A0;
     dispatch->dispatchIdx = zero;
 
-    state->_unk0C = GetFrameTick();
+    state->lastAdvanceTick = GetFrameTick();
     Screen_BeginFlash(0xBF);
 
     *(vu16 *)0x0400000E = 0x1E88;
@@ -56,6 +56,6 @@ void UiScreen_Init(void)
 
     REG_DISPCNT = DISPCNT_OBJ_1D | DISPCNT_BG3_ON;
 
-    state->_data[0]++;
+    state->subState++;
     dispatch->_field_00 = zero;
 }

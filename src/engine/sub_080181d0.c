@@ -16,7 +16,7 @@ void FrogSelect_LoadCharTilemap(void)
     attr = (attr & 0x00ffffff) | 0x03000000;
     attr = (attr & 0xff00ffff) | 0x000e0000;
 
-    switch (gIwram_3480._unk14) {
+    switch (gIwram_3480.cursorIndex) {
     case 0:
         attr = (attr & 0xffff00ff) | 0x0500;
         break;
@@ -47,7 +47,7 @@ extern u32 GetFrameTick(void);
 
 void FrogSelect_InitDispatch(void)
 {
-    gIwram_3480._unk0C = GetFrameTick();
+    gIwram_3480.lastAdvanceTick = GetFrameTick();
     Screen_BeginFlash(0xBF);
 
     gIwram_3470[0] = 0;
@@ -58,6 +58,6 @@ void FrogSelect_InitDispatch(void)
     gIwram_3550._data[0] = 0;
     gIwram_3550._data[1] = 0;
 
-    gIwram_3480._data[3]++;
+    gIwram_3480.menu25Step++;
     gIwram_34A0.dispatchIdx = 0;
 }

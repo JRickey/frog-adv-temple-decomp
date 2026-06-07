@@ -41,7 +41,7 @@
  *        else substate = 3.
  *   6 -> sp[+0x140] test: if 0 call Blend_StartFade(0xBF) + increment;
  *        then ldrsb sp[+0x140] vs #1: must equal 1 to continue;
- *        Blend_StepFade() must return 0; then writes gIwram_3480._data[0] = 4,
+ *        Blend_StepFade() must return 0; then writes gIwram_3480.subState = 4,
  *        gIwram_3480[+6] = counter (the byte at sp+0x140 at the decision
  *        point), gGameStuff.mode = 4 (return to dispatcher).
  *   7 -> RunFadeTransition(&sp[+0x140], 0x0800a26d); on accept substate = 2,

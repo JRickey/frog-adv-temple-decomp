@@ -36,8 +36,8 @@ void Init1(void)
     gGameStuff._unk14 = 0;
     gGameStuff.sceneType = 0;
     gGameStuff._unk04 = 0;
-    gIwram_3480._data[5] = 0;
-    gIwram_3480._data[0] = 0;
+    gIwram_3480.routerSelection = 0;
+    gIwram_3480.subState = 0;
     gIwram_34A0.dispatchIdx = 0;
     gIwram_34B4._data[0] = 1;
     gIwram_34B4._data[1] = 1;
@@ -129,7 +129,7 @@ u32 Input_Poll(void)
 
         if (mapped != 0) {
             gs->mode = GAME_MODE_ROUTER;
-            gIwram_3480._data[0] = 4;
+            gIwram_3480.subState = 4;
             return 0;
         }
     }
@@ -193,7 +193,7 @@ u32 PollInputAndAttract(void)
         }
 
         gs->mode = GAME_MODE_ROUTER;
-        gIwram_3480._data[0] = 4;
+        gIwram_3480.subState = 4;
         return 0;
     }
 }

@@ -129,8 +129,8 @@ void SceneLoop_17(void)
                 break;
             if (Blend_StepFade() != 0)
                 break;
-            gIwram_3480._data[0] = 4;
-            gIwram_3480._data[6] = c;
+            gIwram_3480.subState = 4;
+            gIwram_3480.reloadFlag = c;
             gGameStuff.mode = GAME_MODE_ROUTER;
             break;
         }

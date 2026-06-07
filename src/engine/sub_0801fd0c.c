@@ -26,19 +26,19 @@ void WinPoseScreen_Init(void)
     args.tilemap2 = (const void *)0x081e4c18;
     args._unk0C = 0;
 
-    gIwram_3480._unk14 = gIwram_34B0._data;
+    gIwram_3480.cursorIndex = gIwram_34B0._data;
 
     REG_DISPCNT &= ~DISPCNT_BG1_ON;
 
     gIwram_34D0._field_10 = 0;
 
-    /* Read gIwram_3480._unk14 inline at every lookup: caching it in a local
+    /* Read gIwram_3480.cursorIndex inline at every lookup: caching it in a local
      * lets agbcc CSE the index away, which diverges from the baserom's
      * reload-per-access. sWinPoseSpriteCoords packs (x, y) u16 pairs. */
-    gIwram_34D0.curX = sWinPoseSpriteCoords[gIwram_3480._unk14 * 2] - 16;
-    gIwram_34D0.curY = sWinPoseSpriteCoords[gIwram_3480._unk14 * 2 + 1] - 24;
-    gIwram_34D0.targetX = sWinPoseSpriteCoords[gIwram_3480._unk14 * 2] - 16;
-    gIwram_34D0.targetY = sWinPoseSpriteCoords[gIwram_3480._unk14 * 2 + 1] - 24;
+    gIwram_34D0.curX = sWinPoseSpriteCoords[gIwram_3480.cursorIndex * 2] - 16;
+    gIwram_34D0.curY = sWinPoseSpriteCoords[gIwram_3480.cursorIndex * 2 + 1] - 24;
+    gIwram_34D0.targetX = sWinPoseSpriteCoords[gIwram_3480.cursorIndex * 2] - 16;
+    gIwram_34D0.targetY = sWinPoseSpriteCoords[gIwram_3480.cursorIndex * 2 + 1] - 24;
     gIwram_34D0._field_1D = 3;
 
     if (gIwram_34A0.reentryFlag == 0) {
@@ -83,7 +83,7 @@ void WinPoseScreen_Init(void)
     WinPoseScreen_LoadSprites();
     WinPoseScreen_DrawBg();
 
-    gIwram_3480._data[2]++;
+    gIwram_3480.menuStep++;
     gIwram_5398 = 0;
 }
 
@@ -125,9 +125,9 @@ void WinPoseScreen_Update(void)
     switch (state) {
     case 1:
         Sound_Play(2);
-        if (gIwram_3480._unk14 == 0)
+        if (gIwram_3480.cursorIndex == 0)
             goto tail;
-        gIwram_3480._unk14--;
+        gIwram_3480.cursorIndex--;
         /* state == 1 here; the baserom reuses the just-read selector register
          * rather than materialising a fresh literal (case 2 below uses 1). */
         gIwram_34D0._field_10 = state;
@@ -137,9 +137,9 @@ void WinPoseScreen_Update(void)
 
     case 2:
         Sound_Play(2);
-        if (gIwram_3480._unk14 == 4)
+        if (gIwram_3480.cursorIndex == 4)
             goto tail;
-        gIwram_3480._unk14++;
+        gIwram_3480.cursorIndex++;
         gIwram_34D0._field_10 = 1;
         gIwram_34D0._field_08 = 1;
         WinPoseScreen_ScrollStep(0);
@@ -148,9 +148,9 @@ void WinPoseScreen_Update(void)
     case 16:
     case 64:
         Sound_Play(1);
-        SetCurrentLevel(gIwram_3480._unk14);
+        SetCurrentLevel(gIwram_3480.cursorIndex);
 
-        switch (gIwram_3480._unk14) {
+        switch (gIwram_3480.cursorIndex) {
         case 0:
             attr = (attr & 0xffff00ff) | 0x0300;
             break;
@@ -168,7 +168,7 @@ void WinPoseScreen_Update(void)
             break;
         }
 
-        if (gIwram_3480._unk14 != 3)
+        if (gIwram_3480.cursorIndex != 3)
             Sprite_AnimateFlip(&attr, 0, 1, 2, 10);
         else
             Sprite_AnimateFlip(&attr, 2, 3, 2, 10);
@@ -183,12 +183,12 @@ void WinPoseScreen_Update(void)
         Screen_InstallOamA(1, 23, 6, 2);
 
         gGameStuff.mode = GAME_MODE_ROUTER;
-        gIwram_3480._data[0] = 8;
-        gIwram_3480._data[5] = 0;
-        gIwram_3480._data[2] = 0;
-        gIwram_3480._data[1] = 0;
+        gIwram_3480.subState = 8;
+        gIwram_3480.routerSelection = 0;
+        gIwram_3480.menuStep = 0;
+        gIwram_3480._unk01 = 0;
         gIwram_5398 = 0;
-        gIwram_3480._data[7] = 0;
+        gIwram_3480.blinkCounter = 0;
         break;
     }
 
@@ -196,7 +196,7 @@ tail:
     if (gIwram_5398 == 32) {
         Sound_Play(0);
         REG_DISPCNT &= ~DISPCNT_OBJ_ON;
-        gIwram_3480._data[2]++;
+        gIwram_3480.menuStep++;
     } else if (gIwram_5398 != 0 && gIwram_5398 != 16 && gIwram_5398 != 64) {
         WinPoseScreen_DrawBg();
         WinPoseScreen_AnimAndScroll();

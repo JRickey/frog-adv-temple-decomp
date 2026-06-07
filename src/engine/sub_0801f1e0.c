@@ -13,7 +13,7 @@ extern u8 CountHighestBit(u32 bits);
 /* Twin of SaveSlot_DrawAllSlots (same body, different call site): renders the four save
  * slots. For each populated slot draws its name, two counters and a completion
  * percentage; for each empty slot blits a placeholder sprite. The slot whose
- * index equals gIwram_3480._unk14 is highlighted. An OAM-style attribute word
+ * index equals gIwram_3480.cursorIndex is highlighted. An OAM-style attribute word
  * is built on the stack and its address handed to the sprite helpers. */
 void FileSelect_DrawSlots(void)
 {
@@ -83,7 +83,7 @@ void FileSelect_DrawSlots(void)
                 }
             }
 
-            if (gIwram_3480._unk14 == i) {
+            if (gIwram_3480.cursorIndex == i) {
                 Tilemap_SwapPalette(attrp, 5, 4, 2);
                 Tilemap_SwapPalette(attrp, 7, 6, 2);
             }
@@ -102,7 +102,7 @@ void FileSelect_DrawSlots(void)
             asm("" : "+r"(table));
             TileBlit((u32 *)ap, (const void *)table[gIwram_34B0._data], 2);
 
-            if (gIwram_3480._unk14 == i) {
+            if (gIwram_3480.cursorIndex == i) {
                 Tilemap_SwapPalette((u32 *)ap, 5, 4, 2);
             }
         }

@@ -80,7 +80,7 @@ int ScriptTick(void)
     }
 
     gs->mode = GAME_MODE_ROUTER;
-    gIwram_3480._data[0] = 4;
+    gIwram_3480.subState = 4;
     goto ret_op_zero;
 
 ret_zero:

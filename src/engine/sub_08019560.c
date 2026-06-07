@@ -11,14 +11,14 @@
  * index read, matching the baserom. */
 extern void (*const gHandlerTable_08308058[])(void);
 
-/* Dispatch through a ROM handler table indexed by gIwram_3480._data[3].
+/* Dispatch through a ROM handler table indexed by gIwram_3480.menu25Step.
  * Class-sibling of GameMode_Menu26 (which indexes by _data[4]); both share
  * the 0x08308058 table and discard the handler's return value (the popped
  * lr lands in r0 before bx). */
 
 void GameMode_Menu25(void)
 {
-    gHandlerTable_08308058[gIwram_3480._data[3]]();
+    gHandlerTable_08308058[gIwram_3480.menu25Step]();
 }
 
 extern void SoundMixer_Stop(void);
@@ -29,19 +29,19 @@ void Menu25_WaitFadeIn(void)
     u32 now;
 
     SoundMixer_Stop();
-    gIwram_3480._data[5] = 0;
+    gIwram_3480.routerSelection = 0;
     gIwram_3608._data = 0;
 
     if (Screen_TickFlash() != 0)
         return;
 
     now = GetFrameTick();
-    now -= gIwram_3480._unk0C;
+    now -= gIwram_3480.lastAdvanceTick;
     if (now <= 0x77)
         return;
 
-    gIwram_3480._unk0C = GetFrameTick();
-    gIwram_3480._data[0]++;
+    gIwram_3480.lastAdvanceTick = GetFrameTick();
+    gIwram_3480.subState++;
     Blend_StartFade(0xBF);
 }
 
@@ -61,7 +61,7 @@ void Menu25_ReloadStatusBarBg(void)
 {
     volatile DmaChannel *dma;
 
-    gIwram_3480._data[5] = 0;
+    gIwram_3480.routerSelection = 0;
 
     if (Blend_StepFade() != 0)
         return;
@@ -87,7 +87,7 @@ void Menu25_ReloadStatusBarBg(void)
     REG_DISPCNT = DISPCNT_OBJ_1D | DISPCNT_BG3_ON;
 
     Screen_BeginFlash(0xBF);
-    gIwram_3480._data[0]++;
+    gIwram_3480.subState++;
 }
 
 /* Resets the status-bar dispatch state (clears _data[7] and _data[0])
@@ -98,8 +98,8 @@ void Menu25_ResetAfterFade(void)
     if (Blend_StepFade() != 0)
         return;
 
-    gIwram_3480._data[7] = 0;
-    gIwram_3480._data[0] = 0;
+    gIwram_3480.blinkCounter = 0;
+    gIwram_3480.subState = 0;
 }
 
 /* Bumps the status-bar sub-state counter (_data[3]). Companion to
@@ -107,7 +107,7 @@ void Menu25_ResetAfterFade(void)
  * and clears _data[0]. */
 void Menu25_AdvanceSubstate(void)
 {
-    gIwram_3480._data[3]++;
+    gIwram_3480.menu25Step++;
 }
 
 /* Advances the status-bar dispatch sub-state (_data[3]++) and seeds the
@@ -122,9 +122,9 @@ void Menu25_AdvanceAndReturn(void)
     if (r != 0)
         return;
 
-    gIwram_3480._data[3]++;
+    gIwram_3480.menu25Step++;
     gGameStuff.mode = GAME_MODE_ROUTER;
-    gIwram_3480._data[0] = r;
+    gIwram_3480.subState = r;
 }
 
 /* Sets the game-state mode to 4 and zeros the dispatch index and two
@@ -139,9 +139,9 @@ void Menu25_ReturnToRouter(void)
         return;
 
     gGameStuff.mode = GAME_MODE_ROUTER;
-    gIwram_3480._data[3] = r;
-    gIwram_3480._data[0] = r;
-    gIwram_3480._data[5] = r;
+    gIwram_3480.menu25Step = r;
+    gIwram_3480.subState = r;
+    gIwram_3480.routerSelection = r;
 }
 
 /* Sets the game-state mode to 25 (0x19) and seeds the dispatch state:
@@ -149,10 +149,10 @@ void Menu25_ReturnToRouter(void)
 void Menu25_Enter(void)
 {
     gGameStuff.mode = GAME_MODE_MENU_25;
-    gIwram_3480._data[0] = 0;
-    gIwram_3480._data[5] = 0;
-    gIwram_3480._data[3] = 2;
-    gIwram_3480._data[4] = 0;
+    gIwram_3480.subState = 0;
+    gIwram_3480.routerSelection = 0;
+    gIwram_3480.menu25Step = 2;
+    gIwram_3480.menu26Step = 0;
 }
 
 void sub_080196E8(void)

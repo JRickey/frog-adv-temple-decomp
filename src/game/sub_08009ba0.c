@@ -89,7 +89,7 @@ u32 Scene_EntityTick(u8 *flag)
         if (game->mode == GAME_MODE_ATTRACT) {
             game->mode = GAME_MODE_ROUTER;
             game->sceneType = 0;
-            gIwram_3480._data[0] = 4;
+            gIwram_3480.subState = 4;
             return 0;
         }
     }

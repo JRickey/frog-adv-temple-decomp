@@ -33,14 +33,14 @@ void SoundSystem_Transfer(void *a, void *b);
 void SoundSystem_SetVolCountB(u32 arg);
 void SoundSystem_SetVolCountA(u32 arg);
 
-/* Dispatch through a ROM handler table indexed by gIwram_3480._data[2].
+/* Dispatch through a ROM handler table indexed by gIwram_3480.menuStep.
  * Class-sibling of GameMode_Menu07 (which indexes gHandlerTable_08308AD4 by the
  * same byte); the indirect call lowers to `bl _call_via_r0` and the popped
  * lr lands in r0 before bx, discarding the handler's return value. */
 
 void GameMode_FileSelect(void)
 {
-    gHandlerTable_08308AEC[gIwram_3480._data[2]]();
+    gHandlerTable_08308AEC[gIwram_3480.menuStep]();
 }
 
 /* Trailing mode-reset helper at 0x080202c8 — shares this compilation slice
@@ -50,11 +50,11 @@ void GameMode_FileSelect(void)
 void SaveMenu_ResetDispatcher(void)
 {
     gGameStuff.mode = GAME_MODE_ROUTER;
-    gIwram_3480._data[0] = 8;
-    gIwram_3480._unk14 = 0;
+    gIwram_3480.subState = 8;
+    gIwram_3480.cursorIndex = 0;
     gIwram_5398 = 0;
-    gIwram_3480._data[2] = 0;
-    gIwram_3480._data[5] = 0;
+    gIwram_3480.menuStep = 0;
+    gIwram_3480.routerSelection = 0;
     gIwram_34A0._field_00 = 0;
 }
 

@@ -15,12 +15,23 @@
  * addresses; opaque link-time symbols can't be folded. See
  * docs/codegen-notes.md "Adjacent IWRAM bases". */
 
+/* Menu / scene-dispatch state machine at 0x03003480. subState is the primary
+ * handler-table index; the per-mode sub-state bytes (+2..+4) plus the cursor/
+ * blink/timer fields drive the title/file-select/options/credits screens. */
 struct IwramAt3480 {
-    u8 _data[9];  /* bytes 0-8: writes at +0, +2, +5, +6, +7, +8 */
-    u8 _pad09[3]; /* bytes 9-11: alignment padding */
-    u32 _unk0C;   /* +0x0C: tick timestamp (u32 ldr/str) */
-    u32 _unk10;   /* +0x10: word written by Menu25_HandleInput */
-    u8 _unk14;    /* +0x14 (offset 20): state byte */
+    u8 subState;         /* +0: primary handler-table index (sub_08019500 dispatch) */
+    u8 _unk01;           /* +1: zeroed by dispatch resets; no reader found */
+    u8 menuStep;         /* +2: FileSelect/Menu27/Menu07 sub-state index */
+    u8 menu25Step;       /* +3: Menu25 / Credits-A sub-state index */
+    u8 menu26Step;       /* +4: Menu26 / Credits-B sub-state index */
+    u8 routerSelection;  /* +5: AgbMain router target (1=FILE_SELECT,2=OPTIONS,3=MENU_07,4=ATTRACT) */
+    u8 reloadFlag;       /* +6: gates first-time vs returning asset reload (Menu25_LoadAssets) */
+    u8 blinkCounter;     /* +7: cursor-blink frame counter */
+    u8 blinkState;       /* +8: cursor-blink on/off phase */
+    u8 _pad09[3];        /* +9..0xB: alignment padding */
+    u32 lastAdvanceTick; /* +0xC: GetFrameTick() at last auto-advance / idle-timeout */
+    u32 blinkTick;       /* +0x10: GetFrameTick() at last cursor-blink toggle */
+    u8 cursorIndex;      /* +0x14: selectable cursor/option index */
 };
 
 struct IwramAt34A0 {

@@ -6,7 +6,7 @@
 extern void TileBlit(u32 *attr, const void *src, u8 mode);
 
 /* Builds a 4-byte tilemap descriptor on the stack, refines its tile column by
- * gIwram_3480._unk14, kicks a DMA3 screenblock load, then blits the descriptor
+ * gIwram_3480.cursorIndex, kicks a DMA3 screenblock load, then blits the descriptor
  * via TileBlit. Sibling of SaveSlot_DrawSelectionCursor (same attr-build idiom). */
 void WinPoseScreen_DrawBg(void)
 {
@@ -17,7 +17,7 @@ void WinPoseScreen_DrawBg(void)
     attr = (attr & 0x00ffffff) | 0x03000000;
     attr = (attr & 0xff00ffff) | 0x000e0000;
 
-    switch (gIwram_3480._unk14) {
+    switch (gIwram_3480.cursorIndex) {
     case 0:
         attr = (attr & 0xffff00ff) | 0x0300;
         break;

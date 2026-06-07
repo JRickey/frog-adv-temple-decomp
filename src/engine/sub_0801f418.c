@@ -36,7 +36,7 @@ void FileSelect_Init(void)
     args.tilemap2 = sScreenTilemapTable_308EF4[gIwram_34B0._data];
     args._unk0C = 0;
 
-    gIwram_3480._unk14 = 0;
+    gIwram_3480.cursorIndex = 0;
 
     if (gIwram_34A0.reentryFlag == 0) {
         Bg_InitMode0();
@@ -80,7 +80,7 @@ void FileSelect_Init(void)
         Scene_DrawWindow(0, 6, rec[1], 28, 0, 1);
     }
 
-    gIwram_3480._data[2]++;
+    gIwram_3480.menuStep++;
 }
 
 void FileSelect_Update(void)
@@ -97,10 +97,10 @@ void FileSelect_Update(void)
         Sound_Play(1);
 
         rec = sSceneRecordTable_308110[gIwram_34B0._data];
-        if ((*(u8 *)&gSaveData >> (poseIdx = gIwram_3480._unk14)) & 1) {
+        if ((*(u8 *)&gSaveData >> (poseIdx = gIwram_3480.cursorIndex)) & 1) {
             if (Scene_DrawWindow(0, 6, rec[2], 28, 0, 0) == 0)
                 break;
-            finalIdx = gIwram_3480._unk14;
+            finalIdx = gIwram_3480.cursorIndex;
         } else {
             finalIdx = poseIdx;
         }
@@ -111,11 +111,11 @@ void FileSelect_Update(void)
     }
     case 1:
         Sound_Play(2);
-        if (gIwram_3480._unk14 == 0) {
-            gIwram_3480._unk14 = 3;
+        if (gIwram_3480.cursorIndex == 0) {
+            gIwram_3480.cursorIndex = 3;
             break;
         }
-        gIwram_3480._unk14--;
+        gIwram_3480.cursorIndex--;
         break;
     case 2: {
         /* pin the constant to r1 and the reload to r2 so the 0x3480 base lands
@@ -127,10 +127,10 @@ void FileSelect_Update(void)
         register u8 reloaded asm("r2");
 
         Sound_Play(2);
-        gIwram_3480._unk14++;
+        gIwram_3480.cursorIndex++;
         three = 3;
-        reloaded = *(volatile u8 *)&gIwram_3480._unk14;
-        gIwram_3480._unk14 = three & reloaded;
+        reloaded = *(volatile u8 *)&gIwram_3480.cursorIndex;
+        gIwram_3480.cursorIndex = three & reloaded;
         break;
     }
     }
@@ -140,7 +140,7 @@ void FileSelect_Update(void)
         Sound_Play(0);
         gIwram_34A0.reentryFlag = 0;
         Screen_InstallOamA(0, 30, 6, 2);
-        gIwram_3480._data[2]++;
+        gIwram_3480.menuStep++;
     } else if (gIwram_5398 != 0 && gIwram_5398 != 16 && gIwram_5398 != 64) {
         gIwram_5398 = 0;
         SaveSlot_DrawAllSlots();
