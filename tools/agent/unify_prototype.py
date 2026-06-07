@@ -147,7 +147,14 @@ def main():
     for f, _old, new in touched:
         f.write_text(new)
 
-    print("running make tidy && make -j8 && make check ...")
+    # Format touched files FIRST so the clean-build gate validates exactly the
+    # bytes that get committed (the pre-commit hook runs clang-format; validating
+    # the pre-format version then committing the post-format version would be a
+    # stale check, and clang-format can reorder includes -> change preproc output).
+    fmt = [str(f) for f, _, _ in touched] + ([str(header)] if header_needs else [])
+    subprocess.run(["clang-format", "-i"] + fmt, cwd=REPO, capture_output=True, text=True)
+
+    print("running clang-format + make tidy && make -j8 && make check ...")
     subprocess.run(["make", "tidy"], cwd=REPO, capture_output=True, text=True)
     b = subprocess.run(["make", "-j8"], cwd=REPO, capture_output=True, text=True)
     ok = b.returncode == 0 and subprocess.run(["make", "check"], cwd=REPO, capture_output=True, text=True).returncode == 0
