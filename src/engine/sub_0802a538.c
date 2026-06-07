@@ -35,7 +35,7 @@ struct IwramAt6110 {
 extern struct IwramAt6110 gIwram_6110;
 
 struct Entity {
-    u8 field_00;
+    u8 kind;
     u8 field_01;
     s16 x;
     s16 y;

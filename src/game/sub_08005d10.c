@@ -66,7 +66,7 @@ void Entity_AdvanceAnimFrames(s32 slot, s32 endSlot)
     e = (struct Entity *)(base + offset);
     do {
         if ((e->status & 2) != 0) {
-            const SpriteAnimDesc *desc = (const SpriteAnimDesc *)(sSpriteAssetTable[e->field_00].ptr + e->state * 12);
+            const SpriteAnimDesc *desc = (const SpriteAnimDesc *)(sSpriteAssetTable[e->kind].ptr + e->state * 12);
 
             frame = *(const AnimFrame *)desc->frames;
             e->field_1C[0] = desc->frameCount;
@@ -95,7 +95,7 @@ void Entity_AdvanceAnimFrames(s32 slot, s32 endSlot)
                 const SpriteAnimDesc *desc;
 
                 e->field_1B = e->field_1B + 1;
-                desc = (const SpriteAnimDesc *)(sSpriteAssetTable[e->field_00].ptr + e->state * 12);
+                desc = (const SpriteAnimDesc *)(sSpriteAssetTable[e->kind].ptr + e->state * 12);
                 frame = ((const AnimFrame *)desc->frames)[nextFrame];
 
                 e->collisionType = frame.field_09;

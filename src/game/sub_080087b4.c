@@ -118,7 +118,7 @@ u8 Entity_CheckTouchEnemy(u8 arg0, u8 arg1)
             continue;
         if (e->y >= xHi)
             continue;
-        if (e->field_00 == 11) {
+        if (e->kind == 11) {
             /* The latch is `0x80 | flags | 4`. Pinning the accumulator to r0
              * keeps it a fresh 0x80 (not a reuse of flags' callee-saved reg),
              * which both stops agbcc folding 0x80|4 into 0x84 and lets flags

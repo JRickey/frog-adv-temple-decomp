@@ -84,7 +84,7 @@ void Entity_CheckAllCollisions(void)
             if (gGameStuff._unk10 & 1)
                 continue;
             gIwram_35E0.collisionType = gEntities_03003720[id].collisionType;
-            gIwram_35E0.colliderTag = gEntities_03003720[id].field_00;
+            gIwram_35E0.colliderTag = gEntities_03003720[id].kind;
             PlayerFlags_Set(&gIwram_35E0, 0x200);
             return;
 
@@ -94,7 +94,7 @@ void Entity_CheckAllCollisions(void)
             if ((u8)(gEntities_03003720[0].state - 8) <= 3)
                 continue;
             gIwram_35E0.collisionType = gEntities_03003720[id].collisionType;
-            gIwram_35E0.colliderTag = gEntities_03003720[id].field_00;
+            gIwram_35E0.colliderTag = gEntities_03003720[id].kind;
             PlayerFlags_Set(&gIwram_35E0, 0x400);
             return;
 
@@ -103,7 +103,7 @@ void Entity_CheckAllCollisions(void)
             if (gGameStuff._unk10 & 1)
                 continue;
             gIwram_35E0.collisionType = gEntities_03003720[id].collisionType;
-            gIwram_35E0.colliderTag = gEntities_03003720[id].field_00;
+            gIwram_35E0.colliderTag = gEntities_03003720[id].kind;
             PlayerFlags_Set(&gIwram_35E0, 0x400);
             return;
 
@@ -111,7 +111,7 @@ void Entity_CheckAllCollisions(void)
             if (gGameStuff._unk10 & 1)
                 continue;
             gIwram_35E0.collisionType = gEntities_03003720[id].collisionType;
-            gIwram_35E0.colliderTag = gEntities_03003720[id].field_00;
+            gIwram_35E0.colliderTag = gEntities_03003720[id].kind;
             PlayerFlags_Set(&gIwram_35E0, 0x800);
             return;
 
@@ -119,7 +119,7 @@ void Entity_CheckAllCollisions(void)
             if (gGameStuff._unk10 & 1)
                 continue;
             gIwram_35E0.collisionType = gEntities_03003720[id].collisionType;
-            gIwram_35E0.colliderTag = gEntities_03003720[id].field_00;
+            gIwram_35E0.colliderTag = gEntities_03003720[id].kind;
             PlayerFlags_Set(&gIwram_35E0, 0x4000);
             return;
 
@@ -127,7 +127,7 @@ void Entity_CheckAllCollisions(void)
             if (gGameStuff._unk10 & 1)
                 continue;
             gIwram_35E0.collisionType = gEntities_03003720[id].collisionType;
-            gIwram_35E0.colliderTag = gEntities_03003720[id].field_00;
+            gIwram_35E0.colliderTag = gEntities_03003720[id].kind;
             PlayerFlags_Set(&gIwram_35E0, 0x8000);
             return;
 
@@ -137,7 +137,7 @@ void Entity_CheckAllCollisions(void)
             if ((u8)(gEntities_03003720[0].state - 8) <= 3)
                 continue;
             gIwram_35E0.collisionType = gEntities_03003720[id].collisionType;
-            gIwram_35E0.colliderTag = gEntities_03003720[id].field_00;
+            gIwram_35E0.colliderTag = gEntities_03003720[id].kind;
             PlayerFlags_Set(&gIwram_35E0, 0x8000);
             return;
 

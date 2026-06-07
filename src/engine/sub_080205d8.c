@@ -28,7 +28,7 @@ void Entity_DispatchSound(struct Entity *entity)
     /* Case bodies are emitted in baserom physical order, which is not the
      * same as numeric case order (e.g. case 60 precedes case 59) — keeping
      * source order aligned to that layout is what holds the match. */
-    switch (entity->field_00) {
+    switch (entity->kind) {
     case 7:
         Entity_ProximitySound(entity, 2, 1, 2);
         return;

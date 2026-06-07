@@ -98,7 +98,7 @@ struct IwramAt3608 {
  * the middle is reached via computed slot pointers (per-behavior). Restructuring
  * to this model is byte-neutral (layout preserved). Replaces flat IwramAt3720. */
 struct Entity {
-    u8 field_00;      /* +0x00: kind/type byte */
+    u8 kind;          /* +0x00: variant tag (selects sprite asset + behavior view) */
     u8 collisionType; /* +0x01 */
     s16 x;            /* +0x02: X sub-coordinate (signed; /24 -> tile X) */
     s16 y;            /* +0x04: Y sub-coordinate (signed; /24 -> tile Y) */
