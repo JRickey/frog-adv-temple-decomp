@@ -1,4 +1,5 @@
 #include "game.h"
+#include "entity.h"
 #include "iwram.h"
 #include "types.h"
 
@@ -92,7 +93,6 @@ extern u32 ModeControl_GetFlag(void *base, u32 selector, u32 bit);
 extern void ModeControl_ClearBit(void *base, u32 selector, u32 bit);
 extern void Sound_Play(u32 sound);
 extern void Entity_FollowPath(const void *a0, s32 slot);
-extern void Entity_UpdateMovers(s32 a0, s32 a1);
 extern void Entity_AdvanceAnimFrames(s32 a0, s32 a1);
 
 extern const u32 sLevelLayoutPtrs_317ED4[1];

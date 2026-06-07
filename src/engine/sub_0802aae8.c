@@ -1,4 +1,5 @@
 #include "iwram.h"
+#include "entity.h"
 #include "types.h"
 
 typedef struct EntitySlot {
@@ -9,7 +10,6 @@ typedef struct EntitySlot {
 
 extern void LevelLayout_WalkRecords(u32 a0, const void *a1, u32 a2, u32 a3, u32 a4, u32 a5, u32 a6);
 extern void Entity_FollowPath(const void *a0, s32 slot);
-extern void Entity_UpdateMovers(s32 a0, s32 a1);
 extern void Entity_AdvanceAnimFrames(s32 a0, s32 a1);
 
 extern const u32 sLevelLayout_317DC4[6];

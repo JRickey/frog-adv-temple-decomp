@@ -1,10 +1,10 @@
 #include "iwram.h"
+#include "entity.h"
 #include "types.h"
 
 extern void LevelLayout_WalkRecords(s32 a0, const void *a1, s32 a2, s32 a3, s32 a4, s32 a5, s32 a6);
 extern void Entity_WalkCompactRecords(u8 a0, const void *a1, u8 a2, void *a3, u8 a4);
 extern void Entity_FollowPath(const void *a0, s32 slot);
-extern void Entity_UpdateMovers(s32 a0, s32 a1);
 extern void Entity_AdvanceAnimFrames(s32 a0, s32 a1);
 extern const u32 sLevelLayout_311CB0[12];
 extern const u32 sLevelLayoutPtrs_311EC0[10];

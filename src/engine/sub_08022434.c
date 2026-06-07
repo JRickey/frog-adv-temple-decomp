@@ -1,4 +1,5 @@
 #include "macros.h"
+#include "entity.h"
 #include "iwram.h"
 #include "types.h"
 
@@ -10,7 +11,6 @@
 extern u32 Sound_PlayNearEntity(struct Entity *entity, u32 sound, u8 halfW, u8 halfH);
 extern void EntityMover_Tick(u8 idx);
 extern void Entity_Update(void *p);
-extern void Entity_UpdateMovers(s32 a, s32 b);
 extern void Entity_AdvanceAnimFrames(s32 a, s32 b);
 
 void UpdateLogPairEntities(void)

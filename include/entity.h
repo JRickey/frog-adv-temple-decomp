@@ -34,4 +34,6 @@ struct MotionDesc {
     u8 mode;
 };
 
+void Entity_UpdateMovers(s32 start, s32 end);
+
 #endif /* GUARD_ENTITY_H */
