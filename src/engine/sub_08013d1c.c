@@ -1,11 +1,11 @@
 #include "types.h"
+#include "gfx.h"
 #include "game.h"
 #include "iwram.h"
 
 extern void CharLayers_Upload(unsigned int arg);
 extern void FrogOam_Init(void);
 extern void ResetBgAnimState(void);
-extern void Scroll_UpdateCamera(unsigned int arg);
 extern void BgScrollBlit(unsigned int arg);
 extern void BgScrollAnim_Update(void);
 extern void StatusBar_Update(void);

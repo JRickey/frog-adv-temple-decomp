@@ -1,4 +1,5 @@
 #include "game.h"
+#include "gfx.h"
 #include "sound.h"
 #include "iwram.h"
 #include "macros.h"
@@ -64,7 +65,6 @@ extern void Player_UpdateHorizontalInput(u32 arg);
 extern void sub_08008174(void);
 extern void Player_UpdateTileCache(void);
 extern void Entity_UpdateSlot1Status(void);
-extern void Scroll_UpdateCamera(u8 arg);
 extern void sub_08002EE8(s32 a, void *b);
 extern void Entity_UpdateVisibility(void);
 extern void Entity_Advance(void);

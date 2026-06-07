@@ -1,4 +1,5 @@
 #include "game.h"
+#include "gfx.h"
 #include "iwram.h"
 #include "gba/intr.h"
 #include "gba/syscall.h"
@@ -33,7 +34,6 @@ extern const GameProc sEntityProcD[17];
 extern const u8 sEntitySubtypeLut[20];
 
 extern void Game_UpdateSubsystems(void);
-extern void Scroll_UpdateCamera(u8 arg);
 extern void Entity_UpdateVisibility(void);
 extern void Entity_Advance(void);
 

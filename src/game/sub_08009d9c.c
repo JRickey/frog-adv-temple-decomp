@@ -1,4 +1,5 @@
 #include "game.h"
+#include "gfx.h"
 #include "gba/intr.h"
 #include "iwram.h"
 #include "macros.h"
@@ -324,7 +325,6 @@ extern const EntityProc sEntityProcB[17];
 extern const EntityProc sEntityProcD[17];
 extern const u8 sEntitySubtypeLut[20];
 
-extern void Scroll_UpdateCamera(u8 arg);
 extern void LevelCleared_ShowKindLabel(u8 value);
 extern void LevelCleared_ShowExtLabel(void);
 extern u8 gIwram_5330;

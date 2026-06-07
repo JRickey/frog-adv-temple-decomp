@@ -1,4 +1,5 @@
 #include "macros.h"
+#include "gfx.h"
 #include "types.h"
 
 struct TransferDesc {
@@ -46,7 +47,6 @@ extern void CharLayers_Upload(u8 arg);
 extern void BgLayer_Disable(u8 layer);
 extern void FrogOam_Init(void);
 extern void BgScrollAnim_InitPartial(void);
-extern void Scroll_UpdateCamera(u8 arg);
 extern void BgScrollBlit(u8 arg);
 extern void StatusBar_Update(void);
 

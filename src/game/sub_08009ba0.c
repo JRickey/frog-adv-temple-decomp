@@ -1,4 +1,5 @@
 #include "game.h"
+#include "gfx.h"
 #include "sound.h"
 #include "iwram.h"
 #include "macros.h"
@@ -105,7 +106,6 @@ extern const u8 sEntitySubtypeLut[20];
 extern void Sound_DrainIfActive(void);
 extern void EntityPool_Reset(void);
 extern void Entity_SpawnFromConfig(s8 a, s16 b, s8 c);
-extern void Scroll_UpdateCamera(u8 arg);
 extern void Game_UpdateSubsystems(void);
 extern void Entity_UpdateVisibility(void);
 extern void Entity_Advance(void);

@@ -1,9 +1,9 @@
 #include "types.h"
+#include "gfx.h"
 
 extern void CharLayers_Upload(u8 arg);
 extern void EntitySlots_Init(const void *src, u8 arg);
 extern void FrogOam_Init(void);
-extern void Scroll_UpdateCamera(u8 arg);
 extern void BgScrollBlit(u8 arg);
 extern void StatusBar_Update(void);
 

@@ -1,4 +1,5 @@
 #include "macros.h"
+#include "gfx.h"
 #include "sound.h"
 #include "types.h"
 #include "game.h"
@@ -50,7 +51,6 @@ extern struct IwramAt60A0 gIwram_60A0;
 
 extern void CharLayers_Upload(u8 arg);
 extern void FrogOam_Init(void);
-extern void Scroll_UpdateCamera(u8 arg);
 extern void ScaleAnim_SyncSelectors(void);
 extern void BgScrollBlit(u8 arg);
 extern void StatusBar_Update(void);

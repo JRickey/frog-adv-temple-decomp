@@ -1,10 +1,10 @@
 #include "types.h"
+#include "gfx.h"
 
 extern void CharLayers_Upload(u8 arg);
 extern void FrogOam_Init(void);
 extern void Scroll_ResetDirStep(void);
 extern void ModeChannel_Apply(u8 arg0, u8 arg1);
-extern void Scroll_UpdateCamera(u8 arg);
 extern void BgScrollBlit(u8 arg);
 extern void StatusBar_Update(void);
 

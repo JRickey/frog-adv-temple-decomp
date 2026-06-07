@@ -17,4 +17,6 @@ s32 Screen_TickFlash(void);
 
 void sub_08015194(void);
 
+void Scroll_UpdateCamera(u8 countArg);
+
 #endif /* GUARD_GFX_H */

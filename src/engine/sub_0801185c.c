@@ -1,4 +1,5 @@
 #include "gba/io.h"
+#include "gfx.h"
 #include "game.h"
 #include "iwram.h"
 #include "types.h"
@@ -54,7 +55,6 @@ done:
 extern void CharLayers_Upload(u8 arg);
 extern void Selector_InitState(void);
 extern void FrogOam_Init(void);
-extern void Scroll_UpdateCamera(u8 arg);
 extern void BgScrollBlit(u8 arg);
 extern void StatusBar_Update(void);
 extern void Selector_BlitStateMachine(u32 arg);

@@ -1,4 +1,5 @@
 #include "macros.h"
+#include "gfx.h"
 #include "sound.h"
 #include "types.h"
 #include "iwram.h"
@@ -24,7 +25,6 @@ extern void Scroll_FlushTilemapWindow(u32, void *, void *);
 extern void CharLayers_Upload(u8 arg);
 extern void FrogOam_Init(void);
 extern void Scenery_InitScrollState(void);
-extern void Scroll_UpdateCamera(u8 arg);
 extern void BgScrollBlit(u8 arg);
 extern void StatusBar_Update(void);
 

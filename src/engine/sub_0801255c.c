@@ -1,9 +1,9 @@
+#include "gfx.h"
 extern void CharLayers_Upload(unsigned int arg);
 extern void BgLayer_Disable(unsigned int arg);
 extern void BgLayer_Enable(unsigned int arg);
 extern void FrogOam_Init(void);
 extern void Selector_ResetState(void);
-extern void Scroll_UpdateCamera(unsigned int arg);
 extern void BgScrollBlit(unsigned int arg);
 extern void StatusBar_Update(void);
 
