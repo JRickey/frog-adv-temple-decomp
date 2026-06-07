@@ -27,7 +27,7 @@ void Entity_PlayStateSound(void)
 
         sound = 92;
     } else {
-        state = gIwram_35E0._field_D - 7;
+        state = gIwram_35E0.colliderTag - 7;
         if (state > 85)
             return;
 

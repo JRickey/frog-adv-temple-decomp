@@ -146,7 +146,7 @@ u8 Entity_CheckAtTarget(void)
     {
         s16 x = gEntities[0].x;
         s16 y = gEntities[0].y;
-        u8 entryIndex = p35E0->_field_D;
+        u8 entryIndex = p35E0->colliderTag;
 #define ACTOR_RECORD ((struct ActorRecord *)((u8 *)gEntities + entryIndex * 56))
         if (Entity_MoveTowardTarget(x, y, (s16)(ACTOR_RECORD->_h2 + ACTOR_RECORD->_h24),
                                     (s16)(ACTOR_RECORD->_h4 + ACTOR_RECORD->_h26 - (ACTOR_RECORD->_b29 >> 1))) != 0) {

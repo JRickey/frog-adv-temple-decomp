@@ -69,7 +69,7 @@ void Player_FindNearbyInteractable(void)
             continue;
         if (headerX > right)
             continue;
-        if (e->field_01 != 2)
+        if (e->collisionType != 2)
             continue;
 
         gIwram_35E0._field_1A = rawId;

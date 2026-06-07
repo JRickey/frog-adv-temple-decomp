@@ -48,7 +48,7 @@ void Entity_UpdateOrbitalPosition(u8 idx, u16 baseX, u16 baseY, s8 mag, u8 mode,
     sy = (s16)baseY + Fixed8Mul(sSineTable[(s16)angle - 0x40], mag);
     slot->y = sy;
 
-    if ((gIwram_35E0._field_10 & 2) != 0 && idx == gIwram_35E0._field_D) {
+    if ((gIwram_35E0._field_10 & 2) != 0 && idx == gIwram_35E0.colliderTag) {
         gEntities[0].x = slot->x;
         gEntities[0].y = slot->y;
     }

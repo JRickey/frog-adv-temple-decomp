@@ -64,7 +64,7 @@ void EntityMover_Tick(u8 arg)
         dy = (dy << 24) >> 24;
         e->y += dy;
 
-        if ((gIwram_35E0._field_10 & 2) != 0 && argReg == gIwram_35E0._field_D) {
+        if ((gIwram_35E0._field_10 & 2) != 0 && argReg == gIwram_35E0.colliderTag) {
             coord = base->x;
             sum = coord + dx;
             base->x = sum;
@@ -158,7 +158,7 @@ void Entity_UpdateMovers(s32 start, s32 end)
 
                 active = 2;
                 active &= flags->_field_10;
-                if (active != 0 && idx == flags->_field_D) {
+                if (active != 0 && idx == flags->colliderTag) {
                     mover->x += dx;
                     mover->y += dy;
                 }

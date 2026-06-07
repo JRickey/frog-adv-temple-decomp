@@ -52,7 +52,7 @@ void Player_UpdateHorizontalInput(void)
     if (mask != 0) {
         x = (s16)e->x;
         if (x > 3) {
-            e[gIwram_35E0._field_E].x -= 3;
+            e[gIwram_35E0.platformId].x -= 3;
             e->x -= 3;
         }
     }
@@ -62,7 +62,7 @@ void Player_UpdateHorizontalInput(void)
     if (mask != 0) {
         x = (s16)e->x;
         if (x <= 236) {
-            e[gIwram_35E0._field_E].x += 3;
+            e[gIwram_35E0.platformId].x += 3;
             e->x += 3;
         }
     }

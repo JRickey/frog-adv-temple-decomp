@@ -64,7 +64,7 @@ u8 Entity_ProbeDir(u8 dir)
             continue;
         if (gEntities_03003720[0].field_06 != e->field_06)
             continue;
-        if (e->field_01 != 3)
+        if (e->collisionType != 3)
             continue;
 
         left = (u16)((e->y + e->hitHalfH) - e->field_29);

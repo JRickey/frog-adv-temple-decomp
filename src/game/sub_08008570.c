@@ -75,7 +75,7 @@ u8 Entity_UpdateJumpTarget(void)
                 continue;
             if (e->y >= xHi)
                 continue;
-            if (e->field_01 != 2)
+            if (e->collisionType != 2)
                 continue;
 
             gIwram_35E0._field_1A = id;

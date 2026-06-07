@@ -59,11 +59,11 @@ struct IwramAt35E0 {
     u8 _data[5]; /* writes at +0 and +4 */
     s8 _field_5; /* +5: signed byte; read by entity-dispatch + passed to Entity_SpawnFromRecord */
     u8 _pad06[2];
-    s16 _field_8; /* +8: cached tile-X coord (signed read; from gIwram_3720.field_2 / 24) */
-    s16 _field_A; /* +A: cached tile-Y coord (signed read; from gIwram_3720.field_4 / 24) */
-    u8 _field_C;  /* +C: flag byte (low bits queried); written by Entity_Advance cluster */
-    u8 _field_D;
-    u8 _field_E;
+    s16 _field_8;     /* +8: cached tile-X coord (signed read; from gIwram_3720.field_2 / 24) */
+    s16 _field_A;     /* +A: cached tile-Y coord (signed read; from gIwram_3720.field_4 / 24) */
+    u8 collisionType; /* +C: flag byte (low bits queried); written by Entity_Advance cluster */
+    u8 colliderTag;
+    u8 platformId;
     u8 _pad0F;
     u16 _field_10; /* +10: flags; bit 0x40 raised when tile coords change */
     u16 _field_12;
@@ -98,35 +98,35 @@ struct IwramAt3608 {
  * the middle is reached via computed slot pointers (per-behavior). Restructuring
  * to this model is byte-neutral (layout preserved). Replaces flat IwramAt3720. */
 struct Entity {
-    u8 field_00;    /* +0x00: kind/type byte */
-    u8 field_01;    /* +0x01 */
-    s16 x;          /* +0x02: X sub-coordinate (signed; /24 -> tile X) */
-    s16 y;          /* +0x04: Y sub-coordinate (signed; /24 -> tile Y) */
-    u8 field_06;    /* +0x06: active actor id (matched against entry+8 by Entity_CheckEngage) */
-    u8 field_07[3]; /* +0x07..+0x09 */
-    u8 field_0A;    /* +0x0A: scene/entity-type id (keys sEntityProc* tables) */
-    u8 field_0B[5]; /* +0x0B..+0x0F */
-    u16 field_10;   /* +0x10 */
-    u16 field_12;   /* +0x12 */
-    u16 field_14;   /* +0x14 */
-    u8 field_16;    /* +0x16 */
-    u8 field_17;    /* +0x17: tile-class result (Player_CheckTileEvents) */
-    u8 field_18[2]; /* +0x18..+0x19 */
-    u8 state;       /* +0x1A: dispatch state read often (also a move-opcode in slot 0) */
-    u8 field_1B;    /* +0x1B: active-entity count, loop bound (<= 4); slot 0 only */
-    u8 field_1C[8]; /* +0x1C..+0x23 */
-    s16 hitHalfW;   /* +0x24: signed half-extent (AABB collision probes) */
-    s16 hitHalfH;   /* +0x26: signed half-extent */
-    u8 field_28;    /* +0x28 */
-    u8 field_29;    /* +0x29 */
-    u8 field_2A;    /* +0x2A: MotionDesc.sel (pool slot ptr in MotionDesc_Set) */
-    u8 field_2B[5]; /* +0x2B..+0x2F */
-    u8 field_30;    /* +0x30: MotionDesc.dx */
-    u8 field_31;    /* +0x31: MotionDesc.dy */
-    u8 field_32;    /* +0x32: MotionDesc.mode */
-    u8 field_33;    /* +0x33 */
-    u16 status;     /* +0x34: flag halfword (bits 0x04 / 0x08 / 0x40 / 0x8000 tested) */
-    u8 field_36[2]; /* +0x36..+0x37 */
+    u8 field_00;      /* +0x00: kind/type byte */
+    u8 collisionType; /* +0x01 */
+    s16 x;            /* +0x02: X sub-coordinate (signed; /24 -> tile X) */
+    s16 y;            /* +0x04: Y sub-coordinate (signed; /24 -> tile Y) */
+    u8 field_06;      /* +0x06: active actor id (matched against entry+8 by Entity_CheckEngage) */
+    u8 field_07[3];   /* +0x07..+0x09 */
+    u8 field_0A;      /* +0x0A: scene/entity-type id (keys sEntityProc* tables) */
+    u8 field_0B[5];   /* +0x0B..+0x0F */
+    u16 field_10;     /* +0x10 */
+    u16 field_12;     /* +0x12 */
+    u16 field_14;     /* +0x14 */
+    u8 field_16;      /* +0x16 */
+    u8 field_17;      /* +0x17: tile-class result (Player_CheckTileEvents) */
+    u8 field_18[2];   /* +0x18..+0x19 */
+    u8 state;         /* +0x1A: dispatch state read often (also a move-opcode in slot 0) */
+    u8 field_1B;      /* +0x1B: active-entity count, loop bound (<= 4); slot 0 only */
+    u8 field_1C[8];   /* +0x1C..+0x23 */
+    s16 hitHalfW;     /* +0x24: signed half-extent (AABB collision probes) */
+    s16 hitHalfH;     /* +0x26: signed half-extent */
+    u8 field_28;      /* +0x28 */
+    u8 field_29;      /* +0x29 */
+    u8 field_2A;      /* +0x2A: MotionDesc.sel (pool slot ptr in MotionDesc_Set) */
+    u8 field_2B[5];   /* +0x2B..+0x2F */
+    u8 field_30;      /* +0x30: MotionDesc.dx */
+    u8 field_31;      /* +0x31: MotionDesc.dy */
+    u8 field_32;      /* +0x32: MotionDesc.mode */
+    u8 field_33;      /* +0x33 */
+    u16 status;       /* +0x34: flag halfword (bits 0x04 / 0x08 / 0x40 / 0x8000 tested) */
+    u8 field_36[2];   /* +0x36..+0x37 */
 };
 typedef char _entity_size_check[sizeof(struct Entity) == 0x38 ? 1 : -1];
 

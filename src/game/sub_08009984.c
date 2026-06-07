@@ -53,7 +53,7 @@ void Player_CheckTileEvents(void)
     }
 
     if (tile == 7) {
-        if ((gIwram_35E0._field_C & 2) != 0)
+        if ((gIwram_35E0.collisionType & 2) != 0)
             goto check8or11;
         if (gEntities[0].state > 3)
             goto check8or11;
@@ -63,7 +63,7 @@ void Player_CheckTileEvents(void)
 check8or11:
     if (tile != 8 && tile != 11)
         return;
-    if ((gIwram_35E0._field_C & 2) != 0)
+    if ((gIwram_35E0.collisionType & 2) != 0)
         return;
     if (gEntities[0].state > 3)
         return;

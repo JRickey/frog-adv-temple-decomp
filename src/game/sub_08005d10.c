@@ -74,7 +74,7 @@ void Entity_AdvanceAnimFrames(s32 slot, s32 endSlot)
             e->field_18[0] = Anim_GetFrameWidth(desc->state, desc->dir);
             e->field_1B = 0;
 
-            e->field_01 = frame.field_09;
+            e->collisionType = frame.field_09;
             e->x += frame.dx;
             e->y += frame.dy;
             e->hitHalfW = frame.field_0A;
@@ -98,7 +98,7 @@ void Entity_AdvanceAnimFrames(s32 slot, s32 endSlot)
                 desc = (const SpriteAnimDesc *)(sSpriteAssetTable[e->field_00].ptr + e->state * 12);
                 frame = ((const AnimFrame *)desc->frames)[nextFrame];
 
-                e->field_01 = frame.field_09;
+                e->collisionType = frame.field_09;
                 e->x += frame.dx;
                 e->y += frame.dy;
                 e->hitHalfW = frame.field_0A;

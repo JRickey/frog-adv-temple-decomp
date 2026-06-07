@@ -8,7 +8,7 @@
  *
  * Walks the active-entity index at 0x03006160 and, for every live record whose
  * box overlaps the player header (record 0), dispatches on the record's pose
- * byte (field_01, opcodes 1..11) to either: latch the record into the shared
+ * byte (collisionType, opcodes 1..11) to either: latch the record into the shared
  * input scratch at gIwram_35E0 (+0xC id, +0xD kind), raise a hop/move flag bit
  * on gIwram_35E0 via PlayerFlags_Set, or just mark the record "seen" (status bit
  * 0x80). Each record's status bit 0x80 is cleared at the top of every iteration
@@ -28,10 +28,10 @@ void Entity_CheckAllCollisions(void)
     if (gEntities[0].status & 4)
         return;
 
-    gIwram_35E0._field_C = 0;
-    gIwram_35E0._field_D = 0;
+    gIwram_35E0.collisionType = 0;
+    gIwram_35E0.colliderTag = 0;
     if ((gIwram_35E0._field_10 & 2) == 0)
-        gIwram_35E0._field_E = 0;
+        gIwram_35E0.platformId = 0;
 
     for (i = 0; i < gIwram_6110.liveCount; i++) {
         u8 id = gEntityIndex_03006160[i].id;
@@ -60,31 +60,31 @@ void Entity_CheckAllCollisions(void)
         if (!Entity_BBoxOverlap(&gEntities_03003720[0], e))
             continue;
 
-        switch (e->field_01 - 1) {
+        switch (e->collisionType - 1) {
         case 0:
             if (gEntities_03003720[0].state > 3 && (gIwram_35E0._field_10 & 0x10) == 0)
                 continue;
-            gIwram_35E0._field_C |= gEntities_03003720[id].field_01;
+            gIwram_35E0.collisionType |= gEntities_03003720[id].collisionType;
             gEntities_03003720[id].status |= 0x80;
             break;
 
         case 1:
             if (!Entity_RectOverlap(&gEntities_03003720[0], &gEntities_03003720[id]))
                 continue;
-            gIwram_35E0._field_C |= gEntities_03003720[id].field_01;
-            gIwram_35E0._field_D = id;
+            gIwram_35E0.collisionType |= gEntities_03003720[id].collisionType;
+            gIwram_35E0.colliderTag = id;
             if (gEntities_03003720[0].state > 3 && (gIwram_35E0._field_10 & 0x10) == 0)
                 continue;
             gEntities_03003720[id].status |= 0x80;
             gIwram_35E0._field_10 |= 2;
-            gIwram_35E0._field_E = id;
+            gIwram_35E0.platformId = id;
             break;
 
         case 4:
             if (gGameStuff._unk10 & 1)
                 continue;
-            gIwram_35E0._field_C = gEntities_03003720[id].field_01;
-            gIwram_35E0._field_D = gEntities_03003720[id].field_00;
+            gIwram_35E0.collisionType = gEntities_03003720[id].collisionType;
+            gIwram_35E0.colliderTag = gEntities_03003720[id].field_00;
             PlayerFlags_Set(&gIwram_35E0, 0x200);
             return;
 
@@ -93,8 +93,8 @@ void Entity_CheckAllCollisions(void)
                 continue;
             if ((u8)(gEntities_03003720[0].state - 8) <= 3)
                 continue;
-            gIwram_35E0._field_C = gEntities_03003720[id].field_01;
-            gIwram_35E0._field_D = gEntities_03003720[id].field_00;
+            gIwram_35E0.collisionType = gEntities_03003720[id].collisionType;
+            gIwram_35E0.colliderTag = gEntities_03003720[id].field_00;
             PlayerFlags_Set(&gIwram_35E0, 0x400);
             return;
 
@@ -102,32 +102,32 @@ void Entity_CheckAllCollisions(void)
         case 7:
             if (gGameStuff._unk10 & 1)
                 continue;
-            gIwram_35E0._field_C = gEntities_03003720[id].field_01;
-            gIwram_35E0._field_D = gEntities_03003720[id].field_00;
+            gIwram_35E0.collisionType = gEntities_03003720[id].collisionType;
+            gIwram_35E0.colliderTag = gEntities_03003720[id].field_00;
             PlayerFlags_Set(&gIwram_35E0, 0x400);
             return;
 
         case 5:
             if (gGameStuff._unk10 & 1)
                 continue;
-            gIwram_35E0._field_C = gEntities_03003720[id].field_01;
-            gIwram_35E0._field_D = gEntities_03003720[id].field_00;
+            gIwram_35E0.collisionType = gEntities_03003720[id].collisionType;
+            gIwram_35E0.colliderTag = gEntities_03003720[id].field_00;
             PlayerFlags_Set(&gIwram_35E0, 0x800);
             return;
 
         case 8:
             if (gGameStuff._unk10 & 1)
                 continue;
-            gIwram_35E0._field_C = gEntities_03003720[id].field_01;
-            gIwram_35E0._field_D = gEntities_03003720[id].field_00;
+            gIwram_35E0.collisionType = gEntities_03003720[id].collisionType;
+            gIwram_35E0.colliderTag = gEntities_03003720[id].field_00;
             PlayerFlags_Set(&gIwram_35E0, 0x4000);
             return;
 
         case 9:
             if (gGameStuff._unk10 & 1)
                 continue;
-            gIwram_35E0._field_C = gEntities_03003720[id].field_01;
-            gIwram_35E0._field_D = gEntities_03003720[id].field_00;
+            gIwram_35E0.collisionType = gEntities_03003720[id].collisionType;
+            gIwram_35E0.colliderTag = gEntities_03003720[id].field_00;
             PlayerFlags_Set(&gIwram_35E0, 0x8000);
             return;
 
@@ -136,8 +136,8 @@ void Entity_CheckAllCollisions(void)
                 continue;
             if ((u8)(gEntities_03003720[0].state - 8) <= 3)
                 continue;
-            gIwram_35E0._field_C = gEntities_03003720[id].field_01;
-            gIwram_35E0._field_D = gEntities_03003720[id].field_00;
+            gIwram_35E0.collisionType = gEntities_03003720[id].collisionType;
+            gIwram_35E0.colliderTag = gEntities_03003720[id].field_00;
             PlayerFlags_Set(&gIwram_35E0, 0x8000);
             return;
 
