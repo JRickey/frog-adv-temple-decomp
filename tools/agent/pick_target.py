@@ -79,6 +79,16 @@ LIBGCC_SYMBOLS = frozenset({
     "_call_via_ip", "_call_via_sp", "_call_via_lr",
 })
 
+# GAX Sound System (Shin'en) — third-party audio middleware, NOT a decomp
+# target. Like libgcc, it is kept byte-exact and left as a library; the whole
+# engine is now consolidated as incbin under lib/gax/. This contiguous baserom
+# range is the GAX engine; everything in it is GAX (verified: self-contained,
+# no calls into Frogger game code). The Frogger entity cluster just BELOW it
+# (0x0802d170-0x0802d514) and the libagbsyscall SDK block (0x0802d514-0x0802d5ec)
+# are deliberately outside this range and stay normal targets / SDK.
+# See docs/gax-library.md.
+GAX_REGION = (0x0802d5ec, 0x080338a8)
+
 
 @dataclass
 class Target:
@@ -327,6 +337,16 @@ def classify(t: Target, min_prefix: int) -> Target:
         t.legality_note = (
             f"skipped: {t.name} is an in-ROM libgcc helper linked from libgcc.a. "
             "Not a decomp target; wire exact archive members in linker.ld instead."
+        )
+        return t
+
+    # Guard 0b: GAX Sound System (Shin'en) — third-party audio middleware kept
+    # byte-exact as a library (consolidated under lib/gax/), never decompiled.
+    # See docs/gax-library.md.
+    if GAX_REGION[0] <= t.addr < GAX_REGION[1]:
+        t.legality_note = (
+            f"skipped: {t.name} ({t.addr:#010x}) is part of the GAX Sound System "
+            "(Shin'en) audio library. Kept byte-exact; not a decomp target."
         )
         return t
 
