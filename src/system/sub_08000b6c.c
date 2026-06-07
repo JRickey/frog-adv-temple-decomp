@@ -6,7 +6,6 @@ extern void Entity_UpdateHitboxWithTile(void *ent, u32 arg1, u32 kind);
 extern void Entity_ActivateHitSlot(void *ent, u32 arg1, u32 kind, u32 tile);
 extern u32 Tilemap_GetTileClass(u8 col, u8 row, s32 tileX, s32 tileY);
 extern u32 SpriteAsset_GetCellFlag(u8 col, u8 row, s32 tileX, s32 tileY);
-extern void PlayerFlags_Set(void *p, u16 mask);
 extern void IwramFlags_Clear(void *p, u16 mask);
 
 void Scene08_UpdatePlayerEntity(void *ent, u32 arg1)

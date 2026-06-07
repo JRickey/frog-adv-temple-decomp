@@ -34,7 +34,6 @@ extern void sub_0800BEBC(void *ent, void *arg1, u8 kind, u8 tile);
 extern void sub_0800C444(u8 tile);
 extern u32 Tilemap_GetTileClass(u8 col, u8 row, s16 tileX, s16 tileY);
 extern u8 IsFlagMaskSet(struct IwramAt35E0 *p, u32 mask);
-extern void PlayerFlags_Set(struct IwramAt35E0 *p, u32 mask);
 
 void Scene_UpdateCollisionAndTile(u32 arg0, u32 arg1, u32 arg2, u32 arg3, void *arg4, void *arg5)
 {

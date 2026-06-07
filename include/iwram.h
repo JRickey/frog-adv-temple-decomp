@@ -216,4 +216,6 @@ extern struct IwramAt5360 gIwram_5360;
 extern struct IwramAt6150 gIwram_6150;
 void ModeControl_SetBit(void *unused, s32 bits);
 
+void PlayerFlags_Set(void *p, u16 mask);
+
 #endif /* GUARD_IWRAM_H */

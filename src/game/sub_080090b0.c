@@ -20,7 +20,7 @@
  * and compare ordering exactly.
  */
 
-extern u16 PlayerFlags_Set(void *p, u16 v); /* OR-into-u16-at-offset-16 */
+/* OR-into-u16-at-offset-16 */
 
 void Player_UpdateTileCache(void)
 {

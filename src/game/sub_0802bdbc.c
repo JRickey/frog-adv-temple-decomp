@@ -5,7 +5,6 @@
 extern u32 ModeControl_GetFlag(u8 *base, u32 selector, u32 bit);
 extern void ModeControl_ClearBit(u8 *base, u32 selector, u32 bit);
 extern void CtrlFlags_SetBit(u8 *base, u32 selector, u32 bit);
-extern void PlayerFlags_Set(struct IwramAt35E0 *p, u32 mask);
 extern void sub_08015194(void);
 extern void Display_ResetLayers(void);
 extern u8 sub_0801436C(void);

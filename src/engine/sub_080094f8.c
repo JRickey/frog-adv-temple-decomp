@@ -20,7 +20,6 @@ extern struct IndexEntry gEntityIndex_03006160[];
 extern void Entity_DispatchSound(struct Entity *e);
 extern u8 Entity_BBoxOverlap(struct Entity *p1, struct Entity *p2);
 extern u8 Entity_RectOverlap(struct Entity *p1, struct Entity *p2);
-extern void PlayerFlags_Set(void *p, u32 mask);
 
 void Entity_CheckAllCollisions(void)
 {

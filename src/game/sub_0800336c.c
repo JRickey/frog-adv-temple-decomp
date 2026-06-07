@@ -185,7 +185,6 @@ void sub_080035F8(void)
 }
 
 extern u32 Tilemap_GetTileClass(u8 col, u8 row, s16 tileX, s16 tileY);
-extern void PlayerFlags_Set(struct IwramAt35E0 *p, u32 mask);
 
 void Scene17_TileCheck(void)
 {

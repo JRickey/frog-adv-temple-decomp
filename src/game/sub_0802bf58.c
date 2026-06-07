@@ -9,7 +9,6 @@ extern void EntityPool_UpdateOwned(u32 sound);
 extern u32 sub_08015194(void);
 extern u8 EnemySpawn_ProcessWaveA(const void *a0, u8 a1, const void *a2, u8 a3);
 extern u8 EnemySpawn_ProcessWaveB(const void *a0, u8 a1, const void *a2, u8 a3);
-extern void PlayerFlags_Set(void *p, u16 mask);
 
 extern const u8 sSpawnTable_0830791C[];
 extern const u8 sSpawnTable_083079DC[];

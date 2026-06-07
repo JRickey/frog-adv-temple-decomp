@@ -73,7 +73,6 @@ extern void Game_ForceRender(void);
 extern void Entity_CheckAllCollisions(void);
 extern void Player_CheckTileEvents(void);
 extern u8 Tilemap_GetTileClass();
-extern void PlayerFlags_Set(void *a, u32 b);
 
 void GameMode_SceneTick(void *arg)
 {

@@ -192,7 +192,6 @@ extern const struct EntScriptExt sEntityScriptIndexExt[];
 
 extern void CollisionTable_CheckAndTriggerScript(s8 a, s32 c, s32 r2, s32 r3, s8 b);
 extern s32 CollisionTable_ScanForPlayer(s32 c, s8 count);
-extern void PlayerFlags_Set(void *p, u16 mask);
 
 /* Looks up the per-script header in sEntityScriptIndex[b], hands it (plus the
  * caller's a/c) to CollisionTable_CheckAndTriggerScript, then for scripts that pass the CollisionTable_ScanForPlayer
