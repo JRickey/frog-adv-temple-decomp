@@ -3,7 +3,6 @@
 #include "macros.h"
 #include "types.h"
 
-extern u8 RandRange(s16 range);
 extern u8 gIwram_53A0;
 extern u8 gIwram_3610;
 

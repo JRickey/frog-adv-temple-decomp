@@ -10,7 +10,6 @@
 #include "iwram.h"
 #include "types.h"
 
-extern u32 RandRange(u8 range);
 extern u32 ModeControl_GetFlag(void *base, u32 selector, u32 bit);
 extern void Entity_Update(struct Entity *p);
 

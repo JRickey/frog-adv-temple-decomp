@@ -25,7 +25,10 @@ void ClearVramAndWorkram(void)
 /* Step the LCG seed and return the result modulo `range`.
  * Multiplier 109 / increment 1021 — small-period generator used for
  * gameplay randomness (callers TBD; verified via struct_xref on offset 28). */
-u8 RandRange(u8 range)
+/* range is a byte (the binary masks it at entry); the result is narrowed to a
+ * byte by the (u8) cast in the body, but the interface returns it widened so
+ * callers use the masked value directly without re-masking. */
+s32 RandRange(u8 range)
 {
     gGameStuff.rngSeed = gGameStuff.rngSeed * 109 + 1021;
     return (u8)(gGameStuff.rngSeed % range);
