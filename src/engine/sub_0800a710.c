@@ -1,3 +1,4 @@
+#include "entity.h"
 #include "macros.h"
 #include "types.h"
 
@@ -87,12 +88,6 @@ void Entity_ClearTargetFlag(struct ClusterA710 *p)
 {
     p->flags &= 0xffbf;
 }
-
-typedef struct EntityHitbox {
-    u32 count;
-    u32 points;
-    u32 flags;
-} EntityHitbox;
 
 extern const EntityHitbox sEntityHitboxTable[];
 

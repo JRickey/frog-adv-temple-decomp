@@ -1,3 +1,4 @@
+#include "entity.h"
 #include "macros.h"
 #include "types.h"
 
@@ -132,12 +133,6 @@
  * `{u32, u32, ...}` and a u32-into-u8/u16 narrowing in an aggregate
  * initializer is a -Werror under agbcc, so they stay as flat u32 arrays
  * until their consumer lands in C with a real bytewise reader. */
-
-typedef struct EntityHitbox {
-    u32 count;  /* +0x00 -- 1..0x30 (consumer reads as u8) */
-    u32 points; /* +0x04 -- const s16* into 0x082f9xxx..0x082faxxx */
-    u32 flags;  /* +0x08 -- bit-packed (low byte = size class, 0x10000 = extended) */
-} EntityHitbox;
 
 const u32 sEntityScriptIndex[7 * 2] = INCBIN_U32("data/entity/script_descriptors.bin");
 

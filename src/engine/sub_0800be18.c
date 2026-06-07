@@ -1,13 +1,8 @@
+#include "entity.h"
 #include "game.h"
 #include "iwram.h"
 #include "macros.h"
 #include "types.h"
-
-typedef struct EntityHitbox {
-    u32 count;
-    u32 points;
-    u32 flags;
-} EntityHitbox;
 
 typedef struct CollisionSlot {
     u32 flags;
