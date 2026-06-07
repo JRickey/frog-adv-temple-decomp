@@ -9,12 +9,35 @@ A **2D top-down grid maze** game. The player pilots Frogger through discrete
 grid levels, one tile at a time.
 
 ## Structure
-- **5 worlds**, **3 levels each** (15 levels total).
-- Per world, the three levels are:
-  1. **Collect 3 orbs**, then reach the exit.
-  2. **Collect 5 orbs**, then reach the exit.
-  3. **Boss level** — different success mechanics per world. Final world's boss:
-     Frogger must have collected **50 coins**.
+- **5 worlds**, **3 levels each** (15 levels total). Worlds are reached via a
+  **world map**; an NPC talks to you (text boxes) before a stage.
+- Per world, levels 1 & 2: **collect N elements** ("orbs" — call them
+  **elements**), then reach the exit. Level 1 needs **3 elements**, level 2 needs
+  **5**. Level 3 is the **boss** (per-world mechanics, below).
+
+| # | World | Element | World-map NPC |
+|---|---|---|---|
+| 1 | Goblin Caverns | **Fire** | Lumpy (frog) |
+| 2 | Ancient Ruins | **Earth** | Zippy (owl) |
+| 3 | Sea Town | **Water** | Senior Chief (pelican) |
+| 4 | Sky City | **Wind** | Lilly (fairy girl) |
+| 5 | Temple of the Frog | (final) | — |
+
+- **World 5 (Temple)** gates on coins: **50 coins** to enter level 1, **75** to
+  enter level 2 (levels 1 & 2 still need 3 / 5 elements); level 3 = **Mr. D** boss.
+
+## Boss mechanics (per world, level 3)
+1. **Goblin Caverns**: step on **4 switch tiles in order** → removes 4
+   larger-than-normal squares so the boss falls into a pit.
+2. **Ancient Ruins**: stay alive, dodge **boulders shot vertically**, then press
+   floor switches when they appear — **3 times** to defeat the boss.
+3. **Sea Town**: step on **8 switch tiles (any order)**, split into groups of 2;
+   use **warp tiles** to reach the different subgroups.
+4. **Sky City**: collect more **blue gems** than the boss (who roams collecting
+   gems) within **20 s**, avoiding **orange gems** (may decrement — unconfirmed);
+   **3 rounds**, boss faster each round.
+5. **Temple / Mr. D**: dodge stage hazards while **collecting the 5 elements**;
+   on collecting all 5 the attack set switches and you collect the next 5.
 
 ## Controls & movement (grid-based)
 - **D-pad**: move one tile up / down / left / right (no diagonals).
@@ -30,14 +53,28 @@ grid levels, one tile at a time.
   byte: 4 directions × {step 1 tile, jump 2 tiles}. Tongue and rotate are likely
   their own states/opcodes.
 
-## Entities, hazards, collectibles
-- **Enemies**: move in **preprogrammed patterns on a loop** (not reactive AI).
-  → (inferred) the per-entity "MotionDesc" (dx/dy/mode) + a looping path/pattern.
-- **Hazards**: spikes (toggle active/inactive), pits, anything that kills on
-  contact. Falling off the stage also kills.
-- **Collectibles**: **butterflies**, **coins**, **orbs**.
-- **Checkpoint** tile: respawn point; Frogger respawns there on death.
-- **Moving tiles**: platforms that carry Frogger; leaving one re-centers him.
+## Tiles / objects (nearly everything is a tile type)
+- **Hazards**: **spikes** (rise out of the ground; toggle active/inactive),
+  **fire** (shoots from a wall), **pits** (fall = death). Falling off the stage
+  also kills.
+- **Vehicles / cars**: move in **straight lines** across tiles (an enemy class).
+- **Enemies**: move in **preprogrammed loops** (not reactive AI) → per-entity
+  MotionDesc (dx/dy/mode) + a looping path.
+- **Moving platforms**: carry Frogger; leaving one re-centers him on a tile.
+- **Switch** tiles (boss puzzles), **warp** tiles (Sea Town boss).
+- **Collectibles**: **elements** (the "orbs" — 3 or 5 per level), **butterflies**
+  (tongue-grabbed), **coins** (gate the Temple: 50/75; final-boss-adjacent).
+- **Checkpoint** tile (respawn point), **exit** tile (level goal), **hint /
+  question-mark** tile (shows how-to-play text in level 1).
+- **Gems** (Sky City boss only): blue (collect) vs orange (avoid).
+
+## HUD
+- Frogger's **lives**.
+- The **element slots** for the level (3 for level 1, 5 for level 2): each slot
+  empty or filled. **Collection order and slot order are irrelevant — the HUD
+  fills left-to-right** as elements are collected (so it's a simple count, not a
+  per-element identity).
+- **Coins collected** count.
 
 ## Death / lives
 - Death on: any hazard contact, or falling off the stage.
