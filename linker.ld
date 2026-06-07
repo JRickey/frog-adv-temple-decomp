@@ -788,7 +788,7 @@ SECTIONS {
         src/system/sound_opcode_dispatch.o(.text);  /* 0x080315d8 - 0x08031638, Sound_OpcodeDispatch */
         src/system/SoundOpcode_SetStreamPan.o(.text);
         asm/disasm_0x08031688.o(.text);  /* 0x08031688 - 0x080316dc, sub_08031688 (auto-peeled) */
-        src/system/sub_080316dc.o(.text);
+        src/system/SoundOp_SetEnvelopeOscillator.o(.text);
         asm/disasm_0x080316fc.o(.text);  /* 0x080316fc - 0x08031720, sub_080316FC (auto-peeled) */
         src/system/SoundOp_SetEnvelopeRamp.o(.text);
         src/system/SoundOp_Jump.o(.text);
@@ -799,7 +799,7 @@ SECTIONS {
         asm/disasm_0x08031824.o(.text);  /* 0x08031824 - 0x08031868, sub_08031824 (auto-peeled) */
         src/system/sub_08031868.o(.text);
         asm/disasm_0x08031868.o(.text);  /* 0x08031868 - 0x0803189c, sub_08031868 (auto-peeled) */
-        src/system/sub_0803189c.o(.text);
+        src/system/SoundOp_Skip2.o(.text);
         asm/disasm_0x080318a8.o(.text);  /* 0x080318a8 - 0x080318f0, sub_080318A8 (auto-peeled) */
         src/system/sub_080318f0.o(.text);
         asm/disasm_0x080318f0.o(.text);  /* 0x080318f0 - 0x08031910, sub_080318F0 (auto-peeled) */
