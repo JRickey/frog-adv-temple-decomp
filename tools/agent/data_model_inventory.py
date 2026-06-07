@@ -170,7 +170,34 @@ def extract_structs(path):
 
 
 # --- extern extraction -------------------------------------------------------
-_EXTERN_RE = re.compile(r"\bextern\s+([^;{]*?\b([A-Za-z_]\w*)\s*\([^;{]*\))\s*;")
+_EXTERN_RE = re.compile(r"\bextern\s+([^;{]*?\b([A-Za-z_]\w*)\s*\(([^;{]*)\))\s*;")
+_SCALAR = re.compile(r"\b(void|u8|s8|u16|s16|u32|s32|u64|s64|int|char|short|long|bool\w*)\b")
+
+
+def _norm_type(t):
+    """Collapse a type to an ABI-equivalence class: any pointer -> 'ptr',
+    otherwise the underlying scalar keyword (signedness/width preserved)."""
+    t = " ".join(t.split())
+    if "*" in t:
+        return "ptr"
+    scalars = _SCALAR.findall(t)
+    if not scalars:
+        return t or "void"
+    # keep the last scalar keyword (e.g. "unsigned int"->int, "const u8"->u8)
+    return scalars[-1]
+
+
+def normalize_sig(ret_and_name, args):
+    """Return (ret_norm, (arg_norms...)) ignoring param NAMES and pointer
+    target types but PRESERVING scalar widths/signedness and arg count."""
+    # ret_and_name = "u32 ModeControl_GetFlag" -> strip trailing identifier
+    ret = re.sub(r"\b[A-Za-z_]\w*\s*$", "", ret_and_name).strip()
+    a = args.strip()
+    if a in ("", "void"):
+        argl = []
+    else:
+        argl = [x for x in a.split(",")]
+    return (_norm_type(ret), tuple(_norm_type(x) for x in argl))
 
 
 def extract_externs(path):
@@ -179,8 +206,9 @@ def extract_externs(path):
     for m in _EXTERN_RE.finditer(text):
         sig = " ".join(m.group(1).split())
         name = m.group(2)
-        # normalize: drop param names, keep types — crude: collapse spaces only
-        out.append({"name": name, "file": str(path.relative_to(REPO)), "sig": sig})
+        ret_and_name = sig[: sig.index("(")]
+        norm = normalize_sig(ret_and_name, m.group(3))
+        out.append({"name": name, "file": str(path.relative_to(REPO)), "sig": sig, "norm": norm})
     return out
 
 
@@ -233,7 +261,13 @@ def main():
         sigs = {d["sig"] for d in defs}
         if len(sigs) < 2:
             continue
+        norms = {d["norm"] for d in defs}
+        # COSMETIC: variants differ only in param names / pointer target types
+        # (same arg count, same scalar widths, same return ABI class) -> safe to
+        # centralize byte-neutrally. ABI: a scalar return/arg type or arg count
+        # differs -> centralizing would change call-site codegen (matching-relevant).
         drift[name] = {
+            "class": "COSMETIC" if len(norms) == 1 else "ABI",
             "nsigs": len(sigs),
             "ndecls": len(defs),
             "sigs": sorted(sigs),
@@ -259,10 +293,18 @@ def main():
             print(f"      {' '.join(v['files'])}")
 
     if do_externs:
-        rows = sorted(drift.items(), key=lambda kv: -kv[1]["nsigs"])
-        print(f"\n=== Functions declared with >=2 distinct signatures: {len(rows)} ===")
-        for name, v in rows[:40]:
-            print(f"  {name:28} {v['nsigs']} sigs across {len(v['files'])} files")
+        cos = sorted((kv for kv in drift.items() if kv[1]["class"] == "COSMETIC"),
+                     key=lambda kv: -len(kv[1]["files"]))
+        abi = sorted((kv for kv in drift.items() if kv[1]["class"] == "ABI"),
+                     key=lambda kv: -len(kv[1]["files"]))
+        print(f"\n=== Functions with >=2 distinct signatures: {len(drift)} "
+              f"(COSMETIC={len(cos)} safe-centralize, ABI={len(abi)} matching-relevant) ===")
+        print(f"--- COSMETIC (param-name/pointer-type drift only; byte-neutral to centralize) ---")
+        for name, v in cos:
+            print(f"  {name:30} {v['nsigs']} sigs / {len(v['files'])} files")
+        print(f"--- ABI (scalar return/arg type or arg count differs; needs per-caller care) ---")
+        for name, v in abi[:25]:
+            print(f"  {name:30} {v['nsigs']} sigs / {len(v['files'])} files")
 
 
 if __name__ == "__main__":
