@@ -27,7 +27,7 @@ extern void EntityRec_ClearKeyFlags(u8 *rec, u16 mask);
  *     compiled size is 0xC0 (192 B), not 0xA4 (164 B). The linker.ld
  *     slot is sized accordingly. */
 
-u8 Scene08_MapScreenTick(void)
+s32 Scene08_MapScreenTick(void)
 {
     u8 *state;
     u8 ret;

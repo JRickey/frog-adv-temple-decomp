@@ -60,4 +60,6 @@ u32 Scene_EntityTick(u8 *flag);
 
 s32 GetVcountRandom(u8 range);
 
+s32 Scene08_MapScreenTick(void);
+
 #endif /* GUARD_GAME_H */

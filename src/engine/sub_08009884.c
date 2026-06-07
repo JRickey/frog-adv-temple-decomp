@@ -7,7 +7,6 @@
 extern u8 SpriteAsset_GetTileAttr(u8 a, u8 b, s16 c, s16 d);
 extern void Scene08_MapScreenInit(u32 a);
 extern void WaitVblank(void);
-extern u32 Scene08_MapScreenTick(void);
 extern u8 Player_CheckSpecialTileMatch(void);
 extern void Entity_InitShadow(void);
 

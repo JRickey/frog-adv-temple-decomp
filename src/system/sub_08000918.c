@@ -15,7 +15,6 @@ extern void Scene08_MapScreenInit(u8 arg);
 extern void Scene08_PlayFrameTick(u32 a, u32 b);
 extern void Scene_DisableBg2(void);
 extern void Mode8_StateStep(u8 *state, u32 a, u32 b);
-extern u32 Scene08_MapScreenTick(void);
 extern u8 Scene_FadeUpdate(void);
 extern u8 Blend_StepFade(void);
 extern void EntityParam_Reset(void);

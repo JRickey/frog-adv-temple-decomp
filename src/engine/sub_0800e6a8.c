@@ -6,7 +6,6 @@
 extern u8 AnimCtrl_RunPhase(void);
 extern void WaitVblank(void);
 extern void UpdateBgTilemapFrames(void);
-extern u8 Scene08_MapScreenTick(void);
 extern void SoundSystem_FadeOut(void);
 
 u8 Scene_FadeUpdate(void)
