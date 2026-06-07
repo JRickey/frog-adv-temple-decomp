@@ -1,5 +1,6 @@
 #include "game.h"
 #include "gba/io.h"
+#include "gfx.h"
 #include "iwram.h"
 #include "types.h"
 
@@ -13,7 +14,6 @@ extern const u8 sEntitySubtypeLut[];
  * ignores r0/r1 (it reloads from pool immediately) but agbcc at the call
  * site still emits the ldrsh r0 / ldrsh r1 sequence. */
 extern void Player_NormalizeStatusAndUpdate(s16 x, s16 y);
-extern void ScrollCamera_Update(u8 countArg);
 extern void BgScrollBlit(u8 arg);
 extern void Entity_UpdateVisibility(void);
 extern void Entity_Advance(void);

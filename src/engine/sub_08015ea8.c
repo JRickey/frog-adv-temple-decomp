@@ -1,5 +1,7 @@
+#include "gfx.h"
+#include "types.h"
+
 extern void CharLayers_Upload(unsigned int arg);
-extern void ScrollCamera_Update(unsigned int arg);
 extern void BgScrollBlit(unsigned int arg);
 
 void sub_08015EA4(void)

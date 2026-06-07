@@ -37,7 +37,6 @@ extern void Game_UpdateSubsystems(void);
 extern void Entity_UpdateVisibility(void);
 extern void Entity_Advance(void);
 
-extern void Scroll_RunSubtypeTicks(u8 arg);
 extern void Game_CommitRender(void);
 extern u8 gIwram_5330;
 

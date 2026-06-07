@@ -51,7 +51,6 @@ extern void Entity_Update(void *a);
 extern void Entity_UpdateVisibility(void);
 extern void Entity_Advance(void);
 extern void WaitVblank(void);
-extern void Scroll_RunSubtypeTicks(u32 a);
 extern void Game_CommitRender(void);
 extern void CpuFastSet(void *dst, void *src, u32 count);
 

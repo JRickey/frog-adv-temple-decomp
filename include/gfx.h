@@ -7,6 +7,12 @@
  * helpers in src/engine, centralized from per-caller ad-hoc externs
  * (see tools/agent/unify_prototype.py). */
 
+u8 TileMap_GetCell(u32 x, u32 y);
+
+void ScrollCamera_Update(u8 countArg);
+
+void Scroll_RunSubtypeTicks(u8 arg);
+
 u16 Blend_StartFade(u16 arg);
 
 u32 SpriteAsset_LoadSheet(u8 a, u8 b);

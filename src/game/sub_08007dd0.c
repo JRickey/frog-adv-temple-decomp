@@ -29,7 +29,6 @@
  */
 
 extern void Entity_PlayStateSound(void);
-extern void IwramFlags_Clear(void *p, u16 mask);
 extern u32 Tilemap_GetTileClass(u8 col, u8 row, s16 tileX, s16 tileY);
 u8 Entity_MoveTowardTarget(s16 x, s16 y, s16 targetX, s16 targetY);
 
