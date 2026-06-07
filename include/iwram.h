@@ -220,4 +220,6 @@ void PlayerFlags_Set(void *p, u16 mask);
 
 u8 IsFlagMaskSet(void *p, u16 mask);
 
+s64 CtrlFlags_ReadBitRange(void *unused, s32 lo, s32 hi);
+
 #endif /* GUARD_IWRAM_H */

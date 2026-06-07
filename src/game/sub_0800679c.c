@@ -1,4 +1,5 @@
 #include "types.h"
+#include "iwram.h"
 
 /* Generic bit-test accessor on a struct at `base`. The (selector, bit)
  * pair indexes a packed flag stored in one of nine struct fields; the

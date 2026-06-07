@@ -15,8 +15,6 @@ typedef struct EntityMover {
     u8 _pad33[5];
 } EntityMover;
 
-extern long long CtrlFlags_ReadBitRange(struct IwramAt6110 *p, s32 a, s32 b);
-
 void EntityMover_Tick(u8 arg)
 {
     register EntityMover *base asm("r3");

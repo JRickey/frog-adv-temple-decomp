@@ -10,7 +10,6 @@
 #include "macros.h"
 #include "types.h"
 
-extern s32 CtrlFlags_ReadBitRange(struct IwramAt6110 *p, s32 lo, s32 hi);
 extern u8 Anim_GetFrameHeight(u8 state, u8 dir);
 extern u8 Anim_GetFrameWidth(u8 state, u8 dir);
 
