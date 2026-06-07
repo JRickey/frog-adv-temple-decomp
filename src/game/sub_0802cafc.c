@@ -5,16 +5,10 @@
 
 /* --- Enemy_PickNextStep: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
 #ifdef NON_MATCHING
+#include "entity.h"
 #include "game.h"
 #include "iwram.h"
 #include "types.h"
-
-typedef struct {
-    u16 a;
-    s16 b;
-    u16 c;
-    s16 d;
-} Entry;
 
 #define GRID ((u8 *)0x03003610)
 

@@ -3,6 +3,17 @@
 
 #include "types.h"
 
+/* Waypoint record: two tile-coord fields (a=x, c=y as u16) and two signed
+ * delta/step fields (b, d as s16).  Five files share this layout; the two
+ * u16-b/d files cast (s16) at compare sites, which is byte-neutral when the
+ * underlying field is already s16. */
+typedef struct {
+    u16 a;
+    s16 b;
+    u16 c;
+    s16 d;
+} Entry;
+
 /* Spawn record: two tile-coord halfwords + 5 config bytes (8 bytes + pad → 9 total, stride varies). */
 struct SpawnRec {
     s16 _h0;

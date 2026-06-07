@@ -1,12 +1,6 @@
+#include "entity.h"
 #include "iwram.h"
 #include "types.h"
-
-typedef struct {
-    u16 a;
-    u16 b;
-    u16 c;
-    u16 d;
-} Entry;
 
 /* idxB is declared u32 (not u8) so agbcc passes idxReg straight through in r2
  * (mov r2,r9) instead of re-masking it at every call site — idxReg is already

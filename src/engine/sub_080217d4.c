@@ -1,11 +1,5 @@
+#include "entity.h"
 #include "types.h"
-
-typedef struct {
-    u16 a;
-    u16 b;
-    u16 c;
-    u16 d;
-} Entry;
 
 u8 Entity_WaypointDirectionCompare(Entry *base, u8 idxA, u8 idxB)
 {
