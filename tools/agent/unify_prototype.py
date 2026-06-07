@@ -126,7 +126,8 @@ def main():
             if dnew != dtxt:
                 touched.append((dp, dtxt, dnew))
 
-    htxt = header.read_text(errors="ignore")
+    header_existed = header.exists()
+    htxt = header.read_text(errors="ignore") if header_existed else ""
     decl_re = re.compile(r"^[^\n]*\b" + re.escape(func) + r"\s*\([^;{]*\)\s*;", re.M)
     header_needs = not decl_re.search(htxt)
     print(f"callers with ad-hoc extern: {len(callers)}")
@@ -153,9 +154,14 @@ def main():
     if ok:
         print(f"GREEN: centralized {func} into {args.header}; {len(callers)} callers de-externed.")
         return
-    print("RED: reverting all touched files", file=sys.stderr)
-    paths = [str(f) for f, _, _ in touched] + ([str(header)] if header_needs else [])
-    subprocess.run(["git", "checkout", "--"] + paths, cwd=REPO)
+    print("RED: reverting all touched files (in-memory restore)", file=sys.stderr)
+    for f, old, _new in touched:
+        f.write_text(old)  # robust: works for tracked AND untracked files
+    if header_needs:
+        if header_existed:
+            header.write_text(htxt)
+        else:
+            header.unlink()  # we created it this run
     print((b.stdout + b.stderr)[-1500:], file=sys.stderr)
     sys.exit(1)
 
