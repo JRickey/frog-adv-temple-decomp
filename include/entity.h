@@ -40,4 +40,6 @@ void EntityMover_Tick(u8 arg);
 
 void EntityParam_Apply(u32 arg);
 
+u32 Entity_IsInProximity(s32 idx);
+
 #endif /* GUARD_ENTITY_H */

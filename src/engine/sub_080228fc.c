@@ -73,7 +73,6 @@ void UpdateZone_Slots3Eto44(void)
     Entity_AdvanceAnimFrames(0x3e, 0x44);
 }
 
-extern int Entity_IsInProximity(u8 a0);
 extern void Entity_InitFromLayout(const void *a0, u8 a1);
 
 void SpawnNearbyEntities(void)

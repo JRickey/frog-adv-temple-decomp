@@ -1,4 +1,5 @@
 #include "game.h"
+#include "entity.h"
 #include "iwram.h"
 #include "macros.h"
 #include "types.h"
@@ -97,8 +98,6 @@ check8or11:
  * unreachable. The reference body in the NON_MATCHING block documents
  * intent for the phase-3 PC port.
  */
-
-extern u32 Entity_IsInProximity(s32 idx);
 
 #ifdef NON_MATCHING
 void Entity_UpdateVisibility(void)
