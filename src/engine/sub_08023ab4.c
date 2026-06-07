@@ -3,7 +3,6 @@
 
 extern void Entity_CheckProximityAndPlaySound(struct Entity *s, u8 idx, u8 halfW, u8 halfH);
 extern void Entity_FollowPath(const void *a0, s32 slot);
-extern void ModeControl_SetBit(void *p, s32 idx);
 extern void Entity_UpdateMovers(s32 a0, s32 a1);
 extern void Entity_AdvanceAnimFrames(s32 a0, s32 a1);
 

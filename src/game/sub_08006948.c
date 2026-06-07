@@ -1,4 +1,5 @@
 #include "macros.h"
+#include "iwram.h"
 #include "types.h"
 
 /* Two bit-flag leaves on an entity-record's u16 field at offset 0x2e — the

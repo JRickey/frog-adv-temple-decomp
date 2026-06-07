@@ -214,4 +214,6 @@ extern struct IwramAt6110 gIwram_6110;
 
 extern struct IwramAt5360 gIwram_5360;
 extern struct IwramAt6150 gIwram_6150;
+void ModeControl_SetBit(void *unused, s32 bits);
+
 #endif /* GUARD_IWRAM_H */

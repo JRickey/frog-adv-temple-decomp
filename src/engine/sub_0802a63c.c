@@ -10,7 +10,6 @@
 
 extern u8 RandRange(u8 range);
 extern void Sound_Play(u32 sound);
-extern void ModeControl_SetBit(struct IwramAt6110 *control, s32 slot);
 extern void Entity_Update(struct Entity *e);
 extern void EntityMover_Tick(u8 slot);
 extern void Entity_Init(struct Entity *p, u8 a, u16 x, u16 y, u8 actorId, u16 e, u8 f, u8 g, u8 state, u16 initFlags);

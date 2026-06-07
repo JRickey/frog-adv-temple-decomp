@@ -6,7 +6,6 @@ extern void Sound_Play(u32 effect);
 extern void StatusBar_Update(void);
 extern int __divsi3(int num, int den);
 extern void PadGrid_DeactivateEntityAtPos(s16 tileX, s16 tileY);
-extern void ModeControl_SetBit(void *unused, s32 bit);
 extern void Entity_AdvanceAnimFrames(s32 first, s32 last);
 
 void Entity_WalkCompactRecords(u8 baseSlot, u8 *pCount, u8 kind, u8 unused, u8 bitBase)

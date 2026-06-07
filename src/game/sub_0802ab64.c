@@ -88,7 +88,6 @@ void RoomEntities_Init(void)
     *(u32 *)(base + off) = gGameStuff._unk00;
 }
 
-extern void ModeControl_SetBit(void *p, s32 bits);
 extern u32 ModeControl_GetFlag(void *base, u32 selector, u32 bit);
 extern void ModeControl_ClearBit(void *base, u32 selector, u32 bit);
 extern void Sound_Play(u32 sound);

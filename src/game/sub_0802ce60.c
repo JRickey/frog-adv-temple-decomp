@@ -11,7 +11,6 @@
 
 extern int __divsi3(int num, int den);
 
-extern void ModeControl_SetBit(void *base, s32 bit);
 extern u32 ModeControl_GetFlag(void *base, u32 selector, u32 bit);
 extern void ModeControl_ClearBit(void *base, u32 selector, u32 bit);
 extern void CtrlFlags_SetBit(void *base, u32 selector, u32 bit);

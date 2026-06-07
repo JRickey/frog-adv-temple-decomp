@@ -11,7 +11,6 @@
 
 extern u32 RandRange(u8 range);
 extern u32 ModeControl_GetFlag(void *base, u32 selector, u32 bit);
-extern void ModeControl_SetBit(void *p, s32 idx);
 extern void Entity_Update(struct Entity *p);
 extern void EntityMover_Tick(u8 idx);
 

@@ -101,7 +101,6 @@ check8or11:
  */
 
 extern u32 Entity_IsInProximity(s32 idx);
-extern void ModeControl_SetBit(void *p, s32 idx);
 
 #ifdef NON_MATCHING
 void Entity_UpdateVisibility(void)
