@@ -55,7 +55,7 @@ void SaveMenu_ResetDispatcher(void)
     gIwram_5398 = 0;
     gIwram_3480._data[2] = 0;
     gIwram_3480._data[5] = 0;
-    gIwram_34A0._pad00 = 0;
+    gIwram_34A0._field_00 = 0;
 }
 
 void SaveMenu_DrawWorldInfoRow(u8 pane, const u8 *str)

@@ -57,5 +57,5 @@ void UiScreen_Init(void)
     REG_DISPCNT = DISPCNT_OBJ_1D | DISPCNT_BG3_ON;
 
     state->_data[0]++;
-    dispatch->_pad00 = zero;
+    dispatch->_field_00 = zero;
 }

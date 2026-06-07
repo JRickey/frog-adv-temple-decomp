@@ -32,7 +32,7 @@ void Dispatcher_ResetModeA(void)
     gIwram_5398 = 0;
     gIwram_3480._data[2] = 0;
     gIwram_3480._data[5] = 0;
-    gIwram_34A0._pad00 = 0;
+    gIwram_34A0._field_00 = 0;
 }
 
 /* Mode-reset helper at 0x0802023c — shares this compilation slice with

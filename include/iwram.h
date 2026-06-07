@@ -24,10 +24,10 @@ struct IwramAt3480 {
 };
 
 struct IwramAt34A0 {
-    u8 _pad00;
+    u8 _field_00;   /* +0: live selector byte, cleared alongside dispatchIdx by Dispatcher_ResetModeA/B */
     u8 dispatchIdx; /* +1: index into the ROM dispatch table at 0x08308ac8 (GameMode_Options) */
     u8 _pad02[6];
-    u32 _field_08;
+    u32 reentryFlag; /* +8: 0 = fresh entry (full BG reload); != 0 = returning sub-screen (lightweight) */
 };
 
 struct IwramAt34B0 {
@@ -39,10 +39,10 @@ struct IwramAt34B4 {
 };
 
 struct IwramAt34D0 {
-    u16 _field_00; /* +0x00: tilemap-cell X coord (sWinPoseSpriteCoords[idx*2] - 16) */
-    u16 _field_02; /* +0x02: tilemap-cell Y coord (sWinPoseSpriteCoords[idx*2+1] - 24) */
-    u8 _field_04;  /* +0x04: low byte of _field_00 source (pre-subtract) */
-    u8 _field_05;  /* +0x05: low byte of _field_02 source */
+    u16 targetX; /* +0x00: win-pose sprite X (sWinPoseSpriteCoords[idx*2] - 16) */
+    u16 targetY; /* +0x02: win-pose sprite Y (sWinPoseSpriteCoords[idx*2+1] - 24) */
+    u8 curX;     /* +0x04: X as a byte (init same value as targetX) */
+    u8 curY;     /* +0x05: Y as a byte (init same value as targetY) */
     u8 _pad06[2];
     u32 _field_08; /* +0x08: word written alongside _field_10 by WinPoseScreen_Update */
     u8 _pad0C[4];

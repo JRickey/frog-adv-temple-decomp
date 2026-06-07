@@ -38,7 +38,7 @@ void FileSelect_Init(void)
 
     gIwram_3480._unk14 = 0;
 
-    if (gIwram_34A0._field_08 == 0) {
+    if (gIwram_34A0.reentryFlag == 0) {
         Bg_InitMode0();
 
         REG_DMA3.src = (const void *)0x081dab98;
@@ -60,7 +60,7 @@ void FileSelect_Init(void)
 
         Screen_ClearBlocks(14);
 
-        flag = (gIwram_34A0._field_08 == 0);
+        flag = (gIwram_34A0.reentryFlag == 0);
         Screen_Install(flag, 29, 6, args, 2);
 
         REG_DISPCNT |= DISPCNT_BG3_ON;
@@ -75,7 +75,7 @@ void FileSelect_Init(void)
 
     SaveSlot_DrawAllSlots();
 
-    if (gIwram_34A0._field_08 != 0) {
+    if (gIwram_34A0.reentryFlag != 0) {
         const void *const *rec = sSceneRecordTable_308110[gIwram_34B0._data];
         Scene_DrawWindow(0, 6, rec[1], 28, 0, 1);
     }
@@ -138,7 +138,7 @@ void FileSelect_Update(void)
     if (gIwram_5398 == 32) {
         gIwram_5398 = 0;
         Sound_Play(0);
-        gIwram_34A0._field_08 = 0;
+        gIwram_34A0.reentryFlag = 0;
         Screen_InstallOamA(0, 30, 6, 2);
         gIwram_3480._data[2]++;
     } else if (gIwram_5398 != 0 && gIwram_5398 != 16 && gIwram_5398 != 64) {

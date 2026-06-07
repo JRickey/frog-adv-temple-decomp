@@ -172,7 +172,7 @@ void Menu25_HandleInput(void)
 
     if (input == 0x40) {
         FrogSelect_ValidateSelection();
-        gIwram_34A0._field_08 = 1;
+        gIwram_34A0.reentryFlag = 1;
         gIwram_5330._field_09 = 0x1B;
         state->_data[0] += 2;
         state->_unk14 = zero;
@@ -288,13 +288,13 @@ void Menu25_InstallBg(void)
 
     state = &gIwram_3480;
     state->_data[0] = 10;
-    if (gIwram_34A0._field_08 != 0) {
+    if (gIwram_34A0.reentryFlag != 0) {
         state->_unk14 = 0;
     }
 
     Screen_ClearBlocks(14);
 
-    field08 = gIwram_34A0._field_08;
+    field08 = gIwram_34A0.reentryFlag;
     count = (field08 != 0) ? 23 : 25;
     Screen_Install((field08 == 0), count, 6, args, 2);
 

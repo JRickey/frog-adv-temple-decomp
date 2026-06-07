@@ -35,18 +35,18 @@ void WinPoseScreen_Init(void)
     /* Read gIwram_3480._unk14 inline at every lookup: caching it in a local
      * lets agbcc CSE the index away, which diverges from the baserom's
      * reload-per-access. sWinPoseSpriteCoords packs (x, y) u16 pairs. */
-    gIwram_34D0._field_04 = sWinPoseSpriteCoords[gIwram_3480._unk14 * 2] - 16;
-    gIwram_34D0._field_05 = sWinPoseSpriteCoords[gIwram_3480._unk14 * 2 + 1] - 24;
-    gIwram_34D0._field_00 = sWinPoseSpriteCoords[gIwram_3480._unk14 * 2] - 16;
-    gIwram_34D0._field_02 = sWinPoseSpriteCoords[gIwram_3480._unk14 * 2 + 1] - 24;
+    gIwram_34D0.curX = sWinPoseSpriteCoords[gIwram_3480._unk14 * 2] - 16;
+    gIwram_34D0.curY = sWinPoseSpriteCoords[gIwram_3480._unk14 * 2 + 1] - 24;
+    gIwram_34D0.targetX = sWinPoseSpriteCoords[gIwram_3480._unk14 * 2] - 16;
+    gIwram_34D0.targetY = sWinPoseSpriteCoords[gIwram_3480._unk14 * 2 + 1] - 24;
     gIwram_34D0._field_1D = 3;
 
-    if (gIwram_34A0._field_08 == 0) {
+    if (gIwram_34A0.reentryFlag == 0) {
         s32 flag;
 
         Screen_ClearBlocks(14);
 
-        flag = (gIwram_34A0._field_08 == 0);
+        flag = (gIwram_34A0.reentryFlag == 0);
         Screen_Install(flag, 0x21, 6, args, 2);
 
         REG_DMA3.src = (void *)0x081e5c18;
@@ -179,7 +179,7 @@ void WinPoseScreen_Update(void)
         }
 
         REG_DISPCNT &= ~DISPCNT_OBJ_ON;
-        gIwram_34A0._field_08 = 1;
+        gIwram_34A0.reentryFlag = 1;
         Screen_InstallOamA(1, 23, 6, 2);
 
         gGameStuff.mode = GAME_MODE_ROUTER;
