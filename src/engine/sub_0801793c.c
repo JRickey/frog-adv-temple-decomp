@@ -18,12 +18,12 @@ void GameMode_Attract(void)
     *(u16 *)&gIwram_35E0._data[2] = 0;
 
     tmp = &gGameStuff;
-    step = tmp->_step24;
+    step = tmp->attractStep;
     gs = tmp;
     if (step == 2)
-        gs->_step24 = 0;
+        gs->attractStep = 0;
     else
-        gs->_step24 = step + 1;
+        gs->attractStep = step + 1;
 
     switch (step) {
     case 0:

@@ -6,7 +6,7 @@ extern void Sound_Reset(void);
 extern void SaveCommit(u8 a, void *b);
 
 /* Per-mode scene reset: marks the current pending mode as visited in
- * gGameStuff._unk0C (bitmap of seen modes), CpuFastSet-zeroes a 32-byte
+ * gGameStuff.unlockedWorlds (bitmap of seen modes), CpuFastSet-zeroes a 32-byte
  * VRAM region at 0x06010000 (OBJ tile 0), clears the 128-entry OAM
  * shadow at 0x030054a0 to {y=0xf0 (hidden), 0, 0, 0}, runs Sound_Reset,
  * then dispatches SaveCommit with a byte from 0x03003538 plus a table
@@ -33,7 +33,7 @@ void WorldMap_Init(void)
     u32 zero;
 
     if (g->sceneType != 0) {
-        g->_unk0C |= 1 << (g->sceneType - 1);
+        g->unlockedWorlds |= 1 << (g->sceneType - 1);
     }
 
     zero = 0;

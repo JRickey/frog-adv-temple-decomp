@@ -153,7 +153,7 @@ u32 LevelSelect_Enter(u8 arg)
 mode_ready:
     if (mode == 5) {
         i = 15;
-        bits = gGameStuff._unk0C;
+        bits = gGameStuff.unlockedWorlds;
         while (i >= 0) {
             if (((bits >> i) & 1) != 0) {
                 highest = i + 1;
@@ -171,7 +171,7 @@ mode_ready:
 
     if (mode == 4) {
         i = 15;
-        bits = gGameStuff._unk0C;
+        bits = gGameStuff.unlockedWorlds;
         while (i >= 0) {
             if (((bits >> i) & 1) != 0) {
                 highest = i + 1;

@@ -20,12 +20,12 @@
  *                              it; it keys the sEntityProc* tables in
  *                              src/data/entity_dispatch.c. The Set*Mode_NN
  *                              helpers set this scene id.
- *  offset 12  `_unk0C`       - unlocked-worlds bitmap (set by WorldMap_Init;
+ *  offset 12  `unlockedWorlds`       - unlocked-worlds bitmap (set by WorldMap_Init;
  *                              read by GetHighestUnlockedWorld to bound the world map).
  *  offset 28  `rngSeed`      - LCG state stepped by RandRange
  *                              (seed = seed * 109 + 1021).
  *  offset 34  `_unk22`       - halfword; written by TitleLogo_Display.
- *  offset 36  `_step24`      - 3-step cycle counter (0→1→2→0) used by
+ *  offset 36  `attractStep`      - 3-step cycle counter (0→1→2→0) used by
  *                              GameMode_Attract to index gHandlerTable_08308028
  *                              and select a sceneType value.
  */
@@ -70,7 +70,7 @@ typedef struct GameStuff {
     u8 mode;
     u8 sceneType;
     u8 _pad0B[1];
-    u32 _unk0C;
+    u32 unlockedWorlds;
     u8 _unk10;
     u8 _pad11[3];
     u32 _unk14;
@@ -79,7 +79,7 @@ typedef struct GameStuff {
     u32 rngSeed;
     u8 _pad20[2];
     u16 _unk22;
-    u8 _step24;
+    u8 attractStep;
 } GameStuff;
 
 #define gGameStuff (*(GameStuff *)0x03005330)
