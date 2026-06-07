@@ -296,7 +296,7 @@ NAKED u32 Scene_InitScan(u8 *arg)
  * gIwram_5398, then either runs a one-time init (when *arg == 0) or a
  * flag-toggle (when gEntities[0].status has bit 0x8000 set). The shared
  * tail dispatches two entity-handler tables (sEntityProcB/D) by
- * gGameStuff.pendingMode, advances the subsystems, masks VBlank, commits the
+ * gGameStuff.sceneType, advances the subsystems, masks VBlank, commits the
  * deferred OAM + BG-scroll state, then runs a late state-check.
  *
  * agbcc levers that carry the match (all load-bearing register pins below):
@@ -307,7 +307,7 @@ NAKED u32 Scene_InitScan(u8 *arg)
  *     else-branch `+1`) and the signed `== 0` test stay separate loads.
  *   - The handler dispatch reads gGameStuff through the linker-assigned
  *     gIwram_5330 symbol with an explicit `(idx << 2) + table` so agbcc
- *     emits the baserom's pendingMode chain (same idiom as Game_RunEntityFrame).
+ *     emits the baserom's sceneType chain (same idiom as Game_RunEntityFrame).
  *   - The else-branch flag rewrite is staged through an r0-pinned temp
  *     (`t = 2; t |= flags; t &= 0x7fff;`) so the mask result lands in r0
  *     and `& 0x7fff` loads the pooled constant instead of a shift pair.
@@ -378,17 +378,17 @@ u32 Entity_UpdateFrame(u8 *arg, u8 kind)
     procs = sEntityProcB;
 
     gs = (GameStuff *)&gIwram_5330;
-    idx = gs->pendingMode;
+    idx = gs->sceneType;
     offset = ((u32)idx << 2) + (u32)procs;
     ((EntityProc)(*(const u32 *)offset))();
 
     procs = sEntityProcD;
-    idx = gs->pendingMode;
+    idx = gs->sceneType;
     offset = ((u32)idx << 2) + (u32)procs;
     ((EntityProc)(*(const u32 *)offset))();
 
     lut = sEntitySubtypeLut;
-    idx = gs->pendingMode;
+    idx = gs->sceneType;
     Scroll_UpdateCamera(*(const u8 *)(idx + (u32)lut));
 
     Entity_UpdateVisibility();
@@ -396,7 +396,7 @@ u32 Entity_UpdateFrame(u8 *arg, u8 kind)
     WaitVblank();
 
     REG_IE &= ~IRQ_VBLANK;
-    Scroll_RunSubtypeTicks(*(const u8 *)(gs->pendingMode + (u32)lut));
+    Scroll_RunSubtypeTicks(*(const u8 *)(gs->sceneType + (u32)lut));
     Game_CommitRender();
     CpuFastSet((void *)0x030054a0, (void *)0x07000000, 0x100);
 

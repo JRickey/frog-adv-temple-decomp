@@ -55,7 +55,7 @@ void SceneLoop_17(void)
 
         switch (state) {
         case 0:
-            gGameStuff.pendingMode = 10;
+            gGameStuff.sceneType = 10;
             EntityScript_BuildSlotData(6, buf);
             state = 1;
             counter = 0;
@@ -154,7 +154,7 @@ void SceneLoop_17(void)
 
 void Scene17_LoadPart(void *buf)
 {
-    gGameStuff.pendingMode = 10;
+    gGameStuff.sceneType = 10;
     EntityScript_BuildSlotData(6, buf);
 }
 

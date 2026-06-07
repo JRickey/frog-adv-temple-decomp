@@ -8,12 +8,12 @@
 
 /* Per-frame entity dispatch tail used by the game-mode handlers.
  *
- * Reads gGameStuff.pendingMode (the byte at offset 10 — used as a
+ * Reads gGameStuff.sceneType (the byte at offset 10 — used as a
  * global entity-type / pose index that also keys the
  * sEntityProc{A..E} / sEntitySubtypeLut tables in
  * src/data/entity_dispatch.c). Calls Game_UpdateSubsystems once, then
  * dispatches through sEntityProcB, sEntitySubtypeLut, sEntityProcD
- * by pendingMode, and finishes with Entity_UpdateVisibility + Entity_Advance.
+ * by sceneType, and finishes with Entity_UpdateVisibility + Entity_Advance.
  *
  * The two `sEntityProcB[id]()` / `sEntityProcD[id]()` indirect calls
  * go through libgcc's _call_via_r0 helper from libgcc.a:_call_via_rX.o;
@@ -23,7 +23,7 @@
  * Uses the same explicit table-offset idiom as Entity_DispatchBC: load the
  * gGameStuff base through the linker-assigned IWRAM symbol, keep the
  * table base separate from the index, then call the loaded function
- * pointer. That gives agbcc the baserom's r2/r1/r4 pendingMode chain
+ * pointer. That gives agbcc the baserom's r2/r1/r4 sceneType chain
  * without register pins.
  */
 
@@ -51,7 +51,7 @@ void Game_RunEntityFrame(void)
 
     procs = sEntityProcB;
     base = (GameStuff *)&gIwram_5330;
-    idx = base->pendingMode;
+    idx = base->sceneType;
     offset = ((u32)idx << 2) + (u32)procs;
     ((GameProc)(*(const u32 *)offset))();
 
@@ -60,12 +60,12 @@ void Game_RunEntityFrame(void)
         u32 subtype;
 
         lut = sEntitySubtypeLut;
-        subtype = base->pendingMode;
+        subtype = base->sceneType;
         Scroll_UpdateCamera(*(const u8 *)(subtype + (u32)lut));
     }
 
     procs = sEntityProcD;
-    idx = base->pendingMode;
+    idx = base->sceneType;
     offset = ((u32)idx << 2) + (u32)procs;
     ((GameProc)(*(const u32 *)offset))();
 
@@ -102,7 +102,7 @@ void Game_ForceRender(void)
 
     REG_IE &= ~IRQ_VBLANK;
     lut = sEntitySubtypeLut;
-    idx = ((GameStuff *)&gIwram_5330)->pendingMode;
+    idx = ((GameStuff *)&gIwram_5330)->sceneType;
     Scroll_RunSubtypeTicks(*(const u8 *)(idx + (u32)lut));
     Game_CommitRender();
     CpuFastSet((void *)0x030054a0, (void *)0x07000000, 0x100);

@@ -34,7 +34,7 @@ void Init1(void)
     gGameStuff._unk10 = 0;
     gGameStuff._unk18 = 0;
     gGameStuff._unk14 = 0;
-    gGameStuff.pendingMode = 0;
+    gGameStuff.sceneType = 0;
     gGameStuff._unk04 = 0;
     gIwram_3480._data[5] = 0;
     gIwram_3480._data[0] = 0;

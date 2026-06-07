@@ -11,7 +11,7 @@
  * cluster and looks like another mode dispatcher.
  *
  * Shape sketch (verified by baserom objdump):
- *   EntityProbe_SetMode2(a, b)         — sets gGameStuff.pendingMode = 2 and calls
+ *   EntityProbe_SetMode2(a, b)         — sets gGameStuff.sceneType = 2 and calls
  *                                Entity_UpdateHitboxSlots(a, b, 3).
  *   EntityProbe_ResetAndDispatch(a, b)         — tail of an init/reset chain (5 subsystem
  *                                resets) followed by Scene09_UpdatePlayerTile(a, b)
@@ -34,7 +34,7 @@ extern void Game_FrameEnd(void);
 
 void EntityProbe_SetMode2(void *a, void *b)
 {
-    gGameStuff.pendingMode = 2;
+    gGameStuff.sceneType = 2;
     Entity_UpdateHitboxSlots(a, b, 3);
 }
 

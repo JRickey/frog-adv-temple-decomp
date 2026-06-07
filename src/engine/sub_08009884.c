@@ -29,7 +29,7 @@ void Player_HandleTileCollision(u8 arg)
         if ((s8)gIwram_35E0._data[4] >= gIwram_6110.threshold) {
             gIwram_35E0._field_10 |= 0x100;
         } else {
-            u8 mod = gGameStuff.pendingMode % 3;
+            u8 mod = gGameStuff.sceneType % 3;
             if (mod == 1) {
                 Scene08_MapScreenInit(5);
             } else if (mod == 2) {

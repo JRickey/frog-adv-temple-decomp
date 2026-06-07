@@ -13,11 +13,11 @@
  *       == 0 -> sub_0800793C(24, 24)   (intro / spawn)
  *       == 2 -> Player_UpdateHorizontalInput(2)
  *   - sub_08008174() + Player_UpdateTileCache() + Entity_UpdateSlot1Status() — subsystem ticks.
- *   - Handler dispatch through sEntityProcB[gGameStuff.pendingMode]().
+ *   - Handler dispatch through sEntityProcB[gGameStuff.sceneType]().
  *   - Again branch on 0x03006110[+16]:
- *       == 0 -> Scroll_UpdateCamera(sEntitySubtypeLut[pendingMode])
- *       else -> sub_08002EE8((s8)sEntitySubtypeLut[pendingMode], arg)
- *   - Handler dispatch through sEntityProcD[gGameStuff.pendingMode](),
+ *       == 0 -> Scroll_UpdateCamera(sEntitySubtypeLut[sceneType])
+ *       else -> sub_08002EE8((s8)sEntitySubtypeLut[sceneType], arg)
+ *   - Handler dispatch through sEntityProcD[gGameStuff.sceneType](),
  *     then Entity_UpdateVisibility / Entity_Advance / WaitVblank / Game_ForceRender /
  *     Entity_CheckAllCollisions / Player_CheckTileEvents.
  *   - Late-tick check: when neither bit 4 of gIwram_3720[+0x34] is set
@@ -101,7 +101,7 @@ void GameMode_SceneTick(void *arg)
         register u8 id asm("r2");
         register u32 offset asm("r0");
 
-        id = g->pendingMode;
+        id = g->sceneType;
         offset = id << 2;
         offset += (u32)procs;
         (*(GameProc *)offset)();
@@ -114,13 +114,13 @@ void GameMode_SceneTick(void *arg)
         if (*(u32 *)(p6110 + 16) == 0) {
             const volatile u8 *lut = sEntitySubtypeLut;
 
-            g = (GameStuff *)(u32)g->pendingMode;
+            g = (GameStuff *)(u32)g->sceneType;
             Scroll_UpdateCamera(lut[(u32)g]);
         } else {
             const volatile u8 *lut = sEntitySubtypeLut;
             s32 subtype;
 
-            g = (GameStuff *)(u32)g->pendingMode;
+            g = (GameStuff *)(u32)g->sceneType;
             subtype = lut[(u32)g];
             subtype <<= 24;
             subtype >>= 24;
@@ -137,7 +137,7 @@ void GameMode_SceneTick(void *arg)
             register u8 id asm("r3");
             register u32 offset asm("r0");
 
-            id = gTail->pendingMode;
+            id = gTail->sceneType;
             offset = id << 2;
             offset += (u32)procsD;
             (*(GameProc *)offset)();

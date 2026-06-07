@@ -48,7 +48,7 @@ void Scene11_AttractModeMain(void)
         case 0: {
             void *obj;
             obj = frame.r4_obj;
-            gGameStuff.pendingMode = 4;
+            gGameStuff.sceneType = 4;
             Entity_UpdateHitboxSlots(frame.sp_buf, obj, 4);
             frame.localState = 1;
             frame.spByte = 0;
@@ -163,12 +163,12 @@ void Scene11_AttractModeMain(void)
     } while (gGameStuff.mode == GAME_MODE_SCENE_11 || gGameStuff.mode == GAME_MODE_ATTRACT);
 }
 
-/* Mode-4 re-arm thunk: queues pendingMode = 4, then forwards its two
+/* Mode-4 re-arm thunk: queues sceneType = 4, then forwards its two
  * (untouched) register arguments plus the same literal 4 to Entity_UpdateHitboxSlots.
  * agbcc reuses the 4 it materialised for the strb as the third call arg,
  * so the constant is loaded once. */
 void Scene11_ArmModeTransition(void *a, void *b)
 {
-    gGameStuff.pendingMode = 4;
+    gGameStuff.sceneType = 4;
     Entity_UpdateHitboxSlots(a, b, 4);
 }

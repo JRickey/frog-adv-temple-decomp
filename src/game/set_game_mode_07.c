@@ -2,5 +2,5 @@
 
 void SetGameMode_07(void)
 {
-    gGameStuff.pendingMode = 7;
+    gGameStuff.sceneType = 7;
 }

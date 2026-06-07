@@ -52,7 +52,7 @@ void Scene12_Main(void)
         case 0: {
             void *obj;
             obj = frame.r4_obj;
-            gGameStuff.pendingMode = 5;
+            gGameStuff.sceneType = 5;
             EntityScript_BuildSlotData(0, frame.obj0);
             Entity_UpdateHitboxSlots(frame.buf, obj, 5);
             frame.state = 1;
@@ -175,7 +175,7 @@ void Scene12_Main(void)
 
 void Scene12_InitPlayState(void *buf, void *r4_obj, u32 kind)
 {
-    gGameStuff.pendingMode = 5;
+    gGameStuff.sceneType = 5;
     EntityScript_BuildSlotData(0, buf);
     Entity_UpdateHitboxSlots(r4_obj, (void *)kind, 5);
 }

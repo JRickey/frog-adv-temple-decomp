@@ -16,7 +16,7 @@ void EntityParam_Reset(void)
 
     p = &gGameStuff;
 
-    m = p->pendingMode;
+    m = p->sceneType;
     if ((u8)(m % 3) == 0)
         return;
     if (m == 16)
@@ -27,7 +27,7 @@ void EntityParam_Reset(void)
     if (gIwram_6110.state == 1) {
         const u32 *table = sEntityParamTable;
         /* Reuse the now-dead base pointer so agbcc overwrites r5 with the table index. */
-        p = (GameStuff *)(u32)p->pendingMode;
+        p = (GameStuff *)(u32)p->sceneType;
         value = table[(u32)p];
     }
     Sound_PlayIfEnabled(value);
@@ -52,7 +52,7 @@ int Scene_SelectEntityLimit(void)
         break;
     }
 
-    if ((u8)(p->pendingMode - 15) <= 1)
+    if ((u8)(p->sceneType - 15) <= 1)
         result = 7;
 
     Sound_DrainIfActive();
@@ -93,16 +93,16 @@ void Entity_DispatchBC(void)
     Game_UpdateSubsystems();
 
     /* sEntityProcB dispatch — t1 loads first (r1), then base (r4).
-     * idx (r2) holds pendingMode temporarily; shift and add route through r0
+     * idx (r2) holds sceneType temporarily; shift and add route through r0
      * to match the baserom's lsls r0,r2,#2 + adds r0,r0,r1 encoding. */
     t1 = sEntityProcB;
     base = (GameStuff *)&gIwram_5330;
-    idx = base->pendingMode;
+    idx = base->sceneType;
     offset = ((u32)idx << 2) + (u32)t1;
     ((GameProc)(*(const u32 *)offset))();
 
     t1 = sEntityProcC;
-    idx = base->pendingMode;
+    idx = base->sceneType;
     offset = ((u32)idx << 2) + (u32)t1;
     ((GameProc)(*(const u32 *)offset))();
 
@@ -110,7 +110,7 @@ void Entity_DispatchBC(void)
         const u8 *lut;
         u32 lastidx;
         lut = sEntitySubtypeLut;
-        lastidx = base->pendingMode;
+        lastidx = base->sceneType;
         Scroll_UpdateCamera(*(const u8 *)(lastidx + (u32)lut));
     }
 

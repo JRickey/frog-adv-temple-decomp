@@ -63,7 +63,7 @@ void SceneLoop_22(void)
         default:
             goto tail;
         case 0:
-            gGameStuff.pendingMode = 15;
+            gGameStuff.sceneType = 15;
             handle = Scene_SelectEntityLimit();
             frame.state = 1;
             frame.accept = 0;

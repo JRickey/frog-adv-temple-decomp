@@ -11,7 +11,7 @@ struct BlitState {
 };
 
 /* Blits a cols x rows block of u16 tiles from the ROM cell table
- * (gFrameCellTable[(gGameStuff.pendingMode - 1) * 5][frame][cell]) into one of
+ * (gFrameCellTable[(gGameStuff.sceneType - 1) * 5][frame][cell]) into one of
  * three EWRAM banks selected by `bank`, at (dstX, dstY) scaled by the scene
  * stride at gIwram_60A0+26, then tail-calls ScaleAnim_BlitFrameToVram to flush the bank to
  * VRAM. Twin of the (already-matching) sub_08012BC4; like it, the register pins
@@ -56,7 +56,7 @@ void BlitFrameCell(u32 frameArg, u32 rowsArg, u32 colsArg, u32 dstXArg, u32 dstY
 
     {
         const u16 ****table = gFrameCellTable_08307EAC;
-        u32 idx = gGameStuff.pendingMode - 1;
+        u32 idx = gGameStuff.sceneType - 1;
         const u16 **frameTable = table[idx * 5][frame];
         frame = (u32)frameTable[cell];
     }

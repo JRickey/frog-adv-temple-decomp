@@ -40,7 +40,7 @@ void ShowWinLoseMessage(u8 kind)
     u8 x;
     u8 idx;
     u32 startFrame;
-    register u8 pendingMode asm("r5");
+    register u8 sceneType asm("r5");
     register u16 savedPal asm("r9");
     register u32 yArg asm("r8");
 
@@ -48,9 +48,9 @@ void ShowWinLoseMessage(u8 kind)
     text_0800e76c();
     savedPal = BG_PAL_1DA;
     yArg = 10;
-    pendingMode = gGameStuff.pendingMode;
+    sceneType = gGameStuff.sceneType;
 
-    if (pendingMode == 15)
+    if (sceneType == 15)
         goto epilogue;
 
     switch (kind) {
@@ -93,11 +93,11 @@ void ShowWinLoseMessage(u8 kind)
         goto done;
 
     case 2:
-        if (pendingMode % 3 != 0 || pendingMode == 0) {
-            if (pendingMode != 16)
+        if (sceneType % 3 != 0 || sceneType == 0) {
+            if (sceneType != 16)
                 goto done;
         }
-        idx = (u8)(pendingMode / 3 - 1);
+        idx = (u8)(sceneType / 3 - 1);
         str = WORLD_CLEARED_TABLES[gIwram_34B0._data][idx];
         len = 0;
         i = 0;

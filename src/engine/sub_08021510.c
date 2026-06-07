@@ -108,7 +108,7 @@ void Entity_WalkCompactRecords(u8 baseSlot, const void *pCount, u8 kind, void *u
                 }
                 goto call_effect;
             case 4:
-                if (gGameStuff.pendingMode == 15) {
+                if (gGameStuff.sceneType == 15) {
                     Sound_Play(123);
                 } else {
                     Sound_Play(7);

@@ -32,12 +32,12 @@ extern const u16 sIconFramePal4[16], sIconFrameTiles4[80];
     (void)REG_DMA3.cnt
 
 /* Refreshes the on-screen animated icon for the current scene type.
- * gGameStuff.pendingMode (the scene-type id) selects which of the five
+ * gGameStuff.sceneType (the scene-type id) selects which of the five
  * icon frames to upload; scene type 15 reads a finer animation state
  * from gIwram_6110.spawnMask. */
 void Icon_LoadFrameByMode(void)
 {
-    switch (gGameStuff.pendingMode - 1) {
+    switch (gGameStuff.sceneType - 1) {
     case 0:
     case 1:
         LOAD_ICON_FRAME(1);

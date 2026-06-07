@@ -69,7 +69,7 @@ loop:
         game = &gGameStuff;
         asm("" : "+r"(game));
         zero = 0;
-        game->pendingMode = 6;
+        game->sceneType = 6;
     }
         r7 = Scene_SelectEntityLimit();
         *statep = 1;
@@ -138,10 +138,10 @@ loop:
             proc = (void (**)(void))0x080C0CB8;
             asm("" : "+r"(proc));
             game = &gGameStuff;
-            proc[game->pendingMode]();
+            proc[game->sceneType]();
             proc = (void (**)(void))0x080C0D40;
             asm("" : "+r"(proc));
-            proc[game->pendingMode]();
+            proc[game->sceneType]();
         }
         Entity_UpdateVisibility();
         Entity_Advance();

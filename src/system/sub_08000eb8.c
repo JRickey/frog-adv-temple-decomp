@@ -12,14 +12,14 @@
  * The function maintains a 1-byte sub-state on the stack (at sp+0x141)
  * and dispatches on it via a computed jump through an inline 9-entry
  * table. Cases 0..8 each advance the sub-state, sometimes invoking
- * subsystem callees and setting gGameStuff.pendingMode / gGameStuff._unk14.
+ * subsystem callees and setting gGameStuff.sceneType / gGameStuff._unk14.
  * After each case the function re-checks gGameStuff.mode: if it's still
  * 9 or 24 the loop continues with another Sound_ServiceQueue (per-frame tick
  * / VBlank wait); otherwise control falls through to the epilogue.
  *
  * Sub-state behaviour, mirroring Scene15_Main (mode 15/24) with
  * mode-9-specific callbacks and constants:
- *   0 -> sets gGameStuff.pendingMode = 2; Entity_UpdateHitboxSlots(sp_buf, &r4_obj, 3)
+ *   0 -> sets gGameStuff.sceneType = 2; Entity_UpdateHitboxSlots(sp_buf, &r4_obj, 3)
  *        (a 3-arg dispatch); substate = 1; clears sp[+0x140].
  *   1 -> RunFadeTransition(&sp[+0x140], 0x08000d5d); on accept advances to
  *        2, clears gGameStuff._unk14 and sp[+0x140], then runs the
@@ -141,7 +141,7 @@ void Scene09_Run(void)
 
         switch (localState) {
         case 0:
-            gGameStuff.pendingMode = 2;
+            gGameStuff.sceneType = 2;
             Entity_UpdateHitboxSlots(sp_buf, r4_obj, 3);
             localState = 1;
             spByte = 0;

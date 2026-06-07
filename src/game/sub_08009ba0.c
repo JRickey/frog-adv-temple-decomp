@@ -17,7 +17,7 @@ u8 Player_CheckSpecialTileMatch(void)
     s16 needleX;
     u8 i;
 
-    if (gGameStuff.pendingMode != 1)
+    if (gGameStuff.sceneType != 1)
         goto end;
     if (gIwram_6110.state != 1)
         goto end;
@@ -79,16 +79,16 @@ u32 Scene_EntityTick(u8 *flag)
         Entity_SpawnFromRecord(gIwram_35E0._field_5);
         {
             register const u32 *procA asm("r1");
-            register u8 pendingMode asm("r2");
+            register u8 sceneType asm("r2");
             register u32 offset asm("r0");
             procA = sEntityProcA;
-            pendingMode = game->pendingMode;
-            offset = ((u32)pendingMode << 2) + (u32)procA;
+            sceneType = game->sceneType;
+            offset = ((u32)sceneType << 2) + (u32)procA;
             ((void (*)(void))(*(const u32 *)offset))();
         }
         if (game->mode == GAME_MODE_ATTRACT) {
             game->mode = GAME_MODE_ROUTER;
-            game->pendingMode = 0;
+            game->sceneType = 0;
             gIwram_3480._data[0] = 4;
             return 0;
         }
@@ -120,16 +120,16 @@ void EntityDispatch_RunFrame(void)
 
     p = &gGameStuff;
 
-    /* The `!= 16` read is volatile-qualified so agbcc re-loads pendingMode after the
+    /* The `!= 16` read is volatile-qualified so agbcc re-loads sceneType after the
      * __umodsi3 call instead of caching it in a callee-saved reg across the BL; that
      * keeps the base in r4 (re-read each time), matching the baserom. */
-    if ((u8)(p->pendingMode % 3) != 0 && ((volatile GameStuff *)p)->pendingMode != 16) {
+    if ((u8)(p->sceneType % 3) != 0 && ((volatile GameStuff *)p)->sceneType != 16) {
         value = 0;
         Sound_DrainIfActive();
         if (gIwram_6110.state == 1) {
             const u32 *table = sEntityParamTable;
             /* Reuse the now-dead base pointer so agbcc overwrites r4 with the index. */
-            p = (GameStuff *)(u32)p->pendingMode;
+            p = (GameStuff *)(u32)p->sceneType;
             value = table[(u32)p];
         }
         Sound_PlayIfEnabled(value);
@@ -147,26 +147,26 @@ void EntityDispatch_RunFrame(void)
 
         procC = sEntityProcC;
         base = &gGameStuff;
-        idx1 = base->pendingMode;
+        idx1 = base->sceneType;
         offset = ((u32)idx1 << 2) + (u32)procC;
         ((GameProc)(*(const u32 *)offset))();
 
         {
             register const u8 *lut asm("r0");
             lut = sEntitySubtypeLut;
-            idx2 = base->pendingMode;
+            idx2 = base->sceneType;
             Scroll_UpdateCamera(*(const u8 *)(idx2 + (u32)lut));
         }
 
         {
             register const u32 *procA asm("r1");
             procA = sEntityProcA;
-            idx2 = base->pendingMode;
+            idx2 = base->sceneType;
             offset = ((u32)idx2 << 2) + (u32)procA;
             ((GameProc)(*(const u32 *)offset))();
         }
 
-        idx1 = base->pendingMode;
+        idx1 = base->sceneType;
         offset = ((u32)idx1 << 2) + (u32)procC;
         ((GameProc)(*(const u32 *)offset))();
 
@@ -179,7 +179,7 @@ void EntityDispatch_RunFrame(void)
         {
             register const u32 *procB asm("r1");
             procB = sEntityProcB;
-            idx2 = base->pendingMode;
+            idx2 = base->sceneType;
             offset = ((u32)idx2 << 2) + (u32)procB;
             ((GameProc)(*(const u32 *)offset))();
         }

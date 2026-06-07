@@ -46,7 +46,7 @@ void SceneLoop_16(void)
 
         switch (state) {
         case 0:
-            gGameStuff.pendingMode = 9;
+            gGameStuff.sceneType = 9;
             r6 = Scene_SelectEntityLimit();
             state = 1;
             secondary = 0;

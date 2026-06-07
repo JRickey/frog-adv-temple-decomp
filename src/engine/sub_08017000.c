@@ -38,7 +38,7 @@ void FrogStatusBar_Update(void)
 
     acc = 1;
 
-    if (gGameStuff.pendingMode == 3)
+    if (gGameStuff.sceneType == 3)
         return;
 
     diff = *(u32 *)&gGameStuff - gIwram_6100.field4;
@@ -69,7 +69,7 @@ void FrogStatusBar_Update(void)
 
     if ((s8)gIwram_35E0._data[4] < ctrl->threshold)
         goto phase2;
-    if (gGameStuff.pendingMode == 15)
+    if (gGameStuff.sceneType == 15)
         goto phase2;
     Icon_DmaUpdateSprite();
     return;

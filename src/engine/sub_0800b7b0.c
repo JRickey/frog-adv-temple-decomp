@@ -22,7 +22,7 @@ void Entity_UpdateHitboxSlots(void *slotsArg, void *outArg, s8 type)
     register s32 typeIndex asm("r4");
     s32 iShift;
     register s32 slotShift asm("r2");
-    u32 pendingMode;
+    u32 sceneType;
     u32 cleared;
     s32 pointCount;
 
@@ -64,8 +64,8 @@ void Entity_UpdateHitboxSlots(void *slotsArg, void *outArg, s8 type)
 
         game = &gGameStuff;
         iShift = slotShift;
-        pendingMode = game->pendingMode;
-        if (pendingMode == 1) {
+        sceneType = game->sceneType;
+        if (sceneType == 1) {
             s32 branchType;
             u32 offset;
             const s16 *pt;

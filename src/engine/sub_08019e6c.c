@@ -190,7 +190,7 @@ extern void Entity_Advance(void);
 extern void Game_ForceRender(void);
 
 /* Win-pose / level-transition entry. Reads the transition state byte at
- * 0x03003540: state 0 drives the win-pose camera from gGameStuff.pendingMode,
+ * 0x03003540: state 0 drives the win-pose camera from gGameStuff.sceneType,
  * state 2 from the highest live world flag (GetHighestUnlockedWorld). Seeds the player
  * sprite at the chosen screen coords, primes the gIwram_6110 mode-control
  * block (the two flagBank words are set to 0xFFFFFFFF, not -1, so each pair
@@ -208,7 +208,7 @@ void WinPose_Init(void)
 
     switch (*(u8 *)0x03003540) {
     case 0:
-        idx = gGameStuff.pendingMode;
+        idx = gGameStuff.sceneType;
         break;
     case 2:
         idx = (u8)(GetHighestUnlockedWorld() + 1);
@@ -229,7 +229,7 @@ void WinPose_Init(void)
     x = coords[idx * 2];
     y = *(const u16 *)((u32)coords + ((idx * 2 + 1) << 1));
 
-    gGameStuff.pendingMode = 0;
+    gGameStuff.sceneType = 0;
     ModeControl_Init(&gIwram_6110, 20, 2, sUnkPtrPair_82F998C, 1, 0);
 
     EntityPool_Reset();

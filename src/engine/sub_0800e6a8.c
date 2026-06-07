@@ -23,7 +23,7 @@ u8 Scene_FadeUpdate(void)
     }
 
     if (*(u8 *)0x03005328 == 0) {
-        switch (gGameStuff.pendingMode) {
+        switch (gGameStuff.sceneType) {
         case 1:
         case 2:
             break;
@@ -44,7 +44,7 @@ u8 Scene_FadeUpdate(void)
 
 void text_0800e76c(void)
 {
-    switch (gGameStuff.pendingMode) {
+    switch (gGameStuff.sceneType) {
     case 1:
     case 2:
         break;
@@ -79,7 +79,7 @@ void text_0800e76c(void)
 
 void SetModeBlendRegs(void)
 {
-    switch (gGameStuff.pendingMode) {
+    switch (gGameStuff.sceneType) {
     case 1:
     case 2:
         break;

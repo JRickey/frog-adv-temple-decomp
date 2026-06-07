@@ -14,11 +14,11 @@ extern void Sound_Reset(void);
  * bit 1 (mask 0xFD) of the byte at 0x03003570 (gStructAt3003570.flags
  * — see src/game/sub_08020b30.c).
  *
- * First dispatch on gGameStuff.pendingMode (1..16; out-of-range = no-op):
+ * First dispatch on gGameStuff.sceneType (1..16; out-of-range = no-op):
  *   modes 3, 6, 9, 12, 16 → Sound_PlayIfEnabled(1)
  *   all others 1..16     → Sound_PlayIfEnabled(2)
  *
- * Second dispatch on gGameStuff.pendingMode (1..16; out-of-range = no-op):
+ * Second dispatch on gGameStuff.sceneType (1..16; out-of-range = no-op):
  *   modes 3, 6, 9, 12, 16 → ShowWinLoseMessage(2)
  *   mode 15              → (skipped)
  *   all others 1..16     → ShowWinLoseMessage(1)
@@ -27,8 +27,8 @@ extern void Sound_Reset(void);
  *
  * Matching notes (old_agbcc):
  *   - gGameStuff base is cached across the three opening BLs so
- *     pendingMode materializes without a fresh pool load.
- *   - The second dispatch reads gGameStuff.pendingMode via the macro
+ *     sceneType materializes without a fresh pool load.
+ *   - The second dispatch reads gGameStuff.sceneType via the macro
  *     (fresh pool load), not via the cached pointer — baserom reloads
  *     the base address before the second ldrb.
  *   - Each switch uses an explicit dense 1..16 case list so old_agbcc
@@ -66,7 +66,7 @@ void Game_FrameEnd(void)
         p1->flags = t;
     }
 
-    switch (g->pendingMode) {
+    switch (g->sceneType) {
     case 1:
     case 2:
     case 4:
@@ -91,7 +91,7 @@ void Game_FrameEnd(void)
         break;
     }
 
-    switch (gGameStuff.pendingMode) {
+    switch (gGameStuff.sceneType) {
     case 1:
     case 2:
     case 4:

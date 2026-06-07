@@ -39,7 +39,7 @@ typedef struct ScrollBlitState {
     u16 width;    /* +0x32 */
 } ScrollBlitState;
 
-/* romTable[pendingMode-1] (20-byte stride). +0 points at the scroll record
+/* romTable[sceneType-1] (20-byte stride). +0 points at the scroll record
  * array (also passed in as `records`), +12 is the per-direction step lut:
  * u8 pairs [n*2] = start index, [n*2+1] = limit. */
 typedef struct ScrollModeEntry {
@@ -72,7 +72,7 @@ void Scroll_TickBlitDir(void *records, u8 n)
     if (((scroll->active >> dir) & 1) == 0)
         return;
 
-    pm1 = gGameStuff.pendingMode - 1;
+    pm1 = gGameStuff.sceneType - 1;
     {
         /* Form (romTable + 12) as a held field-column base before adding the
          * scaled index, matching the baserom's `adds r1,#12; adds r0,r0,r1`. */
@@ -183,7 +183,7 @@ void Scroll_TickBlitDir(void *records, u8 n)
 
     {
         const u8 *const *col2 = (const u8 *const *)((char *)romTable + 12);
-        const u8 *lut2 = *(const u8 *const *)((char *)col2 + (gGameStuff.pendingMode - 1) * 20);
+        const u8 *lut2 = *(const u8 *const *)((char *)col2 + (gGameStuff.sceneType - 1) * 20);
         if (dirStep[dir] < lut2[n2 + 1] - 1) {
             dirStep[dir]++;
             Scroll_PrepareBlitWork(recordsReg, dir, 0);
@@ -194,11 +194,11 @@ void Scroll_TickBlitDir(void *records, u8 n)
     scroll->active = 0;
 
 refresh:
-    if (gGameStuff.pendingMode != 11)
+    if (gGameStuff.sceneType != 11)
         SoundEntry_Play(11);
 
     if (scroll->active == 0) {
-        if (gGameStuff.pendingMode != 11) {
+        if (gGameStuff.sceneType != 11) {
             SoundEntry_Stop(11);
             Sound_Play(0x82);
         }

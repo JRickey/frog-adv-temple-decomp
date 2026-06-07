@@ -104,7 +104,7 @@ void InitCharacterBgGraphics(void)
     dma->cnt = DMA_ENABLE | 0x100;
     (void)dma->cnt;
 
-    dma->src = (const void *)sCharacterSpriteFrames[(gGameStuff.pendingMode - 1) * 8];
+    dma->src = (const void *)sCharacterSpriteFrames[(gGameStuff.sceneType - 1) * 8];
     dma->dst = (void *)0x06000000;
     enable4000 = DMA_ENABLE | 0x4000;
     dma->cnt = enable4000;
@@ -118,7 +118,7 @@ void InitCharacterBgGraphics(void)
 
     *(vu16 *)0x04000008 = 0x1C03;
 
-    dma->src = (const void *)sCharacterSpriteFrames[((gGameStuff.pendingMode - 1) * 2 + 1) * 4];
+    dma->src = (const void *)sCharacterSpriteFrames[((gGameStuff.sceneType - 1) * 2 + 1) * 4];
     dma->dst = (void *)0x06008000;
     dma->cnt = enable4000;
     (void)dma->cnt;

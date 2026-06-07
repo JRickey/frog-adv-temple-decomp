@@ -11,7 +11,7 @@ extern void Game_FrameEnd(void);
 
 void Mode14_Setup(u8 *buf, u32 arg1, u32 arg2)
 {
-    gGameStuff.pendingMode = 14;
+    gGameStuff.sceneType = 14;
     EntityScript_BuildSlotData(5, buf);
     Entity_UpdateHitboxSlots((void *)arg1, (void *)arg2, 17);
 }

@@ -44,7 +44,7 @@ void Scene10_Main(void)
 
         switch (substate) {
         case 0:
-            gGameStuff.pendingMode = 3;
+            gGameStuff.sceneType = 3;
             r7 = Scene_SelectEntityLimit();
             substate = 1;
             spByte4 = 0;

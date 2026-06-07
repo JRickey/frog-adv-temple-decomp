@@ -67,7 +67,7 @@ void Scroll_PrepareBlitWork(struct DrawRecord *records, u32 idxArg, u32 commit)
 
     {
         u8 *table = (u8 *)gFrameCellTable_08307EAC;
-        u32 sceneIdx = gGameStuff.pendingMode - 1;
+        u32 sceneIdx = gGameStuff.sceneType - 1;
         asm("" : "+r"(table)); /* keep +12 a runtime add, not folded to table-8 */
         table += 12;
         stream = *(u8 **)(table + sceneIdx * 20);

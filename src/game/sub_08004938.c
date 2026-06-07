@@ -57,7 +57,7 @@ void SceneLoop_21(void)
              * #5`. The pin forces the constant out first. */
             void *b;
             b = frame.b;
-            gGameStuff.pendingMode = 14;
+            gGameStuff.sceneType = 14;
             partId = 5;
             EntityScript_BuildSlotData(partId, frame.obj0);
             Entity_UpdateHitboxSlots(frame.a, b, 17);

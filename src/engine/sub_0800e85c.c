@@ -68,13 +68,13 @@ void CharLayers_Upload(u8 count)
         dma = &REG_DMA3;
         layer = (struct CharacterLayerCtrl *)0x030060A0;
 
-        layer[pose].width = frames[game->pendingMode * 3 + pose].width;
-        layer[pose].height = frames[game->pendingMode * 3 + pose].height;
+        layer[pose].width = frames[game->sceneType * 3 + pose].width;
+        layer[pose].height = frames[game->sceneType * 3 + pose].height;
 
         switch (pose) {
         case 0:
-            if (frames[game->pendingMode * 3].tilesA != NULL) {
-                tilesA = frames[game->pendingMode * 3].tilesA;
+            if (frames[game->sceneType * 3].tilesA != NULL) {
+                tilesA = frames[game->sceneType * 3].tilesA;
             }
             LZ77UnCompWram(tilesA, (void *)0x02000000);
 
@@ -83,35 +83,35 @@ void CharLayers_Upload(u8 count)
             dma->cnt = DMA_ENABLE | 0x4000;
             (void)dma->cnt;
 
-            if (game->pendingMode == 13) {
-                dma->src = frames[game->pendingMode * 3].tilesA;
+            if (game->sceneType == 13) {
+                dma->src = frames[game->sceneType * 3].tilesA;
                 dma->dst = (void *)0x06000000;
                 dma->cnt = DMA_ENABLE | 0x4000;
                 (void)dma->cnt;
             }
 
-            LZ77UnCompWram(frames[game->pendingMode * 3].tilesC, (void *)0x02000000);
+            LZ77UnCompWram(frames[game->sceneType * 3].tilesC, (void *)0x02000000);
             REG_BG0CNT = CHARACTER_BG0CNT;
             break;
         case 1:
-            if (frames[game->pendingMode * 3 + 1].tilesA != NULL) {
-                dma->src = frames[game->pendingMode * 3 + 1].tilesA;
+            if (frames[game->sceneType * 3 + 1].tilesA != NULL) {
+                dma->src = frames[game->sceneType * 3 + 1].tilesA;
                 dma->dst = (void *)0x02010000;
                 dma->cnt = DMA_ENABLE | 0x2000;
                 (void)dma->cnt;
             }
-            LZ77UnCompWram(frames[game->pendingMode * 3 + 1].tilesC, (void *)0x02010000);
+            LZ77UnCompWram(frames[game->sceneType * 3 + 1].tilesC, (void *)0x02010000);
             REG_BG1CNT = CHARACTER_BG1CNT;
             break;
         case 2:
-            if (frames[game->pendingMode * 3 + 2].tilesA != NULL) {
-                dma->src = frames[game->pendingMode * 3 + 2].tilesA;
+            if (frames[game->sceneType * 3 + 2].tilesA != NULL) {
+                dma->src = frames[game->sceneType * 3 + 2].tilesA;
                 dma->dst = (void *)0x0600C000;
                 dma->cnt = DMA_ENABLE | 0x1000;
                 (void)dma->cnt;
             }
-            if (frames[game->pendingMode * 3 + 2].tilesC != NULL) {
-                dma->src = frames[game->pendingMode * 3 + 2].tilesC;
+            if (frames[game->sceneType * 3 + 2].tilesC != NULL) {
+                dma->src = frames[game->sceneType * 3 + 2].tilesC;
                 dma->dst = (void *)0x02020000;
                 dma->cnt = DMA_ENABLE | 0x8000;
                 (void)dma->cnt;
@@ -127,7 +127,7 @@ void CharLayers_Upload(u8 count)
         }
     }
 
-    REG_DMA3.src = sCharacterSpriteFrames[gGameStuff.pendingMode * 3].tilesB;
+    REG_DMA3.src = sCharacterSpriteFrames[gGameStuff.sceneType * 3].tilesB;
     REG_DMA3.dst = (void *)0x05000000;
     REG_DMA3.cnt = DMA_ENABLE | 0x100;
     (void)REG_DMA3.cnt;

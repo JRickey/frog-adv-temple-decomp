@@ -40,7 +40,7 @@ void EntitySpawnDriver(void)
     flags = 0;
     origin = gGameStuff._unk00;
 
-    while ((gGameStuff._unk00 - origin) < sEntityInitTable[gGameStuff.pendingMode].settleLimit &&
+    while ((gGameStuff._unk00 - origin) < sEntityInitTable[gGameStuff.sceneType].settleLimit &&
            gEntities[0].field_1A <= 3) {
         Game_UpdateSubsystems();
         Game_RunEntityFrame();
@@ -48,19 +48,19 @@ void EntitySpawnDriver(void)
         Game_ForceRender();
     }
 
-    if (sEntityInitTable[gGameStuff.pendingMode].spawnCount == 0) {
+    if (sEntityInitTable[gGameStuff.sceneType].spawnCount == 0) {
         return;
     }
 
-    for (i = 0; i < sEntityInitTable[gGameStuff.pendingMode].spawnCount; i++) {
+    for (i = 0; i < sEntityInitTable[gGameStuff.sceneType].spawnCount; i++) {
         flags &= ~SPAWN_FLAG_DONE;
         while ((flags & SPAWN_FLAG_DONE) == 0) {
             if (flags & SPAWN_FLAG_WAITING) {
-                if ((gGameStuff._unk00 - origin) > sEntityInitTable[gGameStuff.pendingMode].waitLimit) {
+                if ((gGameStuff._unk00 - origin) > sEntityInitTable[gGameStuff.sceneType].waitLimit) {
                     flags &= ~SPAWN_FLAG_WAITING;
                 }
             } else {
-                const s16 *points = sEntityInitTable[gGameStuff.pendingMode].points + i * 2;
+                const s16 *points = sEntityInitTable[gGameStuff.sceneType].points + i * 2;
                 result = (u8)Scroll_StepTowardTile(points[0], points[1]);
                 if (result == 0xff) {
                     origin = gGameStuff._unk00;

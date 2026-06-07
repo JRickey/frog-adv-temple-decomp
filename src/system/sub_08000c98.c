@@ -6,11 +6,11 @@
 
 extern void EntityDispatch_RunFrame(void);
 
-/* Thin wrapper around Entity_UpdateHitboxSlots — sets gGameStuff.pendingMode = 1 then
+/* Thin wrapper around Entity_UpdateHitboxSlots — sets gGameStuff.sceneType = 1 then
  * forwards the caller's two args with the constant third argument 18. */
 void Scene08_StartIntro(u32 a, u32 b)
 {
-    gGameStuff.pendingMode = 1;
+    gGameStuff.sceneType = 1;
     Entity_UpdateHitboxSlots((void *)a, (void *)b, 18);
 }
 

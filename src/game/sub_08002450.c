@@ -39,7 +39,7 @@ void Scene_FrameUpdate(void *arg0, void *arg1)
         const GameProc *procs = sEntityProcB;
 
         g = &gGameStuff;
-        id = g->pendingMode;
+        id = g->sceneType;
         offset = id << 2;
         offset += (u32)procs;
         (*(GameProc *)offset)();
@@ -48,7 +48,7 @@ void Scene_FrameUpdate(void *arg0, void *arg1)
     {
         const GameProc *procsD = sEntityProcD;
 
-        id = g->pendingMode;
+        id = g->sceneType;
         offset = id << 2;
         offset += (u32)procsD;
         (*(GameProc *)offset)();

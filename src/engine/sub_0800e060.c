@@ -5,9 +5,9 @@
 
 extern void SoundSystem_StopAll(void);
 
-/* Scene/mode teardown dispatched on gGameStuff.pendingMode. Modes 3, 6, 9, 15
+/* Scene/mode teardown dispatched on gGameStuff.sceneType. Modes 3, 6, 9, 15
  * additionally clear REG_BLDCNT before the shared teardown body; all other
- * pendingMode values (and any out-of-range) skip straight to the body.
+ * sceneType values (and any out-of-range) skip straight to the body.
  *
  * Shared body:
  *   - DMA3 halfword-fill 0x400 halfwords at OBJ-VRAM 0x0600F800 from a
@@ -22,7 +22,7 @@ extern void SoundSystem_StopAll(void);
  *   - Set gGameStuff._unk18 |= 1 and gGameStuff._unk04 = 6.
  *
  * Matching notes (agbcc 2.x):
- *   - The 16-entry casesi jump table at e080 comes from `switch (pendingMode)`
+ *   - The 16-entry casesi jump table at e080 comes from `switch (sceneType)`
  *     with explicit empty cases 1..16 (so agbcc keeps the dense
  *     `subs #1; cmp #15; bhi default` dispatch instead of folding the four
  *     active cases into an if-chain).
@@ -42,7 +42,7 @@ void Scene_LoadBg(void)
     u32 idx;
     const u32 *tileTable;
 
-    switch (gGameStuff.pendingMode) {
+    switch (gGameStuff.sceneType) {
     case 3:
     case 6:
     case 9:

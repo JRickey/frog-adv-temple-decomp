@@ -13,7 +13,7 @@ extern void LoadRoomBg3Graphics(void);
  *   - halfword-fill OBJ-VRAM 0x0600F800 with 0 (0x400 halfwords)
  *   - copy ROM 0x080E3754 -> palette 0x050001A0 (0x30 halfwords)
  *   - copy ROM 0x080E3AB6 -> BG-VRAM 0x06008000 (0x2000 halfwords)
- *   - if gGameStuff.pendingMode == 12: copy ROM 0x080E37B4 -> palette
+ *   - if gGameStuff.sceneType == 12: copy ROM 0x080E37B4 -> palette
  *     0x05000140 (0x30 halfwords) -- the +0x60 src and the cnt word are
  *     reused from the second DMA.
  * Finally programs REG_BG3CNT (0x0400000E) = 0x1F08 and raises BG3 in
@@ -71,7 +71,7 @@ void FrogOam_Init(void)
     dma[2] = DMA_ENABLE | 0x2000;
     (void)dma[2];
 
-    if (gGameStuff.pendingMode == 12) {
+    if (gGameStuff.sceneType == 12) {
         register u32 src2 asm("r0");
         src2 = romBase;
         src2 += 0x60;

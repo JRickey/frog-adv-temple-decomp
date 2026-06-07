@@ -10,7 +10,7 @@ extern void Entity_InitHitboxSlots(u32 arg);
 
 void Stage_InitMode16(u32 arg)
 {
-    gGameStuff.pendingMode = 16;
+    gGameStuff.sceneType = 16;
     Entity_InitHitboxSlots(arg);
     gIwram_6110.spawnMask = 0;
 }

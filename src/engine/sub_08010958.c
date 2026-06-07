@@ -33,7 +33,7 @@ void ModeChannel_Apply(u8 a, u8 b)
         listA = gModeListA;
         for (i = 0; i < a; i++) {
             if ((*(u16 *)(base + 0x26) >> i) & 1) {
-                u32 idx = gGameStuff.pendingMode - 1;
+                u32 idx = gGameStuff.sceneType - 1;
                 Blit_CopyEntry(listA[idx].list, i, 1);
             }
         }
@@ -47,12 +47,12 @@ void ModeChannel_Apply(u8 a, u8 b)
     pairs = gModePairs;
     for (i = 0; i < b; i++) {
         if ((*p2a >> i) & 1) {
-            u32 idx = gGameStuff.pendingMode - 1;
+            u32 idx = gGameStuff.sceneType - 1;
             pair = (u8 *)pairs[idx].list + i * 2;
             j = pair[0];
             count = pair[1];
             while (count != 0) {
-                u32 idx2 = gGameStuff.pendingMode - 1;
+                u32 idx2 = gGameStuff.sceneType - 1;
                 Blit_CopyEntry(gModeListB[idx2].list, j, 0);
                 j++;
                 count--;

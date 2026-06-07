@@ -35,7 +35,7 @@ void Entity_UpdateAndRender(void)
 
     procs = sEntityProcB;
     base = (GameStuff *)&gIwram_5330;
-    idx = base->pendingMode;
+    idx = base->sceneType;
     offset = ((u32)idx << 2) + (u32)procs;
     ((GameProc)(*(const u32 *)offset))();
 

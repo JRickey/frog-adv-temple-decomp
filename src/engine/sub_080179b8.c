@@ -39,7 +39,7 @@ int ScriptTick(void)
         int m;
 
         gs = &gGameStuff;
-        m = gs->pendingMode - 1;
+        m = gs->sceneType - 1;
         script = tbl[m];
     }
 

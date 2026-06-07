@@ -119,7 +119,7 @@ extern u8 gIwram_5330;
  *
  * The entity-proc dispatch uses the same explicit table-offset idiom as
  * Game_RunEntityFrame (dispatch_helpers.c): gGameStuff is reached through the
- * link-time symbol gIwram_5330 (kept opaque in a register so pendingMode
+ * link-time symbol gIwram_5330 (kept opaque in a register so sceneType
  * loads into r2 and the gGameStuff base is reused for ._unk00), and the
  * index is added before the table pointer (`(idx << 2) + (u32)procs`) so
  * the shift result lands in r0 separate from the index. */
@@ -146,7 +146,7 @@ u32 Selector_RunAnimSequence(void)
 
         procs = sEntityProcB;
         gs = (GameStuff *)&gIwram_5330;
-        offset = ((u32)gs->pendingMode << 2) + (u32)procs;
+        offset = ((u32)gs->sceneType << 2) + (u32)procs;
         ((GameProc)(*(const u32 *)offset))();
 
         if ((u8)Selector_StepBlitAnim(3) != 0) {
@@ -163,7 +163,7 @@ u32 Selector_RunAnimSequence(void)
 
         procs = sEntityProcB;
         gs = (GameStuff *)&gIwram_5330;
-        offset = ((u32)gs->pendingMode << 2) + (u32)procs;
+        offset = ((u32)gs->sceneType << 2) + (u32)procs;
         ((GameProc)(*(const u32 *)offset))();
 
         if (gs->_unk00 - gIwram_6580.lastTime > 59)

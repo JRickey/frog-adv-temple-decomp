@@ -61,7 +61,7 @@ loop:
     case 0: {
         u8 *p11 = pair11;
         u8 *p16 = pair16;
-        gGameStuff.pendingMode = 13;
+        gGameStuff.sceneType = 13;
         EntityScript_BuildSlotData(2, buf0);
         LoadPartEntry(3, buf1, 2);
         LoadPartEntry(4, buf2, 2);

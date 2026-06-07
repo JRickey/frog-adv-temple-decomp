@@ -27,20 +27,20 @@ void GameMode_Attract(void)
 
     switch (step) {
     case 0:
-        gs->pendingMode = 1;
+        gs->sceneType = 1;
         break;
     case 1:
-        gs->pendingMode = 2;
+        gs->sceneType = 2;
         break;
     case 2:
-        gs->pendingMode = 4;
+        gs->sceneType = 4;
         break;
     case 3:
-        gs->pendingMode = 7;
+        gs->sceneType = 7;
         break;
     }
 
     gHandlerTable_08308028[step]();
     Attract_StepFinish();
-    gGameStuff.pendingMode = 0;
+    gGameStuff.sceneType = 0;
 }

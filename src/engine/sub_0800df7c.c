@@ -2,7 +2,7 @@
 #include "types.h"
 
 /* Sole caller of sEntityProcE — dispatches the per-entity-type "E" handler
- * (cleanup callback) by gGameStuff.pendingMode. See src/data/entity_dispatch.c
+ * (cleanup callback) by gGameStuff.sceneType. See src/data/entity_dispatch.c
  * for the table layout (5 parallel 17-entry function-pointer tables).
  *
  * The indirect call lowers to `bl _call_via_r0` (libgcc thunk at 0x08033cd8)
@@ -14,7 +14,7 @@ extern const GameProc sEntityProcE[17];
 
 void EntityProcE_Dispatch(void)
 {
-    sEntityProcE[gGameStuff.pendingMode]();
+    sEntityProcE[gGameStuff.sceneType]();
 }
 
 extern void EntityPool_Reset(void);

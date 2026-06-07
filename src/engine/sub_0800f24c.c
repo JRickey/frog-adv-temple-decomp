@@ -42,7 +42,7 @@ void Scroll_UpdateCamera(u8 countArg)
     register s32 targetY asm("r1");
     u8 stateIndex;
 
-    if (gGameStuff.pendingMode == SCROLL_SKIP_PENDING_MODE) {
+    if (gGameStuff.sceneType == SCROLL_SKIP_PENDING_MODE) {
         return;
     }
     stateIndex = 0;

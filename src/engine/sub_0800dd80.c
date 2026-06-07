@@ -10,7 +10,7 @@ extern void SaveCommit(u8 a, void *b);
  * VRAM region at 0x06010000 (OBJ tile 0), clears the 128-entry OAM
  * shadow at 0x030054a0 to {y=0xf0 (hidden), 0, 0, 0}, runs Sound_Reset,
  * then dispatches SaveCommit with a byte from 0x03003538 plus a table
- * base 0x03003600. Finally sets gGameStuff.mode to 23 if pendingMode is
+ * base 0x03003600. Finally sets gGameStuff.mode to 23 if sceneType is
  * 15, otherwise 29.
  *
  * Matching notes (old_agbcc):
@@ -32,8 +32,8 @@ void WorldMap_Init(void)
     u8 *p_3003500;
     u32 zero;
 
-    if (g->pendingMode != 0) {
-        g->_unk0C |= 1 << (g->pendingMode - 1);
+    if (g->sceneType != 0) {
+        g->_unk0C |= 1 << (g->sceneType - 1);
     }
 
     zero = 0;
@@ -69,7 +69,7 @@ void WorldMap_Init(void)
 
     {
         GameStuff *g2 = &gGameStuff;
-        if (g2->pendingMode == 15) {
+        if (g2->sceneType == 15) {
             g2->mode = GAME_MODE_SCENE_23;
         } else {
             g2->mode = GAME_MODE_WORLD_MAP;

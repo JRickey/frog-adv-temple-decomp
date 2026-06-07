@@ -57,7 +57,7 @@ loop:
     default:
         goto tail;
     case 0:
-        gGameStuff.pendingMode = 7;
+        gGameStuff.sceneType = 7;
         *statep = 1;
         frame.accept = 0;
         break;
