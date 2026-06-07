@@ -7,6 +7,14 @@
  * helpers in src/engine, centralized from per-caller ad-hoc externs
  * (see tools/agent/unify_prototype.py). */
 
+typedef struct SpriteAssetIndexEntry {
+    u32 dataPtr;
+    u8 stride;
+    u8 rows;
+    u8 _field_6;
+    u8 _field_7;
+} SpriteAssetIndexEntry;
+
 struct TransferDesc {
     u32 word0;
     u32 word4;

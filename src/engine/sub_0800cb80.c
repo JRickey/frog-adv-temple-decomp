@@ -1,4 +1,5 @@
 #include "game.h"
+#include "gfx.h"
 #include "iwram.h"
 #include "macros.h"
 #include "types.h"
@@ -21,14 +22,6 @@
  *   - Term order is 2*dStride first, then 5*b*4096, then 2*c last: it pins
  *     the `lsls #1` of the stride term and the `c` sign-extend to baserom's
  *     instruction positions. */
-
-struct SpriteAssetIndexEntry {
-    u32 dataPtr;
-    u8 stride;
-    u8 _field_5;
-    u8 _field_6;
-    u8 _field_7;
-};
 
 extern struct SpriteAssetIndexEntry sSpriteAssetIndexTable[];
 

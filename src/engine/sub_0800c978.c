@@ -1,4 +1,5 @@
 #include "game.h"
+#include "gfx.h"
 #include "iwram.h"
 #include "macros.h"
 #include "types.h"
@@ -8,14 +9,6 @@
 #define DIR_LEFT  4
 #define DIR_RIGHT 8
 #define DIR_AUTO  16
-
-struct SpriteAssetIndexEntry {
-    u32 dataPtr;
-    u8 stride;
-    u8 rows;
-    u8 _field_6;
-    u8 _field_7;
-};
 
 extern struct SpriteAssetIndexEntry sSpriteAssetIndexTable[];
 

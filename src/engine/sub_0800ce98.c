@@ -11,18 +11,10 @@
  * SDK CpuSet returns void; this TU declares it u32 because the match
  * depends on the wrapper's r0 surviving (see the epilogue note below).
  *
- * Match notes: register-pinned r4/r5 for stride/_field_5 (agbcc otherwise
+ * Match notes: register-pinned r4/r5 for stride/rows (agbcc otherwise
  * inlines the reads and skips the push); separate `table` local anchors
  * the pool load before the `(u8)a` shift-extract; u32 return type pins
  * the epilogue's pop choice to `{r1}; bx r1` (sister-fn idiom). */
-
-struct SpriteAssetIndexEntry {
-    u32 dataPtr;
-    u8 stride;
-    u8 _field_5;
-    u8 _field_6;
-    u8 _field_7;
-};
 
 extern const struct SpriteAssetIndexEntry sSpriteAssetIndexTable[];
 
@@ -33,13 +25,13 @@ u32 SpriteAsset_LoadSheet(u8 a, u8 b)
     const struct SpriteAssetIndexEntry *table = sSpriteAssetIndexTable;
     const struct SpriteAssetIndexEntry *entry;
     register u8 stride asm("r4");
-    register u8 field5 asm("r5");
+    register u8 numRows asm("r5");
     const void *src;
     void *dst;
     entry = &table[(u8)a];
     src = (const void *)entry->dataPtr;
     dst = (void *)(0x02030000 + (u8)b * 0x5000);
     stride = entry->stride;
-    field5 = entry->_field_5;
-    return CpuSet(src, dst, stride * field5);
+    numRows = entry->rows;
+    return CpuSet(src, dst, stride * numRows);
 }

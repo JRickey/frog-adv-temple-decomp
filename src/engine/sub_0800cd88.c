@@ -1,4 +1,5 @@
 #include "game.h"
+#include "gfx.h"
 #include "iwram.h"
 #include "macros.h"
 #include "types.h"
@@ -8,14 +9,6 @@
  * differ only in which bitfield they pull from the halfword. The grid
  * stride (entry_descriptor[+4]) comes from sSpriteAssetIndexTable at
  * 0x08306444 (see src/data/sprite_dispatch.c). */
-
-struct SpriteAssetIndexEntry {
-    u32 dataPtr;
-    u8 stride;
-    u8 _field_5;
-    u8 _field_6;
-    u8 _field_7;
-};
 
 extern const struct SpriteAssetIndexEntry sSpriteAssetIndexTable[];
 
