@@ -1,9 +1,8 @@
+#include "entity.h"
 #include "game.h"
 #include "iwram.h"
 #include "macros.h"
 #include "types.h"
-
-extern void Entity_UpdateHitboxSlots(u32 a, u32 b, u8 c);
 
 /* Two-entity variant of the Entity_UpdateHudState / Scene12_UpdateTileInteraction tile-cache probe:
  * enqueues both entity pairs (kind 11 and 16), then — gated on the shared
@@ -65,6 +64,6 @@ void TileCacheProbe_Init(u8 *state, u32 arg1, u32 arg2, u32 arg3, u32 arg4)
     if (Scene_EntityTick(state) == 0)
         *state = 7;
 
-    Entity_UpdateHitboxSlots(arg1, arg2, 11);
-    Entity_UpdateHitboxSlots(arg3, arg4, 16);
+    Entity_UpdateHitboxSlots((void *)arg1, (void *)arg2, 11);
+    Entity_UpdateHitboxSlots((void *)arg3, (void *)arg4, 16);
 }

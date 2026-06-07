@@ -1,9 +1,8 @@
+#include "entity.h"
 #include "game.h"
 #include "iwram.h"
 #include "macros.h"
 #include "types.h"
-
-extern void Entity_UpdateHitboxSlots(u32 a, u32 b, u8 c);
 
 /* Sibling of Mode8_StateStep: when Scene_EntityTick fails the predicate, force
  * state=7 onto the caller's byte pointer, then forward to Entity_UpdateHitboxSlots
@@ -19,7 +18,7 @@ void Scene_UpdateAnimState(u8 *state, u32 a, u32 b)
     if (Scene_EntityTick(state) == 0) {
         *state = 7;
     }
-    Entity_UpdateHitboxSlots(a, b, 5);
+    Entity_UpdateHitboxSlots((void *)a, (void *)b, 5);
     if (gIwram_35E0._field_5 <= 1) {
         ModeControl_ClearBit(&gIwram_6110, 8, 0);
         ModeControl_ClearBit(&gIwram_6110, 9, 0);

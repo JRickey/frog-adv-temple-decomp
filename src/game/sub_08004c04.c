@@ -1,3 +1,4 @@
+#include "entity.h"
 #include "game.h"
 #include "gfx.h"
 #include "sound.h"
@@ -6,14 +7,13 @@
 #include "types.h"
 
 extern void EntityScript_BuildSlotData(u8 partId, u8 *out);
-extern void Entity_UpdateHitboxSlots(u32 a, u32 b, u8 c);
 extern void Game_FrameEnd(void);
 
 void Mode14_Setup(u8 *buf, u32 arg1, u32 arg2)
 {
     gGameStuff.pendingMode = 14;
     EntityScript_BuildSlotData(5, buf);
-    Entity_UpdateHitboxSlots(arg1, arg2, 17);
+    Entity_UpdateHitboxSlots((void *)arg1, (void *)arg2, 17);
 }
 
 extern void EntityDispatch_RunFrame(void);
@@ -25,7 +25,6 @@ void Mode15_Setup(void)
     EntityDispatch_RunFrame();
 }
 
-extern void Entity_RunScript(u32 a, u32 b);
 extern void Game_RunEntityFrame(void);
 extern void WaitVblank(void);
 extern void Game_ForceRender(void);
@@ -35,7 +34,7 @@ extern void Player_HandleTileTransitions(u32 a, u32 b);
 
 void Mode17_RunFrame(u32 a, u32 b, u32 c)
 {
-    Entity_RunScript(5, a);
+    Entity_RunScript(5, (void *)a);
     Game_RunEntityFrame();
     WaitVblank();
     Game_ForceRender();
@@ -60,7 +59,7 @@ void Mode_InitEntityState(u8 *state, u32 arg1, u32 arg2)
     if (Scene_EntityTick(state) == 0)
         state[0] = 7;
 
-    Entity_UpdateHitboxSlots(arg1, arg2, 17);
+    Entity_UpdateHitboxSlots((void *)arg1, (void *)arg2, 17);
 }
 
 void Mode_EndScene(void)

@@ -1,3 +1,4 @@
+#include "entity.h"
 #include "game.h"
 #include "gfx.h"
 #include "iwram.h"
@@ -5,7 +6,6 @@
 #include "types.h"
 
 extern void EntityDispatch_RunFrame(void);
-extern void Entity_UpdateHitboxSlots(u32 a, u32 b, u8 c);
 extern void Game_FrameEnd(void);
 
 extern void Game_RunEntityFrame(void);
@@ -75,7 +75,7 @@ void Scene05_StateTransition(u8 *state, u32 a, u32 b)
     if (Scene_EntityTick(state) == 0) {
         *state = 7;
     }
-    Entity_UpdateHitboxSlots(a, b, 4);
+    Entity_UpdateHitboxSlots((void *)a, (void *)b, 4);
     if (gIwram_35E0._field_5 <= 1) {
         gIwram_6110.scenePhase = 0;
         gIwram_6110.selector5Flags = 0;

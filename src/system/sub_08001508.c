@@ -1,3 +1,4 @@
+#include "entity.h"
 #include "game.h"
 #include "gfx.h"
 #include "iwram.h"
@@ -5,7 +6,6 @@
 #include "types.h"
 
 extern void Sound_ServiceQueue(void);
-extern void Entity_UpdateHitboxSlots(void *sp_buf, void *r4_obj, u32 arg2);
 extern u8 RunFadeTransition(u8 *localState, u32 callbackTable);
 extern u32 Scene_InitScan(u8 *localState);
 extern u16 Input_Poll(void);

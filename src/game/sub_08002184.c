@@ -22,7 +22,6 @@ extern void Entity_CollisionProbe(void *obj, void *r4_obj);
 extern void EntitySlot17_Init(void);
 extern u8 Scene_FadeUpdate(void);
 extern u8 Blend_StepFade(void);
-extern void Entity_UpdateHitboxSlots(void *obj, void *r4_obj, u32 size);
 extern void LoadScreenTilemap_188EDC(void);
 extern void Game_FrameEnd(void);
 

@@ -1,3 +1,4 @@
+#include "entity.h"
 #include "game.h"
 #include "types.h"
 
@@ -23,8 +24,6 @@
  *                                Entity_UpdateHitboxSlots(a, b, 3).
  *   ModeControl_Cleanup(void)         — single-statement thunk to Game_FrameEnd.
  */
-
-extern void Entity_UpdateHitboxSlots(void *sp_buf, void *r4_obj, u32 arg2);
 extern void Game_RunEntityFrame(void);
 extern void WaitVblank(void);
 extern void Game_ForceRender(void);

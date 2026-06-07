@@ -15,7 +15,7 @@ typedef struct CollisionSlot {
 extern const EntityHitbox sEntityHitboxTable[];
 extern int SpriteGrid_SetCellFlags(int xTile, int mode, int x, int y, int flags);
 
-void Entity_UpdateHitboxSlots(CollisionSlot *slotsArg, unsigned long long *outArg, s8 type)
+void Entity_UpdateHitboxSlots(void *slotsArg, void *outArg, s8 type)
 {
     volatile u32 slotsStack;
     volatile u32 outStack;

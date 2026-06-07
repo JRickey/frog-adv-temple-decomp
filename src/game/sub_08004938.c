@@ -6,7 +6,6 @@
 
 extern void Sound_ServiceQueue(void);
 extern void EntityScript_BuildSlotData(u32 partId, void *out);
-extern void Entity_UpdateHitboxSlots(void *a, void *b, u32 kind);
 extern u8 RunFadeTransition(u8 *localState, u32 callbackTable);
 extern u32 Scene_InitScan(u8 *localState);
 extern u16 Input_Poll(void);

@@ -34,6 +34,8 @@ struct MotionDesc {
     u8 mode;
 };
 
+void Entity_UpdateHitboxSlots(void *slotsArg, void *outArg, s8 type);
+
 void Entity_UpdateMovers(s32 start, s32 end);
 
 void EntityMover_Tick(u8 arg);

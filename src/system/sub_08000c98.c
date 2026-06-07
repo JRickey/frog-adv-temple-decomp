@@ -1,9 +1,8 @@
+#include "entity.h"
 #include "game.h"
 #include "gfx.h"
 #include "iwram.h"
 #include "types.h"
-
-extern void Entity_UpdateHitboxSlots(u32 a, u32 b, u8 c);
 
 extern void EntityDispatch_RunFrame(void);
 
@@ -12,7 +11,7 @@ extern void EntityDispatch_RunFrame(void);
 void Scene08_StartIntro(u32 a, u32 b)
 {
     gGameStuff.pendingMode = 1;
-    Entity_UpdateHitboxSlots(a, b, 18);
+    Entity_UpdateHitboxSlots((void *)a, (void *)b, 18);
 }
 
 /* Sibling of Scene_Init_04 / Scene06_Init: installs config table 0x082f998c
