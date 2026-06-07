@@ -32,6 +32,12 @@ struct ScreenInstallArgs {
     u32 _unk0C;
 };
 
+struct Rect2 {
+    u16 _field_0;
+    s16 _field_2;
+    s16 _field_4;
+};
+
 u8 TileMap_GetCell(u32 x, u32 y);
 
 void ScrollCamera_Update(u8 countArg);

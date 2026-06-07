@@ -4,15 +4,10 @@
 /* --- Rect_PointInRect: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "game.h"
+#include "gfx.h"
 #include "iwram.h"
 #include "macros.h"
 #include "types.h"
-
-struct Rect2 {
-    u16 _field_0;
-    s16 _field_2;
-    s16 _field_4;
-};
 
 /* old_agbcc TU (sister grid functions all build under old_agbcc). */
 u32 Rect_PointInRect(struct Rect2 *s, s32 a, s32 b, s16 c, s16 e)
