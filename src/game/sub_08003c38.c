@@ -1,9 +1,8 @@
 #include "game.h"
+#include "entity.h"
 #include "iwram.h"
 #include "macros.h"
 #include "types.h"
-
-extern void Entity_RunScript(u32 id, void *obj);
 extern void Game_RunEntityFrame(void);
 extern void WaitVblank(void);
 extern void Game_ForceRender(void);

@@ -1,4 +1,5 @@
 #include "game.h"
+#include "entity.h"
 #include "gfx.h"
 #include "iwram.h"
 #include "types.h"
@@ -10,7 +11,6 @@ extern u8 RunFadeTransition(u8 *localState, u32 callbackTable);
 extern u32 Scene_InitScan(u8 *localState);
 extern u16 Input_Poll(void);
 extern void Scene_LoadBg(void);
-extern void Entity_RunScript(u32 partId, void *out);
 extern void Game_RunEntityFrame(void);
 extern void WaitVblank(void);
 extern void Game_ForceRender(void);
