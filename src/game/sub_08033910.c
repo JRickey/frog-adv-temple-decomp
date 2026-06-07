@@ -1,4 +1,5 @@
 #include "types.h"
+#include "game.h"
 
 /* IWRAM globals touched by Timer_SetIrqHandler. The function takes a timer index
  * (0..3) and an out-pointer; it stashes the index, computes the matching

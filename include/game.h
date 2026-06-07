@@ -54,4 +54,6 @@ typedef struct GameStuff {
 
 void UpdateSceneGate(u8 mode);
 
+u32 Timer_SetIrqHandler(u8 idx, void *out);
+
 #endif /* GUARD_GAME_H */

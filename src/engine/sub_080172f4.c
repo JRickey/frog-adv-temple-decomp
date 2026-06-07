@@ -1,11 +1,11 @@
 #include "macros.h"
+#include "game.h"
 #include "types.h"
 
 extern const u8 sEepromSignatureBlock[64];
 
 extern void *Memcpy(void *dst, const void *src, u32 n);
 extern u32 Eeprom_SetSizeConfig(u16 arg0);
-extern u32 Timer_SetIrqHandler(u8 idx, void *out);
 extern u16 SaveReadBlocks(u16 *buf, u16 start, u8 count);
 extern u16 SaveWriteBlocks(u16 *buf, u16 start, u8 count);
 

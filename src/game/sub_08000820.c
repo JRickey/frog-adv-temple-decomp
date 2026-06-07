@@ -1,10 +1,10 @@
 #include "types.h"
+#include "game.h"
 #include "gba/dma.h"
 #include "gba/intr.h"
 #include "gba/io.h"
 
 extern void IntrMain(void);
-extern u32 Timer_SetIrqHandler(u8, void *);
 
 /* IRQ handler vector table — src/data/irq_handler_table.c. The Timer3
  * slot is patched at runtime by Timer_SetIrqHandler(3, &sIrqHandlerTable[6]). */
