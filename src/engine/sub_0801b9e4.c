@@ -1,3 +1,4 @@
+#include "gba/syscall.h"
 #include "types.h"
 
 extern u8 sub_0801B71C(u8 arg);
@@ -25,7 +26,6 @@ u32 Credits_StepThrottled(u8 arg)
     return ret;
 }
 
-extern void BiosSwiTable(void *src, void *dst, u32 mode);
 extern void sub_0801BAD8(void);
 extern void LoadWorldLevelLayoutAlt(void);
 
@@ -95,7 +95,7 @@ void Credits_InitScene(void)
     {
         /* Load fill mode into r2 before sp → r0 to match baserom instruction ordering. */
         u32 fill_mode = 0x01000700;
-        BiosSwiTable(&zero, ent, fill_mode);
+        CpuFastSet(&zero, ent, fill_mode);
     }
     {
         s32 mask = 8;

@@ -101,30 +101,15 @@
         bx      lr
         syscall_end ArcTan2, sub_0802D550
 
-        @ Bios_CpuSet: name applied by main's call-graph rename; kept as an
-        @ alias until call sites migrate to CpuSet (then drop it).
         syscall_func CpuSet, sub_0802D554
-        .global Bios_CpuSet
-        .type   Bios_CpuSet, function
-        .thumb_func
-Bios_CpuSet:
         svc     #11
         bx      lr
         syscall_end CpuSet, sub_0802D554
-        .size   Bios_CpuSet, . - Bios_CpuSet
 
-        @ BiosSwiTable: name applied by main's call-graph rename (it is the
-        @ CpuFastSet thunk, not a table); kept as an alias until call sites
-        @ migrate to CpuFastSet (then drop it).
         syscall_func CpuFastSet, sub_0802D558
-        .global BiosSwiTable
-        .type   BiosSwiTable, function
-        .thumb_func
-BiosSwiTable:
         svc     #12
         bx      lr
         syscall_end CpuFastSet, sub_0802D558
-        .size   BiosSwiTable, . - BiosSwiTable
 
         syscall_func BgAffineSet, sub_0802D55C
         svc     #14

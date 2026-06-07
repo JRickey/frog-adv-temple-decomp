@@ -1,6 +1,5 @@
+#include "gba/syscall.h"
 #include "types.h"
-
-extern void BiosSwiTable(void *src, void *dst, u32 count);
 
 void EntityPool_Reset(void)
 {
@@ -9,7 +8,7 @@ void EntityPool_Reset(void)
     register s32 idx asm("r5");
 
     scratch[0] = 0;
-    BiosSwiTable(&scratch[0], (void *)0x06010000, 0x01000008);
+    CpuFastSet(&scratch[0], (void *)0x06010000, 0x01000008);
 
     fillSrc = &scratch[1];
 
@@ -51,7 +50,7 @@ void EntityPool_Reset(void)
 
             oamDst = (void *)0x07000000;
             oamCount = 0x100;
-            BiosSwiTable(oamBase, oamDst, oamCount);
+            CpuFastSet(oamBase, oamDst, oamCount);
         }
     }
 
@@ -77,7 +76,7 @@ void EntityPool_Reset(void)
         register u32 mask asm("r1");
 
         ent = (u8 *)0x03003720;
-        BiosSwiTable(fillSrc, ent, 0x01000700);
+        CpuFastSet(fillSrc, ent, 0x01000700);
 
         mask = 8;
         ent += 0x34;

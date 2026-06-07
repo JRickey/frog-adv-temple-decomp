@@ -2,6 +2,7 @@
 #include "types.h"
 #include "gba/dma.h"
 #include "gba/io.h"
+#include "gba/syscall.h"
 #include "iwram.h"
 
 extern u16 gIwram_5398;
@@ -9,7 +10,6 @@ extern const void *const sUiAssetSlots[];
 
 u32 GetFrameTick(void);
 u16 Screen_BeginFlash(u16 arg);
-void sub_0802D56C(const void *src, void *dst);
 
 void UiScreen_Init(void)
 {
@@ -41,7 +41,7 @@ void UiScreen_Init(void)
 
     *(vu16 *)0x0400000E = 0x1E88;
 
-    sub_0802D56C(sUiAssetSlots[0], (void *)0x06008000);
+    LZ77UnCompVramAndGetSize(sUiAssetSlots[0], (void *)0x06008000);
 
     dma = &REG_DMA3;
     dma->src = sUiAssetSlots[1];

@@ -1,6 +1,7 @@
 #include "game.h"
 #include "iwram.h"
 #include "gba/intr.h"
+#include "gba/syscall.h"
 #include "macros.h"
 #include "types.h"
 
@@ -38,8 +39,6 @@ extern void Entity_Advance(void);
 
 extern void Scroll_RunSubtypeTicks(u8 arg);
 extern void Game_CommitRender(void);
-/* BiosSwiTable is a thin wrapper around BIOS SWI 12 (CpuFastSet) — see init.c. */
-extern void BiosSwiTable(void *src, void *dst, u32 mode);
 extern u8 gIwram_5330;
 
 void Game_RunEntityFrame(void)
@@ -107,7 +106,7 @@ void Game_ForceRender(void)
     idx = ((GameStuff *)&gIwram_5330)->pendingMode;
     Scroll_RunSubtypeTicks(*(const u8 *)(idx + (u32)lut));
     Game_CommitRender();
-    BiosSwiTable((void *)0x030054a0, (void *)0x07000000, 0x100);
+    CpuFastSet((void *)0x030054a0, (void *)0x07000000, 0x100);
     dst = (vu16 *)0x04000010;
     src = (u16 *)0x03003550;
     *dst++ = src[0];

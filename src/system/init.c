@@ -1,11 +1,11 @@
 #include "game.h"
 #include "gba/intr.h"
+#include "gba/syscall.h"
 #include "types.h"
 
-/* BiosSwiTable is a thin Thumb wrapper around BIOS SWI 12 (CpuFastSet):
- *   r0=src, r1=dst, r2=count|mode-bits. The high bit of `count` (0x01000000)
- *   selects fill-mode (read src once, replicate into dst). */
-extern void BiosSwiTable(void *src, void *dst, u32 mode);
+/* CpuFastSet's control word packs the transfer count with mode bits; the
+ * high bit (CPU_FAST_SET_SRC_FIXED, 0x01000000) selects fill-mode: read src
+ * once and replicate it across dst. */
 
 extern void IntrEnable_Thunk(void);
 extern void SoundMixer_VBlankUpdate(void);
@@ -17,9 +17,9 @@ void ClearVramAndWorkram(void)
     u32 zero1 = 0;
     u32 zero2;
 
-    BiosSwiTable(&zero1, (void *)0x06010000, 0x01000008);
+    CpuFastSet(&zero1, (void *)0x06010000, 0x01000008);
     zero2 = 0;
-    BiosSwiTable(&zero2, (void *)0x030054a0, 0x01000100);
+    CpuFastSet(&zero2, (void *)0x030054a0, 0x01000100);
 }
 
 /* Step the LCG seed and return the result modulo `range`.
@@ -59,7 +59,7 @@ void VBlankIntr(void)
         register vu16 *dst asm("r1");
         u16 *src;
 
-        BiosSwiTable((void *)0x030054a0, (void *)0x07000000, 0x100);
+        CpuFastSet((void *)0x030054a0, (void *)0x07000000, 0x100);
         dst = (vu16 *)0x04000010;
         src = (u16 *)0x03003550;
         /* The first 5 stores use *dst++ to force `strh; adds r1, #2`;

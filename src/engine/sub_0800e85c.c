@@ -31,9 +31,7 @@ struct CharacterLayerCtrl {
 
 extern const struct CharacterSpriteFrame sCharacterSpriteFrames[];
 
-/* svc 17 (LZ77UnCompVRAM) wrapper — expose via .thumb_set in
-   src/game/sub_0802d558.c's NAKED asm (see top of this note). */
-extern void sub_0802D568(const void *src, void *dst);
+extern void LZ77UnCompWram(const void *src, void *dst); /* BIOS SWI 17 */
 extern void BgLayer_Disable(u8 layer);
 extern void BgLayer_Enable(u8 layer);
 
@@ -79,7 +77,7 @@ void CharLayers_Upload(u8 count)
             if (frames[game->pendingMode * 3].tilesA != NULL) {
                 tilesA = frames[game->pendingMode * 3].tilesA;
             }
-            sub_0802D568(tilesA, (void *)0x02000000);
+            LZ77UnCompWram(tilesA, (void *)0x02000000);
 
             dma->src = (const void *)0x02000000;
             dma->dst = (void *)0x06000000;
@@ -93,7 +91,7 @@ void CharLayers_Upload(u8 count)
                 (void)dma->cnt;
             }
 
-            sub_0802D568(frames[game->pendingMode * 3].tilesC, (void *)0x02000000);
+            LZ77UnCompWram(frames[game->pendingMode * 3].tilesC, (void *)0x02000000);
             REG_BG0CNT = CHARACTER_BG0CNT;
             break;
         case 1:
@@ -103,7 +101,7 @@ void CharLayers_Upload(u8 count)
                 dma->cnt = DMA_ENABLE | 0x2000;
                 (void)dma->cnt;
             }
-            sub_0802D568(frames[game->pendingMode * 3 + 1].tilesC, (void *)0x02010000);
+            LZ77UnCompWram(frames[game->pendingMode * 3 + 1].tilesC, (void *)0x02010000);
             REG_BG1CNT = CHARACTER_BG1CNT;
             break;
         case 2:

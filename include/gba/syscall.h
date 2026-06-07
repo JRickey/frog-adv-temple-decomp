@@ -113,8 +113,4 @@ void sub_0802D5D4(void *mplayInfo);
 void sub_0802D5D8(void *mplayInfo, u16 speed);
 s32 sub_0802D5DC(void *mb, u32 mode);
 
-/* Aliases applied by the call-graph rename, kept until call sites migrate. */
-void Bios_CpuSet(const void *src, void *dst, u32 control);
-void BiosSwiTable(const void *src, void *dst, u32 control);
-
 #endif /* GUARD_GBA_SYSCALL_H */

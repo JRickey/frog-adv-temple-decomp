@@ -24,7 +24,7 @@
  *     - clear bit 0xfffe of [REG_IE] (top bit clear)
  *     - bl Scroll_RunSubtypeTicks with arg0 = ROM byte-table 0x080c0d84[gGameStuff[10]]
  *     - bl Game_CommitRender (?)
- *     - DMA-style call BiosSwiTable with src=0x030054a0, dst=0x07000000,
+ *     - DMA-style call CpuFastSet with src=0x030054a0, dst=0x07000000,
  *       count=0x100 (probably sprite OAM copy)
  *     - manually copy 6 halfwords from 0x03003550[0..5] to REG_DISPSTAT+0xc
  *       and 5 successive halfwords (BG0/BG1 affine? bg-scroll DMA write)
@@ -52,7 +52,7 @@ extern void Entity_Advance(void);
 extern void WaitVblank(void);
 extern void Scroll_RunSubtypeTicks(u32 a);
 extern void Game_CommitRender(void);
-extern void BiosSwiTable(void *dst, void *src, u32 count);
+extern void CpuFastSet(void *dst, void *src, u32 count);
 
 #ifdef NON_MATCHING
 /* Reference body for the phase-3 PC port. The shape mirrors the asm:
@@ -104,7 +104,7 @@ u32 Scene_InitScan(u8 *arg)
     *(vu16 *)0x04000200 &= 0xfffe;
     Scroll_RunSubtypeTicks(*(u8 *)(0x080c0d84 + *(u8 *)(0x03005330 + 10)));
     Game_CommitRender();
-    BiosSwiTable((void *)0x07000000, (void *)0x030054a0, 0x100);
+    CpuFastSet((void *)0x07000000, (void *)0x030054a0, 0x100);
 
     /* Manually copy 6 halfwords to MMIO at 0x04000010 (BG0 scroll regs) */
     {
@@ -216,7 +216,7 @@ NAKED u32 Scene_InitScan(u8 *arg)
         "    lsls    r1, r1, #19\n"
         "    movs    r2, #128\n"
         "    lsls    r2, r2, #1\n"
-        "    bl      BiosSwiTable\n"
+        "    bl      CpuFastSet\n"
         "    ldr     r1, _sub_08009D9C_pool_400010\n"
         "    ldr     r2, _sub_08009D9C_pool_3550\n"
         "    ldrh    r0, [r2, #0]\n"
@@ -399,7 +399,7 @@ u32 Entity_UpdateFrame(u8 *arg, u8 kind)
     REG_IE &= ~IRQ_VBLANK;
     Scroll_RunSubtypeTicks(*(const u8 *)(gs->pendingMode + (u32)lut));
     Game_CommitRender();
-    BiosSwiTable((void *)0x030054a0, (void *)0x07000000, 0x100);
+    CpuFastSet((void *)0x030054a0, (void *)0x07000000, 0x100);
 
     dst = (vu16 *)0x04000010;
     src = (u16 *)0x03003550;

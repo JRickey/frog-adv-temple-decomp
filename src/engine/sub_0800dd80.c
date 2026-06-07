@@ -1,7 +1,7 @@
 #include "game.h"
+#include "gba/syscall.h"
 #include "types.h"
 
-extern void BiosSwiTable(void *src, void *dst, u32 mode);
 extern void Sound_Reset(void);
 extern void SaveCommit(u8 a, void *b);
 
@@ -37,7 +37,7 @@ void WorldMap_Init(void)
     }
 
     zero = 0;
-    BiosSwiTable(&zero, (void *)0x06010000, 0x01000008);
+    CpuFastSet(&zero, (void *)0x06010000, 0x01000008);
 
     i = 0;
     base = (u16 *)0x030054a0;
