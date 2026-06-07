@@ -13,18 +13,6 @@ s32 GetVcountRandom(u8 range)
     return (u8)__modsi3((u8)REG_VCOUNT * 107 + 7, range);
 }
 
-typedef struct AnimDesc {
-    u8 state;
-    u8 _pad01[3];
-    u32 field_04;
-    u32 field_08;
-    u8 maxFrames;
-    u8 _pad0d;
-    s16 field_0e;
-    u8 _pad10[4];
-    u32 field_14;
-} AnimDesc;
-
 extern const AnimDesc sAnimDesc_6e08;
 extern const AnimDesc sAnimDesc_6e28;
 

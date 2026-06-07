@@ -19,7 +19,7 @@ typedef struct ScrollRecord {
 } ScrollRecord;
 
 /* Scroll-blit bookkeeping block at IWRAM 0x03006540. */
-typedef struct ScrollState {
+typedef struct ScrollBlitState {
     u8 startBuf; /* +0x00 */
     u8 _pad01[1];
     u8 active; /* +0x02, per-direction enable bitmask */
@@ -37,7 +37,7 @@ typedef struct ScrollState {
     s16 rowsLeft; /* +0x2E */
     u16 height;   /* +0x30 */
     u16 width;    /* +0x32 */
-} ScrollState;
+} ScrollBlitState;
 
 /* romTable[pendingMode-1] (20-byte stride). +0 points at the scroll record
  * array (also passed in as `records`), +12 is the per-direction step lut:
@@ -59,7 +59,7 @@ void Scroll_TickBlitDir(void *records, u8 n)
 {
     register void *recordsReg asm("r9") = records;
     u32 dir = n;
-    register ScrollState *scroll asm("r6") = (ScrollState *)0x03006540;
+    register ScrollBlitState *scroll asm("r6") = (ScrollBlitState *)0x03006540;
     register u8 *dirStep asm("sl");
     register u32 n2 asm("r8");
     register ScrollModeEntry *romTable asm("r4") = gFrameCellTable_08307EAC;
@@ -136,7 +136,7 @@ void Scroll_TickBlitDir(void *records, u8 n)
             scroll->srcRead = scroll->srcBase;
             scroll->srcBase += 2;
             if (scroll->colsLeft != 0) {
-                ScrollState *s = scroll;
+                ScrollBlitState *s = scroll;
                 u32 src = s->srcRead;
                 u32 dst = s->dstRead;
                 for (i = 0; i < s->width; i++) {
@@ -160,7 +160,7 @@ void Scroll_TickBlitDir(void *records, u8 n)
             scroll->srcRead = scroll->srcBase;
             scroll->srcBase -= 2;
             if (scroll->colsLeft != 0) {
-                ScrollState *s = scroll;
+                ScrollBlitState *s = scroll;
                 u32 src = s->srcRead;
                 u32 dst = s->dstRead;
                 for (i = 0; i < s->width; i++) {

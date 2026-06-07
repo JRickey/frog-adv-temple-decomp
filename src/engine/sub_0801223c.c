@@ -1,22 +1,8 @@
 #include "game.h"
+#include "gfx.h"
 #include "sound.h"
 #include "iwram.h"
 #include "types.h"
-
-/* ROM animation-descriptor pair at 0x08306e08 / 0x08306e28. Only the two
- * position anchors (field_04 / field_14) and the per-channel frame-count
- * limit (maxFrames) are read here. */
-typedef struct AnimDesc {
-    u8 state;
-    u8 _pad01[3];
-    u32 field_04;
-    u32 field_08;
-    u8 maxFrames;
-    u8 _pad0d;
-    s16 field_0e;
-    u8 _pad10[4];
-    u32 field_14;
-} AnimDesc;
 
 extern const AnimDesc sAnimDesc_6e08;
 extern const AnimDesc sAnimDesc_6e28;

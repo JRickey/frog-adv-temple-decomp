@@ -16,7 +16,7 @@ struct BlitEntry {
     u8 _pad14[4];
 };
 
-struct BlitState {
+struct BlitEntryState {
     u8 _pad00[12];
     const u16 *src;
     u8 _pad10[4];
@@ -28,7 +28,7 @@ struct SceneScroll {
     u16 stride;
 };
 
-#define gBlitState   (*(struct BlitState *)0x03006500)
+#define gBlitState   (*(struct BlitEntryState *)0x03006500)
 #define gSceneScroll (*(struct SceneScroll *)0x030060A0)
 
 void Blit_CopyEntry(struct BlitEntry *entries, u8 index, u8 srcIndex)

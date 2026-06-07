@@ -54,6 +54,20 @@ typedef struct FrameDescriptor {
     const u16 *tile_data;
 } FrameDescriptor;
 
+/* Scroll-animation descriptor: two ROM entries at 0x08306e08 / 0x08306e28
+ * describe one scroll-animation channel each. Each AnimDesc is 24 bytes. */
+typedef struct AnimDesc {
+    u8 state;
+    u8 _pad01[3];
+    u32 field_04;
+    u32 field_08;
+    u8 maxFrames;
+    u8 _pad0d;
+    s16 field_0e;
+    u8 _pad10[4];
+    u32 field_14;
+} AnimDesc;
+
 struct ScaleAnimDesc {
     u16 dstX;
     u16 dstY;
@@ -81,6 +95,20 @@ struct ScrollData {
     u32 f2;
     u32 f3;
 };
+
+/* Display-state save/restore block at 0x03006420 (IWRAM). Saved by
+ * BgBuffer_ApplyPending before flushing; restored by Display_RestoreState.
+ * tileBank (+25) is the high tilemap-entry bits used for screen fill. */
+struct Unk03006420 {
+    u32 active;
+    u16 dispcnt;
+    u16 _pad;
+    struct ScrollData scroll;
+    u8 _pad18;
+    u8 tileBank; /* +25: high tilemap-entry bits (<<12) for the screen fill */
+};
+
+extern struct Unk03006420 gUnk03006420;
 
 u8 TileMap_GetCell(u32 x, u32 y);
 

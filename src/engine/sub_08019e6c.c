@@ -12,17 +12,6 @@ extern void sub_08019A14(void);
 extern void Sound_DrainIfActive(void);
 extern const u8 sRoomDmaTable_080C1254[];
 
-struct Unk03006420 {
-    u32 active;
-    u16 dispcnt;
-    u16 _pad;
-    struct ScrollData scroll;
-    u8 _pad18;
-    u8 tileBank; /* +25: high tilemap-entry bits (<<12) for the screen fill */
-};
-
-extern struct Unk03006420 gUnk03006420;
-
 /* clang-format off */
 #define FIXED_ARG_U32(reg, expr) ({ register u32 _v asm(reg) = (expr); _v; })
 #define FIXED_ARG_PTR(reg, expr) ({ register void *_v asm(reg) = (void *)(expr); _v; })

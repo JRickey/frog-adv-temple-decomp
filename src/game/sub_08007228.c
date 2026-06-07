@@ -21,17 +21,6 @@
  */
 
 #ifdef NON_MATCHING
-struct SrcRec {
-    s16 _h0;
-    s16 _h2;
-    s8 _b4;
-    s8 _b5;
-    u8 _pad[2];
-    u8 _b8;
-    u8 _b9;
-    u8 _pad0A[2];
-    u32 _w12;
-};
 
 extern const struct PartEntry gPartTable_080C0AB0[];
 

@@ -19,13 +19,13 @@ typedef struct SpriteAssetEntry2 {
 } SpriteAssetEntry2;
 extern const SpriteAssetEntry2 sSpriteAssetTable[];
 
-typedef struct AnimDesc {
+typedef struct SpriteAnimDesc {
     const u8 *frames;
     u32 _unk04;
     u8 frameCount;
     u8 state;
     u8 dir;
-} AnimDesc;
+} SpriteAnimDesc;
 
 typedef struct AnimFrame {
     s8 dx;
@@ -66,7 +66,8 @@ void Entity_AdvanceAnimFrames(s32 slot, s32 endSlot)
     e = (struct Entity *)(base + offset);
     do {
         if ((e->status & 2) != 0) {
-            const AnimDesc *desc = (const AnimDesc *)(sSpriteAssetTable[e->field_00].ptr + e->field_1A * 12);
+            const SpriteAnimDesc *desc =
+                (const SpriteAnimDesc *)(sSpriteAssetTable[e->field_00].ptr + e->field_1A * 12);
 
             frame = *(const AnimFrame *)desc->frames;
             e->field_1C[0] = desc->frameCount;
@@ -92,10 +93,10 @@ void Entity_AdvanceAnimFrames(s32 slot, s32 endSlot)
             if (nextFrame == e->field_1C[0]) {
                 e->status |= 0x8000;
             } else {
-                const AnimDesc *desc;
+                const SpriteAnimDesc *desc;
 
                 e->field_1B = e->field_1B + 1;
-                desc = (const AnimDesc *)(sSpriteAssetTable[e->field_00].ptr + e->field_1A * 12);
+                desc = (const SpriteAnimDesc *)(sSpriteAssetTable[e->field_00].ptr + e->field_1A * 12);
                 frame = ((const AnimFrame *)desc->frames)[nextFrame];
 
                 e->field_01 = frame.field_09;

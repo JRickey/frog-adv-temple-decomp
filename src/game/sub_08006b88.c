@@ -57,18 +57,6 @@ u8 IsFlagMaskSet(void *p, u16 mask)
  */
 
 #ifdef NON_MATCHING
-struct SrcRec {
-    s16 _h0;
-    s16 _h2;
-    s8 _b4;
-    s8 _b5;
-    s8 _b6;
-    s8 _b7;
-    u8 _b8;
-    u8 _b9;
-    u8 _pad[2];
-    u32 _w12;
-};
 
 struct BB4Frame {
     struct SrcRec s;

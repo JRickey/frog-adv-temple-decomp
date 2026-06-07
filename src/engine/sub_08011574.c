@@ -1,4 +1,5 @@
 #include "game.h"
+#include "gfx.h"
 #include "types.h"
 
 void sub_08012BC4(u32 flags, u32 dstX, u32 dstY, u32 widthArg, u32 srcRowsArg, void *srcTable, u32 srcIndex);
@@ -88,18 +89,6 @@ struct AnimSeqState {
 };
 
 extern struct AnimSeqState gIwram_53A0;
-
-typedef struct AnimDesc {
-    u8 state;
-    u8 _pad01[3];
-    u32 field_04;
-    u32 field_08;
-    u8 maxFrames;
-    u8 _pad0d;
-    s16 field_0e;
-    u8 _pad10[4];
-    u32 field_14;
-} AnimDesc;
 
 extern const AnimDesc sAnimDesc_6e08;
 extern const AnimDesc sAnimDesc_6e28;

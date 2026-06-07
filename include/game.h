@@ -31,7 +31,22 @@
  *                              GameMode_Attract to index gHandlerTable_08308028
  *                              and select a pendingMode value.
  */
-struct SrcRec; /* forward declaration — layout varies per TU; PartEntry holds a pointer only */
+/* Part source-record layout (16 bytes). Used by EntityScript_BuildSlotData and
+ * LoadPartEntry. _b6/_b7 encode the layout flag and axis id; sub_08007228 does
+ * not access them but the same physical bytes exist (replaced by _pad in its
+ * simpler variant — same size, same alignment). */
+struct SrcRec {
+    s16 _h0;
+    s16 _h2;
+    s8 _b4;
+    s8 _b5;
+    s8 _b6;
+    s8 _b7;
+    u8 _b8;
+    u8 _b9;
+    u8 _pad[2];
+    u32 _w12;
+};
 
 /* Part-descriptor table entry (0x080C0AB0 / 0x080C0AE8). */
 struct PartEntry {

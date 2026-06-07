@@ -4,15 +4,6 @@
 
 extern void Scroll_FlushTilemapWindow(u32, void *, void *);
 
-struct Unk03006420 {
-    u32 active;
-    u16 dispcnt;
-    u16 _pad;
-    struct ScrollData scroll;
-};
-
-extern struct Unk03006420 gUnk03006420;
-
 void Display_RestoreState(void)
 {
     REG_DISPCNT = gUnk03006420.dispcnt;
