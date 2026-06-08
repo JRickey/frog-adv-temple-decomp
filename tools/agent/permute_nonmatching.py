@@ -247,6 +247,16 @@ def main() -> int:
 
     outdir = NONMATCH / fn
     outdir.mkdir(parents=True, exist_ok=True)
+
+    # Refuse if a permuter is already grinding this function — two runs in the
+    # same scratch dir wipe/archive each other's outputs and corrupt results.
+    probe = subprocess.run(["pgrep", "-f", f"permuter.py .*nonmatchings/{fn}\\b"],
+                           capture_output=True, text=True)
+    if probe.stdout.strip():
+        return emit({"fn": fn, "error": f"a permuter run for {fn} is already active "
+                     f"(pids {probe.stdout.split()}); kill it before relaunching "
+                     "(pkill -f 'permuter.py .*nonmatchings/" + fn + "')"}, 1)
+
     clean_note = "kept prior outputs" if args.keep_outputs else archive_and_clean(outdir)
 
     autobase = outdir / "_autobase.c"
