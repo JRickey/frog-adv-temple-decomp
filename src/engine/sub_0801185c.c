@@ -28,11 +28,11 @@ u32 Anim_CheckScreenIdle(void)
                            sAnimDesc_6e28.field_04, sAnimDesc_6e28.field_0e);
     UpdateScrollFromAnimChannels();
 
-    if (gIwram_6150._field_04 != 0)
+    if (gIwram_6150.scrollPos != 0)
         goto done;
-    if (gIwram_5360._field_04 != 0)
+    if (gIwram_5360.scrollPos != 0)
         goto done;
-    if (gIwram_5360._field_0e != 0)
+    if (gIwram_5360.frameCounter != 0)
         goto done;
 
     result = 1;

@@ -99,49 +99,49 @@ void UpdateScrollFromAnimChannels(void)
     s32 x;
     s32 y;
 
-    if (gIwram_5330 - gIwram_6150._field_08 >= gIwram_6150._maxFrames) {
-        switch (gIwram_6150._field_00) {
+    if (gIwram_5330 - gIwram_6150.lastPos >= gIwram_6150.maxFrames) {
+        switch (gIwram_6150.animState) {
         case 2:
-            gIwram_6150._field_04 += 2;
+            gIwram_6150.scrollPos += 2;
             break;
         case 1:
-            gIwram_6150._field_04 -= 2;
+            gIwram_6150.scrollPos -= 2;
             break;
         case 0:
-            if (gIwram_6150._field_04 != 0) {
-                if ((s32)gIwram_6150._field_04 > 0)
-                    gIwram_6150._field_04 -= 2;
+            if (gIwram_6150.scrollPos != 0) {
+                if ((s32)gIwram_6150.scrollPos > 0)
+                    gIwram_6150.scrollPos -= 2;
                 else
-                    gIwram_6150._field_04 += 2;
+                    gIwram_6150.scrollPos += 2;
             }
             break;
         }
-        gIwram_6150._field_08 = gIwram_5330;
+        gIwram_6150.lastPos = gIwram_5330;
     }
 
-    if (gIwram_5330 - gIwram_5360._field_08 >= gIwram_5360._maxFrames) {
-        switch (gIwram_5360._field_00) {
+    if (gIwram_5330 - gIwram_5360.lastPos >= gIwram_5360.maxFrames) {
+        switch (gIwram_5360.animState) {
         case 4:
-            gIwram_5360._field_04 += 2;
+            gIwram_5360.scrollPos += 2;
             break;
         case 3:
-            gIwram_5360._field_04 -= 2;
+            gIwram_5360.scrollPos -= 2;
             break;
         case 0:
-            if (gIwram_5360._field_04 != 0) {
-                if ((s32)gIwram_5360._field_04 > 0)
-                    gIwram_5360._field_04 -= 2;
+            if (gIwram_5360.scrollPos != 0) {
+                if ((s32)gIwram_5360.scrollPos > 0)
+                    gIwram_5360.scrollPos -= 2;
                 else
-                    gIwram_5360._field_04 += 2;
+                    gIwram_5360.scrollPos += 2;
             }
             break;
         }
-        gIwram_5360._field_08 = gIwram_5330;
+        gIwram_5360.lastPos = gIwram_5330;
     }
 
-    x = gIwram_60A0[0].scrollX + (s32)gIwram_5360._field_04;
+    x = gIwram_60A0[0].scrollX + (s32)gIwram_5360.scrollPos;
     gIwram_60A0[0].scrollX = x;
-    y = gIwram_60A0[0].scrollY + (s32)gIwram_6150._field_04;
+    y = gIwram_60A0[0].scrollY + (s32)gIwram_6150.scrollPos;
     gIwram_60A0[0].scrollY = y;
     gIwram_60A0[1].scrollX = x;
     gIwram_60A0[1].scrollY = y;

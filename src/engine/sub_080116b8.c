@@ -142,7 +142,7 @@ void Selector_BlitStateMachine(u8 maxIdxArg)
         InitScrollAnimSequence(sAnimDesc_6e08.field_04, sAnimDesc_6e08.field_14, sAnimDesc_6e28.field_04,
                                sAnimDesc_6e28.field_04, sAnimDesc_6e28.field_0e);
         UpdateScrollFromAnimChannels();
-        if (gIwram_6150._field_04 == 0 && gIwram_5360._field_04 == 0 && gIwram_5360._field_0e == 0)
+        if (gIwram_6150.scrollPos == 0 && gIwram_5360.scrollPos == 0 && gIwram_5360.frameCounter == 0)
             done = 1;
         if (done) {
             ptr3610 = gIwram_3610;

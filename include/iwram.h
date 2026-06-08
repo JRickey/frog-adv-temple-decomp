@@ -98,8 +98,8 @@ struct IwramAt35E0 {
 };
 
 struct IwramAt3608 {
-    u32 _data;   /* +0x0: u32 written by Menu25_WaitFadeIn */
-    u8 _pad4;    /* +0x4 */
+    u32 _data; /* +0x0: u32 written by Menu25_WaitFadeIn */
+    u8 _field_4; /* +0x4: live HBLANK/scroll-state byte (written by CharLayers_Upload; reader ScrollUpdate_Pass0 still asm) */
     u8 _field_5; /* +0x5: byte accessed by CharLayers_Upload and ScrollUpdate_Pass0 */
 };
 
@@ -225,22 +225,18 @@ struct BgScrollState {
     u8 _pad1c[4];   /* +0x1C */
 };
 
-struct IwramAt5360 {
-    u8 _field_00; /* +0: state byte (written as 1/2/3/4 by InitScrollAnimSequence) */
+/* One channel of a two-channel scroll-anim sequencer. TWO instances of this
+ * one type: gIwram_5360 (channel A) and gIwram_6150 (channel B). The shared
+ * frame counter (frameCounter, +0xE) is live on channel A only; channel B
+ * never touches it. See src/engine/sub_0801223c.c (InitScrollAnimSequence). */
+struct ScrollAnimChannel {
+    u8 animState; /* +0: phase byte 1/2/3/4 (InitScrollAnimSequence) */
     u8 _pad01[3];
-    u32 _field_04; /* +4: position/counter (r/w; compared against ROM anchor field_04) */
-    u32 _field_08; /* +8: cached position (written from gIwram_5330 by UpdateScrollFromAnimChannels) */
-    u8 _maxFrames; /* +12: frame-count limit (copied from ROM AnimDesc.maxFrames) */
+    u32 scrollPos; /* +4: scroll position/counter (+/-2 per step; vs ROM anchor) */
+    u32 lastPos;   /* +8: snapshot of gIwram_5330 at last advance (throttle ref) */
+    u8 maxFrames;  /* +12: advance interval (ROM AnimDesc.maxFrames) */
     u8 _pad0d;
-    s16 _field_0e; /* +14: signed frame counter (decremented; nonzero = animation in progress) */
-};
-
-struct IwramAt6150 {
-    u8 _field_00; /* +0: state byte (written as 1 by InitScrollAnimSequence) */
-    u8 _pad01[3];
-    u32 _field_04; /* +4: position/counter (r/w; compared against ROM anchor field_04) */
-    u32 _field_08; /* +8: cached position (written from gIwram_5330 by UpdateScrollFromAnimChannels) */
-    u8 _maxFrames; /* +12: frame-count limit (copied from ROM AnimDesc.maxFrames) */
+    s16 frameCounter; /* +14: signed frame counter (channel A only; decremented; !=0 = in progress) */
 };
 
 struct IwramAt6110 {
@@ -292,8 +288,8 @@ extern struct IwramAt5320 gIwram_5320;
 extern struct IwramAt5358 gIwram_5358;
 extern struct IwramAt6110 gIwram_6110;
 
-extern struct IwramAt5360 gIwram_5360;
-extern struct IwramAt6150 gIwram_6150;
+extern struct ScrollAnimChannel gIwram_5360;
+extern struct ScrollAnimChannel gIwram_6150;
 void ModeControl_SetBit(void *unused, s32 bits);
 
 void IwramFlags_Clear(void *p, u16 mask);

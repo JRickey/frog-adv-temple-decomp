@@ -150,7 +150,7 @@ void CharLayers_Upload(u8 count)
 
     REG_IE &= ~IRQ_HBLANK;
     REG_DISPSTAT &= ~DISPSTAT_HBLANK_IRQ;
-    gIwram_3608._pad4 = 1;
+    gIwram_3608._field_4 = 1;
     gIwram_3608._field_5 = 0;
 }
 #else

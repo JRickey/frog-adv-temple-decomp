@@ -1,5 +1,6 @@
 #include "game.h"
 #include "gfx.h"
+#include "iwram.h"
 #include "types.h"
 
 void sub_08012BC4(u32 flags, u32 dstX, u32 dstY, u32 widthArg, u32 srcRowsArg, void *srcTable, u32 srcIndex);
@@ -75,13 +76,6 @@ u32 Selector_StepBlitAnim(u8 idx)
     return 0;
 }
 
-struct IwramAt6150_sub115f8 {
-    u8 _pad00[4];
-    u32 _field_04;
-};
-
-extern struct IwramAt6150_sub115f8 gIwram_6150;
-
 /* Sequencer phase byte at gIwram_53A0[0]. Selector_InitState / Menu25_InitKeyTable /
  * Selector_TriggerWindowReveal reset it; this is the only reader. */
 struct AnimSeqState {
@@ -112,8 +106,8 @@ extern u8 gIwram_5330;
  *   phase 2: keep dispatching; report 1 (done) once 60 ticks have
  *            elapsed since the phase-1 latch.
  *
- * The bare `(void)...->_field_04` read is load-bearing: the baserom reads
- * gIwram_6150._field_04 here and discards it (the value is overwritten
+ * The bare `(void)...->scrollPos` read is load-bearing: the baserom reads
+ * gIwram_6150.scrollPos here and discards it (the value is overwritten
  * before use). Reading it through a volatile struct pointer keeps that
  * dead ldr instead of letting agbcc DCE it.
  *
@@ -142,7 +136,7 @@ u32 Selector_RunAnimSequence(void)
         InitScrollAnimSequence(sAnimDesc_6e08.field_04, sAnimDesc_6e08.field_14, sAnimDesc_6e28.field_04,
                                sAnimDesc_6e28.field_04, sAnimDesc_6e28.field_0e);
         UpdateScrollFromAnimChannels();
-        (void)((volatile struct IwramAt6150_sub115f8 *)&gIwram_6150)->_field_04;
+        (void)((volatile struct ScrollAnimChannel *)&gIwram_6150)->scrollPos;
 
         procs = sEntityProcB;
         gs = (GameStuff *)&gIwram_5330;

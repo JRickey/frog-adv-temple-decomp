@@ -11,10 +11,10 @@ extern const AnimDesc sAnimDesc_6e28;
 extern u8 gIwram_53A0[];
 
 /* Two-channel scroll sequencer. Channel A is gIwram_5360, channel B is
- * gIwram_6150; the shared frame counter lives in channel A (_field_0e). The
+ * gIwram_6150; the shared frame counter lives in channel A (frameCounter). The
  * first four arguments are unused; the 5th (low byte) seeds the counter on the
  * one-shot init pass. Each channel's position (_field_04) is matched against
- * its two ROM anchors to step the channel's state byte and tick the shared
+ * its two ROM anchors to step the channel's animState and tick the shared
  * counter down, which is then floored at 0.
  *
  * cmpA (r2) / chB (r4) are pinned because the baserom reloads channel A into a
@@ -23,12 +23,12 @@ extern u8 gIwram_53A0[];
  * and the last B-comparison reuses chB rather than cmpB. */
 void InitScrollAnimSequence(u32 unused0, u32 unused1, u32 unused2, u32 unused3, s32 frames)
 {
-    struct IwramAt5360 *chA;
-    register struct IwramAt6150 *chB asm("r4");
+    struct ScrollAnimChannel *chA;
+    register struct ScrollAnimChannel *chB asm("r4");
     const AnimDesc *a;
     const AnimDesc *b;
-    register struct IwramAt5360 *cmpA asm("r2");
-    struct IwramAt6150 *cmpB;
+    register struct ScrollAnimChannel *cmpA asm("r2");
+    struct ScrollAnimChannel *cmpB;
     u8 startFrames;
     u8 armed;
 
@@ -40,38 +40,38 @@ void InitScrollAnimSequence(u32 unused0, u32 unused1, u32 unused2, u32 unused3, 
     b = &sAnimDesc_6e28;
 
     if (armed == 0) {
-        chA->_field_04 = 0;
-        chB->_field_04 = 0;
-        chA->_maxFrames = a->maxFrames;
-        chB->_maxFrames = b->maxFrames;
-        chA->_field_00 = 4;
-        chB->_field_00 = 1;
-        chA->_field_0e = startFrames;
+        chA->scrollPos = 0;
+        chB->scrollPos = 0;
+        chA->maxFrames = a->maxFrames;
+        chB->maxFrames = b->maxFrames;
+        chA->animState = 4;
+        chB->animState = 1;
+        chA->frameCounter = startFrames;
         gIwram_53A0[0xff] = 1;
     }
 
     cmpA = chA;
-    if (cmpA->_field_04 == a->field_04) {
-        cmpA->_field_00 = 3;
-        cmpA->_field_0e--;
+    if (cmpA->scrollPos == a->field_04) {
+        cmpA->animState = 3;
+        cmpA->frameCounter--;
     }
-    if (cmpA->_field_04 == a->field_14) {
-        cmpA->_field_00 = 4;
-        cmpA->_field_0e--;
+    if (cmpA->scrollPos == a->field_14) {
+        cmpA->animState = 4;
+        cmpA->frameCounter--;
     }
 
     cmpB = chB;
-    if (cmpB->_field_04 == b->field_04) {
-        cmpB->_field_00 = 1;
-        cmpA->_field_0e--;
+    if (cmpB->scrollPos == b->field_04) {
+        cmpB->animState = 1;
+        cmpA->frameCounter--;
     }
-    if (chB->_field_04 == b->field_14) {
-        chB->_field_00 = 2;
-        cmpA->_field_0e--;
+    if (chB->scrollPos == b->field_14) {
+        chB->animState = 2;
+        cmpA->frameCounter--;
     }
 
-    if (chA->_field_0e <= 0)
-        chA->_field_0e = 0;
+    if (chA->frameCounter <= 0)
+        chA->frameCounter = 0;
 }
 
 /* ROM transfer descriptor consumed by DmaJob_Advance (first 16 bytes by value,
@@ -148,12 +148,12 @@ void RunScrollTransitionSequence(void)
         if (gIwram_60A0[0] >> 7 != 0)
             break;
         Sound_Play(28);
-        gIwram_5360._field_04 = 0;
-        gIwram_6150._field_04 = 0;
-        gIwram_5360._maxFrames = 0;
-        gIwram_5360._field_00 = 0;
-        gIwram_6150._maxFrames = 0;
-        gIwram_6150._field_00 = 1;
+        gIwram_5360.scrollPos = 0;
+        gIwram_6150.scrollPos = 0;
+        gIwram_5360.maxFrames = 0;
+        gIwram_5360.animState = 0;
+        gIwram_6150.maxFrames = 0;
+        gIwram_6150.animState = 1;
         gIwram_53A0[0xff] = 0;
         gIwram_6410.maxFrames = 8;
         gIwram_53A0[1] = 1;
@@ -167,7 +167,7 @@ void RunScrollTransitionSequence(void)
         seedB = (struct SeqSeed_6E08 *)0x08306e28;
         InitScrollAnimSequence(a0, a1, seedB->posA, seedB->posA, seedB->frames);
         UpdateScrollFromAnimChannels();
-        if (gIwram_6150._field_04 == 0 && gIwram_5360._field_04 == 0 && gIwram_5360._field_0e == 0) {
+        if (gIwram_6150.scrollPos == 0 && gIwram_5360.scrollPos == 0 && gIwram_5360.frameCounter == 0) {
             FlushFramebufferBank(0);
             FlushFramebufferBank(1);
             ok = 1;
