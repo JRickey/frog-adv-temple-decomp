@@ -125,7 +125,8 @@ struct Entity {
     s16 y;            /* +0x04: Y sub-coordinate (signed; /24 -> tile Y) */
     u8 actorId;       /* +0x06: active actor id (matched against entry+8 by Entity_CheckEngage) */
     u8 field_07[3];   /* +0x07..+0x09 */
-    u8 field_0A;      /* +0x0A: scene/entity-type id (keys sEntityProc* tables) */
+    u8 field_0A;      /* +0x0A: no C accessors yet (asm-only or unused); purpose unconfirmed.
+                       * NOT the sEntityProc* key — those tables key on gGameStuff.sceneType. */
     u8 field_0B[5];   /* +0x0B..+0x0F */
     u16 field_10;     /* +0x10 */
     u16 field_12;     /* +0x12 */
