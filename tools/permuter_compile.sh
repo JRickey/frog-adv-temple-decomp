@@ -55,7 +55,10 @@ fi
 # Same flags as the Makefile. Default compiler is old_agbcc (the Makefile
 # default CC); override with AGBCC= for the agbcc-exception TUs.
 AGBCC="${AGBCC:-tools/agbcc/bin/old_agbcc}"
-CFLAGS="-Werror -O2 -mthumb-interwork -fhex-asm"
+# PERMUTER_EXTRA_CFLAGS: per-TU flags the Makefile applies to this function's
+# .s target (e.g. -fno-expensive-optimizations). The permuter MUST compile with
+# the same flags as the real build, or it optimizes codegen that won't match.
+CFLAGS="-Werror -O2 -mthumb-interwork -fhex-asm ${PERMUTER_EXTRA_CFLAGS:-}"
 # -DNON_MATCHING: permute the readable C branch of #ifdef NON_MATCHING / #else asm
 # functions (never the real build; harmless for files without that ifdef).
 CPPFLAGS="-P -DREGION_US -DNON_MATCHING -nostdinc -Iinclude/"

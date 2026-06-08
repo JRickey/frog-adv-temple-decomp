@@ -25,6 +25,7 @@ functions too). --agbcc-new selects the newer agbcc for the ~4 exception TUs.
 import argparse
 import os
 import re
+import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -80,6 +81,10 @@ def main() -> int:
                     "mismatched-reloc target and a corrupt score.")
     ap.add_argument("--agbcc-new", action="store_true",
                     help="use the newer agbcc (only for the ~4 exception TUs)")
+    ap.add_argument("--extra-cflags", default="",
+                    help="per-TU CFLAGS the Makefile applies to this function "
+                    "(e.g. '-fno-expensive-optimizations'); baked into compile.sh "
+                    "so the permuter matches the real build")
     args = ap.parse_args()
     fn = args.fn
     outdir = ROOT / "nonmatchings" / fn
@@ -96,6 +101,7 @@ def main() -> int:
         'INPUT="$(realpath "$1")"\n'
         'OUTPUT="$(cd "$(dirname "$3")" && pwd)/$(basename "$3")"\n'
         f"cd {ROOT}\n"
+        f"PERMUTER_EXTRA_CFLAGS={shlex.quote(args.extra_cflags)} "
         f'AGBCC={agbcc} tools/permuter_compile.sh -DREGION_US -nostdinc -Iinclude/ "$INPUT" -o "$OUTPUT"\n'
     )
     os.chmod(outdir / "compile.sh", 0o755)

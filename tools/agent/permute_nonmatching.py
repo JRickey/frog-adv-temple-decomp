@@ -63,6 +63,33 @@ PERMUTER = ROOT / "vendor" / "decomp-permuter"
 PYBIN = PERMUTER / ".venv" / "bin" / "python"
 
 
+def detect_tu_cflags(srcfile: Path) -> str:
+    """Collect per-TU `CFLAGS += ...` flags the Makefile applies to this
+    function's .s target (handles `\\`-continued target lists)."""
+    makefile = ROOT / "Makefile"
+    if not makefile.exists():
+        return ""
+    target = str(srcfile.relative_to(ROOT)).replace(".c", ".s")
+    # Join backslash-continued lines into logical rules.
+    logical = []
+    buf = ""
+    for line in makefile.read_text(errors="replace").splitlines():
+        if line.endswith("\\"):
+            buf += line[:-1] + " "
+        else:
+            logical.append(buf + line)
+            buf = ""
+    flags: list[str] = []
+    for rule in logical:
+        m = re.match(r"\s*(.+?):\s*CFLAGS\s*\+=\s*(.+)$", rule)
+        if not m:
+            continue
+        targets = m.group(1).split()
+        if target in targets:
+            flags.extend(m.group(2).split())
+    return " ".join(flags)
+
+
 def find_defining_file(name: str) -> Path | None:
     """src/**/*.c that *defines* `name` (a `... name(args) {`, not a call/decl)."""
     def_re = re.compile(rf"\b{re.escape(name)}\s*\([^;)]*\)\s*\n?\s*\{{")
@@ -237,10 +264,18 @@ def main() -> int:
         return emit({"fn": fn, "error": f"{fn} {reason}"}, 1)
 
     base_text = build_base_c(src_text)
-    if "asm(" in base_text or "asm (" in base_text:
-        return emit({"fn": fn, "error": "inline asm survived base.c extraction "
-                     "(pycparser will choke) — the NON_MATCHING body itself "
-                     "contains asm; hand-author a base.c instead"}, 1)
+    # perm_pycparser handles register-variable pins — `register T x asm("r5")`
+    # (incl. high-reg aliases sl/sb/fp/ip/sp/lr) — fine; those are often the
+    # load-bearing matching trick we want to permute around. Only a genuine
+    # inline-asm STATEMENT block (instruction strings) chokes the parser, so
+    # reject only `asm(...)` sites that are NOT a register binding.
+    REG = r'(?:r(?:1[0-5]|[0-9])|sl|sb|fp|ip|sp|lr|pc|a[1-4]|v[1-8])'
+    all_asm = len(re.findall(r'\b(?:__)?asm(?:__)?\s*(?:volatile\s*)?\(', base_text))
+    reg_pins = len(re.findall(rf'\basm\s*\(\s*"{REG}"\s*\)', base_text))
+    if all_asm > reg_pins:
+        return emit({"fn": fn, "error": "an inline-asm STATEMENT survived base.c "
+                     "extraction (perm_pycparser handles register pins, but not "
+                     "asm instruction blocks); hand-author a base.c instead"}, 1)
     if re.search(rf"\b{re.escape(fn)}\s*\([^;)]*\)\s*\n?\s*\{{", base_text) is None:
         return emit({"fn": fn, "error": f"{fn} not found as a definition in the "
                      "extracted NON_MATCHING body"}, 1)
@@ -262,10 +297,17 @@ def main() -> int:
     autobase = outdir / "_autobase.c"
     autobase.write_text(base_text)
 
+    # Per-TU CFLAGS the Makefile applies to this function's .s target (e.g.
+    # -fno-expensive-optimizations). The permuter must compile with the same
+    # flags or it optimizes codegen that won't match the real build.
+    extra_cflags = detect_tu_cflags(srcfile)
+
     # Scaffold via setup_permuter, forcing the compiled C body as the target
     # candidate so the relocation layout matches a real C match (F2).
     setup_cmd = ["python3", "tools/agent/setup_permuter.py", fn,
                  "--base", str(autobase), "--target-from-base"]
+    if extra_cflags:
+        setup_cmd += ["--extra-cflags", extra_cflags]
     if args.addr:
         setup_cmd += ["--addr", args.addr]
     setup = subprocess.run(setup_cmd, cwd=ROOT, capture_output=True, text=True)
