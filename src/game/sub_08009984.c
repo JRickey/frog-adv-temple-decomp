@@ -70,6 +70,9 @@ check8or11:
     PlayerFlags_Set(&gIwram_35E0, 0x2000);
 }
 
+extern struct BgScrollState gIwram_60A0[3];
+extern struct IndexEntry gEntityIndex_03006160[];
+
 /* Per-frame entity-vs-player AABB sweep.
  *
  * Iterates the entity array at 0x03003720 (stride 0x38, count at
@@ -102,70 +105,80 @@ check8or11:
 #ifdef NON_MATCHING
 void Entity_UpdateVisibility(void)
 {
-    s16 player_cx;
-    s16 player_cy;
+    s16 scrollX;
+    s16 scrollY;
     u8 count;
     s32 idx;
-    u8 *hits_count_ptr;
-    u8 *entity;
-    s32 i;
-    s32 rx;
-    s32 ry;
+    u8 *visibleCount;
+    struct Entity *entity;
+    s32 offset;
+    s32 height;
+    s32 width;
+    s32 scrollXReg;
+    s32 scrollYReg;
     s32 ex;
     s32 ey;
-    s32 dx_raw;
-    s32 dy_raw;
+    struct IndexEntry *slots;
     u16 flags;
-    u8 *slot;
 
-    player_cx = (s16) * (u16 *)(0x030060A0 + 12);
-    player_cy = (s16) * (u16 *)(0x030060A0 + 16);
-    *(u8 *)(0x03006110 + 49) = 0;
-    *(u32 *)(0x03006110 + 20) = 0;
-    *(u32 *)(0x03006110 + 24) = 0;
-    *(u32 *)(0x03006110 + 28) = 0;
-    *(u32 *)(0x03006110 + 32) = 0;
+    scrollX = (s16)(u16)gIwram_60A0[0].scrollX;
+    scrollY = (s16)(u16)gIwram_60A0[0].scrollY;
+    gIwram_6110.liveCount = 0;
+    gIwram_6110.flagBank0 = 0;
+    gIwram_6110.flagBank1 = 0;
 
-    count = *(u8 *)(0x03006110 + 48);
-    for (idx = 0; idx < count; idx++) {
-        hits_count_ptr = (u8 *)(0x03006110 + 49);
-        i = idx * 0x38;
-        entity = (u8 *)(0x03003720 + i);
-        if ((*(u16 *)(entity + 0x34) & 8) != 0)
-            continue;
+    count = gIwram_6110.limit;
+    idx = 0;
+    if (idx >= count)
+        return;
+
+    visibleCount = &gIwram_6110.liveCount;
+    offset = 0;
+    do {
+        entity = (struct Entity *)((u8 *)gEntities + offset);
+        if ((entity->status & 8) != 0)
+            goto step;
         if (Entity_IsInProximity(idx) == 0)
             goto clear_bit;
 
-        rx = *(u8 *)(entity + 24) >> 1;
-        ry = *(u8 *)(entity + 25) >> 1;
-        ex = (s16) * (u16 *)(entity + 2);
-        ey = (s16) * (u16 *)(entity + 4);
-        *(u16 *)(entity + 8) = (u16)(ex - player_cx - ry);
-        *(u16 *)(entity + 10) = (u16)(ey - player_cy - rx);
+        height = entity->visibilityHeight >> 1;
+        ex = entity->x;
+        scrollXReg = scrollX;
+        width = entity->visibilityWidth >> 1;
+        entity->screenX = ex - scrollXReg - width;
+        ey = entity->y;
+        scrollYReg = scrollY;
+        entity->screenY = ey - scrollYReg - height;
 
-        if ((ex + ry) < player_cx)
-            goto clear_bit;
-        if ((ex - ry) > player_cx + 240)
-            goto clear_bit;
-        if ((ey + rx) < player_cy)
-            goto clear_bit;
-        if ((ey - rx) > player_cy + 160)
-            goto clear_bit;
+        if (ex + width < scrollXReg)
+            goto set_control_bit;
+        if (ex - width > scrollXReg + 240)
+            goto set_control_bit;
+        if (ey + height < scrollYReg)
+            goto set_control_bit;
+        if (ey - height > scrollYReg + 160)
+            goto set_control_bit;
 
-        flags = *(u16 *)(entity + 0x34);
-        if ((flags & 1) == 0)
-            *(u16 *)(entity + 0x34) = flags | 0x100 | 1;
-        slot = (u8 *)(0x03006160 + (*hits_count_ptr << 3));
-        slot[0] = (u8)idx;
-        *(u16 *)(slot + 2) = (u16)(*(u16 *)(entity + 0x26) + ey);
-        *(u16 *)(slot + 4) = 0xFFFF;
-        (*hits_count_ptr)++;
-        ModeControl_SetBit((void *)0x03006110, idx);
-        continue;
+        flags = entity->status;
+        if ((flags & 1) == 0) {
+            flags |= 0x100;
+            entity->status = flags | 1;
+        }
+        slots = gEntityIndex_03006160;
+        slots[*visibleCount].id = idx;
+        slots[*visibleCount].sortY = entity->hitHalfH + ey;
+        slots[*visibleCount].next = 0xFFFF;
+        (*visibleCount)++;
+    set_control_bit:
+        ModeControl_SetBit(&gIwram_6110, idx);
+        goto step;
 
     clear_bit:
-        *(u16 *)(entity + 0x34) = (u16)(*(u16 *)(entity + 0x34) & 0xFFFE);
-    }
+        entity->status &= 0xFFFE;
+    step:
+        offset += sizeof(struct Entity);
+        idx++;
+    } while (idx < gIwram_6110.limit);
 }
 #else
 NAKED void Entity_UpdateVisibility(void)

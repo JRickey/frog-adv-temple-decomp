@@ -119,36 +119,37 @@ struct IwramAt3608 {
  * the middle is reached via computed slot pointers (per-behavior). Restructuring
  * to this model is byte-neutral (layout preserved). Replaces flat IwramAt3720. */
 struct Entity {
-    u8 kind;          /* +0x00: variant tag (selects sprite asset + behavior view) */
-    u8 collisionType; /* +0x01 */
-    s16 x;            /* +0x02: X sub-coordinate (signed; /24 -> tile X) */
-    s16 y;            /* +0x04: Y sub-coordinate (signed; /24 -> tile Y) */
-    u8 actorId;       /* +0x06: active actor id (matched against entry+8 by Entity_CheckEngage) */
-    u8 field_07[3];   /* +0x07..+0x09 */
-    u8 field_0A;      /* +0x0A: no C accessors yet (asm-only or unused); purpose unconfirmed.
-                       * NOT the sEntityProc* key — those tables key on gGameStuff.sceneType. */
-    u8 field_0B[5];   /* +0x0B..+0x0F */
-    u16 field_10;     /* +0x10 */
-    u16 field_12;     /* +0x12 */
-    u16 field_14;     /* +0x14 */
-    u8 field_16;      /* +0x16 */
-    u8 field_17;      /* +0x17: tile-class result (Player_CheckTileEvents) */
-    u8 field_18[2];   /* +0x18..+0x19 */
-    u8 state;         /* +0x1A: dispatch state read often (also a move-opcode in slot 0) */
-    u8 field_1B;      /* +0x1B: active-entity count, loop bound (<= 4); slot 0 only */
-    u8 field_1C[8];   /* +0x1C..+0x23 */
-    s16 hitHalfW;     /* +0x24: signed half-extent (AABB collision probes) */
-    s16 hitHalfH;     /* +0x26: signed half-extent */
-    u8 field_28;      /* +0x28 */
-    u8 field_29;      /* +0x29 */
-    u8 field_2A;      /* +0x2A: MotionDesc.sel (pool slot ptr in MotionDesc_Set) */
-    u8 field_2B[5];   /* +0x2B..+0x2F */
-    u8 field_30;      /* +0x30: MotionDesc.dx */
-    u8 field_31;      /* +0x31: MotionDesc.dy */
-    u8 field_32;      /* +0x32: MotionDesc.mode */
-    u8 field_33;      /* +0x33 */
-    u16 status;       /* +0x34: flag halfword (bits 0x04 / 0x08 / 0x40 / 0x8000 tested) */
-    u8 field_36[2];   /* +0x36..+0x37 */
+    u8 kind;             /* +0x00: variant tag (selects sprite asset + behavior view) */
+    u8 collisionType;    /* +0x01 */
+    s16 x;               /* +0x02: X sub-coordinate (signed; /24 -> tile X) */
+    s16 y;               /* +0x04: Y sub-coordinate (signed; /24 -> tile Y) */
+    u8 actorId;          /* +0x06: active actor id (matched against entry+8 by Entity_CheckEngage) */
+    u8 field_07;         /* +0x07 */
+    s16 screenX;         /* +0x08: screen-space X offset written by Entity_UpdateVisibility */
+    s16 screenY;         /* +0x0A: screen-space Y offset written by Entity_UpdateVisibility */
+    u8 field_0C[4];      /* +0x0C..+0x0F */
+    u16 field_10;        /* +0x10 */
+    u16 field_12;        /* +0x12 */
+    u16 field_14;        /* +0x14 */
+    u8 field_16;         /* +0x16 */
+    u8 field_17;         /* +0x17: tile-class result (Player_CheckTileEvents) */
+    u8 visibilityHeight; /* +0x18: vertical visibility span source */
+    u8 visibilityWidth;  /* +0x19: horizontal visibility span source */
+    u8 state;            /* +0x1A: dispatch state read often (also a move-opcode in slot 0) */
+    u8 field_1B;         /* +0x1B: active-entity count, loop bound (<= 4); slot 0 only */
+    u8 field_1C[8];      /* +0x1C..+0x23 */
+    s16 hitHalfW;        /* +0x24: signed half-extent (AABB collision probes) */
+    s16 hitHalfH;        /* +0x26: signed half-extent */
+    u8 field_28;         /* +0x28 */
+    u8 field_29;         /* +0x29 */
+    u8 field_2A;         /* +0x2A: MotionDesc.sel (pool slot ptr in MotionDesc_Set) */
+    u8 field_2B[5];      /* +0x2B..+0x2F */
+    u8 field_30;         /* +0x30: MotionDesc.dx */
+    u8 field_31;         /* +0x31: MotionDesc.dy */
+    u8 field_32;         /* +0x32: MotionDesc.mode */
+    u8 field_33;         /* +0x33 */
+    u16 status;          /* +0x34: flag halfword (bits 0x04 / 0x08 / 0x40 / 0x8000 tested) */
+    u8 field_36[2];      /* +0x36..+0x37 */
 };
 typedef char _entity_size_check[sizeof(struct Entity) == 0x38 ? 1 : -1];
 

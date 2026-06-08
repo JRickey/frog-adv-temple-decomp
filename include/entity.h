@@ -73,7 +73,10 @@ typedef struct EntityHitbox {
  * unsigned (ldrb). */
 typedef struct IndexEntry {
     u8 id;
-    u8 _pad[7];
+    u8 _pad1;
+    u16 sortY;
+    u16 next;
+    u8 _pad6[2];
 } IndexEntry;
 
 /* An entity record (gEntities slot) viewed only through the four fields
