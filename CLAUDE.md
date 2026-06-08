@@ -482,6 +482,61 @@ For each decomp target:
    is acceptable only when wrapped behind the ifdef so the build still
    uses the asm.
 
+### Permuter: when it pays off, how to run it, how to harvest
+
+`vendor/decomp-permuter` is the last-mile tool for **register-coloring**
+matches after corpus + manual structure stall (and for reaping
+`register … asm("rN")` pins, task #14). Hard-won rules:
+
+**Decide if it's worth a run BEFORE starting one** — the permuter mutates
+C structure and hopes agbcc colours differently; it does not steer the
+allocator directly, so its reach is uneven:
+- ✅ **High-register *permutations***: agbcc already keeps the right values
+  in r8/r9/sl but in a different order than the baserom. Relieve the
+  pressure source (classic: make a spare `volatile` stack-temp non-volatile,
+  or add/remove a spill) and it recolours — reaped `Entity_UpdateHitboxSlots`
+  r8/r9 this way (the whole fix was "make `typeStack` non-volatile").
+- ✅ **Structural diffs you SEED by hand first**: get the instruction *shape*
+  right manually, then let the permuter finish the coloring. `Blit_ApplyFlaggedRecords`
+  went byte_diff 114→27 by hand-adding a `volatile u32 x = (u32)ptr;` stack
+  spill to match the baserom; the permuter then chips at the residual.
+- ❌ **Pure low-register coloring** (a scalar agbcc deterministically parks
+  in a different low reg: `sceneType→r2`, `rec→r5`): the permuter PLATEAUS
+  every time — Scene_EntityTick / EntityHitbox_RegisterHitPoint / Mode4_BlitRect
+  all stuck at 24–36k iters. **Keep the pin** (the function still matches with
+  it — this is a reaping limit, not an "unmatchable" verdict; cf.
+  codegen-notes "Permuter convergence audit").
+
+**Run mechanics** (macOS has no `timeout`/`gtimeout`):
+```sh
+# base.c = your BEST manual near-match, NOT the naive de-pin. Keep load-bearing
+# pins (reaping targets the MINIMAL pin set, not zero). pycparser chokes on
+# expressions inside extended-asm operands — hoist them out:
+#   u32 t = x << 24;  asm volatile("" : "=r"(o) : "0"(t));
+python3 tools/agent/setup_permuter.py <Fn> --base nonmatchings/<Fn>/base.c
+PERMUTER_PROJECT_ROOT=$PWD nohup vendor/decomp-permuter/.venv/bin/python \
+  vendor/decomp-permuter/permuter.py nonmatchings/<Fn> -j5 --stop-on-zero \
+  > /tmp/perm_<Fn>.log 2>&1 &       # poll the log; kill by hand when done
+```
+- **Run it LONG**: 35k+ iterations is normal — do NOT call a function resistant
+  after a few hundred (that mistake costs a restart). It self-stops on score 0
+  and writes `nonmatchings/<Fn>/output-0-*`. ~2 permuters at once on a 10-core
+  box (`-j4`/`-j5` each); don't run foreground clean builds during a run.
+- **Read the score** (it is NOT byte_diff): structural diffs (DELETION /
+  INSERTION / REPLACEMENT) cost ~100 *each*; coloring (ARGUMENT_MISMATCH) far
+  less. Score ≈ a small multiple of byte_diff ⇒ pure coloring (if it plateaus,
+  it's the ❌ class). Score dominated by ×100 jumps ⇒ still structural ⇒ fix
+  base.c by hand, don't just add iterations.
+- **Iterate the base**: when it plateaus, fold the next structural insight into
+  base.c and re-run `setup_permuter` from the closer base.
+
+**Harvest — never paste the winner verbatim.** `output-0-*/source.c` is
+pycparser-expanded and littered with `if (1) {}` / `do {} while (0)` / `new_var`
+noise. Diff it against base.c, extract the **one essential mutation** (usually a
+single change, e.g. a type/volatile flip or a split assignment), apply *that*
+cleanly to the real src, then `make tidy && make -j8 && make check`.
+`nonmatchings/` is gitignored, so scratch never reaches a commit.
+
 ### Subagent parallelism
 
 Targets that are **truly independent** can run in parallel:
