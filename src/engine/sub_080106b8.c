@@ -16,8 +16,10 @@
  *   - countdown pinned to r2 (otherwise allocated to r3).
  *   - p3480 anchors the 0x03003480 base before the [5] index so the
  *     constant fold doesn't collapse it to 0x03003485.
- *   - bldcnt pinned to r0 and the literal 16 pinned to r1 to force
- *     the target's evaluation order for `16 - *countdown`. */
+ *   - bldcnt pinned to r0, and `16 - *countdown` written as a split
+ *     `n -= *countdown` so agbcc materialises 16 first (into r1) and
+ *     subtracts in place — matches the target's evaluation order
+ *     without needing a register pin on the literal. */
 
 u8 Blend_StepFade(void)
 {
@@ -32,8 +34,9 @@ u8 Blend_StepFade(void)
     }
     bldcnt = (vu16 *)0x04000054;
     {
-        register int n asm("r1") = 16;
-        *bldcnt = n - *countdown;
+        int n = 16;
+        n -= *countdown;
+        *bldcnt = n;
     }
     return *countdown;
 }
