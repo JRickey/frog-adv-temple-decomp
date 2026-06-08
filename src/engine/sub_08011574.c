@@ -3,7 +3,7 @@
 #include "iwram.h"
 #include "types.h"
 
-void sub_08012BC4(u32 flags, u32 dstX, u32 dstY, u32 widthArg, u32 srcRowsArg, void *srcTable, u32 srcIndex);
+void Tilemap_BlitTileRows(u32 flags, u32 dstX, u32 dstY, u32 widthArg, u32 srcRowsArg, void *srcTable, u32 srcIndex);
 
 struct BlitRecord_sub11574 {
     u16 dstX;
@@ -64,9 +64,10 @@ u32 Selector_StepBlitAnim(u8 idx)
     if (p->_unk00 - s->lastTime < s->field_b)
         return 0;
 
-    sub_08012BC4(entry->flags, entry->dstX, entry->dstY, entry->width, entry->rows,
-                 (srcAddr = (u32)base + 16, srcAddr2 = stride + srcAddr, srcTable = *(const u16 ***)srcAddr2, srcTable),
-                 (s->field_a = (u8)(fieldA + 1), ipField));
+    Tilemap_BlitTileRows(
+        entry->flags, entry->dstX, entry->dstY, entry->width, entry->rows,
+        (srcAddr = (u32)base + 16, srcAddr2 = stride + srcAddr, srcTable = *(const u16 ***)srcAddr2, srcTable),
+        (s->field_a = (u8)(fieldA + 1), ipField));
     {
         GameStuff *postGs;
 

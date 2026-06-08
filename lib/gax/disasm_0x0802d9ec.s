@@ -1,7 +1,7 @@
 @ Auto-emitted by tools/disasm/peel.py — do not hand-edit this header.
 @ Range:  [0x0802dc1c, 0x0802dcbc)  (160 bytes, thumb mode)
 @ Re-peel:  python3 tools/disasm/peel.py --start 0x802dc1c --end 0x802dcbc --mode thumb
-@ Holds SoundHandle_SetPan [0x0802dc1c, 0x0802dcbc); sub_0802D9EC was decompiled to src/game/sub_0802d9ec.c.
+@ Holds SoundHandle_SetPan [0x0802dc1c, 0x0802dcbc); Sound_AllocVoice was decompiled to src/game/sub_0802d9ec.c.
 
         .include "asm/macros.inc"
         .syntax unified

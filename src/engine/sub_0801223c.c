@@ -76,7 +76,7 @@ void InitScrollAnimSequence(u32 unused0, u32 unused1, u32 unused2, u32 unused3, 
 
 /* ROM transfer descriptor consumed by DmaJob_Advance (first 16 bytes by value,
  * byte at +2 is the mode selector). Same shape as the 0x08306f08 descriptor
- * used by sub_08012D88. */
+ * used by Scene_TickScrollAndBlend. */
 struct TransferDesc_6908 {
     u32 word0;
     u32 word4;

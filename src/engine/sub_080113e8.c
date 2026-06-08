@@ -60,7 +60,7 @@ u32 GenRandomTileMask(void)
     return result;
 }
 
-void sub_08012BC4(u32 flags, u32 dstX, u32 dstY, u32 widthArg, u32 srcRowsArg, void *srcTable, u32 srcIndex);
+void Tilemap_BlitTileRows(u32 flags, u32 dstX, u32 dstY, u32 widthArg, u32 srcRowsArg, void *srcTable, u32 srcIndex);
 
 struct BlitRecord {
     u16 dstX;
@@ -103,13 +103,13 @@ void Blit_ApplyFlaggedRecords(u8 count, struct BlitRecord *records, u8 srcIndex)
 
             stride = (u32)i * 24;
             rec = (struct BlitRecord *)(stride + (u32)records);
-            sub_08012BC4(rec->flags, rec->dstX, rec->dstY, rec->width, rec->rows, rec->srcTable, idx);
+            Tilemap_BlitTileRows(rec->flags, rec->dstX, rec->dstY, rec->width, rec->rows, rec->srcTable, idx);
             if (i != 3) {
                 struct BlitRecord *romRec = (struct BlitRecord *)(stride + (u32)romTable);
                 struct BlitSrcEntry *srcBase = gBlitSrcTable_08306b84;
 
-                sub_08012BC4(romRec->flags, romRec->dstX, romRec->dstY, romRec->width, romRec->rows,
-                             srcBase[i].srcTable, 3);
+                Tilemap_BlitTileRows(romRec->flags, romRec->dstX, romRec->dstY, romRec->width, romRec->rows,
+                                     srcBase[i].srcTable, 3);
             }
         }
         i = (u8)(i + 1);

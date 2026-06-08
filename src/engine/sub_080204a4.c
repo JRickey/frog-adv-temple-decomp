@@ -11,7 +11,7 @@ typedef struct {
 
 extern u8 gIwram_3570;
 
-extern u32 sub_0802D9EC(u32 sound, u32 a, u32 b, u32 c);
+extern u32 Sound_AllocVoice(u32 sound, u32 a, u32 b, u32 c);
 extern void SoundHandle_SetPan(u32 handle, u8 val);
 extern u32 SoundHandle_Retire(u32 handle);
 extern u32 SoundHandle_IsActive(u32 handle);
@@ -46,7 +46,7 @@ void Entity_ProximitySound(struct Entity *entity, u8 channel, u8 halfW, u8 halfH
             sound = *(u32 *)(offset + base);
             handle = -1;
             if ((p->flags & 0x10) != 0) {
-                handle = sub_0802D9EC(sound, 0xff, 0xff, 0xff);
+                handle = Sound_AllocVoice(sound, 0xff, 0xff, 0xff);
                 SoundHandle_SetPan(handle, p->_field_02 & 0x7f);
             }
             *(u32 *)slot = handle;
@@ -96,7 +96,7 @@ startSlot1:
     sound = p->entries[1].fieldA;
     handle = -1;
     if ((p->flags & 0x10) != 0) {
-        handle = sub_0802D9EC(sound, 0xff, 0xff, 0xff);
+        handle = Sound_AllocVoice(sound, 0xff, 0xff, 0xff);
         pan = 0x7f;
         p = (SoundState *)(u32)p->_field_02;
         pan &= (u32)p;
@@ -113,7 +113,7 @@ startSlot0:
     sound = p->entries[0].fieldA;
     handle = -1;
     if ((p->flags & 0x10) != 0) {
-        handle = sub_0802D9EC(sound, 0xff, 0xff, 0xff);
+        handle = Sound_AllocVoice(sound, 0xff, 0xff, 0xff);
         pan = 0x7f;
         pan &= p->_field_02;
         SoundHandle_SetPan(handle, pan);

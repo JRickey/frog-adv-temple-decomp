@@ -1,11 +1,11 @@
-extern void sub_0801BB18(void);
+extern void Level_PreLoadHook(void);
 extern void LoadWorldLevelLayout(void);
 
 void Level_LoadLayout(void)
 {
-    sub_0801BB18();
+    Level_PreLoadHook();
     LoadWorldLevelLayout();
 }
 
-void sub_0801BAD8(void)
+void Credits_PreInitHook(void)
 {}

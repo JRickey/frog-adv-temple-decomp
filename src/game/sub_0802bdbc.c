@@ -5,7 +5,7 @@
 
 extern u32 ModeControl_GetFlag(u8 *base, u32 selector, u32 bit);
 extern void Display_ResetLayers(void);
-extern u8 sub_0801436C(void);
+extern u8 Gate_RunAnimSequence(void);
 
 void Gate_Tick(void)
 {
@@ -18,7 +18,7 @@ void Gate_Tick(void)
     if ((u8)ModeControl_GetFlag((u8 *)&gIwram_6110, 3, 5)) {
         u8 *p1;
 
-        sub_08015194();
+        ScrollBlit_ResetLayers();
         p1 = (u8 *)gEntities;
         new_var = (u16 *)(p1 + 0xaf2);
         scratch = 0;
@@ -40,7 +40,7 @@ void Gate_Tick(void)
     }
 
     scratch = 0xaf2;
-    if (sub_0801436C()) {
+    if (Gate_RunAnimSequence()) {
         u8 *base;
         u8 *p3;
         s32 st;

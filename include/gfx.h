@@ -124,7 +124,7 @@ u16 Screen_BeginFlash(u16 arg);
 
 s32 Screen_TickFlash(void);
 
-void sub_08015194(void);
+void ScrollBlit_ResetLayers(void);
 
 void Scroll_UpdateCamera(u8 countArg);
 
@@ -137,6 +137,6 @@ void BgLayer_Enable(u8 layer);
  * (lsls/lsrs) only for u32 params; narrower types at the call site are safe.
  * srcTable is void* to accommodate callers passing TilemapTableEntry.tiles (void*)
  * or const u16** from ScaleAnimDesc; ABI-identical either way. */
-void sub_08012BC4(u32 flags, u32 dstX, u32 dstY, u32 widthArg, u32 srcRowsArg, void *srcTable, u32 srcIndex);
+void Tilemap_BlitTileRows(u32 flags, u32 dstX, u32 dstY, u32 widthArg, u32 srcRowsArg, void *srcTable, u32 srcIndex);
 
 #endif /* GUARD_GFX_H */

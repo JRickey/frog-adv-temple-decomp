@@ -2,7 +2,7 @@
 #include "sound.h"
 
 extern u8 gIwram_3570;
-extern u32 sub_0802D9EC(u32 sound, u32 a, u32 b, u32 c);
+extern u32 Sound_AllocVoice(u32 sound, u32 a, u32 b, u32 c);
 extern void SoundHandle_SetPan(u32 handle, u8 val);
 
 u32 Sound_Play(u32 sound)
@@ -16,7 +16,7 @@ u32 Sound_Play(u32 sound)
     mask = 0x10;
     mask = mask & p->flags;
     if (mask != 0) {
-        handle = sub_0802D9EC(sound, 0xff, 0xff, 0xff);
+        handle = Sound_AllocVoice(sound, 0xff, 0xff, 0xff);
     }
     return handle;
 }
@@ -35,7 +35,7 @@ u32 Sound_PlayWithPan(u32 sound)
     handle = 0x10;
     handle = handle & p->flags;
     if (handle != 0) {
-        handle = sub_0802D9EC(snd, 0xff, 0xff, 0xff);
+        handle = Sound_AllocVoice(snd, 0xff, 0xff, 0xff);
         result = handle;
         pan = 0x7f;
 
@@ -73,7 +73,7 @@ u32 Sound_PlayNearEntity(struct Entity *entity, u32 sound, u8 halfW, u8 halfH)
     handle = 0x10;
     handle = handle & p->flags;
     if (handle) {
-        handle = sub_0802D9EC(sound, 0xff, 0xff, 0xff);
+        handle = Sound_AllocVoice(sound, 0xff, 0xff, 0xff);
         result = handle;
         pan = 0x7f;
         p = (SoundState *)(u32)p->_field_02;
@@ -112,7 +112,7 @@ u32 Entity_PlaySoundOnScreenEnter(struct Entity *entity, u32 sound, u8 halfW, u8
         handle = 0x10;
         handle = handle & p->flags;
         if (handle) {
-            handle = sub_0802D9EC(sound, 0xff, 0xff, 0xff);
+            handle = Sound_AllocVoice(sound, 0xff, 0xff, 0xff);
             result = handle;
             pan = 0x7f;
             p = (SoundState *)(u32)p->_field_02;

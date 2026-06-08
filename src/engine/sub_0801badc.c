@@ -16,5 +16,5 @@ void LoadWorldLevelLayoutAlt(void)
     LevelLayout_WalkRecords(4, layout, 0, 0x33, 100, 3, 0);
 }
 
-void sub_0801BB18(void)
+void Level_PreLoadHook(void)
 {}

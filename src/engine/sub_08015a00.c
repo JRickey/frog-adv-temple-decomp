@@ -25,7 +25,7 @@ void BgTilemap_LoadScene(void)
 {
     const struct TilemapTableEntry *desc = &sTilemapTable_307CE8;
 
-    sub_08012BC4(desc->unk08, desc->unk00, desc->unk02, desc->unk04, desc->unk06, desc->tiles, 1);
+    Tilemap_BlitTileRows(desc->unk08, desc->unk00, desc->unk02, desc->unk04, desc->unk06, desc->tiles, 1);
 }
 
 void Scene_Update(void)

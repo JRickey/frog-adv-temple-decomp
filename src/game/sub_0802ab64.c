@@ -4,7 +4,7 @@
 #include "iwram.h"
 #include "types.h"
 
-extern void sub_080210A0(u16 a0, const void *a1, u16 a2, u8 a3, u16 a4, u8 a5, u8 a6, u8 a7);
+extern void Entity_InitSlotFromRecord(u16 a0, const void *a1, u16 a2, u8 a3, u16 a4, u8 a5, u8 a6, u8 a7);
 extern void LevelLayout_WalkRecords(u32 a0, const void *a1, u32 a2, u32 a3, u32 a4, u32 a5, u32 a6);
 
 extern void Entity10_UpdateStatus(void);
@@ -27,7 +27,7 @@ void EntitySlot17_Init(void)
     u8 i;
 
     for (i = 0; i < 2; i++) {
-        sub_080210A0(i + 17, sLevelLayoutPtrs_317E6C[i], 0, 27, ((i & 1) << 4) | 0x161, 6, 3, 3);
+        Entity_InitSlotFromRecord(i + 17, sLevelLayoutPtrs_317E6C[i], 0, 27, ((i & 1) << 4) | 0x161, 6, 3, 3);
     }
 }
 

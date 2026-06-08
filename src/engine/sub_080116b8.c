@@ -4,7 +4,8 @@
 #include "types.h"
 
 extern void SetModeBlendRegs(void);
-extern void sub_08012BC4(u32 flags, u32 dstX, u32 dstY, u32 widthArg, u32 srcRowsArg, void *srcTable, u32 srcIndex);
+extern void Tilemap_BlitTileRows(u32 flags, u32 dstX, u32 dstY, u32 widthArg, u32 srcRowsArg, void *srcTable,
+                                 u32 srcIndex);
 extern void AnimChannels_Reset(void);
 extern void InitScrollAnimSequence(u32 a, u32 b, u32 c, u32 d, s32 e);
 extern void UpdateScrollFromAnimChannels(void);
@@ -96,8 +97,8 @@ void Selector_BlitStateMachine(u8 maxIdxArg)
                 stride = ((i << 1) + i) << 3;
                 entry = (struct BlitRecord_sub116b8 *)(stride + (u32)gBlitInitTable_08306AD4);
                 new_var3 = i;
-                sub_08012BC4(entry->flags, entry->dstX, entry->dstY, entry->width, entry->rows,
-                             *(const u16 ***)(stride + ((u32)&gBlitInitTable_08306AD4[0].srcTable)), one);
+                Tilemap_BlitTileRows(entry->flags, entry->dstX, entry->dstY, entry->width, entry->rows,
+                                     *(const u16 ***)(stride + ((u32)&gBlitInitTable_08306AD4[0].srcTable)), one);
 
                 flags = f;
                 flags->selector6Flags |= one << new_var3;
@@ -113,7 +114,7 @@ void Selector_BlitStateMachine(u8 maxIdxArg)
                     struct BlitRecord_sub116b8 *rec;
 
                     rec = new_var;
-                    sub_08012BC4(rec->flags, rec->dstX, rec->dstY, rec->width, rec->rows, rec->srcTable, 0);
+                    Tilemap_BlitTileRows(rec->flags, rec->dstX, rec->dstY, rec->width, rec->rows, rec->srcTable, 0);
                 }
             }
             i = (u8)(i + 1);

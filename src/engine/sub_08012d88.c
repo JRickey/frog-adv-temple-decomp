@@ -9,10 +9,10 @@ extern u8 gIwram_6480[];
 
 extern void DmaJob_Advance(struct TransferDesc desc, u8 mode, void *buf);
 extern void BgScrollAnim_Update(void);
-extern void sub_08010A44(u8 a, u8 b);
+extern void Scroll_TickChannels(u8 a, u8 b);
 extern void FrogStatusBar_Update(void);
 
-void sub_08012D88(void)
+void Scene_TickScrollAndBlend(void)
 {
     if (gIwram_60A0[0x40] & 1) {
         *(vu16 *)0x04000050 = 0x1744;
@@ -27,7 +27,7 @@ void sub_08012D88(void)
     }
 
     BgScrollAnim_Update();
-    sub_08010A44(4, 4);
+    Scroll_TickChannels(4, 4);
     FrogStatusBar_Update();
 }
 

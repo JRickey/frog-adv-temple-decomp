@@ -60,35 +60,35 @@ check:
     ModeControl_ClearBit(checkBase, 8, 1);
 }
 
-void sub_0800AC44(u8 tile)
+void TileCollect_OnStep(u8 tile)
 {
-    u8 *base6110;
-    struct IwramAt6110 *p6110;
+    u8 *pCtrlBase;
+    struct IwramAt6110 *pState;
 
     if (tile != 20)
         return;
 
-    base6110 = (u8 *)0x03006110;
+    pCtrlBase = (u8 *)0x03006110;
 
-    if (ModeControl_GetFlag(base6110, 5, 0) == 0) {
-        CtrlFlags_SetBit(base6110, 5, 0);
+    if (ModeControl_GetFlag(pCtrlBase, 5, 0) == 0) {
+        CtrlFlags_SetBit(pCtrlBase, 5, 0);
         Sound_Play(25);
-        CtrlFlags_SetBit(base6110, 8, 4);
-    } else if (ModeControl_GetFlag(base6110, 5, 1) == 0) {
-        CtrlFlags_SetBit(base6110, 5, 1);
+        CtrlFlags_SetBit(pCtrlBase, 8, 4);
+    } else if (ModeControl_GetFlag(pCtrlBase, 5, 1) == 0) {
+        CtrlFlags_SetBit(pCtrlBase, 5, 1);
         Sound_Play(25);
-        CtrlFlags_SetBit(base6110, 8, 4);
-    } else if (ModeControl_GetFlag(base6110, 5, 2) == 0) {
-        CtrlFlags_SetBit(base6110, 5, 2);
+        CtrlFlags_SetBit(pCtrlBase, 8, 4);
+    } else if (ModeControl_GetFlag(pCtrlBase, 5, 2) == 0) {
+        CtrlFlags_SetBit(pCtrlBase, 5, 2);
         Sound_Play(25);
-        CtrlFlags_SetBit(base6110, 8, 4);
+        CtrlFlags_SetBit(pCtrlBase, 8, 4);
     }
 
-    p6110 = &gIwram_6110;
-    if (p6110->selector5Flags == 7)
-        CtrlFlags_SetBit((u8 *)p6110, 8, 5);
+    pState = &gIwram_6110;
+    if (pState->selector5Flags == 7)
+        CtrlFlags_SetBit((u8 *)pState, 8, 5);
 
-    CtrlFlags_SetBit((u8 *)p6110, 8, 2);
+    CtrlFlags_SetBit((u8 *)pState, 8, 2);
 }
 
 extern s8 SpriteAnim_GetPermIndex(s8 idx);

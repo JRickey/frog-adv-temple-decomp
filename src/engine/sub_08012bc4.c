@@ -4,19 +4,20 @@
 
 extern void Scroll_FlushTilemapWindow(u32, void *, void *);
 
-void sub_08012BC4(u32 flags, u32 dstX, u32 dstY, u32 widthArg, u32 srcRowsArg, const u16 **srcTable, u32 srcIndex)
+void Tilemap_BlitTileRows(u32 flags, u32 dstX, u32 dstY, u32 widthArg, u32 srcRowsArg, const u16 **srcTable,
+                          u32 srcIndex)
 {
-    register u32 f asm("ip");
-    register u32 x asm("r9");
-    u32 y;
+    register u32 flagsShifted asm("ip");
+    register u32 dstCol asm("r9");
+    u32 dstRow;
     u32 rows;
     register u32 width asm("r6");
-    register u32 index asm("r8");
+    register u32 frameIndex asm("r8");
     u16 *dst;
     u16 *state;
     register u16 stride asm("r1");
     const u16 *src;
-    register u32 bank asm("r5");
+    register u32 ewramBank asm("r5");
     register void *flushSrc asm("r2");
     register void *flushDst asm("r3");
     register u32 row asm("r0");
@@ -24,13 +25,13 @@ void sub_08012BC4(u32 flags, u32 dstX, u32 dstY, u32 widthArg, u32 srcRowsArg, c
     u32 scratch;
     u8 col;
 
-    f = flags << 24;
-    x = (u16)dstX;
-    y = (u16)dstY;
+    flagsShifted = flags << 24;
+    dstCol = (u16)dstX;
+    dstRow = (u16)dstY;
     width = (u8)widthArg;
     rows = (u8)srcRowsArg;
-    index = (u8)srcIndex;
-    if ((f >> 28) & 1) {
+    frameIndex = (u8)srcIndex;
+    if ((flagsShifted >> 28) & 1) {
         dst = (u16 *)0x02010000;
     } else {
         dst = (u16 *)0x02000000;
@@ -38,11 +39,11 @@ void sub_08012BC4(u32 flags, u32 dstX, u32 dstY, u32 widthArg, u32 srcRowsArg, c
 
     state = (u16 *)0x030060A0;
     stride = state[13];
-    dst += stride * y + x;
-    scratch = index;
+    dst += stride * dstRow + dstCol;
+    scratch = frameIndex;
     src = srcTable[scratch];
     row = 0;
-    bank = f >> 28;
+    ewramBank = flagsShifted >> 28;
     if (row < rows) {
         register u32 loopState asm("ip") = (u32)state;
 
@@ -68,7 +69,7 @@ void sub_08012BC4(u32 flags, u32 dstX, u32 dstY, u32 widthArg, u32 srcRowsArg, c
         register u32 one asm("r1");
 
         one = 1;
-        if (bank & one) {
+        if (ewramBank & one) {
             flushSrc = (void *)0x02010000;
             flushDst = (void *)0x0600E800;
         } else {
@@ -80,16 +81,16 @@ void sub_08012BC4(u32 flags, u32 dstX, u32 dstY, u32 widthArg, u32 srcRowsArg, c
         register u32 one asm("r0");
 
         one = 1;
-        bank = (bank & one) + scratch - scratch;
+        ewramBank = (ewramBank & one) + scratch - scratch;
     }
-    Scroll_FlushTilemapWindow(bank, flushSrc, flushDst);
+    Scroll_FlushTilemapWindow(ewramBank, flushSrc, flushDst);
 
     {
         u8 *sentinel = (u8 *)0x030064C0;
 
         sentinel[10] = 0;
     }
-    if (index == 0) {
+    if (frameIndex == 0) {
         *(u8 *)0x03003610 = 1;
     }
 }

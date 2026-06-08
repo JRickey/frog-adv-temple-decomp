@@ -30,7 +30,7 @@
  *                              and select a sceneType value.
  */
 /* Part source-record layout (16 bytes). Used by EntityScript_BuildSlotData and
- * LoadPartEntry. _b6/_b7 encode the layout flag and axis id; sub_08007228 does
+ * LoadPartEntry. _b6/_b7 encode the layout flag and axis id; LoadPartEntry does
  * not access them but the same physical bytes exist (replaced by _pad in its
  * simpler variant — same size, same alignment). */
 struct SrcRec {

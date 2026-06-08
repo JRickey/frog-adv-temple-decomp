@@ -577,7 +577,7 @@
 @   0x08007dcc: 35e0        adds	r5, #224	@ 0xe0
 @   0x08007dce: 0300        lsls	r0, r0, #12
 
-        thumb_func_start sub_0800793C
-sub_0800793C: @ 0x0800793c
+        thumb_func_start Player_ProbeSpawnDir
+Player_ProbeSpawnDir: @ 0x0800793c
         .incbin "frog_us_baserom.gba", 0x793c, 0x494
-        thumb_func_end sub_0800793C
+        thumb_func_end Player_ProbeSpawnDir

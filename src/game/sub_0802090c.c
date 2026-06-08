@@ -1,7 +1,7 @@
 #include "iwram.h"
 #include "types.h"
 
-extern u32 sub_0802D9EC(u32 sound, u32 a, u32 b, u32 c);
+extern u32 Sound_AllocVoice(u32 sound, u32 a, u32 b, u32 c);
 extern void SoundHandle_SetPan(u32 handle, u32 pan);
 
 void Entity_PlayStateSound(void)
@@ -84,7 +84,7 @@ void Entity_PlayStateSound(void)
 
             sound = 12;
         playSound:
-            sound = sub_0802D9EC(sound, 0xff, 0xff, 0xff);
+            sound = Sound_AllocVoice(sound, 0xff, 0xff, 0xff);
             {
                 u32 mask;
                 mask = 0x7f;
@@ -104,7 +104,7 @@ void Entity_PlayStateSound(void)
             if ((*base & 0x10) == 0)
                 return;
 
-            sound = sub_0802D9EC(93, 0xff, 0xff, 0xff);
+            sound = Sound_AllocVoice(93, 0xff, 0xff, 0xff);
             {
                 u32 mask;
                 mask = 0x7f;

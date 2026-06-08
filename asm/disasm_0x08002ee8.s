@@ -378,7 +378,7 @@
 @   0x080031d0: 3720        adds	r7, #32
 @   0x080031d2: 0300        lsls	r0, r0, #12
 
-        thumb_func_start sub_08002EE8
-sub_08002EE8: @ 0x08002ee8
+        thumb_func_start Scroll_UpdateCameraAlt
+Scroll_UpdateCameraAlt: @ 0x08002ee8
         .incbin "frog_us_baserom.gba", 0x2ee8, 0x2ec
-        thumb_func_end sub_08002EE8
+        thumb_func_end Scroll_UpdateCameraAlt

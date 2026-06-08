@@ -5,7 +5,7 @@
 extern u8 gIwram_3570;
 
 extern u32 SoundHandle_IsActive(u32 handle);
-extern u32 sub_0802D9EC(u32 sound, u32 a, u32 b, u32 c);
+extern u32 Sound_AllocVoice(u32 sound, u32 a, u32 b, u32 c);
 extern void SoundHandle_SetPan(u32 handle, u8 val);
 
 /* Keep this base opaque so agbcc does not fold the entries field offsets into separate IWRAM literals. */
@@ -21,7 +21,7 @@ void SoundEntry_Play(u8 idx)
     sound = p->entries[idx].fieldA;
     handle = -1;
     if ((p->flags & 0x10) != 0) {
-        handle = sub_0802D9EC(sound, 0xff, 0xff, 0xff);
+        handle = Sound_AllocVoice(sound, 0xff, 0xff, 0xff);
         SoundHandle_SetPan(handle, p->_field_02 & 0x7f);
     }
     p->entries[idx].fieldB = handle;
@@ -45,7 +45,7 @@ void Entity_CheckProximityAndPlaySound(struct Entity *s, u8 idx, u8 halfW, u8 ha
     sound = p->entries[idx].fieldA;
     handle = -1;
     if ((p->flags & 0x10) != 0) {
-        handle = sub_0802D9EC(sound, 0xff, 0xff, 0xff);
+        handle = Sound_AllocVoice(sound, 0xff, 0xff, 0xff);
         SoundHandle_SetPan(handle, p->_field_02 & 0x7f);
     }
     p->entries[idx].fieldB = handle;

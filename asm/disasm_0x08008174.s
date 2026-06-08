@@ -497,7 +497,7 @@
 @   0x0800856c: 35e0        adds	r5, #224	@ 0xe0
 @   0x0800856e: 0300        lsls	r0, r0, #12
 
-        thumb_func_start sub_08008174
-sub_08008174: @ 0x08008174
+        thumb_func_start Player_UpdatePhysics
+Player_UpdatePhysics: @ 0x08008174
         .incbin "frog_us_baserom.gba", 0x8174, 0x3fc
-        thumb_func_end sub_08008174
+        thumb_func_end Player_UpdatePhysics

@@ -8,7 +8,7 @@ extern void Pickup_LoadSlotGroup_6(void);
 extern void Entity_CheckProximityAndPlaySound(struct Entity *s, u8 idx, u8 halfW, u8 halfH);
 extern void Entity_FollowPath(const void *a0, s32 slot);
 extern void Entity_AdvanceAnimFrames(s32 a0, s32 a1);
-extern void sub_080210A0(u16 a0, const void *a1, u16 a2, u8 a3, u16 a4, u8 a5, u8 a6, u8 a7);
+extern void Entity_InitSlotFromRecord(u16 a0, const void *a1, u16 a2, u8 a3, u16 a4, u8 a5, u8 a6, u8 a7);
 extern void Entity_DmaLoadSprite(u8 idx);
 extern const u8 sLevelLayout_311498[];
 extern const u8 sLevelLayoutData_3114C0[];
@@ -90,7 +90,7 @@ void SpawnEntityGroup_Slot0C(void)
     u8 *ptr;
 
     for (i = 0; i < 14; i++) {
-        sub_080210A0(i + 12, (const void *)sLevelLayoutPtrs_3116B8[i], 0x400, 20, 0x81, 4, 3, 3);
+        Entity_InitSlotFromRecord(i + 12, (const void *)sLevelLayoutPtrs_3116B8[i], 0x400, 20, 0x81, 4, 3, 3);
     }
 
     i = 0;
@@ -113,9 +113,9 @@ void SpawnEntityGroups_Slot1A_22_2A(void)
     u8 i;
 
     for (i = 0; i < 8; i++) {
-        sub_080210A0(i + 26, (const void *)sLevelLayoutPtrs_3117F0[i], 0x420, 21, 0x91, 5, 3, 3);
-        sub_080210A0(i + 34, (const void *)sLevelLayoutPtrs_311910[i], 0x400, 22, 0xb1, 5, 3, 3);
-        sub_080210A0(i + 42, (const void *)sLevelLayoutPtrs_311A30[i], 0x4000, 1, 0, 0, 3, 3);
+        Entity_InitSlotFromRecord(i + 26, (const void *)sLevelLayoutPtrs_3117F0[i], 0x420, 21, 0x91, 5, 3, 3);
+        Entity_InitSlotFromRecord(i + 34, (const void *)sLevelLayoutPtrs_311910[i], 0x400, 22, 0xb1, 5, 3, 3);
+        Entity_InitSlotFromRecord(i + 42, (const void *)sLevelLayoutPtrs_311A30[i], 0x4000, 1, 0, 0, 3, 3);
     }
 
     Entity_DmaLoadSprite(26);

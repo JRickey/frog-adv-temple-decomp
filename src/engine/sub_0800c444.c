@@ -16,7 +16,7 @@
 extern u8 ModeControl_GetFlag(u8 *base, u32 selector, u32 bit);
 extern void BgMap_WriteTileAttr(u8 col, u8 row, u32 a, u32 b, u32 c);
 
-void sub_0800C444(u8 tile)
+void Scene_OnPlayerStepTile20(u8 tile)
 {
     u8 *base6110;
     struct IwramAt35E0 *p35E0;

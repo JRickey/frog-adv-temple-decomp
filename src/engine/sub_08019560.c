@@ -155,7 +155,7 @@ void Menu25_Enter(void)
     gIwram_3480.menu26Step = 0;
 }
 
-void sub_080196E8(void)
+void Menu25_Nop(void)
 {}
 
 /* Rectangular tilemap blit into a BG screenblock via DMA3. The descriptor's

@@ -26,7 +26,7 @@ u32 Credits_StepThrottled(u8 arg)
     return ret;
 }
 
-extern void sub_0801BAD8(void);
+extern void Credits_PreInitHook(void);
 extern void LoadWorldLevelLayoutAlt(void);
 
 void Credits_InitScene(void)
@@ -107,6 +107,6 @@ void Credits_InitScene(void)
         }
     }
 
-    sub_0801BAD8();
+    Credits_PreInitHook();
     LoadWorldLevelLayoutAlt();
 }

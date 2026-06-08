@@ -14,7 +14,7 @@
 extern int __divsi3(int num, int den);
 
 extern u32 ModeControl_GetFlag(void *base, u32 selector, u32 bit);
-extern void sub_080210A0(u16 a0, const void *a1, u16 a2, u8 a3, u16 a4, u8 a5, u8 a6, u8 a7);
+extern void Entity_InitSlotFromRecord(u16 a0, const void *a1, u16 a2, u8 a3, u16 a4, u8 a5, u8 a6, u8 a7);
 extern void MotionDesc_Set(struct Entity *e, s8 sel, s8 a, s8 b);
 extern void Entity_Update(void *p);
 extern void Entity_MoveToEntry(struct Entity *ent, u8 dir, s16 *e);
@@ -36,7 +36,7 @@ void Entity2_Tick(void)
     if ((u8)ModeControl_GetFlag(&gIwram_6110, 8, 1)) {
         ModeControl_ClearBit(&gIwram_6110, 8, 1);
         CtrlFlags_SetBit(&gIwram_6110, 8, 0);
-        sub_080210A0(2, sLevelLayout_31813C, 0x10, 0x59, 0x41, 1, 3, 2);
+        Entity_InitSlotFromRecord(2, sLevelLayout_31813C, 0x10, 0x59, 0x41, 1, 3, 2);
         *valXp = ((const u16 *)sLevelLayout_31813C)[4];
         *valYp = ((const u16 *)sLevelLayout_31813C)[5] + 0x3a;
     }

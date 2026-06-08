@@ -8,7 +8,7 @@ extern u8 gIwram_6580[];
 extern u8 gIwram_64C0[];
 extern u8 gIwram_3610[];
 
-void sub_08015194(void)
+void ScrollBlit_ResetLayers(void)
 {
     gIwram_6540[8] = 0;
     gIwram_6480[8] = 0;

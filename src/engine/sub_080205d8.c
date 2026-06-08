@@ -4,7 +4,7 @@
 
 extern u8 gIwram_3570;
 
-extern u32 sub_0802D9EC(u32 sound, u32 a, u32 b, u32 c);
+extern u32 Sound_AllocVoice(u32 sound, u32 a, u32 b, u32 c);
 extern void SoundHandle_SetPan(u32 handle, u8 val);
 extern u32 SoundHandle_Retire(u32 handle);
 extern u32 SoundHandle_IsActive(u32 handle);
@@ -50,7 +50,7 @@ void Entity_DispatchSound(struct Entity *entity)
             sound = p->entries[3].fieldA;
             handle = -1;
             if ((p->flags & 0x10) != 0) {
-                handle = sub_0802D9EC(sound, 0xff, 0xff, 0xff);
+                handle = Sound_AllocVoice(sound, 0xff, 0xff, 0xff);
                 SoundHandle_SetPan(handle, p->_field_02 & 0x7f);
             }
             p->entries[3].fieldB = handle;
@@ -84,7 +84,7 @@ void Entity_DispatchSound(struct Entity *entity)
             sound = p->entries[8].fieldA;
             handle = -1;
             if ((p->flags & 0x10) != 0) {
-                handle = sub_0802D9EC(sound, 0xff, 0xff, 0xff);
+                handle = Sound_AllocVoice(sound, 0xff, 0xff, 0xff);
                 SoundHandle_SetPan(handle, p->_field_02 & 0x7f);
             }
             p->entries[8].fieldB = handle;
@@ -102,7 +102,7 @@ void Entity_DispatchSound(struct Entity *entity)
             sound = p->entries[2].fieldA;
             handle = -1;
             if ((p->flags & 0x10) != 0) {
-                handle = sub_0802D9EC(sound, 0xff, 0xff, 0xff);
+                handle = Sound_AllocVoice(sound, 0xff, 0xff, 0xff);
                 SoundHandle_SetPan(handle, p->_field_02 & 0x7f);
             }
             p->entries[2].fieldB = handle;
@@ -122,7 +122,7 @@ void Entity_DispatchSound(struct Entity *entity)
             sound = p->entries[4].fieldA;
             handle = -1;
             if ((p->flags & 0x10) != 0) {
-                handle = sub_0802D9EC(sound, 0xff, 0xff, 0xff);
+                handle = Sound_AllocVoice(sound, 0xff, 0xff, 0xff);
                 SoundHandle_SetPan(handle, p->_field_02 & 0x7f);
             }
             p->entries[4].fieldB = handle;

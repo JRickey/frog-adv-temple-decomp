@@ -67,9 +67,9 @@ void Mode_EndScene(void)
 }
 
 extern u32 ModeControl_GetFlag(u8 *base, u32 selector, u32 bit);
-extern void sub_0800BE18(u8 *slots, u32 *out, s8 type);
-extern void sub_0800BF24(u8 *slots, u32 *out, s8 type);
-extern void sub_0800BEBC(u8 *slots, u32 *out, s8 type, u8 tile);
+extern void Entity_SetupHitboxSlots(u8 *slots, u32 *out, s8 type);
+extern void Entity_ScanHitboxAndBlit(u8 *slots, u32 *out, s8 type);
+extern void EntityHitbox_RegisterHit(u8 *slots, u32 *out, s8 type, u8 tile);
 extern void BgMap_WriteTileAttr(u8 col, u8 row, u32 a, u32 b, u32 c);
 extern u8 Tilemap_GetTileClass(u8 col, u8 row, s16 tileX, s16 tileY);
 extern void BgTilemap_DmaVariantA(void);
@@ -94,8 +94,8 @@ void SpawnCycle_Update(u8 *arg0, u32 *arg1, u8 *arg2, u32 *arg3)
 
         if (gIwram_6110.spawnMask == 1) {
             BgTilemap_DmaVariantA();
-            sub_0800BE18(arg0, arg1, 29);
-            sub_0800BE18(arg2, arg3, 30);
+            Entity_SetupHitboxSlots(arg0, arg1, 29);
+            Entity_SetupHitboxSlots(arg2, arg3, 30);
         }
 
         gIwram_6110.byteFlags8 = 0;
@@ -122,13 +122,13 @@ void SpawnCycle_Update(u8 *arg0, u32 *arg1, u8 *arg2, u32 *arg3)
         ModeControl_ClearBit((u8 *)&gIwram_6110, 3, 7);
 
         if (gIwram_6110.spawnMask == 1) {
-            sub_0800BE18(arg0, arg1, 29);
-            sub_0800BE18(arg2, arg3, 30);
+            Entity_SetupHitboxSlots(arg0, arg1, 29);
+            Entity_SetupHitboxSlots(arg2, arg3, 30);
         }
 
         if (gIwram_6110.spawnMask == 2) {
-            sub_0800BE18(arg0, arg1, 29);
-            sub_0800BE18(arg2, arg3, 30);
+            Entity_SetupHitboxSlots(arg0, arg1, 29);
+            Entity_SetupHitboxSlots(arg2, arg3, 30);
             BgTilemap_DmaVariantB();
         }
 
@@ -176,8 +176,8 @@ void SpawnCycle_Update(u8 *arg0, u32 *arg1, u8 *arg2, u32 *arg3)
         /* short-circuit || — the baserom skips the second probe when the
            first is set, so the calls must stay inside the condition */
         if ((u8)ModeControl_GetFlag((u8 *)&gIwram_6110, 3, 0) || (u8)ModeControl_GetFlag((u8 *)&gIwram_6110, 3, 7)) {
-            sub_0800BF24(arg0, arg1, 29);
-            sub_0800BF24(arg2, arg3, 30);
+            Entity_ScanHitboxAndBlit(arg0, arg1, 29);
+            Entity_ScanHitboxAndBlit(arg2, arg3, 30);
         }
     }
 
@@ -191,7 +191,7 @@ void SpawnCycle_Update(u8 *arg0, u32 *arg1, u8 *arg2, u32 *arg3)
     {
         u8 tile = (u8)Tilemap_GetTileClass(gIwram_35E0._field_18, gIwram_35E0._field_19, gIwram_35E0._field_8,
                                            gIwram_35E0._field_A);
-        sub_0800BEBC(arg0, arg1, 29, tile);
-        sub_0800BEBC(arg2, arg3, 30, tile);
+        EntityHitbox_RegisterHit(arg0, arg1, 29, tile);
+        EntityHitbox_RegisterHit(arg2, arg3, 30, tile);
     }
 }

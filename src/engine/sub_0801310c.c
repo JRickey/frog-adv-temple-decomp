@@ -32,7 +32,7 @@ extern struct IwramAt6110_1310C gIwram_6110;
 extern const struct ScaleAnimDesc_1310C sScaleAnimDescriptors[];
 extern const struct ScaleAnimDesc_1310C sScaleAnimDescriptors2[];
 
-void sub_08012BC4(u32 flags, u32 dstX, u32 dstY, u32 width, u32 rows, void *srcTable, u32 srcIndex);
+void Tilemap_BlitTileRows(u32 flags, u32 dstX, u32 dstY, u32 width, u32 rows, void *srcTable, u32 srcIndex);
 void RemapInputBits(void);
 void ScaleAnim_ClearActiveBits(void);
 void ScaleAnim_BlitSceneLayers(void);
@@ -119,11 +119,11 @@ void ScaleAnim_SyncSelectors(void)
                     offset += i;
                     offset <<= 3;
                     d0 = (const struct ScaleAnimDesc_1310C *)(offset + (u32)sScaleAnimDescriptors);
-                    sub_08012BC4(d0->flags, d0->dstX, d0->dstY, d0->width, d0->rows,
-                                 *(const u16 ***)(offset + (u32)sScaleAnimDescriptors + 16), on);
+                    Tilemap_BlitTileRows(d0->flags, d0->dstX, d0->dstY, d0->width, d0->rows,
+                                         *(const u16 ***)(offset + (u32)sScaleAnimDescriptors + 16), on);
                     d1 = (const struct ScaleAnimDesc_1310C *)(offset + (u32)sScaleAnimDescriptors2);
-                    sub_08012BC4(d1->flags, d1->dstX, d1->dstY, d1->width, d1->rows,
-                                 *(const u16 ***)(offset + (u32)sScaleAnimDescriptors2 + 16), on);
+                    Tilemap_BlitTileRows(d1->flags, d1->dstX, d1->dstY, d1->width, d1->rows,
+                                         *(const u16 ***)(offset + (u32)sScaleAnimDescriptors2 + 16), on);
                     {
                         register struct IwramAt6110_1310C *ctrlLoad asm("r1") = ctrlRef;
                         register u32 zero asm("r1");
@@ -171,11 +171,11 @@ void ScaleAnim_SyncSelectors(void)
                     offset += i;
                     offset <<= 3;
                     d0 = (const struct ScaleAnimDesc_1310C *)(offset + (u32)sScaleAnimDescriptors);
-                    sub_08012BC4(d0->flags, d0->dstX, d0->dstY, d0->width, d0->rows,
-                                 *(const u16 ***)(offset + (u32)sScaleAnimDescriptors + 16), on);
+                    Tilemap_BlitTileRows(d0->flags, d0->dstX, d0->dstY, d0->width, d0->rows,
+                                         *(const u16 ***)(offset + (u32)sScaleAnimDescriptors + 16), on);
                     d1 = (const struct ScaleAnimDesc_1310C *)(offset + (u32)sScaleAnimDescriptors2);
-                    sub_08012BC4(d1->flags, d1->dstX, d1->dstY, d1->width, d1->rows,
-                                 *(const u16 ***)(offset + (u32)sScaleAnimDescriptors2 + 16), 2);
+                    Tilemap_BlitTileRows(d1->flags, d1->dstX, d1->dstY, d1->width, d1->rows,
+                                         *(const u16 ***)(offset + (u32)sScaleAnimDescriptors2 + 16), 2);
                     {
                         register struct IwramAt6110_1310C *ctrlLoad asm("r0") = ctrlRef;
                         register u32 zero asm("r1");

@@ -19,7 +19,7 @@ void BgTilemap_LoadScreen(void)
 {
     struct TilemapRegionDesc *desc = (struct TilemapRegionDesc *)0x083072f8;
 
-    sub_08012BC4(desc->unk08, desc->unk00, desc->unk02, desc->unk04, desc->unk06, desc->tiles, 1);
+    Tilemap_BlitTileRows(desc->unk08, desc->unk00, desc->unk02, desc->unk04, desc->unk06, desc->tiles, 1);
 }
 
 /* Dead stub with no callers or references — bare `bx lr` plus a halfword of
@@ -34,7 +34,7 @@ void sub_08013FCC(void)
  * struct-by-value first argument is load-bearing for matching: it keeps agbcc
  * from precomputing the four word loads ahead of the stack-argument stores. */
 extern void DmaJob_Advance(struct TransferDesc desc, u8 mode, void *buf);
-extern void sub_08010A44(u8 a, u8 b);
+extern void Scroll_TickChannels(u8 a, u8 b);
 extern void FrogStatusBar_Update(void);
 
 void InitBgTransferQueues(void)
@@ -43,6 +43,6 @@ void InitBgTransferQueues(void)
 
     DmaJob_Advance(desc[0], ((u8 *)&desc[0])[2], (void *)0x03006500);
     DmaJob_Advance(desc[1], ((u8 *)&desc[1])[2], (void *)0x03006580);
-    sub_08010A44(6, 2);
+    Scroll_TickChannels(6, 2);
     FrogStatusBar_Update();
 }

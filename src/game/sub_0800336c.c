@@ -178,7 +178,7 @@ void Scene17_PauseCheck(u8 *state, u16 *hw)
     *hw = 0x87;
 }
 
-void sub_080035F8(void)
+void Scene17_Exit(void)
 {
     Game_FrameEnd();
 }

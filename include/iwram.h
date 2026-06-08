@@ -19,7 +19,7 @@
  * handler-table index; the per-mode sub-state bytes (+2..+4) plus the cursor/
  * blink/timer fields drive the title/file-select/options/credits screens. */
 struct IwramAt3480 {
-    u8 subState;         /* +0: primary handler-table index (sub_08019500 dispatch) */
+    u8 subState;         /* +0: primary handler-table index (GameMode_Router dispatch) */
     u8 _unk01;           /* +1: zeroed by dispatch resets; no reader found */
     u8 menuStep;         /* +2: FileSelect/Menu27/Menu07 sub-state index */
     u8 menu25Step;       /* +3: Menu25 / Credits-A sub-state index */
@@ -68,7 +68,7 @@ struct IwramAt3550 {
 
 /* Player run-state at 0x030035E0 (the local `struct StructA74` in sub_08006a74.c
  * is a duplicate of this). The low 5 bytes are the HUD counters set/reset by
- * PlayerState_* and the kind-keyed pickup handler (sub_08021510):
+ * PlayerState_* and the kind-keyed pickup handler (Entity_WalkCompactRecords):
  *   lives    (+0) starts at 5, +1 on a 1-up pickup (entity kind 11/12), cap 99;
  *   coins    (+2) +1 on a coin pickup (kind 2/3), cap 999, reset per level;
  *   elements (+4) +1 on an element pickup (kind 4), drawn by FrogStatusBar_Update,

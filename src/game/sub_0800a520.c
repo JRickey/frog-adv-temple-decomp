@@ -5,7 +5,7 @@
 
 /* Per-frame helper called once from Game_RunEntityFrame (the entity-dispatch
  * tail). Runs five fixed subsystem updates in sequence. The single
- * non-zero argument (24, 24) to sub_0800793C is preserved literally;
+ * non-zero argument (24, 24) to Player_ProbeSpawnDir is preserved literally;
  * its meaning is unknown until that callee is decompiled.
  *
  * Lives in its own .c rather than dispatch_helpers.c because the
@@ -15,16 +15,16 @@
  */
 
 extern void Entity_ProcessEvents(void);
-extern void sub_0800793C(u32 a, u32 b);
-extern void sub_08008174(void);
+extern void Player_ProbeSpawnDir(u32 a, u32 b);
+extern void Player_UpdatePhysics(void);
 extern void Player_UpdateTileCache(void);
 extern void Entity_UpdateSlot1Status(void);
 
 void Game_UpdateSubsystems(void)
 {
     Entity_ProcessEvents();
-    sub_0800793C(24, 24);
-    sub_08008174();
+    Player_ProbeSpawnDir(24, 24);
+    Player_UpdatePhysics();
     Player_UpdateTileCache();
     Entity_UpdateSlot1Status();
 }

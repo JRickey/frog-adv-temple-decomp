@@ -9,7 +9,7 @@
 #include "iwram.h"
 #include "types.h"
 
-extern void sub_080210A0(u16 a0, const void *a1, u16 a2, u8 a3, u16 a4, u8 a5, u8 a6, u8 a7);
+extern void Entity_InitSlotFromRecord(u16 a0, const void *a1, u16 a2, u8 a3, u16 a4, u8 a5, u8 a6, u8 a7);
 extern void Entity_AdvanceAnimFrames(s32 a0, s32 a1);
 extern void MotionDesc_Set(void *m, u8 sel, u8 a, u8 b);
 
@@ -44,7 +44,8 @@ void UpdateLogPairEntities2(void)
                 if (entity->field_1B == entity->field_1C[0] - 2) {
                     if (i == 1)
                         Sound_PlayNearEntity((struct Entity *)((s32)base + 0x5C * 56), 0x13, 3, 3);
-                    sub_080210A0(i + 0x5D, (const void *)sLevelLayoutPtrs_311F28[i], 16, 24, 0x211, 12, 3, 3);
+                    Entity_InitSlotFromRecord(i + 0x5D, (const void *)sLevelLayoutPtrs_311F28[i], 16, 24, 0x211, 12, 3,
+                                              3);
                     ModeControl_SetBit(&gIwram_6110, i + 0x5D);
                 }
                 entity = (struct Entity *)(slot * 56 + (s32)base);

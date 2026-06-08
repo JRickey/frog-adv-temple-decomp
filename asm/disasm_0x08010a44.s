@@ -456,7 +456,7 @@
 @   0x08010dd4: 7ebc        ldrb	r4, [r7, #26]
 @   0x08010dd6: 0830        lsrs	r0, r6, #32
 
-        thumb_func_start sub_08010A44
-sub_08010A44: @ 0x08010a44
+        thumb_func_start Scroll_TickChannels
+Scroll_TickChannels: @ 0x08010a44
         .incbin "frog_us_baserom.gba", 0x10a44, 0x394
-        thumb_func_end sub_08010A44
+        thumb_func_end Scroll_TickChannels

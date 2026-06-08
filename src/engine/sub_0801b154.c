@@ -177,63 +177,63 @@ void WorldMap_SetPathTile(u8 arg0, u8 arg1)
 
 void sub_0801B374(u8 index)
 {
-    vu32 *dma;
-    u16 zero;
-    u16 *zptr;
-    u32 tableBase;
-    u32 idx24;
-    u32 entry;
-    const u32 *tiles;
-    const u32 *palette;
-    u32 offset;
+    vu32 *pDma3;
+    u16 zeroBuf;
+    u16 *pZero;
+    u32 roomTableBase;
+    u32 roomEntryOff;
+    u32 tilesSrc;
+    const u32 *pTileSheet;
+    const u32 *pPalette;
+    u32 indexedOff;
 
-    offset = (u32)index << 24;
+    indexedOff = (u32)index << 24;
 
-    tableBase = 0x080C1254;
+    roomTableBase = 0x080C1254;
     /* anchor the table literal before the gIwram_34B0 address so agbcc keeps
        the +4 add on the table base (not folded into the index multiply). */
-    asm volatile("" : "+r"(tableBase));
-    idx24 = gIwram_34B0._data * 24;
-    tableBase += 4;
-    entry = *(const u32 *)(idx24 + tableBase);
+    asm volatile("" : "+r"(roomTableBase));
+    roomEntryOff = gIwram_34B0._data * 24;
+    roomTableBase += 4;
+    tilesSrc = *(const u32 *)(roomEntryOff + roomTableBase);
 
-    zptr = &zero;
-    *zptr = 0;
-    dma = (vu32 *)0x040000D4;
-    dma[0] = (u32)zptr;
-    dma[1] = 0x0600F800;
-    dma[2] = 0x81000400;
-    dma[2];
+    pZero = &zeroBuf;
+    *pZero = 0;
+    pDma3 = (vu32 *)0x040000D4;
+    pDma3[0] = (u32)pZero;
+    pDma3[1] = 0x0600F800;
+    pDma3[2] = 0x81000400;
+    pDma3[2];
 
-    dma[0] = entry;
-    dma[1] = 0x06008000;
-    dma[2] = 0x80002000;
-    dma[2];
+    pDma3[0] = tilesSrc;
+    pDma3[1] = 0x06008000;
+    pDma3[2] = 0x80002000;
+    pDma3[2];
 
-    tiles = (const u32 *)0x08308F08;
-    offset = offset >> 22;
-    offset += 28;
+    pTileSheet = (const u32 *)0x08308F08;
+    indexedOff = indexedOff >> 22;
+    indexedOff += 28;
 
-    dma[0] = *(const u32 *)(offset + (u32)tiles);
-    dma[1] = 0x06008020;
-    dma[2] = 0x80000100;
-    dma[2];
+    pDma3[0] = *(const u32 *)(indexedOff + (u32)pTileSheet);
+    pDma3[1] = 0x06008020;
+    pDma3[2] = 0x80000100;
+    pDma3[2];
 
-    dma[0] = tiles[0];
-    dma[1] = 0x06008220;
-    dma[2] = 0x80000100;
-    dma[2];
+    pDma3[0] = pTileSheet[0];
+    pDma3[1] = 0x06008220;
+    pDma3[2] = 0x80000100;
+    pDma3[2];
 
-    palette = (const u32 *)0x08308F3C;
-    dma[0] = palette[0];
-    dma[1] = 0x050001A0;
-    dma[2] = 0x80000010;
-    dma[2];
+    pPalette = (const u32 *)0x08308F3C;
+    pDma3[0] = pPalette[0];
+    pDma3[1] = 0x050001A0;
+    pDma3[2] = 0x80000010;
+    pDma3[2];
 
-    dma[0] = *(const u32 *)((u32)palette + offset);
-    dma[1] = 0x050001E0;
-    dma[2] = 0x80000010;
-    dma[2];
+    pDma3[0] = *(const u32 *)((u32)pPalette + indexedOff);
+    pDma3[1] = 0x050001E0;
+    pDma3[2] = 0x80000010;
+    pDma3[2];
 }
 
 void Room_LoadSpriteTiles(u8 index)

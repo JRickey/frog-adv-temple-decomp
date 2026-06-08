@@ -6,7 +6,7 @@
 
 extern void EntityDispatch_RunFrame(void);
 
-void sub_08002450(void)
+void Scene25_ModeInit(void)
 {
     ModeControl_Init(&gIwram_6110, 0x19, 7, (const void *)0x082f9bf0, 1, 0);
     SpriteAsset_LoadSheet(7, 0);

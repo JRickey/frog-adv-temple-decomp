@@ -184,7 +184,7 @@ extern void LoadWorldLevelLayoutAlt(void);
  * the call site (lsls #16 / asrs #16), matching the baserom. */
 extern void Player_InitEntity(s32 x, s32 y, u8 g, u8 h);
 extern void BgScrollBlit(u8 arg);
-extern void sub_08008174(void);
+extern void Player_UpdatePhysics(void);
 extern void Entity_UpdateVisibility(void);
 extern void Entity_Advance(void);
 extern void Game_ForceRender(void);
@@ -252,7 +252,7 @@ void WinPose_Init(void)
     gIwram_6110.flagBank0 = 0xFFFFFFFFLL;
     gIwram_6110.flagBank1 = 0xFFFFFFFFLL;
 
-    sub_08008174();
+    Player_UpdatePhysics();
     ((GameProc)sEntityProcB[0])();
     Entity_UpdateVisibility();
     Entity_Advance();

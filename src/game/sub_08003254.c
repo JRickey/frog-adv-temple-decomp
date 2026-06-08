@@ -10,13 +10,13 @@
  *
  *   - Entity_RunScript(6) + Entity_ProcessEvents() — frame/state setup.
  *   - Branch on the word at 0x03006110[+16] (a scene-phase selector):
- *       == 0 -> sub_0800793C(24, 24)   (intro / spawn)
+ *       == 0 -> Player_ProbeSpawnDir(24, 24)   (intro / spawn)
  *       == 2 -> Player_UpdateHorizontalInput(2)
- *   - sub_08008174() + Player_UpdateTileCache() + Entity_UpdateSlot1Status() — subsystem ticks.
+ *   - Player_UpdatePhysics() + Player_UpdateTileCache() + Entity_UpdateSlot1Status() — subsystem ticks.
  *   - Handler dispatch through sEntityProcB[gGameStuff.sceneType]().
  *   - Again branch on 0x03006110[+16]:
  *       == 0 -> Scroll_UpdateCamera(sEntitySubtypeLut[sceneType])
- *       else -> sub_08002EE8((s8)sEntitySubtypeLut[sceneType], arg)
+ *       else -> Scroll_UpdateCameraAlt((s8)sEntitySubtypeLut[sceneType], arg)
  *   - Handler dispatch through sEntityProcD[gGameStuff.sceneType](),
  *     then Entity_UpdateVisibility / Entity_Advance / WaitVblank / Game_ForceRender /
  *     Entity_CheckAllCollisions / Player_CheckTileEvents.
@@ -60,12 +60,12 @@ extern const u8 sEntitySubtypeLut[20];
 
 extern void Entity_RunScript(u32 arg);
 extern void Entity_ProcessEvents(void);
-extern void sub_0800793C(u32 a, u32 b);
+extern void Player_ProbeSpawnDir(u32 a, u32 b);
 extern void Player_UpdateHorizontalInput(u32 arg);
-extern void sub_08008174(void);
+extern void Player_UpdatePhysics(void);
 extern void Player_UpdateTileCache(void);
 extern void Entity_UpdateSlot1Status(void);
-extern void sub_08002EE8(s32 a, void *b);
+extern void Scroll_UpdateCameraAlt(s32 a, void *b);
 extern void Entity_UpdateVisibility(void);
 extern void Entity_Advance(void);
 extern void WaitVblank(void);
@@ -85,13 +85,13 @@ void GameMode_SceneTick(void *arg)
         u8 *p6110 = (u8 *)0x03006110;
 
         if (*(u32 *)(p6110 + 16) == 0) {
-            sub_0800793C(24, 24);
+            Player_ProbeSpawnDir(24, 24);
         } else if (*(u32 *)(p6110 + 16) == 2) {
             Player_UpdateHorizontalInput(2);
         }
     }
 
-    sub_08008174();
+    Player_UpdatePhysics();
     Player_UpdateTileCache();
     Entity_UpdateSlot1Status();
 
@@ -124,7 +124,7 @@ void GameMode_SceneTick(void *arg)
             subtype = lut[(u32)g];
             subtype <<= 24;
             subtype >>= 24;
-            sub_08002EE8(subtype, arg);
+            Scroll_UpdateCameraAlt(subtype, arg);
         }
     }
 

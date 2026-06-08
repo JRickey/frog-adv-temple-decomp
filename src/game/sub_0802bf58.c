@@ -68,7 +68,7 @@ void EnemyWave_Update(void)
 
             *(u8 *)(p + 0x4ea) = 0;
             *(u16 *)(p + 0x504) |= 2;
-            sub_08015194();
+            ScrollBlit_ResetLayers();
             p += 0xb1c;
             *(u32 *)p = gGameStuff._unk00;
             ModeControl_ClearBit(base6110, 3, 5);

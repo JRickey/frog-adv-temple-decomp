@@ -1421,7 +1421,7 @@
 @   0x08014ea2: 0201        lsls	r1, r0, #8
 @   0x08014ea4: e800        0600 			@ <UNDEFINED> instruction: 0xe8000600
 
-        thumb_func_start sub_0801436C
-sub_0801436C: @ 0x0801436c
+        thumb_func_start Gate_RunAnimSequence
+Gate_RunAnimSequence: @ 0x0801436c
         .incbin "frog_us_baserom.gba", 0x1436c, 0xb3c
-        thumb_func_end sub_0801436C
+        thumb_func_end Gate_RunAnimSequence

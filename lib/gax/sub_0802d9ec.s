@@ -3,7 +3,7 @@
         .include "asm/macros.inc"
         .syntax unified
 
-        thumb_func_start sub_0802D9EC
-sub_0802D9EC:
+        thumb_func_start Sound_AllocVoice
+Sound_AllocVoice:
         .incbin "frog_us_baserom.gba", 0x2d9ec, 0x230
-        thumb_func_end sub_0802D9EC
+        thumb_func_end Sound_AllocVoice

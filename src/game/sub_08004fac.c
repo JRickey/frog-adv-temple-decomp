@@ -27,7 +27,7 @@ extern void Game_ForceRender(void);
 extern void Entity_CheckAllCollisions(void);
 extern void Player_CheckTileEvents(void);
 extern void SpawnCycle_Update(u8 *buf0, u32 *out0, u8 *buf1, u32 *out1);
-extern void sub_0800BE18(u8 *slots, u32 *out, s8 type);
+extern void Entity_SetupHitboxSlots(u8 *slots, u32 *out, s8 type);
 extern u8 Scene_FadeUpdate(void);
 extern u8 Blend_StepFade(void);
 extern void BgTilemap_LoadScene(void);
@@ -128,12 +128,12 @@ void SceneLoop_22(void)
             gIwram_6110.gateByte = 0;
             maskp = &gIwram_6110.spawnMask;
             if (*maskp == 1) {
-                sub_0800BE18(frame.buf, q0, 29);
-                sub_0800BE18(frame.buf + 0x180, q1, 30);
+                Entity_SetupHitboxSlots(frame.buf, q0, 29);
+                Entity_SetupHitboxSlots(frame.buf + 0x180, q1, 30);
                 if (*maskp == 1) {
-                    sub_0800BE18(frame.buf, q0, 29);
+                    Entity_SetupHitboxSlots(frame.buf, q0, 29);
                     asm("" : "+r"(off));
-                    sub_0800BE18(frame.buf + off, q1, 30);
+                    Entity_SetupHitboxSlots(frame.buf + off, q1, 30);
                 }
             }
             frame.accept = 0;

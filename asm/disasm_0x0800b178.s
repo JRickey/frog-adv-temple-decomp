@@ -781,7 +781,7 @@
 @   0x0800b7ac: 5330        strh	r0, [r6, r4]
 @   0x0800b7ae: 0300        lsls	r0, r0, #12
 
-        thumb_func_start sub_0800B178
-sub_0800B178: @ 0x0800b178
+        thumb_func_start Entity_BlitAndCheckTiles
+Entity_BlitAndCheckTiles: @ 0x0800b178
         .incbin "frog_us_baserom.gba", 0xb178, 0x638
-        thumb_func_end sub_0800B178
+        thumb_func_end Entity_BlitAndCheckTiles

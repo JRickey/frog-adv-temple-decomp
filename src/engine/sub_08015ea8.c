@@ -4,7 +4,7 @@
 extern void CharLayers_Upload(unsigned int arg);
 extern void BgScrollBlit(unsigned int arg);
 
-void sub_08015EA4(void)
+void ScrollCamera_NopA(void)
 {}
 
 void ScrollCamera_Reset(void)
@@ -14,5 +14,5 @@ void ScrollCamera_Reset(void)
     BgScrollBlit(2);
 }
 
-void sub_08015EC0(void)
+void ScrollCamera_NopB(void)
 {}

@@ -21,7 +21,7 @@ struct PanelCellSrc {
     u8 _pad[20];
 };
 
-extern void sub_08012BC4(u32 flags, u32 dstX, u32 dstY, u32 width, u32 rows, void *srcTable, u32 cellBit);
+extern void Tilemap_BlitTileRows(u32 flags, u32 dstX, u32 dstY, u32 width, u32 rows, void *srcTable, u32 cellBit);
 extern void Screen_LoadForMode(void);
 extern void SceneLoad_DmaUpdate(void);
 
@@ -41,8 +41,8 @@ void Scenery_UpdateSelectorCells(void)
                 continue;
             }
 
-            sub_08012BC4(geom[i].flags, geom[i].dstX, geom[i].dstY, geom[i].width, geom[i].rows, src[i].srcTable,
-                         (gIwram_6110.selector5Flags >> i) & 1);
+            Tilemap_BlitTileRows(geom[i].flags, geom[i].dstX, geom[i].dstY, geom[i].width, geom[i].rows,
+                                 src[i].srcTable, (gIwram_6110.selector5Flags >> i) & 1);
 
             if ((gIwram_6110.selector5Flags >> i) & 1) {
                 gIwram_6110.selector6Flags |= 1 << i;

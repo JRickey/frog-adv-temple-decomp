@@ -22,7 +22,7 @@ extern int SpriteGrid_SetCellFlags(int xTile, int unused, int x, int y, int flag
  * with the sign-extended type index before the loop body.
  */
 
-void sub_0800BE18(CollisionSlot *slotsArg, unsigned long long *outArg, s8 type)
+void Entity_SetupHitboxSlots(CollisionSlot *slotsArg, unsigned long long *outArg, s8 type)
 {
     volatile unsigned long long *outAddr;
     CollisionSlot *slots;
@@ -111,24 +111,24 @@ done:
 
 extern s8 EntityHitbox_FindPoint(s8 a, s16 x, s16 y);
 
-void sub_0800BEBC(struct EntryB8A8 *arr, unsigned long long *mask, u8 a, u8 b)
+void EntityHitbox_RegisterHit(struct EntryB8A8 *arr, unsigned long long *mask, u8 a, u8 b)
 {
-    s8 idx;
-    struct EntryB8A8 *entry;
+    s8 slotIndex;
+    struct EntryB8A8 *hitSlot;
 
     if (b != 23)
         return;
 
-    idx = EntityHitbox_FindPoint((s8)a, gIwram_35E0._field_8, gIwram_35E0._field_A);
-    if (idx == -1)
+    slotIndex = EntityHitbox_FindPoint((s8)a, gIwram_35E0._field_8, gIwram_35E0._field_A);
+    if (slotIndex == -1)
         return;
 
-    entry = (struct EntryB8A8 *)((u32)(idx << 3) + (u32)arr);
-    if (entry->_field_4 != 0)
+    hitSlot = (struct EntryB8A8 *)((u32)(slotIndex << 3) + (u32)arr);
+    if (hitSlot->_field_4 != 0)
         return;
 
-    entry->_field_5 = 0;
-    entry->_field_4 = 1;
-    entry->_field_0 = gGameStuff._unk00;
-    *mask |= (unsigned long long)1 << idx;
+    hitSlot->_field_5 = 0;
+    hitSlot->_field_4 = 1;
+    hitSlot->_field_0 = gGameStuff._unk00;
+    *mask |= (unsigned long long)1 << slotIndex;
 }

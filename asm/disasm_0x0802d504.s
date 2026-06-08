@@ -1,6 +1,6 @@
 @ Auto-emitted by tools/disasm/peel.py; shrunk after splitting SoftResetExram
 @ (0x0802d514) out into asm/libagbsyscall.s. This slice is now just the game
-@ trampoline that tail-calls sub_0802CE60 + sub_0802D170.
+@ trampoline that tail-calls Entity2_Tick + sub_0802D170.
 @ Range:  [0x0802d504, 0x0802d514)  (16 bytes, thumb mode)
 @ Re-peel:  python3 tools/disasm/peel.py --start 0x802d504 --end 0x802d514 --mode thumb
 

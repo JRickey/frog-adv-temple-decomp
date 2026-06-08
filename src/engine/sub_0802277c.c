@@ -5,7 +5,7 @@
 extern void Entity_FollowPath(const void *a0, s32 slot);
 extern void Entity_AdvanceAnimFrames(s32 a0, s32 a1);
 extern void LevelLayout_WalkRecords(s32 a0, const void *a1, s32 a2, s32 a3, s32 a4, s32 a5, s32 a6);
-extern void sub_080210A0(u16 a0, const void *a1, u16 a2, u8 a3, u16 a4, u8 a5, u8 a6, u8 a7);
+extern void Entity_InitSlotFromRecord(u16 a0, const void *a1, u16 a2, u8 a3, u16 a4, u8 a5, u8 a6, u8 a7);
 extern void Entity_DmaLoadSprite(u8 idx);
 extern const u32 sLevelLayoutPtrs_310DD4[8];
 extern const u32 sLevelLayout_310C2C[6];
@@ -57,7 +57,7 @@ void StreamInit_Slots3Eto44(void)
 
     i = 0;
     do {
-        sub_080210A0(i + 0x3e, (const void *)sLevelLayoutPtrs_31118C[i], 0x400, 14, 0x165, 9, 3, 3);
+        Entity_InitSlotFromRecord(i + 0x3e, (const void *)sLevelLayoutPtrs_31118C[i], 0x400, 14, 0x165, 9, 3, 3);
         i++;
     } while (i <= 6);
 

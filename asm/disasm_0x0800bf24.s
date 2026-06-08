@@ -444,7 +444,7 @@
 @   0x0800c2a4: 0b00        lsrs	r0, r0, #12
 @   0x0800c2a6: 080c        lsrs	r4, r1, #32
 
-        thumb_func_start sub_0800BF24
-sub_0800BF24: @ 0x0800bf24
+        thumb_func_start Entity_ScanHitboxAndBlit
+Entity_ScanHitboxAndBlit: @ 0x0800bf24
         .incbin "frog_us_baserom.gba", 0xbf24, 0x384
-        thumb_func_end sub_0800BF24
+        thumb_func_end Entity_ScanHitboxAndBlit

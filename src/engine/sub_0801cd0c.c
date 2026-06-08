@@ -3,7 +3,7 @@
 #include "macros.h"
 #include "types.h"
 
-/* --- sub_0801CD0C: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
+/* --- UiWindow_DrawBordered: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
 #ifdef NON_MATCHING
 #include "macros.h"
 #include "types.h"
@@ -33,7 +33,7 @@ extern void DrawTilemapString(const u8 *str, u8 count, u8 colBase, u8 rowBase, u
  * B-edge; new_var2 caches i so j+1 (carried in ip) does not cross the VBlank bl
  * (keeps the frame at 0x2c). j++ MUST sit before the VBlank loop for the same
  * reason. Do not rename/inline without re-checking the byte match. */
-void sub_0801CD0C(u8 col, u8 row, const u8 *str, u8 innerRows, u8 width, u16 palColor, u16 frames)
+void UiWindow_DrawBordered(u8 col, u8 row, const u8 *str, u8 innerRows, u8 width, u16 palColor, u16 frames)
 {
     u32 rows2;
     u8 i;
@@ -84,7 +84,7 @@ void sub_0801CD0C(u8 col, u8 row, const u8 *str, u8 innerRows, u8 width, u16 pal
     DrawTilemapString(str, i, (u8)(col + 1), (u8)(row + 1), 0xa0, 14, 3);
 }
 #else
-NAKED void sub_0801CD0C(void)
+NAKED void UiWindow_DrawBordered(void)
 {
     asm(".incbin \"frog_us_baserom.gba\", 0x1cd0c, 0x1b4\n");
 }

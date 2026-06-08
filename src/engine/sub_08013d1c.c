@@ -9,7 +9,7 @@ extern void ResetBgAnimState(void);
 extern void BgScrollBlit(unsigned int arg);
 extern void BgScrollAnim_Update(void);
 extern void StatusBar_Update(void);
-extern void sub_08010A44(u8 a, u8 b);
+extern void Scroll_TickChannels(u8 a, u8 b);
 extern void ModeChannel_Apply(u8 a, u8 b);
 extern void FrogStatusBar_Update(void);
 extern u8 gIwram_53A0[];
@@ -58,7 +58,7 @@ void BgBlendTilemapUpdate(void)
         control[0x2A] |= 1;
     }
 
-    sub_08010A44(1, 1);
+    Scroll_TickChannels(1, 1);
     FrogStatusBar_Update();
 
     desc = (const struct TransferDesc_13D44 *)0x08307238;

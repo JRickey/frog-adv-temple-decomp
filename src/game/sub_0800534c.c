@@ -25,7 +25,7 @@ void Gate_TryUnlock(void)
     ModeControl_ClearBit(base6110, 3, 8);
 }
 
-extern void sub_0800BE18(u8 *slots, u32 *out, s8 type);
+extern void Entity_SetupHitboxSlots(u8 *slots, u32 *out, s8 type);
 
 void Gate_ResetSceneState(u8 *arg0, u8 *arg1, u32 *arg2, u8 *arg3, u32 *arg4)
 {
@@ -42,8 +42,8 @@ void Gate_ResetSceneState(u8 *arg0, u8 *arg1, u32 *arg2, u8 *arg3, u32 *arg4)
             return;
     }
 
-    sub_0800BE18(arg1, arg2, 29);
-    sub_0800BE18(arg3, arg4, 30);
+    Entity_SetupHitboxSlots(arg1, arg2, 29);
+    Entity_SetupHitboxSlots(arg3, arg4, 30);
 }
 
 extern void BgTilemap_LoadScene(void);
@@ -55,7 +55,7 @@ void Gate_FinishScene(void)
     Game_FrameEnd();
 }
 
-extern void sub_0800B178(void *arg0);
+extern void Entity_BlitAndCheckTiles(void *arg0);
 extern u8 Tilemap_GetTileClass(u8 col, u8 row, s16 tileX, s16 tileY);
 extern void Gate_OnTileStep(u8 tile);
 extern void Gate_PollResult(void *arg0);
@@ -66,9 +66,9 @@ void Entity_UpdateHitAndDraw(void *arg0)
     struct IwramAt35E0 *p35E0;
     u32 mask;
 
-    sub_0800B178(arg0);
+    Entity_BlitAndCheckTiles(arg0);
 
-    /* base6110 is materialized after the sub_0800B178 call so its pool load
+    /* base6110 is materialized after the Entity_BlitAndCheckTiles call so its pool load
      * lands past the BL (arg0 is live into the call). */
     base6110 = (u8 *)&gIwram_6110;
     if ((u8)ModeControl_GetFlag(base6110, 5, 4) == 0)

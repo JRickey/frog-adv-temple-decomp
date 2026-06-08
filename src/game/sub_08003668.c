@@ -8,7 +8,7 @@
  * and 22 instead of 11 and 16). Enqueues all three pairs, then — gated on
  * gEntities[0].status & 4 — maps the cached tile coords through Tilemap_GetTileClass
  * and re-enqueues them with the resolved tile when gIwram_35E0._field_10 has
- * bit 0x10 set, also poking sub_0800C444.
+ * bit 0x10 set, also poking Scene_OnPlayerStepTile20.
  *
  * The tail does two coordinate-driven dispatches. The first, gated on
  * IsFlagMaskSet(&gIwram_35E0, 0x40), reads the packed tile coordinate
@@ -29,9 +29,9 @@
  * each compare. */
 
 extern void Entity_UpdateHitboxWithTile(void *ent, u32 arg1, u32 kind);
-extern void sub_0800BF24(void *ent, void *arg1, u8 kind);
-extern void sub_0800BEBC(void *ent, void *arg1, u8 kind, u8 tile);
-extern void sub_0800C444(u8 tile);
+extern void Entity_ScanHitboxAndBlit(void *ent, void *arg1, u8 kind);
+extern void EntityHitbox_RegisterHit(void *ent, void *arg1, u8 kind, u8 tile);
+extern void Scene_OnPlayerStepTile20(u8 tile);
 extern u32 Tilemap_GetTileClass(u8 col, u8 row, s16 tileX, s16 tileY);
 
 void Scene_UpdateCollisionAndTile(u32 arg0, u32 arg1, u32 arg2, u32 arg3, void *arg4, void *arg5)
@@ -48,7 +48,7 @@ void Scene_UpdateCollisionAndTile(u32 arg0, u32 arg1, u32 arg2, u32 arg3, void *
 
     Entity_UpdateHitboxWithTile((void *)arg0, arg1, 6);
     Entity_UpdateHitboxWithTile((void *)arg2, arg3, 7);
-    sub_0800BF24(arg4, arg5, 22);
+    Entity_ScanHitboxAndBlit(arg4, arg5, 22);
 
     p3720 = gEntities;
     mask = 4;
@@ -64,8 +64,8 @@ void Scene_UpdateCollisionAndTile(u32 arg0, u32 arg1, u32 arg2, u32 arg3, void *
     if (mask != 0) {
         Entity_ActivateHitSlot((void *)arg0, (void *)arg1, 6, tile);
         Entity_ActivateHitSlot((void *)arg2, (void *)arg3, 7, tile);
-        sub_0800BEBC(arg4, arg5, 22, tile);
-        sub_0800C444(tile);
+        EntityHitbox_RegisterHit(arg4, arg5, 22, tile);
+        Scene_OnPlayerStepTile20(tile);
     }
 
     if (IsFlagMaskSet(p35E0, 0x40)) {

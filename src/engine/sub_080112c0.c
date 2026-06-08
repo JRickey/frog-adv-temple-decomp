@@ -10,7 +10,7 @@ extern const u16 ***gFrameCellTable_08307EAC[];
  * (gFrameCellTable[(gGameStuff.sceneType - 1) * 5][frame][cell]) into one of
  * three EWRAM banks selected by `bank`, at (dstX, dstY) scaled by the scene
  * stride at gIwram_60A0+26, then tail-calls ScaleAnim_BlitFrameToVram to flush the bank to
- * VRAM. Twin of the (already-matching) sub_08012BC4; like it, the register pins
+ * VRAM. Twin of the (already-matching) Tilemap_BlitTileRows; like it, the register pins
  * mirror agbcc's prologue allocation and are load-bearing for the match. */
 void BlitFrameCell(u32 frameArg, u32 rowsArg, u32 colsArg, u32 dstXArg, u32 dstYArg, u32 bankArg, u32 cellArg)
 {

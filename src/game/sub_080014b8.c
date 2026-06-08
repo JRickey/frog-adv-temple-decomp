@@ -25,14 +25,14 @@ void Scene10_FrameUpdate(void)
 
 /* Thin forwarder to Game_FrameEnd — same shape as Scene06_Exit
  * (push lr; bl Game_FrameEnd; pop r0; bx r0). */
-void sub_080014E4(void)
+void Scene10_Exit(void)
 {
     Game_FrameEnd();
 }
 
 /* On Scene_EntityTick reject: force state byte to 8. Same Scene_EntityTick guard
  * pattern as Scene_UpdateAnimState (state=7) and Scene_InitHitboxes (state=7). */
-void sub_080014F0(u8 *state)
+void Scene10_EntityTick(u8 *state)
 {
     if (Scene_EntityTick(state) == 0)
         *state = 8;

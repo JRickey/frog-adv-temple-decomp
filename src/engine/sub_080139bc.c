@@ -12,7 +12,7 @@ void ScaleAnim_BlitDescIdx1(u8 idx)
     stride <<= 3;
     desc = (struct TilemapTableEntry *)(stride + (u32)table);
 
-    sub_08012BC4(desc->unk08, desc->unk00, desc->unk02, desc->unk04, desc->unk06,
-                 *(void **)((stride += (u32)(table = (struct TilemapTableEntry *)((u8 *)table + 16))), (void *)stride),
-                 1);
+    Tilemap_BlitTileRows(
+        desc->unk08, desc->unk00, desc->unk02, desc->unk04, desc->unk06,
+        *(void **)((stride += (u32)(table = (struct TilemapTableEntry *)((u8 *)table + 16))), (void *)stride), 1);
 }

@@ -38,53 +38,65 @@ void ScaleAnim_BlitSceneLayers(void)
 
         switch (mode) {
         case 4:
-            sub_08012BC4(sceneA->unk08, sceneA->unk00, sceneA->unk02, sceneA->unk04, sceneA->unk06, sceneA->tiles,
-                         indexA);
+            Tilemap_BlitTileRows(sceneA->unk08, sceneA->unk00, sceneA->unk02, sceneA->unk04, sceneA->unk06,
+                                 sceneA->tiles, indexA);
             desc = &sceneA[5];
-            sub_08012BC4(desc->unk08, desc->unk00, desc->unk02, desc->unk04, desc->unk06,
-                         ((const struct TilemapTableEntry *)0x0830702c)[5].tiles, indexA);
-            sub_08012BC4(sceneB->unk08, sceneB->unk00, sceneB->unk02, sceneB->unk04, sceneB->unk06, sceneB->tiles,
-                         indexB);
+            Tilemap_BlitTileRows(desc->unk08, desc->unk00, desc->unk02, desc->unk04, desc->unk06,
+                                 ((const struct TilemapTableEntry *)0x0830702c)[5].tiles, indexA);
+            Tilemap_BlitTileRows(sceneB->unk08, sceneB->unk00, sceneB->unk02, sceneB->unk04, sceneB->unk06,
+                                 sceneB->tiles, indexB);
             desc = &sceneB[5];
-            sub_08012BC4(desc->unk08, desc->unk00, desc->unk02, desc->unk04, desc->unk06,
-                         ((const struct TilemapTableEntry *)0x083070ec)[5].tiles, indexB);
+            Tilemap_BlitTileRows(desc->unk08, desc->unk00, desc->unk02, desc->unk04, desc->unk06,
+                                 ((const struct TilemapTableEntry *)0x083070ec)[5].tiles, indexB);
             cleared = (u8)(*status & 0xfe);
             cleared = (u8)(cleared & 0xdf);
             *status = cleared;
             break;
         case 5:
             desc = &sceneA[1];
-            sub_08012BC4(desc->unk08, desc->unk00, desc->unk02, desc->unk04, desc->unk06, sceneA[1].tiles, indexA);
+            Tilemap_BlitTileRows(desc->unk08, desc->unk00, desc->unk02, desc->unk04, desc->unk06, sceneA[1].tiles,
+                                 indexA);
             desc = &sceneA[4];
-            sub_08012BC4(desc->unk08, desc->unk00, desc->unk02, desc->unk04, desc->unk06, sceneA[4].tiles, indexA);
+            Tilemap_BlitTileRows(desc->unk08, desc->unk00, desc->unk02, desc->unk04, desc->unk06, sceneA[4].tiles,
+                                 indexA);
             desc = &sceneB[1];
-            sub_08012BC4(desc->unk08, desc->unk00, desc->unk02, desc->unk04, desc->unk06, sceneB[1].tiles, indexB);
+            Tilemap_BlitTileRows(desc->unk08, desc->unk00, desc->unk02, desc->unk04, desc->unk06, sceneB[1].tiles,
+                                 indexB);
             desc = &sceneB[4];
-            sub_08012BC4(desc->unk08, desc->unk00, desc->unk02, desc->unk04, desc->unk06, sceneB[4].tiles, indexB);
+            Tilemap_BlitTileRows(desc->unk08, desc->unk00, desc->unk02, desc->unk04, desc->unk06, sceneB[4].tiles,
+                                 indexB);
             cleared = (u8)(*status & 0xfd);
             mask2 = 0xef;
             goto store;
         case 6:
             desc = &sceneA[7];
-            sub_08012BC4(desc->unk08, desc->unk00, desc->unk02, desc->unk04, desc->unk06, sceneA[7].tiles, indexA);
+            Tilemap_BlitTileRows(desc->unk08, desc->unk00, desc->unk02, desc->unk04, desc->unk06, sceneA[7].tiles,
+                                 indexA);
             desc = &sceneA[2];
-            sub_08012BC4(desc->unk08, desc->unk00, desc->unk02, desc->unk04, desc->unk06, sceneA[2].tiles, indexA);
+            Tilemap_BlitTileRows(desc->unk08, desc->unk00, desc->unk02, desc->unk04, desc->unk06, sceneA[2].tiles,
+                                 indexA);
             desc = &sceneB[7];
-            sub_08012BC4(desc->unk08, desc->unk00, desc->unk02, desc->unk04, desc->unk06, sceneB[7].tiles, indexB);
+            Tilemap_BlitTileRows(desc->unk08, desc->unk00, desc->unk02, desc->unk04, desc->unk06, sceneB[7].tiles,
+                                 indexB);
             desc = &sceneB[2];
-            sub_08012BC4(desc->unk08, desc->unk00, desc->unk02, desc->unk04, desc->unk06, sceneB[2].tiles, indexB);
+            Tilemap_BlitTileRows(desc->unk08, desc->unk00, desc->unk02, desc->unk04, desc->unk06, sceneB[2].tiles,
+                                 indexB);
             cleared = (u8)(*status & 0xfb);
             mask2 = 0x7f;
             goto store;
         case 7:
             desc = &sceneA[6];
-            sub_08012BC4(desc->unk08, desc->unk00, desc->unk02, desc->unk04, desc->unk06, sceneA[6].tiles, indexA);
+            Tilemap_BlitTileRows(desc->unk08, desc->unk00, desc->unk02, desc->unk04, desc->unk06, sceneA[6].tiles,
+                                 indexA);
             desc = &sceneA[3];
-            sub_08012BC4(desc->unk08, desc->unk00, desc->unk02, desc->unk04, desc->unk06, sceneA[3].tiles, indexA);
+            Tilemap_BlitTileRows(desc->unk08, desc->unk00, desc->unk02, desc->unk04, desc->unk06, sceneA[3].tiles,
+                                 indexA);
             desc = &sceneB[6];
-            sub_08012BC4(desc->unk08, desc->unk00, desc->unk02, desc->unk04, desc->unk06, sceneB[6].tiles, indexB);
+            Tilemap_BlitTileRows(desc->unk08, desc->unk00, desc->unk02, desc->unk04, desc->unk06, sceneB[6].tiles,
+                                 indexB);
             desc = &sceneB[3];
-            sub_08012BC4(desc->unk08, desc->unk00, desc->unk02, desc->unk04, desc->unk06, sceneB[3].tiles, indexB);
+            Tilemap_BlitTileRows(desc->unk08, desc->unk00, desc->unk02, desc->unk04, desc->unk06, sceneB[3].tiles,
+                                 indexB);
             cleared = (u8)(*status & 0xf7);
             mask2 = 0xbf;
         store:

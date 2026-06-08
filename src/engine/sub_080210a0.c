@@ -16,7 +16,8 @@ typedef struct SpawnRecord {
 extern void DirToMotion(u8 dir, s8 *outX, s8 *outY);
 extern void MotionDesc_Set(struct Entity *e, s8 param, s8 deltaX, s8 deltaY);
 
-void sub_080210A0(u32 idx, const void *record, u32 flags, u32 kind, u32 field14, u32 field16, u32 matchKey, u32 field17)
+void Entity_InitSlotFromRecord(u32 idx, const void *record, u32 flags, u32 kind, u32 field14, u32 field16, u32 matchKey,
+                               u32 field17)
 {
     register const volatile SpawnRecord *recVol asm("sl") = (const volatile SpawnRecord *)record;
     const SpawnRecord *rec;

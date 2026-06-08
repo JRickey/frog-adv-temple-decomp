@@ -16,8 +16,8 @@ void ScaleAnim_BlitFromTable1(u8 idx)
     offset <<= 3;
     desc = (const struct ScaleAnimDesc *)(offset + (u32)base);
 
-    sub_08012BC4(desc->flags, desc->dstX, desc->dstY, desc->width, desc->rows,
-                 (srcTableArr = (const u16 ***)(offset + (u32)(base += 16)), *srcTableArr), 2);
+    Tilemap_BlitTileRows(desc->flags, desc->dstX, desc->dstY, desc->width, desc->rows,
+                         (srcTableArr = (const u16 ***)(offset + (u32)(base += 16)), *srcTableArr), 2);
 }
 
 void ScaleAnim_BlitFromTable2Bank0(u8 idx)
@@ -31,8 +31,8 @@ void ScaleAnim_BlitFromTable2Bank0(u8 idx)
     offset <<= 3;
     desc = (const struct ScaleAnimDesc *)(offset + (u32)base);
 
-    sub_08012BC4(desc->flags, desc->dstX, desc->dstY, desc->width, desc->rows,
-                 (srcTableArr = (const u16 ***)(offset + (u32)(base += 16)), *srcTableArr), 0);
+    Tilemap_BlitTileRows(desc->flags, desc->dstX, desc->dstY, desc->width, desc->rows,
+                         (srcTableArr = (const u16 ***)(offset + (u32)(base += 16)), *srcTableArr), 0);
 }
 
 void ScaleAnim_BlitFromTable2Bank2(u8 idx)
@@ -46,6 +46,6 @@ void ScaleAnim_BlitFromTable2Bank2(u8 idx)
     offset <<= 3;
     desc = (const struct ScaleAnimDesc *)(offset + (u32)base);
 
-    sub_08012BC4(desc->flags, desc->dstX, desc->dstY, desc->width, desc->rows,
-                 (srcTableArr = (const u16 ***)(offset + (u32)(base += 16)), *srcTableArr), 2);
+    Tilemap_BlitTileRows(desc->flags, desc->dstX, desc->dstY, desc->width, desc->rows,
+                         (srcTableArr = (const u16 ***)(offset + (u32)(base += 16)), *srcTableArr), 2);
 }

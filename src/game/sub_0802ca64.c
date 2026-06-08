@@ -5,7 +5,7 @@
 extern void EntityPool_UpdateOwned(u32 a0);
 extern void Gate_Tick(void);
 
-extern void sub_080210A0(u16 a0, const void *a1, u16 a2, u8 a3, u16 a4, u8 a5, u8 a6, u8 a7);
+extern void Entity_InitSlotFromRecord(u16 a0, const void *a1, u16 a2, u8 a3, u16 a4, u8 a5, u8 a6, u8 a7);
 
 extern const u32 sLevelLayout_31805C[8];
 
@@ -27,7 +27,7 @@ void Entity22_SpawnFromLayout(void)
     u8 *base;
     u32 off;
 
-    sub_080210A0(22, sLevelLayout_31805C, 0x10, 0x60, 0x245, 4, 3, 1);
+    Entity_InitSlotFromRecord(22, sLevelLayout_31805C, 0x10, 0x60, 0x245, 4, 3, 1);
     base = (u8 *)gEntities;
     off = 0x0b7a;
     base[off] = 3;

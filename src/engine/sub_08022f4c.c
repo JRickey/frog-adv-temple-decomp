@@ -1,7 +1,7 @@
 #include "iwram.h"
 #include "types.h"
 
-extern void sub_080210A0(u16 a0, const void *a1, u16 a2, u8 a3, u16 a4, u8 a5, u8 a6, u8 a7);
+extern void Entity_InitSlotFromRecord(u16 a0, const void *a1, u16 a2, u8 a3, u16 a4, u8 a5, u8 a6, u8 a7);
 extern u32 __umodsi3(u32 dividend, u32 divisor);
 
 extern const u32 sLevelLayoutPtrs_311EC0[10];
@@ -24,7 +24,7 @@ void LevelLayout_SpawnGroup311EC0(void)
             mod = __umodsi3(i, 6);
             /* two-shift form needed to match agbcc output */
             field14 = (((mod << 24) >> 4) + 0x01710000) >> 16;
-            sub_080210A0(idx, ptr, 16, 13, field14, 11, 2, 3);
+            Entity_InitSlotFromRecord(idx, ptr, 16, 13, field14, 11, 2, 3);
         } else {
             const void *ptr;
             u32 mod;
@@ -33,7 +33,7 @@ void LevelLayout_SpawnGroup311EC0(void)
             ptr = (const void *)tbl[i];
             mod = __umodsi3(i, 6);
             field14 = (((mod << 24) >> 4) + 0x01710000) >> 16;
-            sub_080210A0(idx, ptr, 16, 13, field14, 11, 3, 3);
+            Entity_InitSlotFromRecord(idx, ptr, 16, 13, field14, 11, 3, 3);
         }
         i++;
     } while (i <= 9);

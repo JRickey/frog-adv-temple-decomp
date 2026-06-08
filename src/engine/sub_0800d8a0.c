@@ -61,10 +61,10 @@ void SpawnControl_Dispatch(void)
     EnemySpawn_Tick();
 }
 
-u32 *sub_0800D924(u32 *out, u32 mask, u32 limit)
+u32 *PadGrid_ScanMaskToCoord(u32 *out, u32 mask, u32 limit)
 {
     u32 *outp = out;
-    u32 maskBits = mask;
+    u32 bits = mask;
     register u32 found asm("sl");
     register u8 ulimit asm("r8");
     u32 scratch;
@@ -74,25 +74,25 @@ u32 *sub_0800D924(u32 *out, u32 mask, u32 limit)
     u32 loopValue;
     register u32 inRange asm("r3");
     register u32 belowLimit asm("r2");
-    u32 shiftedLimit;
+    u32 limitShifted;
     u32 local;
     u32 result;
 
-    shiftedLimit = limit << 24;
+    limitShifted = limit << 24;
     found = 0xff;
     loopValue = 0;
-    ulimit = shiftedLimit >> 24;
-    slimit = (s32)shiftedLimit >> 24;
+    ulimit = limitShifted >> 24;
+    slimit = (s32)limitShifted >> 24;
     goto test;
 
 body:
-    if ((maskBits & 1) != 0) {
+    if ((bits & 1) != 0) {
         loopValue = sf + 1;
         loopValue <<= 24;
         loopValue >>= 24;
         found = loopValue;
     }
-    maskBits >>= 1;
+    bits >>= 1;
     loopValue = (u8)(i + 1);
 
 test:
@@ -132,7 +132,7 @@ test:
     return outp;
 }
 
-u32 sub_0800D9C8(void)
+u32 PadGrid_RandomizeAndSyncEntityCoords(void)
 {
     register struct Entity *dst asm("r2");
     register struct IwramAt35E0 *src asm("r4");
