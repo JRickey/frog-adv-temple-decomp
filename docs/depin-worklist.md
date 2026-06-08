@@ -1,0 +1,262 @@
+# De-pin / NAKED-reaping worklist (task #14)
+
+The ROM is 100% byte-matched, but many functions reach that match only because
+they carry `register T x asm("rN")` **pins** that force agbcc's register
+allocator to colour the way the baserom did. Task #14 removes those pins and
+recovers the match with `vendor/decomp-permuter`. This doc ranks every pinned
+function by the **actual byte_diff after pin removal** so the permuter budget
+goes to the easiest-first, and tags the **struct high-register** class the
+owner wants run first.
+
+This is a measurement artifact — no source was changed to produce it. Every
+function was de-pinned, measured, and reverted; `make check` is green.
+
+## Method
+
+For each function: strip the `asm("rN")` annotation from its `register` decls
+(turn `register T x asm("r8");` into `T x;`), leaving everything else
+identical, then **clean-rebuild** (`make tidy && make -j8`) and read the
+per-function diff from `tools/agent/compile_and_view_assembly.py <fn> --human`.
+Revert with `git checkout -- <file>` before the next.
+
+**Why clean rebuild, not incremental:** an incremental `make` after a pin
+strip *false-greens* (stale `.o` reuse) — `CollisionTable_ScanForPlayer` and
+four blit functions reported `byte_diff=0 / MATCH` incrementally but `53`,
+`158`, `200`, … on a clean build. Trust only `make tidy && make -j8`. (Same
+hazard the handoff calls out: incremental check false-greens, a failed build
+leaves stale `.o`s that false-RED.)
+
+**Columns:**
+- `byte_diff` — total mismatching bytes for the function on a clean rebuild
+  (the project oracle's number, drift-free). Scales with function size, so
+  read it together with ARG.
+- `ARG / nonARG` — count of mismatching instructions that are pure
+  register-operand differences (`ARGUMENT_MISMATCH`) vs. opcode/structural
+  differences. **`nonARG == 0` ⇒ the de-pin is pure register colouring — the
+  permuter's exact domain.** `nonARG > 0` ⇒ there's a structural delta the
+  permuter (which only reorders statements/scopes) is less likely to recover.
+  (ARG is the displayed count and is capped by the tool; `byte_diff` is the
+  true total.)
+- `size_delta` — change in the function's own size after de-pin. `0` ⇒ the
+  pin only recoloured registers; `≠ 0` ⇒ the pin was forcing an
+  encoding/size choice (a harder, often-structural case).
+- `struct-high-reg` — the priority class: a **typed struct pointer** pinned
+  into a **high callee-saved register (r8/r9/sl)**.
+
+## How to run the permuter (per function, easiest byte_diff first)
+
+1. Remove the `asm("rN")` pins in the target function (plain locals).
+2. `python3 tools/agent/make_permuter_target.py <fn>` — **regenerate
+   `target.o`**. Without `$t/$d` mapping symbols the permuter scores ~100x too
+   high (the `permuter_target_bug`). Confirm `vendor/decomp-permuter` venv
+   exists (`scripts/setup-decomp-permuter.sh`; it was once a broken
+   self-symlink, now restored). All prerequisites are present in-tree as of
+   this writing.
+3. Run the permuter from the near-matching base; in parallel try the corpus
+   history idiom search (CLAUDE.md "Stuck on a fold? Search the corpus
+   FIRST") — agbcc colouring idioms are usually already solved in pret/cvaos.
+4. **Match** ⇒ drop the pins, `make tidy && make -j8 && make check` (exit 0),
+   commit, decrement the pin count. **Genuine residue** (matches one of the
+   four hard classes in `docs/codegen-notes.md` AND ~0% permuter improvement
+   over ~10k+ iters) ⇒ restore the pins, keep the `#ifdef NON_MATCHING`
+   shape, and log the class + iter count/score in the commit (the
+   "Permuter convergence audit" in codegen-notes is the precedent).
+
+**Discipline:** the only matching oracle is `make tidy && make -j8 &&
+make check`. These functions touch shared files (Entity / the IWRAM structs);
+run them **serially or in non-overlapping worktrees** — never a pin-edit and
+another agent's `git checkout` on the same file concurrently.
+
+**Calibration anchors:** `Entity_UpdateHitboxSlots` is the known-good
+sweet-spot (pure colouring; the handoff cites ~10 after a partial strip —
+full strip measured 65 here, all ARG). `sub_080210A0` is the documented
+resistant case: a prior 17-pin wholesale removal "failed badly"
+(`docs/register-pin-cleanup-handoff.md`) — high-register lifetime + stack-arg
+colouring; ~124 structural.
+
+## Start here — struct-high-reg, low byte_diff (run first)
+
+The priority class is only **5 LIVE functions** (a typed struct pointer pinned
+into r8/r9/sl, in a real compiled body). Run them in this order:
+
+1. **`Tilemap_DispatchPendingBlits`** (`src/engine/sub_08015930.c`, `sl =
+   struct TilemapTableEntry *`) — **byte_diff 0: the pin is already
+   REDUNDANT.** Drop it, rebuild, commit. No permuter needed. (Despite a
+   loop-constant-across-inner-BL shape, the comment's premise no longer holds
+   for the current source.)
+2. **`Entity_UpdateHitboxSlots`** (`src/engine/sub_0800b7b0.c`, `r8 = const
+   EntityHitbox *`) — byte_diff 65, **21 ARG / 0 nonARG**, pure colouring.
+   The reference sweet-spot; best permuter candidate.
+3. **`Blit_ApplyFlaggedRecords`** (`src/engine/sub_080113e8.c`, `r9 = struct
+   BlitRecord *`) — byte_diff 114, **15 ARG / 0 nonARG**, pure colouring.
+4. **`BlitSpriteRect`** (`src/engine/sub_08015b6c.c`, `r8 = struct
+   BlitSource_15B6C *`, `r9 = struct BgScrollState *`) — byte_diff 158, **15
+   ARG / 0 nonARG**, pure colouring but 11 pins / 180 B; longer permuter run.
+5. **`sub_080210A0`** (`src/engine/sub_080210a0.c`, `sl = const volatile
+   SpawnRecord *`) — byte_diff 136. **Documented resistant** (17-pin wholesale
+   removal failed; stack-arg + high-reg colouring). Attempt last, expect to
+   restore + keep NON_MATCHING.
+
+Beyond the strict struct-high-reg class, the **lowest-friction wins overall**
+(any reg, `nonARG == 0`) are the rest of the top of the table — start the
+non-priority work here:
+
+| function | file | byte_diff | why |
+|---|---|--:|---|
+| `Display_ResetLayers` | src/engine/sub_08014ea8.c | 0 | redundant pin — free |
+| `Entity_MoveToEntry` | src/game/sub_0802cdd0.c | 0 | redundant pin — free |
+| `Scene_EntityTick` | src/game/sub_08009ba0.c | 2 | trivial coloring (`GameStuff *` in r4) |
+| `EntityDispatch_RunFrame` | src/game/sub_08009ba0.c | 11 | trivial coloring |
+| `Blend_StepFade` | src/engine/sub_080106b8.c | 11 | trivial coloring |
+| `sub_0800D9C8` | src/engine/sub_0800d8a0.c | 16 | `struct Entity *` in r2 (low reg) |
+| `Mode4_BlitRect` | src/engine/sub_0801621c.c | 22 | trivial coloring |
+| `TileBlit_DrawEntry` | src/engine/sub_08016824.c | 22 | `struct TileBlitRecord *` x3 (low regs) |
+| `Credits_InitStateA` / `Credits_InitStateB` | src/engine/sub_0801ac84.c | 24 | shared file — measure both per-symbol |
+| `EntityHitbox_RegisterHitPoint` | src/engine/sub_0800c2a8.c | 37 | `const EntityHitbox *` in r4 |
+
+## Ranked worklist (all measured, byte_diff ascending)
+
+53 functions: the 51 `function_status.py --status register-heavy` (≥3 pins)
+plus the 2 struct-high-reg priority functions that sit below that threshold
+(`Tilemap_DispatchPendingBlits`, `Blit_ApplyFlaggedRecords`). Sorted
+most-tractable first.
+
+| # | function | file | pinned reg(s) | pin var type(s) | struct-high-reg | byte_diff | ARG/nonARG | size_delta | classification | notes |
+|---|---|---|---|---|:-:|--:|--:|--:|---|---|
+| 1 | `Display_ResetLayers` | src/engine/sub_08014ea8.c | r3, r1, r2 | r3:u8 *a, r1:u8 one, r2:u8 *b |  | 0 | 0/0 | 0 | REDUNDANT (free) |  |
+| 2 | `Entity_MoveToEntry` | src/game/sub_0802cdd0.c | r3, r1, r4 | r3:u32 off1, r1:u32 off2, r4:s8 *outY |  | 0 | 0/0 | 0 | REDUNDANT (free) |  |
+| 3 | `Tilemap_DispatchPendingBlits` | src/engine/sub_08015930.c | sl | sl:struct TilemapTableEntry *table16 | YES | 0 | 0/0 | 0 | REDUNDANT (free) | priority class; pin already redundant |
+| 4 | `Scene_EntityTick` | src/game/sub_08009ba0.c | r4, r1, r2, r0 | r4:GameStuff *game, r1:const u32 *procA, r2:u8 sceneType, r0:u32 offset |  | 2 | 2/0 | 0 | PERMUTER-TRACTABLE (easy) | shared file w/ EntityDispatch_RunFrame |
+| 5 | `EntityDispatch_RunFrame` | src/game/sub_08009ba0.c | r1, r2, r0, r0, r1, r1 | r1:u8 idx1, r2:u8 idx2, r0:u32 offset, r0:const u8 *lut, r1:const u32 *procA, r1:const u32 *procB |  | 11 | 11/0 | 0 | PERMUTER-TRACTABLE (easy) | shared file w/ Scene_EntityTick |
+| 6 | `Blend_StepFade` | src/engine/sub_080106b8.c | r2, r0, r1 | r2:vu8 *countdown, r0:vu16 *bldcnt, r1:int n |  | 11 | 7/0 | 0 | PERMUTER-TRACTABLE (easy) |  |
+| 7 | `sub_0800D9C8` | src/engine/sub_0800d8a0.c | r2, r4, r5, r3, r1 | r2:struct Entity *dst, r4:struct IwramAt35E0 *src, r5:u32 offset, r3:u32 offset2, r1:u32 addrOrValue |  | 16 | 10/0 | 0 | PERMUTER-TRACTABLE (easy) | shared file w/ SpawnControl_Dispatch |
+| 8 | `Mode4_BlitRect` | src/engine/sub_0801621c.c | r2, r0, r7 | r2:u8 *dst, r0:u32 rowOff, r7:u32 x |  | 22 | 20/0 | 0 | PERMUTER-TRACTABLE (easy) |  |
+| 9 | `TileBlit_DrawEntry` | src/engine/sub_08016824.c | r2, ip, r3 | r2:struct TileBlitRecord *entry, ip:struct TileBlitRecord *loopBase, r3:struct TileBlitRecord *p |  | 22 | 22/0 | 0 | PERMUTER-TRACTABLE (easy) | shared file w/ Icon_DmaUpdateSprite |
+| 10 | `Credits_InitStateB` | src/engine/sub_0801ac84.c | r4, r5, r1, r1 | r4:u8 arg, r5:u8 b1, r1:u32 sum, r1:const u8 *p |  | 24 | 10/0 | 0 | PERMUTER-TRACTABLE (easy) | shared file w/ Credits_InitStateA |
+| 11 | `Credits_InitStateA` | src/engine/sub_0801ac84.c | r5, r2, r2 | r5:u8 b1, r2:u32 sum, r2:const u8 *p |  | 24 | 10/0 | 0 | PERMUTER-TRACTABLE (easy) | shared file w/ Credits_InitStateB |
+| 12 | `FrogSelect_ClearInputState` | src/engine/sub_080199e4.c | r2, r4, r1, r3, r1, r0 | r2:u32 i, r4:u8 *base, r1:u8 *dst, r3:u8 zero, r1:u8 *ptr, r0:u32 next |  | 36 | 3/0 | -12 | PERMUTER-TRACTABLE | size_delta -12: clear-loop unrolling may shift |
+| 13 | `BgScroll_TileWipeTransition` | src/engine/sub_0801da1c.c | r9, sl, r1 | r9:u32 d, sl:u32 e, r1:vu16 *palReg |  | 36 | 7/2 | 0 | MIXED (has structural diff) | nonARG=2 |
+| 14 | `EntityHitbox_RegisterHitPoint` | src/engine/sub_0800c2a8.c | r4, r1, r0 | r4:const EntityHitbox *table, r1:u32 offset, r0:u32 pa |  | 37 | 30/0 | 0 | PERMUTER-TRACTABLE |  |
+| 15 | `CollisionTable_ScanForPlayer` | src/game/sub_08007138.c | sl, r6, r1, r4, r5, r1, r2, r3, r0 | sl:u32 maskHi, r6:s32 tailBound, r1:u8 stateByte, r4:union PackedPointUnion07138 point, r5:union …, r1:u32 r1v, r2:u32 r2v, r3:u32 r3v, r0:struct Entity *callPlayer |  | 53 | 16/0 | 0 | PERMUTER-TRACTABLE | sl is a scalar, not a struct ptr |
+| 16 | `BlitTilesRect` | src/engine/sub_08015c24.c | r1, r0, r0, r0, r1, r0 | r1:s32 x, r0:s32 y, r0:s32 xScratch, r0:u32 row, r1:u8 nextRow, r0:s32 off |  | 53 | 11/0 | 0 | PERMUTER-TRACTABLE |  |
+| 17 | `Entity_UpdateHitboxSlots` | src/engine/sub_0800b7b0.c | r8, r9, r1, r4, r2, r7, r2 | r8:const EntityHitbox *table, r9:const u8 *points, r1:u32 r1v, r4:s32 typeIndex, r2:s32 slotShift, r7:u32 slotsBase, r2:u32 *out | YES | 65 | 21/0 | -4 | PERMUTER-TRACTABLE | **priority class; calibration sweet-spot** |
+| 18 | `Entity_UpdateFrame` | src/game/sub_08009d9c.c | r0, r3, r1 | r0:u8 nextState, r3:u8 stateByte, r1:vu16 *dst |  | 65 | 23/1 | 0 | LIKELY-RESISTANT (documented) | permuter audit -5.4% (codegen-notes "Permuter convergence audit"); far from 0 |
+| 19 | `Gate_OnTileStep` | src/engine/sub_0800ab84.c | r4, r5, r5 | r4:u8 *spawn, r5:u8 *spawn5, r5:struct IwramAt6110 *base6110 |  | 66 | 8/3 | 0 | MIXED (has structural diff) | nonARG=3 |
+| 20 | `BgScrollAnim_Update` | src/engine/sub_08012cac.c | r5, r4, r0, r1, r2, r6, r3 | r5:u8 *scrollState, r4:GameStuff *gs, r0:u32 prev, r1:u32 elapsed, r2:u8 *anim0, r6:struct IwramAt3550 *bg2, r3:u32 newCurB |  | 71 | 27/0 | -4 | PERMUTER-TRACTABLE |  |
+| 21 | `Scroll_UpdateCamera` | src/engine/sub_0800f24c.c | r2, r1, r0, r3 | r2:s32 r2v, r1:s32 targetY, r0:u32 rawX, r3:u32 rawY |  | 73 | 17/0 | 4 | PERMUTER-TRACTABLE | new-agbcc exception file (Makefile) |
+| 22 | `ScrollCamera_Update` | src/engine/sub_0801a6d4.c | r8, r2, r1, r0, r3 | r8:u32 count, r2:s32 r2v, r1:s32 targetY, r0:u32 rawX, r3:u32 rawY |  | 74 | 12/0 | 4 | PERMUTER-TRACTABLE | r8 is a scalar count, not a struct ptr |
+| 23 | `ScriptStep_Advance` | src/engine/sub_0801a614.c | r4, r0, r1, r0, r0 | r4:int op, r0:u8 cursor, r1:u8 c1, r0:u32 idx, r0:int z |  | 75 | 23/0 | 0 | PERMUTER-TRACTABLE |  |
+| 24 | `Array_ThrottledRotate` | src/engine/sub_08013908.c | r2, r6, r1 | r2:u16 prev, r6:u16 cur, r1:GameStuff *gsEp |  | 75 | 11/0 | 2 | PERMUTER-TRACTABLE |  |
+| 25 | `HUD_DrawStampIcons` | src/engine/sub_0801c464.c | ip, r6, r0 | ip:u32 ipBase, r6:volatile struct BgScreenblock *screenblock, r0:u32 row2 |  | 81 | 15/0 | 4 | PERMUTER-TRACTABLE |  |
+| 26 | `EntityHitbox_RegisterGridPoints` | src/engine/sub_0800a83c.c | r9, r8, r0, r1, r5, r3, r7, r3 | r9:u32 gridIdReg, r8:u32 gridPlaneReg, r0:u32 r0v, r1:u32 r1v, r5:s32 savedTypeIndex, r3:s32 y, r7:u32 useAlternateFlagsTest, r3:const s8 *countBase |  | 85 | 21/0 | -4 | PERMUTER-TRACTABLE | high-regs are scalars, not struct ptrs |
+| 27 | `ScriptTick` | src/engine/sub_080179b8.c | r4, r2, r0, r1, r0, r1 | r4:int op, r2:GameStuff *gs, r0:u8 cursor, r1:u8 c1, r0:int idx, r1:const u16 *const *tbl |  | 85 | 28/0 | -6 | PERMUTER-TRACTABLE |  |
+| 28 | `BgScrollDmaUpdate` | src/engine/sub_08013aac.c | r4, r0, r6 | r4:struct Queue_64C0 *queue, r0:u8 cursor, r6:u8 wrapCursor |  | 92 | 14/0 | -4 | PERMUTER-TRACTABLE |  |
+| 29 | `Icon_DmaUpdateSprite` | src/engine/sub_08016824.c | ip, r1, r0, r1 | ip:u32 gs, r1:u32 r1val, r0:u32 r0r, r1:u32 r1r |  | 102 | 16/0 | 0 | PERMUTER-TRACTABLE | shared file w/ TileBlit_DrawEntry; Icon-animator pattern (codegen-notes) — may resist |
+| 30 | `sub_0800BE18` | src/engine/sub_0800be18.c | r9, r6, r0, r1 | r9:u32 shiftedType, r6:s32 typeIndex, r0:s32 typeIndex, r1:u32 pointsBase |  | 104 | 14/0 | 0 | PERMUTER-TRACTABLE | r9 is a scalar |
+| 31 | `SpawnControl_Dispatch` | src/engine/sub_0800d8a0.c | r4, r5, r6, r3 | r4:u8 *base, r5:u8 *saved6110, r6:u8 *entry, r3:u32 mask |  | 109 | 23/0 | 4 | PERMUTER-TRACTABLE | shared file w/ sub_0800D9C8 |
+| 32 | `Blit_ApplyFlaggedRecords` | src/engine/sub_080113e8.c | sl, r9 | sl:u8 idx, r9:struct BlitRecord *romTable | YES | 114 | 15/0 | 0 | PERMUTER-TRACTABLE | **priority class** |
+| 33 | `ModeControl_GetFlag` | src/game/sub_0800679c.c | r0, r0, r2, r3, r1 | r0:u32 r, r0:u8 *p, r2:u32 lo, r3:u32 hi, r1:s32 signExt |  | 122 | 10/0 | 6 | LIKELY-RESISTANT (size) |  |
+| 34 | `Entity_LerpPosition` | src/game/sub_080087b4.c | r2, r1, r0, r1 | r2:u8 *gB2, r1:u8 *e, r0:s32 num, r1:s32 ref |  | 122 | 17/0 | 6 | LIKELY-RESISTANT (size) |  |
+| 35 | `PollInputAndAttract` | src/system/init1.c | r3, r1, r0 | r3:u16 prevKeys, r1:u16 keyB, r0:GameStuff *gs |  | 134 | 14/0 | -4 | LIKELY-RESISTANT (size) |  |
+| 36 | `sub_080210A0` | src/engine/sub_080210a0.c | sl, r6, r8, r9, r5, r2, r0, r1, r2 | sl:const volatile SpawnRecord *recVol, r6:u32 field14Reg, r8:u32 field16Reg, r9:u32 matchKeyReg, r5:u32 field17Reg, r2:const SpawnRecord *rec2, r0:u32 byteScratch0, r1:u32 byteScratch1, r2:const u8 *paramRec | YES | 136 | 2/0 | -20 | LIKELY-RESISTANT (documented) | **priority class; KNOWN RESISTANT** — 17-pin wholesale removal failed (register-pin-cleanup-handoff.md); high-reg lifetime + stack-arg colouring |
+| 37 | `Entity12_TickStateMachine` | src/engine/sub_0802a9fc.c | r4, r1, r2, r0, r2, r3 | r4:u16 *statusPtr, r1:u16 status, r2:u16 queued, r0:u16 newStatus, r2:u16 *sp, r3:u16 *sp |  | 140 | 26/2 | 4 | MIXED (has structural diff) | nonARG=2 |
+| 38 | `ScaleAnim_TickFrames` | src/engine/sub_08013040.c | r8, r5, r1, r7, r0, r2, r9, r7, ip, r0, r5, r4, r0 | (13 pins; high-regs are scalars: r8:u8 *counterRef, r9:u32 dst) |  | 149 | 14/0 | 4 | LIKELY-RESISTANT (size) | new-agbcc exception file (Makefile) — harder |
+| 39 | `EntityMover_Tick` | src/engine/sub_08020f3c.c | r3, r6, r1, r0, r1 | r3:EntityMover *base, r6:u32 argReg, r1:s32 dy, r0:u32 finalOff, r1:u8 *stampBase |  | 149 | 17/1 | -12 | MIXED (has structural diff) | nonARG=1; struct ptr in low reg r3 |
+| 40 | `BlitSpriteRect` | src/engine/sub_08015b6c.c | r8, r6, r0, r1, r5, r4, ip, r9, r3, r2, r7 | r8:struct BlitSource_15B6C *srcp, r6:u16 *dst, r0:u32 row, r1:u32 r1slot, r5:u32 width, r4:u32 height, ip:u32 dyh, r9:struct BgScrollState *loopState, r3:u16 dstStride, r2:s32 dx, r7:u32 earlyScratch | YES | 158 | 15/0 | -4 | LIKELY-RESISTANT (size) | **priority class** — pure coloring but 11 pins / large; long permuter run |
+| 41 | `BlitEntityTileFrame1` | src/engine/sub_0801288c.c | r0, r5, r6, r2, r8, ip, r9, r1, r4, r1, r3 | (11 pins; high-regs scalars: r8:u32 x, r9:u32 height) |  | 184 | 9/0 | -4 | LIKELY-RESISTANT (size) |  |
+| 42 | `GameMode_SceneTick` | src/game/sub_08003254.c | r2, r0, r4, r3, r0, r4 | r2:u8 id, r0:u32 offset, r4:GameStuff *g, r3:u8 id, r0:u32 offset, r4:struct IwramAt35E0 *ent |  | 198 | 17/1 | 4 | MIXED (has structural diff) | nonARG=1; uses statement-expression arg pinning (codegen-notes) |
+| 43 | `sub_08012BC4` | src/engine/sub_08012bc4.c | ip, r9, r6, r8, r1, r5, r2, r3, r0, r4, ip, r1, r0 | (13 pins; high-regs scalars: r9:u32 x, r8:u32 index) |  | 200 | 18/0 | -20 | LIKELY-RESISTANT (size) |  |
+| 44 | `BlitEntityTileFrame0` | src/engine/sub_08012664.c | r2, r8, ip, r3, r4, r9, r6, r1, r0, r5, r1, r4, r5, r6, r3, r0 | (16 pins; high-regs scalars: r8:u32 x, r9:u32 rows) |  | 214 | 5/0 | -16 | LIKELY-RESISTANT (size) | most-pinned function |
+| 45 | `Entity_InitHitboxSlots` | src/engine/sub_0800af50.c | r0, r5, r9 | r0:u32 r0v, r5:s32 type, r9:s32 i |  | 223 | 14/0 | -32 | LIKELY-RESISTANT (size) | r9 is loop counter scalar across bl |
+| 46 | `BlitFrameCell` | src/engine/sub_080112c0.c | r8, ip, sl, r1, r3, r7, r4 | r8:u32 rows, ip:u32 cols, sl:u32 dstY, r1:struct BgScrollState *state, r3:u16 stride, r7:u16 *vram, r4:struct BgScrollState *loopState |  | 237 | 24/0 | 4 | LIKELY-RESISTANT (size) | struct ptrs in low regs r1/r4 |
+| 47 | `DrawTilemapString` | src/engine/sub_0801c078.c | sl, r6, r0 | sl:u16 palBits, r6:u16 *base, r0:u16 *digitDst |  | 409 | 14/0 | -14 | LIKELY-RESISTANT (size) | shares code shape w/ Credits_DrawLine |
+| 48 | `Scene15_Main` | src/game/mode_15.c | r0, r3, r1, r0 | r0:u8 *statepInit, r3:u32 nextState, r1:u8 *acceptp, r0:u8 *acceptDst |  | 446 | 15/0 | -12 | LIKELY-RESISTANT (size) | 536 B scene loop |
+| 49 | `Credits_DrawLine` | src/engine/sub_0801dbb4.c | sl, r6, r0 | sl:u16 palBits, r6:u16 *base, r0:u16 *digitDst |  | 482 | 23/0 | 8 | LIKELY-RESISTANT (size) | 746 B |
+| 50 | `SceneLoop_14` | src/game/sub_08002524.c | r0, r3, r1, r0 | r0:u8 *statepInit, r3:u32 nextState, r1:u8 *acceptp, r0:u8 *acceptDst |  | 483 | 15/0 | -8 | LIKELY-RESISTANT (size) | 572 B scene loop |
+| 51 | `Scene13_Update` | src/game/sub_08002184.c | r1, r1, r1, r1, r0 | r1:u8 zero, r1:GameStuff *game, r1:GameStuff *game, r1:u32 localZero, r0:u32 localZero |  | 589 | 18/0 | -8 | LIKELY-RESISTANT (size) | 704 B |
+| 52 | `Entity_WalkCompactRecords` | src/engine/sub_08021510.c | r2, r1, r0, r1, r0 | r2:u16 status, r1:u32 shift, r0:s32 caseSlot, r1:u16 caseStatus, r0:u16 tailStatus |  | 612 | 23/0 | 4 | LIKELY-RESISTANT (size) | 708 B walker |
+| 53 | `SceneLoop_21` | src/game/sub_08004938.c | r1, r0, r3 | r1:u8 zero, r0:u32 partId, r3:u32 nextState |  | 634 | 21/0 | -8 | LIKELY-RESISTANT (size) | 716 B scene loop |
+
+## Probably resistant — deprioritize
+
+These have either a **documented hard class**, a **`nonARG > 0` structural
+delta**, or **large size** (>~120 B byte_diff) that makes permuter convergence
+slow and uncertain. Run them only after the tractable tail is exhausted; expect
+several to restore-pins + keep `NON_MATCHING`.
+
+**Documented hard class (cite the note on defer):**
+- `sub_080210A0` (#36) — `register-pin-cleanup-handoff.md` "Failed probe":
+  wholesale pin removal failed; high-register lifetime + stack-arg colouring.
+- `Entity_UpdateFrame` (#18) — codegen-notes "Permuter convergence audit":
+  11,952 iters, -5.4%, far from 0. Also matches the `sTable[gStruct.field]()`
+  repeated-dispatch resistant pattern.
+
+**Has a structural (non-coloring) delta — permuter weak here:**
+- `Gate_OnTileStep` (#19, nonARG 3), `BgScroll_TileWipeTransition` (#13,
+  nonARG 2), `Entity12_TickStateMachine` (#37, nonARG 2),
+  `EntityMover_Tick` (#39, nonARG 1), `GameMode_SceneTick` (#42, nonARG 1).
+
+**Large / many-pin (pure colouring but slow to converge):** every entry
+#40–#53, plus the 13-/16-pin blit functions `ScaleAnim_TickFrames`,
+`sub_08012BC4`, `BlitEntityTileFrame0/1`, `BlitFrameCell`. These are
+`nonARG == 0` (no structural impossibility) so they are *theoretically*
+recoverable, but a 200–700 B function with 10+ tangled pins is exactly where
+the "Permuter convergence audit" plateaus (`sub_08000918`: 49k iters, -1.5%).
+
+**New-agbcc exception files** (`docs/register-pin-cleanup-handoff.md`): three
+of these compile under the non-default `agbcc`, not `old_agbcc` —
+`Scroll_UpdateCamera` (#21), `ScaleAnim_TickFrames` (#38). Treat the compiler
+as a fixed input; do not flip it to chase a de-pin.
+
+## NAKED struct-high-reg functions — NOT de-pin candidates (separate task)
+
+These functions ship as `NAKED` inline asm with a readable `#ifdef
+NON_MATCHING` C body. The high-reg struct-pointer pins live **inside the dead
+NON_MATCHING branch**, so removing them changes nothing in the build — they
+are not pin-removal candidates. They belong to the `reclaim-naked` / codex
+reclamation track (re-derive the C from scratch), not task #14:
+
+`EntityPool_UpdateOwned` (sub_0802c200), `EntityScript_BuildSlotData` /
+`Entity_TickCells` / `Entity_ApplyScrollStep` (sub_08006b88), `SaveLoad`
+(sub_08017364), `ScaleAnim_SyncSelectors` (sub_0801310c), `ModeChannel_Apply`
+(sub_08010958), `FrogStatusBar_Update` (sub_08017000). (Plus a dozen more
+NAKED functions with scalar high-reg pins in dead code.)
+
+## Measured vs estimated — coverage
+
+- **Measured: 53 / 53** of the target population. The target population is the
+  51 functions `function_status.py --status register-heavy` (≥3 pins, default
+  `--pin-threshold 3`) reports, **plus** the 2 struct-high-reg priority
+  functions that fall below that threshold
+  (`Tilemap_DispatchPendingBlits`, `Blit_ApplyFlaggedRecords`). **Nothing
+  was estimated** — every row is a clean-rebuild measurement.
+- **Struct-high-reg priority class (typed struct ptr in r8/r9/sl, LIVE):
+  5 functions, all measured** — #3, #17, #32, #36, #40.
+- An exhaustive `grep -rnE 'register [^;]*asm\("(r[0-9]+|sl|lr|ip)"\)' src/`
+  finds **556 pin lines across ~140 files**. The 53 measured here are the
+  ones the picker flags as register-heavy (or struct-high-reg). The remaining
+  ~90 files each carry 1–2 pins on a single function below the threshold; they
+  were **not individually measured** (out of scope for this pass, which
+  prioritized the heavy + struct-high-reg classes per the task). A future pass
+  can sweep the 1–2-pin long tail the same way — most are expected to be
+  redundant or trivially tractable like #1–#11 here.
+- The high-reg (r8/r9/sl) pin census (LIVE + DEAD, all 38 functions with any
+  high-reg pin) was fully enumerated to separate the 5 LIVE struct-high-reg
+  candidates from the ~13 DEAD-in-NON_MATCHING ones (the NAKED list above).
+
+### byte_diff distribution (53 measured)
+
+| bucket | count |
+|---|--:|
+| 0 (redundant) | 3 |
+| 1–30 | 8 |
+| 31–80 | 13 |
+| 81–160 | 16 |
+| >160 | 13 |
+
+A `byte_diff == 0` (3 functions) means the pin is already redundant — drop it
+and commit, no permuter. The 1–30 bucket (8) is the next-easiest tier.
+**Every measured function has `nonARG == 0` except 6** (the MIXED rows above),
+i.e. de-pinning is almost always pure register recolouring — the permuter's
+exact domain — so byte_diff magnitude (a size proxy) is the right
+budget-allocation knob.
