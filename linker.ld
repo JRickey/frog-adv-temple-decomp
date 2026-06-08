@@ -252,14 +252,12 @@ SECTIONS {
         src/game/sub_08002184.o(.text);  /* 0x08002184 - 0x08002444, Scene13_Update (mode-13 handler) */
         src/game/game_mode.o(.text);     /* 0x08002444 - 0x08002450, SetGameMode_06 */
         src/game/sub_08002450.o(.text);
-        asm/disasm_0x08002518.o(.text);  /* 0x08002518 - 0x08002524, sub_08002518 (auto-peeled) */
         src/game/sub_08002524.o(.text);  /* 0x08002524 - 0x08002760, SceneLoop_14 (mode-14 handler) */
         src/game/set_game_mode_07.o(.text);  /* 0x08002760 - 0x0800276c, SetGameMode_07 */
         src/game/sub_0800276c.o(.text);  /* 0x0800276c - 0x08002844, Scene08_Init + Scene08_Tick + Scene08_StateGuard + Scene08_Exit + Scene08_EntityDispatch */
         src/game/mode_15.o(.text);       /* 0x08002844 - 0x08002a5c, Scene15_Main (mode-15 handler) */
         src/game/set_game_mode_08.o(.text);  /* 0x08002a5c - 0x08002a68, SetGameMode_08 */
-        src/game/sub_08002a68.o(.text);  /* 0x08002a68 - 0x08002adc, Mode9_Init + Mode9_Update + Mode9_AdvanceState */
-        asm/disasm_0x08002adc.o(.text);  /* 0x08002adc - 0x08002ae8, sub_08002ADC (auto-peeled) */
+        src/game/sub_08002a68.o(.text);  /* 0x08002a68 - 0x08002ae8, Mode9_Init + Mode9_Update + Mode9_AdvanceState + sub_08002ADC */
         src/game/sub_08002ae8.o(.text);  /* 0x08002ae8 - 0x08002b58, Scene_EnterLevel */
         src/game/sub_08002b58.o(.text);  /* 0x08002b58 - 0x08002e04, SceneLoop_16 */
         src/game/set_game_mode_09.o(.text);  /* 0x08002e04 - 0x08002e10, SetGameMode_09 */
@@ -275,8 +273,7 @@ SECTIONS {
         src/game/sub_08003b40.o(.text);
         src/game/sub_08003b8c.o(.text);  /* 0x08003b8c - 0x08003bfc, Mode12_Init */
         src/game/sub_08003bfc.o(.text);  /* 0x08003bfc - 0x08003c38, Scene_InitHitboxes */
-        src/game/sub_08003c38.o(.text);  /* 0x08003c38 - 0x08003c9c, Mode12_SetupAndUpdate */
-        asm/disasm_0x08003c9c.o(.text);  /* 0x08003c9c - 0x08003ca8, sub_08003C9C (auto-peeled) */
+        src/game/sub_08003c38.o(.text);  /* 0x08003c38 - 0x08003ca8, Mode12_SetupAndUpdate + sub_08003C9C */
         src/game/sub_08003ca8.o(.text);
         asm/disasm_0x08003ca8.o(.text);  /* 0x08003ca8 - 0x08004074, GameMode_Scene19 (auto-peeled) */
         src/game/set_game_mode_12.o(.text);  /* 0x08004074 - 0x08004080, SetGameMode_12 */
@@ -285,8 +282,7 @@ SECTIONS {
         src/game/sub_0800411c.o(.text);
         src/game/sub_0800441c.o(.text);
         src/game/sub_08004470.o(.text);
-        src/game/sub_08004508.o(.text);  /* 0x08004508 - 0x080045e0, Scene20_UpdateParts + TileCacheProbe_Init */
-        asm/disasm_0x080045e0.o(.text);  /* 0x080045e0 - 0x080045ec, sub_080045E0 (auto-peeled) */
+        src/game/sub_08004508.o(.text);  /* 0x08004508 - 0x080045ec, Scene20_UpdateParts + TileCacheProbe_Init + sub_080045E0 */
         src/game/sub_080045ec.o(.text);
         src/game/sub_08004938.o(.text);
         src/game/sub_08004c04.o(.text);  /* 0x08004c04 - 0x08004fac, Mode14_Setup + Mode15_Setup + Mode17_RunFrame + Mode_InitEntityState + Mode_EndScene + SpawnCycle_Update */
@@ -733,8 +729,7 @@ SECTIONS {
         asm/disasm_0x0802d448.o(.text);  /* 0x0802d448 - 0x0802d4ac, sub_0802D448 (auto-peeled) */
         src/game/sub_0802d4ac.o(.text);
         asm/disasm_0x0802d4ac.o(.text);  /* 0x0802d4ac - 0x0802d4f8, sub_0802D4AC (auto-peeled) */
-        src/game/sub_0802d4f8.o(.text);
-        asm/disasm_0x0802d4f8.o(.text);  /* 0x0802d4f8 - 0x0802d504, sub_0802D4F8 (auto-peeled) */
+        src/game/sub_0802d4f8.o(.text);  /* 0x0802d4f8 - 0x0802d504, sub_0802D4F8 */
         src/game/sub_0802d504.o(.text);
         asm/disasm_0x0802d504.o(.text);  /* 0x0802d504 - 0x0802d514, sub_0802D504 (game trampoline) */
         asm/libagbsyscall.o(.text);  /* 0x0802d514 - 0x0802d5ec, public SDK BIOS SWI wrappers (libagbsyscall) */

@@ -82,3 +82,10 @@ void Scene_CleanupOnExit(u8 *state)
     if (*(base + 43) == 1)
         EntitySlot17_Init();
 }
+
+extern void Game_FrameEnd(void);
+
+void sub_08002518(void)
+{
+    Game_FrameEnd();
+}

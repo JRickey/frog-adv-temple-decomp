@@ -66,3 +66,10 @@ void TileCacheProbe_Init(u8 *state, u32 arg1, u32 arg2, u32 arg3, u32 arg4)
     Entity_UpdateHitboxSlots((void *)arg1, (void *)arg2, 11);
     Entity_UpdateHitboxSlots((void *)arg3, (void *)arg4, 16);
 }
+
+extern void Game_FrameEnd(void);
+
+void sub_080045E0(void)
+{
+    Game_FrameEnd();
+}

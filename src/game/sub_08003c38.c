@@ -21,3 +21,10 @@ void Mode12_SetupAndUpdate(void *arg0, u32 arg1, u32 arg2, u32 arg3, u32 arg4, v
     Scene_UpdateCollisionAndTile(arg1, arg2, arg3, arg4, arg5, arg6);
     gGameStuff._unk14++;
 }
+
+extern void Game_FrameEnd(void);
+
+void sub_08003C9C(void)
+{
+    Game_FrameEnd();
+}

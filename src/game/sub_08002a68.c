@@ -34,3 +34,10 @@ void Mode9_AdvanceState(u8 *state)
     if (Scene_EntityTick(state) == 0)
         *state = 7;
 }
+
+extern void Game_FrameEnd(void);
+
+void sub_08002ADC(void)
+{
+    Game_FrameEnd();
+}
