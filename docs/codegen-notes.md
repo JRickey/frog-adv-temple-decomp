@@ -1574,8 +1574,10 @@ not header-driven.
 > structural idiom (operand-order cast, struct-layout fix). Do not cite a flat
 > permuter run as proof of unmatchability again.
 >
-> Of the list, only `sub_0800A2D8` remains NAKED (a reclaim demote-attempt didn't
-> land) — it is OPEN, not confirmed-unmatchable. Original analysis kept below.
+> Update (2026-06-08): `sub_0800A2D8` has since been RECLAIMED too — it is now
+> `Game_RunEntityFrame` in `src/game/dispatch_helpers.c` (plain matching C, no
+> NAKED, byte_diff 0 at 0x0800a2d8). The entire class is reclaimed; none remain
+> NAKED. Original analysis kept below for posterity.
 
 (Historical.) **Promoted from "candidate" → confirmed in iter 21** after a third
 distinct instance (sub_080090B0) reproduced the same shape.
