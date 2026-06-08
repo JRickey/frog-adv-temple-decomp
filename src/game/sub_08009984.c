@@ -72,6 +72,10 @@ check8or11:
 
 extern struct BgScrollState gIwram_60A0[3];
 extern struct IndexEntry gEntityIndex_03006160[];
+/* Linker-assigned alias of gIwram_6110.limit (0x03006140) — see linker.ld. Used
+ * as the loop bound so the back-edge emits a direct 0x03006140 pool constant
+ * rather than folding base+0x30, matching the baserom. */
+extern u8 gIwram_6140;
 
 /* Per-frame entity-vs-player AABB sweep.
  *
@@ -92,14 +96,35 @@ extern struct IndexEntry gEntityIndex_03006160[];
  *     log at 0x03006160 (count byte at 0x03006110[49]), and call
  *     ModeControl_SetBit(0x03006110, idx).
  *
- * Shipped NAKED. The baserom pins the loop's per-entity scratch into
- * the high registers sl (zero hold), r9 (pointer to the hit-count byte
- * at 0x03006110+49), r8 (loop index), and ip (sign-extended entity[4]).
- * Per docs/codegen-notes.md "High registers (sl/r10, sb/r9, r8, ip)
- * — corpus-validated unmatchable", agbcc 2.x will not promote loop
- * state into a high register from any plausible C input — pure-C is
- * unreachable. The reference body in the NON_MATCHING block documents
- * intent for the phase-3 PC port.
+ * Shipped NAKED, but the NON_MATCHING C body below is a NEAR-match, not a
+ * placeholder: it reproduces the function's structure exactly (147/147
+ * instructions, entity in r5, the loop state promoted into r8/r9/sl/ip) and
+ * compiles to byte_diff 16 of 324 — verify with
+ *   compile_and_view_assembly.py Entity_UpdateVisibility --non-matching
+ * The earlier "high regs are unreachable from plain C / corpus-validated
+ * unmatchable" verdict was WRONG; agbcc does promote the loop state. Three
+ * RTL-derived levers (agbcc_oracle .greg dumps) took it from 263 -> 16:
+ *   - structural seeds: read entity->y early as a raw u16 then sign-extend
+ *     (matches the baserom's early ldrh + late shift), and re-read
+ *     entity->visibility{Height,Width} >> 1 inline instead of caching, to
+ *     match its instruction scheduling.  110 -> 41 diffs.
+ *   - gIwram_6140: a linker-assigned alias of gIwram_6110.limit (offset 0x30)
+ *     used as the loop bound, so the back-edge emits a direct 0x03006140 pool
+ *     constant instead of folding the live gIwram_6110 base + 0x30.  Fixes the
+ *     back-edge and the 4-byte size excess.
+ *   - `register count asm("r0")`: the .greg dump shows agbcc otherwise loads
+ *     the limit-compare byte back into the dead address register r2; pinning
+ *     it to r0 matches the baserom.  256 -> 16.
+ *
+ * The residual 16 bytes are PURE register coloring — identical instructions,
+ * different register numbers — on three low-priority *anonymous* values that
+ * agbcc's leftover-register allocation (REG_ALLOC_ORDER {3,2,1,0}) colors one
+ * register off: the `offset = 0` temp, the in-place `flags |= 0x100`
+ * accumulator, and the back-edge limit re-read. None has a C-level name to
+ * pin, and decomp-permuter explored ~51k structures and plateaued at score 50
+ * without flipping all three at once. Left NAKED until a structural shape (or
+ * an allocator lever) closes the last 16; the C body is the working base for
+ * that and the intent record for the phase-3 PC port.
  */
 
 #ifdef NON_MATCHING
@@ -107,7 +132,7 @@ void Entity_UpdateVisibility(void)
 {
     s16 scrollX;
     s16 scrollY;
-    u8 count;
+    register u8 count asm("r0"); /* see header: pin defeats the r2 coalesce */
     s32 idx;
     u8 *visibleCount;
     struct Entity *entity;
@@ -118,6 +143,8 @@ void Entity_UpdateVisibility(void)
     s32 scrollYReg;
     s32 ex;
     s32 ey;
+    s32 yRaw;
+    s32 idxGuard;
     struct IndexEntry *slots;
     u16 flags;
 
@@ -127,9 +154,10 @@ void Entity_UpdateVisibility(void)
     gIwram_6110.flagBank0 = 0;
     gIwram_6110.flagBank1 = 0;
 
-    count = gIwram_6110.limit;
     idx = 0;
-    if (idx >= count)
+    idxGuard = idx; /* separate copy for the entry guard; baserom inits r8 from a fresh zero */
+    count = gIwram_6110.limit;
+    if (idxGuard >= count)
         return;
 
     visibleCount = &gIwram_6110.liveCount;
@@ -142,21 +170,21 @@ void Entity_UpdateVisibility(void)
             goto clear_bit;
 
         height = entity->visibilityHeight >> 1;
+        yRaw = (u16)entity->y;
         ex = entity->x;
         scrollXReg = scrollX;
-        width = entity->visibilityWidth >> 1;
-        entity->screenX = ex - scrollXReg - width;
-        ey = entity->y;
+        entity->screenX = ex - scrollXReg - (entity->visibilityWidth >> 1);
+        ey = (s16)yRaw;
         scrollYReg = scrollY;
-        entity->screenY = ey - scrollYReg - height;
+        entity->screenY = ey - scrollYReg - (entity->visibilityHeight >> 1);
 
-        if (ex + width < scrollXReg)
+        if (ex + (entity->visibilityWidth >> 1) < scrollXReg)
             goto set_control_bit;
-        if (ex - width > scrollXReg + 240)
+        if (ex - (entity->visibilityWidth >> 1) > scrollXReg + 240)
             goto set_control_bit;
-        if (ey + height < scrollYReg)
+        if (ey + (entity->visibilityHeight >> 1) < scrollYReg)
             goto set_control_bit;
-        if (ey - height > scrollYReg + 160)
+        if (ey - (entity->visibilityHeight >> 1) > scrollYReg + 160)
             goto set_control_bit;
 
         flags = entity->status;
@@ -178,7 +206,7 @@ void Entity_UpdateVisibility(void)
     step:
         offset += sizeof(struct Entity);
         idx++;
-    } while (idx < gIwram_6110.limit);
+    } while (idx < gIwram_6140);
 }
 #else
 NAKED void Entity_UpdateVisibility(void)

@@ -149,6 +149,11 @@ SECTIONS {
         . = 0x000054A0; gOamShadow_54A0 = .;
         . = 0x000060A0; gIwram_60A0 = .;
         . = 0x00006110; gIwram_6110 = .;
+        /* Aliases gIwram_6110.limit (offset 0x30). A distinct symbol so the
+         * Entity_UpdateVisibility loop bound materialises 0x03006140 as its own
+         * pool constant instead of folding onto the live gIwram_6110 base
+         * (base+0x30) — matches the baserom back-edge. */
+        . = 0x00006140; gIwram_6140 = .;
         . = 0x00006150; gIwram_6150 = .;
         . = 0x00006160; gEntityIndex_03006160 = .;
         . = 0x00006400; gIwram_6400 = .;
