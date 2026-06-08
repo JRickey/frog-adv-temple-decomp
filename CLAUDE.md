@@ -224,7 +224,14 @@ python3 tools/agent/pick_target.py --name SomeFunction      # by name
 python3 tools/agent/pick_target.py --json                   # for agents
 
 # Per-function compile + categorized diff vs baserom — the loop's oracle.
+# THIS is the answer to "why doesn't <fn> match?" — do NOT hand-roll
+# objdump|diff, raw objdiff-cli, or a custom JSON parser; this wraps all of
+# that and reads ROM byte-ranges so it has no symbol-boundary pitfalls.
 python3 tools/agent/compile_and_view_assembly.py SomeFunction --human
+# For a function shipped NAKED/asm (whose live form matches by construction,
+# so the oracle would report MATCH): diff its #ifdef NON_MATCHING reference
+# body instead — auto-activates it, diffs, restores the source.
+python3 tools/agent/compile_and_view_assembly.py SomeFunction --non-matching --human
 
 # Snapshot every function's baserom address to .function_addresses.json so
 # the diff tool can detect layout drift even after an agent deletes the
@@ -403,15 +410,22 @@ For each decomp target:
    `asm/disasm_0x*.s`. If the file becomes empty, remove its
    `linker.ld` entry too.
 
-7. **Iterate to match.**
+7. **Iterate to match.** The oracle is one command — reach for it FIRST,
+   and don't reconstruct what it already does (objdump|diff, raw
+   objdiff-cli, custom JSON parsing). It rebuilds incrementally and
+   categorizes the diff off ROM byte-ranges.
    ```sh
-   # Per-symbol diff (fast — uses expected/.o, no full ROM rebuild)
+   # Primary: whole-ROM compile + categorized per-instruction diff.
+   python3 tools/agent/compile_and_view_assembly.py <name> --human
+   # Function shipped NAKED? Diff its NON_MATCHING reference body instead:
+   python3 tools/agent/compile_and_view_assembly.py <name> --non-matching --human
+
+   # Fallback — fine-grained per-symbol objdiff (proper Thumb render) only
+   # when the oracle says "nonmatching" but the function looks right (e.g.
+   # suspected .rodata/alignment bleed). Needs expected/.o built first.
    python3 tools/agent/build_expected.py --fn <name>
    tools/agent/bin/objdiff-cli diff \
        -1 expected/src/<rel>.o -2 src/<rel>.o <name> --format json-pretty
-
-   # Whole-ROM compile + categorized diff
-   make -j8 && python3 tools/agent/compile_and_view_assembly.py <name> --human
    ```
    **Stuck on a fold? Search the corpus FIRST, permuter LAST.** Other
    agbcc decomps have almost certainly solved the same idiom — and the

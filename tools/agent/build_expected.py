@@ -86,6 +86,30 @@ def nm_symbols(obj: Path) -> list[str]:
     return out
 
 
+def func_symbols(obj: Path) -> list[tuple[int, int, str]]:
+    """Return [(offset_in_text, size, name)] for global function symbols.
+
+    Unlike `nm_symbols`, this carries each symbol's *offset within .text*
+    and its size, so a multi-function TU (e.g. `Player_CheckTileEvents` +
+    `Entity_UpdateVisibility`) is emitted with each symbol at its real
+    address instead of collapsing them to aliases at offset 0.
+    """
+    proc = subprocess.run(
+        ["arm-none-eabi-nm", "-g", "--print-size", "--defined-only", str(obj)],
+        capture_output=True, text=True, check=True,
+    )
+    out: list[tuple[int, int, str]] = []
+    for line in proc.stdout.splitlines():
+        parts = line.split()
+        # `OFF SIZE T name`  (sized)  or  `OFF T name`  (size unknown → 0)
+        if len(parts) == 4 and parts[2] in ("T", "t"):
+            out.append((int(parts[0], 16), int(parts[1], 16), parts[3]))
+        elif len(parts) == 3 and parts[1] in ("T", "t"):
+            out.append((int(parts[0], 16), 0, parts[2]))
+    out.sort()
+    return out
+
+
 def arm_mapping_symbols(obj: Path) -> list[tuple[int, str]]:
     """Return [(offset_in_text, marker)] for $t / $d / $a mapping symbols.
 
@@ -114,33 +138,101 @@ def arm_mapping_symbols(obj: Path) -> list[tuple[int, str]]:
     return out
 
 
-def emit_expected_s(entry: Entry, symbols: list[str],
-                    mappings: list[tuple[int, str]]) -> str:
-    """Emit a .s file that INCBINs the entry's bytes under each exported
-    symbol, replicating the ARM ELF mapping symbols ($t / $d / $a) from
-    the built .o so objdump/objdiff disassemble each chunk in the right
-    mode.
+def _emit_run(body: list[str], all_bytes: bytes, lo: int, hi: int,
+              marker: str) -> None:
+    """Append directives for bytes [lo, hi) in the given mapping mode.
 
-    Splits the .incbin into runs between mapping symbols. Each run is
-    one `.incbin "...", off, size` line preceded by a single-letter
-    mapping label.
+    No explicit `$t:` / `$d:` labels — `.inst.n` and `.word` / `.short`
+    emit the right mapping symbols automatically. Adding our own would
+    create duplicates that confuse objdiff. Word/halfword alignment is
+    keyed off the absolute offset `i` so `$d` runs split correctly.
+    """
+    i = lo
+    if marker == '$t':
+        # Thumb halfwords via `.inst.n` so GAS sets `$t` and the
+        # disassembler reads them as Thumb instructions (not data).
+        while i < hi:
+            if hi - i >= 2:
+                hw = all_bytes[i] | (all_bytes[i + 1] << 8)
+                body.append(f'        .inst.n 0x{hw:04x}')
+                i += 2
+            else:
+                body.append(f'        .byte 0x{all_bytes[i]:02x}')
+                i += 1
+    elif marker == '$a':
+        # ARM 32-bit instructions via `.inst`. Rare on this title.
+        while i < hi:
+            if (i % 4 == 0) and (hi - i >= 4):
+                w = struct.unpack_from("<I", all_bytes, i)[0]
+                body.append(f'        .inst 0x{w:08x}')
+                i += 4
+            else:
+                body.append(f'        .byte 0x{all_bytes[i]:02x}')
+                i += 1
+    else:
+        # Data ($d): words when word-aligned, halfwords/bytes otherwise.
+        while i < hi:
+            if (i % 4 == 0) and (hi - i >= 4):
+                w = struct.unpack_from("<I", all_bytes, i)[0]
+                body.append(f'        .word 0x{w:08x}')
+                i += 4
+            elif (i % 2 == 0) and (hi - i >= 2):
+                hw = all_bytes[i] | (all_bytes[i + 1] << 8)
+                body.append(f'        .short 0x{hw:04x}')
+                i += 2
+            else:
+                body.append(f'        .byte 0x{all_bytes[i]:02x}')
+                i += 1
+
+
+def emit_expected_s(entry: Entry, funcs: list[tuple[int, int, str]],
+                    mappings: list[tuple[int, str]]) -> str:
+    """Emit a .s file that reproduces the entry's bytes from baserom with
+    every exported function at its *real* offset, replicating the ARM ELF
+    mapping symbols ($t / $d / $a) so objdump/objdiff disassemble each
+    chunk in the right mode.
+
+    `funcs` is [(offset, size, name)] sorted by offset. Functions sharing
+    an offset are emitted as aliases (`name = primary`). Byte emission is
+    cut at every mapping boundary *and* every function boundary, so each
+    symbol gets a label at its exact offset and a correct `.size`, and no
+    word straddles a function boundary.
     """
     size = entry.hi - entry.lo
     file_off = entry.lo - ROM_BASE
-    primary = symbols[0] if symbols else f"sub_{entry.lo:08X}"
+
+    if not funcs:
+        funcs = [(0, size, f"sub_{entry.lo:08X}")]
+
+    # Group names by offset (same address → aliases), keeping first-seen order.
+    by_off: dict[int, list[str]] = {}
+    for off, _sz, name in sorted(funcs):
+        by_off.setdefault(off, []).append(name)
+    func_offsets = sorted(by_off)
 
     # Default to a single Thumb chunk if the built .o has no mapping syms.
     if not mappings:
         mappings = [(0, "$t")]
-    # Normalize: ensure the list starts at 0 and ends at size.
     if mappings[0][0] != 0:
         mappings = [(0, "$t")] + mappings
-    # Append a sentinel so we can iterate as ranges.
-    runs: list[tuple[int, int, str]] = []
-    for i, (off, marker) in enumerate(mappings):
-        nxt = mappings[i + 1][0] if i + 1 < len(mappings) else size
-        if nxt > off:
-            runs.append((off, nxt - off, marker))
+
+    def marker_at(off: int) -> str:
+        cur = "$t"
+        for moff, mk in mappings:
+            if moff <= off:
+                cur = mk
+            else:
+                break
+        return cur
+
+    with BASEROM.open("rb") as f:
+        f.seek(file_off)
+        all_bytes = f.read(size)
+    if len(all_bytes) != size:
+        raise RuntimeError(
+            f"can't read {size} bytes from baserom at 0x{file_off:x} "
+            f"(got {len(all_bytes)})"
+        )
 
     body = []
     body.append(
@@ -155,69 +247,31 @@ def emit_expected_s(entry: Entry, symbols: list[str],
     body.append('        .thumb')
     body.append('        .text')
     body.append('        .align  2')
-    body.append(f'        .global {primary}')
-    body.append(f'        .type   {primary}, %function')
-    body.append(f'{primary}:')
-    for alias in symbols[1:]:
-        body.append(f'        .global {alias}')
-        body.append(f'        .type   {alias}, %function')
-        body.append(f'{alias} = {primary}')
-    # Read the function's full byte slice from baserom up front so we can
-    # emit per-halfword/word directives in each run. Using `.incbin` here
-    # confuses the assembler's mapping-symbol tracking — it always inserts
-    # a `$d` at the .incbin site even inside `.thumb` mode, which makes
-    # objdiff treat code bytes as data.
-    with BASEROM.open("rb") as f:
-        f.seek(file_off)
-        all_bytes = f.read(size)
-    if len(all_bytes) != size:
-        raise RuntimeError(
-            f"can't read {size} bytes from baserom at 0x{file_off:x} "
-            f"(got {len(all_bytes)})"
-        )
-    for run_off, run_size, marker in runs:
-        # No explicit `$t:` / `$d:` labels — `.inst.n` and `.word` /
-        # `.short` emit the right mapping symbols automatically. Adding
-        # our own would create duplicates that confuse objdiff.
-        if marker == '$t':
-            # Thumb halfwords via `.inst.n` so GAS sets `$t` and the
-            # disassembler reads them as Thumb instructions (not data).
-            i = run_off
-            while i < run_off + run_size:
-                if run_off + run_size - i >= 2:
-                    hw = all_bytes[i] | (all_bytes[i + 1] << 8)
-                    body.append(f'        .inst.n 0x{hw:04x}')
-                    i += 2
-                else:
-                    body.append(f'        .byte 0x{all_bytes[i]:02x}')
-                    i += 1
-        elif marker == '$a':
-            # ARM 32-bit instructions via `.inst`. Rare on this title.
-            i = run_off
-            while i < run_off + run_size:
-                if (i % 4 == 0) and (run_off + run_size - i >= 4):
-                    w = struct.unpack_from("<I", all_bytes, i)[0]
-                    body.append(f'        .inst 0x{w:08x}')
-                    i += 4
-                else:
-                    body.append(f'        .byte 0x{all_bytes[i]:02x}')
-                    i += 1
-        else:
-            # Data ($d): words when word-aligned, halfwords/bytes otherwise.
-            i = run_off
-            while i < run_off + run_size:
-                if (i % 4 == 0) and (run_off + run_size - i >= 4):
-                    w = struct.unpack_from("<I", all_bytes, i)[0]
-                    body.append(f'        .word 0x{w:08x}')
-                    i += 4
-                elif (i % 2 == 0) and (run_off + run_size - i >= 2):
-                    hw = all_bytes[i] | (all_bytes[i + 1] << 8)
-                    body.append(f'        .short 0x{hw:04x}')
-                    i += 2
-                else:
-                    body.append(f'        .byte 0x{all_bytes[i]:02x}')
-                    i += 1
-    body.append(f'        .size   {primary}, .-{primary}')
+    for off in func_offsets:
+        for name in by_off[off]:
+            body.append(f'        .global {name}')
+            body.append(f'        .type   {name}, %function')
+
+    # Cut points: mapping boundaries ∪ function boundaries ∪ {0, size}, all
+    # clamped to the baserom slice. A built .o can be larger than its
+    # linker.ld range (e.g. a non-matching scaffold) — offsets past `size`
+    # have no bytes to emit, so drop them rather than read out of range.
+    cuts = sorted(c for c in ({0, size} | {m[0] for m in mappings}
+                              | set(func_offsets)) if 0 <= c <= size)
+
+    open_primary: str | None = None
+    for a, b in zip(cuts, cuts[1:]):
+        if a in by_off:
+            if open_primary is not None:
+                body.append(f'        .size   {open_primary}, .-{open_primary}')
+            names = by_off[a]
+            open_primary = names[0]
+            body.append(f'{open_primary}:')
+            for alias in names[1:]:
+                body.append(f'{alias} = {open_primary}')
+        _emit_run(body, all_bytes, a, b, marker_at(a))
+    if open_primary is not None:
+        body.append(f'        .size   {open_primary}, .-{open_primary}')
     body.append('')
     return "\n".join(body)
 
@@ -236,17 +290,18 @@ def build_one(entry: Entry) -> tuple[bool, str]:
         return False, (
             f"built .o missing — run `make -j8` first: {entry.built_o.relative_to(ROOT)}"
         )
-    syms = nm_symbols(entry.built_o)
-    if not syms:
+    funcs = func_symbols(entry.built_o)
+    if not funcs:
         return False, f"no symbols in {entry.built_o.relative_to(ROOT)}"
     mappings = arm_mapping_symbols(entry.built_o)
     entry.expected_s.parent.mkdir(parents=True, exist_ok=True)
-    entry.expected_s.write_text(emit_expected_s(entry, syms, mappings))
+    entry.expected_s.write_text(emit_expected_s(entry, funcs, mappings))
     try:
         assemble(entry.expected_s, entry.expected_o)
     except subprocess.CalledProcessError as e:
         return False, f"as failed: {e}"
-    return True, f"{entry.expected_o.relative_to(ROOT)} ({', '.join(syms)})"
+    names = ", ".join(n for _off, _sz, n in funcs)
+    return True, f"{entry.expected_o.relative_to(ROOT)} ({names})"
 
 
 def main() -> int:

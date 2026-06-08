@@ -56,6 +56,7 @@ BASEROM = ROOT / "frog_us_baserom.gba"
 BUILTROM = ROOT / "frog_us.gba"
 MAP_FILE = ROOT / "frog_us.map"
 ASM_DIR = ROOT / "asm"
+SRC_DIR = ROOT / "src"
 ROM_BASE = 0x08000000
 
 OBJDUMP = "arm-none-eabi-objdump"
@@ -277,11 +278,55 @@ def byte_diff(addr: int, size: int) -> int:
     return sum(1 for k in range(n) if a[k] != b[k]) + abs(len(a) - len(b))
 
 
-def measure(name: str) -> dict:
+def find_defining_file(name: str) -> Path | None:
+    """Return the src/**/*.c that *defines* `name` (not just calls it).
+
+    A definition is `... name(args) {` (optionally `NAKED`), as opposed to
+    an `extern ... name(...);` declaration or a `name();` call site (both
+    end in `;`). Matches both the compiled body and a `#ifdef NON_MATCHING`
+    reference body, since they live in the same TU.
+    """
+    def_re = re.compile(rf"\b{re.escape(name)}\s*\([^;)]*\)\s*\n?\s*\{{")
+    for p in sorted(SRC_DIR.rglob("*.c")):
+        if def_re.search(p.read_text(errors="replace")):
+            return p
+    return None
+
+
+def measure(name: str, non_matching: bool = False) -> dict:
     if not BASEROM.exists():
         return {"function": name, "build_ok": False,
                 "build_errors": f"missing {BASEROM.name}"}
 
+    if not non_matching:
+        return _diff_after_build(name)
+
+    # --non-matching: temporarily activate the function's #ifdef NON_MATCHING
+    # reference body (the readable C that the build normally skips in favour
+    # of the shipped NAKED/asm), diff it, then restore the source verbatim.
+    # This is the one-command path for "why doesn't this NAKED function match?"
+    srcfile = find_defining_file(name)
+    if srcfile is None:
+        return {"function": name, "build_ok": False,
+                "build_errors": f"--non-matching: no src/**/*.c defines {name!r}"}
+    text = srcfile.read_text(errors="replace")
+    if "NON_MATCHING" not in text:
+        return {"function": name, "build_ok": False,
+                "build_errors": f"--non-matching: {srcfile.relative_to(ROOT)} "
+                                "has no #ifdef NON_MATCHING branch to activate"}
+    srcfile.write_text("#define NON_MATCHING\n" + text)
+    try:
+        r = _diff_after_build(name)
+    finally:
+        # Restore byte-for-byte. Rewriting bumps mtime so the next `make`
+        # rebuilds this TU back to the shipped (matching) variant.
+        srcfile.write_text(text)
+    r["non_matching"] = True
+    r["non_matching_file"] = str(srcfile.relative_to(ROOT))
+    return r
+
+
+def _diff_after_build(name: str) -> dict:
     ok, errors = build_incremental()
     if not ok:
         return {"function": name, "build_ok": False, "build_errors": errors}
@@ -356,6 +401,8 @@ def measure(name: str) -> dict:
 
 def print_human(r: dict) -> None:
     print(f"function:  {r['function']}")
+    if r.get("non_matching"):
+        print(f"mode:      NON_MATCHING reference body ({r['non_matching_file']})")
     if not r.get("build_ok"):
         print(f"BUILD FAILED")
         if r.get("build_errors"):
@@ -392,9 +439,13 @@ def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("name", help="function symbol to diff")
     p.add_argument("--human", action="store_true")
+    p.add_argument("--non-matching", action="store_true", dest="non_matching",
+                   help="compile the function's #ifdef NON_MATCHING reference "
+                        "body and diff THAT against baserom (for NAKED/asm "
+                        "functions whose shipped form matches by construction)")
     args = p.parse_args()
 
-    r = measure(args.name)
+    r = measure(args.name, non_matching=args.non_matching)
     if args.human:
         print_human(r)
     else:
