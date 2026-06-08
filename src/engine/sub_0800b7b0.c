@@ -11,9 +11,9 @@ void Entity_UpdateHitboxSlots(void *slotsArg, void *outArg, s8 type)
 {
     volatile u32 slotsStack;
     volatile u32 outStack;
-    volatile s32 typeStack;
-    register const EntityHitbox *table asm("r8");
-    register const u8 *points asm("r9");
+    s32 typeStack;
+    const EntityHitbox *table;
+    const u8 *points;
     register u32 r1v asm("r1");
     const EntityHitbox *tbl2;
     u32 typeByte;
