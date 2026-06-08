@@ -1,27 +1,18 @@
 #include "types.h"
 #include "sound.h"
 
-typedef struct {
-    u8 flags;
-    u8 b;
-    u8 c;
-    u8 d;
-} StructAt3003570;
-
-#define gStructAt3003570 (*(StructAt3003570 *)0x03003570)
-
 extern u8 gIwram_3570;
 extern u32 sub_0802D9EC(u32 sound, u32 a, u32 b, u32 c);
 extern void SoundHandle_SetPan(u32 handle, u8 val);
 
 u32 Sound_Play(u32 sound)
 {
-    StructAt3003570 *p;
+    SoundState *p;
     int mask;
     u32 handle;
 
     handle = -1;
-    p = &gStructAt3003570;
+    p = &gSoundState;
     mask = 0x10;
     mask = mask & p->flags;
     if (mask != 0) {
@@ -36,11 +27,11 @@ u32 Sound_PlayWithPan(u32 sound)
     u32 handle;
     u32 pan;
     u32 result;
-    StructAt3003570 *p;
+    SoundState *p;
 
     snd = sound;
     result = -1;
-    p = (StructAt3003570 *)&gIwram_3570;
+    p = (SoundState *)&gIwram_3570;
     handle = 0x10;
     handle = handle & p->flags;
     if (handle != 0) {
@@ -53,7 +44,7 @@ u32 Sound_PlayWithPan(u32 sound)
          * spilling a fresh scratch — agbcc only reuses the dying base when
          * the load destination IS the pointer var. `p` must stay UNPINNED
          * for the allocator to colour it r5; pinning it forces ldrb r2. */
-        p = (StructAt3003570 *)(u32)p->c;
+        p = (SoundState *)(u32)p->_field_02;
         pan &= (u32)p;
         SoundHandle_SetPan(handle, pan);
     }
@@ -70,7 +61,7 @@ u32 Sound_PlayNearEntity(struct Entity *entity, u32 sound, u8 halfW, u8 halfH)
     u32 handle;
     u32 pan;
     register u32 r asm("r0");
-    StructAt3003570 *p;
+    SoundState *p;
 
     r = Entity_IsInTileRange(entity, halfW, halfH);
     r <<= 24;
@@ -78,14 +69,14 @@ u32 Sound_PlayNearEntity(struct Entity *entity, u32 sound, u8 halfW, u8 halfH)
         return r;
 
     result = -1;
-    p = &gStructAt3003570;
+    p = &gSoundState;
     handle = 0x10;
     handle = handle & p->flags;
     if (handle) {
         handle = sub_0802D9EC(sound, 0xff, 0xff, 0xff);
         result = handle;
         pan = 0x7f;
-        p = (StructAt3003570 *)(u32)p->c;
+        p = (SoundState *)(u32)p->_field_02;
         pan &= (u32)p;
         SoundHandle_SetPan(handle, pan);
     }
@@ -100,7 +91,7 @@ u32 Entity_PlaySoundOnScreenEnter(struct Entity *entity, u32 sound, u8 halfW, u8
     register u32 f34 asm("r1");
     u32 handle;
     u32 pan;
-    StructAt3003570 *p;
+    SoundState *p;
 
     r = Entity_IsInTileRange(entity, halfW, halfH);
     r <<= 24;
@@ -117,14 +108,14 @@ u32 Entity_PlaySoundOnScreenEnter(struct Entity *entity, u32 sound, u8 halfW, u8
         r = r | f34;
         entity->status = r;
         result = -1;
-        p = &gStructAt3003570;
+        p = &gSoundState;
         handle = 0x10;
         handle = handle & p->flags;
         if (handle) {
             handle = sub_0802D9EC(sound, 0xff, 0xff, 0xff);
             result = handle;
             pan = 0x7f;
-            p = (StructAt3003570 *)(u32)p->c;
+            p = (SoundState *)(u32)p->_field_02;
             pan &= (u32)p;
             SoundHandle_SetPan(handle, pan);
         }
@@ -139,17 +130,17 @@ u32 Entity_PlaySoundOnScreenEnter(struct Entity *entity, u32 sound, u8 halfW, u8
 
 void Sound_ReplaySlotEntry(u8 index)
 {
-    StructAt3003570 *p;
+    SoundState *p;
     u32 offset;
     u32 *slot;
     u32 handle;
 
-    p = (StructAt3003570 *)&gIwram_3570;
+    p = (SoundState *)&gIwram_3570;
     offset = index * 8;
     slot = (u32 *)((u8 *)p + 4);
     slot = (u32 *)(offset + (u32)slot);
     handle = Sound_Play(*slot);
-    p = (StructAt3003570 *)((u8 *)p + 8);
+    p = (SoundState *)((u8 *)p + 8);
     offset = (u32)((u8 *)p + offset);
     *(u32 *)offset = handle;
 }

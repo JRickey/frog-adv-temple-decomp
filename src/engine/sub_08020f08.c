@@ -19,14 +19,6 @@
  * "Adjacent IWRAM bases". (Sibling Sound_IncrementChannelDepth reads only offset 3, so it
  * never triggers the fold and keeps the plain cast.) */
 
-typedef struct {
-    u8 flags;
-    u8 b;
-    u8 c;
-    u8 d;
-    SoundChannelEntry entries[12];
-} StructAt3003570;
-
 extern u8 gIwram_3570;
 
 extern void SoundHandle_SetPan(u8 value, u8 counter);
@@ -34,11 +26,11 @@ extern u32 SoundHandle_Retire(u32 handle);
 
 void Sound_DecrementChannelDepth(u8 value)
 {
-    StructAt3003570 *p = (StructAt3003570 *)&gIwram_3570;
+    SoundState *p = (SoundState *)&gIwram_3570;
 
-    p->d--;
-    if ((u8)p->d != 0xFF) {
-        SoundHandle_SetPan(value, p->d);
+    p->channelDepth--;
+    if ((u8)p->channelDepth != 0xFF) {
+        SoundHandle_SetPan(value, p->channelDepth);
         return;
     }
     SoundHandle_Retire(p->entries[value].fieldB);

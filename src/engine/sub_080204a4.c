@@ -3,14 +3,6 @@
 #include "iwram.h"
 
 typedef struct {
-    u8 flags;
-    u8 b;
-    u8 c;
-    u8 d;
-    SoundChannelEntry entries[12];
-} StructAt3003570;
-
-typedef struct {
     u8 _pad00[10];
     u8 mode;
 } StructAt3005330;
@@ -34,14 +26,14 @@ void Entity_ProximitySound(struct Entity *entity, u8 channel, u8 halfW, u8 halfH
         entity->status |= 0x2000;
 
         {
-            StructAt3003570 *p;
+            SoundState *p;
             u32 offset;
             u32 slot;
             u32 base;
             u32 sound;
             u32 handle;
 
-            p = (StructAt3003570 *)&gIwram_3570;
+            p = (SoundState *)&gIwram_3570;
             offset = channel * 8;
             base = (u32)p;
             base += 8;
@@ -55,7 +47,7 @@ void Entity_ProximitySound(struct Entity *entity, u8 channel, u8 halfW, u8 halfH
             handle = -1;
             if ((p->flags & 0x10) != 0) {
                 handle = sub_0802D9EC(sound, 0xff, 0xff, 0xff);
-                SoundHandle_SetPan(handle, p->c & 0x7f);
+                SoundHandle_SetPan(handle, p->_field_02 & 0x7f);
             }
             *(u32 *)slot = handle;
         }
@@ -67,10 +59,10 @@ void Entity_ProximitySound(struct Entity *entity, u8 channel, u8 halfW, u8 halfH
 
 void TileSound_Update(u8 tile)
 {
-    StructAt3003570 *p;
-    StructAt3003570 *slotBase;
-    StructAt3003570 *stopBase;
-    StructAt3003570 *stopSlotBase;
+    SoundState *p;
+    SoundState *slotBase;
+    SoundState *stopBase;
+    SoundState *stopSlotBase;
     u32 sound;
     u32 handle;
     u32 pan;
@@ -96,8 +88,8 @@ void TileSound_Update(u8 tile)
     }
 
 startSlot1:
-    p = (StructAt3003570 *)&gIwram_3570;
-    slotBase = (StructAt3003570 *)((u8 *)p + 8);
+    p = (SoundState *)&gIwram_3570;
+    slotBase = (SoundState *)((u8 *)p + 8);
     if (SoundHandle_IsActive(slotBase->entries[0].fieldB) != 0)
         return;
 
@@ -106,7 +98,7 @@ startSlot1:
     if ((p->flags & 0x10) != 0) {
         handle = sub_0802D9EC(sound, 0xff, 0xff, 0xff);
         pan = 0x7f;
-        p = (StructAt3003570 *)(u32)p->c;
+        p = (SoundState *)(u32)p->_field_02;
         pan &= (u32)p;
         SoundHandle_SetPan(handle, pan);
     }
@@ -114,7 +106,7 @@ startSlot1:
     return;
 
 startSlot0:
-    p = (StructAt3003570 *)&gIwram_3570;
+    p = (SoundState *)&gIwram_3570;
     if (SoundHandle_IsActive(p->entries[0].fieldB) != 0)
         return;
 
@@ -123,15 +115,15 @@ startSlot0:
     if ((p->flags & 0x10) != 0) {
         handle = sub_0802D9EC(sound, 0xff, 0xff, 0xff);
         pan = 0x7f;
-        pan &= p->c;
+        pan &= p->_field_02;
         SoundHandle_SetPan(handle, pan);
     }
     p->entries[0].fieldB = handle;
     return;
 
 stopSlots:
-    stopBase = (StructAt3003570 *)&gIwram_3570;
-    stopSlotBase = (StructAt3003570 *)((u8 *)stopBase + 8);
+    stopBase = (SoundState *)&gIwram_3570;
+    stopSlotBase = (SoundState *)((u8 *)stopBase + 8);
     SoundHandle_Retire(stopBase->entries[0].fieldB);
     SoundHandle_Retire(stopSlotBase->entries[0].fieldB);
     return;

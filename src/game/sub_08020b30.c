@@ -1,17 +1,5 @@
 #include "types.h"
-
-/* Struct at 0x03003570 in IWRAM. Touched by SoundMixer_Init (called first from
- * Init1 / Init1). Purpose TBD; field names are placeholders until
- * the subsystem is identified.
- */
-typedef struct {
-    u8 flags;
-    u8 b;
-    u8 c;
-    u8 d;
-} StructAt3003570;
-
-#define gStructAt3003570 (*(StructAt3003570 *)0x03003570)
+#include "sound.h"
 
 /* Called once from Init1. Sets bits 0+1 of `flags` and writes a small
  * three-byte constant block (0xCD, 0xF5, 0xF5) into bytes 1..3.
@@ -23,16 +11,16 @@ typedef struct {
  */
 void SoundMixer_Init(void)
 {
-    StructAt3003570 *p = &gStructAt3003570;
+    SoundState *p = &gSoundState;
     u8 t;
 
     t = 1;
     t |= p->flags;
     t |= 2;
     p->flags = t;
-    p->c = 0xF5;
-    p->b = 0xCD;
-    p->d = 0xF5;
+    p->_field_02 = 0xF5;
+    p->masterVolume = 0xCD;
+    p->channelDepth = 0xF5;
 }
 
 extern void Sound_DrainActiveSlots(void);

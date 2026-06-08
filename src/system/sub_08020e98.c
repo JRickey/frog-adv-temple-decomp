@@ -9,22 +9,12 @@
  * with fieldA == -1 are unused slots; for each live slot, fieldB is the
  * handle to forward into SoundHandle_SetPan. */
 
-typedef struct {
-    u8 flags;
-    u8 b;
-    u8 c;
-    u8 d;
-    SoundChannelEntry entries[12];
-} StructAt3003570;
-
-#define gStructAt3003570 (*(StructAt3003570 *)0x03003570)
-
 extern void SoundHandle_SetPan(u32 handle, u8 val);
 
 void SoundChannel_BroadcastValue(u32 arg)
 {
     u8 i;
-    StructAt3003570 *p;
+    SoundState *p;
     u32 *fieldB_arr;
     u32 m_shifted;
     u32 offset;
@@ -32,7 +22,7 @@ void SoundChannel_BroadcastValue(u32 arg)
     arg = arg << 24;
     do {
         i = 0;
-        p = &gStructAt3003570;
+        p = &gSoundState;
         fieldB_arr = &p->entries[0].fieldB;
         m_shifted = arg & 0x7F000000;
         do {
@@ -55,5 +45,5 @@ void SoundChannel_BroadcastValue(u32 arg)
  * register (r1); r0 is unused on entry and is reused to hold the base. */
 void SoundChannelTable_SetCounter(u32 unused, u32 value)
 {
-    gStructAt3003570.d = value;
+    gSoundState.channelDepth = value;
 }

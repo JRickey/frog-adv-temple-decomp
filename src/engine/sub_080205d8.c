@@ -2,14 +2,6 @@
 #include "types.h"
 #include "iwram.h"
 
-typedef struct {
-    u8 flags;
-    u8 b;
-    u8 c;
-    u8 d;
-    SoundChannelEntry entries[12];
-} StructAt3003570;
-
 extern u8 gIwram_3570;
 
 extern u32 sub_0802D9EC(u32 sound, u32 a, u32 b, u32 c);
@@ -21,7 +13,7 @@ extern void Entity_ProximitySound(struct Entity *entity, u8 channel, u8 halfW, u
 
 void Entity_DispatchSound(struct Entity *entity)
 {
-    StructAt3003570 *p;
+    SoundState *p;
     u32 sound;
     u32 handle;
 
@@ -51,7 +43,7 @@ void Entity_DispatchSound(struct Entity *entity)
 
     case 38:
         if (Entity_IsInTileRange(entity, 1, 1) != 0) {
-            p = (StructAt3003570 *)&gIwram_3570;
+            p = (SoundState *)&gIwram_3570;
             if (SoundHandle_IsActive(p->entries[3].fieldB) != 0)
                 return;
 
@@ -59,7 +51,7 @@ void Entity_DispatchSound(struct Entity *entity)
             handle = -1;
             if ((p->flags & 0x10) != 0) {
                 handle = sub_0802D9EC(sound, 0xff, 0xff, 0xff);
-                SoundHandle_SetPan(handle, p->c & 0x7f);
+                SoundHandle_SetPan(handle, p->_field_02 & 0x7f);
             }
             p->entries[3].fieldB = handle;
         }
@@ -85,7 +77,7 @@ void Entity_DispatchSound(struct Entity *entity)
 
     case 55:
         if (Entity_IsInTileRange(entity, 1, 1) != 0) {
-            p = (StructAt3003570 *)&gIwram_3570;
+            p = (SoundState *)&gIwram_3570;
             if (SoundHandle_IsActive(p->entries[8].fieldB) != 0)
                 return;
 
@@ -93,17 +85,17 @@ void Entity_DispatchSound(struct Entity *entity)
             handle = -1;
             if ((p->flags & 0x10) != 0) {
                 handle = sub_0802D9EC(sound, 0xff, 0xff, 0xff);
-                SoundHandle_SetPan(handle, p->c & 0x7f);
+                SoundHandle_SetPan(handle, p->_field_02 & 0x7f);
             }
             p->entries[8].fieldB = handle;
             return;
         }
-        SoundHandle_Retire(((StructAt3003570 *)&gIwram_3570)->entries[8].fieldB);
+        SoundHandle_Retire(((SoundState *)&gIwram_3570)->entries[8].fieldB);
         return;
 
     case 58:
         if (Entity_IsInTileRange(entity, 1, 1) != 0) {
-            p = (StructAt3003570 *)&gIwram_3570;
+            p = (SoundState *)&gIwram_3570;
             if (SoundHandle_IsActive(p->entries[2].fieldB) != 0)
                 return;
 
@@ -111,7 +103,7 @@ void Entity_DispatchSound(struct Entity *entity)
             handle = -1;
             if ((p->flags & 0x10) != 0) {
                 handle = sub_0802D9EC(sound, 0xff, 0xff, 0xff);
-                SoundHandle_SetPan(handle, p->c & 0x7f);
+                SoundHandle_SetPan(handle, p->_field_02 & 0x7f);
             }
             p->entries[2].fieldB = handle;
         }
@@ -123,7 +115,7 @@ void Entity_DispatchSound(struct Entity *entity)
 
     case 59:
         if (Entity_IsInTileRange(entity, 1, 1) != 0) {
-            p = (StructAt3003570 *)&gIwram_3570;
+            p = (SoundState *)&gIwram_3570;
             if (SoundHandle_IsActive(p->entries[4].fieldB) != 0)
                 return;
 
@@ -131,7 +123,7 @@ void Entity_DispatchSound(struct Entity *entity)
             handle = -1;
             if ((p->flags & 0x10) != 0) {
                 handle = sub_0802D9EC(sound, 0xff, 0xff, 0xff);
-                SoundHandle_SetPan(handle, p->c & 0x7f);
+                SoundHandle_SetPan(handle, p->_field_02 & 0x7f);
             }
             p->entries[4].fieldB = handle;
         }

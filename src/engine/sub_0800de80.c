@@ -11,7 +11,7 @@ extern void Sound_Reset(void);
 /* Mode-dispatched scene-step driver.
  *
  * Header: calls EntitySpawnDriver, EntityProcE_Dispatch, Sound_Reset, then clears
- * bit 1 (mask 0xFD) of the byte at 0x03003570 (gStructAt3003570.flags
+ * bit 1 (mask 0xFD) of the byte at 0x03003570 (gSoundState.flags
  * — see src/game/sub_08020b30.c).
  *
  * First dispatch on gGameStuff.sceneType (1..16; out-of-range = no-op):
@@ -42,12 +42,6 @@ extern void Sound_Reset(void);
  *     ldrb r2, [r1]; ands r0, r2; strb r0, [r1]` shape.
  */
 
-typedef struct {
-    u8 flags;
-} StructAt3003570;
-
-#define gStructAt3003570 (*(StructAt3003570 *)0x03003570)
-
 void Game_FrameEnd(void)
 {
     GameStuff *g;
@@ -60,7 +54,7 @@ void Game_FrameEnd(void)
     Sound_Reset();
 
     {
-        StructAt3003570 *p1 = &gStructAt3003570;
+        SoundState *p1 = &gSoundState;
         t = 0xFD;
         t &= p1->flags;
         p1->flags = t;

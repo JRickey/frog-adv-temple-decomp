@@ -10,6 +10,30 @@ typedef struct SoundChannelEntry {
     u32 fieldB;
 } SoundChannelEntry;
 
+/* Sound-state block at IWRAM 0x03003570 (Frogger/Konami sound layer, not GAX).
+ * One canonical type unifying the per-file duplicates. Field evidence comes from
+ * the named accessors (Sound_Play*, SoundMixer_Init, Music_*, Level_Load, etc.):
+ *   +0x00 flags        bit0 = "sound enabled" gate, bit4 = handle-alloc gate.
+ *   +0x01 masterVolume written by SoundMixer_Init + SoundSlot_SetVolumeByte.
+ *   +0x02 _field_02    init=0xF5; used as a 7-bit pan source (& 0x7f) by the
+ *                      Sound_Play* / Entity proximity paths and Music_Resume.
+ *   +0x03 channelDepth Sound_Increment/DecrementChannelDepth, SoundChannelTable_SetCounter.
+ *   +0x04 entries[12]  per-channel { sound id (fieldA), handle (fieldB) } table;
+ *                      single-word reads observed at +0x08/0x18/0x20/0x28/0x48.
+ * Sound_PlayIfEnabled / SoundSlot_EnableAndLoad (sub_08020b88.c, sub_08020bc0.c)
+ * deliberately keep their own 4-byte local copy of this struct: their matching
+ * lever is a by-value read (`s = *p`), and copying the full superset here emits
+ * a memcpy that breaks the byte match. */
+typedef struct SoundState {
+    u8 flags;
+    u8 masterVolume;
+    u8 _field_02;
+    u8 channelDepth;
+    SoundChannelEntry entries[12];
+} SoundState;
+
+#define gSoundState (*(SoundState *)0x03003570)
+
 typedef struct SlotEnvelopeA0 {
     u16 acc;
     s16 step;

@@ -4,8 +4,6 @@
 extern u32 sub_0802D9EC(u32 sound, u32 a, u32 b, u32 c);
 extern void SoundHandle_SetPan(u32 handle, u32 pan);
 
-#define gStructAt3003570 (*(u8 *)0x03003570)
-
 void Entity_PlayStateSound(void)
 {
     u8 *base;
