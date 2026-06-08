@@ -72,6 +72,12 @@ def main() -> int:
     ap.add_argument("--target-candidate",
                     help="explicit built .o to use for target $t/$d + relocation layout "
                     "(default: search src/**/*.o, fallback to compiled base)")
+    ap.add_argument("--target-from-base", action="store_true",
+                    help="use the compiled base.c as the target $t/$d+reloc candidate. "
+                    "Correct for NAKED / #ifdef NON_MATCHING functions: the shipped .o "
+                    "(NAKED) has absolute-literal pools, but a C body references the same "
+                    "addresses as relocations, so the default src/*.o candidate yields a "
+                    "mismatched-reloc target and a corrupt score.")
     ap.add_argument("--agbcc-new", action="store_true",
                     help="use the newer agbcc (only for the ~4 exception TUs)")
     args = ap.parse_args()
@@ -108,9 +114,11 @@ def main() -> int:
                        "--addr", addr, "--out", str(outdir)]
     if args.target_candidate:
         make_target_cmd.extend(["--candidate", args.target_candidate])
+    elif args.target_from_base:
+        make_target_cmd.extend(["--candidate", str(cand)])
 
     r = sh(*make_target_cmd)
-    if r.returncode != 0 and not args.target_candidate:
+    if r.returncode != 0 and not args.target_candidate and not args.target_from_base:
         make_target_cmd.extend(["--candidate", str(cand)])
         r = sh(*make_target_cmd)
     print(r.stdout.strip() or r.stderr.strip())
