@@ -201,7 +201,7 @@ def apply_manifest(manifest, dry_run):
     # binary keeps the old symbol while the C references the new one. Renaming a
     # symbol in asm is byte-safe (names are not in the ROM). Scoped var/field
     # loops key off manifest file paths, so they never touch these.
-    for extra in [REPO / "linker.ld", *REPO.glob("asm/**/*.s"), *REPO.glob("sound/**/*.s")]:
+    for extra in [REPO / "linker.ld", *REPO.glob("asm/**/*.s"), *REPO.glob("sound/**/*.s"), *REPO.glob("src/**/*.s"), *REPO.glob("lib/**/*.s")]:
         rp = extra.resolve()
         if extra.exists() and rp not in contents:
             try:
