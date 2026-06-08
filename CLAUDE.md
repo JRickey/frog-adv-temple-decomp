@@ -521,7 +521,20 @@ allocator directly, so its reach is uneven:
   it — this is a reaping limit, not an "unmatchable" verdict; cf.
   codegen-notes "Permuter convergence audit").
 
-**Run mechanics** (macOS has no `timeout`/`gtimeout`):
+**For a `#ifdef NON_MATCHING` / NAKED function, use the one-command wrapper**
+— it absorbs every setup friction (auto-builds base.c from the reference body,
+wipes stale `output-*` scratch, forces the correct `target.o` reloc candidate,
+runs in its own process group with a wall-clock budget + killpg, stop-on-zero):
+```sh
+python3 tools/agent/permute_nonmatching.py <Fn> --minutes 20 -j5
+# Budgets >~8min: launch via the Bash tool's run_in_background (it blocks for
+# the budget). Reports base/best score + best-output dir; flags a score-0 hit.
+```
+Reach for the manual mechanics below only when permuting a non-NAKED near-match
+(a plain near-match `base.c` you wrote, or a de-pin where base.c keeps load-
+bearing pins).
+
+**Manual run mechanics** (macOS has no `timeout`/`gtimeout`):
 ```sh
 # base.c = your BEST manual near-match, NOT the naive de-pin. Keep load-bearing
 # pins (reaping targets the MINIMAL pin set, not zero). pycparser chokes on
