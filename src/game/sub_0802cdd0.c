@@ -22,11 +22,11 @@ void Entity_MoveToEntry(struct Entity *ent, u8 dir, Entry *e)
     {
         u8 *base = (u8 *)gEntities;
         s32 tx = buf[0] * 24 + 11;
-        register u32 off1 asm("r3") = 0x0af2;
+        u32 off1 = 0x0af2;
         *(s16 *)(base + off1) = tx;
         {
             s32 ty = buf[1] * 24 - 3;
-            register u32 off2 asm("r1") = 0x0af4;
+            u32 off2 = 0x0af4;
             *(s16 *)(base + off2) = ty;
         }
     }
@@ -34,7 +34,7 @@ void Entity_MoveToEntry(struct Entity *ent, u8 dir, Entry *e)
     ent->state = TileEntry_CalcDirection(e, (Entry *)buf);
     {
         u8 fa = ent->state;
-        register s8 *outY asm("r4") = &out[1];
+        s8 *outY = &out[1];
         DirToMotion(fa, &out[0], outY);
         MotionDesc_Set((struct MotionDesc *)ent, dir, out[0], *outY);
     }

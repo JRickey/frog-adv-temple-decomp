@@ -6,13 +6,11 @@
 
 void Tilemap_DispatchPendingBlits(void)
 {
-    /* The baserom holds the loop constants (1, table base, table base + 16) in
-     * high registers across the inner BL; pin them so agbcc does the same. */
     u8 i = 0;
     struct IwramAt6110 *ctrl = &gIwram_6110;
     u32 one = 1;
     struct TilemapTableEntry *table = (struct TilemapTableEntry *)0x08307e18;
-    register struct TilemapTableEntry *table16 asm("sl") = (struct TilemapTableEntry *)((u8 *)table + 16);
+    struct TilemapTableEntry *table16 = (struct TilemapTableEntry *)((u8 *)table + 16);
     u32 stride;
 
     do {

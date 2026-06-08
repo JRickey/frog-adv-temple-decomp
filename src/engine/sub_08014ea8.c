@@ -9,14 +9,14 @@ extern u8 gIwram_6580[];
 
 void Display_ResetLayers(void)
 {
-    /* r3/r2 pins + inner scope for b: reproduce baserom's interleaved
-     * pool-load order (ldr r3 first, then movs r0, #0, strb, ldr r2). */
-    register u8 *a asm("r3") = (u8 *)0x03006540;
-    register u8 one asm("r1");
+    /* The inner scope for b reproduces the baserom's interleaved pool-load
+     * order (ldr first base, then movs r0, #0, strb, ldr second base). */
+    u8 *a = (u8 *)0x03006540;
+    u8 one;
 
     a[0] = 0;
     {
-        register u8 *b asm("r2") = (u8 *)0x03006480;
+        u8 *b = (u8 *)0x03006480;
         b[0] = 0;
         one = 1;
         a[8] = one;
