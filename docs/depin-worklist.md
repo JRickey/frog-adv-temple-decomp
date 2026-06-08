@@ -1,5 +1,54 @@
 # De-pin / NAKED-reaping worklist (task #14)
 
+## Session 2026-06-07 progress (read this first)
+
+**Landed reaps (all clean-rebuild verified, `make check` OK):**
+- `17c09c9a` — 3 free wins (Display_ResetLayers, Entity_MoveToEntry,
+  Tilemap_DispatchPendingBlits): the worklist's byte_diff-0 redundant pins.
+- `6c5db1b0` — `Blend_StepFade`: reaped the literal-16 pin by splitting
+  `*p = 16 - *c` into `n = 16; n -= *c; *p = n;` (3 pins → 2).
+- `b498acdd` — `Entity_UpdateHitboxSlots` (**owner priority #1**): reaped
+  BOTH r8/r9 high-reg struct-pointer pins by making the spare `typeStack`
+  spill non-volatile. Found via decomp-permuter (perm_randomize_internal_type).
+
+**Method that works** (see memory `depin-methodology`): de-pin → permuter
+(run LONG, 35k+) → extract the *minimal* winning mutation → apply cleanly →
+clean-rebuild verify. Manual structural insight + permuter combo beats either
+alone (Blit went 1635→70 score once the records-spill was added by hand).
+
+**Confirmed RESISTANT this session (attempted, reverted, pins kept):**
+- `Scene_EntityTick` (#4): all 4 pins interdependent; sceneType→r2 is pure
+  low-reg coloring the permuter can't flip.
+- `Blit_ApplyFlaggedRecords` (#32, priority): the romTable(r9) reap needs a
+  hand-added `volatile recordsStack` spill to match the baserom's stack spill
+  (got byte_diff 114→27), but the residual rec→r5/r4 coloring + spill-position
+  plateaus the permuter at score 70 over 36k+ iters across 2 base improvements.
+- `BlitSpriteRect` (#40, priority): 11-pin tangle; minimal r8/r9 removal
+  plateaus the permuter at 750.
+- `EntityHitbox_RegisterHitPoint` (#14), `Mode4_BlitRect` (#8): pure low-reg
+  coloring; permuter plateaus (120, 30) at 24–30k iters.
+
+**KEY FINDING — the free-win vein is exhausted.** Batch-tested ALL 37 LIVE
+single-pin functions (the 1-pin long tail the original pass left unmeasured):
+**0 / 37 redundant** — every single pin is load-bearing (e.g. FrogOam_Init's
+one r0 pin = byte_diff 155 when removed). Prior agents only added pins when
+needed, so the remaining pin forest is genuinely load-bearing agbcc coloring
+(confirms [[pin-forest-not-data-model]]). Reaping now REQUIRES the
+permuter/structural work, which: **works** for high-reg permutations (Entity)
+and structural spills (Blend); **resists** pure low-reg coloring (Scene,
+EntityHitbox, Mode4 all plateau). The 2-pin tail was not batch-tested but is
+expected load-bearing for the same reason.
+
+**Next-session leverage:** the remaining tractable value is (a) other
+high-reg-permutation functions amenable to the typeStack/spill-pressure trick,
+and (b) large structural cases via manual-insight-seeded permuter runs. Pure
+low-reg coloring (most of the mid tier) is a permuter dead-end here — don't
+burn budget on it. `nonmatchings/<fn>/` scratch dirs (gitignored) hold the
+permuter setups for Blit/BlitSpriteRect/Scene/EntityHitbox/Mode4 if resuming.
+
+---
+
+
 The ROM is 100% byte-matched, but many functions reach that match only because
 they carry `register T x asm("rN")` **pins** that force agbcc's register
 allocator to colour the way the baserom did. Task #14 removes those pins and
