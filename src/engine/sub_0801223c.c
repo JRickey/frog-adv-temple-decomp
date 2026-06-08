@@ -103,12 +103,6 @@ struct ChanTiming {
     u8 maxFrames;  /* +0x0c */
 };
 
-/* Camera-target tracker at 0x03006480 (signed target at +0x36). */
-struct CamTarget_6480 {
-    u8 _pad00[54];
-    s16 target; /* +0x36 */
-};
-
 /* Entity[0] position word read at 0x03003720 +0x04 (16-bit, sign-extended). */
 struct EntityPos_3720 {
     u8 _pad00[4];
@@ -117,7 +111,7 @@ struct EntityPos_3720 {
 
 extern struct ChanTiming gIwram_6400;
 extern struct ChanTiming gIwram_6410;
-extern struct CamTarget_6480 gIwram_6480;
+extern struct ScrollBlitLayer gIwram_6480;
 extern struct EntityPos_3720 gEntities_03003720;
 extern u8 gIwram_60A0[];
 
@@ -143,7 +137,7 @@ void RunScrollTransitionSequence(void)
     struct SeqSeed_6E08 *seedB;
     u8 a0;
     u8 a1;
-    register struct CamTarget_6480 *cam asm("r2");
+    register struct ScrollBlitLayer *cam asm("r2");
     struct TransferDesc_6908 *desc;
 
     phase = gIwram_53A0[1];
@@ -186,7 +180,7 @@ void RunScrollTransitionSequence(void)
     case 2:
         pos = (s16)gEntities_03003720.y >> 3;
         cam = &gIwram_6480;
-        if (pos - cam->target <= 59 && pos > cam->target)
+        if (pos - cam->_field_36 <= 59 && pos > cam->_field_36)
             SoundEntry_Play(8);
         else
             SoundEntry_Stop(8);
@@ -209,7 +203,7 @@ void RunScrollTransitionSequence(void)
             break;
         SoundEntry_Stop(8);
         gIwram_6410.maxFrames = 8;
-        gIwram_6480.target = 0;
+        gIwram_6480._field_36 = 0;
         gIwram_53A0[1] = 0;
         gIwram_6110.byteFlags8 &= 0xf0;
         gIwram_6110.gateByte &= 0xf0;

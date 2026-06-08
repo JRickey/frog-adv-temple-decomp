@@ -6,37 +6,14 @@
 #include "game.h"
 #include "gba/dma.h"
 
-struct IwramAt6480 {
-    u8 _pad00[9];
-    u8 field_9; /* +0x09 */
-    u8 _pad0A;
-    u8 field_b; /* +0x0b: frame counter */
-    u8 _pad0C[42];
-    s16 field_36; /* +0x36: signed coord */
-};
-
-struct IwramAt6500 {
-    u8 _pad00[11];
-    u8 field_b; /* +0x0b: frame counter */
-};
-
-struct IwramAt6540 {
-    u8 _pad00[9];
-    u8 field_9; /* +0x09 */
-    u8 _pad0A;
-    u8 field_b; /* +0x0b */
-    u8 _pad0C[40];
-    s16 field_34; /* +0x34: signed coord */
-};
-
 struct Rom306F6C {
     u8 _pad0[2];
     u8 byte2; /* +0x02 */
 };
 
-extern struct IwramAt6480 gIwram_6480;
-extern struct IwramAt6500 gIwram_6500;
-extern struct IwramAt6540 gIwram_6540;
+extern struct ScrollBlitLayer gIwram_6480;
+extern struct ScrollBlitLayer gIwram_6500;
+extern struct ScrollBlitLayer gIwram_6540;
 extern struct BgScrollState gIwram_60A0[3];
 
 extern void CharLayers_Upload(u8 arg);
@@ -69,13 +46,13 @@ void BgLayer_Init(void)
     scroll += 1;
     scroll[0] = 40;
 
-    gIwram_6540.field_34 = 0;
-    gIwram_6480.field_36 = 0;
-    gIwram_6540.field_b = 0;
-    gIwram_6480.field_b = 18;
-    gIwram_6540.field_9 = 0;
-    gIwram_6480.field_9 = 1;
-    gIwram_6500.field_b = ((struct Rom306F6C *)0x08306F6C)->byte2;
+    gIwram_6540._field_34 = 0;
+    gIwram_6480._field_36 = 0;
+    gIwram_6540.frameCtr = 0;
+    gIwram_6480.frameCtr = 18;
+    gIwram_6540.phase = 0;
+    gIwram_6480.phase = 1;
+    gIwram_6500.frameCtr = ((struct Rom306F6C *)0x08306F6C)->byte2;
     gIwram_60A0[1].tileRows = 66;
 
     dma = (vu32 *)0x040000D4;

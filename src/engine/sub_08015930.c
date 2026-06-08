@@ -31,19 +31,7 @@ void Tilemap_DispatchPendingBlits(void)
     } while (i <= 3);
 }
 
-/* Minimal struct views for the Scenery_InitScrollState init pass. */
-struct IwramInited6480 {
-    u8 base; /* +0 */
-    u8 _pad[7];
-    u8 flag; /* +8 */
-};
-
-struct IwramInited6540 {
-    u8 base; /* +0 */
-    u8 _pad[7];
-    u8 flag; /* +8 */
-};
-
+/* Minimal struct view for the Scenery_InitScrollState init pass. */
 struct IwramInited3610 {
     u8 base; /* +0 */
     u8 _pad[5];
@@ -54,8 +42,8 @@ struct IwramInited3610 {
     u8 fieldb; /* +11 */
 };
 
-extern struct IwramInited6480 gIwram_6480;
-extern struct IwramInited6540 gIwram_6540;
+extern struct ScrollBlitLayer gIwram_6480;
+extern struct ScrollBlitLayer gIwram_6540;
 extern u8 gIwram_6500;
 extern u8 gIwram_6580;
 extern struct IwramInited3610 gIwram_3610;
@@ -64,12 +52,12 @@ void Scenery_InitScrollState(void)
 {
     /* r2 holds &gIwram_6540 throughout the paired init writes;
      * without the pin, agbcc assigns the wrong register. */
-    struct IwramInited6540 *p6540 = &gIwram_6540;
+    struct ScrollBlitLayer *p6540 = &gIwram_6540;
 
-    p6540->flag = 0;
-    gIwram_6480.flag = 0;
-    p6540->base = 0;
-    gIwram_6480.base = 0;
+    p6540->pendingDma = 0;
+    gIwram_6480.pendingDma = 0;
+    p6540->active = 0;
+    gIwram_6480.active = 0;
     gIwram_6500 = 0;
     gIwram_6580 = 0;
     gIwram_3610.base = 0;

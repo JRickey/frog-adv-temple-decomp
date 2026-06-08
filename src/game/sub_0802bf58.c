@@ -12,14 +12,7 @@ extern const u8 sSpawnTable_0830791C[];
 extern const u8 sSpawnTable_083079DC[];
 extern const u8 sSpawnRecords_08307CB0[];
 
-struct IwramAt6540_2C000 {
-    u8 field_00;
-    u8 _pad01[0x33];
-    s16 field_34;
-    s16 field_36;
-};
-
-extern struct IwramAt6540_2C000 gIwram_6540;
+extern struct ScrollBlitLayer gIwram_6540;
 extern u8 gIwram_64C0;
 
 /* Mode-2 sibling of EnemySpawn_Tick (dispatched from SpawnControl_Dispatch). When the
@@ -92,7 +85,7 @@ void EnemyWave_Update(void)
             result = 2;
         break;
     case 1:
-        gIwram_6540.field_00 = 1;
+        gIwram_6540.active = 1;
         result = EnemySpawn_ProcessWaveA(sSpawnTable_0830791C, 8, sSpawnRecords_08307CB0, 0);
         if (result)
             result = 2;
@@ -129,12 +122,12 @@ void EnemyWave_Update(void)
     if (gEntities[0].status & 4)
         return;
 
-    if ((s16)(gIwram_6540.field_36 / 3) == gIwram_35E0._field_A) {
+    if ((s16)(gIwram_6540._field_36 / 3) == gIwram_35E0._field_A) {
         if ((u8)(gEntities[0].state - 8) > 3)
             PlayerFlags_Set(&gIwram_35E0, 0x2000);
     }
 
-    if ((s16)(gIwram_6540.field_34 / 3) == gIwram_35E0._field_8) {
+    if ((s16)((s16)gIwram_6540._field_34 / 3) == gIwram_35E0._field_8) {
         if ((u8)(gEntities[0].state - 8) > 3)
             PlayerFlags_Set(&gIwram_35E0, 0x2000);
     }

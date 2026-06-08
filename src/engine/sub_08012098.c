@@ -53,18 +53,8 @@ u32 Selector_StepColorFade(void)
 extern u8 gIwram_53A0[];
 extern u8 gEntities_03003720[];
 
-struct IwramAt6480_12100 {
-    u8 _pad00[54];
-    s16 field_36;
-};
-
-struct IwramAt6540_12100 {
-    u8 _pad00[10];
-    u8 field_a;
-};
-
-extern struct IwramAt6480_12100 gIwram_6480;
-extern struct IwramAt6540_12100 gIwram_6540;
+extern struct ScrollBlitLayer gIwram_6480;
+extern struct ScrollBlitLayer gIwram_6540;
 
 void Selector_ResetState(void)
 {
@@ -79,11 +69,11 @@ void Selector_ResetState(void)
     gIwram_53A0[0xff] = 0;
     gEntities_03003720[0x1a5b] = 0;
 
-    gIwram_6480.field_36 = 0;
+    gIwram_6480._field_36 = 0;
     *(u8 *)&gIwram_6480 = 0;
     *((u8 *)&gIwram_6480 + 2) = 0;
 
-    gIwram_6540.field_a = 0;
+    gIwram_6540.animFrame = 0;
 
     zero = 0;
     REG_DMA3.src = &zero;

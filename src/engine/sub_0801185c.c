@@ -49,25 +49,9 @@ extern void Selector_BlitStateMachine(u32 arg);
 extern void FrogStatusBar_Update(void);
 extern void Selector_StepScrollAxes(s32 a, s32 b, s32 c, s32 d);
 
-struct IwramAt6480_sub1190C {
-    u8 _pad00[46];
-    s16 field_2e;
-    u8 _pad30[6];
-    s16 field_36;
-};
-
-struct IwramAt6540_sub1190C {
-    u8 _pad00[9];
-    u8 field_9;
-    u8 _pad0a[34];
-    s16 field_2c;
-    u8 _pad2e[6];
-    s16 field_34;
-};
-
 extern struct BgScrollState gIwram_60A0[3];
-extern struct IwramAt6480_sub1190C gIwram_6480;
-extern struct IwramAt6540_sub1190C gIwram_6540;
+extern struct ScrollBlitLayer gIwram_6480;
+extern struct ScrollBlitLayer gIwram_6540;
 
 void Selector_InitScene(void)
 {
@@ -93,17 +77,17 @@ u32 Selector_StepScroll(void)
 
     result = 0;
     Selector_StepScrollAxes(-24, 2, -72, 2);
-    x = gIwram_60A0[0].scrollX + gIwram_6540.field_2c;
+    x = gIwram_60A0[0].scrollX + (s16)gIwram_6540._field_2c;
     gIwram_60A0[0].scrollX = x;
-    y = gIwram_60A0[0].scrollY + gIwram_6480.field_2e;
+    y = gIwram_60A0[0].scrollY + gIwram_6480._field_2e;
     gIwram_60A0[0].scrollY = y;
     gIwram_60A0[1].scrollX = x;
     gIwram_60A0[1].scrollY = y;
 
-    if (gIwram_6480.field_36 == -72)
-        gIwram_6540.field_9 = 3;
+    if (gIwram_6480._field_36 == -72)
+        gIwram_6540.phase = 3;
 
-    if (gIwram_6540.field_34 == -24)
+    if ((s16)gIwram_6540._field_34 == -24)
         result = 1;
 
     return result;

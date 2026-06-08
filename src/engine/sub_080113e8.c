@@ -116,24 +116,6 @@ void Blit_ApplyFlaggedRecords(u8 count, struct BlitRecord *records, u8 srcIndex)
     } while (i < (u8)count);
 }
 
-struct IwramAt6480_sub11518 {
-    u8 _pad00[9];
-    u8 field_9; /* +0x09 */
-    u8 _pad0A;
-    u8 field_b; /* +0x0b */
-    u8 _pad0C[42];
-    s16 field_36; /* +0x36 */
-};
-
-struct IwramAt6540_sub11518 {
-    u8 _pad00[9];
-    u8 field_9; /* +0x09 */
-    u8 _pad0A;
-    u8 field_b; /* +0x0b */
-    u8 _pad0C[40];
-    s16 field_34; /* +0x34 */
-};
-
 struct IwramAt6580_sub11518 {
     u8 _pad00[4];
     u32 lastTime;
@@ -145,29 +127,29 @@ struct IwramAt6580_sub11518 {
 extern u8 gIwram_3610;
 extern u8 gIwram_53A0;
 extern u8 gIwram_60A0[];
-extern struct IwramAt6480_sub11518 gIwram_6480;
-extern struct IwramAt6540_sub11518 gIwram_6540;
+extern struct ScrollBlitLayer gIwram_6480;
+extern struct ScrollBlitLayer gIwram_6540;
 extern struct IwramAt6580_sub11518 gIwram_6580;
 extern struct BlitRecord gBlitInitTable_08306AD4[];
 
 void Selector_InitState(void)
 {
     u8 *base = &gIwram_3610;
-    struct IwramAt6480_sub11518 *p6480;
-    struct IwramAt6540_sub11518 *p6540;
+    struct ScrollBlitLayer *p6480;
+    struct ScrollBlitLayer *p6540;
     u8 zero;
     /* zero=0 inline: agbcc emits movs r2,#0 after adds r0,#0xc8 */
     base[0xC8] = (zero = 0);
     gIwram_53A0 = zero;
     gIwram_60A0[0] = zero;
     p6540 = &gIwram_6540;
-    p6540->field_34 = zero;
+    p6540->_field_34 = zero;
     p6480 = &gIwram_6480;
-    p6480->field_36 = zero;
-    p6540->field_b = 0;
-    p6480->field_b = 0;
-    p6540->field_9 = 0;
-    p6480->field_9 = 2;
+    p6480->_field_36 = zero;
+    p6540->frameCtr = 0;
+    p6480->frameCtr = 0;
+    p6540->phase = 0;
+    p6480->phase = 2;
     gIwram_6580.field_b = 0x50;
     gIwram_6580.field_a = 3;
     Blit_ApplyFlaggedRecords(4, gBlitInitTable_08306AD4, 1);
