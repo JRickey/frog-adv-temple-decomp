@@ -1,30 +1,13 @@
 #include "iwram.h"
 #include "types.h"
 
-typedef struct EntitySlot {
-    u8 kind;
-    u8 _pad01;
-    u16 x;
-    u16 y;
-    u8 matchKey;
-    u8 _pad07[13];
-    u16 field14;
-    u8 field16;
-    u8 field17;
-    u8 _pad18[2];
-    u8 dispatchState;
-    u8 _pad1B[0x18];
-    u8 _field33;
-    u16 flags;
-    u8 _pad36[2];
-} EntitySlot;
-
-extern void MotionDesc_Set(EntitySlot *e, s8 param, s8 deltaX, s8 deltaY);
+/* Slots written here are the canonical struct Entity (iwram.h). */
+extern void MotionDesc_Set(struct Entity *e, s8 param, s8 deltaX, s8 deltaY);
 
 void InitSpecialEntitySlots(void)
 {
     u8 *base = (u8 *)gEntities;
-    EntitySlot *slot;
+    struct Entity *slot;
     s32 offset;
     u8 *addr;
     register s32 value asm("r0");
@@ -41,17 +24,17 @@ void InitSpecialEntitySlots(void)
 
     initFlags = 16;
     initKind = 15;
-    slot = (EntitySlot *)(base + 0xf18);
+    slot = (struct Entity *)(base + 0xf18);
     initField16 = 12;
     initField17 = 3;
     initMatchKey = 2;
     i = 1;
     do {
-        slot->flags = initFlags;
+        slot->status = initFlags;
         slot->kind = initKind;
-        slot->field16 = initField16;
-        slot->field17 = initField17;
-        slot->matchKey = initMatchKey;
+        slot->field_16 = initField16;
+        slot->field_17 = initField17;
+        slot->actorId = initMatchKey;
         slot++;
     } while (--i >= 0);
 
@@ -105,6 +88,6 @@ void InitSpecialEntitySlots(void)
         *(u16 *)flagAddr = mask;
     }
 
-    MotionDesc_Set((EntitySlot *)(base + 0xf18), 4, 0, 1);
-    MotionDesc_Set((EntitySlot *)(base + 0xf50), 4, 0, 1);
+    MotionDesc_Set((struct Entity *)(base + 0xf18), 4, 0, 1);
+    MotionDesc_Set((struct Entity *)(base + 0xf50), 4, 0, 1);
 }

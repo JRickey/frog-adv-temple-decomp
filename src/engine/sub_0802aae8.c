@@ -2,12 +2,6 @@
 #include "entity.h"
 #include "types.h"
 
-typedef struct EntitySlot {
-    u8 _pad00[0x34];
-    u16 flags;
-    u8 _pad36[2];
-} EntitySlot;
-
 extern void LevelLayout_WalkRecords(u32 a0, const void *a1, u32 a2, u32 a3, u32 a4, u32 a5, u32 a6);
 extern void Entity_FollowPath(const void *a0, s32 slot);
 extern void Entity_AdvanceAnimFrames(s32 a0, s32 a1);
