@@ -314,13 +314,35 @@ def measure(name: str, non_matching: bool = False) -> dict:
         return {"function": name, "build_ok": False,
                 "build_errors": f"--non-matching: {srcfile.relative_to(ROOT)} "
                                 "has no #ifdef NON_MATCHING branch to activate"}
+    # Build chain is .c -> .s (CC) -> .o (AS). Removing only the .o lets a stale
+    # intermediate .s survive — make's mtime granularity then skips recompiling
+    # the flipped source, silently diffing the STALE (NAKED) object (bogus
+    # byte_diff 0). Remove BOTH intermediates to force the full chain.
+    intermediates = [srcfile.with_suffix(".s"), srcfile.with_suffix(".o")]
+
+    # frog_us.gba <-(OBJCOPY)- frog_us.elf <-(LD)- objects. The flip changes the
+    # TU's .text size, so the link must re-run BOTH ways (flip and restore) — but
+    # make's mtime granularity skips the relink when the new .o lands in the same
+    # second as the .elf, leaving the diff to read a stale ROM (bogus byte_diff
+    # 0). So always drop the intermediates AND the linked ROM/ELF to force a full
+    # recompile + relink. Cheap relative to the build itself.
+    stale = intermediates + [BUILTROM, BUILTROM.with_suffix(".elf")]
+
+    def force_rebuild() -> None:
+        for f in stale:
+            if f.exists():
+                f.unlink()
+
     srcfile.write_text("#define NON_MATCHING\n" + text)
     try:
+        force_rebuild()
         r = _diff_after_build(name)
     finally:
-        # Restore byte-for-byte. Rewriting bumps mtime so the next `make`
-        # rebuilds this TU back to the shipped (matching) variant.
+        # Restore byte-for-byte, then force a clean recompile + relink so the
+        # tree is left MATCHING.
         srcfile.write_text(text)
+        force_rebuild()
+        build_incremental()
     r["non_matching"] = True
     r["non_matching_file"] = str(srcfile.relative_to(ROOT))
     return r
