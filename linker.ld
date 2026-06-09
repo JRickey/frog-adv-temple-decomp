@@ -458,8 +458,7 @@ SECTIONS {
         src/engine/sub_0801288c.o(.text);
         src/engine/sub_0801297c.o(.text);
         src/engine/sub_08012a6c.o(.text);
-        src/engine/sub_08012b38.o(.text);  /* 0x08012b38 - 0x08012bb4, LoadScreenTilemap_188EDC + ScrollState_Reset + Scene_Init2Layer */
-        asm/disasm_0x08012bb4.o(.text);  /* 0x08012bb4 - 0x08012bc4, sub_08012BB4 (auto-peeled) */
+        src/engine/sub_08012b38.o(.text);  /* 0x08012b38 - 0x08012bc4, LoadScreenTilemap_188EDC + ScrollState_Reset + Scene_Init2Layer + sub_08012BB4 */
         src/engine/sub_08012bc4.o(.text);  /* 0x08012bc4 - 0x08012cac, Tilemap_BlitTileRows */
         src/engine/sub_08012cac.o(.text);
         src/engine/sub_08012d40.o(.text);

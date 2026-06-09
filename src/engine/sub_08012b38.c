@@ -55,3 +55,12 @@ void Scene_Init2Layer(void)
     BgScrollBlit(2);
     StatusBar_Update();
 }
+
+extern void ScaleBlit_Tick(void);
+extern void FrogStatusBar_Update(void);
+
+void sub_08012BB4(void)
+{
+    ScaleBlit_Tick();
+    FrogStatusBar_Update();
+}
