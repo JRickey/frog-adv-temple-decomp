@@ -184,8 +184,19 @@ def m2c_seed(asm_path: Path, fn: str) -> str:
     script = ROOT / "vendor/m2c/m2c.py"
     if not m2c.exists() or not script.exists():
         return "(m2c not installed — run scripts/setup-m2c.sh)\n"
-    proc = run([str(m2c), str(script), str(asm_path),
-                "--target", "arm", "--function", fn, "--globals", "none"])
+    cmd = [str(m2c), str(script), str(asm_path),
+           "--target", "arm", "--function", fn, "--globals", "none"]
+    # Feed m2c the project's structs/types/signatures so field accesses resolve
+    # to names instead of raw unkNN offsets. ctx.c is generated/refreshed by
+    # m2c_run (shared helper); failure is non-fatal (m2c still seeds untyped).
+    try:
+        sys.path.insert(0, str(ROOT / "tools/agent"))
+        import m2c_run
+        if m2c_run.ensure_context() and m2c_run.CTX.exists():
+            cmd += ["--context", str(m2c_run.CTX)]
+    except Exception:
+        pass
+    proc = run(cmd)
     # The "function is still .incbin" case: m2c can't parse raw bytes, so
     # it reports the failure as a /* ... */ comment in stdout. Surface
     # that explicitly — it's the most common failure mode and a peel-state

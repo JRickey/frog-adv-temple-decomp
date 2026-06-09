@@ -77,6 +77,9 @@ vendor/m2c/.venv/
 vendor/decomp-permuter/.venv/
 ~/.cache/mizuchi/
 
+# m2c_run.py generated seeds + context (regenerated on demand; scratch like nonmatchings/)
+tools/agent/m2c_out/
+
 # tools/agent/corpus.py cache (other agbcc-era GBA decomps, never committed).
 # Lives under $HOME/.cache/decomp-corpus by default — this pattern is
 # defensive in case someone points DECOMP_CORPUS_DIR at a path inside the

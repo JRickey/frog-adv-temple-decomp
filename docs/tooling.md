@@ -216,6 +216,46 @@ Two paths to per-symbol diff now coexist:
 The Python tool stays primary for the first-cut "did my edit match"
 question; the expected-`.o` path is the fast permuter loop.
 
+## m2c seed C for any baserom function (`m2c_run.py`)
+
+`decomp_brief.py`'s built-in `m2c_seed` can only seed functions whose asm has
+been **refined to mnemonics** — m2c treats `.incbin` as data and won't
+disassemble raw bytes (`vendor/m2c/m2c/asm_file.py:parse_incbin`). That leaves
+out the whole `.incbin`-bodied asm/disasm corpus *and* every NAKED+NON_MATCHING
+function (which ships as `.incbin` in `src/`).
+
+`tools/agent/m2c_run.py` bridges the gap for **any** function with a known
+baserom range:
+
+```sh
+python3 tools/agent/m2c_run.py <Fn> [<Fn> ...]   # m2c seed C (with context)
+python3 tools/agent/m2c_run.py --all-naked       # every NAKED+NON_MATCHING fn
+python3 tools/agent/m2c_run.py <Fn> --asm-only   # just the generated .s
+```
+
+What it does: resolves the range (NAKED `.incbin` directive, else the map),
+disassembles the slice as Thumb via objdump, and rewrites it into
+m2c-ingestible GNU-`as` — `glabel`, `.L` jump labels, `ldr rX,=val` pool loads,
+symbol-resolved `bl`/`b` targets. Two non-obvious correctness points baked in:
+
+- **Pool-aware segmented disassembly.** A literal pool embedded mid-function
+  disassembles as garbage and *desyncs objdump's linear instruction stream
+  after it* (real instruction boundaries vanish → silently corrupt C, or
+  "Cannot find branch target"). `m2c_run` finds `ldr [pc]` pool words, carves
+  those byte ranges out, re-disassembles each code segment realigned, and
+  rescans to a fixpoint.
+- **Context is automatic.** `ensure_context()` preprocesses `include/` headers
+  into `ctx.c` (build cpp flags; agbcc-isms neutered) and passes `--context`,
+  so field reads resolve to names instead of raw `unkNN`. `decomp_brief.m2c_seed`
+  now shares this `ctx.c` too.
+
+Coverage on the current NAKED set: ~85% produce a full clean body, a few more a
+usable partial. The principled misses are the same idioms that drove those
+functions to NAKED: **jump-table dispatchers** (m2c needs the switch table
+emitted — not yet done), **ARM/Thumb interworking veneers** (`bx pc` mode
+switch), and **r12/ip held across a call** (m2c doesn't propagate ip). Outputs
+land in `tools/agent/m2c_out/` (gitignored).
+
 ## Setup: m2c and decomp-permuter
 
 Submodules under `vendor/` — clone with:
@@ -223,6 +263,13 @@ Submodules under `vendor/` — clone with:
 ```sh
 git submodule update --init --recursive
 ```
+
+> If `vendor/m2c` ever shows up as a self-referential symlink (`vendor/m2c ->
+> .../vendor/m2c`) instead of a checked-out submodule, the working tree got
+> clobbered. Recover with: `rm vendor/m2c && git -C .git/modules/vendor/m2c
+> --work-tree=$PWD/vendor/m2c checkout -f master`, write `gitdir:
+> ../../.git/modules/vendor/m2c` into `vendor/m2c/.git`, then
+> `git rm --cached vendor/m2c && git add vendor/m2c` to restore the gitlink.
 
 Then set up the Python venvs (one-time):
 

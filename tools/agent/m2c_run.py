@@ -1,0 +1,348 @@
+#!/usr/bin/env python3
+"""Run m2c against a baserom function and print the seed C.
+
+m2c needs GNU-`as` Thumb mnemonics with literal pools resolved; it treats
+`.incbin` as data only and will NOT disassemble raw bytes (see
+vendor/m2c/m2c/asm_file.py:parse_incbin). The asm/disasm_*.s files in this
+repo are `.incbin`-bodied (mnemonics live only in `@`-comments), and NAKED
+functions ship as `.incbin` in src/. So neither source is directly
+m2c-ingestible.
+
+This tool bridges that gap: it resolves a function's baserom byte-range,
+disassembles it as Thumb via arm-none-eabi-objdump, rewrites the objdump
+output into m2c-parseable GNU-as (glabel + `.L` jump labels + `ldr rX,=val`
+pool loads + symbol-resolved `bl`/`b` targets, literal-pool words skipped),
+and runs m2c with --target arm and the project context file.
+
+  python3 tools/agent/m2c_run.py <Fn> [<Fn> ...]
+  python3 tools/agent/m2c_run.py --all-naked
+  python3 tools/agent/m2c_run.py <Fn> --asm-only   # just print the .s
+  python3 tools/agent/m2c_run.py <Fn> --no-context # skip --context
+
+Context (the project's structs/types/signatures) is supplied to m2c
+automatically: ctx.c is generated from include/ headers on first run and
+refreshed when a header changes. Without it m2c emits raw `unk2`/`unkA`
+field offsets; with it they resolve to named fields.
+
+Outputs land in tools/agent/m2c_out/<Fn>.s and <Fn>.c (printed to stdout too).
+"""
+from __future__ import annotations
+
+import argparse
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+BASEROM = ROOT / "frog_us_baserom.gba"
+MAP = ROOT / "frog_us.map"
+SRC = ROOT / "src"
+OUTDIR = ROOT / "tools/agent/m2c_out"
+CTX = OUTDIR / "ctx.c"
+M2C_PY = ROOT / "vendor/m2c/.venv/bin/python"
+M2C = ROOT / "vendor/m2c/m2c.py"
+OBJDUMP = "arm-none-eabi-objdump"
+ROM_BASE = 0x08000000
+
+# Thumb branch mnemonics (after stripping .n/.w). Note blt/ble/bls start with
+# "bl" but are conditional branches, NOT the bl/blx call — keep them here.
+BRANCH_BASES = {
+    "b", "beq", "bne", "bcs", "bhs", "bcc", "blo", "bmi", "bpl",
+    "bvs", "bvc", "bhi", "bls", "bge", "blt", "bgt", "ble", "bal",
+}
+
+# `   8017364:\tb5f0      \tpush\t{r4, lr}`  (objdump -D on raw binary)
+RE_INSN = re.compile(r"^\s*([0-9a-fA-F]+):\s+((?:[0-9a-fA-F]{4} ?)+)\s+(\S.*)$")
+# A map symbol line: `                0x08017364                SaveLoad`
+RE_MAPSYM = re.compile(r"^\s+0x0([0-9a-fA-F]{7,8})\s+([A-Za-z_]\w*)\s*$")
+
+
+def load_symbols() -> dict[int, str]:
+    """addr -> name from the linker map (last definition wins)."""
+    syms: dict[int, str] = {}
+    if not MAP.exists():
+        return syms
+    for line in MAP.read_text(errors="replace").splitlines():
+        m = RE_MAPSYM.match(line)
+        if m:
+            addr = int(m.group(1), 16)
+            name = m.group(2)
+            # Skip linker-internal and obvious non-code/data filler.
+            if name in ("ABSOLUTE",):
+                continue
+            syms[addr] = name
+    return syms
+
+
+def resolve_range(fn: str, syms: dict[int, str]) -> tuple[int, int]:
+    """Return (rom_offset, size) for `fn`.
+
+    Prefers a NAKED `.incbin "...", off, size` in src/ (exact). Falls back to
+    the map symbol address with size = next-symbol delta.
+    """
+    # 1. NAKED incbin in src/ — exact offset+size.
+    pat = re.compile(
+        re.escape(fn) + r"\b.*?\.incbin\s+\"[^\"]*\",\s*(0x[0-9a-fA-F]+),\s*(0x[0-9a-fA-F]+)",
+        re.DOTALL,
+    )
+    for cfile in SRC.rglob("*.c"):
+        txt = cfile.read_text(errors="replace")
+        idx = txt.find(fn)
+        if idx == -1:
+            continue
+        m = pat.search(txt, idx)
+        if m:
+            return int(m.group(1), 16), int(m.group(2), 16)
+    # 2. Map: find addr, size from next symbol.
+    addr = next((a for a, n in syms.items() if n == fn), None)
+    if addr is None:
+        raise SystemExit(f"Cannot resolve address for {fn} (not NAKED, not in map)")
+    higher = sorted(a for a in syms if a > addr)
+    if not higher:
+        raise SystemExit(f"Cannot infer size for {fn} (no following symbol)")
+    return addr - ROM_BASE, higher[0] - addr
+
+
+def _objdump_region(data: bytes, vaddr: int, start: int, end: int) -> list[tuple[int, str, str]]:
+    """objdump [start, end) of `data` (vaddr-based) as Thumb, realigned to start."""
+    tmp = OUTDIR / "_slice.bin"
+    tmp.write_bytes(data[start - vaddr:end - vaddr])
+    out = subprocess.run(
+        [OBJDUMP, "-D", "-b", "binary", "-m", "arm7tdmi", "-Mforce-thumb",
+         f"--adjust-vma={start:#x}", str(tmp)],
+        capture_output=True, text=True, check=True,
+    ).stdout
+    insns: list[tuple[int, str, str]] = []
+    for line in out.splitlines():
+        m = RE_INSN.match(line)
+        if not m:
+            continue
+        addr = int(m.group(1), 16)
+        rest = re.split(r"\s*[;@]\s*", m.group(3), maxsplit=1)[0].rstrip()
+        parts = rest.split(None, 1)
+        if not parts:
+            continue
+        insns.append((addr, parts[0], parts[1] if len(parts) > 1 else ""))
+    return insns
+
+
+def _merge_pool_ranges(pools: set[int]) -> list[tuple[int, int]]:
+    """Merge 4-byte pool words into contiguous [start, end) ranges."""
+    ranges: list[tuple[int, int]] = []
+    for p in sorted(pools):
+        if ranges and p <= ranges[-1][1]:
+            ranges[-1] = (ranges[-1][0], max(ranges[-1][1], p + 4))
+        else:
+            ranges.append((p, p + 4))
+    return ranges
+
+
+def disassemble(data: bytes, vaddr: int, size: int) -> tuple[list[tuple[int, str, str]], set[int]]:
+    """Pool-aware Thumb disassembly.
+
+    A literal pool embedded mid-function disassembles as garbage and desyncs
+    objdump's linear instruction stream after it (real instruction boundaries
+    vanish). We iterate: find `ldr rX,[pc,#N]` pool words, carve those byte
+    ranges out, re-disassemble each code segment realigned to its start, then
+    rescan the now-correct code for more pool loads. Converges to a fixpoint.
+    Returns (instructions, pool_word_addrs).
+    """
+    end = vaddr + size
+    pools: set[int] = set()
+    insns: list[tuple[int, str, str]] = []
+    for _ in range(12):  # fixpoint; pools rarely nest more than a couple deep
+        insns = []
+        ranges = _merge_pool_ranges(pools)
+        cur = vaddr
+        for rs, re_ in ranges:
+            if rs > cur:
+                insns += _objdump_region(data, vaddr, cur, min(rs, end))
+            cur = max(cur, re_)
+        if cur < end:
+            insns += _objdump_region(data, vaddr, cur, end)
+        new = set(pools)
+        for addr, mnem, ops in insns:
+            if mnem.split(".")[0].startswith("ldr"):
+                mm = re.search(r"\[pc,\s*#(-?\d+)\]", ops)
+                if mm:
+                    pa = ((addr + 4) & ~3) + int(mm.group(1))
+                    if vaddr <= pa < end:
+                        new.add(pa)
+        if new == pools:
+            break
+        pools = new
+    return insns, pools
+
+
+def emit_asm(fn: str, rom_off: int, size: int, syms: dict[int, str]) -> str:
+    vaddr = rom_off + ROM_BASE
+    romdata = BASEROM.read_bytes()
+    data = romdata[rom_off:rom_off + size]
+    insns, pool_words = disassemble(data, vaddr, size)
+
+    # Pool word values + in-function branch targets.
+    pool: dict[int, int] = {}   # pool_addr -> 32-bit value
+    for pa in pool_words:
+        off = pa - ROM_BASE
+        pool[pa] = int.from_bytes(romdata[off:off + 4], "little")
+    branch_targets: set[int] = set()
+    for addr, mnem, ops in insns:
+        if mnem.split(".")[0] in BRANCH_BASES:  # blt/ble/bls start "bl" but ARE branches
+            mm = re.match(r"^(0x[0-9a-fA-F]+)$", ops.strip())
+            if mm:
+                t = int(mm.group(1), 16)
+                if vaddr <= t < vaddr + size:
+                    branch_targets.add(t)
+
+    def label(addr: int) -> str:
+        return f".L{addr:08X}"
+
+    def sym_or_hex(value: int) -> str:
+        if value in syms:
+            return syms[value]
+        return f"0x{value:08X}"
+
+    lines = [
+        "    .include \"macros.inc\"   @ harmless if absent; m2c ignores unknown",
+        "    .text",
+        "    .thumb",
+        "    .syntax unified",
+        f"glabel {fn}",
+    ]
+    for addr, mnem, ops in insns:
+        if addr in branch_targets:
+            lines.append(f"{label(addr)}:")
+        base = mnem.split(".")[0]  # strip Thumb .n/.w width suffix
+        # Pool load -> ldr rX, =value
+        if mnem.startswith("ldr") and "[pc" in ops:
+            mm = re.search(r"\[pc,\s*#(-?\d+)\]", ops)
+            reg = ops.split(",")[0].strip()
+            imm = int(mm.group(1))
+            paddr = ((addr + 4) & ~3) + imm
+            lines.append(f"    {base} {reg}, ={sym_or_hex(pool[paddr])}")
+            continue
+        # bl / blx target -> symbol
+        if base in ("bl", "blx"):
+            mm = re.match(r"^(0x[0-9a-fA-F]+)$", ops.strip())
+            if mm:
+                t = int(mm.group(1), 16)
+                name = syms.get(t, f"func_{t:08X}")
+                lines.append(f"    {base} {name}")
+                continue
+        # local branch -> label
+        if base in BRANCH_BASES:
+            mm = re.match(r"^(0x[0-9a-fA-F]+)$", ops.strip())
+            if mm:
+                t = int(mm.group(1), 16)
+                if vaddr <= t < vaddr + size:
+                    lines.append(f"    {base} {label(t)}")
+                    continue
+                name = syms.get(t)
+                if name:
+                    lines.append(f"    {base} {name}")
+                    continue
+        lines.append(f"    {base} {ops}".rstrip())
+    return "\n".join(lines) + "\n"
+
+
+# Public headers fed to m2c as type/struct/signature context. Mirrors what a
+# typical NAKED .c #includes; extend as new subsystems get headers.
+CTX_HEADERS = [
+    "types.h", "macros.h", "gba/intr.h", "iwram.h", "save.h",
+    "sound.h", "entity.h", "gfx.h", "game.h", "game_constants.h",
+]
+
+
+def ensure_context() -> bool:
+    """(Re)generate ctx.c — the preprocessed project headers m2c reads via
+    --context to resolve struct fields, types, and function signatures. Built
+    with the build's cpp flags; agbcc-isms pycparser can't parse are neutered.
+    Returns True if a usable ctx.c exists."""
+    newest = max((( ROOT / "include" / h).stat().st_mtime
+                  for h in CTX_HEADERS if (ROOT / "include" / h).exists()),
+                 default=0.0)
+    if CTX.exists() and CTX.stat().st_mtime >= newest:
+        return True
+    src = "".join(f'#include "{h}"\n' for h in CTX_HEADERS)
+    tmp = OUTDIR / "_ctx_src.c"
+    tmp.write_text(src)
+    # macOS build uses `cpp-15 -P`; fall back to plain cpp elsewhere.
+    cpp = "cpp-15" if subprocess.run(["which", "cpp-15"],
+                                     capture_output=True).returncode == 0 else "cpp"
+    proc = subprocess.run(
+        [cpp, "-P", "-nostdinc", f"-I{ROOT/'include'}", f"-I{ROOT/'tools/agbcc/include'}",
+         "-DREGION_US", "-D__attribute__(x)=", "-D__asm__(x)=", "-Dasm(x)=", "-Dvolatile=",
+         str(tmp), "-o", str(CTX)],
+        capture_output=True, text=True,
+    )
+    if proc.returncode != 0:
+        print(f"(ctx.c generation failed: {proc.stderr.strip()})", file=sys.stderr)
+        return CTX.exists()
+    return True
+
+
+def run_m2c(asm_path: Path, fn: str, use_context: bool) -> str:
+    cmd = [str(M2C_PY), str(M2C), str(asm_path),
+           "--target", "arm", "--function", fn, "--globals", "none"]
+    if use_context and CTX.exists():
+        cmd += ["--context", str(CTX)]
+    proc = subprocess.run(cmd, capture_output=True, text=True)
+    out = proc.stdout
+    if proc.returncode != 0 and not out.strip():
+        out = f"/* m2c failed (exit {proc.returncode}):\n{proc.stderr}\n*/"
+    return out
+
+
+def naked_functions() -> list[str]:
+    fns: list[str] = []
+    pat = re.compile(r"^NAKED\s+\S[^\n]*?\b([A-Za-z_]\w*)\s*\(", re.MULTILINE)
+    for cfile in sorted(SRC.rglob("*.c")):
+        txt = cfile.read_text(errors="replace")
+        if "NON_MATCHING" not in txt:
+            continue
+        for m in pat.finditer(txt):
+            fns.append(m.group(1))
+    return fns
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("functions", nargs="*")
+    ap.add_argument("--all-naked", action="store_true")
+    ap.add_argument("--asm-only", action="store_true")
+    ap.add_argument("--no-context", action="store_true")
+    args = ap.parse_args()
+
+    OUTDIR.mkdir(parents=True, exist_ok=True)
+    if not args.asm_only and not args.no_context:
+        ensure_context()  # generate/refresh ctx.c so m2c gets project types
+    syms = load_symbols()
+    fns = list(args.functions)
+    if args.all_naked:
+        fns += naked_functions()
+    if not fns:
+        ap.error("no functions given (use names or --all-naked)")
+
+    for fn in fns:
+        try:
+            rom_off, size = resolve_range(fn, syms)
+            asm = emit_asm(fn, rom_off, size, syms)
+        except (SystemExit, Exception) as e:  # keep batch going on any per-fn failure
+            print(f"== {fn}: {type(e).__name__}: {e}", file=sys.stderr)
+            continue
+        asm_path = OUTDIR / f"{fn}.s"
+        asm_path.write_text(asm)
+        if args.asm_only:
+            print(f"/* === {fn} (asm) === */")
+            print(asm)
+            continue
+        c = run_m2c(asm_path, fn, not args.no_context)
+        (OUTDIR / f"{fn}.c").write_text(c)
+        print(f"/* ===================== {fn}  "
+              f"(rom 0x{rom_off:x}, {size} bytes) ===================== */")
+        print(c)
+
+
+if __name__ == "__main__":
+    main()
