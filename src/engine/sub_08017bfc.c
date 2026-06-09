@@ -1,6 +1,7 @@
 #include "gfx.h"
 #include "macros.h"
 #include "types.h"
+#include "game.h"
 #include "gba/dma.h"
 #include "gba/io.h"
 #include "iwram.h"
@@ -307,4 +308,95 @@ void Menu25_InstallBg(void)
 
     REG_DISPCNT |= DISPCNT_BG3_ON;
     FrogSelect_LoadCharTilemap();
+}
+
+extern void Sound_Play(u32 id);
+extern void Screen_InstallOamA(s32 a, s32 b, s32 c, s32 d);
+extern void Sprite_AnimateFlip(void *self, u16 a, u16 b, u8 c, u8 count);
+extern void WinPoseScreen_ScrollStep(u32 dir);
+extern void WinPoseScreen_AnimAndScroll(void);
+extern void WinPoseScreen_UpdateAnim(void);
+extern void Sprite_CycleDmaFrame(u32 a, u32 b, u32 c, u32 d);
+extern const u32 sOamDmaCfg_08100[4];
+
+/* Win-pose screen step machine, keyed off gIwram_5398. First switch handles
+ * cursor nav (1/2) and entry (0x10/0x40, building the win-pose OAM descriptor);
+ * second switch handles teardown (0x20 -> hand off to MENU_27) vs the per-frame
+ * animate path. */
+void sub_08017FC4(void)
+{
+    u32 oam;
+    u16 state;
+    u16 state2;
+    u8 cursor;
+
+    state = gIwram_5398;
+    switch (state) {
+    case 1:
+        Sound_Play(2);
+        cursor = gIwram_3480.cursorIndex;
+        if (cursor != 0) {
+            gIwram_3480.cursorIndex = cursor - 1;
+            gIwram_34D0._field_10 = state;
+            gIwram_34D0._field_08 = state;
+            WinPoseScreen_ScrollStep(1);
+        }
+        break;
+    case 2:
+        Sound_Play(2);
+        cursor = gIwram_3480.cursorIndex;
+        if (cursor <= 1) {
+            gIwram_3480.cursorIndex = cursor + 1;
+            gIwram_34D0._field_10 = 1;
+            gIwram_34D0._field_08 = 0;
+            WinPoseScreen_ScrollStep(0);
+        }
+        break;
+    case 0x10:
+    case 0x40:
+        Sound_Play(1);
+        oam = (((((((oam & 0xFFFFFF00) | 9) & 0xFFFF00FF) | 0x600) & 0x00FFFFFF) | 0x03000000) & 0xFF00FFFF) | 0xE0000;
+        switch (gIwram_3480.cursorIndex) {
+        case 0:
+            oam = (oam & 0xFFFF00FF) | 0x500;
+            break;
+        case 1:
+            oam = (oam & 0xFFFF00FF) | 0x900;
+            break;
+        case 2:
+            oam = (oam & 0xFFFF00FF) | 0xD00;
+            break;
+        }
+        Sprite_AnimateFlip(&oam, 4, 5, 2, 0xA);
+        REG_DISPCNT &= 0xEFFF;
+        gIwram_34A0.reentryFlag = 1;
+        Screen_InstallOamA(1, 0x17, 6, 2);
+        gIwram_3480.subState++;
+        break;
+    }
+
+    state2 = gIwram_5398;
+    if (state2 == 0x20) {
+        Sound_Play(0);
+        REG_DISPCNT &= 0xEFFF;
+        gIwram_34A0.reentryFlag = 0;
+        Screen_InstallOamA(0, 0x19, 6, 2);
+        gGameStuff.mode = GAME_MODE_MENU_27;
+        gIwram_3480.subState = 0;
+        gIwram_3480.menuStep = 0;
+        gIwram_3480._unk01 = 0;
+        gIwram_5398 = 0;
+        gIwram_3480.reloadFlag = 1;
+        gIwram_3480.blinkCounter = 0;
+    } else if (state2 != 0 && state2 != 0x10 && state2 != 0x40) {
+        /* negated so the default arm lays out before the animate arm, matching
+         * the baserom block order (each `== case` beq's forward to the animate
+         * block). */
+        FrogSelect_LoadCharTilemap();
+        WinPoseScreen_AnimAndScroll();
+    } else {
+        Sprite_CycleDmaFrame(sOamDmaCfg_08100[0], sOamDmaCfg_08100[1], sOamDmaCfg_08100[2], sOamDmaCfg_08100[3]);
+        WinPoseScreen_UpdateAnim();
+    }
+    gIwram_5398 = 0;
 }
