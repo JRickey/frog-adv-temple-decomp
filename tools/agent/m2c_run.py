@@ -138,48 +138,95 @@ def _merge_pool_ranges(pools: set[int]) -> list[tuple[int, int]]:
     return ranges
 
 
-def disassemble(data: bytes, vaddr: int, size: int) -> tuple[list[tuple[int, str, str]], set[int]]:
-    """Pool-aware Thumb disassembly.
+def _read_jump_table(romdata: bytes, V: int, vaddr: int, end: int) -> list[int]:
+    """Read a word jump table at V: consecutive in-range code targets. Stops at
+    the lowest target seen (case bodies always follow the table) or an
+    out-of-range word. Returns case-target addresses (thumb bit masked)."""
+    entries: list[int] = []
+    a, min_t = V, None
+    while a + 4 <= end and len(entries) < 256:
+        if min_t is not None and a >= min_t:
+            break
+        t = int.from_bytes(romdata[a - ROM_BASE:a - ROM_BASE + 4], "little") & ~1
+        if not (vaddr <= t < end):
+            break
+        entries.append(t)
+        min_t = t if min_t is None else min(min_t, t)
+        a += 4
+    return entries
 
-    A literal pool embedded mid-function disassembles as garbage and desyncs
-    objdump's linear instruction stream after it (real instruction boundaries
-    vanish). We iterate: find `ldr rX,[pc,#N]` pool words, carve those byte
-    ranges out, re-disassemble each code segment realigned to its start, then
-    rescan the now-correct code for more pool loads. Converges to a fixpoint.
-    Returns (instructions, pool_word_addrs).
+
+def disassemble(data: bytes, vaddr: int, size: int,
+                ) -> tuple[list[tuple[int, str, str]], set[int], dict[int, list[int]]]:
+    """Pool-aware Thumb disassembly with jump-table carving.
+
+    Embedded data (a literal pool, or a `mov pc`-style switch jump table)
+    disassembles as garbage and desyncs objdump's linear instruction stream
+    after it (real instruction boundaries vanish). We iterate to a fixpoint:
+    find `ldr rX,[pc,#N]` pool words AND jump tables (pool values that point
+    inside the function, when the function has a computed PC write), carve those
+    byte ranges out, re-disassemble each code segment realigned, rescan.
+    Returns (instructions, pool_word_addrs, {table_base: [case_targets]}).
     """
     end = vaddr + size
+    romdata = BASEROM.read_bytes()
     pools: set[int] = set()
+    jtables: dict[int, list[int]] = {}
     insns: list[tuple[int, str, str]] = []
-    for _ in range(12):  # fixpoint; pools rarely nest more than a couple deep
+    for _ in range(12):  # fixpoint; pools/tables rarely nest more than a couple deep
         insns = []
-        ranges = _merge_pool_ranges(pools)
+        # Carve both pool words (4B) and full table extents.
+        carve = [(p, p + 4) for p in pools]
+        carve += [(V, V + 4 * len(t)) for V, t in jtables.items()]
+        carve.sort()
+        merged: list[list[int]] = []
+        for s, e in carve:
+            if merged and s <= merged[-1][1]:
+                merged[-1][1] = max(merged[-1][1], e)
+            else:
+                merged.append([s, e])
         cur = vaddr
-        for rs, re_ in ranges:
+        for rs, re_ in merged:
             if rs > cur:
                 insns += _objdump_region(data, vaddr, cur, min(rs, end))
             cur = max(cur, re_)
         if cur < end:
             insns += _objdump_region(data, vaddr, cur, end)
-        new = set(pools)
+
+        new_pools = set(pools)
         for addr, mnem, ops in insns:
             if mnem.split(".")[0].startswith("ldr"):
                 mm = re.search(r"\[pc,\s*#(-?\d+)\]", ops)
                 if mm:
                     pa = ((addr + 4) & ~3) + int(mm.group(1))
                     if vaddr <= pa < end:
-                        new.add(pa)
-        if new == pools:
+                        new_pools.add(pa)
+        # A switch needs a register PC write (mov pc,rX / ldr pc / add pc). Only
+        # then treat in-range pool values as jump-table bases — keeps non-switch
+        # functions (no computed jump) completely unaffected.
+        has_switch = any(
+            mnem.split(".")[0] in ("mov", "add", "ldr") and ops.split(",")[0].strip() == "pc"
+            for _, mnem, ops in insns
+        )
+        new_jt = dict(jtables)
+        if has_switch:
+            for pa in new_pools:
+                V = int.from_bytes(romdata[pa - ROM_BASE:pa - ROM_BASE + 4], "little")
+                if vaddr < V < end and V % 2 == 0 and V not in new_jt:
+                    ents = _read_jump_table(romdata, V, vaddr, end)
+                    if ents:
+                        new_jt[V] = ents
+        if new_pools == pools and new_jt == jtables:
             break
-        pools = new
-    return insns, pools
+        pools, jtables = new_pools, new_jt
+    return insns, pools, jtables
 
 
 def emit_asm(fn: str, rom_off: int, size: int, syms: dict[int, str]) -> str:
     vaddr = rom_off + ROM_BASE
     romdata = BASEROM.read_bytes()
     data = romdata[rom_off:rom_off + size]
-    insns, pool_words = disassemble(data, vaddr, size)
+    insns, pool_words, jtables = disassemble(data, vaddr, size)
 
     # Pool word values + in-function branch targets.
     pool: dict[int, int] = {}   # pool_addr -> 32-bit value
@@ -194,6 +241,10 @@ def emit_asm(fn: str, rom_off: int, size: int, syms: dict[int, str]) -> str:
                 t = int(mm.group(1), 16)
                 if vaddr <= t < vaddr + size:
                     branch_targets.add(t)
+    # Every jump-table case target needs a code label m2c can resolve.
+    for V, ents in jtables.items():
+        branch_targets.update(ents)
+    table_slots: dict[int, int] = {}  # pool-slot addr -> table base (filled while emitting)
 
     def label(addr: int) -> str:
         return f".L{addr:08X}"
@@ -214,13 +265,18 @@ def emit_asm(fn: str, rom_off: int, size: int, syms: dict[int, str]) -> str:
         if addr in branch_targets:
             lines.append(f"{label(addr)}:")
         base = mnem.split(".")[0]  # strip Thumb .n/.w width suffix
-        # Pool load -> ldr rX, =value
+        # Pool load. Jump-table base -> ldr rX, lbl_p_<slot> (symbol load, so
+        # m2c follows slot -> table -> cases). Otherwise -> ldr rX, =value.
         if mnem.startswith("ldr") and "[pc" in ops:
             mm = re.search(r"\[pc,\s*#(-?\d+)\]", ops)
             reg = ops.split(",")[0].strip()
             imm = int(mm.group(1))
             paddr = ((addr + 4) & ~3) + imm
-            lines.append(f"    {base} {reg}, ={sym_or_hex(pool[paddr])}")
+            if pool[paddr] in jtables:
+                table_slots[paddr] = pool[paddr]
+                lines.append(f"    {base} {reg}, lbl_p_{paddr:08X}")
+            else:
+                lines.append(f"    {base} {reg}, ={sym_or_hex(pool[paddr])}")
             continue
         # bl / blx target -> symbol
         if base in ("bl", "blx"):
@@ -243,6 +299,20 @@ def emit_asm(fn: str, rom_off: int, size: int, syms: dict[int, str]) -> str:
                     lines.append(f"    {base} {name}")
                     continue
         lines.append(f"    {base} {ops}".rstrip())
+
+    # Jump-table data (in .text so m2c sees is_text). Two levels, mirroring the
+    # real layout: the literal-pool slot holds the table address; the table
+    # holds the case targets. lbl_ prefix keeps these as data labels, not new
+    # functions (m2c re_local_label).
+    if jtables:
+        lines.append("")
+        for paddr, V in sorted(table_slots.items()):
+            lines.append(f"lbl_p_{paddr:08X}:")
+            lines.append(f"    .word lbl_{V:08X}")
+        for V, ents in sorted(jtables.items()):
+            lines.append(f"lbl_{V:08X}:")
+            for t in ents:
+                lines.append(f"    .word {label(t)}")
     return "\n".join(lines) + "\n"
 
 

@@ -236,25 +236,30 @@ python3 tools/agent/m2c_run.py <Fn> --asm-only   # just the generated .s
 What it does: resolves the range (NAKED `.incbin` directive, else the map),
 disassembles the slice as Thumb via objdump, and rewrites it into
 m2c-ingestible GNU-`as` — `glabel`, `.L` jump labels, `ldr rX,=val` pool loads,
-symbol-resolved `bl`/`b` targets. Two non-obvious correctness points baked in:
+symbol-resolved `bl`/`b` targets. Three non-obvious correctness points baked in:
 
-- **Pool-aware segmented disassembly.** A literal pool embedded mid-function
-  disassembles as garbage and *desyncs objdump's linear instruction stream
-  after it* (real instruction boundaries vanish → silently corrupt C, or
-  "Cannot find branch target"). `m2c_run` finds `ldr [pc]` pool words, carves
-  those byte ranges out, re-disassembles each code segment realigned, and
-  rescans to a fixpoint.
+- **Pool-aware segmented disassembly.** Embedded data (a literal pool, or a
+  switch jump table) disassembles as garbage and *desyncs objdump's linear
+  instruction stream after it* (real instruction boundaries vanish → silently
+  corrupt C, or "Cannot find branch target"). `m2c_run` finds `ldr [pc]` pool
+  words, carves those byte ranges out, re-disassembles each code segment
+  realigned, and rescans to a fixpoint.
+- **Jump-table reconstruction.** When the function has a computed PC write
+  (`mov pc,rX`), in-range pool values are treated as table bases: the table
+  bytes are carved (same desync fix) and re-emitted in the two-level form m2c's
+  ARM backend wants (`ldr rX, lbl_p_<slot>` → `lbl_p: .word lbl_<tbl>` →
+  `lbl_<tbl>: .word .Lcase…`), so m2c rebuilds a real `switch`.
 - **Context is automatic.** `ensure_context()` preprocesses `include/` headers
   into `ctx.c` (build cpp flags; agbcc-isms neutered) and passes `--context`,
   so field reads resolve to names instead of raw `unkNN`. `decomp_brief.m2c_seed`
   now shares this `ctx.c` too.
 
-Coverage on the current NAKED set: ~85% produce a full clean body, a few more a
-usable partial. The principled misses are the same idioms that drove those
-functions to NAKED: **jump-table dispatchers** (m2c needs the switch table
-emitted — not yet done), **ARM/Thumb interworking veneers** (`bx pc` mode
-switch), and **r12/ip held across a call** (m2c doesn't propagate ip). Outputs
-land in `tools/agent/m2c_out/` (gitignored).
+Coverage on the current NAKED set: ~93% (54/58) produce a full clean body, the
+rest a usable partial. The remaining partials are narrow m2c limits, not asm
+bugs: **r12/ip (or a reg) held across a call** (m2c doesn't propagate it, leaves
+a `M2C_ERROR(/* Read from unset register */)` inline but still emits the body)
+and the **ARM/Thumb interworking veneer** `SoundIrqEnable` (`bx pc` mode
+switch). Outputs land in `tools/agent/m2c_out/` (gitignored).
 
 ## Setup: m2c and decomp-permuter
 
