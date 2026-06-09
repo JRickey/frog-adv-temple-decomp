@@ -6,15 +6,6 @@
 #include "gba/io.h"
 #include "iwram.h"
 
-asm(".global sub_08015EC4\n"
-    ".thumb_set sub_08015EC4, 0x08015EC5\n"
-    ".global sub_08015F9C\n"
-    ".thumb_set sub_08015F9C, 0x08015F9D\n"
-    ".global sub_0801629C\n"
-    ".thumb_set sub_0801629C, 0x0801629D\n"
-    ".global sub_080162FC\n"
-    ".thumb_set sub_080162FC, 0x080162FD");
-
 extern u16 gIwram_5398;
 extern const void *const sUiAssetSlots[];
 
