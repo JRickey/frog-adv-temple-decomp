@@ -496,7 +496,6 @@ SECTIONS {
         src/engine/sub_08015044.o(.text);
         asm/disasm_0x08015044.o(.text);  /* 0x08015044 - 0x08015194, EnemySpawn_ProcessWaveB (auto-peeled) */
         src/engine/sub_08015194.o(.text);
-        asm/disasm_0x08015220.o(.text);  /* 0x08015220 - 0x080152b0, sub_08015220 (auto-peeled) */
         src/engine/sub_080152b0.o(.text);
         src/engine/sub_0801549c.o(.text);
         src/engine/sub_080155f0.o(.text);
