@@ -2655,3 +2655,43 @@ The fix has two parts:
 
 So the shared tail is a cross-jump RESULT, not a source construct. Trying
 to pre-share it in source is what blocks the match.
+
+## Free flow-time live-length perturbation via combine-foldable casts (sub_0800C4E8)
+
+Global-alloc priority = `floor(log2(n_refs) * n_refs / live_length * 10000)`
+(global.c `allocno_compare`), and REG_N_REFS / REG_LIVE_LENGTH are computed
+at FLOW time — but **combine runs after flow** and can delete insns without
+the stats being recomputed. So a redundant sign-extension that combine folds
+away (`(s16)v` where `v`'s value is provably already sign-extended — e.g. a
+local assigned from a `(s16)` cast, or a `u8`-range `ldrb` result) emits
+lsls+asrs at RTL-gen, inflates the live lengths of every pseudo live across
+that point, and then vanishes — **zero bytes in the final code**.
+
+This is the precision lever for allocation-ORDER mismatches: when the baserom
+parks values as {col=r9, col*8=sl, x<<16=ip, row*4=r7} but agbcc picks
+{col=sl, row*4=r9, x<<16=r7, col*8=spill}, no amount of expression reshaping
+moves the muls/adds — the whole assignment is one allocation-order cascade.
+In sub_0800C4E8, writing the two DIR_AUTO "second read" products as
+`((s16)y - 1) * (s16)stride` (both casts redundant, both folded) lengthened
+the shared `tileX<<16` temp's live range past a priority tie, demoted it one
+slot in allocation order, and the entire callee-saved assignment snapped to
+the baserom's coloring. byte_diff 471 -> 0 from those four casts.
+
+Diagnosis route: `agbcc_oracle.py <fn> --pass greg` prints "Registers to be
+allocated in sorted order" + per-pseudo `refs/live_length`; compute the
+priorities by hand and look for floor-level ties (e.g. 27/63 == 3/7 == 4285)
+— ties break by pseudo number, so the param pseudo always wins/loses the
+same way, and only a stats change (not a tie rebreak) can flip it.
+
+Related discoveries from the same function:
+- Noop copies (`s32 t = y;`) do NOT work for this — cse copy-propagates them
+  before flow ever counts them.
+- A `s16 prod` local does the same demotion but its truncation pair survives
+  (+4 bytes) — the cast-on-use form is the size-neutral variant.
+- muls destination follows SOURCE operand order at expansion (`y *= s` vs
+  `prod = s * y` pick different dest registers); reg-reg commutative
+  operands are NOT canonicalized at RTL-gen.
+- Statement-level product hoisting (`prod = y * stride;` before the address
+  expression) is what makes the muls precede the `2*(s16)tileX` evaluation;
+  inline products evaluate after it (operands expand left-to-right, with
+  "more complex first" reordering only INSIDE a commutative plus).

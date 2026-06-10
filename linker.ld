@@ -372,7 +372,6 @@ SECTIONS {
         src/engine/sub_0800c444.o(.text);  /* 0x0800c444 - 0x0800c4a0, Scene_OnPlayerStepTile20 */
         src/engine/sub_0800c4a0.o(.text);  /* 0x0800c4a0 - 0x0800c4e8, Stage_BuildActiveSlotMask / EntityProc_Nop / EntityProcE_Nop */
         src/engine/sub_0800c4e8.o(.text);
-        asm/disasm_0x0800c4e8.o(.text);  /* 0x0800c4e8 - 0x0800c978, sub_0800C4E8 (auto-peeled) */
         src/engine/sub_0800c978.o(.text);
         src/engine/sub_0800cb80.o(.text);  /* 0x0800cb80 - 0x0800cd88, SpriteGrid_SetCellFlags/BgMap_WriteTileAttr and sibling grid writers */
         src/engine/sub_0800cd88.o(.text);
