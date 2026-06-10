@@ -669,7 +669,6 @@ SECTIONS {
         src/engine/sub_08023594.o(.text);  /* 0x08023594 - 0x080235c8, LevelLayout_Update */
         src/engine/sub_080235c8.o(.text);  /* 0x080235c8 - 0x080236f4, LevelEntityBatch_SpawnAndClassify + LevelEntity_AnimAndSpawn */
         src/engine/sub_080236f4.o(.text);
-        asm/disasm_0x080236f4.o(.text);  /* 0x080236f4 - 0x08023ab4, sub_080236F4 (auto-peeled) */
         src/engine/sub_08023ab4.o(.text);  /* 0x08023ab4 - 0x08023bc0, LevelEntities_SpawnGroup10 */
         src/engine/sub_08023bc0.o(.text);
         asm/disasm_0x08023bc0.o(.text);  /* 0x08023bc0 - 0x08023f68, sub_08023BC0 (auto-peeled) */
