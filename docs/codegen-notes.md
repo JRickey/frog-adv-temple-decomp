@@ -2754,3 +2754,45 @@ CONSEQUENCES for matching work on this title:
 - Spin-off lead: the 5 CC=$(AGBCC_BIN) TUs depend on the new build solely via the
   SREGOP SUBREG(MEM) bit; reshaping their narrowed-memory-access sites could make
   the whole ROM old_agbcc-consistent.
+
+## Memory-homed locals: multi-member / volatile struct locals (the 8A5C keystone)
+
+gcc 2.x (both agbcc builds) has NO scalar replacement of aggregates. This gives a
+family of PURE-C levers for shapes the register allocator provably cannot produce
+from scalar locals (memory-homed loop counters with ldr/add/str latches, exact
+frame sizes, never-accessed "hole" slots):
+
+- A MULTI-member struct local keeps every field memory-resident. Single-member
+  wrappers (`s32 i[1]`, `struct{s32 v;}`) DO get promoted — multi-member is the
+  property that defeats promotion.
+- Size classes matter: an 8-byte struct is DImode (register path — spill
+  unreliable); 12-byte+ is BLKmode, and nonzero-offset members are addressed via
+  a base register (costs an insn per access).
+- `volatile` members/scalars force the assign_stack_temp path with slots assigned
+  in DECLARATION ORDER — the deterministic frame-layout lever. Example that
+  reproduces sub_08008A5C's baserom frame exactly:
+      volatile struct { s32 i; s32 unused; } it;   /* [sp+32], hole at [sp+36] */
+      volatile s32 eym;                            /* [sp+40] */
+  yields `sub sp,#44`, per-iteration `ldr/add/str [sp,#32]` counter latches with
+  the loop bound left in r8, and an untouched hole at sp+36. Instrumented
+  analysis had "proven" this unreachable — true for SCALARS only. Plain volatile
+  variables are ordinary C (distinct from volatile asm).
+- Companion loop-form facts (same investigation): writing an inner loop as a
+  goto-loop keeps loop.c from running on it (preserves per-iteration pool
+  reloads); a guarded do-while with source-level `goto` tail blocks reproduces
+  the baserom's tail block ORDER, restores cross-jump call merges, and flips a
+  switch's shared-tail survivor to the FIRST case.
+
+When a target function shows a frame larger than the scalar model needs, stable
+[sp,#N] word locals with load-modify-store latches, or adjacent never-accessed
+slots: model those locals as ONE struct (the original source likely used an
+iterator/cursor struct). Expect a retuning cascade after introducing it —
+structurally-correct changes often measure WORSE before the surrounding shapes
+are re-tuned (precedents: sub_080236F4 read 412 when truly 12; 8A5C went
+467→781 on conversion with the entire skeleton corrected).
+
+This finding REFINES the "third SDK snapshot" section above: the memory-homing
+residual class is reachable on the STOCK compiler with struct-shaped source.
+Re-attack remaining "toolchain-class" residuals (tie directions, rotation) as
+source-shape problems before accepting pins; the full investigation record is
+in docs/investigations/ (local, untracked).
