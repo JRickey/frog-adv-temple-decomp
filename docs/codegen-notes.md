@@ -2717,3 +2717,40 @@ or DRIVER FLAG defaults — not the host. Do not spend further effort on host
 replication. Build recipe for container builds (works clean on debian:bullseye,
 no patches): cp -RL tools/agbcc-src, delete stale gcc/*.o AND the Mach-O
 gen*/old_agbcc binaries, then make -C gcc old.
+
+## Konami's compiler is a THIRD SDK snapshot — the residual tie classes are toolchain, not source (2026-06-10)
+
+Three-experiment chain (full artifacts: .agent-session-save-20260609/tc-{corpus,bisect}-*,
+transcripts a92ca91a/ad9bda72/a9a02f4d):
+
+1. HOST: old_agbcc codegen is bit-identical across macOS/arm64, i386 Linux, amd64
+   Linux. Host replication is a dead end (see section above).
+2. IDENTITY: pret's old_agbcc and agbcc are the SAME "gcc 2.9-arm-000512" snapshot
+   (2000-05-12 Nintendo AGB SDK); -DOLD_COMPILER toggles 12 ifdef sites = 5 semantic
+   features (RETREG function.c:6136, FARJUMP thumb.c:41/719/735/952+toplev.c:735,
+   SREGOP thumb.c:1543, LOOPBIV loop.c:7207, UNROLL unroll.c x4).
+3. BISECT: every feature independently toggled; calibration exact (all-old == pret-old,
+   none == pret-new across all 534 TUs). Findings:
+   - LOOPBIV and UNROLL are project-wide dead code.
+   - The entire old<->new delta on this ROM = SREGOP (122 TUs) + FARJUMP (24) + RETREG (1).
+   - SREGOP alone (s_register_operand's pre-reload SUBREG(MEM) acceptance) flips all 5
+     new-agbcc-only TUs to their matched output — but the SAME bit is required OLD by
+     the unmatched-tail litmus, 17 clean FARJUMP TUs, and 26 pinned functions.
+   - One binary cannot satisfy both => Konami used a third snapshot revision whose
+     delta lies OUTSIDE the OLD_COMPILER surface, in the reload/global-alloc code both
+     pret builds share — exactly where instrumented traces localized the tie-direction
+     / rotation / finish_spills-kick decisions.
+
+CONSEQUENCES for matching work on this title:
+- The systematic residual classes (regmove tie directions, reload remat-copy
+  separation, spill kicks, rotation parity) are COMPILER-REVISION deltas. Stop
+  hunting pure-C source shapes for them; a register pin compensating one of these
+  classes is a documented toolchain workaround, not a source-shape failure.
+- The const-copy fingerprint (movs rA,#imm; adds r0,rA,#0; ands r0,rB) marks the
+  class: 87% of such sites in the ROM fall in our unmatched/pinned tail.
+- The real fix would be recovering the actual 2001 SDK binary (siblings sharing
+  Frogger's exact GAX build: Jurassic Park III DNA Factor, ESPN X-Games
+  Skateboarding — useful validation targets if a candidate compiler surfaces).
+- Spin-off lead: the 5 CC=$(AGBCC_BIN) TUs depend on the new build solely via the
+  SREGOP SUBREG(MEM) bit; reshaping their narrowed-memory-access sites could make
+  the whole ROM old_agbcc-consistent.
