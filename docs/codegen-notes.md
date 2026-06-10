@@ -2695,3 +2695,25 @@ Related discoveries from the same function:
   expression) is what makes the muls precede the `2*(s16)tileX` evaluation;
   inline products evaluate after it (operands expand left-to-right, with
   "more complex first" reordering only INSIDE a commutative plus).
+
+## Host forensics is a dead end: old_agbcc is host-deterministic (2026-06-10)
+
+Hypothesis tested: the residual tie-direction/rotation mismatches on early-title
+functions come from host-behavior differences between pret's modern builds of
+old_agbcc and Konami's 2001-era 32-bit host build. Experiment: built old_agbcc
+from tools/agbcc-src inside Docker as (a) genuine i386 Linux (ILP32 + glibc) and
+(b) amd64 Linux, then compiled two litmus TUs (sub_080236F4's 12-byte near-match
+— six tie-pairs; sub_08008A5C's 467-byte near-match — the memory-homed counter)
+with -O2 -mthumb-interwork -fhex-asm.
+
+Result: ALL outputs bit-identical (MD5) across macOS/arm64, i386, amd64. Zero
+baserom-direction flips. pret's HOST_WIDE_INT=int32_t pin plus the rest of the
+modernization make codegen fully host-deterministic.
+
+Consequence: the systematic residual classes (regmove tie directions, reload
+remat-copy separation, finish_spills kicks, spill-reg rotation) must come from a
+COMPILER SOURCE/REVISION delta (Konami's SDK snapshot vs pret's reconstruction)
+or DRIVER FLAG defaults — not the host. Do not spend further effort on host
+replication. Build recipe for container builds (works clean on debian:bullseye,
+no patches): cp -RL tools/agbcc-src, delete stale gcc/*.o AND the Mach-O
+gen*/old_agbcc binaries, then make -C gcc old.
