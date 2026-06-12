@@ -850,7 +850,7 @@ SECTIONS {
         src/game/sub_080338a8.o(.text);
         src/game/sub_08033910.o(.text);  /* 0x08033910 - 0x08033948, Timer_SetIrqHandler */
         asm/disasm_0x08033948.o(.text);    /* 0x08033948 - 0x080339ac, sub_08033948 */
-        asm/text/text_0x080339ac.o(.text);  /* 0x080339ac - 0x080339f0, raw bytes */
+        asm/disasm_0x080339ac.o(.text);    /* 0x080339ac - 0x080339f0, sub_080339AC */
         asm/disasm_0x080339f0.o(.text);    /* 0x080339f0 - 0x08033a70, sub_080339F0 */
         asm/text/text_0x08033a70.o(.text); /* 0x08033a70 - 0x08033ca4, raw bytes */
         *libgcc.a:_ashldi3.o(.text);      /* 0x08033ca4 - 0x08033cd8, __ashldi3 */
