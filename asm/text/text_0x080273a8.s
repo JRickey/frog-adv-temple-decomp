@@ -1,4 +1,4 @@
-@ Auto-emitted by peeler — raw bytes after sub_08027384 (peeled).
+@ Auto-emitted by peeler — raw bytes after sub_08027384.
 @ Address-aligned bucket of unparsed baserom bytes.
 @ Range:  [0x080273a8, 0x0802a2f0)  (0x2f48 bytes)
 @
