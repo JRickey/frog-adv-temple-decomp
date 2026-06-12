@@ -11,5 +11,5 @@
         .global text_08027000
         .type   text_08027000, %object
 text_08027000:
-        .incbin "/Users/jackrickey/Dev/frog-adv-decomp/frog_us_baserom.gba", 0x027000, 0x32f0
+        .incbin "frog_us_baserom.gba", 0x027000, 0x32f0
         .size   text_08027000, . - text_08027000
