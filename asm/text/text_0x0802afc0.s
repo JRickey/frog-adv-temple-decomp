@@ -1,8 +1,7 @@
-.include "asm/macros.inc"
-.syntax unified
+        .include "asm/macros.inc"
+        .syntax unified
 
-.text
-.align 2
+        .section .text
 
-@ Raw bytes from baserom.gba [0x0802afc0, 0x0802b008)
-.incbin "baserom.gba", 0x2afc0, 0x48
+        .align 2
+        .incbin "baserom.gba", 0x2afc0, 0x38

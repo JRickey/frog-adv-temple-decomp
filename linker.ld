@@ -704,7 +704,8 @@ SECTIONS {
         asm/disasm_0x0802af10.o(.text);  /* 0x0802af10 - 0x0802af4c, sub_0802AF10 (auto-peeled) */
         asm/disasm_0x0802af4c.o(.text);  /* 0x0802af4c - 0x0802af84, sub_0802AF4C */
         asm/disasm_0x0802af84.o(.text);  /* 0x0802af84 - 0x0802afc0, sub_0802AF84 (auto-peeled) */
-        asm/text/text_0x0802afc0.o(.text);  /* 0x0802afc0 - 0x0802b008, raw bytes */
+        asm/text/text_0x0802afc0.o(.text);  /* 0x0802afc0 - 0x0802aff8, raw bytes */
+        asm/disasm_0x0802aff8.o(.text);  /* 0x0802aff8 - 0x0802b008, sub_0802AFF8 (auto-peeled) */
         asm/disasm_0x0802b008.o(.text);  /* 0x0802b008 - 0x0802b2ec, sub_0802B008 (auto-peeled) */
         asm/disasm_0x0802b2ec.o(.text);  /* 0x0802b2ec - 0x0802b3b0, sub_0802B2EC (auto-peeled) */
         asm/text/text_0x0802b3b0.o(.text);  /* 0x0802b3b0 - 0x0802b9d4, raw bytes */
