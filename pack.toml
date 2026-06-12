@@ -1,0 +1,26 @@
+# Packaging description for this title's recomp (gba-pack).
+# The packaged binary refuses to run until the end user supplies a ROM
+# and BIOS hashing to these pins; nothing image-derived ships in it.
+
+[package]
+name = "frog-recomp"
+version = "0.1.0"
+platforms = ["macos", "windows", "linux"]
+
+[image]
+rom-sha256 = "2dac7cdf9821c7ef672b5700f0114cf8bbe46bd019f85b97478e4c9a937637c5"
+bios-sha256 = "fd2547724b505f487e6dcb29ec2ecff3af35a841a77ab2e85fd87350abd36570"
+
+[labels]
+file = "frog_us_baserom.labels.toml"
+
+[runtime]
+menu = true
+enhanced-audio = true
+screen-sim = true
+engine-hle = "gax"      # known GAX title — skip discovery
+interpreter = false     # full recomp: no interpreter ships; build gates on zero fallback
+
+[output]
+binary = true
+c-source = true         # the decomp project wants the labeled C tree
