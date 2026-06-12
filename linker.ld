@@ -847,7 +847,9 @@ SECTIONS {
         lib/gax/text_0x08032e1c.o(.text);  /* 0x08032e1c - 0x080338a8, raw bytes */
         src/game/sub_080338a8.o(.text);
         src/game/sub_08033910.o(.text);  /* 0x08033910 - 0x08033948, Timer_SetIrqHandler */
-        asm/text/text_0x08033948.o(.text);  /* 0x08033948 - 0x08033ca4, raw bytes */
+        asm/text/text_0x08033948.o(.text);  /* 0x08033948 - 0x080339f0, raw bytes */
+        asm/disasm_0x080339f0.o(.text);    /* 0x080339f0 - 0x08033a70, sub_080339F0 */
+        asm/text/text_0x08033a70.o(.text); /* 0x08033a70 - 0x08033ca4, raw bytes */
         *libgcc.a:_ashldi3.o(.text);      /* 0x08033ca4 - 0x08033cd8, __ashldi3 */
         *libgcc.a:_call_via_rX.o(.text);  /* 0x08033cd8 - 0x08033d14, _call_via_rX helper table */
         *libgcc.a:_divsi3.o(.text);       /* 0x08033d14 - 0x08033da8, __divsi3 */
