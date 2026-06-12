@@ -1,0 +1,2 @@
+0x0802d5e4 data 2-byte align pad then 8-byte literal pool (ptrs 0x04000208 0x03007f00) trailing MultiBoot; true code resumes at SoundSystem_Transfer 0x0802d5ec
+0x08000004 data GBA ROM header: 156-byte Nintendo logo blob plus 12-byte game title FROG:TEMPLEAFRE A4 maker-code complement; non-executable per hardware spec; code resumes at _start 0x080000c0
