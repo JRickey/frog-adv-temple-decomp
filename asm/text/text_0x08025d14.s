@@ -8,8 +8,8 @@
 
 	.section .text, "ax", %progbits
 	.align  2
-	.global text_08025cec
-	.type   text_08025cec, %object
-text_08025cec:
+	.global text_08025d14
+	.type   text_08025d14, %object
+text_08025d14:
 	.incbin "baserom.gba", 0x00025d14, 0x000045dc
-	.size   text_08025cec, . - text_08025cec
+	.size   text_08025d14, . - text_08025d14
