@@ -5183,6 +5183,12 @@ end = 0x08026d58
 mode = "arm"
 
 [[functions]]
+name = "sub_08026D58"
+address = 0x08026d58
+end = 0x08026dcc
+mode = "arm"
+
+[[functions]]
 name = "SpawnGrid_SpawnWave2"
 address = 0x0802a2f0
 end = 0x0802a394
