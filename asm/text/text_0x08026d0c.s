@@ -5,7 +5,7 @@
 
     .align 2
 
-    thumb_func_start text_08026d0c
-text_08026d0c: @ 0x08026d0c
-    .incbin "baserom.gba", 0x26d0c, 0x35e4
-    thumb_func_end text_08026d0c
+    thumb_func_start text_08026d34
+text_08026d34: @ 0x08026d34
+    .incbin "baserom.gba", 0x26d34, 0x35bc
+    thumb_func_end text_08026d34
