@@ -2250,6 +2250,12 @@ end = 0x080125b0
 mode = "thumb"
 
 [[functions]]
+name = "sub_080125B0"
+address = 0x080125b0
+end = 0x08012604
+mode = "thumb"
+
+[[functions]]
 name = "ScaleAnim_ResetState"
 address = 0x080125ec
 end = 0x08012604

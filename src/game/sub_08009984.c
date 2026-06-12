@@ -135,15 +135,15 @@ void Entity_UpdateVisibility(void)
     register u8 count asm("r0"); /* see header: pin defeats the r2 coalesce */
     s32 idx;
     u8 *visibleCount;
+    u8 *limitPtr;
     struct Entity *entity;
     s32 offset;
-    s32 height;
-    s32 width;
+    s32 ey;
     s32 scrollXReg;
     s32 scrollYReg;
     s32 ex;
-    s32 ey;
     s32 yRaw;
+    s32 height;
     s32 idxGuard;
     struct IndexEntry *slots;
     u16 flags;
@@ -161,10 +161,11 @@ void Entity_UpdateVisibility(void)
         return;
 
     visibleCount = &gIwram_6110.liveCount;
+    limitPtr = &gIwram_6140;
     offset = 0;
     do {
         entity = (struct Entity *)((u8 *)gEntities + offset);
-        if ((entity->status & 8) != 0)
+        if ((entity->status & (ey = 8)) != 0)
             goto step;
         if (Entity_IsInProximity(idx) == 0)
             goto clear_bit;
@@ -190,7 +191,9 @@ void Entity_UpdateVisibility(void)
         flags = entity->status;
         if ((flags & 1) == 0) {
             flags |= 0x100;
-            entity->status = flags | 1;
+            do {
+                entity->status = flags | 1;
+            } while (0);
         }
         slots = gEntityIndex_03006160;
         slots[*visibleCount].id = idx;
@@ -206,7 +209,7 @@ void Entity_UpdateVisibility(void)
     step:
         offset += sizeof(struct Entity);
         idx++;
-    } while (idx < gIwram_6140);
+    } while (idx < *limitPtr);
 }
 #else
 NAKED void Entity_UpdateVisibility(void)
