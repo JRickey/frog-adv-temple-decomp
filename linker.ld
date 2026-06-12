@@ -878,7 +878,7 @@ SECTIONS {
         src/game/sub_0803578c.o(.text);
         asm/disasm_0x080357ec.o(.text);  /* 0x080357ec - 0x08035d7c, qsort (libc, peeled) */
         src/game/sub_08035d7c.o(.text);  /* 0x08035d7c - 0x08035d84, IntrEnable_Thunk (Thumb-to-ARM interwork thunk -> IntrEnable) */
-        asm/text/text_0x08035d84.o(.text);  /* 0x08035d84 - 0x08035d8c, one Thumb-to-ARM veneer */
+        asm/disasm_0x08035d84.o(.text);  /* 0x08035d84 - 0x08035d8c, sub_08000240_Thunk (Thumb-to-ARM interwork veneer -> sub_08000240, peeled) */
         src/game/sub_08035d8c.o(.text);
         src/game/sub_08035d94.o(.text);  /* 0x08035d94 - 0x08035d9c, SoundIrqEnable (NAKED interwork veneer) */
         src/data/irq_handler_table.o(.rodata);  /* 0x08035d9c - 0x08035dd0, sIrqHandlerTable */
