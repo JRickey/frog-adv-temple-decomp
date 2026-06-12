@@ -5708,6 +5708,12 @@ end = 0x08031390
 mode = "thumb"
 
 [[functions]]
+name = "sub_08031390"
+address = 0x08031390
+end = 0x080313fc
+mode = "thumb"
+
+[[functions]]
 name = "Sound_OpcodeDispatch"
 address = 0x080315d8
 end = 0x08031638
