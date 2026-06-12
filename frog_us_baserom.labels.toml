@@ -1,0 +1,6373 @@
+# SPDX-License-Identifier: CC0-1.0
+# Function map (gba-labels v2) — addresses and names only, no image bytes.
+format = "gba-labels"
+version = 2
+
+[image]
+sha256 = "2dac7cdf9821c7ef672b5700f0114cf8bbe46bd019f85b97478e4c9a937637c5"
+
+[[functions]]
+name = "entry_branch"
+address = 0x08000000
+end = 0x08000004
+mode = "arm"
+
+[[functions]]
+name = "_start"
+address = 0x080000c0
+end = 0x080000fc
+mode = "arm"
+
+[[functions]]
+name = "IntrEnable"
+address = 0x080000fc
+end = 0x08000114
+mode = "arm"
+
+[[functions]]
+name = "IntrDisable"
+address = 0x08000114
+end = 0x0800012c
+mode = "arm"
+
+[[functions]]
+name = "IntrMain"
+address = 0x0800012c
+end = 0x08000240
+mode = "arm"
+
+[[functions]]
+name = "sub_08000240"
+address = 0x08000240
+end = 0x080002a4
+mode = "arm"
+
+[[functions]]
+name = "AgbMain"
+address = 0x080002a4
+end = 0x08000430
+mode = "thumb"
+
+[[functions]]
+name = "Init1"
+address = 0x08000430
+end = 0x080004c4
+mode = "thumb"
+
+[[functions]]
+name = "Input_Poll"
+address = 0x080004c4
+end = 0x080005d8
+mode = "thumb"
+
+[[functions]]
+name = "PollInputAndAttract"
+address = 0x080005d8
+end = 0x08000678
+mode = "thumb"
+
+[[functions]]
+name = "PollKeys_DPad"
+address = 0x08000678
+end = 0x08000726
+mode = "thumb"
+
+[[functions]]
+name = "sub_08000728"
+address = 0x08000728
+end = 0x0800072a
+mode = "thumb"
+
+[[functions]]
+name = "ClearVramAndWorkram"
+address = 0x0800072c
+end = 0x08000764
+mode = "thumb"
+
+[[functions]]
+name = "RandRange"
+address = 0x08000764
+end = 0x08000790
+mode = "thumb"
+
+[[functions]]
+name = "VBlankIntr"
+address = 0x08000790
+end = 0x08000820
+mode = "thumb"
+
+[[functions]]
+name = "IrqHandler_Install"
+address = 0x08000820
+end = 0x08000884
+mode = "thumb"
+
+[[functions]]
+name = "sub_08000884"
+address = 0x08000884
+end = 0x08000886
+mode = "thumb"
+
+[[functions]]
+name = "sub_08000888"
+address = 0x08000888
+end = 0x0800088a
+mode = "thumb"
+
+[[functions]]
+name = "IntrHBlank"
+address = 0x0800088c
+end = 0x080008dc
+mode = "thumb"
+
+[[functions]]
+name = "WaitVblank"
+address = 0x080008dc
+end = 0x08000900
+mode = "thumb"
+
+[[functions]]
+name = "GetFrameTick"
+address = 0x08000900
+end = 0x0800090c
+mode = "thumb"
+
+[[functions]]
+name = "sub_0800090C"
+address = 0x0800090c
+end = 0x08000918
+mode = "thumb"
+
+[[functions]]
+name = "Scene08_Main"
+address = 0x08000918
+end = 0x08000b6c
+mode = "thumb"
+
+[[functions]]
+name = "Scene08_UpdatePlayerEntity"
+address = 0x08000b6c
+end = 0x08000c98
+mode = "thumb"
+
+[[functions]]
+name = "Scene08_StartIntro"
+address = 0x08000c98
+end = 0x08000cb0
+mode = "thumb"
+
+[[functions]]
+name = "Scene08_InitModeControl"
+address = 0x08000cb0
+end = 0x08000cec
+mode = "thumb"
+
+[[functions]]
+name = "Scene08_PlayFrameTick"
+address = 0x08000cec
+end = 0x08000d2c
+mode = "thumb"
+
+[[functions]]
+name = "Mode8_StateStep"
+address = 0x08000d2c
+end = 0x08000d50
+mode = "thumb"
+
+[[functions]]
+name = "Mode8_Teardown"
+address = 0x08000d50
+end = 0x08000d5a
+mode = "thumb"
+
+[[functions]]
+name = "Mode8_Setup"
+address = 0x08000d5c
+end = 0x08000e0c
+mode = "thumb"
+
+[[functions]]
+name = "Scene09_UpdatePlayerTile"
+address = 0x08000e0c
+end = 0x08000eb8
+mode = "thumb"
+
+[[functions]]
+name = "Scene09_Run"
+address = 0x08000eb8
+end = 0x08001128
+mode = "thumb"
+
+[[functions]]
+name = "EntityProbe_SetMode2"
+address = 0x08001128
+end = 0x08001140
+mode = "thumb"
+
+[[functions]]
+name = "EntityProbe_ResetAndDispatch"
+address = 0x08001140
+end = 0x08001174
+mode = "thumb"
+
+[[functions]]
+name = "EntityProbe_FinishOrSetup"
+address = 0x08001174
+end = 0x08001198
+mode = "thumb"
+
+[[functions]]
+name = "ModeControl_Cleanup"
+address = 0x08001198
+end = 0x080011a2
+mode = "thumb"
+
+[[functions]]
+name = "Entity_UpdateHudState"
+address = 0x080011a4
+end = 0x08001214
+mode = "thumb"
+
+[[functions]]
+name = "Scene10_Main"
+address = 0x08001214
+end = 0x08001478
+mode = "thumb"
+
+[[functions]]
+name = "SetGameMode_03"
+address = 0x08001478
+end = 0x08001484
+mode = "thumb"
+
+[[functions]]
+name = "Scene_Init_04"
+address = 0x08001484
+end = 0x080014b8
+mode = "thumb"
+
+[[functions]]
+name = "Scene10_FrameUpdate"
+address = 0x080014b8
+end = 0x080014e4
+mode = "thumb"
+
+[[functions]]
+name = "Scene10_Exit"
+address = 0x080014e4
+end = 0x080014ee
+mode = "thumb"
+
+[[functions]]
+name = "Scene10_EntityTick"
+address = 0x080014f0
+end = 0x08001506
+mode = "thumb"
+
+[[functions]]
+name = "Scene11_AttractModeMain"
+address = 0x08001508
+end = 0x08001794
+mode = "thumb"
+
+[[functions]]
+name = "Scene11_ArmModeTransition"
+address = 0x08001794
+end = 0x080017a8
+mode = "thumb"
+
+[[functions]]
+name = "Scene05_Init"
+address = 0x080017a8
+end = 0x080017dc
+mode = "thumb"
+
+[[functions]]
+name = "Scene05_Tick"
+address = 0x080017dc
+end = 0x08001850
+mode = "thumb"
+
+[[functions]]
+name = "Scene05_StateTransition"
+address = 0x08001850
+end = 0x0800189c
+mode = "thumb"
+
+[[functions]]
+name = "Scene05_Exit"
+address = 0x0800189c
+end = 0x080018a6
+mode = "thumb"
+
+[[functions]]
+name = "Scene05_EntityDispatch"
+address = 0x080018a8
+end = 0x080018f8
+mode = "thumb"
+
+[[functions]]
+name = "Scene12_UpdateTileInteraction"
+address = 0x080018f8
+end = 0x080019b4
+mode = "thumb"
+
+[[functions]]
+name = "Scene12_Main"
+address = 0x080019b4
+end = 0x08001cec
+mode = "thumb"
+
+[[functions]]
+name = "Scene12_InitPlayState"
+address = 0x08001cec
+end = 0x08001d18
+mode = "thumb"
+
+[[functions]]
+name = "Scene06_Init"
+address = 0x08001d18
+end = 0x08001d54
+mode = "thumb"
+
+[[functions]]
+name = "Scene06_Tick"
+address = 0x08001d54
+end = 0x08001d94
+mode = "thumb"
+
+[[functions]]
+name = "Scene_UpdateAnimState"
+address = 0x08001d94
+end = 0x08001e18
+mode = "thumb"
+
+[[functions]]
+name = "Scene06_Exit"
+address = 0x08001e18
+end = 0x08001e22
+mode = "thumb"
+
+[[functions]]
+name = "Entity_CollisionProbe"
+address = 0x08001e24
+end = 0x08002184
+mode = "thumb"
+
+[[functions]]
+name = "Scene13_Update"
+address = 0x08002184
+end = 0x08002444
+mode = "thumb"
+
+[[functions]]
+name = "SetGameMode_06"
+address = 0x08002444
+end = 0x08002450
+mode = "thumb"
+
+[[functions]]
+name = "Scene25_ModeInit"
+address = 0x08002450
+end = 0x08002484
+mode = "thumb"
+
+[[functions]]
+name = "Scene_FrameUpdate"
+address = 0x08002484
+end = 0x080024e4
+mode = "thumb"
+
+[[functions]]
+name = "Scene_CleanupOnExit"
+address = 0x080024e4
+end = 0x08002518
+mode = "thumb"
+
+[[functions]]
+name = "sub_08002518"
+address = 0x08002518
+end = 0x08002522
+mode = "thumb"
+
+[[functions]]
+name = "SceneLoop_14"
+address = 0x08002524
+end = 0x08002760
+mode = "thumb"
+
+[[functions]]
+name = "SetGameMode_07"
+address = 0x08002760
+end = 0x0800276c
+mode = "thumb"
+
+[[functions]]
+name = "Scene08_Init"
+address = 0x0800276c
+end = 0x080027a0
+mode = "thumb"
+
+[[functions]]
+name = "Scene08_Tick"
+address = 0x080027a0
+end = 0x080027f0
+mode = "thumb"
+
+[[functions]]
+name = "Scene08_StateGuard"
+address = 0x080027f0
+end = 0x08002806
+mode = "thumb"
+
+[[functions]]
+name = "Scene08_Exit"
+address = 0x08002808
+end = 0x08002812
+mode = "thumb"
+
+[[functions]]
+name = "Scene08_EntityDispatch"
+address = 0x08002814
+end = 0x08002844
+mode = "thumb"
+
+[[functions]]
+name = "Scene15_Main"
+address = 0x08002844
+end = 0x08002a5c
+mode = "thumb"
+
+[[functions]]
+name = "SetGameMode_08"
+address = 0x08002a5c
+end = 0x08002a68
+mode = "thumb"
+
+[[functions]]
+name = "Mode9_Init"
+address = 0x08002a68
+end = 0x08002a9c
+mode = "thumb"
+
+[[functions]]
+name = "Mode9_Update"
+address = 0x08002a9c
+end = 0x08002ac4
+mode = "thumb"
+
+[[functions]]
+name = "Mode9_AdvanceState"
+address = 0x08002ac4
+end = 0x08002ada
+mode = "thumb"
+
+[[functions]]
+name = "sub_08002ADC"
+address = 0x08002adc
+end = 0x08002ae6
+mode = "thumb"
+
+[[functions]]
+name = "Scene_EnterLevel"
+address = 0x08002ae8
+end = 0x08002b58
+mode = "thumb"
+
+[[functions]]
+name = "SceneLoop_16"
+address = 0x08002b58
+end = 0x08002e04
+mode = "thumb"
+
+[[functions]]
+name = "SetGameMode_09"
+address = 0x08002e04
+end = 0x08002e10
+mode = "thumb"
+
+[[functions]]
+name = "GameMode10_Init"
+address = 0x08002e10
+end = 0x08002e44
+mode = "thumb"
+
+[[functions]]
+name = "GameMode10_Tick"
+address = 0x08002e44
+end = 0x08002e94
+mode = "thumb"
+
+[[functions]]
+name = "GameMode10_StateCallback"
+address = 0x08002e94
+end = 0x08002eaa
+mode = "thumb"
+
+[[functions]]
+name = "GameMode10_Cleanup"
+address = 0x08002eac
+end = 0x08002eb6
+mode = "thumb"
+
+[[functions]]
+name = "GameMode10_TileCheckTick"
+address = 0x08002eb8
+end = 0x08002ee8
+mode = "thumb"
+
+[[functions]]
+name = "Scroll_UpdateCameraAlt"
+address = 0x08002ee8
+end = 0x080031d4
+mode = "thumb"
+
+[[functions]]
+name = "Player_UpdateHorizontalInput"
+address = 0x080031d4
+end = 0x08003254
+mode = "thumb"
+
+[[functions]]
+name = "GameMode_SceneTick"
+address = 0x08003254
+end = 0x0800336c
+mode = "thumb"
+
+[[functions]]
+name = "SceneLoop_17"
+address = 0x0800336c
+end = 0x08003584
+mode = "thumb"
+
+[[functions]]
+name = "Scene17_LoadPart"
+address = 0x08003584
+end = 0x0800359c
+mode = "thumb"
+
+[[functions]]
+name = "Scene17_ModeControlInit"
+address = 0x0800359c
+end = 0x080035d0
+mode = "thumb"
+
+[[functions]]
+name = "Scene17_PauseCheck"
+address = 0x080035d0
+end = 0x080035f8
+mode = "thumb"
+
+[[functions]]
+name = "Scene17_Exit"
+address = 0x080035f8
+end = 0x08003602
+mode = "thumb"
+
+[[functions]]
+name = "Scene17_TileCheck"
+address = 0x08003604
+end = 0x08003668
+mode = "thumb"
+
+[[functions]]
+name = "Scene_UpdateCollisionAndTile"
+address = 0x08003668
+end = 0x08003864
+mode = "thumb"
+
+[[functions]]
+name = "GameMode_Scene18"
+address = 0x08003864
+end = 0x08003b40
+mode = "thumb"
+
+[[functions]]
+name = "Mode11_SetupEntities"
+address = 0x08003b40
+end = 0x08003b8c
+mode = "thumb"
+
+[[functions]]
+name = "Mode12_Init"
+address = 0x08003b8c
+end = 0x08003bfc
+mode = "thumb"
+
+[[functions]]
+name = "Scene_InitHitboxes"
+address = 0x08003bfc
+end = 0x08003c36
+mode = "thumb"
+
+[[functions]]
+name = "Mode12_SetupAndUpdate"
+address = 0x08003c38
+end = 0x08003c9c
+mode = "thumb"
+
+[[functions]]
+name = "sub_08003C9C"
+address = 0x08003c9c
+end = 0x08003ca6
+mode = "thumb"
+
+[[functions]]
+name = "GameMode_Scene19"
+address = 0x08003ca8
+end = 0x08004074
+mode = "thumb"
+
+[[functions]]
+name = "SetGameMode_12"
+address = 0x08004074
+end = 0x08004080
+mode = "thumb"
+
+[[functions]]
+name = "Mode13_Init"
+address = 0x08004080
+end = 0x080040c4
+mode = "thumb"
+
+[[functions]]
+name = "Mode_RunFrameBasic"
+address = 0x080040c4
+end = 0x080040ec
+mode = "thumb"
+
+[[functions]]
+name = "State_ValidateOrReset"
+address = 0x080040ec
+end = 0x08004102
+mode = "thumb"
+
+[[functions]]
+name = "Mode_ReturnToMap"
+address = 0x08004104
+end = 0x0800411c
+mode = "thumb"
+
+[[functions]]
+name = "SceneLoop_20"
+address = 0x0800411c
+end = 0x0800441c
+mode = "thumb"
+
+[[functions]]
+name = "Mode13_SetupEntities"
+address = 0x0800441c
+end = 0x08004470
+mode = "thumb"
+
+[[functions]]
+name = "Scene14_Init"
+address = 0x08004470
+end = 0x080044a4
+mode = "thumb"
+
+[[functions]]
+name = "Scene_FrameUpdateWithLayers"
+address = 0x080044a4
+end = 0x08004508
+mode = "thumb"
+
+[[functions]]
+name = "Scene20_UpdateParts"
+address = 0x08004508
+end = 0x08004588
+mode = "thumb"
+
+[[functions]]
+name = "TileCacheProbe_Init"
+address = 0x08004588
+end = 0x080045e0
+mode = "thumb"
+
+[[functions]]
+name = "sub_080045E0"
+address = 0x080045e0
+end = 0x080045ea
+mode = "thumb"
+
+[[functions]]
+name = "Player_HandleTileTransitions"
+address = 0x080045ec
+end = 0x08004938
+mode = "thumb"
+
+[[functions]]
+name = "SceneLoop_21"
+address = 0x08004938
+end = 0x08004c04
+mode = "thumb"
+
+[[functions]]
+name = "Mode14_Setup"
+address = 0x08004c04
+end = 0x08004c30
+mode = "thumb"
+
+[[functions]]
+name = "Mode15_Setup"
+address = 0x08004c30
+end = 0x08004c64
+mode = "thumb"
+
+[[functions]]
+name = "Mode17_RunFrame"
+address = 0x08004c64
+end = 0x08004ca4
+mode = "thumb"
+
+[[functions]]
+name = "Mode_InitEntityState"
+address = 0x08004ca4
+end = 0x08004d04
+mode = "thumb"
+
+[[functions]]
+name = "Mode_EndScene"
+address = 0x08004d04
+end = 0x08004d0e
+mode = "thumb"
+
+[[functions]]
+name = "SpawnCycle_Update"
+address = 0x08004d10
+end = 0x08004fac
+mode = "thumb"
+
+[[functions]]
+name = "SceneLoop_22"
+address = 0x08004fac
+end = 0x080052c0
+mode = "thumb"
+
+[[functions]]
+name = "SetGameMode_15"
+address = 0x080052c0
+end = 0x080052cc
+mode = "thumb"
+
+[[functions]]
+name = "Mode16_Init"
+address = 0x080052cc
+end = 0x08005308
+mode = "thumb"
+
+[[functions]]
+name = "Game_StepFrame"
+address = 0x08005308
+end = 0x0800534c
+mode = "thumb"
+
+[[functions]]
+name = "Gate_TryUnlock"
+address = 0x0800534c
+end = 0x080053a4
+mode = "thumb"
+
+[[functions]]
+name = "Gate_ResetSceneState"
+address = 0x080053a4
+end = 0x080053f4
+mode = "thumb"
+
+[[functions]]
+name = "Gate_FinishScene"
+address = 0x080053f4
+end = 0x08005402
+mode = "thumb"
+
+[[functions]]
+name = "Entity_UpdateHitAndDraw"
+address = 0x08005404
+end = 0x080054a8
+mode = "thumb"
+
+[[functions]]
+name = "GameMode_Scene23"
+address = 0x080054a8
+end = 0x0800586c
+mode = "thumb"
+
+[[functions]]
+name = "Stage_InitMode16"
+address = 0x0800586c
+end = 0x08005890
+mode = "thumb"
+
+[[functions]]
+name = "Stage_InitMode17"
+address = 0x08005890
+end = 0x080058cc
+mode = "thumb"
+
+[[functions]]
+name = "Stage_UpdateTick"
+address = 0x080058cc
+end = 0x080058fc
+mode = "thumb"
+
+[[functions]]
+name = "Stage_ResetPlayerSlots"
+address = 0x080058fc
+end = 0x08005960
+mode = "thumb"
+
+[[functions]]
+name = "Stage_WaitAndResetSpawnFlags"
+address = 0x08005960
+end = 0x080059b0
+mode = "thumb"
+
+[[functions]]
+name = "Scene_ExitSequence"
+address = 0x080059b0
+end = 0x080059c4
+mode = "thumb"
+
+[[functions]]
+name = "Entity_Update"
+address = 0x080059c4
+end = 0x08005d10
+mode = "thumb"
+
+[[functions]]
+name = "Entity_AdvanceAnimFrames"
+address = 0x08005d10
+end = 0x08005ed8
+mode = "thumb"
+
+[[functions]]
+name = "Anim_GetFrameHeight"
+address = 0x08005ed8
+end = 0x08005f4e
+mode = "thumb"
+
+[[functions]]
+name = "Anim_GetFrameWidth"
+address = 0x08005f50
+end = 0x08005fc8
+mode = "thumb"
+
+[[functions]]
+name = "Game_CommitRender"
+address = 0x08005fc8
+end = 0x080063ec
+mode = "thumb"
+
+[[functions]]
+name = "Entity_DmaLoadSprite"
+address = 0x080063ec
+end = 0x08006518
+mode = "thumb"
+
+[[functions]]
+name = "DeadTileSizeClone_08006518"
+address = 0x08006518
+end = 0x0800658c
+mode = "thumb"
+
+[[functions]]
+name = "ModeControl_Init"
+address = 0x0800658c
+end = 0x080065fe
+mode = "thumb"
+
+[[functions]]
+name = "CtrlFlags_SetBit"
+address = 0x08006600
+end = 0x080066c4
+mode = "thumb"
+
+[[functions]]
+name = "ModeControl_ClearBit"
+address = 0x080066c4
+end = 0x0800679a
+mode = "thumb"
+
+[[functions]]
+name = "ModeControl_GetFlag"
+address = 0x0800679c
+end = 0x08006830
+mode = "thumb"
+
+[[functions]]
+name = "CtrlFlags_ReadBitRange"
+address = 0x08006830
+end = 0x0800690c
+mode = "thumb"
+
+[[functions]]
+name = "Entity_InitMotionFields"
+address = 0x0800690c
+end = 0x0800693a
+mode = "thumb"
+
+[[functions]]
+name = "Entity_OrFlags"
+address = 0x0800693c
+end = 0x08006948
+mode = "thumb"
+
+[[functions]]
+name = "EntityRec_ClearKeyFlags"
+address = 0x08006948
+end = 0x08006956
+mode = "thumb"
+
+[[functions]]
+name = "EntityRec_TestKeyFlags"
+address = 0x08006958
+end = 0x0800696c
+mode = "thumb"
+
+[[functions]]
+name = "ModeControl_SetBit"
+address = 0x0800696c
+end = 0x080069bc
+mode = "thumb"
+
+[[functions]]
+name = "EventFlags_ClearBit"
+address = 0x080069bc
+end = 0x08006a0c
+mode = "thumb"
+
+[[functions]]
+name = "Input_DetectHold"
+address = 0x08006a0c
+end = 0x08006a74
+mode = "thumb"
+
+[[functions]]
+name = "PlayerState_Init"
+address = 0x08006a74
+end = 0x08006aaa
+mode = "thumb"
+
+[[functions]]
+name = "PlayerState_SetByte"
+address = 0x08006aac
+end = 0x08006ab8
+mode = "thumb"
+
+[[functions]]
+name = "PlayerState_IncrByteMax10"
+address = 0x08006ab8
+end = 0x08006adc
+mode = "thumb"
+
+[[functions]]
+name = "Timer_DecrByte"
+address = 0x08006adc
+end = 0x08006afc
+mode = "thumb"
+
+[[functions]]
+name = "Timer_IncrS16Max99"
+address = 0x08006afc
+end = 0x08006b20
+mode = "thumb"
+
+[[functions]]
+name = "Timer_IncrS16Wrap"
+address = 0x08006b20
+end = 0x08006b40
+mode = "thumb"
+
+[[functions]]
+name = "Timer_IncrByteMax12"
+address = 0x08006b40
+end = 0x08006b64
+mode = "thumb"
+
+[[functions]]
+name = "Timer_IncrementCheckNeg"
+address = 0x08006b64
+end = 0x08006b86
+mode = "thumb"
+
+[[functions]]
+name = "PlayerFlags_Set"
+address = 0x08006b88
+end = 0x08006b94
+mode = "thumb"
+
+[[functions]]
+name = "IwramFlags_Clear"
+address = 0x08006b94
+end = 0x08006ba2
+mode = "thumb"
+
+[[functions]]
+name = "IsFlagMaskSet"
+address = 0x08006ba4
+end = 0x08006bb4
+mode = "thumb"
+
+[[functions]]
+name = "EntityScript_BuildSlotData"
+address = 0x08006bb4
+end = 0x08006d22
+mode = "thumb"
+
+[[functions]]
+name = "Entity_TickCells"
+address = 0x08006d24
+end = 0x08006e8c
+mode = "thumb"
+
+[[functions]]
+name = "Entity_ApplyGridMovement"
+address = 0x08006e8c
+end = 0x08006fec
+mode = "thumb"
+
+[[functions]]
+name = "Entity_CheckEngage"
+address = 0x08006fec
+end = 0x080070a0
+mode = "thumb"
+
+[[functions]]
+name = "Entity_ApplyScrollStep"
+address = 0x080070a0
+end = 0x08007138
+mode = "thumb"
+
+[[functions]]
+name = "CollisionTable_ScanForPlayer"
+address = 0x08007138
+end = 0x08007228
+mode = "thumb"
+
+[[functions]]
+name = "LoadPartEntry"
+address = 0x08007228
+end = 0x080072e0
+mode = "thumb"
+
+[[functions]]
+name = "EntityScript_Advance"
+address = 0x080072e0
+end = 0x0800736c
+mode = "thumb"
+
+[[functions]]
+name = "CollisionTable_CheckAndTriggerScript"
+address = 0x0800736c
+end = 0x08007660
+mode = "thumb"
+
+[[functions]]
+name = "Entity_RunScript"
+address = 0x08007660
+end = 0x080076a4
+mode = "thumb"
+
+[[functions]]
+name = "Rect_PointInCenterRect"
+address = 0x080076a4
+end = 0x08007714
+mode = "thumb"
+
+[[functions]]
+name = "Rect_PointInCenterRectEx"
+address = 0x08007714
+end = 0x080077ac
+mode = "thumb"
+
+[[functions]]
+name = "Entity_SpawnFromConfig"
+address = 0x080077ac
+end = 0x08007874
+mode = "thumb"
+
+[[functions]]
+name = "Entity_SpawnFromRecord"
+address = 0x08007874
+end = 0x0800793c
+mode = "thumb"
+
+[[functions]]
+name = "Player_ProbeSpawnDir"
+address = 0x0800793c
+end = 0x08007dd0
+mode = "thumb"
+
+[[functions]]
+name = "Entity_ProcessEvents"
+address = 0x08007dd0
+end = 0x08007f88
+mode = "thumb"
+
+[[functions]]
+name = "Entity_CheckAtTarget"
+address = 0x08007f88
+end = 0x0800803c
+mode = "thumb"
+
+[[functions]]
+name = "Entity_MoveTowardTarget"
+address = 0x0800803c
+end = 0x08008174
+mode = "thumb"
+
+[[functions]]
+name = "Player_UpdatePhysics"
+address = 0x08008174
+end = 0x08008570
+mode = "thumb"
+
+[[functions]]
+name = "Entity_UpdateJumpTarget"
+address = 0x08008570
+end = 0x080087b2
+mode = "thumb"
+
+[[functions]]
+name = "Entity_LerpPosition"
+address = 0x080087b4
+end = 0x0800885a
+mode = "thumb"
+
+[[functions]]
+name = "Entity_CheckTouchEnemy"
+address = 0x0800885c
+end = 0x080089a4
+mode = "thumb"
+
+[[functions]]
+name = "Entity_GetDirHitbox"
+address = 0x080089a4
+end = 0x08008a5c
+mode = "thumb"
+
+[[functions]]
+name = "sub_08008A5C"
+address = 0x08008a5c
+end = 0x08008e84
+mode = "thumb"
+
+[[functions]]
+name = "Entity_ProbeDir"
+address = 0x08008e84
+end = 0x08008f98
+mode = "thumb"
+
+[[functions]]
+name = "Player_FindNearbyInteractable"
+address = 0x08008f98
+end = 0x0800908c
+mode = "thumb"
+
+[[functions]]
+name = "Player_CheckReachable"
+address = 0x0800908c
+end = 0x080090b0
+mode = "thumb"
+
+[[functions]]
+name = "Player_UpdateTileCache"
+address = 0x080090b0
+end = 0x080090fc
+mode = "thumb"
+
+[[functions]]
+name = "Player_InitEntity"
+address = 0x080090fc
+end = 0x08009140
+mode = "thumb"
+
+[[functions]]
+name = "Player_NormalizeStatusAndUpdate"
+address = 0x08009140
+end = 0x08009188
+mode = "thumb"
+
+[[functions]]
+name = "Entity_Advance"
+address = 0x08009188
+end = 0x080094f8
+mode = "thumb"
+
+[[functions]]
+name = "Entity_CheckAllCollisions"
+address = 0x080094f8
+end = 0x080097fc
+mode = "thumb"
+
+[[functions]]
+name = "Entity_BBoxOverlap"
+address = 0x080097fc
+end = 0x08009882
+mode = "thumb"
+
+[[functions]]
+name = "Player_HandleTileCollision"
+address = 0x08009884
+end = 0x08009984
+mode = "thumb"
+
+[[functions]]
+name = "Player_CheckTileEvents"
+address = 0x08009984
+end = 0x08009a58
+mode = "thumb"
+
+[[functions]]
+name = "Entity_UpdateVisibility"
+address = 0x08009a58
+end = 0x08009ba0
+mode = "thumb"
+
+[[functions]]
+name = "Player_CheckSpecialTileMatch"
+address = 0x08009ba0
+end = 0x08009c12
+mode = "thumb"
+
+[[functions]]
+name = "Scene_EntityTick"
+address = 0x08009c14
+end = 0x08009cbc
+mode = "thumb"
+
+[[functions]]
+name = "EntityDispatch_RunFrame"
+address = 0x08009cbc
+end = 0x08009d9c
+mode = "thumb"
+
+[[functions]]
+name = "Scene_InitScan"
+address = 0x08009d9c
+end = 0x08009eec
+mode = "thumb"
+
+[[functions]]
+name = "Entity_UpdateFrame"
+address = 0x08009eec
+end = 0x0800a05c
+mode = "thumb"
+
+[[functions]]
+name = "EntityPool_Reset"
+address = 0x0800a05c
+end = 0x0800a104
+mode = "thumb"
+
+[[functions]]
+name = "RunFadeTransition"
+address = 0x0800a104
+end = 0x0800a156
+mode = "thumb"
+
+[[functions]]
+name = "Entity_RectOverlap"
+address = 0x0800a158
+end = 0x0800a1c8
+mode = "thumb"
+
+[[functions]]
+name = "EntityParam_Reset"
+address = 0x0800a1c8
+end = 0x0800a214
+mode = "thumb"
+
+[[functions]]
+name = "Scene_SelectEntityLimit"
+address = 0x0800a214
+end = 0x0800a258
+mode = "thumb"
+
+[[functions]]
+name = "EntityParam_Apply"
+address = 0x0800a258
+end = 0x0800a26c
+mode = "thumb"
+
+[[functions]]
+name = "Entity_DispatchBC"
+address = 0x0800a26c
+end = 0x0800a2d8
+mode = "thumb"
+
+[[functions]]
+name = "Game_RunEntityFrame"
+address = 0x0800a2d8
+end = 0x0800a328
+mode = "thumb"
+
+[[functions]]
+name = "Game_ForceRender"
+address = 0x0800a328
+end = 0x0800a3a4
+mode = "thumb"
+
+[[functions]]
+name = "CmpPair_Compare"
+address = 0x0800a3a4
+end = 0x0800a3d0
+mode = "thumb"
+
+[[functions]]
+name = "Scroll_CheckTileStep"
+address = 0x0800a3d0
+end = 0x0800a458
+mode = "thumb"
+
+[[functions]]
+name = "Scroll_StepTowardTile"
+address = 0x0800a458
+end = 0x0800a4d0
+mode = "thumb"
+
+[[functions]]
+name = "Entity_UpdateSlot1Status"
+address = 0x0800a4d0
+end = 0x0800a520
+mode = "thumb"
+
+[[functions]]
+name = "Game_UpdateSubsystems"
+address = 0x0800a520
+end = 0x0800a53e
+mode = "thumb"
+
+[[functions]]
+name = "Entity_InitShadow"
+address = 0x0800a540
+end = 0x0800a580
+mode = "thumb"
+
+[[functions]]
+name = "MotionDesc_Set"
+address = 0x0800a580
+end = 0x0800a70e
+mode = "thumb"
+
+[[functions]]
+name = "Entity_Init"
+address = 0x0800a710
+end = 0x0800a75a
+mode = "thumb"
+
+[[functions]]
+name = "Entity_SetFlags"
+address = 0x0800a75c
+end = 0x0800a768
+mode = "thumb"
+
+[[functions]]
+name = "Entity_ClearFlags"
+address = 0x0800a768
+end = 0x0800a776
+mode = "thumb"
+
+[[functions]]
+name = "Entity_TestFlags"
+address = 0x0800a778
+end = 0x0800a788
+mode = "thumb"
+
+[[functions]]
+name = "Entity_SetTargetPos"
+address = 0x0800a788
+end = 0x0800a798
+mode = "thumb"
+
+[[functions]]
+name = "Entity_ClearTargetFlag"
+address = 0x0800a798
+end = 0x0800a7a8
+mode = "thumb"
+
+[[functions]]
+name = "EntityHitbox_FindPoint"
+address = 0x0800a7a8
+end = 0x0800a83a
+mode = "thumb"
+
+[[functions]]
+name = "EntityHitbox_RegisterGridPoints"
+address = 0x0800a83c
+end = 0x0800a910
+mode = "thumb"
+
+[[functions]]
+name = "Frog_UpdateContactHitboxes"
+address = 0x0800a910
+end = 0x0800a9d4
+mode = "thumb"
+
+[[functions]]
+name = "TileCacheProbe_HandleTile20"
+address = 0x0800a9d4
+end = 0x0800aa70
+mode = "thumb"
+
+[[functions]]
+name = "Gate_HandleGateTile"
+address = 0x0800aa70
+end = 0x0800ab84
+mode = "thumb"
+
+[[functions]]
+name = "FrogPad_CheckTile"
+address = 0x0800ab84
+end = 0x0800ac44
+mode = "thumb"
+
+[[functions]]
+name = "TileCollect_OnStep"
+address = 0x0800ac44
+end = 0x0800ace8
+mode = "thumb"
+
+[[functions]]
+name = "TileArrival_UpdateModeFlags"
+address = 0x0800ace8
+end = 0x0800ae3c
+mode = "thumb"
+
+[[functions]]
+name = "Gate_OnTileStep"
+address = 0x0800ae3c
+end = 0x0800af50
+mode = "thumb"
+
+[[functions]]
+name = "Entity_InitHitboxSlots"
+address = 0x0800af50
+end = 0x0800b07c
+mode = "thumb"
+
+[[functions]]
+name = "Gate_PollResult"
+address = 0x0800b07c
+end = 0x0800b178
+mode = "thumb"
+
+[[functions]]
+name = "Entity_BlitAndCheckTiles"
+address = 0x0800b178
+end = 0x0800b7b0
+mode = "thumb"
+
+[[functions]]
+name = "Entity_UpdateHitboxSlots"
+address = 0x0800b7b0
+end = 0x0800b8a8
+mode = "thumb"
+
+[[functions]]
+name = "Entity_ActivateHitSlot"
+address = 0x0800b8a8
+end = 0x0800b918
+mode = "thumb"
+
+[[functions]]
+name = "Entity_UpdateHitboxWithTile"
+address = 0x0800b918
+end = 0x0800be18
+mode = "thumb"
+
+[[functions]]
+name = "Entity_SetupHitboxSlots"
+address = 0x0800be18
+end = 0x0800bebc
+mode = "thumb"
+
+[[functions]]
+name = "EntityHitbox_RegisterHit"
+address = 0x0800bebc
+end = 0x0800bf24
+mode = "thumb"
+
+[[functions]]
+name = "Entity_ScanHitboxAndBlit"
+address = 0x0800bf24
+end = 0x0800c2a8
+mode = "thumb"
+
+[[functions]]
+name = "EntityHitbox_GetPoint"
+address = 0x0800c2a8
+end = 0x0800c2d0
+mode = "thumb"
+
+[[functions]]
+name = "EntityHitbox_RegisterHitPoint"
+address = 0x0800c2d0
+end = 0x0800c358
+mode = "thumb"
+
+[[functions]]
+name = "Frog_ProcessTileContact"
+address = 0x0800c358
+end = 0x0800c3e4
+mode = "thumb"
+
+[[functions]]
+name = "UpdateSceneGate"
+address = 0x0800c3e4
+end = 0x0800c444
+mode = "thumb"
+
+[[functions]]
+name = "Scene_OnPlayerStepTile20"
+address = 0x0800c444
+end = 0x0800c4a0
+mode = "thumb"
+
+[[functions]]
+name = "Stage_BuildActiveSlotMask"
+address = 0x0800c4a0
+end = 0x0800c4e0
+mode = "thumb"
+
+[[functions]]
+name = "EntityProc_Nop"
+address = 0x0800c4e0
+end = 0x0800c4e2
+mode = "thumb"
+
+[[functions]]
+name = "EntityProcE_Nop"
+address = 0x0800c4e4
+end = 0x0800c4e6
+mode = "thumb"
+
+[[functions]]
+name = "sub_0800C4E8"
+address = 0x0800c4e8
+end = 0x0800c976
+mode = "thumb"
+
+[[functions]]
+name = "SpriteGrid_GetNeighborTile"
+address = 0x0800c978
+end = 0x0800cb7e
+mode = "thumb"
+
+[[functions]]
+name = "SpriteGrid_SetCellFlags"
+address = 0x0800cb80
+end = 0x0800cbe8
+mode = "thumb"
+
+[[functions]]
+name = "BgMap_WriteTileAttr"
+address = 0x0800cbe8
+end = 0x0800cc50
+mode = "thumb"
+
+[[functions]]
+name = "SpriteGrid_SetBit14"
+address = 0x0800cc50
+end = 0x0800ccb8
+mode = "thumb"
+
+[[functions]]
+name = "SpriteGrid_SetBits13_12"
+address = 0x0800ccb8
+end = 0x0800cd20
+mode = "thumb"
+
+[[functions]]
+name = "SpriteGrid_SetBits11_10"
+address = 0x0800cd20
+end = 0x0800cd88
+mode = "thumb"
+
+[[functions]]
+name = "Tilemap_GetTileClass"
+address = 0x0800cd88
+end = 0x0800cdcc
+mode = "thumb"
+
+[[functions]]
+name = "SpriteAsset_GetCellFlag"
+address = 0x0800cdcc
+end = 0x0800ce10
+mode = "thumb"
+
+[[functions]]
+name = "SpriteAsset_GetTileAttr"
+address = 0x0800ce10
+end = 0x0800ce54
+mode = "thumb"
+
+[[functions]]
+name = "TileCell_GetPropertyB"
+address = 0x0800ce54
+end = 0x0800ce98
+mode = "thumb"
+
+[[functions]]
+name = "SpriteAsset_LoadSheet"
+address = 0x0800ce98
+end = 0x0800ced0
+mode = "thumb"
+
+[[functions]]
+name = "Rect_PointInRect"
+address = 0x0800ced0
+end = 0x0800cfdc
+mode = "thumb"
+
+[[functions]]
+name = "Rect2_ContainsPoint"
+address = 0x0800cfdc
+end = 0x0800d028
+mode = "thumb"
+
+[[functions]]
+name = "Entity_IsInProximity"
+address = 0x0800d028
+end = 0x0800d070
+mode = "thumb"
+
+[[functions]]
+name = "PadGrid_StepPackedCoord"
+address = 0x0800d070
+end = 0x0800d0f8
+mode = "thumb"
+
+[[functions]]
+name = "PadGrid_PlaceEntities"
+address = 0x0800d0f8
+end = 0x0800d1f8
+mode = "thumb"
+
+[[functions]]
+name = "GateRoom_TickFrogUpdate"
+address = 0x0800d1f8
+end = 0x0800d270
+mode = "thumb"
+
+[[functions]]
+name = "TileMap_GetCell"
+address = 0x0800d270
+end = 0x0800d2c0
+mode = "thumb"
+
+[[functions]]
+name = "PadGrid_DeactivateEntityAtPos"
+address = 0x0800d2c0
+end = 0x0800d450
+mode = "thumb"
+
+[[functions]]
+name = "PadGrid_FillGrid"
+address = 0x0800d450
+end = 0x0800d808
+mode = "thumb"
+
+[[functions]]
+name = "PadGrid_RemoveRandom"
+address = 0x0800d808
+end = 0x0800d8a0
+mode = "thumb"
+
+[[functions]]
+name = "SpawnControl_Dispatch"
+address = 0x0800d8a0
+end = 0x0800d924
+mode = "thumb"
+
+[[functions]]
+name = "PadGrid_ScanMaskToCoord"
+address = 0x0800d924
+end = 0x0800d9c8
+mode = "thumb"
+
+[[functions]]
+name = "PadGrid_RandomizeAndSyncEntityCoords"
+address = 0x0800d9c8
+end = 0x0800d9fc
+mode = "thumb"
+
+[[functions]]
+name = "SpriteAnim_GetPermIndex"
+address = 0x0800d9fc
+end = 0x0800da10
+mode = "thumb"
+
+[[functions]]
+name = "GateRoom_ResetState"
+address = 0x0800da10
+end = 0x0800da70
+mode = "thumb"
+
+[[functions]]
+name = "FilterValidBits"
+address = 0x0800da70
+end = 0x0800dab6
+mode = "thumb"
+
+[[functions]]
+name = "IsTileSolid"
+address = 0x0800dab8
+end = 0x0800db04
+mode = "thumb"
+
+[[functions]]
+name = "PadGrid_SlotToCoord"
+address = 0x0800db04
+mode = "thumb"
+
+[[functions]]
+name = "sub_0800DC3C"
+address = 0x0800dc3c
+end = 0x0800dc50
+mode = "thumb"
+
+[[functions]]
+name = "EntitySpawnDriver"
+address = 0x0800dc50
+end = 0x0800dd80
+mode = "thumb"
+
+[[functions]]
+name = "WorldMap_Init"
+address = 0x0800dd80
+end = 0x0800de0c
+mode = "thumb"
+
+[[functions]]
+name = "EntityProcE_Settle"
+address = 0x0800de0c
+end = 0x0800de80
+mode = "thumb"
+
+[[functions]]
+name = "Game_FrameEnd"
+address = 0x0800de80
+end = 0x0800df7c
+mode = "thumb"
+
+[[functions]]
+name = "EntityProcE_Dispatch"
+address = 0x0800df7c
+end = 0x0800df9c
+mode = "thumb"
+
+[[functions]]
+name = "EntityProcE_Init"
+address = 0x0800df9c
+end = 0x0800dfaa
+mode = "thumb"
+
+[[functions]]
+name = "EntityProcE_Run"
+address = 0x0800dfac
+end = 0x0800dffc
+mode = "thumb"
+
+[[functions]]
+name = "Fixed8Mul"
+address = 0x0800dffc
+end = 0x0800e014
+mode = "thumb"
+
+[[functions]]
+name = "Fixed16Mul"
+address = 0x0800e014
+end = 0x0800e030
+mode = "thumb"
+
+[[functions]]
+name = "Fixed8Div"
+address = 0x0800e030
+end = 0x0800e046
+mode = "thumb"
+
+[[functions]]
+name = "Fixed16Recip"
+address = 0x0800e048
+end = 0x0800e060
+mode = "thumb"
+
+[[functions]]
+name = "Scene_LoadBg"
+address = 0x0800e060
+end = 0x0800e174
+mode = "thumb"
+
+[[functions]]
+name = "UpdateBgTilemapFrames"
+address = 0x0800e174
+end = 0x0800e4bc
+mode = "thumb"
+
+[[functions]]
+name = "AnimCtrl_RunPhase"
+address = 0x0800e4bc
+end = 0x0800e5fe
+mode = "thumb"
+
+[[functions]]
+name = "Scene08_MapScreenInit"
+address = 0x0800e600
+end = 0x0800e6a8
+mode = "thumb"
+
+[[functions]]
+name = "Scene_FadeUpdate"
+address = 0x0800e6a8
+end = 0x0800e76c
+mode = "thumb"
+
+[[functions]]
+name = "text_0800e76c"
+address = 0x0800e76c
+end = 0x0800e7d4
+mode = "thumb"
+
+[[functions]]
+name = "SetModeBlendRegs"
+address = 0x0800e7d4
+end = 0x0800e850
+mode = "thumb"
+
+[[functions]]
+name = "text_0800e850"
+address = 0x0800e850
+end = 0x0800e85a
+mode = "thumb"
+
+[[functions]]
+name = "CharLayers_Upload"
+address = 0x0800e85c
+end = 0x0800eb1c
+mode = "thumb"
+
+[[functions]]
+name = "FrogOam_Init"
+address = 0x0800eb1c
+end = 0x0800ebdc
+mode = "thumb"
+
+[[functions]]
+name = "BgScrollBlit"
+address = 0x0800ebdc
+end = 0x0800ee34
+mode = "thumb"
+
+[[functions]]
+name = "BgLayer_Disable"
+address = 0x0800ee34
+end = 0x0800ee94
+mode = "thumb"
+
+[[functions]]
+name = "BgLayer_Enable"
+address = 0x0800ee94
+end = 0x0800eee8
+mode = "thumb"
+
+[[functions]]
+name = "Bg_SetLayersByMode"
+address = 0x0800eee8
+end = 0x0800ef56
+mode = "thumb"
+
+[[functions]]
+name = "SceneReset"
+address = 0x0800ef58
+end = 0x0800ef90
+mode = "thumb"
+
+[[functions]]
+name = "Scene_DisableBg2"
+address = 0x0800ef90
+end = 0x0800efc8
+mode = "thumb"
+
+[[functions]]
+name = "SceneInit_WithHud"
+address = 0x0800efc8
+end = 0x0800eff4
+mode = "thumb"
+
+[[functions]]
+name = "SceneInit"
+address = 0x0800eff4
+end = 0x0800f014
+mode = "thumb"
+
+[[functions]]
+name = "InitScreenBgGraphics"
+address = 0x0800f014
+end = 0x0800f114
+mode = "thumb"
+
+[[functions]]
+name = "InitCharacterBgGraphics"
+address = 0x0800f114
+end = 0x0800f22c
+mode = "thumb"
+
+[[functions]]
+name = "InitAllBgTilemapLayers"
+address = 0x0800f22c
+end = 0x0800f24a
+mode = "thumb"
+
+[[functions]]
+name = "Scroll_UpdateCamera"
+address = 0x0800f24c
+end = 0x0800f2f8
+mode = "thumb"
+
+[[functions]]
+name = "SaveBgScrollOffset"
+address = 0x0800f2f8
+end = 0x0800f398
+mode = "thumb"
+
+[[functions]]
+name = "ScrollUpdate_Pass1"
+address = 0x0800f398
+end = 0x0800f814
+mode = "thumb"
+
+[[functions]]
+name = "ScrollUpdate_Pass0"
+address = 0x0800f814
+end = 0x0800fcc8
+mode = "thumb"
+
+[[functions]]
+name = "Scroll_RunSubtypeTicks"
+address = 0x0800fcc8
+end = 0x0800fce2
+mode = "thumb"
+
+[[functions]]
+name = "GetEwramBuffer"
+address = 0x0800fce4
+end = 0x0800fd18
+mode = "thumb"
+
+[[functions]]
+name = "GetVramTilemapBuffer"
+address = 0x0800fd18
+end = 0x0800fd50
+mode = "thumb"
+
+[[functions]]
+name = "Scene08_MapScreenTick"
+address = 0x0800fd50
+end = 0x0800fe10
+mode = "thumb"
+
+[[functions]]
+name = "Credits_WriteRow"
+address = 0x0800fe10
+end = 0x0800fe88
+mode = "thumb"
+
+[[functions]]
+name = "Credits_RenderStep"
+address = 0x0800fe88
+end = 0x080100e4
+mode = "thumb"
+
+[[functions]]
+name = "Scroll_FlushTilemapWindow"
+address = 0x080100e4
+end = 0x0801025c
+mode = "thumb"
+
+[[functions]]
+name = "ScaleAnim_BlitFrameToVram"
+address = 0x0801025c
+end = 0x080105b0
+mode = "thumb"
+
+[[functions]]
+name = "Blit_CopyEntry"
+address = 0x080105b0
+end = 0x08010694
+mode = "thumb"
+
+[[functions]]
+name = "Blend_StartFade"
+address = 0x08010694
+end = 0x080106b8
+mode = "thumb"
+
+[[functions]]
+name = "Blend_StepFade"
+address = 0x080106b8
+end = 0x080106ec
+mode = "thumb"
+
+[[functions]]
+name = "Screen_BeginFlash"
+address = 0x080106ec
+end = 0x08010710
+mode = "thumb"
+
+[[functions]]
+name = "Screen_TickFlash"
+address = 0x08010710
+end = 0x08010740
+mode = "thumb"
+
+[[functions]]
+name = "Render_UpdateBlendRegs"
+address = 0x08010740
+end = 0x08010778
+mode = "thumb"
+
+[[functions]]
+name = "Pal_RotateEntries"
+address = 0x08010778
+end = 0x080107d0
+mode = "thumb"
+
+[[functions]]
+name = "Render_DmaLoadTileset"
+address = 0x080107d0
+end = 0x08010870
+mode = "thumb"
+
+[[functions]]
+name = "WrapBufPtr"
+address = 0x08010870
+end = 0x0801089a
+mode = "thumb"
+
+[[functions]]
+name = "Anim_AdvanceFrameStep"
+address = 0x0801089c
+end = 0x080108f8
+mode = "thumb"
+
+[[functions]]
+name = "Anim_TickFrame"
+address = 0x080108f8
+end = 0x08010958
+mode = "thumb"
+
+[[functions]]
+name = "ModeChannel_Apply"
+address = 0x08010958
+end = 0x08010a44
+mode = "thumb"
+
+[[functions]]
+name = "Scroll_TickChannels"
+address = 0x08010a44
+end = 0x08010dd8
+mode = "thumb"
+
+[[functions]]
+name = "Scroll_PrepareBlitWork"
+address = 0x08010dd8
+end = 0x08010f64
+mode = "thumb"
+
+[[functions]]
+name = "Scroll_TickBlitDir"
+address = 0x08010f64
+end = 0x08011288
+mode = "thumb"
+
+[[functions]]
+name = "Scroll_ResetDirStep"
+address = 0x0801129c
+end = 0x080112c0
+mode = "thumb"
+
+[[functions]]
+name = "BlitFrameCell"
+address = 0x080112c0
+end = 0x080113e8
+mode = "thumb"
+
+[[functions]]
+name = "GenRandomTileMask"
+address = 0x080113e8
+end = 0x08011478
+mode = "thumb"
+
+[[functions]]
+name = "Blit_ApplyFlaggedRecords"
+address = 0x08011478
+end = 0x08011518
+mode = "thumb"
+
+[[functions]]
+name = "Selector_InitState"
+address = 0x08011518
+end = 0x08011574
+mode = "thumb"
+
+[[functions]]
+name = "Selector_StepBlitAnim"
+address = 0x08011574
+end = 0x080115f8
+mode = "thumb"
+
+[[functions]]
+name = "Selector_RunAnimSequence"
+address = 0x080115f8
+end = 0x080116b8
+mode = "thumb"
+
+[[functions]]
+name = "Selector_BlitStateMachine"
+address = 0x080116b8
+end = 0x0801185c
+mode = "thumb"
+
+[[functions]]
+name = "GetVcountRandom"
+address = 0x0801185c
+end = 0x08011884
+mode = "thumb"
+
+[[functions]]
+name = "Anim_CheckScreenIdle"
+address = 0x08011884
+end = 0x080118d8
+mode = "thumb"
+
+[[functions]]
+name = "Selector_InitScene"
+address = 0x080118d8
+end = 0x080118fc
+mode = "thumb"
+
+[[functions]]
+name = "Selector_Update"
+address = 0x080118fc
+end = 0x0801190c
+mode = "thumb"
+
+[[functions]]
+name = "Selector_StepScroll"
+address = 0x0801190c
+end = 0x08011978
+mode = "thumb"
+
+[[functions]]
+name = "Selector_VblankTick"
+address = 0x08011978
+end = 0x08011982
+mode = "thumb"
+
+[[functions]]
+name = "Selector_BlitTiles"
+address = 0x08011984
+end = 0x08011aa4
+mode = "thumb"
+
+[[functions]]
+name = "Selector_UpdateBlit"
+address = 0x08011aa4
+end = 0x08011e40
+mode = "thumb"
+
+[[functions]]
+name = "Selector_TriggerWindowReveal"
+address = 0x08011e40
+end = 0x08012098
+mode = "thumb"
+
+[[functions]]
+name = "Selector_StepColorFade"
+address = 0x08012098
+end = 0x08012100
+mode = "thumb"
+
+[[functions]]
+name = "Selector_ResetState"
+address = 0x08012100
+end = 0x08012180
+mode = "thumb"
+
+[[functions]]
+name = "UpdateScrollFromAnimChannels"
+address = 0x08012180
+end = 0x0801223c
+mode = "thumb"
+
+[[functions]]
+name = "InitScrollAnimSequence"
+address = 0x0801223c
+end = 0x080122e4
+mode = "thumb"
+
+[[functions]]
+name = "RunScrollTransitionSequence"
+address = 0x080122e4
+end = 0x080124d0
+mode = "thumb"
+
+[[functions]]
+name = "AnimChannels_Reset"
+address = 0x080124d0
+end = 0x08012504
+mode = "thumb"
+
+[[functions]]
+name = "sub_08012504"
+address = 0x08012504
+end = 0x0801254c
+mode = "thumb"
+
+[[functions]]
+name = "UpdateScrollTransition"
+address = 0x0801254c
+end = 0x0801255c
+mode = "thumb"
+
+[[functions]]
+name = "InitScrollScene"
+address = 0x0801255c
+end = 0x08012586
+mode = "thumb"
+
+[[functions]]
+name = "SetupBlendRegs"
+address = 0x08012588
+end = 0x080125b0
+mode = "thumb"
+
+[[functions]]
+name = "ScaleAnim_ResetState"
+address = 0x080125ec
+end = 0x08012604
+mode = "thumb"
+
+[[functions]]
+name = "TickScrollAnimUntilDone"
+address = 0x08012604
+end = 0x08012664
+mode = "thumb"
+
+[[functions]]
+name = "PickEntitySpawnPos"
+address = 0x08012664
+end = 0x08012798
+mode = "thumb"
+
+[[functions]]
+name = "BlitEntityTileFrame0"
+address = 0x08012798
+end = 0x0801288c
+mode = "thumb"
+
+[[functions]]
+name = "BlitEntityTileFrame1"
+address = 0x0801288c
+end = 0x0801297c
+mode = "thumb"
+
+[[functions]]
+name = "BlitEntityTileFrame2"
+address = 0x0801297c
+end = 0x08012a6c
+mode = "thumb"
+
+[[functions]]
+name = "ScaleBlit_Tick"
+address = 0x08012a6c
+end = 0x08012b38
+mode = "thumb"
+
+[[functions]]
+name = "LoadScreenTilemap_188EDC"
+address = 0x08012b38
+end = 0x08012b5c
+mode = "thumb"
+
+[[functions]]
+name = "ScrollState_Reset"
+address = 0x08012b5c
+end = 0x08012b78
+mode = "thumb"
+
+[[functions]]
+name = "Scene_Init2Layer"
+address = 0x08012b78
+end = 0x08012bb4
+mode = "thumb"
+
+[[functions]]
+name = "sub_08012BB4"
+address = 0x08012bb4
+end = 0x08012bc2
+mode = "thumb"
+
+[[functions]]
+name = "Tilemap_BlitTileRows"
+address = 0x08012bc4
+end = 0x08012cac
+mode = "thumb"
+
+[[functions]]
+name = "BgScrollAnim_Update"
+address = 0x08012cac
+end = 0x08012d40
+mode = "thumb"
+
+[[functions]]
+name = "BgScrollAnim_Init"
+address = 0x08012d40
+end = 0x08012d88
+mode = "thumb"
+
+[[functions]]
+name = "Scene_TickScrollAndBlend"
+address = 0x08012d88
+end = 0x08012e00
+mode = "thumb"
+
+[[functions]]
+name = "Scene_InitFull"
+address = 0x08012e00
+end = 0x08012e2a
+mode = "thumb"
+
+[[functions]]
+name = "BgScrollAnim_InitPartial"
+address = 0x08012e2c
+end = 0x08012e64
+mode = "thumb"
+
+[[functions]]
+name = "Scene_UpdateWithBlend"
+address = 0x08012e64
+end = 0x08012ed4
+mode = "thumb"
+
+[[functions]]
+name = "Scene_InitLayers"
+address = 0x08012ed4
+end = 0x08012efe
+mode = "thumb"
+
+[[functions]]
+name = "RemapInputBits"
+address = 0x08012f00
+end = 0x08012fa0
+mode = "thumb"
+
+[[functions]]
+name = "ScaleAnim_ClearActiveBits"
+address = 0x08012fa0
+end = 0x08013040
+mode = "thumb"
+
+[[functions]]
+name = "ScaleAnim_TickFrames"
+address = 0x08013040
+end = 0x0801310c
+mode = "thumb"
+
+[[functions]]
+name = "ScaleAnim_SyncSelectors"
+address = 0x0801310c
+end = 0x080132e8
+mode = "thumb"
+
+[[functions]]
+name = "ScaleAnim_BlitSceneLayers"
+address = 0x080132e8
+end = 0x080135b8
+mode = "thumb"
+
+[[functions]]
+name = "Selector_StepScrollAxes"
+address = 0x080135b8
+end = 0x08013694
+mode = "thumb"
+
+[[functions]]
+name = "BgScroll_Step"
+address = 0x08013694
+end = 0x0801377c
+mode = "thumb"
+
+[[functions]]
+name = "BgLayer_Init"
+address = 0x0801377c
+end = 0x08013828
+mode = "thumb"
+
+[[functions]]
+name = "ScaleAnim_Reset"
+address = 0x08013828
+end = 0x08013880
+mode = "thumb"
+
+[[functions]]
+name = "BgLayer_InitAndCommit"
+address = 0x08013880
+end = 0x08013896
+mode = "thumb"
+
+[[functions]]
+name = "ScaleAnim_UpdateFrame"
+address = 0x08013898
+end = 0x08013908
+mode = "thumb"
+
+[[functions]]
+name = "AnimTile_ResetAndClearBg"
+address = 0x08013908
+end = 0x08013920
+mode = "thumb"
+
+[[functions]]
+name = "Array_ThrottledRotate"
+address = 0x08013920
+end = 0x08013980
+mode = "thumb"
+
+[[functions]]
+name = "ScaleAnim_BlitDescIdx0"
+address = 0x08013980
+end = 0x080139bc
+mode = "thumb"
+
+[[functions]]
+name = "ScaleAnim_BlitDescIdx1"
+address = 0x080139bc
+end = 0x080139f8
+mode = "thumb"
+
+[[functions]]
+name = "ScaleAnim_BlitFromTable1"
+address = 0x080139f8
+end = 0x08013a34
+mode = "thumb"
+
+[[functions]]
+name = "ScaleAnim_BlitFromTable2Bank0"
+address = 0x08013a34
+end = 0x08013a70
+mode = "thumb"
+
+[[functions]]
+name = "ScaleAnim_BlitFromTable2Bank2"
+address = 0x08013a70
+end = 0x08013aac
+mode = "thumb"
+
+[[functions]]
+name = "BlitTilemapFromScaleAnimEntry"
+address = 0x08013aac
+end = 0x08013ae8
+mode = "thumb"
+
+[[functions]]
+name = "BgScrollState_Enter"
+address = 0x08013ae8
+end = 0x08013b54
+mode = "thumb"
+
+[[functions]]
+name = "ResetBgAnimState"
+address = 0x08013b54
+end = 0x08013ba4
+mode = "thumb"
+
+[[functions]]
+name = "BgScrollDmaUpdate"
+address = 0x08013ba4
+end = 0x08013c60
+mode = "thumb"
+
+[[functions]]
+name = "DmaJob_Advance"
+address = 0x08013c60
+end = 0x08013cd4
+mode = "thumb"
+
+[[functions]]
+name = "DmaQueueAdvanceCursor"
+address = 0x08013cd4
+end = 0x08013d1c
+mode = "thumb"
+
+[[functions]]
+name = "InitScene3Layer"
+address = 0x08013d1c
+end = 0x08013d44
+mode = "thumb"
+
+[[functions]]
+name = "BgBlendTilemapUpdate"
+address = 0x08013d44
+end = 0x08013dd4
+mode = "thumb"
+
+[[functions]]
+name = "InitScene2LayerA"
+address = 0x08013dd4
+end = 0x08013dfc
+mode = "thumb"
+
+[[functions]]
+name = "PopulateRasterScrollBuffer"
+address = 0x08013dfc
+end = 0x08013e94
+mode = "thumb"
+
+[[functions]]
+name = "Deck_DealRandom"
+address = 0x08013e94
+end = 0x08013f2c
+mode = "thumb"
+
+[[functions]]
+name = "Deck_Init"
+address = 0x08013f2c
+end = 0x08013f5c
+mode = "thumb"
+
+[[functions]]
+name = "Deck_ResetFirst"
+address = 0x08013f5c
+end = 0x08013f68
+mode = "thumb"
+
+[[functions]]
+name = "InitScene2LayerB"
+address = 0x08013f68
+end = 0x08013f94
+mode = "thumb"
+
+[[functions]]
+name = "UpdateStatusBar"
+address = 0x08013f94
+end = 0x08013f9e
+mode = "thumb"
+
+[[functions]]
+name = "BgTilemap_LoadScreen"
+address = 0x08013fa0
+end = 0x08013fcc
+mode = "thumb"
+
+[[functions]]
+name = "sub_08013FCC"
+address = 0x08013fcc
+end = 0x08013fce
+mode = "thumb"
+
+[[functions]]
+name = "InitBgTransferQueues"
+address = 0x08013fd0
+end = 0x08014020
+mode = "thumb"
+
+[[functions]]
+name = "InitScene2LayerC"
+address = 0x08014020
+end = 0x08014058
+mode = "thumb"
+
+[[functions]]
+name = "ClearQueueSeed"
+address = 0x08014058
+end = 0x08014064
+mode = "thumb"
+
+[[functions]]
+name = "Engine_Update"
+address = 0x08014064
+end = 0x08014076
+mode = "thumb"
+
+[[functions]]
+name = "Scene_InitSpriteEngine"
+address = 0x08014078
+end = 0x080140a0
+mode = "thumb"
+
+[[functions]]
+name = "AnimState_Init"
+address = 0x080140a0
+end = 0x0801413e
+mode = "thumb"
+
+[[functions]]
+name = "AnimState_BlitStep"
+address = 0x08014140
+end = 0x080142d4
+mode = "thumb"
+
+[[functions]]
+name = "GateRoom_UpdateSlide"
+address = 0x080142d4
+end = 0x0801436c
+mode = "thumb"
+
+[[functions]]
+name = "Gate_RunAnimSequence"
+address = 0x0801436c
+end = 0x08014ea8
+mode = "thumb"
+
+[[functions]]
+name = "Display_ResetLayers"
+address = 0x08014ea8
+end = 0x08014ee8
+mode = "thumb"
+
+[[functions]]
+name = "EnemySpawn_ProcessWaveA"
+address = 0x08014ee8
+end = 0x08015044
+mode = "thumb"
+
+[[functions]]
+name = "EnemySpawn_ProcessWaveB"
+address = 0x08015044
+end = 0x08015194
+mode = "thumb"
+
+[[functions]]
+name = "ScrollBlit_ResetLayers"
+address = 0x08015194
+end = 0x08015220
+mode = "thumb"
+
+[[functions]]
+name = "sub_08015220"
+address = 0x08015220
+end = 0x080152b0
+mode = "thumb"
+
+[[functions]]
+name = "Screen_LoadForMode"
+address = 0x080152b0
+end = 0x0801549c
+mode = "thumb"
+
+[[functions]]
+name = "SceneLoad_DmaUpdate"
+address = 0x0801549c
+end = 0x080155f0
+mode = "thumb"
+
+[[functions]]
+name = "Scenery_BlitAndCyclePalette"
+address = 0x080155f0
+end = 0x0801585c
+mode = "thumb"
+
+[[functions]]
+name = "Scenery_UpdateSelectorCells"
+address = 0x0801585c
+end = 0x0801592e
+mode = "thumb"
+
+[[functions]]
+name = "Tilemap_DispatchPendingBlits"
+address = 0x08015930
+end = 0x080159b0
+mode = "thumb"
+
+[[functions]]
+name = "Scenery_InitScrollState"
+address = 0x080159b0
+end = 0x08015a00
+mode = "thumb"
+
+[[functions]]
+name = "BgTilemap_LoadScene"
+address = 0x08015a00
+end = 0x08015a2c
+mode = "thumb"
+
+[[functions]]
+name = "Scene_Update"
+address = 0x08015a2c
+end = 0x08015a50
+mode = "thumb"
+
+[[functions]]
+name = "BgTilemap_DmaVariantA"
+address = 0x08015a50
+end = 0x08015a80
+mode = "thumb"
+
+[[functions]]
+name = "BgTilemap_DmaVariantB"
+address = 0x08015a80
+end = 0x08015ab0
+mode = "thumb"
+
+[[functions]]
+name = "Scene_Init"
+address = 0x08015ab0
+end = 0x08015ad4
+mode = "thumb"
+
+[[functions]]
+name = "Scene_UpdateFrame"
+address = 0x08015ad4
+end = 0x08015b1e
+mode = "thumb"
+
+[[functions]]
+name = "FlushFramebufferBank"
+address = 0x08015b20
+end = 0x08015b6c
+mode = "thumb"
+
+[[functions]]
+name = "BlitSpriteRect"
+address = 0x08015b6c
+end = 0x08015c24
+mode = "thumb"
+
+[[functions]]
+name = "BlitTilesRect"
+address = 0x08015c24
+end = 0x08015cbc
+mode = "thumb"
+
+[[functions]]
+name = "DmaFrameJob_Advance"
+address = 0x08015cbc
+end = 0x08015d30
+mode = "thumb"
+
+[[functions]]
+name = "GateRoom_InitScrollParams"
+address = 0x08015d30
+end = 0x08015d54
+mode = "thumb"
+
+[[functions]]
+name = "SetBgPriorities"
+address = 0x08015d54
+end = 0x08015d84
+mode = "thumb"
+
+[[functions]]
+name = "sub_08015D84"
+address = 0x08015d84
+end = 0x08015ea4
+mode = "thumb"
+
+[[functions]]
+name = "ScrollCamera_NopA"
+address = 0x08015ea4
+end = 0x08015ea6
+mode = "thumb"
+
+[[functions]]
+name = "ScrollCamera_Reset"
+address = 0x08015ea8
+end = 0x08015ec0
+mode = "thumb"
+
+[[functions]]
+name = "ScrollCamera_NopB"
+address = 0x08015ec0
+end = 0x08015ec2
+mode = "thumb"
+
+[[functions]]
+name = "sub_08015EC4"
+address = 0x08015ec4
+end = 0x08015f9c
+mode = "thumb"
+
+[[functions]]
+name = "sub_08015F9C"
+address = 0x08015f9c
+end = 0x08016074
+mode = "thumb"
+
+[[functions]]
+name = "sub_08016074"
+address = 0x08016074
+end = 0x0801616c
+mode = "thumb"
+
+[[functions]]
+name = "sub_0801616C"
+address = 0x0801616c
+end = 0x0801621c
+mode = "thumb"
+
+[[functions]]
+name = "Mode4_BlitRect"
+address = 0x0801621c
+end = 0x0801629c
+mode = "thumb"
+
+[[functions]]
+name = "sub_0801629C"
+address = 0x0801629c
+end = 0x080162fc
+mode = "thumb"
+
+[[functions]]
+name = "sub_080162FC"
+address = 0x080162fc
+end = 0x08016360
+mode = "thumb"
+
+[[functions]]
+name = "EntitySlots_Init"
+address = 0x08016360
+end = 0x08016404
+mode = "thumb"
+
+[[functions]]
+name = "UpdateColumnClipSpans"
+address = 0x08016404
+end = 0x08016650
+mode = "thumb"
+
+[[functions]]
+name = "Icon_LoadFrameByMode"
+address = 0x08016650
+end = 0x08016824
+mode = "thumb"
+
+[[functions]]
+name = "TileBlit_DrawEntry"
+address = 0x08016824
+end = 0x080168a0
+mode = "thumb"
+
+[[functions]]
+name = "Icon_DmaLoadSprite"
+address = 0x080168a0
+end = 0x08016928
+mode = "thumb"
+
+[[functions]]
+name = "Icon_DmaUpdateSprite"
+address = 0x08016928
+end = 0x080169bc
+mode = "thumb"
+
+[[functions]]
+name = "StatusBar_DrawTile24"
+address = 0x080169bc
+end = 0x08016a40
+mode = "thumb"
+
+[[functions]]
+name = "StatusBar_Update"
+address = 0x08016a40
+end = 0x08017000
+mode = "thumb"
+
+[[functions]]
+name = "FrogStatusBar_Update"
+address = 0x08017000
+end = 0x080172f4
+mode = "thumb"
+
+[[functions]]
+name = "SaveDetect"
+address = 0x080172f4
+end = 0x08017362
+mode = "thumb"
+
+[[functions]]
+name = "SaveLoad"
+address = 0x08017364
+end = 0x0801756c
+mode = "thumb"
+
+[[functions]]
+name = "SaveCommit"
+address = 0x0801756c
+end = 0x080177a0
+mode = "thumb"
+
+[[functions]]
+name = "SaveReadHeader"
+address = 0x080177a0
+end = 0x080177d8
+mode = "thumb"
+
+[[functions]]
+name = "SaveWriteHeader"
+address = 0x080177d8
+end = 0x08017812
+mode = "thumb"
+
+[[functions]]
+name = "SaveReadSlot"
+address = 0x08017814
+end = 0x08017856
+mode = "thumb"
+
+[[functions]]
+name = "SaveWriteSlot"
+address = 0x08017858
+end = 0x0801789c
+mode = "thumb"
+
+[[functions]]
+name = "SaveWriteBlocks"
+address = 0x0801789c
+end = 0x080178fc
+mode = "thumb"
+
+[[functions]]
+name = "SaveReadBlocks"
+address = 0x080178fc
+end = 0x08017938
+mode = "thumb"
+
+[[functions]]
+name = "sub_08017938"
+address = 0x08017938
+end = 0x0801793a
+mode = "thumb"
+
+[[functions]]
+name = "GameMode_Attract"
+address = 0x0801793c
+end = 0x080179b8
+mode = "thumb"
+
+[[functions]]
+name = "ScriptTick"
+address = 0x080179b8
+end = 0x08017a86
+mode = "thumb"
+
+[[functions]]
+name = "Attract_StepFinish"
+address = 0x08017a88
+end = 0x08017aa8
+mode = "thumb"
+
+[[functions]]
+name = "Attract_Cleanup"
+address = 0x08017aa8
+end = 0x08017aba
+mode = "thumb"
+
+[[functions]]
+name = "UiScreen_Init"
+address = 0x08017abc
+end = 0x08017b68
+mode = "thumb"
+
+[[functions]]
+name = "Menu25_LoadAssets"
+address = 0x08017bfc
+end = 0x08017d10
+mode = "thumb"
+
+[[functions]]
+name = "Menu25_WaitAndBlink"
+address = 0x08017d10
+end = 0x08017db8
+mode = "thumb"
+
+[[functions]]
+name = "Menu25_HandleInput"
+address = 0x08017db8
+end = 0x08017ecc
+mode = "thumb"
+
+[[functions]]
+name = "Menu25_SetupRects"
+address = 0x08017ecc
+end = 0x08017f00
+mode = "thumb"
+
+[[functions]]
+name = "Menu25_InstallBg"
+address = 0x08017f00
+end = 0x08017fc4
+mode = "thumb"
+
+[[functions]]
+name = "sub_08017FC4"
+address = 0x08017fc4
+end = 0x08018188
+mode = "thumb"
+
+[[functions]]
+name = "sub_08018188"
+address = 0x08018188
+end = 0x080181d0
+mode = "thumb"
+
+[[functions]]
+name = "FrogSelect_LoadCharTilemap"
+address = 0x080181d0
+end = 0x08018284
+mode = "thumb"
+
+[[functions]]
+name = "FrogSelect_InitDispatch"
+address = 0x08018284
+end = 0x080182cc
+mode = "thumb"
+
+[[functions]]
+name = "CreditsMenu_HandleInputA"
+address = 0x080182cc
+end = 0x08018348
+mode = "thumb"
+
+[[functions]]
+name = "CreditsScreen_Init"
+address = 0x08018348
+end = 0x080183d0
+mode = "thumb"
+
+[[functions]]
+name = "CreditsMenu_HandleInputB"
+address = 0x080183d0
+end = 0x0801844c
+mode = "thumb"
+
+[[functions]]
+name = "Bg_InitMode0"
+address = 0x0801844c
+end = 0x080184dc
+mode = "thumb"
+
+[[functions]]
+name = "Tilemap_SwapPalette"
+address = 0x080184dc
+end = 0x080185c0
+mode = "thumb"
+
+[[functions]]
+name = "Sprite_CycleDmaFrame"
+address = 0x080185c0
+end = 0x08018648
+mode = "thumb"
+
+[[functions]]
+name = "Screen_InstallOamA"
+address = 0x08018648
+end = 0x08018898
+mode = "thumb"
+
+[[functions]]
+name = "Screen_Install"
+address = 0x08018898
+end = 0x08018c0c
+mode = "thumb"
+
+[[functions]]
+name = "Screen_ClearBlocks"
+address = 0x08018c0c
+end = 0x08018ca8
+mode = "thumb"
+
+[[functions]]
+name = "WinPoseScreen_LoadSprites"
+address = 0x08018ca8
+end = 0x08018ef0
+mode = "thumb"
+
+[[functions]]
+name = "WinPoseScreen_UpdateAnim"
+address = 0x08018ef0
+end = 0x08019014
+mode = "thumb"
+
+[[functions]]
+name = "WinPoseScreen_ScrollStep"
+address = 0x08019014
+end = 0x08019228
+mode = "thumb"
+
+[[functions]]
+name = "WinPoseScreen_AnimAndScroll"
+address = 0x08019228
+end = 0x0801932c
+mode = "thumb"
+
+[[functions]]
+name = "TitleLogo_Display"
+address = 0x0801932c
+end = 0x080193d8
+mode = "thumb"
+
+[[functions]]
+name = "Menu25_InitKeyTable"
+address = 0x080193d8
+end = 0x08019420
+mode = "thumb"
+
+[[functions]]
+name = "Menu25_PollInput"
+address = 0x08019420
+end = 0x08019500
+mode = "thumb"
+
+[[functions]]
+name = "GameMode_Router"
+address = 0x08019500
+end = 0x0801953e
+mode = "thumb"
+
+[[functions]]
+name = "GameMode_Menu26"
+address = 0x08019540
+end = 0x08019560
+mode = "thumb"
+
+[[functions]]
+name = "GameMode_Menu25"
+address = 0x08019560
+end = 0x08019580
+mode = "thumb"
+
+[[functions]]
+name = "Menu25_WaitFadeIn"
+address = 0x08019580
+end = 0x080195c4
+mode = "thumb"
+
+[[functions]]
+name = "Menu25_ReloadStatusBarBg"
+address = 0x080195c4
+end = 0x0801964c
+mode = "thumb"
+
+[[functions]]
+name = "Menu25_ResetAfterFade"
+address = 0x0801964c
+end = 0x08019668
+mode = "thumb"
+
+[[functions]]
+name = "Menu25_AdvanceSubstate"
+address = 0x08019668
+end = 0x08019678
+mode = "thumb"
+
+[[functions]]
+name = "Menu25_AdvanceAndReturn"
+address = 0x08019678
+end = 0x080196a0
+mode = "thumb"
+
+[[functions]]
+name = "Menu25_ReturnToRouter"
+address = 0x080196a0
+end = 0x080196c8
+mode = "thumb"
+
+[[functions]]
+name = "Menu25_Enter"
+address = 0x080196c8
+end = 0x080196e8
+mode = "thumb"
+
+[[functions]]
+name = "Menu25_Nop"
+address = 0x080196e8
+end = 0x080196ea
+mode = "thumb"
+
+[[functions]]
+name = "TileBlit"
+address = 0x080196ec
+end = 0x0801977c
+mode = "thumb"
+
+[[functions]]
+name = "BgTilemap_BlitRectClipped"
+address = 0x0801977c
+end = 0x08019834
+mode = "thumb"
+
+[[functions]]
+name = "Sprite_AnimateFlip"
+address = 0x08019834
+end = 0x080198a8
+mode = "thumb"
+
+[[functions]]
+name = "Sprite_AnimateFlipWithShadow"
+address = 0x080198a8
+end = 0x08019956
+mode = "thumb"
+
+[[functions]]
+name = "SetCurrentLevel"
+address = 0x08019958
+end = 0x08019964
+mode = "thumb"
+
+[[functions]]
+name = "TitleScene_InitRng"
+address = 0x08019964
+end = 0x08019984
+mode = "thumb"
+
+[[functions]]
+name = "FrogSelect_ValidateSelection"
+address = 0x08019984
+end = 0x080199e4
+mode = "thumb"
+
+[[functions]]
+name = "FrogSelect_ClearInputState"
+address = 0x080199e4
+end = 0x08019a14
+mode = "thumb"
+
+[[functions]]
+name = "sub_08019A14"
+address = 0x08019a14
+mode = "thumb"
+
+[[functions]]
+name = "Room_StreamOamAttribs"
+address = 0x08019aec
+end = 0x08019db4
+mode = "thumb"
+
+[[functions]]
+name = "Display_RestoreState"
+address = 0x08019db4
+end = 0x08019e28
+mode = "thumb"
+
+[[functions]]
+name = "Display_EnableBg"
+address = 0x08019e28
+end = 0x08019e6c
+mode = "thumb"
+
+[[functions]]
+name = "BgBuffer_ApplyPending"
+address = 0x08019e6c
+end = 0x08019ef0
+mode = "thumb"
+
+[[functions]]
+name = "LoadRoomBg3Graphics"
+address = 0x08019ef0
+end = 0x08019f70
+mode = "thumb"
+
+[[functions]]
+name = "BgPlane_FillTilemap"
+address = 0x08019f70
+end = 0x08019fd8
+mode = "thumb"
+
+[[functions]]
+name = "RoomSelect_InitDisplay"
+address = 0x08019fd8
+end = 0x0801a0a4
+mode = "thumb"
+
+[[functions]]
+name = "WinPose_Init"
+address = 0x0801a0a4
+end = 0x0801a1c4
+mode = "thumb"
+
+[[functions]]
+name = "MapCursor_Step"
+address = 0x0801a1c4
+end = 0x0801a268
+mode = "thumb"
+
+[[functions]]
+name = "GameMode_WorldMap"
+address = 0x0801a268
+end = 0x0801a624
+mode = "thumb"
+
+[[functions]]
+name = "ScriptStep_Advance"
+address = 0x0801a624
+end = 0x0801a6d4
+mode = "thumb"
+
+[[functions]]
+name = "ScrollCamera_Update"
+address = 0x0801a6d4
+end = 0x0801a774
+mode = "thumb"
+
+[[functions]]
+name = "Room_InitWindowAndState"
+address = 0x0801a774
+end = 0x0801a892
+mode = "thumb"
+
+[[functions]]
+name = "IrisOpen"
+address = 0x0801a894
+end = 0x0801a980
+mode = "thumb"
+
+[[functions]]
+name = "IrisClose"
+address = 0x0801a980
+end = 0x0801aa60
+mode = "thumb"
+
+[[functions]]
+name = "Credits_DmaLoadTiles"
+address = 0x0801aa60
+end = 0x0801ab44
+mode = "thumb"
+
+[[functions]]
+name = "LevelSelect_Enter"
+address = 0x0801ab44
+end = 0x0801ac84
+mode = "thumb"
+
+[[functions]]
+name = "Credits_InitStateA"
+address = 0x0801ac84
+end = 0x0801ad10
+mode = "thumb"
+
+[[functions]]
+name = "Credits_InitStateB"
+address = 0x0801ad10
+end = 0x0801ada8
+mode = "thumb"
+
+[[functions]]
+name = "Credits_RunScript"
+address = 0x0801ada8
+end = 0x0801b0ac
+mode = "thumb"
+
+[[functions]]
+name = "Entity_UpdateAndRender"
+address = 0x0801b0ac
+end = 0x0801b0fc
+mode = "thumb"
+
+[[functions]]
+name = "Scene_StartTransition"
+address = 0x0801b0fc
+end = 0x0801b154
+mode = "thumb"
+
+[[functions]]
+name = "GetHighestUnlockedWorld"
+address = 0x0801b154
+end = 0x0801b186
+mode = "thumb"
+
+[[functions]]
+name = "CountHighestBit"
+address = 0x0801b188
+end = 0x0801b1b2
+mode = "thumb"
+
+[[functions]]
+name = "Room_LoadTilesAndPalette"
+address = 0x0801b1b4
+end = 0x0801b224
+mode = "thumb"
+
+[[functions]]
+name = "CreditsRoll_StepThrottled"
+address = 0x0801b224
+end = 0x0801b274
+mode = "thumb"
+
+[[functions]]
+name = "sub_0801B274"
+address = 0x0801b274
+end = 0x0801b276
+mode = "thumb"
+
+[[functions]]
+name = "WorldMap_DrawPathTiles"
+address = 0x0801b278
+end = 0x0801b30c
+mode = "thumb"
+
+[[functions]]
+name = "WorldMap_SetPathTile"
+address = 0x0801b30c
+end = 0x0801b374
+mode = "thumb"
+
+[[functions]]
+name = "sub_0801B374"
+address = 0x0801b374
+end = 0x0801b430
+mode = "thumb"
+
+[[functions]]
+name = "Room_LoadSpriteTiles"
+address = 0x0801b430
+end = 0x0801b514
+mode = "thumb"
+
+[[functions]]
+name = "RunWorldSelectTransition"
+address = 0x0801b514
+end = 0x0801b620
+mode = "thumb"
+
+[[functions]]
+name = "sub_0801B620"
+address = 0x0801b620
+end = 0x0801b694
+mode = "thumb"
+
+[[functions]]
+name = "sub_0801B694"
+address = 0x0801b694
+end = 0x0801b71c
+mode = "thumb"
+
+[[functions]]
+name = "sub_0801B71C"
+address = 0x0801b71c
+end = 0x0801b954
+mode = "thumb"
+
+[[functions]]
+name = "Scene_SetupWindows"
+address = 0x0801b954
+end = 0x0801b9e4
+mode = "thumb"
+
+[[functions]]
+name = "Credits_StepThrottled"
+address = 0x0801b9e4
+end = 0x0801ba34
+mode = "thumb"
+
+[[functions]]
+name = "Credits_InitScene"
+address = 0x0801ba34
+end = 0x0801bac8
+mode = "thumb"
+
+[[functions]]
+name = "Level_LoadLayout"
+address = 0x0801bac8
+end = 0x0801bad6
+mode = "thumb"
+
+[[functions]]
+name = "Credits_PreInitHook"
+address = 0x0801bad8
+end = 0x0801bada
+mode = "thumb"
+
+[[functions]]
+name = "LoadWorldLevelLayoutAlt"
+address = 0x0801badc
+end = 0x0801bb18
+mode = "thumb"
+
+[[functions]]
+name = "Level_PreLoadHook"
+address = 0x0801bb18
+end = 0x0801bb1a
+mode = "thumb"
+
+[[functions]]
+name = "LoadWorldLevelLayout"
+address = 0x0801bb1c
+end = 0x0801bb54
+mode = "thumb"
+
+[[functions]]
+name = "ShowWinLoseMessage"
+address = 0x0801bb54
+end = 0x0801be7c
+mode = "thumb"
+
+[[functions]]
+name = "DrawTextGlyphs"
+address = 0x0801be7c
+end = 0x0801c078
+mode = "thumb"
+
+[[functions]]
+name = "DrawTilemapString"
+address = 0x0801c078
+end = 0x0801c2b2
+mode = "thumb"
+
+[[functions]]
+name = "DrawNumber"
+address = 0x0801c2b4
+end = 0x0801c462
+mode = "thumb"
+
+[[functions]]
+name = "HUD_DrawStampIcons"
+address = 0x0801c464
+end = 0x0801c4f8
+mode = "thumb"
+
+[[functions]]
+name = "HUD_DrawStatus"
+address = 0x0801c4f8
+end = 0x0801c69c
+mode = "thumb"
+
+[[functions]]
+name = "HUD_ClearScreen"
+address = 0x0801c69c
+end = 0x0801c6fc
+mode = "thumb"
+
+[[functions]]
+name = "sub_0801C6FC"
+address = 0x0801c6fc
+end = 0x0801c900
+mode = "thumb"
+
+[[functions]]
+name = "Scene_DrawWindow"
+address = 0x0801c900
+end = 0x0801cd0c
+mode = "thumb"
+
+[[functions]]
+name = "UiWindow_DrawBordered"
+address = 0x0801cd0c
+end = 0x0801cec0
+mode = "thumb"
+
+[[functions]]
+name = "ParseDecimalStr"
+address = 0x0801cec0
+end = 0x0801cf18
+mode = "thumb"
+
+[[functions]]
+name = "DrawByteDecimal"
+address = 0x0801cf18
+end = 0x0801cfa0
+mode = "thumb"
+
+[[functions]]
+name = "Bg_WriteTilePair"
+address = 0x0801cfa0
+end = 0x0801d048
+mode = "thumb"
+
+[[functions]]
+name = "LevelCleared_ShowKindLabel"
+address = 0x0801d048
+end = 0x0801d094
+mode = "thumb"
+
+[[functions]]
+name = "LevelCleared_ShowExtLabel"
+address = 0x0801d094
+end = 0x0801d0bc
+mode = "thumb"
+
+[[functions]]
+name = "Screen_ClearRect"
+address = 0x0801d0bc
+end = 0x0801d150
+mode = "thumb"
+
+[[functions]]
+name = "Credits_Init"
+address = 0x0801d150
+end = 0x0801d268
+mode = "thumb"
+
+[[functions]]
+name = "Credits_LoadBgGfx"
+address = 0x0801d268
+end = 0x0801d33c
+mode = "thumb"
+
+[[functions]]
+name = "Credits_LoadFrogGfx"
+address = 0x0801d33c
+end = 0x0801d438
+mode = "thumb"
+
+[[functions]]
+name = "Credits_InitScrollPage2"
+address = 0x0801d438
+end = 0x0801d4cc
+mode = "thumb"
+
+[[functions]]
+name = "Credits_InitScrollPage1"
+address = 0x0801d4cc
+end = 0x0801d570
+mode = "thumb"
+
+[[functions]]
+name = "Credits_ScrollTick"
+address = 0x0801d570
+end = 0x0801d880
+mode = "thumb"
+
+[[functions]]
+name = "Credits_LoadGfx"
+address = 0x0801d880
+end = 0x0801da1c
+mode = "thumb"
+
+[[functions]]
+name = "BgScroll_TileWipeTransition"
+address = 0x0801da1c
+end = 0x0801dbb4
+mode = "thumb"
+
+[[functions]]
+name = "Credits_DrawLine"
+address = 0x0801dbb4
+end = 0x0801de9e
+mode = "thumb"
+
+[[functions]]
+name = "Credits_DrawLineAlt"
+address = 0x0801dea0
+end = 0x0801e076
+mode = "thumb"
+
+[[functions]]
+name = "Credits_FadeTransition"
+address = 0x0801e078
+end = 0x0801e118
+mode = "thumb"
+
+[[functions]]
+name = "Screen_FadeSequence"
+address = 0x0801e118
+end = 0x0801e1aa
+mode = "thumb"
+
+[[functions]]
+name = "Credits_Tick"
+address = 0x0801e1ac
+end = 0x0801e1fc
+mode = "thumb"
+
+[[functions]]
+name = "Credits_FillPage"
+address = 0x0801e1fc
+end = 0x0801e26e
+mode = "thumb"
+
+[[functions]]
+name = "WaitFrames"
+address = 0x0801e270
+end = 0x0801e28a
+mode = "thumb"
+
+[[functions]]
+name = "Level_Load"
+address = 0x0801e28c
+end = 0x0801ea08
+mode = "thumb"
+
+[[functions]]
+name = "sub_0801EA08"
+address = 0x0801ea08
+end = 0x0801f1e0
+mode = "thumb"
+
+[[functions]]
+name = "FileSelect_DrawSlots"
+address = 0x0801f1e0
+end = 0x0801f418
+mode = "thumb"
+
+[[functions]]
+name = "FileSelect_Init"
+address = 0x0801f418
+end = 0x0801f560
+mode = "thumb"
+
+[[functions]]
+name = "FileSelect_Update"
+address = 0x0801f560
+end = 0x0801f684
+mode = "thumb"
+
+[[functions]]
+name = "SaveSlot_DrawAllSlots"
+address = 0x0801f684
+end = 0x0801f8bc
+mode = "thumb"
+
+[[functions]]
+name = "SaveSlot_DrawSelectionCursor"
+address = 0x0801f8bc
+end = 0x0801f970
+mode = "thumb"
+
+[[functions]]
+name = "SaveSlot_UpdateScreen"
+address = 0x0801f970
+end = 0x0801fd0c
+mode = "thumb"
+
+[[functions]]
+name = "WinPoseScreen_Init"
+address = 0x0801fd0c
+end = 0x0801fe68
+mode = "thumb"
+
+[[functions]]
+name = "WinPoseScreen_Update"
+address = 0x0801fe68
+end = 0x080200b4
+mode = "thumb"
+
+[[functions]]
+name = "WinPoseScreen_DrawBg"
+address = 0x080200b4
+end = 0x080201a8
+mode = "thumb"
+
+[[functions]]
+name = "GameMode_Options"
+address = 0x080201a8
+end = 0x080201c8
+mode = "thumb"
+
+[[functions]]
+name = "GameMode_Menu07"
+address = 0x080201c8
+end = 0x080201e8
+mode = "thumb"
+
+[[functions]]
+name = "GameMode_Menu27"
+address = 0x080201e8
+end = 0x08020208
+mode = "thumb"
+
+[[functions]]
+name = "Dispatcher_ResetModeA"
+address = 0x08020208
+end = 0x0802023c
+mode = "thumb"
+
+[[functions]]
+name = "Dispatcher_ResetModeB"
+address = 0x0802023c
+end = 0x08020270
+mode = "thumb"
+
+[[functions]]
+name = "Dispatcher_ResetModeC"
+address = 0x08020270
+end = 0x080202a8
+mode = "thumb"
+
+[[functions]]
+name = "GameMode_FileSelect"
+address = 0x080202a8
+end = 0x080202c8
+mode = "thumb"
+
+[[functions]]
+name = "SaveMenu_ResetDispatcher"
+address = 0x080202c8
+end = 0x080202f8
+mode = "thumb"
+
+[[functions]]
+name = "SaveMenu_DrawWorldInfoRow"
+address = 0x080202f8
+end = 0x08020388
+mode = "thumb"
+
+[[functions]]
+name = "LevelLayout_InitManager"
+address = 0x08020388
+end = 0x08020414
+mode = "thumb"
+
+[[functions]]
+name = "Entity_ProximitySound"
+address = 0x08020414
+end = 0x080204a4
+mode = "thumb"
+
+[[functions]]
+name = "TileSound_Update"
+address = 0x080204a4
+end = 0x080205d8
+mode = "thumb"
+
+[[functions]]
+name = "Entity_DispatchSound"
+address = 0x080205d8
+end = 0x0802090a
+mode = "thumb"
+
+[[functions]]
+name = "Entity_PlayStateSound"
+address = 0x0802090c
+end = 0x08020b30
+mode = "thumb"
+
+[[functions]]
+name = "SoundMixer_Init"
+address = 0x08020b30
+end = 0x08020b50
+mode = "thumb"
+
+[[functions]]
+name = "SoundMixer_Stop"
+address = 0x08020b50
+end = 0x08020b60
+mode = "thumb"
+
+[[functions]]
+name = "SoundSystem_StopAll"
+address = 0x08020b60
+end = 0x08020b76
+mode = "thumb"
+
+[[functions]]
+name = "SoundSystem_FadeOut"
+address = 0x08020b78
+end = 0x08020b88
+mode = "thumb"
+
+[[functions]]
+name = "Sound_PlayIfEnabled"
+address = 0x08020b88
+end = 0x08020bac
+mode = "thumb"
+
+[[functions]]
+name = "Sound_DrainIfActive"
+address = 0x08020bac
+end = 0x08020bc0
+mode = "thumb"
+
+[[functions]]
+name = "Sound_ServiceQueue"
+address = 0x08020bc0
+end = 0x08020be4
+mode = "thumb"
+
+[[functions]]
+name = "SoundSlot_SetVolumeByte"
+address = 0x08020be4
+end = 0x08020bf0
+mode = "thumb"
+
+[[functions]]
+name = "Sound_ClearActiveFlag"
+address = 0x08020bf0
+end = 0x08020c14
+mode = "thumb"
+
+[[functions]]
+name = "SoundSlot_EnableAndLoad"
+address = 0x08020c14
+end = 0x08020c3c
+mode = "thumb"
+
+[[functions]]
+name = "Music_Stop"
+address = 0x08020c3c
+end = 0x08020c58
+mode = "thumb"
+
+[[functions]]
+name = "Music_Resume"
+address = 0x08020c58
+end = 0x08020c78
+mode = "thumb"
+
+[[functions]]
+name = "Sound_Play"
+address = 0x08020c78
+end = 0x08020ca4
+mode = "thumb"
+
+[[functions]]
+name = "Sound_PlayWithPan"
+address = 0x08020ca4
+end = 0x08020cdc
+mode = "thumb"
+
+[[functions]]
+name = "Sound_PlayNearEntity"
+address = 0x08020cdc
+end = 0x08020d2c
+mode = "thumb"
+
+[[functions]]
+name = "Entity_PlaySoundOnScreenEnter"
+address = 0x08020d2c
+end = 0x08020da0
+mode = "thumb"
+
+[[functions]]
+name = "Sound_ReplaySlotEntry"
+address = 0x08020da0
+end = 0x08020dc4
+mode = "thumb"
+
+[[functions]]
+name = "SoundEntry_Play"
+address = 0x08020dc4
+end = 0x08020e14
+mode = "thumb"
+
+[[functions]]
+name = "Entity_CheckProximityAndPlaySound"
+address = 0x08020e14
+end = 0x08020e7c
+mode = "thumb"
+
+[[functions]]
+name = "SoundEntry_Stop"
+address = 0x08020e7c
+end = 0x08020e98
+mode = "thumb"
+
+[[functions]]
+name = "SoundChannel_BroadcastValue"
+address = 0x08020e98
+end = 0x08020ed8
+mode = "thumb"
+
+[[functions]]
+name = "SoundChannelTable_SetCounter"
+address = 0x08020ed8
+end = 0x08020ee4
+mode = "thumb"
+
+[[functions]]
+name = "Sound_IncrementChannelDepth"
+address = 0x08020ee4
+end = 0x08020f08
+mode = "thumb"
+
+[[functions]]
+name = "Sound_DecrementChannelDepth"
+address = 0x08020f08
+end = 0x08020f3c
+mode = "thumb"
+
+[[functions]]
+name = "EntityMover_Tick"
+address = 0x08020f3c
+end = 0x08020fe4
+mode = "thumb"
+
+[[functions]]
+name = "Entity_UpdateMovers"
+address = 0x08020fe4
+end = 0x080210a0
+mode = "thumb"
+
+[[functions]]
+name = "Entity_InitSlotFromRecord"
+address = 0x080210a0
+end = 0x08021140
+mode = "thumb"
+
+[[functions]]
+name = "LevelLayout_WalkRecords"
+address = 0x08021140
+end = 0x08021510
+mode = "thumb"
+
+[[functions]]
+name = "Entity_WalkCompactRecords"
+address = 0x08021510
+end = 0x080217d4
+mode = "thumb"
+
+[[functions]]
+name = "Entity_WaypointDirectionCompare"
+address = 0x080217d4
+end = 0x08021836
+mode = "thumb"
+
+[[functions]]
+name = "Entity_AdvanceWaypoint"
+address = 0x08021838
+end = 0x080219bc
+mode = "thumb"
+
+[[functions]]
+name = "Entity_FollowPath"
+address = 0x080219bc
+end = 0x08021ac8
+mode = "thumb"
+
+[[functions]]
+name = "sub_08021AC8"
+address = 0x08021ac8
+end = 0x08021cfc
+mode = "thumb"
+
+[[functions]]
+name = "Entity_UpdateOrbitalPosition"
+address = 0x08021cfc
+end = 0x08021e34
+mode = "thumb"
+
+[[functions]]
+name = "Entity_IsInTileRange"
+address = 0x08021e34
+end = 0x08021ebe
+mode = "thumb"
+
+[[functions]]
+name = "TileEntry_CalcDirection"
+address = 0x08021ec0
+end = 0x08021eec
+mode = "thumb"
+
+[[functions]]
+name = "Entity_InitFromLayout"
+address = 0x08021eec
+end = 0x08021f1c
+mode = "thumb"
+
+[[functions]]
+name = "DirToMotion"
+address = 0x08021f1c
+end = 0x08021f64
+mode = "thumb"
+
+[[functions]]
+name = "LevelLayout_LoadSlots3113C8"
+address = 0x08021f64
+end = 0x0802205c
+mode = "thumb"
+
+[[functions]]
+name = "LevelLayout_LoadSlots311074"
+address = 0x0802205c
+end = 0x080220c2
+mode = "thumb"
+
+[[functions]]
+name = "SpawnDispatchedEntities"
+address = 0x080220c4
+end = 0x08022160
+mode = "thumb"
+
+[[functions]]
+name = "SpawnEntitiesIfScrolled"
+address = 0x08022160
+end = 0x080221fc
+mode = "thumb"
+
+[[functions]]
+name = "SpawnVarHeightEntities"
+address = 0x080221fc
+end = 0x080222bc
+mode = "thumb"
+
+[[functions]]
+name = "SpawnRowGroupEntities"
+address = 0x080222bc
+end = 0x08022360
+mode = "thumb"
+
+[[functions]]
+name = "InitSpecialEntitySlots"
+address = 0x08022360
+end = 0x08022434
+mode = "thumb"
+
+[[functions]]
+name = "UpdateLogPairEntities"
+address = 0x08022434
+end = 0x08022730
+mode = "thumb"
+
+[[functions]]
+name = "SpawnEntitySlot2"
+address = 0x08022730
+end = 0x08022758
+mode = "thumb"
+
+[[functions]]
+name = "SpawnZone_Slot02"
+address = 0x08022758
+end = 0x0802277c
+mode = "thumb"
+
+[[functions]]
+name = "UpdateZone_Slots36to3D"
+address = 0x0802277c
+end = 0x080227b4
+mode = "thumb"
+
+[[functions]]
+name = "StreamInit_Slot2F"
+address = 0x080227b4
+end = 0x080227dc
+mode = "thumb"
+
+[[functions]]
+name = "SpawnZone_Slot2F"
+address = 0x080227dc
+end = 0x08022800
+mode = "thumb"
+
+[[functions]]
+name = "UpdateZone_Slots19to26"
+address = 0x08022800
+end = 0x08022838
+mode = "thumb"
+
+[[functions]]
+name = "StreamInit_Slots3Eto44"
+address = 0x08022838
+end = 0x08022884
+mode = "thumb"
+
+[[functions]]
+name = "StreamInit_Slot05"
+address = 0x08022884
+end = 0x080228ac
+mode = "thumb"
+
+[[functions]]
+name = "SpawnZone_Slot05"
+address = 0x080228ac
+end = 0x080228d0
+mode = "thumb"
+
+[[functions]]
+name = "SpawnEntitySlot47"
+address = 0x080228d0
+end = 0x080228fc
+mode = "thumb"
+
+[[functions]]
+name = "SpawnZone_Slot47"
+address = 0x080228fc
+end = 0x08022920
+mode = "thumb"
+
+[[functions]]
+name = "UpdateZone_Slots4Cto53"
+address = 0x08022920
+end = 0x08022958
+mode = "thumb"
+
+[[functions]]
+name = "StreamInit_Slot02"
+address = 0x08022958
+end = 0x08022980
+mode = "thumb"
+
+[[functions]]
+name = "Pickup_LoadSlotGroup_2"
+address = 0x08022980
+end = 0x080229a4
+mode = "thumb"
+
+[[functions]]
+name = "StreamInit_Slot06"
+address = 0x080229a4
+end = 0x080229cc
+mode = "thumb"
+
+[[functions]]
+name = "Pickup_LoadSlotGroup_6"
+address = 0x080229cc
+end = 0x080229f0
+mode = "thumb"
+
+[[functions]]
+name = "UpdateZone_Slots3Eto44"
+address = 0x080229f0
+end = 0x08022a28
+mode = "thumb"
+
+[[functions]]
+name = "SpawnNearbyEntities"
+address = 0x08022a28
+end = 0x08022a9c
+mode = "thumb"
+
+[[functions]]
+name = "StreamInit_Slot59"
+address = 0x08022a9c
+end = 0x08022ac8
+mode = "thumb"
+
+[[functions]]
+name = "SpawnZone_Slot59"
+address = 0x08022ac8
+end = 0x08022aec
+mode = "thumb"
+
+[[functions]]
+name = "LevelLayout_StreamInit"
+address = 0x08022aec
+end = 0x08022b4c
+mode = "thumb"
+
+[[functions]]
+name = "LevelEntities_Init"
+address = 0x08022b4c
+end = 0x08022b90
+mode = "thumb"
+
+[[functions]]
+name = "LevelEntities_Start"
+address = 0x08022b90
+end = 0x08022bae
+mode = "thumb"
+
+[[functions]]
+name = "Pickup_ResetLiveSlots"
+address = 0x08022bb0
+end = 0x08022bcc
+mode = "thumb"
+
+[[functions]]
+name = "EntityGroup_UpdatePickupsA"
+address = 0x08022bcc
+end = 0x08022c44
+mode = "thumb"
+
+[[functions]]
+name = "EntityGroup_UpdatePickupsB"
+address = 0x08022c44
+end = 0x08022cd4
+mode = "thumb"
+
+[[functions]]
+name = "SpawnEntityGroup_Slot0C"
+address = 0x08022cd4
+end = 0x08022d4c
+mode = "thumb"
+
+[[functions]]
+name = "SpawnEntityGroups_Slot1A_22_2A"
+address = 0x08022d4c
+end = 0x08022ddc
+mode = "thumb"
+
+[[functions]]
+name = "EntityGroup_UpdateMovers"
+address = 0x08022ddc
+end = 0x08022ea6
+mode = "thumb"
+
+[[functions]]
+name = "LevelLayout_SpawnGroup311C80"
+address = 0x08022ea8
+end = 0x08022f4c
+mode = "thumb"
+
+[[functions]]
+name = "LevelLayout_SpawnGroup311EC0"
+address = 0x08022f4c
+end = 0x08022fec
+mode = "thumb"
+
+[[functions]]
+name = "UpdateLogPairEntities2"
+address = 0x08022fec
+end = 0x080231f4
+mode = "thumb"
+
+[[functions]]
+name = "StreamInit_Slot02_Alt"
+address = 0x080231f4
+end = 0x0802321c
+mode = "thumb"
+
+[[functions]]
+name = "LevelLayout_InitSlot6"
+address = 0x0802321c
+end = 0x08023244
+mode = "thumb"
+
+[[functions]]
+name = "LevelLayout_InitGroup3116B8"
+address = 0x08023244
+end = 0x080232cc
+mode = "thumb"
+
+[[functions]]
+name = "LevelLayout_InitGroup311C80"
+address = 0x080232cc
+end = 0x08023334
+mode = "thumb"
+
+[[functions]]
+name = "StreamInit_Slot43"
+address = 0x08023334
+end = 0x08023360
+mode = "thumb"
+
+[[functions]]
+name = "EntityGroup_CheckPickups_Slot0x43"
+address = 0x08023360
+end = 0x08023384
+mode = "thumb"
+
+[[functions]]
+name = "StreamInit_Slot4E"
+address = 0x08023384
+end = 0x080233b0
+mode = "thumb"
+
+[[functions]]
+name = "EntityGroup_CheckPickups_Slot0x4E"
+address = 0x080233b0
+end = 0x080233d4
+mode = "thumb"
+
+[[functions]]
+name = "StreamInit_Slot3E"
+address = 0x080233d4
+end = 0x08023400
+mode = "thumb"
+
+[[functions]]
+name = "EntityGroup_CheckPickups_Slot0x3E"
+address = 0x08023400
+end = 0x08023424
+mode = "thumb"
+
+[[functions]]
+name = "EntityGroup_LoadAndUpdateMovers_311EC0"
+address = 0x08023424
+end = 0x0802349c
+mode = "thumb"
+
+[[functions]]
+name = "SpawnEntityPair_Slot5B_5C"
+address = 0x0802349c
+end = 0x080234e8
+mode = "thumb"
+
+[[functions]]
+name = "EntityGroup_LoadLayout_Slot0x5F"
+address = 0x080234e8
+end = 0x08023514
+mode = "thumb"
+
+[[functions]]
+name = "EntityGroup_CheckPickups_Slot0x5F"
+address = 0x08023514
+end = 0x08023538
+mode = "thumb"
+
+[[functions]]
+name = "LevelLayout_SpawnInit"
+address = 0x08023538
+end = 0x08023594
+mode = "thumb"
+
+[[functions]]
+name = "LevelLayout_Update"
+address = 0x08023594
+end = 0x080235c6
+mode = "thumb"
+
+[[functions]]
+name = "LevelEntityBatch_SpawnAndClassify"
+address = 0x080235c8
+end = 0x0802367c
+mode = "thumb"
+
+[[functions]]
+name = "LevelEntity_AnimAndSpawn"
+address = 0x0802367c
+end = 0x080236f4
+mode = "thumb"
+
+[[functions]]
+name = "sub_080236F4"
+address = 0x080236f4
+end = 0x08023ab4
+mode = "thumb"
+
+[[functions]]
+name = "LevelEntities_SpawnGroup10"
+address = 0x08023ab4
+end = 0x08023bc0
+mode = "thumb"
+
+[[functions]]
+name = "sub_08023BC0"
+address = 0x08023bc0
+end = 0x08023f68
+mode = "thumb"
+
+[[functions]]
+name = "LevelLayout_312D60_SpawnEntities"
+address = 0x08023f68
+end = 0x08023fac
+mode = "thumb"
+
+[[functions]]
+name = "LevelLayout_312D60_UpdateEntities"
+address = 0x08023fac
+end = 0x08023ff8
+mode = "thumb"
+
+[[functions]]
+name = "LevelLayout_312228_PlaceEntities"
+address = 0x08023ff8
+end = 0x08024024
+mode = "thumb"
+
+[[functions]]
+name = "LevelLayout_312228_ProcessEntities"
+address = 0x08024024
+end = 0x08024048
+mode = "thumb"
+
+[[functions]]
+name = "LevelLayout_312148_PlaceEntities"
+address = 0x08024048
+end = 0x08024070
+mode = "thumb"
+
+[[functions]]
+name = "LevelLayout_312148_ProcessEntities"
+address = 0x08024070
+end = 0x08024094
+mode = "thumb"
+
+[[functions]]
+name = "LevelLayout_LoadEntities28"
+address = 0x08024094
+end = 0x080240e0
+mode = "thumb"
+
+[[functions]]
+name = "LevelLayout_InitEntities28"
+address = 0x080240e0
+end = 0x08024138
+mode = "thumb"
+
+[[functions]]
+name = "LevelLayout_LoadEntities33"
+address = 0x08024138
+end = 0x08024180
+mode = "thumb"
+
+[[functions]]
+name = "LevelLayout_LoadEntities59"
+address = 0x08024180
+end = 0x080241cc
+mode = "thumb"
+
+[[functions]]
+name = "LevelLayout_InitEntities59"
+address = 0x080241cc
+end = 0x08024234
+mode = "thumb"
+
+[[functions]]
+name = "LevelLayout_LoadEntity5F"
+address = 0x08024234
+end = 0x08024260
+mode = "thumb"
+
+[[functions]]
+name = "UpdateEntitySlot5F"
+address = 0x08024260
+end = 0x080242ac
+mode = "thumb"
+
+[[functions]]
+name = "LoadEntitySlot61"
+address = 0x080242ac
+end = 0x080242d8
+mode = "thumb"
+
+[[functions]]
+name = "LoadEntitySlot65"
+address = 0x080242d8
+end = 0x08024304
+mode = "thumb"
+
+[[functions]]
+name = "InitEntitySlot65"
+address = 0x08024304
+end = 0x08024328
+mode = "thumb"
+
+[[functions]]
+name = "InitEntitySlots67_6B"
+address = 0x08024328
+end = 0x08024390
+mode = "thumb"
+
+[[functions]]
+name = "InitEntitySlots0A_13"
+address = 0x08024390
+end = 0x080243d4
+mode = "thumb"
+
+[[functions]]
+name = "InitEntitySlot71WithDifficulty"
+address = 0x080243d4
+end = 0x08024442
+mode = "thumb"
+
+[[functions]]
+name = "LoadEntitySlot77"
+address = 0x08024444
+end = 0x08024470
+mode = "thumb"
+
+[[functions]]
+name = "SpawnGrid_SpawnWave2"
+address = 0x0802a2f0
+end = 0x0802a394
+mode = "thumb"
+
+[[functions]]
+name = "EntityGroup14_Tick"
+address = 0x0802a394
+end = 0x0802a42a
+mode = "thumb"
+
+[[functions]]
+name = "SpawnGrid_SpawnWave1"
+address = 0x0802a42c
+end = 0x0802a4a4
+mode = "thumb"
+
+[[functions]]
+name = "EntityGroup16_Tick"
+address = 0x0802a4a4
+end = 0x0802a536
+mode = "thumb"
+
+[[functions]]
+name = "GateEvent_HandleEntity30"
+address = 0x0802a538
+end = 0x0802a63c
+mode = "thumb"
+
+[[functions]]
+name = "SpawnGrid_UpdateSection"
+address = 0x0802a63c
+end = 0x0802a8fc
+mode = "thumb"
+
+[[functions]]
+name = "Entity10_UpdateStatus"
+address = 0x0802a8fc
+end = 0x0802a9fc
+mode = "thumb"
+
+[[functions]]
+name = "Entity12_TickStateMachine"
+address = 0x0802a9fc
+end = 0x0802aae8
+mode = "thumb"
+
+[[functions]]
+name = "sub_0802AAE8"
+address = 0x0802aae8
+end = 0x0802aaea
+mode = "thumb"
+
+[[functions]]
+name = "EntitySlot10_LoadLayout"
+address = 0x0802aaec
+end = 0x0802ab14
+mode = "thumb"
+
+[[functions]]
+name = "EntitySlot17_Update"
+address = 0x0802ab14
+end = 0x0802ab64
+mode = "thumb"
+
+[[functions]]
+name = "EntitySlot17_Init"
+address = 0x0802ab64
+end = 0x0802abb0
+mode = "thumb"
+
+[[functions]]
+name = "EntitySlot12_LoadLayout"
+address = 0x0802abb0
+end = 0x0802abdc
+mode = "thumb"
+
+[[functions]]
+name = "RoomEntities_Update"
+address = 0x0802abdc
+end = 0x0802ac60
+mode = "thumb"
+
+[[functions]]
+name = "RoomEntities_Init"
+address = 0x0802ac60
+end = 0x0802acb4
+mode = "thumb"
+
+[[functions]]
+name = "RoomFrogEntity_Update"
+address = 0x0802acb4
+end = 0x0802af10
+mode = "thumb"
+
+[[functions]]
+name = "sub_0802B3B0"
+address = 0x0802b3b0
+mode = "thumb"
+
+[[functions]]
+name = "sub_0802B4B8"
+address = 0x0802b4b8
+mode = "thumb"
+
+[[functions]]
+name = "FrogPos_UpdateEntities"
+address = 0x0802b9d4
+end = 0x0802ba64
+mode = "thumb"
+
+[[functions]]
+name = "FrogGoal_UpdateEntities"
+address = 0x0802ba64
+end = 0x0802baf8
+mode = "thumb"
+
+[[functions]]
+name = "PadGrid_SpawnTypeA"
+address = 0x0802baf8
+mode = "thumb"
+
+[[functions]]
+name = "Walker_SpawnAtTile"
+address = 0x0802bb5c
+end = 0x0802bbc0
+mode = "thumb"
+
+[[functions]]
+name = "Pos2D_ClampToBounds"
+address = 0x0802bbc0
+end = 0x0802bbfc
+mode = "thumb"
+
+[[functions]]
+name = "Walker_LoadLayout"
+address = 0x0802bbfc
+end = 0x0802bc24
+mode = "thumb"
+
+[[functions]]
+name = "GateRoom_LoadLayout"
+address = 0x0802bc24
+end = 0x0802bc4c
+mode = "thumb"
+
+[[functions]]
+name = "GateRoom_Init"
+address = 0x0802bc4c
+end = 0x0802bc84
+mode = "thumb"
+
+[[functions]]
+name = "GateRoom_Update"
+address = 0x0802bc84
+end = 0x0802bc92
+mode = "thumb"
+
+[[functions]]
+name = "GateRoom_Tick"
+address = 0x0802bc94
+end = 0x0802bdbc
+mode = "thumb"
+
+[[functions]]
+name = "Gate_Tick"
+address = 0x0802bdbc
+end = 0x0802bf58
+mode = "thumb"
+
+[[functions]]
+name = "EnemyWave_TickGateTimer"
+address = 0x0802bf58
+end = 0x0802bffe
+mode = "thumb"
+
+[[functions]]
+name = "EnemyWave_Update"
+address = 0x0802c000
+end = 0x0802c200
+mode = "thumb"
+
+[[functions]]
+name = "EntityPool_UpdateOwned"
+address = 0x0802c200
+end = 0x0802c3e4
+mode = "thumb"
+
+[[functions]]
+name = "EntityPool_SpawnEntry"
+address = 0x0802c3e4
+end = 0x0802c5e0
+mode = "thumb"
+
+[[functions]]
+name = "EntityPool_CheckSpawnable"
+address = 0x0802c5e0
+end = 0x0802c640
+mode = "thumb"
+
+[[functions]]
+name = "EntityPool_AdvancePhase"
+address = 0x0802c640
+end = 0x0802c75c
+mode = "thumb"
+
+[[functions]]
+name = "EnemyLayout_Reset"
+address = 0x0802c75c
+end = 0x0802c7ec
+mode = "thumb"
+
+[[functions]]
+name = "EnemySpawn_Tick"
+address = 0x0802c7ec
+end = 0x0802c910
+mode = "thumb"
+
+[[functions]]
+name = "Entity22_Update"
+address = 0x0802c910
+end = 0x0802ca54
+mode = "thumb"
+
+[[functions]]
+name = "sub_0802CA54"
+address = 0x0802ca54
+end = 0x0802ca64
+mode = "thumb"
+
+[[functions]]
+name = "EntityPool_UpdateOwner58"
+address = 0x0802ca64
+end = 0x0802ca70
+mode = "thumb"
+
+[[functions]]
+name = "EntityPool_UpdateOwner5B"
+address = 0x0802ca70
+end = 0x0802ca80
+mode = "thumb"
+
+[[functions]]
+name = "Entity22_SpawnFromLayout"
+address = 0x0802ca80
+end = 0x0802cac0
+mode = "thumb"
+
+[[functions]]
+name = "EntityPool_AreAllCaptured"
+address = 0x0802cac0
+end = 0x0802cafc
+mode = "thumb"
+
+[[functions]]
+name = "Enemy_PickNextStep"
+address = 0x0802cafc
+end = 0x0802cdd0
+mode = "thumb"
+
+[[functions]]
+name = "Entity_MoveToEntry"
+address = 0x0802cdd0
+end = 0x0802ce60
+mode = "thumb"
+
+[[functions]]
+name = "Entity2_Tick"
+address = 0x0802ce60
+end = 0x0802d170
+mode = "thumb"
+
+[[functions]]
+name = "sub_0802D170"
+address = 0x0802d170
+end = 0x0802d294
+mode = "thumb"
+
+[[functions]]
+name = "sub_0802D294"
+address = 0x0802d294
+end = 0x0802d3c0
+mode = "thumb"
+
+[[functions]]
+name = "sub_0802D3C0"
+address = 0x0802d3c0
+end = 0x0802d448
+mode = "thumb"
+
+[[functions]]
+name = "sub_0802D448"
+address = 0x0802d448
+end = 0x0802d4ac
+mode = "thumb"
+
+[[functions]]
+name = "sub_0802D4AC"
+address = 0x0802d4ac
+end = 0x0802d4f8
+mode = "thumb"
+
+[[functions]]
+name = "sub_0802D4F8"
+address = 0x0802d4f8
+end = 0x0802d502
+mode = "thumb"
+
+[[functions]]
+name = "sub_0802D504"
+address = 0x0802d504
+end = 0x0802d514
+mode = "thumb"
+
+[[functions]]
+name = "sub_0802D514"
+address = 0x0802d514
+end = 0x0802d524
+mode = "thumb"
+
+[[functions]]
+name = "RegisterRamReset"
+address = 0x0802d524
+end = 0x0802d528
+mode = "thumb"
+
+[[functions]]
+name = "sub_0802D528"
+address = 0x0802d528
+end = 0x0802d52e
+mode = "thumb"
+
+[[functions]]
+name = "VBlankIntrWait"
+address = 0x0802d52e
+end = 0x0802d534
+mode = "thumb"
+
+[[functions]]
+name = "Div"
+address = 0x0802d534
+end = 0x0802d538
+mode = "thumb"
+
+[[functions]]
+name = "DivArm"
+address = 0x0802d538
+end = 0x0802d53c
+mode = "thumb"
+
+[[functions]]
+name = "sub_0802D53C"
+address = 0x0802d53c
+end = 0x0802d542
+mode = "thumb"
+
+[[functions]]
+name = "ModArm"
+address = 0x0802d542
+end = 0x0802d548
+mode = "thumb"
+
+[[functions]]
+name = "Sqrt"
+address = 0x0802d548
+end = 0x0802d54c
+mode = "thumb"
+
+[[functions]]
+name = "sub_0802D54C"
+address = 0x0802d54c
+end = 0x0802d550
+mode = "thumb"
+
+[[functions]]
+name = "sub_0802D550"
+address = 0x0802d550
+end = 0x0802d554
+mode = "thumb"
+
+[[functions]]
+name = "CpuSet"
+address = 0x0802d554
+end = 0x0802d558
+mode = "thumb"
+
+[[functions]]
+name = "CpuFastSet"
+address = 0x0802d558
+end = 0x0802d55c
+mode = "thumb"
+
+[[functions]]
+name = "sub_0802D55C"
+address = 0x0802d55c
+end = 0x0802d560
+mode = "thumb"
+
+[[functions]]
+name = "ObjAffineSet"
+address = 0x0802d560
+end = 0x0802d564
+mode = "thumb"
+
+[[functions]]
+name = "sub_0802D564"
+address = 0x0802d564
+end = 0x0802d568
+mode = "thumb"
+
+[[functions]]
+name = "LZ77UnCompWram"
+address = 0x0802d568
+end = 0x0802d56c
+mode = "thumb"
+
+[[functions]]
+name = "LZ77UnCompVramAndGetSize"
+address = 0x0802d56c
+end = 0x0802d580
+mode = "thumb"
+
+[[functions]]
+name = "HuffUnComp"
+address = 0x0802d580
+end = 0x0802d584
+mode = "thumb"
+
+[[functions]]
+name = "sub_0802D584"
+address = 0x0802d584
+end = 0x0802d588
+mode = "thumb"
+
+[[functions]]
+name = "sub_0802D588"
+address = 0x0802d588
+end = 0x0802d58c
+mode = "thumb"
+
+[[functions]]
+name = "sub_0802D58C"
+address = 0x0802d58c
+end = 0x0802d590
+mode = "thumb"
+
+[[functions]]
+name = "sub_0802D590"
+address = 0x0802d590
+end = 0x0802d594
+mode = "thumb"
+
+[[functions]]
+name = "sub_0802D594"
+address = 0x0802d594
+end = 0x0802d598
+mode = "thumb"
+
+[[functions]]
+name = "sub_0802D598"
+address = 0x0802d598
+end = 0x0802d59c
+mode = "thumb"
+
+[[functions]]
+name = "SoundBiasSet"
+address = 0x0802d59c
+end = 0x0802d5a2
+mode = "thumb"
+
+[[functions]]
+name = "sub_0802D5A2"
+address = 0x0802d5a2
+end = 0x0802d5a8
+mode = "thumb"
+
+[[functions]]
+name = "sub_0802D5A8"
+address = 0x0802d5a8
+end = 0x0802d5ac
+mode = "thumb"
+
+[[functions]]
+name = "SoundDriverMode"
+address = 0x0802d5ac
+end = 0x0802d5b0
+mode = "thumb"
+
+[[functions]]
+name = "SoundDriverMain"
+address = 0x0802d5b0
+end = 0x0802d5b4
+mode = "thumb"
+
+[[functions]]
+name = "sub_0802D5B4"
+address = 0x0802d5b4
+end = 0x0802d5b8
+mode = "thumb"
+
+[[functions]]
+name = "SoundChannelClear"
+address = 0x0802d5b8
+end = 0x0802d5bc
+mode = "thumb"
+
+[[functions]]
+name = "sub_0802D5BC"
+address = 0x0802d5bc
+end = 0x0802d5c0
+mode = "thumb"
+
+[[functions]]
+name = "sub_0802D5C0"
+address = 0x0802d5c0
+end = 0x0802d5c4
+mode = "thumb"
+
+[[functions]]
+name = "sub_0802D5C4"
+address = 0x0802d5c4
+end = 0x0802d5c8
+mode = "thumb"
+
+[[functions]]
+name = "sub_0802D5C8"
+address = 0x0802d5c8
+end = 0x0802d5cc
+mode = "thumb"
+
+[[functions]]
+name = "MusicPlayerStart"
+address = 0x0802d5cc
+end = 0x0802d5d0
+mode = "thumb"
+
+[[functions]]
+name = "sub_0802D5D0"
+address = 0x0802d5d0
+end = 0x0802d5d4
+mode = "thumb"
+
+[[functions]]
+name = "sub_0802D5D4"
+address = 0x0802d5d4
+end = 0x0802d5d8
+mode = "thumb"
+
+[[functions]]
+name = "MusicPlayerFadeOut"
+address = 0x0802d5d8
+end = 0x0802d5dc
+mode = "thumb"
+
+[[functions]]
+name = "MultiBoot"
+address = 0x0802d5dc
+end = 0x0802d5e2
+mode = "thumb"
+
+[[functions]]
+name = "SoundSystem_Transfer"
+address = 0x0802d5ec
+end = 0x0802d770
+mode = "thumb"
+
+[[functions]]
+name = "sub_0802D770"
+address = 0x0802d770
+end = 0x0802d800
+mode = "thumb"
+
+[[functions]]
+name = "sub_0802D800"
+address = 0x0802d800
+end = 0x0802d890
+mode = "thumb"
+
+[[functions]]
+name = "SoundSystem_SetPanParams"
+address = 0x0802d890
+end = 0x0802d8f8
+mode = "thumb"
+
+[[functions]]
+name = "Sound_Reset"
+address = 0x0802d8f8
+end = 0x0802d99c
+mode = "thumb"
+
+[[functions]]
+name = "LevelLayout_SetupManager"
+address = 0x0802d99c
+end = 0x0802d9ec
+mode = "thumb"
+
+[[functions]]
+name = "Sound_AllocVoice"
+address = 0x0802d9ec
+end = 0x0802dc1c
+mode = "thumb"
+
+[[functions]]
+name = "SoundHandle_SetPan"
+address = 0x0802dc1c
+end = 0x0802dcbc
+mode = "thumb"
+
+[[functions]]
+name = "Sound_SetChannelPan"
+address = 0x0802dcbc
+end = 0x0802ddb0
+mode = "thumb"
+
+[[functions]]
+name = "Sound_GetChannelPan"
+address = 0x0802ddb0
+end = 0x0802de24
+mode = "thumb"
+
+[[functions]]
+name = "SoundSlot_SetVolume"
+address = 0x0802de24
+end = 0x0802de9c
+mode = "thumb"
+
+[[functions]]
+name = "Sound_OpenStream"
+address = 0x0802de9c
+end = 0x0802dfbc
+mode = "thumb"
+
+[[functions]]
+name = "SoundSlot_SetPitchScale"
+address = 0x0802dfbc
+end = 0x0802e00c
+mode = "thumb"
+
+[[functions]]
+name = "SoundStream_UpdateCursor"
+address = 0x0802e00c
+end = 0x0802e0bc
+mode = "thumb"
+
+[[functions]]
+name = "Sound_SetActiveCount"
+address = 0x0802e0bc
+end = 0x0802e100
+mode = "thumb"
+
+[[functions]]
+name = "SoundHandle_Retire"
+address = 0x0802e100
+end = 0x0802e13c
+mode = "thumb"
+
+[[functions]]
+name = "Sound_DrainActiveSlots"
+address = 0x0802e13c
+end = 0x0802e184
+mode = "thumb"
+
+[[functions]]
+name = "SoundHandle_IsActive"
+address = 0x0802e184
+end = 0x0802e1c8
+mode = "thumb"
+
+[[functions]]
+name = "SoundHandle_GetPeriod"
+address = 0x0802e1c8
+end = 0x0802e220
+mode = "thumb"
+
+[[functions]]
+name = "Sound_GetChannelVolume"
+address = 0x0802e220
+end = 0x0802e27c
+mode = "thumb"
+
+[[functions]]
+name = "SoundSystem_SetMuteByActive"
+address = 0x0802e27c
+end = 0x0802e2b4
+mode = "thumb"
+
+[[functions]]
+name = "SoundSystem_GetFlags"
+address = 0x0802e2b4
+end = 0x0802e2c0
+mode = "thumb"
+
+[[functions]]
+name = "SoundSystem_SetFlags"
+address = 0x0802e2c0
+end = 0x0802e2d4
+mode = "thumb"
+
+[[functions]]
+name = "SoundSystem_TestFlag"
+address = 0x0802e2d4
+end = 0x0802e2ec
+mode = "thumb"
+
+[[functions]]
+name = "SoundSystem_SetFlag"
+address = 0x0802e2ec
+end = 0x0802e30c
+mode = "thumb"
+
+[[functions]]
+name = "SoundSystem_ClearFlag"
+address = 0x0802e30c
+end = 0x0802e32c
+mode = "thumb"
+
+[[functions]]
+name = "SoundSystem_SetVolCountA"
+address = 0x0802e32c
+end = 0x0802e344
+mode = "thumb"
+
+[[functions]]
+name = "SoundSystem_SetVolCountB"
+address = 0x0802e344
+end = 0x0802e35c
+mode = "thumb"
+
+[[functions]]
+name = "SoundSystem_SetMasterVolHigh"
+address = 0x0802e35c
+end = 0x0802e36c
+mode = "thumb"
+
+[[functions]]
+name = "SoundSystem_SetMasterVolLow"
+address = 0x0802e36c
+end = 0x0802e380
+mode = "thumb"
+
+[[functions]]
+name = "MemZero"
+address = 0x0802e380
+end = 0x0802e394
+mode = "thumb"
+
+[[functions]]
+name = "Sound_MemCopy"
+address = 0x0802e394
+end = 0x0802e3ac
+mode = "thumb"
+
+[[functions]]
+name = "SoundRng_Step"
+address = 0x0802e3ac
+end = 0x0802e3c8
+mode = "thumb"
+
+[[functions]]
+name = "Sound_Rand"
+address = 0x0802e3c8
+end = 0x0802e3f8
+mode = "thumb"
+
+[[functions]]
+name = "Sound_Unlock"
+address = 0x0802e3f8
+end = 0x0802e418
+mode = "thumb"
+
+[[functions]]
+name = "Sound_Lock"
+address = 0x0802e418
+end = 0x0802e43c
+mode = "thumb"
+
+[[functions]]
+name = "SoundLock_SlotOpen"
+address = 0x0802e43c
+end = 0x0802e470
+mode = "thumb"
+
+[[functions]]
+name = "SoundLock_SlotClose"
+address = 0x0802e470
+end = 0x0802e4b4
+mode = "thumb"
+
+[[functions]]
+name = "SoundLock_SetPan"
+address = 0x0802e4b4
+end = 0x0802e4e8
+mode = "thumb"
+
+[[functions]]
+name = "SoundLock_SetEnable"
+address = 0x0802e4e8
+end = 0x0802e528
+mode = "thumb"
+
+[[functions]]
+name = "SoundLock_CalcPeriod"
+address = 0x0802e528
+end = 0x0802e544
+mode = "thumb"
+
+[[functions]]
+name = "sub_0802E544"
+address = 0x0802e544
+end = 0x0802e5d8
+mode = "thumb"
+
+[[functions]]
+name = "Sound_EmitPsgPitch"
+address = 0x0802e5d8
+end = 0x0802e684
+mode = "thumb"
+
+[[functions]]
+name = "SoundVolume_Emit"
+address = 0x0802e684
+end = 0x0802e724
+mode = "thumb"
+
+[[functions]]
+name = "SoundChannel_Reset"
+address = 0x0802e724
+end = 0x0802e7c4
+mode = "thumb"
+
+[[functions]]
+name = "sub_0802E7C4"
+address = 0x0802e7c4
+end = 0x0802e874
+mode = "thumb"
+
+[[functions]]
+name = "Sound_AdjustPan"
+address = 0x0802e874
+end = 0x0802e934
+mode = "thumb"
+
+[[functions]]
+name = "Sound_TickDualEnvelopes"
+address = 0x0802e934
+end = 0x0802ea2c
+mode = "thumb"
+
+[[functions]]
+name = "SoundEnvelope_SetOscillator"
+address = 0x0802ea2c
+end = 0x0802ea80
+mode = "thumb"
+
+[[functions]]
+name = "SoundEnvelope_TickA0"
+address = 0x0802ea80
+end = 0x0802eb34
+mode = "thumb"
+
+[[functions]]
+name = "SoundEnvelope_SetRamp"
+address = 0x0802eb34
+end = 0x0802ebf8
+mode = "thumb"
+
+[[functions]]
+name = "SoundEnvelope_InitClamp"
+address = 0x0802ebf8
+end = 0x0802ec7c
+mode = "thumb"
+
+[[functions]]
+name = "Sound_UpdateChannelEnvelopesA"
+address = 0x0802ec7c
+end = 0x0802ed5c
+mode = "thumb"
+
+[[functions]]
+name = "Sound_TickSlotEnvelopeB"
+address = 0x0802ed5c
+end = 0x0802edf0
+mode = "thumb"
+
+[[functions]]
+name = "Sound_TickStreamHead"
+address = 0x0802edf0
+end = 0x0802eef8
+mode = "thumb"
+
+[[functions]]
+name = "SoundChannel_SetEnvelopeC"
+address = 0x0802eef8
+end = 0x0802ef7c
+mode = "thumb"
+
+[[functions]]
+name = "Sound_ApplyEnvelopeC"
+address = 0x0802ef7c
+end = 0x0802f054
+mode = "thumb"
+
+[[functions]]
+name = "Sound_TickEnvelopeC"
+address = 0x0802f054
+end = 0x0802f2fc
+mode = "thumb"
+
+[[functions]]
+name = "SoundPan_Tick"
+address = 0x0802f2fc
+end = 0x0802f398
+mode = "thumb"
+
+[[functions]]
+name = "SoundPan_UpdateMixEntry"
+address = 0x0802f398
+end = 0x0802f4b0
+mode = "thumb"
+
+[[functions]]
+name = "SoundMixer_VBlankUpdate"
+address = 0x0802f4b0
+end = 0x0802f870
+mode = "thumb"
+
+[[functions]]
+name = "Sound_WritePsgDuty"
+address = 0x0802f870
+end = 0x0802f884
+mode = "thumb"
+
+[[functions]]
+name = "Sound_WriteNoiseFreq"
+address = 0x0802f884
+end = 0x0802f890
+mode = "thumb"
+
+[[functions]]
+name = "Sound_WritePsgVolume"
+address = 0x0802f890
+end = 0x0802f8f0
+mode = "thumb"
+
+[[functions]]
+name = "Sound_MarkChannelFullDirty"
+address = 0x0802f8f0
+end = 0x0802f930
+mode = "thumb"
+
+[[functions]]
+name = "Sound_LoadWaveRam"
+address = 0x0802f930
+end = 0x0802f99c
+mode = "thumb"
+
+[[functions]]
+name = "sub_0802F99C"
+address = 0x0802f99c
+end = 0x0802f9f0
+mode = "thumb"
+
+[[functions]]
+name = "Sound_RetireChannel"
+address = 0x0802f9f0
+end = 0x0802fa60
+mode = "thumb"
+
+[[functions]]
+name = "Sound_UpdateStreamPeriod"
+address = 0x0802fa60
+end = 0x0802fab8
+mode = "thumb"
+
+[[functions]]
+name = "sub_0802FAB8"
+address = 0x0802fab8
+end = 0x0802ff58
+mode = "thumb"
+
+[[functions]]
+name = "SoundMixer_VBlankTick"
+address = 0x0802ff58
+end = 0x08030158
+mode = "thumb"
+
+[[functions]]
+name = "sub_08030158"
+address = 0x08030158
+end = 0x080301c4
+mode = "thumb"
+
+[[functions]]
+name = "Sound_CalcNotePeriod"
+address = 0x080301c4
+end = 0x08030264
+mode = "thumb"
+
+[[functions]]
+name = "SoundPeriod_Reset"
+address = 0x08030264
+end = 0x08030290
+mode = "thumb"
+
+[[functions]]
+name = "Sound_StartDma"
+address = 0x08030290
+end = 0x0803030c
+mode = "thumb"
+
+[[functions]]
+name = "SoundOp_RetireChannel"
+address = 0x0803030c
+end = 0x0803038c
+mode = "thumb"
+
+[[functions]]
+name = "SoundOp_SetPeriod"
+address = 0x0803038c
+end = 0x0803045c
+mode = "thumb"
+
+[[functions]]
+name = "SoundOp_GateOff"
+address = 0x0803045c
+end = 0x080304f4
+mode = "thumb"
+
+[[functions]]
+name = "SoundOp_Wait"
+address = 0x080304f4
+end = 0x08030644
+mode = "thumb"
+
+[[functions]]
+name = "sub_08030644"
+address = 0x08030644
+end = 0x0803079c
+mode = "thumb"
+
+[[functions]]
+name = "SoundOp_SetPitchRel"
+address = 0x0803079c
+end = 0x0803080c
+mode = "thumb"
+
+[[functions]]
+name = "SoundOp_SetAcc1"
+address = 0x0803080c
+end = 0x080308b0
+mode = "thumb"
+
+[[functions]]
+name = "Sound_LoadStreamSlot"
+address = 0x080308b0
+end = 0x080309a0
+mode = "thumb"
+
+[[functions]]
+name = "SoundOpcode_TriggerStream"
+address = 0x080309a0
+end = 0x08030a44
+mode = "thumb"
+
+[[functions]]
+name = "SoundOpcode_SetStreamLoop"
+address = 0x08030a44
+end = 0x08030b34
+mode = "thumb"
+
+[[functions]]
+name = "Sound_OpcodeDispatch"
+address = 0x080315d8
+end = 0x08031638
+mode = "thumb"
+
+[[functions]]
+name = "SoundOpcode_SetStreamPan"
+address = 0x08031638
+end = 0x08031688
+mode = "thumb"
+
+[[functions]]
+name = "sub_08031688"
+address = 0x08031688
+end = 0x080316dc
+mode = "thumb"
+
+[[functions]]
+name = "SoundOp_SetEnvelopeOscillator"
+address = 0x080316dc
+end = 0x080316fc
+mode = "thumb"
+
+[[functions]]
+name = "sub_080316FC"
+address = 0x080316fc
+end = 0x08031720
+mode = "thumb"
+
+[[functions]]
+name = "SoundOp_SetEnvelopeRamp"
+address = 0x08031720
+end = 0x08031748
+mode = "thumb"
+
+[[functions]]
+name = "SoundOp_Jump"
+address = 0x08031748
+end = 0x0803175c
+mode = "thumb"
+
+[[functions]]
+name = "SoundOp_Call"
+address = 0x08031798
+end = 0x080317b0
+mode = "thumb"
+
+[[functions]]
+name = "SoundOp_Return"
+address = 0x080317b0
+end = 0x080317c0
+mode = "thumb"
+
+[[functions]]
+name = "SoundOp_SetEnvelopeC"
+address = 0x080317c0
+end = 0x080317e0
+mode = "thumb"
+
+[[functions]]
+name = "sub_080317E0"
+address = 0x080317e0
+end = 0x08031824
+mode = "thumb"
+
+[[functions]]
+name = "sub_08031824"
+address = 0x08031824
+end = 0x08031868
+mode = "thumb"
+
+[[functions]]
+name = "sub_08031868"
+address = 0x08031868
+end = 0x0803189c
+mode = "thumb"
+
+[[functions]]
+name = "SoundOp_Skip2"
+address = 0x0803189c
+end = 0x080318a8
+mode = "thumb"
+
+[[functions]]
+name = "sub_080318A8"
+address = 0x080318a8
+end = 0x080318f0
+mode = "thumb"
+
+[[functions]]
+name = "sub_080318F0"
+address = 0x080318f0
+end = 0x08031910
+mode = "thumb"
+
+[[functions]]
+name = "sub_08031910"
+address = 0x08031910
+end = 0x0803194c
+mode = "thumb"
+
+[[functions]]
+name = "sub_0803194C"
+address = 0x0803194c
+end = 0x08031998
+mode = "thumb"
+
+[[functions]]
+name = "sub_08031998"
+address = 0x08031998
+end = 0x080319c0
+mode = "thumb"
+
+[[functions]]
+name = "sub_080319C0"
+address = 0x080319c0
+end = 0x080319fc
+mode = "thumb"
+
+[[functions]]
+name = "sub_080319FC"
+address = 0x080319fc
+end = 0x08031a48
+mode = "thumb"
+
+[[functions]]
+name = "sub_08031A48"
+address = 0x08031a48
+end = 0x08031ab4
+mode = "thumb"
+
+[[functions]]
+name = "sub_08031AB4"
+address = 0x08031ab4
+end = 0x08031b84
+mode = "thumb"
+
+[[functions]]
+name = "sub_08031B84"
+address = 0x08031b84
+end = 0x08031bb8
+mode = "thumb"
+
+[[functions]]
+name = "sub_08031BB8"
+address = 0x08031bb8
+end = 0x08031c04
+mode = "thumb"
+
+[[functions]]
+name = "sub_08031C04"
+address = 0x08031c04
+end = 0x08031c64
+mode = "thumb"
+
+[[functions]]
+name = "sub_08031C64"
+address = 0x08031c64
+end = 0x08031c84
+mode = "thumb"
+
+[[functions]]
+name = "sub_08031C84"
+address = 0x08031c84
+end = 0x08031d2c
+mode = "thumb"
+
+[[functions]]
+name = "sub_08031D2C"
+address = 0x08031d2c
+end = 0x08031dbc
+mode = "thumb"
+
+[[functions]]
+name = "SoundSlot_CalcStreamTiming"
+address = 0x08031dbc
+end = 0x08031e24
+mode = "thumb"
+
+[[functions]]
+name = "SoundSlot_Load"
+address = 0x08031e24
+end = 0x08031fdc
+mode = "thumb"
+
+[[functions]]
+name = "SoundRequest_Drain"
+address = 0x08031fdc
+end = 0x08032094
+mode = "thumb"
+
+[[functions]]
+name = "SoundRequestSlot_Drain"
+address = 0x08032094
+end = 0x08032148
+mode = "thumb"
+
+[[functions]]
+name = "SoundSystem_IsActive"
+address = 0x08032148
+end = 0x08032200
+mode = "thumb"
+
+[[functions]]
+name = "sub_080323CC"
+address = 0x080323cc
+end = 0x080325b0
+mode = "thumb"
+
+[[functions]]
+name = "Sound_ProcessRequests"
+address = 0x080325b0
+end = 0x08032894
+mode = "thumb"
+
+[[functions]]
+name = "SoundSlot_InitParams"
+address = 0x08032894
+end = 0x08032904
+mode = "thumb"
+
+[[functions]]
+name = "SoundChannel_SetState"
+address = 0x08032904
+end = 0x0803299c
+mode = "thumb"
+
+[[functions]]
+name = "SoundChannel_Init"
+address = 0x0803299c
+end = 0x080329f4
+mode = "thumb"
+
+[[functions]]
+name = "SoundSlot_QueueRequest"
+address = 0x080329f4
+end = 0x08032a20
+mode = "thumb"
+
+[[functions]]
+name = "SoundSlot_ClearInProgress"
+address = 0x08032a20
+end = 0x08032a54
+mode = "thumb"
+
+[[functions]]
+name = "SoundSlot_QueueId"
+address = 0x08032a54
+end = 0x08032a98
+mode = "thumb"
+
+[[functions]]
+name = "SoundSlot_Stride"
+address = 0x08032a98
+end = 0x08032aa0
+mode = "thumb"
+
+[[functions]]
+name = "SoundSystem_InitRequestSlot"
+address = 0x08032aa0
+end = 0x08032b18
+mode = "thumb"
+
+[[functions]]
+name = "SoundSlot_PickByPriority"
+address = 0x08032b18
+end = 0x08032ba0
+mode = "thumb"
+
+[[functions]]
+name = "SoundChannel_CheckPriority"
+address = 0x08032ba0
+end = 0x08032bc8
+mode = "thumb"
+
+[[functions]]
+name = "SoundVoice_Init"
+address = 0x08032bc8
+end = 0x08032c18
+mode = "thumb"
+
+[[functions]]
+name = "sub_08032C18"
+address = 0x08032c18
+mode = "thumb"
+
+[[functions]]
+name = "BuildRangeTable"
+address = 0x08032e04
+end = 0x08032e1c
+mode = "thumb"
+
+[[functions]]
+name = "SoundIrqEnable_ARM"
+address = 0x08032e1c
+mode = "arm"
+
+[[functions]]
+name = "SoundIrqDisable_ARM"
+address = 0x08032e38
+mode = "arm"
+
+[[functions]]
+name = "Eeprom_SetSizeConfig"
+address = 0x080338a8
+end = 0x080338ec
+mode = "thumb"
+
+[[functions]]
+name = "Eeprom_TickTimer"
+address = 0x080338ec
+end = 0x08033910
+mode = "thumb"
+
+[[functions]]
+name = "Timer_SetIrqHandler"
+address = 0x08033910
+end = 0x08033948
+mode = "thumb"
+
+[[functions]]
+name = "sub_08033A70"
+address = 0x08033a70
+mode = "thumb"
+
+[[functions]]
+name = "sub_08033B28"
+address = 0x08033b28
+mode = "thumb"
+
+[[functions]]
+name = "sub_08033C0C"
+address = 0x08033c0c
+mode = "thumb"
+
+[[functions]]
+name = "__ashldi3"
+address = 0x08033ca4
+end = 0x08033cd6
+mode = "thumb"
+
+[[functions]]
+name = "_call_via_r0"
+address = 0x08033cd8
+end = 0x08033cdc
+mode = "thumb"
+
+[[functions]]
+name = "_call_via_r1"
+address = 0x08033cdc
+end = 0x08033ce0
+mode = "thumb"
+
+[[functions]]
+name = "_call_via_r2"
+address = 0x08033ce0
+end = 0x08033ce4
+mode = "thumb"
+
+[[functions]]
+name = "_call_via_r3"
+address = 0x08033ce4
+end = 0x08033ce8
+mode = "thumb"
+
+[[functions]]
+name = "_call_via_r4"
+address = 0x08033ce8
+end = 0x08033cec
+mode = "thumb"
+
+[[functions]]
+name = "_call_via_r5"
+address = 0x08033cec
+end = 0x08033cf0
+mode = "thumb"
+
+[[functions]]
+name = "_call_via_r6"
+address = 0x08033cf0
+end = 0x08033cf4
+mode = "thumb"
+
+[[functions]]
+name = "_call_via_r7"
+address = 0x08033cf4
+end = 0x08033cf8
+mode = "thumb"
+
+[[functions]]
+name = "_call_via_r8"
+address = 0x08033cf8
+end = 0x08033cfc
+mode = "thumb"
+
+[[functions]]
+name = "_call_via_r9"
+address = 0x08033cfc
+end = 0x08033d00
+mode = "thumb"
+
+[[functions]]
+name = "_call_via_sl"
+address = 0x08033d00
+end = 0x08033d04
+mode = "thumb"
+
+[[functions]]
+name = "_call_via_fp"
+address = 0x08033d04
+end = 0x08033d08
+mode = "thumb"
+
+[[functions]]
+name = "_call_via_ip"
+address = 0x08033d08
+end = 0x08033d0c
+mode = "thumb"
+
+[[functions]]
+name = "_call_via_sp"
+address = 0x08033d0c
+end = 0x08033d10
+mode = "thumb"
+
+[[functions]]
+name = "_call_via_lr"
+address = 0x08033d10
+end = 0x08033d14
+mode = "thumb"
+
+[[functions]]
+name = "__divsi3"
+address = 0x08033d14
+end = 0x08033da6
+mode = "thumb"
+
+[[functions]]
+name = "__div0"
+address = 0x08033da8
+end = 0x08033daa
+mode = "thumb"
+
+[[functions]]
+name = "__fixunssfsi"
+address = 0x08033dac
+end = 0x08033de0
+mode = "thumb"
+
+[[functions]]
+name = "__lshrdi3"
+address = 0x08033de0
+end = 0x08033e12
+mode = "thumb"
+
+[[functions]]
+name = "__modsi3"
+address = 0x08033e14
+end = 0x08033ee2
+mode = "thumb"
+
+[[functions]]
+name = "__udivsi3"
+address = 0x08033ee4
+end = 0x08033f5c
+mode = "thumb"
+
+[[functions]]
+name = "__umodsi3"
+address = 0x08033f5c
+end = 0x0803401c
+mode = "thumb"
+
+[[functions]]
+name = "sub_0803401C"
+address = 0x0803401c
+mode = "thumb"
+
+[[functions]]
+name = "__unpack_f"
+address = 0x080340d4
+end = 0x0803414e
+mode = "thumb"
+
+[[functions]]
+name = "sub_08034150"
+address = 0x08034150
+mode = "thumb"
+
+[[functions]]
+name = "__addsf3"
+address = 0x080342cc
+end = 0x080342f8
+mode = "thumb"
+
+[[functions]]
+name = "__subsf3"
+address = 0x080342f8
+end = 0x0803432c
+mode = "thumb"
+
+[[functions]]
+name = "__mulsf3"
+address = 0x0803432c
+end = 0x08034490
+mode = "thumb"
+
+[[functions]]
+name = "__divsf3"
+address = 0x08034490
+end = 0x0803457a
+mode = "thumb"
+
+[[functions]]
+name = "__fpcmp_parts_f"
+address = 0x0803457c
+end = 0x08034660
+mode = "thumb"
+
+[[functions]]
+name = "__cmpsf2"
+address = 0x08034660
+end = 0x08034686
+mode = "thumb"
+
+[[functions]]
+name = "__eqsf2"
+address = 0x08034688
+end = 0x080346ce
+mode = "thumb"
+
+[[functions]]
+name = "__nesf2"
+address = 0x080346d0
+end = 0x08034716
+mode = "thumb"
+
+[[functions]]
+name = "__gtsf2"
+address = 0x08034718
+end = 0x08034760
+mode = "thumb"
+
+[[functions]]
+name = "__gesf2"
+address = 0x08034760
+end = 0x080347a8
+mode = "thumb"
+
+[[functions]]
+name = "__ltsf2"
+address = 0x080347a8
+end = 0x080347ee
+mode = "thumb"
+
+[[functions]]
+name = "__lesf2"
+address = 0x080347f0
+end = 0x08034836
+mode = "thumb"
+
+[[functions]]
+name = "__floatsisf"
+address = 0x08034838
+end = 0x08034898
+mode = "thumb"
+
+[[functions]]
+name = "__fixsfsi"
+address = 0x08034898
+end = 0x08034900
+mode = "thumb"
+
+[[functions]]
+name = "__negsf2"
+address = 0x08034900
+end = 0x08034924
+mode = "thumb"
+
+[[functions]]
+name = "sub_08034924"
+address = 0x08034924
+mode = "thumb"
+
+[[functions]]
+name = "sub_0803493C"
+address = 0x0803493c
+mode = "thumb"
+
+[[functions]]
+name = "__muldi3"
+address = 0x08034968
+end = 0x080349d8
+mode = "thumb"
+
+[[functions]]
+name = "__pack_d"
+address = 0x080349d8
+end = 0x08034b20
+mode = "thumb"
+
+[[functions]]
+name = "sub_08034B20"
+address = 0x08034b20
+mode = "thumb"
+
+[[functions]]
+name = "sub_08034BF8"
+address = 0x08034bf8
+mode = "thumb"
+
+[[functions]]
+name = "__adddf3"
+address = 0x08034e64
+end = 0x08034e94
+mode = "thumb"
+
+[[functions]]
+name = "__subdf3"
+address = 0x08034e94
+end = 0x08034ecc
+mode = "thumb"
+
+[[functions]]
+name = "__muldf3"
+address = 0x08034ecc
+end = 0x08035174
+mode = "thumb"
+
+[[functions]]
+name = "__divdf3"
+address = 0x08035174
+end = 0x080352fc
+mode = "thumb"
+
+[[functions]]
+name = "__fpcmp_parts_d"
+address = 0x080352fc
+end = 0x080353fa
+mode = "thumb"
+
+[[functions]]
+name = "__cmpdf2"
+address = 0x080353fc
+end = 0x08035426
+mode = "thumb"
+
+[[functions]]
+name = "__eqdf2"
+address = 0x08035428
+end = 0x08035472
+mode = "thumb"
+
+[[functions]]
+name = "__nedf2"
+address = 0x08035474
+end = 0x080354be
+mode = "thumb"
+
+[[functions]]
+name = "__gtdf2"
+address = 0x080354c0
+end = 0x0803550c
+mode = "thumb"
+
+[[functions]]
+name = "__gedf2"
+address = 0x0803550c
+end = 0x08035558
+mode = "thumb"
+
+[[functions]]
+name = "__ltdf2"
+address = 0x08035558
+end = 0x080355a2
+mode = "thumb"
+
+[[functions]]
+name = "__ledf2"
+address = 0x080355a4
+end = 0x080355ee
+mode = "thumb"
+
+[[functions]]
+name = "__floatsidf"
+address = 0x080355f0
+end = 0x0803566c
+mode = "thumb"
+
+[[functions]]
+name = "__fixdfsi"
+address = 0x0803566c
+end = 0x080356de
+mode = "thumb"
+
+[[functions]]
+name = "__negdf2"
+address = 0x080356e0
+end = 0x08035706
+mode = "thumb"
+
+[[functions]]
+name = "sub_08035708"
+address = 0x08035708
+mode = "thumb"
+
+[[functions]]
+name = "__truncdfsf2"
+address = 0x08035730
+end = 0x08035774
+mode = "thumb"
+
+[[functions]]
+name = "__negdi2"
+address = 0x08035774
+end = 0x0803578a
+mode = "thumb"
+
+[[functions]]
+name = "Memcpy"
+address = 0x0803578c
+end = 0x080357ea
+mode = "thumb"
+
+[[functions]]
+name = "qsort"
+address = 0x080357ec
+end = 0x08035d7c
+mode = "thumb"
+
+[[functions]]
+name = "IntrEnable_Thunk"
+address = 0x08035d7c
+end = 0x08035d84
+mode = "thumb"
+
+[[functions]]
+name = "sub_08000240_Thunk"
+address = 0x08035d84
+end = 0x08035d8c
+mode = "thumb"
+
+[[functions]]
+name = "SoundIrqDisable"
+address = 0x08035d8c
+end = 0x08035d94
+mode = "thumb"
+
+[[functions]]
+name = "SoundIrqEnable"
+address = 0x08035d94
+end = 0x08035d9c
+mode = "thumb"
