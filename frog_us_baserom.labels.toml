@@ -2982,6 +2982,12 @@ end = 0x08017b68
 mode = "thumb"
 
 [[functions]]
+name = "sub_08017B68"
+address = 0x08017b68
+end = 0x08017bfc
+mode = "thumb"
+
+[[functions]]
 name = "Menu25_LoadAssets"
 address = 0x08017bfc
 end = 0x08017d10
