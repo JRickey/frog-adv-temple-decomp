@@ -4667,6 +4667,12 @@ end = 0x0802af10
 mode = "thumb"
 
 [[functions]]
+name = "sub_0802AF10"
+address = 0x0802af10
+end = 0x0802af4c
+mode = "thumb"
+
+[[functions]]
 name = "sub_0802B008"
 address = 0x0802b008
 end = 0x0802b2ec
