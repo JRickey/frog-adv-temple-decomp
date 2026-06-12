@@ -876,7 +876,7 @@ SECTIONS {
         sub_08034BF8 = __pack_d + 0x220;
         sub_08035708 = __make_dp;
         src/game/sub_0803578c.o(.text);
-        asm/text/text_0x080357ec.o(.text);  /* 0x080357ec - 0x08035d7c, raw bytes */
+        asm/disasm_0x080357ec.o(.text);  /* 0x080357ec - 0x08035d7c, qsort (libc, peeled) */
         src/game/sub_08035d7c.o(.text);  /* 0x08035d7c - 0x08035d84, IntrEnable_Thunk (Thumb-to-ARM interwork thunk -> IntrEnable) */
         asm/text/text_0x08035d84.o(.text);  /* 0x08035d84 - 0x08035d8c, one Thumb-to-ARM veneer */
         src/game/sub_08035d8c.o(.text);
