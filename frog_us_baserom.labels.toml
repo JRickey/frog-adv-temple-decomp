@@ -5870,6 +5870,12 @@ end = 0x08032200
 mode = "thumb"
 
 [[functions]]
+name = "sub_08032200"
+address = 0x08032200
+end = 0x080322e8
+mode = "thumb"
+
+[[functions]]
 name = "sub_080323CC"
 address = 0x080323cc
 end = 0x080325b0

@@ -835,7 +835,8 @@ SECTIONS {
         lib/gax/sub_08031fdc.o(.text);
         lib/gax/sub_08032094.o(.text);
         lib/gax/SoundSystem_IsActive.o(.text);  /* 0x08032148 - 0x08032200, SoundSystem_IsActive */
-        lib/gax/text_0x08032200.o(.text);  /* 0x08032200 - 0x080323cc, raw bytes */
+        asm/disasm_0x08032200.o(.text);  /* 0x08032200 - 0x080322e8, sub_08032200 (peeled) */
+        lib/gax/text_080322e8.o(.text);  /* 0x080322e8 - 0x080323cc, raw bytes */
         lib/gax/disasm_0x080323cc.o(.text);  /* 0x080323cc - 0x080325b0, sub_080323CC (peeled) */
         lib/gax/sound_mixer_tail.o(.text);  /* 0x080325b0 - 0x08032894, Sound_ProcessRequests (NAKED+NON_MATCHING) */
         lib/gax/sub_08032894.o(.text);  /* 0x08032894 - 0x08032904, SoundSlot_InitParams */
