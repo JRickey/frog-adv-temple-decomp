@@ -5351,6 +5351,12 @@ end = 0x080276b8
 mode = "thumb"
 
 [[functions]]
+name = "sub_080276B8"
+address = 0x080276b8
+end = 0x080276f4
+mode = "thumb"
+
+[[functions]]
 name = "SpawnGrid_SpawnWave2"
 address = 0x0802a2f0
 end = 0x0802a394
