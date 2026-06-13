@@ -8,4 +8,4 @@
         .section .text, "ax", %progbits
         .align 2
 
-        .incbin "baserom.gba", 0x281b4, 0x213c
+        .incbin "baserom.gba", 0x281d8, 0x2118
