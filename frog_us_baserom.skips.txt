@@ -1,2 +1,5 @@
 0x0802d5e4 data 2-byte align pad then 8-byte literal pool (ptrs 0x04000208 0x03007f00) trailing MultiBoot; true code resumes at SoundSystem_Transfer 0x0802d5ec
 0x08000004 data GBA ROM header: 156-byte Nintendo logo blob plus 12-byte game title FROG:TEMPLEAFRE A4 maker-code complement; non-executable per hardware spec; code resumes at _start 0x080000c0
+0x080276f4 data two-word literal pool trailing sub_080276B8 (0x08316704 ROM ptr, 0x00000341 constant); true next function entry is 0x080276fc (push{r4-r6,lr} prologue, bl target from 0x802781e)
+0x08000008 data interior of GBA ROM header Nintendo-logo blob (0x004-0x09F); boundary.py: no function entry; hardware spec non-executable; code resumes at _start 0x080000c0
+0x080276f8 data second word of two-word literal pool trailing sub_080276B8 (value 0x00000341 constant); boundary.py: lsls r1,r0,#13 not a prologue; true next entry is 0x080276fc (push{r4-r6,lr})
