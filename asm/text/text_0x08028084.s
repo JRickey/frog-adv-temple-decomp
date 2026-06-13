@@ -6,8 +6,8 @@
 
         .section .text, "ax", %progbits
         .align  2
-        .global text_08028008
-        .type   text_08028008, %object
-text_08028008:
+        .global text_08028084
+        .type   text_08028084, %object
+text_08028084:
         .incbin "frog_us_baserom.gba", 0x00028084, 0x0000226c
-        .size   text_08028008, . - text_08028008
+        .size   text_08028084, . - text_08028084
