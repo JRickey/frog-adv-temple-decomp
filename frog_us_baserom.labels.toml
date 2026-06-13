@@ -5411,6 +5411,12 @@ end = 0x08027d18
 mode = "thumb"
 
 [[functions]]
+name = "sub_08027D18"
+address = 0x08027d18
+end = 0x08027d40
+mode = "thumb"
+
+[[functions]]
 name = "sub_08027D40"
 address = 0x08027d40
 end = 0x08027d64
@@ -5438,6 +5444,12 @@ mode = "thumb"
 name = "sub_08027DD8"
 address = 0x08027dd8
 end = 0x08027dfc
+mode = "thumb"
+
+[[functions]]
+name = "sub_08027DFC"
+address = 0x08027dfc
+end = 0x08027e3c
 mode = "thumb"
 
 [[functions]]
