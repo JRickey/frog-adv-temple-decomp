@@ -2936,3 +2936,39 @@ post-increment on a `u8 *` also keeps the QImode add separate from the index's
 zero-extend, giving the baserom's `lsls #24 ; lsrs #22` instead of `lsls #2`.
 Note `base + 0x1a60` (literal in pointer arithmetic) is the only spelling that
 gives `movs/lsls/adds`; `OFFSET_OF()` and `ptr->field` both pool the constant.
+
+## gcse PRE hands out hoisted-expression pseudos in HASH-BUCKET order — declaration order is the lever
+
+Symptom (sub_08016074, byte_diff 4): two loop increments `dst += 240` and
+`i = (u16)(i + 1)` both get hoisted above an inner loop by gcse PRE
+(`PRE/HOIST: end of bb N, insn X, copying expression E to reg R` in the
+`.gcse` dump) and parked in high regs; agbcc put `i + 1` in ip and
+`dst + 240` in r8, the baserom the other way round. Priorities were tied
+(same refs/live_length) so `global.c:allocno_compare` fell through to
+"lower pseudo number wins" — and the PSEUDO NUMBERS come from
+`gcse.c:pre_delete`, which walks `expr_hash_table[0..T)` bucket by bucket
+and calls `gen_reg_rtx` for each expression it deletes. Bucket =
+`hash_expr_1(x) % T`, with for `(plus (reg N) (const_int C))`:
+
+    hash = PLUS(70) + SImode(6) + (CONST_INT(51)<<7) + C + (REG(56)<<7) + N
+         = 13772 + C + N ;  T = (max_cuid / 2) | 1   (real-insn count / 2, odd)
+
+So the winner is a function of the two pseudo numbers N (declaration
+order!) and the constant C, modulo the function's insn count. Same
+bucket ⇒ chain order = first-encounter (insn walk) order.
+
+Fix that matched: declare the scalars BEFORE the VLA (`u8 *dst; u8 *srcRow;
+u16 j; u16 i; u8 buf[...]`) so dst=34, i=37 (instead of 51/53 after the
+VLA's 16 alloca pseudos) — `(13772+240+34) % 59 == (13772+1+37) % 59 == 4`,
+same bucket, dst first ⇒ dst+240 → ip, i+1 → r8. Byte match.
+
+How to diagnose in 2 minutes: `old_agbcc -da` (or `agbcc_oracle.py --pass
+gcse`), grep the `.gcse` dump for `PRE:` — it prints `(expression E) ...
+reaching reg is R` per deleted occurrence, and the `Expression hash table
+(T buckets, ...)` listing above it gives every `Index E (hash value B)`.
+If the two `reaching reg`s are in the wrong order, shuffle declarations
+(or add/remove a declared local to shift pseudo numbers) until the
+wanted expression has the lower/equal bucket. Explicit `nextDst = dst +
+240;` locals do NOT work here (user-var pseudo gets a longer live range
+⇒ lower priority), and putting `i++`/`dst +=` in a different statement
+order breaks the VLA/srcRow memory-homing (byte_diff 180+).

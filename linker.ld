@@ -513,8 +513,8 @@ SECTIONS {
         src/engine/sub_08015d30.o(.text);
         src/engine/sub_08015d54.o(.text);
         src/engine/sub_08015ea8.o(.text);
-        src/engine/sub_08015ec4.o(.text);  /* 0x08015ec4 - 0x08016074, sub_08015EC4 + sub_08015F9C (NON_MATCHING/NAKED) */
-        asm/disasm_0x08016074.o(.text);  /* 0x08016074 - 0x0801621c, sub_08016074 + sub_0801616C */
+        src/engine/sub_08015ec4.o(.text);  /* 0x08015ec4 - 0x0801616c, sub_08015EC4 + sub_08015F9C (NON_MATCHING/NAKED) + sub_08016074 */
+        asm/disasm_0x08016074.o(.text);  /* 0x0801616c - 0x0801621c, sub_0801616C */
         src/engine/sub_0801621c.o(.text);
         src/engine/sub_0801629c.o(.text);  /* 0x0801629c - 0x08016360, sub_0801629C + sub_080162FC (NON_MATCHING/NAKED) */
         src/engine/sub_08016360.o(.text);  /* 0x08016360 - 0x08016404, EntitySlots_Init */

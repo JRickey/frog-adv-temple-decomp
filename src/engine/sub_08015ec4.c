@@ -1,4 +1,5 @@
 #include "gba/dma.h"
+#include "gba/io.h"
 #include "macros.h"
 #include "types.h"
 
@@ -88,3 +89,46 @@ NAKED void sub_08015F9C(u16 dstX, u16 dstY, u8 *src, struct Mode4BlitRect *desc)
     asm(".incbin \"frog_us_baserom.gba\", 0x15f9c, 0xd8\n");
 }
 #endif /* NON_MATCHING */
+
+/* Back-buffer variant of the transparent row-blit: targets whichever Mode 4
+ * frame page is NOT currently displayed (REG_DISPCNT frame-select bit).
+ *
+ * Matching: the scalars are declared BEFORE the VLA on purpose. gcse PRE hoists
+ * both loop increments (`dst + 240`, `i + 1`) and hands out their new pseudos
+ * in expression-hash-bucket order, which is a function of the pseudo numbers of
+ * `dst` and `i`; this declaration order makes the two expressions share a
+ * bucket so `dst + 240` is allocated first and lands in ip (baserom), not r8. */
+void sub_08016074(u16 dstX, u16 dstY, u8 *src, struct Mode4BlitRect *desc)
+{
+    u8 *dst;
+    u8 *srcRow;
+    u16 j;
+    u16 i;
+    u8 buf[(desc->width + 3) & ~3];
+
+    if (REG_DISPCNT & DISPCNT_FRAME1)
+        dst = (u8 *)(dstX + (u32)dstY * 240 + 0x06000000);
+    else
+        dst = (u8 *)(dstX + (u32)dstY * 240 + 0x0600A000);
+    srcRow = (u8 *)(desc->x + ((u32)src + (u32)desc->y * desc->width));
+
+    for (i = 0; i < desc->rows; i = (u16)(i + 1)) {
+        REG_DMA3.src = dst;
+        REG_DMA3.dst = buf;
+        REG_DMA3.cnt = DMA_ENABLE | (desc->width >> 1);
+        (void)REG_DMA3.cnt;
+
+        for (j = 0; j < desc->width; j = (u16)(j + 1)) {
+            u8 px = srcRow[j];
+            if (px != 0)
+                buf[j] = px;
+        }
+
+        REG_DMA3.src = buf;
+        REG_DMA3.dst = dst;
+        REG_DMA3.cnt = DMA_ENABLE | (desc->width >> 1);
+        (void)REG_DMA3.cnt;
+        srcRow += desc->width;
+        dst += 240;
+    }
+}
