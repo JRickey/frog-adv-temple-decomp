@@ -2896,3 +2896,43 @@ tail call.
 
 Diagnose with `agbcc_oracle.py <fn> --src <abs path> --pass lreg`: the
 `Register N used … in block B` lines say which pseudos local-alloc owns.
+
+## `do { } while (0)` macros re-weight register priority (sub_08015D84 / Scenery_BlitVariant)
+
+flow.c bumps `REG_N_REFS` by `loop_depth` for every reference, and a
+`do { … } while (0)` body sits between `NOTE_INSN_LOOP_BEG/END`, so a pointer
+used once inside such a macro counts as 2 refs (+1 for its set = 3) instead of
+2. global.c's priority is `floor_log2(refs) * refs / live_length`, so the
+extra ref flips a tie against a same-length pseudo (here the selector address
+`gEntities + 0xb70`, live across the early-return branch for a second read):
+with the do-while macro `high` won the tie (r3) and the address got r4; the
+baserom has them swapped. Writing the DMA sequence as a plain brace block (or
+inline) gave byte-identical code. Rule: when a colouring diff is a swap between
+an argument and a temp of equal live length, check whether a `do { } while (0)`
+wrapper is inflating the argument's ref count.
+
+## GCSE only copies SYMBOL_REF bases — the `ldr rA, =sym ; mov rB, rA` idiom
+
+`gcse.c: want_to_gcse_p()` returns 0 for `CONST_INT`, so PRE never touches an
+absolute-address cast (`(u8 *)0x03003610`): a base reused in a later block is
+re-loaded from the pool. A `SYMBOL_REF` base (`gEntities`, a linker-assigned
+`gIwram_3610 = .`) IS gcse'd: the first block keeps the pool load in a scratch
+reg (`ldr r0, =gEntities`), PRE inserts `adds r7, r0, #0` into a fresh
+callee-saved pseudo, and later blocks read through r7. So the baserom shape
+`ldr r0, =X ; … ; adds r7, r0, #0 ; … [r7, #n]` means the source used a real
+symbol for X, accessed directly (no local pointer variable) in two blocks. Both
+Scenery_BlitVariant bases (0x03003720 and 0x03003610) needed the symbol form.
+
+## Expand-order levers for load/address interleaving (Scenery_CyclePalette)
+
+Two byte-exact orderings that only source shape controls (sched does not move
+them): (1) `if (a->x - *(u32 *)(base + N) < k)` with both memory operands
+inline emits both address computations first and both loads after them; hoisting
+either operand into a local (`u32 now = a->x;`) loads it immediately. (2) An
+assignment's LHS address is expanded before its RHS, so
+`REG_DMA3.src = table[(*idx)++]` loads the DMA3 base BEFORE the ldrb/adds/strb
+of the post-increment; a separate `i = (*idx)++;` statement puts it after. The
+post-increment on a `u8 *` also keeps the QImode add separate from the index's
+zero-extend, giving the baserom's `lsls #24 ; lsrs #22` instead of `lsls #2`.
+Note `base + 0x1a60` (literal in pointer arithmetic) is the only spelling that
+gives `movs/lsls/adds`; `OFFSET_OF()` and `ptr->field` both pool the constant.
