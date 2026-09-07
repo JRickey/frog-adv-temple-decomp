@@ -309,3 +309,14 @@ and commit, no permuter. The 1–30 bucket (8) is the next-easiest tier.
 i.e. de-pinning is almost always pure register recolouring — the permuter's
 exact domain — so byte_diff magnitude (a size proxy) is the right
 budget-allocation knob.
+
+## 2026-09-07 — ScaleAnim_SyncSelectors (src/engine/sub_0801310c.c): 35 pins -> 0, NAKED reclaimed
+
+Re-derived from the asm instead of nudging the pinned reference (which itself
+was byte_diff 37 against the ROM). Structure: `do { } while (i <= 7)` u8 loop,
+`switch (on)` two-case body, constant state pointer for the loop stores,
+struct overlay for the gEntities frame counter, and a no-op
+`anim->state = anim->state;` self-store in the loop body to keep the state
+address pseudo live across the case-0 compare (reload spill pick r6 vs r4).
+Permuter hint (score 120 -> 100 at ~10k iters) supplied the last lever. See
+docs/codegen-notes.md "No-op self-store keeps an address pseudo live".

@@ -1,21 +1,22 @@
 #include "macros.h"
 #include "game.h"
 #include "types.h"
+#include "iwram.h"
 
-struct IwramAt6110_1310C {
-    u8 _pad00[0x26];
-    u16 selector5Flags;
-    u16 selector6Flags;
+enum ScaleAnimSyncState {
+    SCALEANIM_SYNC_IDLE = 0,
+    SCALEANIM_SYNC_SELECTED = 1,
+    SCALEANIM_SYNC_CLEARED = 2,
 };
 
-struct IwramAt3610_1310C {
+struct ScaleAnimState {
     u8 _pad00[0xd3];
     u8 selectorAccum;
     u8 _padD4[8];
     u8 state;
 };
 
-struct ScaleAnimDesc_1310C {
+struct ScaleAnimDesc {
     u16 dstX;
     u16 dstY;
     u16 width;
@@ -26,204 +27,105 @@ struct ScaleAnimDesc_1310C {
     u32 _pad14;
 };
 
-extern struct IwramAt3610_1310C gIwram_3610;
-extern u8 gEntities[];
-extern struct IwramAt6110_1310C gIwram_6110;
-extern const struct ScaleAnimDesc_1310C sScaleAnimDescriptors[];
-extern const struct ScaleAnimDesc_1310C sScaleAnimDescriptors2[];
+/* Frame counter of the scale animation, stored inside the gEntities pool
+ * region. Overlaying the symbol keeps the +0x1a5b offset as a separate pool
+ * word (`ldr =gEntities; ldr =0x1a5b; adds`), which a folded `sym+0x1a5b`
+ * constant would not give. */
+struct ScaleAnimPool {
+    u8 _pad00[0x1a5b];
+    u8 frameCounter;
+};
 
-void Tilemap_BlitTileRows(u32 flags, u32 dstX, u32 dstY, u32 width, u32 rows, void *srcTable, u32 srcIndex);
+extern struct ScaleAnimState gIwram_3610;
+#define gScaleAnimPool (*(struct ScaleAnimPool *)gEntities)
+extern const struct ScaleAnimDesc sScaleAnimDescriptors[];
+extern const struct ScaleAnimDesc sScaleAnimDescriptors2[];
+
+void Tilemap_BlitTileRows(u32 flags, u32 dstX, u32 dstY, u32 width, u32 rows, const u16 **srcTable, u32 srcIndex);
 void RemapInputBits(void);
 void ScaleAnim_ClearActiveBits(void);
 void ScaleAnim_BlitSceneLayers(void);
 void ScaleAnim_TickFrames(void);
 
-#ifdef NON_MATCHING
 void ScaleAnim_SyncSelectors(void)
 {
-    register struct IwramAt3610_1310C *base asm("r5") = &gIwram_3610;
-    register u8 *state asm("r4") = &base->state;
-    u8 sv = *state;
+    struct ScaleAnimState *anim = &gIwram_3610;
+    u8 i;
+    u16 flags;
+    u32 low5;
+    u32 low6;
+    /* The loop writes the state through a constant pointer: a pool word that
+     * reload rematerialises per site, instead of keeping `anim + 0xdc` alive
+     * (or spilled) across the loop. */
+    u8 *state = (u8 *)0x030036EC;
 
-    switch (sv) {
-    case 0: {
-        struct IwramAt6110_1310C *ctrl = &gIwram_6110;
-        register u32 i asm("r8");
-        register struct IwramAt6110_1310C *ctrlRef asm("r9");
-        register u8 *accum asm("sl");
+    switch (anim->state) {
+    case SCALEANIM_SYNC_IDLE:
+        flags = gIwram_6110.selector5Flags;
+        low5 = flags & 0xff;
+        flags = gIwram_6110.selector6Flags;
+        low6 = flags & 0xff;
+        if (low5 == low6)
+            break;
 
-        {
-            register u16 flags asm("r6") = ctrl->selector5Flags;
-            u32 selector5Low;
-            u32 selector6Low;
-
-            selector5Low = flags & 0xff;
-            flags = ctrl->selector6Flags;
-            selector6Low = flags;
-            selector6Low = selector6Low & 0xff;
-            if (selector5Low == selector6Low)
-                break;
-        }
-        {
-            register u8 *accumLow asm("r0") = &base->selectorAccum;
-            register u32 zero asm("r1") = 0;
-
-            *accumLow = sv;
-            i = zero;
-            ctrlRef = ctrl;
-            accum = accumLow;
-        }
+        anim->selectorAccum = 0;
+        i = 0;
         do {
-            s32 s5v;
-            u32 on;
-            register u32 off asm("r0");
-            register u32 shift asm("r2");
-            register u32 offset asm("r5");
-            const struct ScaleAnimDesc_1310C *d0;
-            const struct ScaleAnimDesc_1310C *d1;
+            u32 on = (gIwram_6110.selector5Flags >> i) & 1;
+            u32 off = (gIwram_6110.selector6Flags >> i) & 1;
             u32 bit;
-
-            {
-                register struct IwramAt6110_1310C *ctrlCopy asm("r2") = ctrlRef;
-
-                s5v = ctrlCopy->selector5Flags;
-            }
-            shift = i;
-            on = (s5v >> shift) & 1;
-            {
-                register struct IwramAt6110_1310C *ctrlCopy asm("r4") = ctrlRef;
-
-                off = (ctrlCopy->selector6Flags >> shift) & 1;
-            }
+            const struct ScaleAnimDesc *d0;
+            const struct ScaleAnimDesc *d1;
 
             if (on != off) {
                 switch (on) {
-                case 0: {
-                    register u32 bitShift asm("r0") = i;
-                    u8 bitByte;
-
-                    bit = 1 << bitShift;
-                    bitByte = bit;
-                    {
-                        register u8 *accumLoad asm("r1") = accum;
-                        register u8 *accumStore asm("r2") = accum;
-
-                        *accumStore = bitByte | *accumLoad;
-                    }
-                    {
-                        register u32 offsetIndex asm("r3") = i;
-
-                        offset = offsetIndex;
-                    }
-                    offset <<= 1;
-                    offset += i;
-                    offset <<= 3;
-                    d0 = (const struct ScaleAnimDesc_1310C *)(offset + (u32)sScaleAnimDescriptors);
+                case 0:
+                    bit = 1 << i;
+                    anim->selectorAccum |= bit;
+                    d0 = &sScaleAnimDescriptors[i];
                     Tilemap_BlitTileRows(d0->flags, d0->dstX, d0->dstY, d0->width, d0->rows,
-                                         *(const u16 ***)(offset + (u32)sScaleAnimDescriptors + 16), on);
-                    d1 = (const struct ScaleAnimDesc_1310C *)(offset + (u32)sScaleAnimDescriptors2);
+                                         sScaleAnimDescriptors[i].srcTable, 0);
+                    d1 = &sScaleAnimDescriptors2[i];
                     Tilemap_BlitTileRows(d1->flags, d1->dstX, d1->dstY, d1->width, d1->rows,
-                                         *(const u16 ***)(offset + (u32)sScaleAnimDescriptors2 + 16), on);
-                    {
-                        register struct IwramAt6110_1310C *ctrlLoad asm("r1") = ctrlRef;
-                        register u32 zero asm("r1");
-                        register u32 entOffset asm("r3");
-                        register u8 *entSlot asm("r0");
-                        register struct IwramAt6110_1310C *ctrlStore asm("r2");
-                        u16 flags;
-
-                        flags = ctrlLoad->selector6Flags;
-                        flags &= ~bit;
-                        zero = 0;
-                        ctrlStore = ctrlRef;
-                        ctrlStore->selector6Flags = flags;
-                        entSlot = (u8 *)gEntities;
-                        entOffset = 0x1a5b;
-                        entSlot += entOffset;
-                        *entSlot = zero;
-                    }
-                    {
-                        register u32 stateValue asm("r0") = 2;
-                        register u8 *stateOut asm("r4") = (u8 *)0x030036EC;
-
-                        *stateOut = stateValue;
-                    }
+                                         sScaleAnimDescriptors2[i].srcTable, 0);
+                    gIwram_6110.selector6Flags &= ~bit;
+                    gScaleAnimPool.frameCounter = 0;
+                    *state = SCALEANIM_SYNC_CLEARED;
                     break;
-                }
-                case 1: {
-                    register u32 bitShift asm("r0") = i;
-                    u8 bitByte;
-
-                    bit = on << bitShift;
-                    bitByte = bit;
-                    {
-                        register u8 *accumLoad asm("r1") = accum;
-                        register u8 *accumStore asm("r2") = accum;
-
-                        *accumStore = bitByte | *accumLoad;
-                    }
-                    {
-                        register u32 offsetIndex asm("r3") = i;
-
-                        offset = offsetIndex;
-                    }
-                    offset <<= 1;
-                    offset += i;
-                    offset <<= 3;
-                    d0 = (const struct ScaleAnimDesc_1310C *)(offset + (u32)sScaleAnimDescriptors);
+                case 1:
+                    bit = 1 << i;
+                    anim->selectorAccum |= bit;
+                    d0 = &sScaleAnimDescriptors[i];
                     Tilemap_BlitTileRows(d0->flags, d0->dstX, d0->dstY, d0->width, d0->rows,
-                                         *(const u16 ***)(offset + (u32)sScaleAnimDescriptors + 16), on);
-                    d1 = (const struct ScaleAnimDesc_1310C *)(offset + (u32)sScaleAnimDescriptors2);
+                                         sScaleAnimDescriptors[i].srcTable, 1);
+                    d1 = &sScaleAnimDescriptors2[i];
                     Tilemap_BlitTileRows(d1->flags, d1->dstX, d1->dstY, d1->width, d1->rows,
-                                         *(const u16 ***)(offset + (u32)sScaleAnimDescriptors2 + 16), 2);
-                    {
-                        register struct IwramAt6110_1310C *ctrlLoad asm("r0") = ctrlRef;
-                        register u32 zero asm("r1");
-                        register u32 entOffset asm("r3");
-                        register u8 *entSlot asm("r0");
-                        register struct IwramAt6110_1310C *ctrlStore asm("r2");
-                        u16 flags;
-
-                        flags = ctrlLoad->selector6Flags;
-                        flags |= bit;
-                        zero = 0;
-                        ctrlStore = ctrlRef;
-                        ctrlStore->selector6Flags = flags;
-                        entSlot = (u8 *)gEntities;
-                        entOffset = 0x1a5b;
-                        entSlot += entOffset;
-                        *entSlot = zero;
-                    }
-                    {
-                        register u8 *stateOut asm("r4") = (u8 *)0x030036EC;
-
-                        *stateOut = on;
-                    }
+                                         sScaleAnimDescriptors2[i].srcTable, 2);
+                    gIwram_6110.selector6Flags |= bit;
+                    gScaleAnimPool.frameCounter = 0;
+                    *state = SCALEANIM_SYNC_SELECTED;
                     break;
-                }
                 }
             }
-            i = (u8)(i + 1);
+            /* No-op self-store: it is deleted, but the reference keeps the
+             * `anim->state` address pseudo (r4) live across the selector
+             * compare above, so reload takes r6 (not r4) for the two flag
+             * loads there. */
+            anim->state = anim->state;
+            i++;
         } while (i <= 7);
         break;
-    }
-    case 1:
+    case SCALEANIM_SYNC_SELECTED:
         RemapInputBits();
         ScaleAnim_BlitSceneLayers();
-        *state = 0;
+        anim->state = SCALEANIM_SYNC_IDLE;
         break;
-    case 2:
+    case SCALEANIM_SYNC_CLEARED:
         ScaleAnim_ClearActiveBits();
         ScaleAnim_BlitSceneLayers();
-        *state = 0;
+        anim->state = SCALEANIM_SYNC_IDLE;
         break;
     }
 
     ScaleAnim_TickFrames();
 }
-#else
-NAKED void ScaleAnim_SyncSelectors(void)
-{
-    asm(".incbin \"frog_us_baserom.gba\", 0x1310c, 0x1dc\n");
-}
-#endif

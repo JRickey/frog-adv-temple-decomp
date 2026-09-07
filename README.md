@@ -44,8 +44,8 @@ scan, not a ground-truth disassembly. Treat ±20% as honest.
 Regenerate with `python3 tools/agent/progress_stats.py --update-readme`.
 
 - **Functions decompiled to C**: 784 / ~1114 estimated total (**70.4%**)
-  - true pure-C matches: 720
-  - NAKED+NON_MATCHING (asm fallback, byte-matches but not pure C): 64
+  - true pure-C matches: 721
+  - NAKED+NON_MATCHING (asm fallback, byte-matches but not pure C): 63
   - peeled-but-still-asm: 258
   - not yet in C (non-matching tail — asm slices + raw INCBIN): ~330
   - prologue-scan bracket (lower / upper): 335 / 1140

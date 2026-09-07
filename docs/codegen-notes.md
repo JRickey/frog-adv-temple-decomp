@@ -3009,3 +3009,43 @@ Same function, frame-layout facts worth reusing:
   with an `if/else` + duplicated DMA (`push {lr}` ... `pop {r0}; bx r0`),
   old_agbcc does not. Scratch experiments must use `old_agbcc` (the
   Makefile default) or they mislead.
+
+## No-op self-store keeps an address pseudo live across a block — steers reload's spill-reg pick (ScaleAnim_SyncSelectors, 2026-09-07)
+
+Residual after a full structural re-derivation (35 pins -> 0, NAKED reclaimed):
+two `ldrh r6,[r3,#N]; ands rX,r6` sites where old_agbcc emitted `r4`. The
+loads are folded into the `and` (SUBREG(MEM) operand), so the register is a
+RELOAD spill pick, not an allocation: `order_regs_for_reload()` lists, per
+insn, the hard regs holding no live pseudo — call-used first, then r4..r7 in
+regno order — so r4 wins unless a live, hard-reg-allocated pseudo occupies it
+at that insn. By flow, nothing was live in r4 there (the `&anim->state`
+pseudo used by the switch head and the case-1/2 tails is dead on the case-0
+path). The permuter (score 120 -> 100 in 10k iters) found the lever: a
+**no-op self-store of the struct field inside the loop**,
+
+    anim->state = anim->state;   /* deleted, but keeps r4 live */
+
+The store is removed as a no-op move, yet its address reference extends the
+`anim + 0xdc` pseudo's live range through the case-0 block, so at the compare
+r4 is "used" and reload takes r6. `(void)anim->state;` does NOT work (the read
+is dropped before reg-scan); `x += 0` / `x |= 0` / `x = x` all do. Byte match,
+pure C.
+
+Companion levers landed in the same function:
+- Loop-body store to a struct member via a **constant pointer local**
+  (`u8 *state = (u8 *)0x030036EC;` declared at function top): the pseudo gets
+  a CONST_INT REG_EQUIV, global alloc leaves it unallocated (it conflicts with
+  every loop local) and reload rematerialises `ldr r4, =0x030036ec` at each
+  site via round-robin. `anim->state` (pointer form) spills the base to the
+  stack; `gIwram_3610.state` (symbol) emits `ldr =sym; adds #0xdc`;
+  `*((u8 *)&gIwram_3610 + 0xdc)` folds to a `sym+0xdc` pool word but is then a
+  local-alloc'd pseudo (`ldr r1`), not the reload pick.
+- `gEntities + 0x1a5b` as `ldr =gEntities; ldr =0x1a5b; adds`: overlay a
+  struct on the symbol (`(*(struct X *)gEntities).field`) or index a `u8[]`
+  extern; a `(u8 *)gEntities + 0x1a5b` cast folds into one pool word.
+- Two-case `switch (on)` (not `if/else if`) so both bodies are jump targets:
+  reload inheritance is forgotten at the labels, giving the fresh
+  `mov r0, r8 ... mov r3, r8` copies instead of one shared low-reg copy.
+- `selectorAccum = 0` right after `switch (state) case 0:` emits `strb r2`
+  (the state value known-zero via cse's jump-equivalence) — write the literal
+  `0`, not the variable.
