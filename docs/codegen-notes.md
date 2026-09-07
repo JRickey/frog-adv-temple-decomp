@@ -2872,3 +2872,27 @@ conditional on an uninitialized index (`if ((s16)gEntities[i].field_10 - 0x40 < 
 with a dead body). jump1 deletes the compare+branch, flow keeps the load+sub.
 It also pins the `gEntities` pool load into a callee-saved reg across the
 preceding call (`ldr r6` first, `adds r1, r6, #0; adds r1, #32` after the bl).
+
+## Pool base loaded early into the result reg: bump ONE pointer in place (sub_0802D350)
+
+The mirror image of the case above. Target shape: `ldr r2, =gEntities`
+*before* the index math, then `adds r2, r0, r2` (base and result share
+r2), and a second, late `ldr r1, =gEntities; adds r0, r0, r1` before the
+tail call.
+
+- The early load + shared reg is `(set entity (plus offset entity))`: write
+  `entity = gEntities; entity += a + b;` — ONE variable that already spans
+  several blocks (so global-alloc colours it, r2). A separate `base` local
+  (`base = gEntities; entity = base + off`) is block-local, local-alloc
+  grabs it first (r0) and shifts the index/offset temps to r2/r1 (byte_diff
+  32). Two variables (`p = base; p += off; entity = p`) don't help either:
+  combine retargets the add onto `entity` and `p` is block-local again.
+- Re-using the same variable in the tail (`Entity_Update(base + off)`)
+  makes it one multi-set global pseudo → same colour (r2) at both sites
+  (the deferred byte_diff 2). The late load is a plain reload: write the
+  tail as the direct expression `&gEntities[a + b]` and reload picks r1.
+- Keep `(status | 8) & 0x7FFF` as three statements through a u32 temp;
+  the fused expression costs an extra `adds r0, r3, #0`.
+
+Diagnose with `agbcc_oracle.py <fn> --src <abs path> --pass lreg`: the
+`Register N used … in block B` lines say which pseudos local-alloc owns.

@@ -913,7 +913,6 @@ SECTIONS {
         src/game/sub_0802ce60.o(.text);
         src/game/sub_0802d170.o(.text);
         src/game/sub_0802d294.o(.text);
-        asm/disasm_0x0802d294.o(.text);  /* 0x0802d294 - 0x0802d3c0, sub_0802D294 + sub_0802D350 (auto-peeled) */
         src/game/sub_0802d3c0.o(.text);
         src/game/sub_0802d448.o(.text);
         src/game/sub_0802d4ac.o(.text);
