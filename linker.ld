@@ -52,6 +52,10 @@ sScreenTilemapTable_308EF4 = 0x08308EF4;
  * sub_0801EA08); linker-assigned for the same reason. */
 sScreenTilemapTable_308F84 = 0x08308F84;
 
+/* Per-language "Continue?" tilemap table (DMA source for screenblock 22 in
+ * Level_Load); linker-assigned for the same reason. */
+sContinueTilemapTable_308F98 = 0x08308F98;
+
 /* Per-scene record-pointer table at the head of sSpriteFramePtrs_08110. Each
  * entry points at a small array of ROM pointers whose [1]/[2] slots feed
  * Scene_DrawWindow. Linker-assigned for the same defeat-the-fold reason as the
@@ -596,7 +600,6 @@ SECTIONS {
         src/engine/sub_0801e118.o(.text);  /* 0x0801e118 - 0x0801e270, Screen_FadeSequence + Credits_Tick + Credits_FillPage */
         src/engine/sub_0801e270.o(.text);  /* 0x0801e270 - 0x0801e28c, WaitFrames */
         src/engine/sub_0801e28c.o(.text);
-        asm/disasm_0x0801e28c.o(.text);  /* 0x0801e28c - 0x0801ea08, Level_Load (auto-peeled) */
         src/engine/sub_0801ea08.o(.text);
         src/engine/sub_0801f1e0.o(.text);
         src/engine/sub_0801f418.o(.text);

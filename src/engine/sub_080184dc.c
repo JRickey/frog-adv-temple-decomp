@@ -1,11 +1,5 @@
+#include "gfx.h"
 #include "types.h"
-
-typedef struct {
-    u8 x;
-    u8 y;
-    u8 w;
-    u8 h;
-} TilemapRect;
 
 void Tilemap_SwapPalette(const TilemapRect *rect, u16 oldPal, u16 newPal, u8 screen)
 {

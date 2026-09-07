@@ -3,8 +3,6 @@
 #include "iwram.h"
 #include "types.h"
 
-extern void Tilemap_SwapPalette(u32 *attr, u16 arg1, u16 arg2, u8 arg3);
-
 void FrogSelect_LoadCharTilemap(void)
 {
     volatile DmaChannel *dma;
@@ -40,7 +38,7 @@ void FrogSelect_LoadCharTilemap(void)
     dma->cnt = DMA_ENABLE | 0x400;
     (void)dma->cnt;
 
-    Tilemap_SwapPalette(&attr, 5, 4, 2);
+    Tilemap_SwapPalette((const TilemapRect *)&attr, 5, 4, 2);
 }
 
 extern u32 GetFrameTick(void);

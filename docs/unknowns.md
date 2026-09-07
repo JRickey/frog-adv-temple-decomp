@@ -486,3 +486,19 @@ misnamed. Hold the rename until a consumer that indexes a level table (the
 `Sound_ClearActiveFlag` in `SaveLoad`), `[1]` music on/off, `[2]`/`[3]` two
 spinner values clamped to `[3..9]` (arrows disabled at 3 and 9; `[3]` is also
 copied into `SaveHeader._field2` when a slot is picked in `sub_0801F020`).
+
+## `Level_Load` is the "Continue?" prompt, not a level loader
+
+`Level_Load` (0x0801E28C, called only from `Scene_EntityTick` when
+`gIwram_35E0.lives == 1`) draws the continue window (screenblock 22 from
+`sContinueTilemapTable_308F98[lang]`, window tile 0xF039 + `text_08219378`
+on screenblock 31), counts `gSaveData.header._field2` (remaining continues)
+down on YES, and runs the fade/flash game-over sequence on NO/timeout. The
+return value (1 = continue, 0 = game over) is what `Scene_EntityTick` reads.
+Rename candidates: `ContinueScreen_Run`, `text_08219378` ->
+`sContinueWindowTilemap`. `SaveHeader._field2` reads as `continues`.
+
+`gIwram_34A0._field_04` (word) is zeroed by `OptionsMenu_Init` on exit; no
+reader found yet. `OptionsMenu_Init`/`OptionsMenu_Update` are
+`gHandlerTable_08308AD4[0..1]` (the `GameMode_Menu07` sub-machine), so
+"Menu07" == the options menu.

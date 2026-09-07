@@ -2972,3 +2972,40 @@ wanted expression has the lower/equal bucket. Explicit `nextDst = dst +
 240;` locals do NOT work here (user-var pseudo gets a longer live range
 ⇒ lower priority), and putting `i++`/`dst +=` in a different statement
 order breaks the VLA/srcRow memory-homing (byte_diff 180+).
+
+## HImode constant stores: where the `adds r0, rX, #0` truncation copy comes from (Level_Load)
+
+The Thumb `movhi` expander `force_reg`s a constant that does not fit `movs`
+into a HImode pseudo; reload then materialises it through `movsi` and copies
+it (`ldr r2, =0x2D7; adds r0, r2, #0; strh r0, [r1]`). Whether the copy
+appears depends on the *destination*, and the baserom is selective about it:
+
+- Store to an absolute address (`*(u16 *)0x050001FA = 0x2D7`, volatile or
+  not): copy. Baserom has NO copy and loads the constant *first*
+  (`ldr r1, =0x2D7; ldr r0, =PAL; ldrh r2, [r0]; str r2, [sp, #32]; strh r1, [r0]`)
+  -> route the constant through a `u16 color` local (`color = 0x2D7; PAL = color;`).
+- Store to a plain address-taken stack local (`u16 fill; fill = 0xF039;`):
+  no copy. Baserom HAS the copy -> declare the local `volatile u16` (a
+  `u16 *p = &fill; *p = ...` pointer also produces it, but reshuffles the
+  whole allocation).
+- A `vu16` absolute access recolours the three registers around it
+  (const/addr/temp become r2/r1/r0 instead of r1/r0/r2) — use a plain
+  `u16 *` cast when the baserom shows the r1/r0/r2 order.
+
+Same function, frame-layout facts worth reusing:
+
+- A `static inline` helper with an address-taken `u16` local gets ONE
+  4-byte BLKmode frame temp (inline frame block, 4-aligned) that both
+  inlined copies share (sp+0xC for both game-over copies). A macro or
+  open-coded duplicate allocates 2-byte HImode slots instead and shifts
+  every later slot by 2. Prefer the inline helper when the baserom shows a
+  4-aligned slot reused by two copies of the same sequence.
+- `volatile` locals get their slot at `expand_decl` time (function entry),
+  before any inline frame temp; put the volatile in a nested block *after*
+  the code that allocates the earlier slots to control the order.
+- `while (F() != 0) WaitFrames(2); fill = 0;` yields `strh r3` of the
+  call result (cse's jump-equivalence knows r3 == 0) — no `step` temp needed.
+- A cheap old_agbcc-vs-agbcc tell: the newer agbcc pushes `lr` in a leaf
+  with an `if/else` + duplicated DMA (`push {lr}` ... `pop {r0}; bx r0`),
+  old_agbcc does not. Scratch experiments must use `old_agbcc` (the
+  Makefile default) or they mislead.

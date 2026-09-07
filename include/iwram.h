@@ -37,7 +37,8 @@ struct IwramAt3480 {
 struct IwramAt34A0 {
     u8 _field_00;   /* +0: live selector byte, cleared alongside dispatchIdx by Dispatcher_ResetModeA/B */
     u8 dispatchIdx; /* +1: index into the ROM dispatch table at 0x08308ac8 (GameMode_Options) */
-    u8 _pad02[6];
+    u8 _pad02[2];
+    u32 _field_04;   /* +4: word zeroed by OptionsMenu_Init on exit */
     u32 reentryFlag; /* +8: 0 = fresh entry (full BG reload); != 0 = returning sub-screen (lightweight) */
 };
 

@@ -40,6 +40,14 @@ struct ScreenInstallArgs {
     u32 _unk0C;
 };
 
+/* Tilemap cell rectangle (tile units) for Tilemap_SwapPalette. */
+typedef struct {
+    u8 x;
+    u8 y;
+    u8 w;
+    u8 h;
+} TilemapRect;
+
 struct Rect2 {
     u16 _field_0;
     s16 _field_2;
@@ -131,6 +139,9 @@ void Scroll_UpdateCamera(u8 countArg);
 void BgLayer_Disable(u8 layer);
 
 void BgLayer_Enable(u8 layer);
+
+/* Rewrites palette-bank bits of every cell in `rect` on screenblock `screen`. */
+void Tilemap_SwapPalette(const TilemapRect *rect, u16 oldPal, u16 newPal, u8 screen);
 
 /* Tile-blit engine: copies srcTable[srcIndex] rows into VRAM at (dstX, dstY).
  * Scalar params are declared u32 because agbcc generates the entry-narrowing masks
