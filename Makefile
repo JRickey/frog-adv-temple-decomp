@@ -45,10 +45,17 @@ GAME_REVISION = 00
 CPP = cpp
 LDSCRIPT_CPP = $(CPP)
 # macOS: Apple's `cpp` keeps `//` comments which agbcc (gcc 2.x) can't parse,
-# and it silently drops -o on .ld files. Use Homebrew GNU `cpp-15` for the
+# and it silently drops -o on .ld files. Use Homebrew GNU `cpp-N` (newest) for the
 # C-source pipeline and `cc -E -P -x c` for the linker-script step.
 ifeq ($(shell uname -s),Darwin)
-    CPP = cpp-15 -P
+    # Homebrew renames the binary on every major (cpp-15 -> cpp-16 ...);
+    # pick the newest one on PATH so a brew upgrade can't silently break
+    # the pipeline (a missing cpp yields EMPTY .s files, not an error).
+    BREW_CPP := $(shell ls /opt/homebrew/bin/cpp-[0-9]* /usr/local/bin/cpp-[0-9]* 2>/dev/null | sort -t- -k2 -n | tail -1)
+    ifeq ($(BREW_CPP),)
+        $(error macOS build needs Homebrew GNU cpp: brew install gcc)
+    endif
+    CPP = $(BREW_CPP) -P
     LDSCRIPT_CPP = cc -E -P -x c
 endif
 TOOLCHAIN ?= arm-none-eabi-

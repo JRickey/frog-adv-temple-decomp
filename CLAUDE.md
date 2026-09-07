@@ -78,7 +78,7 @@ on it. After a decomp, run `make -j8 && make check`; round-trip is fast.
 
 ### macOS notes (apply automatically)
 
-The Makefile detects Darwin and swaps `cpp` for Homebrew `cpp-15 -P` (Apple's
+The Makefile detects Darwin and swaps `cpp` for the newest Homebrew `cpp-N -P` (via `tools/find_cpp.sh`) (Apple's
 clang `cpp` keeps `//` comments which agbcc 2.x rejects) and uses
 `cc -E -P -x c` for the linker-script step.
 

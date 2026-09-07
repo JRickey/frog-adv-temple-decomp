@@ -89,7 +89,7 @@ Add new files to that list as the same pattern shows up. When in doubt,
 diff a function with both compilers via:
 
 ```sh
-tools/preproc/preproc src/foo.c charmap.txt | cpp-15 -P -I include \
+tools/preproc/preproc src/foo.c charmap.txt | $(tools/find_cpp.sh) -P -I include \
     | tools/agbcc/bin/old_agbcc -O2 -mthumb-interwork -fhex-asm
 ```
 

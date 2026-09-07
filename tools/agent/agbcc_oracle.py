@@ -37,6 +37,11 @@ PASSES = ["rtl", "jump", "cse", "loop", "gcse", "cse2", "flow", "combine",
           "regmove", "lreg", "greg", "mach", "jump2"]
 
 
+def find_cpp() -> str:
+    r = subprocess.run([str(ROOT / "tools/find_cpp.sh")], capture_output=True, text=True)
+    return r.stdout.strip() or "cpp"
+
+
 def find_src(fn: str, override: str | None) -> Path:
     if override:
         return ROOT / override
@@ -58,7 +63,7 @@ def compile_with_dumps(src: Path) -> Path:
     pp = DUMPDIR / "pp.i"
     p1 = subprocess.run([str(PREPROC), str(src), str(CHARMAP)],
                         capture_output=True, text=True, cwd=ROOT)
-    p2 = subprocess.run(["cpp-15", "-P", "-DREGION_US", "-nostdinc", "-Iinclude/"],
+    p2 = subprocess.run([find_cpp(), "-P", "-DREGION_US", "-nostdinc", "-Iinclude/"],
                         input=p1.stdout, capture_output=True, text=True, cwd=ROOT)
     pp.write_text(p2.stdout)
     r = subprocess.run([str(AGBCC), "-o", str(DUMPDIR / "out.s"), "-O2",

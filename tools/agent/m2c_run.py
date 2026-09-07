@@ -337,9 +337,8 @@ def ensure_context() -> bool:
     src = "".join(f'#include "{h}"\n' for h in CTX_HEADERS)
     tmp = OUTDIR / "_ctx_src.c"
     tmp.write_text(src)
-    # macOS build uses `cpp-15 -P`; fall back to plain cpp elsewhere.
-    cpp = "cpp-15" if subprocess.run(["which", "cpp-15"],
-                                     capture_output=True).returncode == 0 else "cpp"
+    cpp = subprocess.run([str(ROOT / "tools/find_cpp.sh")], capture_output=True,
+                         text=True).stdout.strip() or "cpp"
     proc = subprocess.run(
         [cpp, "-P", "-nostdinc", f"-I{ROOT/'include'}", f"-I{ROOT/'tools/agbcc/include'}",
          "-DREGION_US", "-D__attribute__(x)=", "-D__asm__(x)=", "-Dasm(x)=", "-Dvolatile=",

@@ -81,7 +81,7 @@ during setup) — never commit it; the build verifies its SHA1.
 - `g++` and `make` for building `tools/preproc`, `tools/gbafix`, and agbcc
 - `clang-format` for the pre-commit hook (`brew install clang-format` /
   `apt-get install clang-format`)
-- macOS: `brew install gcc` (for `cpp-15`; Apple's clang `cpp` keeps `//`
+- macOS: `brew install gcc` (for GNU `cpp-N`; Apple's clang `cpp` keeps `//`
   comments which agbcc 2.x rejects)
 
 ## Setup

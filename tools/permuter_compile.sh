@@ -5,7 +5,7 @@
 # See LICENSE for full attribution.
 #
 # Wrapper for decomp-permuter: takes a .c file and produces a .o file using
-# the project's actual compile pipeline (preproc | cpp-15 | <agbcc> | as).
+# the project's actual compile pipeline (preproc | GNU cpp | <agbcc> | as).
 #
 # COMPILER: defaults to old_agbcc, which is the Makefile's default CC. Permuting
 # a TU with the WRONG agbcc optimizes codegen that won't match the real ROM
@@ -67,7 +67,7 @@ TMP_S="$(mktemp -t permuter_compile.XXXXXX.s)"
 trap "rm -f '$TMP_S'" EXIT
 
 tools/preproc/preproc "$INPUT" charmap.txt \
-    | cpp-15 $CPPFLAGS \
+    | "$(tools/find_cpp.sh)" $CPPFLAGS \
     | "$AGBCC" -o "$TMP_S" $CFLAGS
 printf '\t.align 2, 0 @ dont insert nops\n' >> "$TMP_S"
 

@@ -128,10 +128,8 @@ def tool_path(name: str) -> str:
 
 
 def cpp_path() -> str:
-    if sys.platform == "darwin":
-        proc = run(["sh", "-c", "command -v cpp-15 || command -v cpp"])
-        return proc.stdout.strip() or "cpp"
-    return "cpp"
+    proc = run(["sh", "tools/find_cpp.sh"])
+    return proc.stdout.strip() or "cpp"
 
 
 def preprocess(source: Path) -> str:

@@ -49,7 +49,7 @@ Do NOT use the permuter for:
 - `permuter_settings.toml` (repo root, tracked) — already wires `compiler_type="gcc"`,
   `compiler_command="tools/permuter_compile.sh …"`, the assembler, and
   `asm_prelude_file=tools/permuter_prelude.inc`. Don't edit it.
-- `tools/permuter_compile.sh` — the preproc | cpp-15 | agbcc | as pipeline as one
+- `tools/permuter_compile.sh` — the preproc | GNU cpp | agbcc | as pipeline as one
   `.c -> .o` step. `nonmatchings/<fn>-*/` dirs from prior runs are working examples.
 
 ## Build a scratch (the validated flow)
@@ -98,7 +98,7 @@ hammering one. Only give up early if the base score is plateaued AND the structu
 clearly wrong (huge byte_diff, not a coloring tail).
 
 **base.c can be the real source file.** `vendor/decomp-permuter/src/preprocess.py` is
-patched to run base.c through the project pipeline (`tools/preproc/preproc | cpp-15
+patched to run base.c through the project pipeline (`tools/preproc/preproc | $(tools/find_cpp.sh)
 -Iinclude -DREGION_US`), so base.c may `#include "game.h"` etc. directly — no need to
 hand-inline a self-contained copy. Set `PERMUTER_PROJECT_ROOT=$PWD` when running.
 `tools/agent/setup_permuter.py <fn>` scaffolds the whole scratch dir.

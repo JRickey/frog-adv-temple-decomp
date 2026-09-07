@@ -31,7 +31,7 @@ cd "$ROOT"
 
 AGBCC="${AGBCC:-tools/agbcc/bin/agbcc}"
 AS="${AS:-arm-none-eabi-as}"
-CPP="${CPP:-cpp-15 -P}"
+CPP="${CPP:-$(tools/find_cpp.sh) -P}"
 CFLAGS="-Werror -O2 -mthumb-interwork -fhex-asm"
 CPPFLAGS="-nostdinc -Iinclude/"
 

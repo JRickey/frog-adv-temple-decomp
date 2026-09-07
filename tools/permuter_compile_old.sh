@@ -5,7 +5,7 @@
 # See LICENSE for full attribution.
 #
 # Wrapper for decomp-permuter: takes a .c file and produces a .o file using
-# the project's actual compile pipeline (preproc | cpp-15 | agbcc | as).
+# the project's actual compile pipeline (preproc | GNU cpp | agbcc | as).
 #
 # Invoked by permuter as: permuter_compile.sh <input.c> -o <output.o>
 # (the -o flag and OUTPUT path are appended by permuter's compile.sh wrapper)
@@ -54,7 +54,7 @@ TMP_S="$(mktemp -t permuter_compile.XXXXXX.s)"
 trap "rm -f '$TMP_S'" EXIT
 
 tools/preproc/preproc "$INPUT" charmap.txt \
-    | cpp-15 $CPPFLAGS \
+    | "$(tools/find_cpp.sh)" $CPPFLAGS \
     | tools/agbcc/bin/old_agbcc -o "$TMP_S" $CFLAGS
 printf '\t.align 2, 0 @ dont insert nops\n' >> "$TMP_S"
 
