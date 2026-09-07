@@ -885,7 +885,6 @@ SECTIONS {
         src/game/sub_0802ab64.o(.text);  /* 0x0802ab64 - 0x0802af10, EntitySlot17_Init + EntitySlot12_LoadLayout + RoomEntities_Update + RoomEntities_Init + RoomFrogEntity_Update */
         asm/text/text_0x0802afc0.o(.text);  /* 0x0802afc0 - 0x0802aff8, raw bytes */
         src/game/sub_0802aff8.o(.text);
-        asm/disasm_0x0802b008.o(.text);  /* 0x0802b008 - 0x0802b2ec, sub_0802B008 (auto-peeled) */
         asm/disasm_0x0802b2ec.o(.text);  /* 0x0802b2ec - 0x0802b3b0, sub_0802B2EC (auto-peeled) */
         asm/text/text_0x0802b3b0.o(.text);  /* 0x0802b3b0 - 0x0802b9d4, raw bytes */
         src/game/sub_0802b9d4.o(.text);

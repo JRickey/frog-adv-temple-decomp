@@ -1,4 +1,5 @@
 #include "game.h"
+#include "game_constants.h"
 #include "iwram.h"
 #include "types.h"
 
@@ -14,11 +15,6 @@ struct WalkerDesc {
     s16 x;
     s16 y;
     u16 kind;
-};
-
-struct Pos2D {
-    s16 x;
-    s16 y;
 };
 
 void Walker_SpawnAtTile(u8 id, s8 tileX, s8 tileY)
@@ -37,15 +33,15 @@ void Walker_SpawnAtTile(u8 id, s8 tileX, s8 tileY)
 
 void Pos2D_ClampToBounds(struct Pos2D *pos)
 {
-    if (pos->x <= 0x3a)
-        pos->x = 0x3b;
-    else if (pos->x > 0x12b)
-        pos->x = 0x12b;
+    if (pos->x < PLAYFIELD_MIN_X)
+        pos->x = PLAYFIELD_MIN_X;
+    else if (pos->x > PLAYFIELD_MAX_X)
+        pos->x = PLAYFIELD_MAX_X;
 
-    if (pos->y <= 0x58)
-        pos->y = 0x59;
-    else if (pos->y > 0x149)
-        pos->y = 0x149;
+    if (pos->y < PLAYFIELD_MIN_Y)
+        pos->y = PLAYFIELD_MIN_Y;
+    else if (pos->y > PLAYFIELD_MAX_Y)
+        pos->y = PLAYFIELD_MAX_Y;
 }
 
 void Walker_LoadLayout(void)

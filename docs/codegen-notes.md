@@ -2796,3 +2796,23 @@ residual class is reachable on the STOCK compiler with struct-shaped source.
 Re-attack remaining "toolchain-class" residuals (tie directions, rotation) as
 source-shape problems before accepting pins; the full investigation record is
 in docs/investigations/ (local, untracked).
+
+## Per-site duplicated helper + cross-jumped tail = `static inline` (sub_0802B008)
+
+When the baserom repeats a small helper body (a clamp, a field setter) at
+every hit site of a search loop, and the LAST few instructions of each
+copy are merged into one shared tail via `b.n`, the source called a
+`static inline` helper in each branch followed by an identical
+`*out = pos; return 1;`. agbcc inlines the helper per site; jump
+optimization then cross-jumps the identical suffixes (only the suffix
+that is byte-identical after register allocation gets merged, so the
+first half of each copy stays duplicated). Do NOT write a single
+`goto done;` label with one clamp — that emits one copy and drifts
+~200 bytes. sub_0802B008 matched first try with this shape; the same
+helper exists out-of-line as Pos2D_ClampToBounds (src/game/sub_0802bb5c.c).
+
+Side observation from the same function: arm.h `PROMOTE_MODE` promotes
+sub-word ints to *unsigned* SImode, so an `s16` parameter lives
+zero-extended (`lsrs rN, r0, #16`, parked in r8/r9) and every signed use
+re-derives `lsls #16; asrs #16` from it. Those high-reg copies are not
+source pins — they fall out of plain `s16 x, s16 y` parameters.

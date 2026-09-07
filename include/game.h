@@ -102,4 +102,10 @@ void Scene12_UpdateTileInteraction(void *buf, void *r4_obj);
 
 void Player_HandleTileTransitions(void *a, void *b);
 
+/* Sub-pixel position pair; see Pos2D_ClampToBounds and sub_0802B008. */
+struct Pos2D {
+    s16 x;
+    s16 y;
+};
+
 #endif /* GUARD_GAME_H */

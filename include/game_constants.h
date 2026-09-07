@@ -56,4 +56,15 @@ enum Element {
 #define TILE_TO_SUBPIXEL(n) ((n) * TILE_SIZE)
 #define SUBPIXEL_TO_TILE(p) ((p) / TILE_SIZE)
 
+/* Sub-pixel anchor of a tile: x is the tile centre (24/2 - 1), y sits 18 units
+ * above it (sprite foot vs. tile origin). Walkers use +11 on both axes. */
+#define TILE_CENTER_X(t) (TILE_TO_SUBPIXEL(t) + 11)
+#define TILE_ANCHOR_Y(t) (TILE_TO_SUBPIXEL(t) - 7)
+
+/* Playfield clamp: x spans tiles 2..12, y tiles 4..14 (Pos2D_ClampToBounds). */
+#define PLAYFIELD_MIN_X TILE_CENTER_X(2)
+#define PLAYFIELD_MAX_X TILE_CENTER_X(12)
+#define PLAYFIELD_MIN_Y TILE_ANCHOR_Y(4)
+#define PLAYFIELD_MAX_Y TILE_ANCHOR_Y(14)
+
 #endif /* GUARD_GAME_CONSTANTS_H */
