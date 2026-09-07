@@ -183,6 +183,12 @@ NAKED void SaveLoad(void)
 }
 NAKED void SaveCommit(void)
 {
-    asm(".incbin \"frog_us_baserom.gba\", 0x1756c, 0x234\n");
+    asm(".incbin \"frog_us_baserom.gba\", 0x1756c, 0x1a4\n");
+}
+/* Hidden inside the old SaveCommit blob: push {r4-r6,lr} prologue at
+ * 0x08017710 after SaveCommit's pool. Split out so BL sites can link it. */
+NAKED void sub_08017710(void)
+{
+    asm(".incbin \"frog_us_baserom.gba\", 0x17710, 0x90\n");
 }
 #endif /* NON_MATCHING */
