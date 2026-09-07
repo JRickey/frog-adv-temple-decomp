@@ -406,6 +406,11 @@ def classify(t: Target, min_prefix: int) -> Target:
         return t
 
     score = _name_prefix_score(t.name, prev)
+    # An address-named scaffold at the target's own address is the intended
+    # home regardless of what the function has since been renamed to
+    # (GameMode_Scene19 -> src/game/sub_08003ca8.c).
+    if re.fullmatch(rf"sub_0*{t.addr:x}", prev.stem, re.IGNORECASE):
+        score = max(score, len(prev.stem))
     if score < min_prefix:
         t.legality_note = (
             f"blocked: weak name affinity with {t.destination} "
