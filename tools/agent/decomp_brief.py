@@ -109,6 +109,7 @@ def peeled_starts() -> set[int]:
          sub_<HEX>` for the address — catches PAIRED peels where one .s
          holds two named functions (the iter-18 hidden-fn pattern).
       3. `src/**/*.c` contains a function with the address-named symbol
+         (or, 4., `frog_us.map` places any symbol at the address — renamed C)
          (`sub_<HEX>(`). Catches callees already lifted to C — this
          was the iter-22/23/25/26 false-positive class that burned 4+
          iters of effort before this fix.
@@ -144,6 +145,18 @@ def peeled_starts() -> set[int]:
     for p in (ROOT / "src").rglob("*.c"):
         try:
             for m in c_def_re.finditer(p.read_text()):
+                addrs.add(int(m.group(1), 16))
+        except OSError:
+            pass
+
+    # (4) every symbol ld actually placed in .text, from the link map.
+    # Catches renamed C functions (Input_Poll, Sound_Play, ...) which (3)
+    # can't see because they no longer carry an address-derived name.
+    map_path = ROOT / "frog_us.map"
+    sym_re = re.compile(r"^\s+0x0*(8[0-9a-fA-F]{6})\s+[A-Za-z_]\w*\s*$", re.M)
+    if map_path.exists():
+        try:
+            for m in sym_re.finditer(map_path.read_text()):
                 addrs.add(int(m.group(1), 16))
         except OSError:
             pass
