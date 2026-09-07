@@ -100,6 +100,14 @@ the already-matching accessors already used the correct `idx * 0x38` stride.
   `+0x0A u8 type` (= scene/entity-type id; keys the `sEntityProc*` tables),
   `+0x1A u8 dispatchState`, `+0x1B u8 activeCount` (slot 0 only; per-frame
   loop bound), `+0x34 u16 status` (flag bits).
+- `+0x2C u32 spawnTick` (`struct Entity.spawnTick`): `gGameStuff._unk00`
+  frame stamp taken when a dormant slot (`status & 0x08`) arms its respawn
+  delay (`status |= 0x80`); the slot respawns once `_unk00 - spawnTick >
+  field_32`. Seen in `sub_0802D170` (slots 3..22) and the NAKED sibling
+  `EntityPool_UpdateOwned` (slots 8..21). Matching note: the baserom folds
+  the `+0x2C` onto the `gEntities` symbol (`gEntities + 0x2C + slot*0x38`),
+  which agbcc emits for `gEntities[slot].spawnTick` but NOT for `e->spawnTick`
+  through the cached slot pointer.
 - `gIwram_6110` is the entity **manager** (`ModeControl`); `gIwram_35E0` is
   the player/cursor move-resolver. See `subsystems.md` "Entity / actor".
 

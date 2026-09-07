@@ -144,7 +144,8 @@ struct Entity {
     u8 field_28;         /* +0x28 */
     u8 field_29;         /* +0x29 */
     u8 field_2A;         /* +0x2A: MotionDesc.sel (pool slot ptr in MotionDesc_Set) */
-    u8 field_2B[5];      /* +0x2B..+0x2F */
+    u8 field_2B;         /* +0x2B */
+    u32 spawnTick;       /* +0x2C: gGameStuff._unk00 stamp taken when the respawn delay starts */
     u8 field_30;         /* +0x30: MotionDesc.dx */
     u8 field_31;         /* +0x31: MotionDesc.dy */
     u8 field_32;         /* +0x32: MotionDesc.mode */
