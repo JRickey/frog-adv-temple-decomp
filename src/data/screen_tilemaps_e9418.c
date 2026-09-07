@@ -31,9 +31,9 @@
  * variants likely correspond to logo / HUD-label swaps for difficulty
  * or language modes rather than wholesale layout changes.
  *
- * Offset table at 0x08308f84 (5 entries, indexed by some selector
- * that is NOT gUnk_030034b0 -- the latter only gates the E9C18/EA418
- * default-vs-mode3 swap):
+ * Offset table at 0x08308f84 (5 entries; sub_0801EA08 indexes it by
+ * gIwram_34B0._data and DMAs the entry to screenblock 30 -- the same
+ * word that gates the E9C18/EA418 default-vs-mode3 swap):
  *
  *   [0] 0x081e9418 -> sScreenTilemap_E9418
  *   [1] 0x081eac18 -> sScreenTilemap_EAC18

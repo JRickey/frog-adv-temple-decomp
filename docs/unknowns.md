@@ -466,3 +466,23 @@ Candidate hypotheses to confirm: `SCENE_08`≈world-scene entry, `SCENE_15`=core
 gameplay, `SCENE_19`=timed/bonus or results. `MENU_07/25/26/27` are
 title/menu/file-flow transition sub-machines — confirm which pane each is once
 the `0x0801E7xx–0x08020xxx` menu handlers are peeled to C.
+
+## `gIwram_34B0` reads as a language index, not a level index
+
+`sub_0801EA08` (options-panel draw) uses `gIwram_34B0._data` to pick
+(a) the ON/OFF label pair from `sUiOnOffLabelPtrs` (`[idx*2]`/`[idx*2+1]`
+-> "ON /OFF", "OUI/NON", "AN /AUS", "SI/NO", ...), (b) the screenblock-30
+tilemap from the 5-entry table at `0x08308F84` (`sScreenTilemapTable_308F84`),
+and (c) a special layout when `== 3` (the 2-char "SI"/"NO" pair gets a
+trailing blank via `sCreditsMisc`). `FileSelect_Init`/`sub_0801EED4` index
+`sScreenTilemapTable_308EF4` and `sSceneRecordTable_308110` the same way.
+`SaveHeader.level` (valid `<= 4`) restores it. Five values, per-language
+label strings and per-language screen tilemaps all point at "UI language",
+so `SetCurrentLevel` / `SaveHeader.level` / the memory-map row are probably
+misnamed. Hold the rename until a consumer that indexes a level table (the
+24-byte-stride users) is decompiled and can arbitrate.
+
+`gIwram_34B4._data[0..3]` is the options block: `[0]` sound on/off (`0` ->
+`Sound_ClearActiveFlag` in `SaveLoad`), `[1]` music on/off, `[2]`/`[3]` two
+spinner values clamped to `[3..9]` (arrows disabled at 3 and 9; `[3]` is also
+copied into `SaveHeader._field2` when a slot is picked in `sub_0801F020`).
