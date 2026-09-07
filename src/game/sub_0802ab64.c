@@ -17,6 +17,7 @@ extern void sub_0802AAE8(void);
 extern void EntitySlot10_LoadLayout(void);
 
 extern const void *const sLevelLayoutPtrs_317E6C[2];
+extern const void *const sLevelLayoutPtrs_317F58[4];
 extern const u32 sLevelLayout_317DDC[4];
 extern const u32 sLevelLayout_317E74[12];
 
@@ -164,4 +165,36 @@ void RoomFrogEntity_Update(void)
 
     Entity_UpdateMovers(2, 2);
     Entity_AdvanceAnimFrames(2, 2);
+}
+
+void sub_0802AF10(void)
+{
+    u8 i;
+
+    for (i = 0; i < 4; i++) {
+        Entity_InitSlotFromRecord(i + 3, sLevelLayoutPtrs_317F58[i], 16, 0x26, 0x81, 2, 3, 3);
+    }
+}
+
+void sub_0802AF4C(void)
+{
+    u8 i;
+
+    for (i = 0; i < 4; i++) {
+        Entity_FollowPath(sLevelLayoutPtrs_317F58[i], i + 3);
+    }
+
+    Entity_UpdateMovers(3, 6);
+    Entity_AdvanceAnimFrames(3, 6);
+}
+
+void sub_0802AF84(void)
+{
+    u8 i;
+
+    i = 0;
+    do {
+        Entity_InitSlotFromRecord(i + 2, (const void *)sLevelLayoutPtrs_317ED4[i], 16, 0x53, 0x41, 1, 3, 3);
+        i++;
+    } while (i == 0);
 }

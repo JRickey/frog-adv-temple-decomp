@@ -8,6 +8,7 @@ struct IwramAt6410 {
 };
 
 extern struct IwramAt6410 gIwram_6410;
+extern struct BgScrollState gIwram_60A0[3];
 extern u8 gIwram_53A0[];
 
 void AnimChannels_Reset(void)
@@ -25,4 +26,19 @@ void AnimChannels_Reset(void)
     chB->animState = 1;
     gIwram_53A0[0xff] = 0;
     gIwram_6410._maxFrames = 8;
+}
+
+void sub_08012504(u16 height, u16 width, const u16 *src, u16 *dst)
+{
+    u16 row;
+    u16 col;
+
+    for (row = 0; row < height; row++) {
+        for (col = 0; col < width; col++) {
+            *dst = *src;
+            src++;
+            dst++;
+        }
+        dst = (u16 *)((u8 *)dst + ((gIwram_60A0[0].tileCols - width) << 1));
+    }
 }

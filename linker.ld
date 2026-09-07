@@ -122,6 +122,7 @@ SECTIONS {
         . = 0x00003474; gIwram_3474 = .;
         . = 0x00003478; gIwram_3478 = .;
         . = 0x00003480; gIwram_3480 = .;
+        . = 0x00003498; gIwram_3498 = .;
         . = 0x000034A0; gIwram_34A0 = .;
         . = 0x000034B0; gIwram_34B0 = .;
         . = 0x000034B4; gIwram_34B4 = .;
@@ -393,7 +394,6 @@ SECTIONS {
         src/engine/sub_0800d9fc.o(.text);
         asm/disasm_0x0800dab8.o(.text);  /* 0x0800db04 - 0x0800dc3c, PadGrid_SlotToCoord cluster (auto-peeled) */
         src/engine/sub_0800dc3c.o(.text);
-        asm/disasm_0x0800dc3c.o(.text);  /* 0x0800dc3c - 0x0800dc50, sub_0800DC3C (auto-peeled) */
         src/engine/sub_0800dc50.o(.text);
         src/engine/sub_0800dd80.o(.text);  /* 0x0800dd80 - 0x0800de0c, WorldMap_Init */
         src/engine/sub_0800de80.o(.text);  /* 0x0800de80 - 0x0800df7c, Game_FrameEnd */
@@ -447,10 +447,8 @@ SECTIONS {
         src/engine/sub_08012098.o(.text);  /* 0x08012098 - 0x0801223c, Selector_StepColorFade + Selector_ResetState + UpdateScrollFromAnimChannels */
         src/engine/sub_0801223c.o(.text);  /* 0x0801223c - 0x080124d0, InitScrollAnimSequence + RunScrollTransitionSequence */
         src/engine/sub_080124d0.o(.text);  /* 0x080124d0 - 0x08012504, AnimChannels_Reset */
-        asm/disasm_0x080122e4.o(.text);  /* 0x08012504 - 0x0801254c, sub_08012504 (auto-peeled) */
         src/engine/sub_0801254c.o(.text);
         src/engine/sub_0801255c.o(.text);
-        asm/disasm_0x080125b0.o(.text);  /* 0x080125b0 - 0x08012604, sub_080125B0 (auto-peeled) */
         src/engine/sub_08012604.o(.text);
         src/engine/sub_08012664.o(.text);
         src/engine/sub_0801288c.o(.text);
@@ -527,7 +525,6 @@ SECTIONS {
         src/engine/sub_08017a88.o(.text);  /* 0x08017a88 - 0x08017aa8, Attract_StepFinish */
         src/engine/sub_08017aa8.o(.text);  /* 0x08017aa8 - 0x08017abc, Attract_Cleanup */
         src/engine/sub_08017abc.o(.text);  /* 0x08017abc - 0x08017b68, UiScreen_Init */
-        asm/disasm_0x08017b68.o(.text);  /* 0x08017b68 - 0x08017bfc, sub_08017B68 (auto-peeled) */
         src/engine/sub_08017bfc.o(.text);  /* ... - 0x08018188, + sub_08017FC4 */
         asm/disasm_0x08018188.o(.text);  /* 0x08018188 - 0x080181d0, sub_08018188 (auto-peeled) */
         src/engine/sub_080181d0.o(.text);
@@ -689,7 +686,6 @@ SECTIONS {
         src/engine/sub_08024304.o(.text);  /* 0x08024304 - 0x080243d4, InitEntitySlot65 + InitEntitySlots0A_13 */
         src/engine/sub_080243d4.o(.text);
         src/engine/sub_08024444.o(.text);
-        asm/disasm_0x08024470.o(.text);  /* 0x08024470 - 0x08024494, sub_08024470 (auto-peeled) */
         asm/text/text_0x08024494.o(.text);  /* 0x08024494 - 0x080244f8, raw bytes */
         asm/disasm_0x080244f8.o(.text);  /* 0x080244f8 - 0x08024534, sub_080244F8 (auto-peeled) */
         asm/disasm_0x08024534.o(.text);  /* 0x08024534 - 0x080247ac, sub_08024534 (peeled) */
@@ -865,13 +861,7 @@ SECTIONS {
         asm/disasm_0x08028b94.o(.text);  /* 0x08028b94 - 0x080292e0, sub_08028B94 (peeled) */
         asm/disasm_0x080292e0.o(.text);  /* 0x080292e0 - 0x08029448, sub_080292E0 (peeled) */
         asm/disasm_0x08029448.o(.text);  /* 0x08029448 - 0x080295ac, sub_08029448 (peeled) */
-        asm/disasm_0x080295ac.o(.text);  /* 0x080295ac - 0x080295d4, sub_080295AC (peeled) */
-        asm/disasm_0x080295d4.o(.text);  /* 0x080295d4 - 0x080295f8, sub_080295D4 (peeled) */
-        asm/disasm_0x080295f8.o(.text);  /* 0x080295f8 - 0x08029620, sub_080295F8 (peeled) */
-        asm/disasm_0x08029620.o(.text);  /* 0x08029620 - 0x08029644, sub_08029620 (peeled) */
-        asm/disasm_0x08029644.o(.text);  /* 0x08029644 - 0x0802966c, sub_08029644 (peeled) */
-        asm/disasm_0x0802966c.o(.text);  /* 0x0802966c - 0x08029690, sub_0802966C (peeled) */
-        asm/disasm_0x08029690.o(.text);  /* 0x08029690 - 0x080296b8, sub_08029690 (peeled) */
+        src/engine/sub_080295ac.o(.text);
         asm/disasm_0x080296b8.o(.text);  /* 0x080296b8 - 0x08029710, sub_080296B8 (peeled) */
         asm/disasm_0x08029710.o(.text);  /* 0x08029710 - 0x08029748, sub_08029710 (peeled) */
         asm/disasm_0x08029748.o(.text);  /* 0x08029748 - 0x08029780, sub_08029748 (peeled) */
@@ -893,11 +883,8 @@ SECTIONS {
         src/engine/sub_0802a9fc.o(.text);
         src/engine/sub_0802aae8.o(.text);
         src/game/sub_0802ab64.o(.text);  /* 0x0802ab64 - 0x0802af10, EntitySlot17_Init + EntitySlot12_LoadLayout + RoomEntities_Update + RoomEntities_Init + RoomFrogEntity_Update */
-        asm/disasm_0x0802af10.o(.text);  /* 0x0802af10 - 0x0802af4c, sub_0802AF10 (auto-peeled) */
-        asm/disasm_0x0802af4c.o(.text);  /* 0x0802af4c - 0x0802af84, sub_0802AF4C */
-        asm/disasm_0x0802af84.o(.text);  /* 0x0802af84 - 0x0802afc0, sub_0802AF84 (auto-peeled) */
         asm/text/text_0x0802afc0.o(.text);  /* 0x0802afc0 - 0x0802aff8, raw bytes */
-        asm/disasm_0x0802aff8.o(.text);  /* 0x0802aff8 - 0x0802b008, sub_0802AFF8 (auto-peeled) */
+        src/game/sub_0802aff8.o(.text);
         asm/disasm_0x0802b008.o(.text);  /* 0x0802b008 - 0x0802b2ec, sub_0802B008 (auto-peeled) */
         asm/disasm_0x0802b2ec.o(.text);  /* 0x0802b2ec - 0x0802b3b0, sub_0802B2EC (auto-peeled) */
         asm/text/text_0x0802b3b0.o(.text);  /* 0x0802b3b0 - 0x0802b9d4, raw bytes */
@@ -915,7 +902,6 @@ SECTIONS {
         src/game/sub_0802c7ec.o(.text);
         src/game/sub_0802c910.o(.text);  /* 0x0802c910 - 0x0802ca54, Entity22_Update (NAKED+NON_MATCHING) */
         src/game/sub_0802ca54.o(.text);
-        asm/disasm_0x0802ca54.o(.text);  /* 0x0802ca54 - 0x0802ca64, sub_0802CA54 (auto-peeled) */
         src/game/sub_0802ca64.o(.text);
         src/game/sub_0802cafc.o(.text);
         src/game/sub_0802cdd0.o(.text);
@@ -925,14 +911,10 @@ SECTIONS {
         src/game/sub_0802d294.o(.text);
         asm/disasm_0x0802d294.o(.text);  /* 0x0802d294 - 0x0802d3c0, sub_0802D294 (auto-peeled) */
         src/game/sub_0802d3c0.o(.text);
-        asm/disasm_0x0802d3c0.o(.text);  /* 0x0802d3c0 - 0x0802d448, sub_0802D3C0 (auto-peeled) */
         src/game/sub_0802d448.o(.text);
-        asm/disasm_0x0802d448.o(.text);  /* 0x0802d448 - 0x0802d4ac, sub_0802D448 (auto-peeled) */
         src/game/sub_0802d4ac.o(.text);
-        asm/disasm_0x0802d4ac.o(.text);  /* 0x0802d4ac - 0x0802d4f8, sub_0802D4AC (auto-peeled) */
         src/game/sub_0802d4f8.o(.text);  /* 0x0802d4f8 - 0x0802d504, sub_0802D4F8 */
         src/game/sub_0802d504.o(.text);
-        asm/disasm_0x0802d504.o(.text);  /* 0x0802d504 - 0x0802d514, sub_0802D504 (game trampoline) */
         asm/libagbsyscall.o(.text);  /* 0x0802d514 - 0x0802d5ec, public SDK BIOS SWI wrappers (libagbsyscall) */
         lib/gax/disasm_0x0802d5ec.o(.text);  /* 0x0802d5ec - 0x0802d770, SoundSystem_Transfer (auto-peeled) */
         src/game/sub_0802d770.o(.text);
