@@ -600,7 +600,6 @@ SECTIONS {
         src/engine/sub_0801f418.o(.text);
         src/engine/sub_0801f684.o(.text);
         src/engine/sub_0801f8bc.o(.text);
-        asm/disasm_0x0801f970.o(.text);  /* 0x0801f970 - 0x0801fd0c, SaveSlot_UpdateScreen (auto-peeled) */
         src/engine/sub_0801fd0c.o(.text);  /* 0x0801fd0c - 0x080200b4, WinPoseScreen_Init + WinPoseScreen_Update */
         src/engine/sub_080200b4.o(.text);  /* 0x080200b4 - 0x080201a8, WinPoseScreen_DrawBg */
 

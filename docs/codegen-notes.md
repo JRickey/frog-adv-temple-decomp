@@ -2816,3 +2816,31 @@ sub-word ints to *unsigned* SImode, so an `s16` parameter lives
 zero-extended (`lsrs rN, r0, #16`, parked in r8/r9) and every signed use
 re-derives `lsls #16; asrs #16` from it. Those high-reg copies are not
 source pins — they fall out of plain `s16 x, s16 y` parameters.
+
+## VRAM base + variable index: constant folding and operand order (SaveSlot_UpdateScreen)
+
+Target shape (four sites): `lsls r0,r6,#8; ldr r1,=0x0600f000; adds r0,r0,r1;
+lsls r1,r5,#1; adds r1,r0,r1; movs r2,#0x83; lsls r2,#1; adds r0,r1,r2; ldrh`
+— i.e. `band = 0x0600f000 + slot*0x100`, `col = band + cursor*2`, then
+`col + 0x106` / `col + 0x146` with the row offset added LAST and the base
+constant left bare. Three source shapes, three results:
+
+- `((u16 (*)[32])(0x0600F000 + slot * 0x100))[4][3 + cursor]` — one expression:
+  fold's `associate` (fold-const.c) sees through the same-mode cast and
+  gathers the constants, then expr.c's `both_summands` (EXPAND_SUM address
+  context) pulls every constant term out of the unforced sum:
+  `(slot<<8 + cursor<<1) + 0x0600f106`. Wrong.
+- `u16 (*band)[32] = ...; band[4][3 + cursor]` — the base is now a REG, so
+  nothing can be pulled out of it. Right split, but the address is still
+  expanded with EXPAND_SUM, where `cursor * 2` stays a `(mult reg 2)` rtx and
+  expr.c "puts a multiplication first": `adds r1, r1, r0` (cursor2 + band)
+  instead of the target `adds r1, r0, r1`. byte_diff 3, three sites.
+- `u16 *band = ...; u16 *glyph = band + cursor; glyph[4 * 32 + 3]` — the
+  pointer sum is an ASSIGNMENT (EXPAND_NORMAL → plain `expand_binop`), so
+  `cursor*2` is a shift into a pseudo and the PLUS keeps source order
+  (band first). Match.
+
+Also: a function-level `band` assigned at every site is a multi-set pseudo
+that global-alloc colours (no local-alloc `combine_regs` tie to the
+`slot<<8` temp → `adds r1, r0, r2` instead of `adds r0, r0, r1`). Declare
+the pointer locals block-scoped, one set each, so each is basic-block-local.

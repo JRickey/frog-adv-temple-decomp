@@ -93,8 +93,9 @@ struct IwramAt35E0 {
     u8 _field_19;  /* +19: entity coord (Y tile) */
     u8 _field_1A;
     u8 _pad1B;
-    s16 _field_1C; /* +0x1C: committed move tile X (gIwram_35E0._field_8 +/- 0,1,2) */
-    s16 _field_1E; /* +0x1E: committed move tile Y (gIwram_35E0._field_A +/- 0,1,2) */
+    s16 _field_1C;  /* +0x1C: committed move tile X (gIwram_35E0._field_8 +/- 0,1,2) */
+    s16 _field_1E;  /* +0x1E: committed move tile Y (gIwram_35E0._field_A +/- 0,1,2) */
+    u8 initials[3]; /* +0x20: player initials entered on the save-slot screen (0x03003600, SaveCommit src) */
 };
 
 struct IwramAt3608 {
