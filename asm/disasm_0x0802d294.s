@@ -150,5 +150,10 @@
 
         thumb_func_start sub_0802D294
 sub_0802D294: @ 0x0802d294
-        .incbin "frog_us_baserom.gba", 0x2d294, 0x12c
+        .incbin "frog_us_baserom.gba", 0x2d294, 0xbc
         thumb_func_end sub_0802D294
+
+        thumb_func_start sub_0802D350
+sub_0802D350: @ 0x0802d350
+        .incbin "frog_us_baserom.gba", 0x2d350, 0x70
+        thumb_func_end sub_0802D350
