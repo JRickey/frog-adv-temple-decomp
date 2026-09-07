@@ -14,6 +14,15 @@
 #define REG_BG2CNT (*(volatile u16 *)0x0400000C)
 #define REG_BG3CNT (*(volatile u16 *)0x0400000E)
 
+/* Window registers. WIN0H/WIN0V hold (left << 8) | right and
+ * (top << 8) | bottom in pixels; WININ/WINOUT hold per-layer enable bits. */
+#define REG_WIN0H  (*(volatile u16 *)0x04000040)
+#define REG_WIN1H  (*(volatile u16 *)0x04000042)
+#define REG_WIN0V  (*(volatile u16 *)0x04000044)
+#define REG_WIN1V  (*(volatile u16 *)0x04000046)
+#define REG_WININ  (*(volatile u16 *)0x04000048)
+#define REG_WINOUT (*(volatile u16 *)0x0400004A)
+
 /* REG_DISPSTAT bits. The low 3 bits are status (VBlank/HBlank/VCount
  * flags), the next 3 are the matching IRQ enables, bits 8-15 are the
  * VCount-match threshold. */

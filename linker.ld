@@ -53,6 +53,11 @@ sScreenTilemapTable_308EF4 = 0x08308EF4;
  * Scene_DrawWindow. Linker-assigned for the same defeat-the-fold reason as the
  * tilemap table above (FileSelect_Init / FileSelect_Update). */
 sSceneRecordTable_308110 = 0x08308110;
+
+/* Per-language world-name string table (5 languages x 5 worlds) used by the
+ * world-name banner. Linker-assigned so the table base is a relocation loaded
+ * ahead of the absolute gIwram_34B0 index base, same idiom as the tables above. */
+sWorldNameTable_30873C = 0x0830873C;
 sSpawnTable_0830791C = 0x0830791C;
 sSpawnTable_083079DC = 0x083079DC;
 sSpawnRecords_08307CB0 = 0x08307CB0;
@@ -568,7 +573,7 @@ SECTIONS {
         src/engine/sub_0801c078.o(.text);
         src/engine/sub_0801c2b4.o(.text);
         src/engine/sub_0801c464.o(.text);
-        asm/disasm_0x0801c6fc.o(.text);  /* 0x0801c6fc - 0x0801cd0c, sub_0801C6FC (auto-peeled) */
+        asm/disasm_0x0801c6fc.o(.text);  /* 0x0801c900 - 0x0801cd0c, Scene_DrawWindow (auto-peeled) */
         src/engine/sub_0801cd0c.o(.text);
         src/engine/sub_0801cec0.o(.text);
         src/engine/sub_0801cf18.o(.text);  /* 0x0801cf18 - 0x0801cfa0, DrawByteDecimal */

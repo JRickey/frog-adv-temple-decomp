@@ -1,5 +1,6 @@
 #include "gba/dma.h"
 #include "gba/io.h"
+#include "iwram.h"
 #include "macros.h"
 #include "types.h"
 
@@ -173,4 +174,115 @@ void HUD_ClearScreen(u8 a)
     (void)REG_DMA3.cnt;
 
     REG_DISPCNT &= ~DISPCNT_BG3_ON;
+}
+
+extern void UiWindow_DrawBordered(u8 col, u8 row, const u8 *str, u8 innerRows, u8 width, u16 palColor, u16 frames);
+extern const u16 sFrogSpritePalettes_E3774[5][16];
+extern const u8 *const *const sWorldNameTable_30873C[];
+
+/* Tile-space window rectangle; agbcc keeps the 4-byte struct packed in one
+ * register (x | y << 8 | w << 16 | h << 24), the same layout Screen_ClearRect
+ * takes as its u32 argument. */
+struct WinRect {
+    u8 x;
+    u8 y;
+    u8 w;
+    u8 h;
+};
+
+void sub_0801C6FC(u8 level)
+{
+    struct WinRect rect;
+    const u8 *str;
+    u8 x;
+    u8 y;
+    u8 world;
+    u8 lines;
+    u8 i;
+    u8 col;
+    u8 maxCol;
+
+    REG_DISPCNT &= ~DISPCNT_WIN0_ON;
+    REG_DISPCNT |= DISPCNT_BG3_ON;
+    REG_DMA3.src = sFrogSpritePalettes_E3774;
+    REG_DMA3.dst = (void *)0x050001E0;
+    REG_DMA3.cnt = DMA_ENABLE | 0x10;
+    (void)REG_DMA3.cnt;
+
+    /* Out-of-range ids fall back to world 0; the pre-init also keeps the
+     * baserom's `movs r2, #0` ahead of the jump table. */
+    world = 0;
+    switch (level) {
+    case 0:
+    case 1:
+    case 2:
+    case 3:
+        x = 1;
+        y = 1;
+        world = 0;
+        break;
+    case 4:
+    case 5:
+    case 6:
+        x = 10;
+        y = 16;
+        world = 1;
+        break;
+    case 7:
+    case 8:
+    case 9:
+        x = 10;
+        y = 16;
+        world = 2;
+        break;
+    case 10:
+    case 11:
+    case 12:
+        x = 10;
+        y = 1;
+        world = 3;
+        break;
+    case 13:
+    case 14:
+    case 15:
+        x = 1;
+        y = 1;
+        world = 4;
+        break;
+    }
+
+    str = sWorldNameTable_30873C[gIwram_34B0._data][world];
+
+    lines = 1;
+    i = 0;
+    col = 0;
+    maxCol = 0;
+    /* The ternary (not `if (maxCol < col)`) yields the baserom's
+     * copy-compare-overwrite shape. `[nnn]` is a 5-char glyph-code escape
+     * that counts as one column. */
+    while (str[i] != '|') {
+        col++;
+        maxCol = (maxCol >= col) ? maxCol : col;
+        if (str[i] == '\n') {
+            lines++;
+            col = 0;
+        } else if (str[i] == '[') {
+            i += 4;
+        }
+        i++;
+    }
+
+    rect.x = x;
+    rect.y = y;
+    rect.h = lines * 2 + 2;
+    UiWindow_DrawBordered(x, y, str, lines, maxCol, 0, 6);
+    rect.w = maxCol + 2;
+
+    REG_WININ = 0x0808;
+    REG_WINOUT = 0x3F3F;
+    REG_WINOUT |= 0x3F;
+    REG_WINOUT &= 0xFFF7;
+    REG_WIN0H = (rect.x << 11) | ((rect.x + rect.w) << 3);
+    REG_WIN0V = (rect.y << 11) | ((rect.y + rect.h) << 3);
+    REG_DISPCNT |= DISPCNT_WIN0_ON;
 }

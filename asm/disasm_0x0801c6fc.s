@@ -757,11 +757,6 @@
 @   0x0801cd08: 5398        strh	r0, [r3, r6]
 @   0x0801cd0a: 0300        lsls	r0, r0, #12
 
-        thumb_func_start sub_0801C6FC
-sub_0801C6FC: @ 0x0801c6fc
-        .incbin "frog_us_baserom.gba", 0x1c6fc, 0x204
-        thumb_func_end sub_0801C6FC
-
         thumb_func_start Scene_DrawWindow
 Scene_DrawWindow: @ 0x0801c900
         .incbin "frog_us_baserom.gba", 0x1c900, 0x40c
