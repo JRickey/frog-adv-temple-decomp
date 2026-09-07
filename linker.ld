@@ -630,7 +630,6 @@ SECTIONS {
         src/engine/sub_080217d4.o(.text);  /* 0x080217d4 - 0x08021838, Entity_WaypointDirectionCompare */
         src/engine/sub_08021838.o(.text);
         src/engine/sub_080219bc.o(.text);  /* 0x080219bc - 0x08021ac8, Entity_FollowPath */
-        asm/disasm_0x08021ac8.o(.text);  /* 0x08021ac8 - 0x08021cfc, sub_08021AC8 (auto-peeled) */
         src/engine/sub_08021cfc.o(.text);
         src/engine/sub_08021e34.o(.text);  /* 0x08021e34 - 0x08021ec0, Entity_IsInTileRange */
         src/engine/sub_08021ec0.o(.text);  /* 0x08021ec0 - 0x08021eec, TileEntry_CalcDirection */

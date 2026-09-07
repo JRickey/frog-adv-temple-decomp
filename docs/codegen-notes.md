@@ -2844,3 +2844,31 @@ Also: a function-level `band` assigned at every site is a multi-set pseudo
 that global-alloc colours (no local-alloc `combine_regs` tie to the
 `slot<<8` temp → `adds r1, r0, r2` instead of `adds r0, r0, r1`). Declare
 the pointer locals block-scoped, one set each, so each is basic-block-local.
+
+## Un-hoistable `(s16)` re-extension: memory-home the source operand (sub_08021AC8)
+
+Baserom loops that re-extend a spilled u16 base value *inside* the loop
+(`ldr r2,[sp,#12]; lsls r1,r2,#16; asrs r1,r1,#16; subs r1,r1,r0; strh`) while
+the value is loop-invariant are NOT reachable from a plain `u16 baseX` local:
+loop.c hoists the `sign_extend` (move_movables passes `threshold*savings*lifetime
+>= insn_count` for the first candidate, then `threshold -= 3` so the second one
+stays — the tell is ONE hoisted extension spilled to a fresh slot and the other
+left in-loop). Two things are needed:
+
+- The extension must survive the tree level: `e->x = (s16)baseX - f()` is
+  narrowed by convert_to_integer (HImode arithmetic, extension gone). Route
+  through an `s32 sx` temp (Entity_UpdateOrbitalPosition's idiom).
+- The operand must not be `invariant_p`: home it in a >4-byte struct local
+  (`struct { u32 x; u32 y; } origin;`, never promoted). `invariant_p(MEM)`
+  returns 0 whenever the loop contains a call (`unknown_address_altered`), so
+  the `ldr` stays in the loop and the extension follows it. A 4-byte struct
+  (`u16 x, y`) is promoted to ONE SImode pseudo and emits an `orr`-packed word
+  — it must be wider than a word.
+
+Same function, a second reusable artifact: a stray pre-loop
+`lsls r0,r7,#3; subs r0,r0,r7; lsls r0,r0,#3; adds r0,r0,r6; ldrsh r0,[r0,#16]; subs r0,#64`
+with NO compare, indexed by the loop counter BEFORE its init, is a dead
+conditional on an uninitialized index (`if ((s16)gEntities[i].field_10 - 0x40 < 0) ...`
+with a dead body). jump1 deletes the compare+branch, flow keeps the load+sub.
+It also pins the `gEntities` pool load into a callee-saved reg across the
+preceding call (`ldr r6` first, `adds r1, r6, #0; adds r1, #32` after the bl).
