@@ -43,11 +43,11 @@ function count reported by `progress.py`.
 scan, not a ground-truth disassembly. Treat ±20% as honest.
 Regenerate with `python3 tools/agent/progress_stats.py --update-readme`.
 
-- **Functions decompiled to C**: 820 / ~1114 estimated total (**73.6%**)
-  - true pure-C matches: 757
+- **Functions decompiled to C**: 822 / ~1114 estimated total (**73.8%**)
+  - true pure-C matches: 759
   - NAKED+NON_MATCHING (asm fallback, byte-matches but not pure C): 63
   - peeled-but-still-asm: 254
-  - not yet in C (non-matching tail — asm slices + raw INCBIN): ~294
+  - not yet in C (non-matching tail — asm slices + raw INCBIN): ~292
   - prologue-scan bracket (lower / upper): 335 / 1140
 - **Data deblobbed**: 628.8 KiB of 4.00 MiB (**15.35%**)
   - raw INCBIN bytes: 3.39 MiB (84.6% of ROM)

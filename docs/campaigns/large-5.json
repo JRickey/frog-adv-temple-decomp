@@ -3,33 +3,61 @@
   "id": "large-5",
   "base_commit": "ee4fcb9a17cb5af9c30c51919fde3f442ec8c239",
   "rom_sha1": "7b4c27009198df18555e63fb5dcad223eaf09815",
-  "summary": "Active five-large-function goal: three accepted functions totaling1968 bytes; data and interface corrections verified separately; bounded failed investigations preserved; camera integrated with clean ROM; scene near-matches preserved with allocation evidence; text and scale rendering active; bounded HUD interface correction active.",
+  "summary": "Five large new matching C functions accepted, totaling3340 ROM bytes. Integrated clean ROM and fresh function oracles pass. Typed data/interface corrections are separate outcomes; bounded investigations, corrected explanations and tooling regressions are preserved.",
   "metrics": {
-    "new_c_functions": 3,
-    "new_c_bytes": 1968,
+    "new_c_functions": 5,
+    "new_c_bytes": 3340,
     "true_c_before": 754,
-    "true_c_after": 757,
+    "true_c_after": 759,
     "pins_added": 0,
     "naked_fallbacks_added": 0,
-    "regression_tests_passed": 62,
+    "regression_tests_passed": 67,
     "failed_extraction_integration_trials": 1,
     "accepted_path_data_objects": 15,
-    "accepted_path_pointer_tables": 1
+    "accepted_path_pointer_tables": 1,
+    "remaining_outside_c_before": 297,
+    "remaining_outside_c_after": 292,
+    "naked_fallbacks_before": 63,
+    "naked_fallbacks_after": 63,
+    "accepted_typed_path_and_scene_objects": 20,
+    "accepted_typed_path_and_scene_bytes": 2048
   },
   "runs": [
     {
+      "id": "large5-draw-text-cfg-review",
+      "review_corrections": [
+        "Root required canonical word inputs with explicit local narrowing after a narrow header altered caller bytes.",
+        "Root requested readable physical VRAM addresses, meaningful names, documented essential arithmetic, and centralized ParseDecimalStr.",
+        "A rename briefly changed a character literal; compiler rejection exposed it and the immutable repaired trial supersedes it."
+      ],
+      "task": "Fresh reference CFG reconstruction and readable text match",
+      "outcome": "accepted-after-review",
+      "model": "gpt-6-astra",
+      "reasoning_effort": "high",
+      "usage": {
+        "input_tokens": 4752671,
+        "cached_input_tokens": 4583808,
+        "output_tokens": 23993,
+        "total_tokens": 4776664,
+        "uncached_input_tokens": 168863
+      },
+      "session_id": "01a07ffd-d1ee-73e2-bd9a-212f0fbb763b"
+    },
+    {
       "id": "large5-hud-interface-correction",
-      "review_corrections": [],
-      "task": "Correct HUD_DrawStatus ABI with explicit byte rendering",
-      "outcome": "in-progress",
+      "review_corrections": [
+        "Root corrected reversed new left/right argument names from actual draw columns."
+      ],
+      "task": "Correct HUD ABI, then bounded PadGrid implementation after compact reset",
+      "outcome": "hud-accepted-padgrid-deferred",
       "model": "gpt-5.6-terra",
       "reasoning_effort": "high",
       "usage": {
-        "input_tokens": 474021,
-        "cached_input_tokens": 429568,
-        "output_tokens": 2896,
-        "total_tokens": 476917,
-        "uncached_input_tokens": 44453
+        "input_tokens": 3428495,
+        "cached_input_tokens": 3241472,
+        "output_tokens": 16454,
+        "total_tokens": 3444949,
+        "uncached_input_tokens": 187023
       },
       "session_id": "01a07fed-47d1-7151-b3e9-2546d5407f71"
     },
@@ -48,6 +76,25 @@
         "uncached_input_tokens": 116879
       },
       "session_id": "01a07fd2-9676-7433-b5e1-4f53662dc255"
+    },
+    {
+      "id": "large5-large-collision-probe",
+      "review_corrections": [
+        "Root required publication of the actual typed helper interface and removal of legacy conflicting declarations, with explicit pointer boundaries.",
+        "Root requested typed probe arguments and separate assignment/condition; both retain zero diff."
+      ],
+      "task": "Reconstruct 864-byte Entity_CollisionProbe from audited reference CFG",
+      "outcome": "accepted-after-review",
+      "model": "gpt-5.6-sol",
+      "reasoning_effort": "high",
+      "usage": {
+        "input_tokens": 5756789,
+        "cached_input_tokens": 5497600,
+        "output_tokens": 28039,
+        "total_tokens": 5784828,
+        "uncached_input_tokens": 259189
+      },
+      "session_id": "01a08001-a268-7b83-915d-22754b3a9b46"
     },
     {
       "id": "large5-large-collision-script",
@@ -69,15 +116,15 @@
       "id": "large5-large-draw-text",
       "review_corrections": [],
       "task": "Reconstruct 508-byte DrawTextGlyphs",
-      "outcome": "in-progress",
+      "outcome": "deferred-for-reference-cfg-review",
       "model": "gpt-5.6-sol",
       "reasoning_effort": "high",
       "usage": {
-        "input_tokens": 622290,
-        "cached_input_tokens": 563072,
-        "output_tokens": 6733,
-        "total_tokens": 629023,
-        "uncached_input_tokens": 59218
+        "input_tokens": 6193458,
+        "cached_input_tokens": 5996672,
+        "output_tokens": 27011,
+        "total_tokens": 6220469,
+        "uncached_input_tokens": 196786
       },
       "session_id": "01a07fea-85e1-7f41-921b-d770400d79ce"
     },
@@ -222,17 +269,19 @@
     },
     {
       "id": "large5-large-scale-blit",
-      "review_corrections": [],
+      "review_corrections": [
+        "Fresh reference CFG/m2c review corrected widths, per-row resets, destination Y and wrap branches; allocation-only explanation was premature."
+      ],
       "task": "Reconstruct 852-byte ScaleAnim_BlitFrameToVram",
-      "outcome": "in-progress",
+      "outcome": "deferred-with-reference-range-bug",
       "model": "gpt-5.6-sol",
       "reasoning_effort": "high",
       "usage": {
-        "input_tokens": 400561,
-        "cached_input_tokens": 333952,
-        "output_tokens": 5262,
-        "total_tokens": 405823,
-        "uncached_input_tokens": 66609
+        "input_tokens": 4342586,
+        "cached_input_tokens": 4120960,
+        "output_tokens": 21689,
+        "total_tokens": 4364275,
+        "uncached_input_tokens": 221626
       },
       "session_id": "01a07fea-f6b1-78f3-8a7b-8a9b5369dfe1"
     },
@@ -301,11 +350,30 @@
       "session_id": "01a07f8c-6b6b-7130-8d0e-62122b4fc051"
     },
     {
+      "id": "large5-m2c-range-fix",
+      "review_corrections": [
+        "Root required per-function bounds in multi-function peel headers and stable cached callee identities.",
+        "Root added a missing-sibling-address guard and regression."
+      ],
+      "task": "Keep m2c reference range immutable during C replacement",
+      "outcome": "accepted-tooling-correction",
+      "model": "gpt-5.6-terra",
+      "reasoning_effort": "high",
+      "usage": {
+        "input_tokens": 2521915,
+        "cached_input_tokens": 2424064,
+        "output_tokens": 19000,
+        "total_tokens": 2540915,
+        "uncached_input_tokens": 97851
+      },
+      "session_id": "01a07ff9-a00b-7862-9b81-957f5101035e"
+    },
+    {
       "id": "large5-root",
       "model": "gpt-6-astra",
       "reasoning_effort": "medium",
       "task": "Strategy, data/interface review, integration and acceptance",
-      "outcome": "three-large-functions-accepted",
+      "outcome": "five-large-functions-accepted",
       "review_corrections": [
         "Rejected pointer-to-integer arithmetic where ordinary typed pointers match.",
         "Corrected MotionDesc_Set signed input and unsigned storage interface across callers.",
@@ -315,13 +383,29 @@
         "Removed unintended dependency-symlink type changes from a local data commit before integration; stage explicit owned paths in dependency-linked worktrees."
       ],
       "usage": {
-        "input_tokens": 37658756,
-        "cached_input_tokens": 36763136,
-        "output_tokens": 102709,
-        "total_tokens": 37761465,
-        "uncached_input_tokens": 895620
+        "input_tokens": 48956948,
+        "cached_input_tokens": 47918208,
+        "output_tokens": 141235,
+        "total_tokens": 49098183,
+        "uncached_input_tokens": 1038740
       },
       "session_id": "01a07f43-1610-7883-b405-10cc57956867"
+    },
+    {
+      "id": "large5-scale-lifetime-review",
+      "review_corrections": [],
+      "task": "Fresh m2c lifetime reconstruction and compiler review",
+      "outcome": "deferred-with-corrected-semantics-and-pre-trace",
+      "model": "gpt-6-astra",
+      "reasoning_effort": "high",
+      "usage": {
+        "input_tokens": 1459828,
+        "cached_input_tokens": 1406208,
+        "output_tokens": 8500,
+        "total_tokens": 1468328,
+        "uncached_input_tokens": 53620
+      },
+      "session_id": "01a07ff9-f744-75e0-b037-96c4c27132a1"
     },
     {
       "id": "large5-scene-final-residual",
@@ -398,7 +482,7 @@
       "id": "large5-scene19-hud-interface",
       "review_corrections": [],
       "task": "Audit Scene19 HUD canonical interface",
-      "outcome": "audit-complete-correction-pending",
+      "outcome": "audited-interface-correction-integrated",
       "model": "gpt-5.6-terra",
       "reasoning_effort": "high",
       "usage": {
@@ -430,12 +514,22 @@
   "usage_provenance": {
     "source": "tools/agent/session_usage.py explicit campaign root and worker sessions",
     "start": "2026-09-08T05:22:15+00:00",
-    "end": "2026-09-08T07:32:45.234390+00:00",
+    "end": "2026-09-08T08:20:30.602930+00:00",
     "scope": "Campaign-only cumulative-counter deltas including orchestration and failed experiments; active workers measured only through cutoff. No account quota attribution."
   },
   "accepted_source_commits": [
     "07069ac88ac7",
     "f3dc4a66",
-    "da794b0d"
-  ]
+    "da794b0d",
+    "a761f40e",
+    "e47355c8"
+  ],
+  "verification": {
+    "source_commit": "e47355c8b1c85d66b8129ccf867d477195b216c8",
+    "whole_rom": "clean make tidy && make -j8 && make check passed",
+    "fresh_oracles": "all five byte_diff0/diff_count0",
+    "compiled_object_ownership": "all five C text contributions verified",
+    "infra_tests_passed": 67,
+    "artifacts": "nonmatchings/large-five/final-acceptance/"
+  }
 }

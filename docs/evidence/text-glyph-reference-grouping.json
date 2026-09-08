@@ -1,0 +1,42 @@
+{
+  "id": "text.glyph.reference-grouping",
+  "kind": "compiler",
+  "title": "Reference arithmetic and escape lifetimes reconstruct text glyph drawing",
+  "claim": "DrawTextGlyphs is a new 508-byte matching C range (506-byte symbol plus 2 alignment). Reference palette+(escapeIndex+escapeBase) grouping, separate escape-address/base lifetimes and direct special-glyph stores reproduce the shared bracket tail without goto or spills. Word-sized public arguments with explicit byte/halfword locals retain caller and callee code. ParseDecimalStr is centralized unchanged. Physical VRAM tile addresses use named screenblock/row constants; row-as-pointer placeholders are removed. A documented subtraction of a negated bounded glyph index preserves two otherwise differing operand-order bytes. There are no new pins, barriers or assembly fallbacks.",
+  "subjects": [
+    "fn:0801be7c",
+    "fn:0801cec0"
+  ],
+  "tags": [
+    "text",
+    "interface",
+    "arithmetic",
+    "allocation",
+    "matching"
+  ],
+  "schema_version": 1,
+  "status": "verified",
+  "provenance": [
+    {
+      "path": "src/engine/sub_0801be7c.c",
+      "location": "DrawTextGlyphs arithmetic, escape path and VRAM addresses",
+      "commit": "e47355c8b1c85d66b8129ccf867d477195b216c8"
+    },
+    {
+      "path": "include/text.h",
+      "location": "canonical text interfaces and screen selector contract",
+      "commit": "e47355c8b1c85d66b8129ccf867d477195b216c8"
+    },
+    {
+      "path": "src/engine/sub_0801cec0.c",
+      "location": "ParseDecimalStr definition includes owning header",
+      "commit": "e47355c8b1c85d66b8129ccf867d477195b216c8"
+    }
+  ],
+  "current_validation": {
+    "commit": "e47355c8b1c85d66b8129ccf867d477195b216c8",
+    "state": "confirmed",
+    "whole_rom": "Integrated clean make tidy && make -j8 && make check passes; expected ROM SHA1.",
+    "functions": "Fresh integrated oracle508B byte_diff0 diff_count0; C object contribution508, function symbol506."
+  }
+}

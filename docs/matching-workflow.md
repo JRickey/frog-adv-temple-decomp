@@ -116,6 +116,15 @@ A useful experiment record contains:
 Keep large candidate batches and raw logs under `nonmatchings/`. Summarize
 new reusable findings in evidence records. Do not promote a failed parameter
 variant into a universal claim that a register pin is necessary.
+Use scoped or symbol-aware renames: replacement across raw C text can change
+character/string literals, as a rejected text-renderer cleanup demonstrated.
+
+Before attributing a shorter body or smaller frame to allocation, check the
+reference control flow independently: signed widths, per-iteration resets,
+wrap branches, and store/reload ordering. A second decompiler must use the
+immutable ROM extent, not the candidate's linked size. The first ScaleAnim
+candidate omitted semantic distinctions that a fresh m2c lifetime review
+found; its allocation-only explanation was therefore premature.
 
 ## Interfaces and source review
 

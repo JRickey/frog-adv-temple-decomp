@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "hud.halfword-input-byte-rendering",
+  "kind": "behavior",
+  "title": "HUD inputs preserve caller halfwords and explicit byte rendering",
+  "status": "verified",
+  "claim": "HUD_DrawStatus accepts two signed halfwords and an unsigned halfword counter through gfx.h, then explicitly narrows all three to bytes inside its existing 420-byte renderer. The only direct ROM caller at 08003dde prepares two ldrsh values from entity fields and a zero-extended counter; the previous u8 interface conflated API inputs with rendered values. The first value renders on the right and the second on the left. This interface correction preserves the callee and whole ROM; it is not a new C function and does not remove the pre-existing renderer barrier.",
+  "subjects": [
+    "fn:0801c4f8",
+    "fn:08003ca8"
+  ],
+  "provenance": [
+    {
+      "path": "include/gfx.h",
+      "location": "HUD_DrawStatus canonical declaration",
+      "commit": "7e11b32b6c71d78afa98c0af3c925bea3a08502d"
+    },
+    {
+      "path": "src/engine/sub_0801c464.c",
+      "location": "HUD_DrawStatus entry conversions and column9/28 rendering",
+      "commit": "7e11b32b6c71d78afa98c0af3c925bea3a08502d"
+    },
+    {
+      "path": "asm/disasm_0x08003ca8.s",
+      "location": "caller argument preparation near08003dde",
+      "commit": "7e11b32b6c71d78afa98c0af3c925bea3a08502d"
+    }
+  ],
+  "tags": [
+    "hud",
+    "interface",
+    "signedness",
+    "matching"
+  ],
+  "current_validation": {
+    "commit": "7e11b32b6c71d78afa98c0af3c925bea3a08502d",
+    "state": "confirmed",
+    "whole_rom": "Integrated clean make tidy && make -j8 && make check passes, expected SHA1.",
+    "functions": "Isolated fresh HUD_DrawStatus oracle420B byte_diff0 diff_count0; root corrected reversed new parameter names before another clean gate."
+  }
+}

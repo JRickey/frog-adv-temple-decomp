@@ -1,42 +1,72 @@
 # Five large functions
 
-Active goal from `ee4fcb9a`: five new substantial game functions, roughly 500 bytes or larger. Baseline: 754 pure C functions, 63 assembly-backed C functions, and approximately 297 functions outside C. There was no user-supplied campaign queue.
+Completed **5/5 new large matching C functions**, totaling **3,340 ROM bytes**. Baseline was `ee4fcb9a`; final source integration is `e47355c8`. There was no user-supplied queue. Astra owned strategy and acceptance.
 
-Accepted **3/5**, totaling **1968 bytes**, with no added pins or assembly fallbacks:
+| Function | ROM start | Matching range | Source commit |
+|---|---|---:|---|
+| Entity_CollisionProbe | 08001e24 | 864 bytes | a761f40e |
+| Scroll_UpdateCameraAlt | 08002ee8 | 748 bytes | da794b0d |
+| DrawTextGlyphs | 0801be7c | 508 bytes | e47355c8 |
+| sub_08024DBC | 08024dbc | 532 bytes | f3dc4a66 |
+| sub_08028270 | 08028270 | 688 bytes | 07069ac8 |
 
-- `sub_08028270`, 688 bytes, integrated at `07069ac8`: ten primary entities and five paired peers. Ordinary array pointers match. Signed motion inputs are centralized, with unsigned byte storage retained inside the existing 400-byte helper.
-- `sub_08024DBC`, 532 bytes, integrated at `f3dc4a66`: path updates and proximity sound control. Unsigned distance staging preserves the signed-threshold conversion. Fifteen literal 64-byte path structs and a typed pointer array have real ROM symbols. Entity_FollowPath's word argument is explicitly narrowed to a byte inside its existing 268-byte definition.
+The ranges include literal pools and four total alignment bytes. All five have authored C bodies, no added pins/barriers/NAKED replacements, and verified C-object ownership. Existing assembly references remain unselected. No compiler flag changes were accepted.
 
-All three accepted ranges have fresh zero-diff oracles, authored-body review, compiled-object ownership checks, and clean whole-ROM validation. Main now has 757 pure C functions and approximately 294 outside C; the 63 existing assembly-backed C functions remain separate. Interface corrections and typed data do not count as additional functions.
+The final integrated `make tidy && make -j8 && make check` passes with SHA1 `7b4c27009198df18555e63fb5dcad223eaf09815`. All five fresh oracles report zero byte and instruction differences. The infrastructure suite passes **67 tests**, plus evidence and campaign validation. The address snapshot was refreshed from the verified ROM and README statistics updated: **759 pure-C functions**, **292 estimated functions outside C**, and **63 existing assembly-backed C functions**. The latter are separate from the outside-C count; the inventory is an estimate, not a vetted queue.
 
-## Bounded investigations
+## Accepted source and interface findings
 
-- `LevelLayout_WalkRecords`, 976 bytes: best exact-size candidate still 144 byte differences / 88 instructions. Distinct cases 34/54/90 must remain separate. RTL identifies late pool rematerialization; next evidence must distinguish GCSE partial-expression sharing and slot identity. Prior assembly restored.
-- `sub_08028858`, 576 bytes: best 572 bytes, 467 differing bytes / 111 instructions. Fresh diagnosis identifies GCSE folding retained mask-minus-one into 0x7fff. A diagnostic narrow-return control preserves the mask, but no justified helper was derived. Reproduction is checked in under `docs/experiments/status-mask-gcse`.
-- `sub_08024534`, 632 bytes: exact-size candidate 491 differing bytes / 146 instructions, with real pointer-table split preserved in its packet. Allocation/status mechanism remains unresolved. Prior implementation restored and whole-ROM gate passed.
-- `sub_080265D4`, 756 bytes: real typed globals removed dispatch-base hoisting; explicit control-flow exits and a corpus-based unsigned-halfword status intermediate reduced the residual to 46 bytes / 36 instructions. Idle blocks contain a redundant zero OR not explained by ordinary semantics. Fresh Astra and Terra audits found analogous sites in sub_080259C4 but no justified shared helper. The candidate is preserved and assembly restored. Typed scene data passed an independent clean whole-ROM gate and was integrated separately as 59c10225; extraction and a clean whole-ROM check passed.
-- `EntityPool_SpawnEntry`, 508 bytes: best 496 bytes with 301 differing bytes / 44 instructions. A valid phase reaches a path where the original leaves the motion selector in stale r7. This remains an explicit reconstruction question; no placeholder or pin was accepted.
+- Paired movement covers ten primaries and five peers using ordinary entity array pointers. MotionDesc_Set takes signed byte inputs and preserves unsigned byte storage inside its existing body.
+- Path/proximity updates retain unsigned halfword distance staging followed by signed threshold comparisons. Entity_FollowPath accepts a word index and explicitly narrows it inside its existing definition.
+- The scripted camera uses existing entity/scroll structs and a signed halfword vertical offset, with a shared gfx.h declaration.
+- Text drawing needed reference grouping `palette + (escapeIndex + escapeBase)`, separate escape lifetimes and direct special-glyph stores. Word API parameters with explicit local narrowing preserve callers. ParseDecimalStr is centralized unchanged. Named physical VRAM address calculations replace pointer placeholders. One documented subtraction of a negated, bounded glyph index preserves operand order; ordinary addition differed by two bytes.
+- Collision updates use typed slots/masks and ordinary entity fields. The spawn-mask assignment is separate from its condition. The existing typed Entity_UpdateHitboxWithTile definition is now declared in entity.h, with eight conflicting local declarations removed. Some legacy wrapper APIs still carry pointers as words; explicit boundary casts preserve them, and that API debt remains unresolved.
+- HUD_DrawStatus, separately integrated at `7e11b32b`, accepts signed halfword values and an unsigned halfword counter, then renders their low bytes. Root corrected reversed proposed left/right argument names using actual draw columns. Its existing 420-byte body remains identical.
 
-- `sub_080259C4`, 808 bytes: best 792 bytes / 520 differing bytes / 210 instructions. Corrected collision-tag/timer semantics and companion coordinates; allocator still merges slot and flag lifetimes. Restored assembly and removed the retired empty scaffold.
-- `CollisionTable_CheckAndTriggerScript`, 756 bytes: best 724 bytes / 644 differing bytes / 254 instructions. Frame size matches after per-state indexing; loop index and script address lifetimes remain different. Assembly restored.
-- `GameMode_Scene18`, 732 bytes: fresh Astra diagnosis reduced 75 differing bytes to four using actual inline copies of three adjacent helper bodies. RTL shows integrate-time stack-address substitution explains recovered call scheduling. Four initialization variants failed to resolve the initial zero-store register swap. A fresh compiler allocation investigation is active; no match is counted.
+Fifteen literal EntityPath globals plus their pointer table, two scene path pairs, a 25-element scene layout array and its dispatch table are separately verified typed-data outcomes: **20 objects / 2,048 bytes**. Unknown header fields retain neutral names. The scene array is one object, not 25 separately defined globals. Neither data nor interface corrections count toward the five functions.
 
-`Scroll_UpdateCameraAlt`, 748 bytes, is accepted and integrated as da794b0d. Its fresh oracle, compiled-object ownership and integrated clean ROM check pass. Scene19 has an exact-size 972-byte candidate with 10 differing bytes confined to initialization; every instruction after +0x18 matches. Typed entity fields, local input results and signed phase reloads resolved the later residuals. Its HUD interface remains under audit. Entity_Update has a bounded implementation attempt active. A new Scene19 worker could not start because of the thread limit, so the released movement worker received a compact target reset; its session usage covers both tasks.
+## Preserved investigations
 
-## Reproduction and corrections
+Ignored `nonmatchings/large-five/<function>/` packets retain immutable best candidates, compiler/configuration identities, oracles and reopening questions. None of these deferred candidates is counted as accepted C.
 
-Ignored `nonmatchings/large-five/<function>/` packets preserve best sources, oracles, compiler/configuration fingerprints, failed controls and next discriminating tests. Some early worker trials retained fingerprints without immutable source copies; those trials are not independently reproducible. Accepted sources have full review snapshots. An attempted root mutation failed its whitespace assertion; its subsequent unchanged oracle is explicitly marked invalid as an experiment, and later compound scripts stop on error.
+| Target | Best preserved result | Next evidence needed |
+|---|---|---|
+| LevelLayout_WalkRecords | 976 bytes / 144 differing bytes | GCSE sharing versus slot identity; distinct identical switch targets must remain separate |
+| sub_08028858 | 572 of 576 bytes / 467 differences | A justified source mechanism for the retained mask; diagnostic narrow-return helper is not accepted game code |
+| sub_08024534 | 632 bytes / 491 differences | Slot/status allocation with the preserved real pointer table |
+| sub_080265D4 | 756 bytes / 46 differences | Explain redundant zero OR without copying existing asm workarounds |
+| EntityPool_SpawnEntry | 496 of 508 bytes / 301 differences | Resolve the apparently stale selector on a reachable path |
+| GameMode_Scene18 | 732 bytes / 4 differences | Initial address/zero allocation; actual helper inlining fixed prior call scheduling |
+| GameMode_Scene19 | 972 bytes / 10 differences | Same initial-store question; every later instruction matches |
+| sub_080259C4 | 792 of 808 bytes / 520 differences | Distinct companion/flag lifetimes after corrected collision/timer semantics |
+| Entity_Update | 756 of 844 bytes / 656 differences | Independent semantic and compiler audit of omitted selector reloads |
+| CollisionTable_CheckAndTriggerScript | 724 of 756 bytes / 644 differences | Loop index versus script-base lifetimes |
+| ScaleAnim_BlitFrameToVram | 808 of 852 bytes / 494 differences | Corrected semantic graph has exact 64-byte frame; GCSE PRE creates a new global-base lifetime |
+| PadGrid_FillGrid | 648 of 952 bytes / 585 differences | Independent packed-coordinate/control-flow audit before allocator claims |
 
-The workflow now requires checking authored C and compiled-object ownership before counting an oracle zero. Baseline-only and empty-scaffold zeroes are not decompilation progress.
+The failed initial text pass was reopened by a fresh reference CFG review and is now accepted. Fresh scale review corrected six semantic distinctions in the first source; its earlier allocation-only explanation was premature. Source changes stopped when trials ceased distinguishing hypotheses; retained near-matches are not impossibility proofs.
 
-The first main integration of the path-data split omitted extraction. Missing raw gap files caused 1101 data-byte differences despite successful compilation. Extraction followed by a clean rebuild restored the ROM. `docs/experiments/missing-extracted-data/verify.py` reproduces the custom preprocessor's warning/empty-initializer behavior; the workflow now requires `make extract` after database integrations.
+## Reproducible corrections
 
-A broad staging command in the isolated data checkout picked up dependency symlink type changes hidden by submodule status settings. They were removed from the local commit before integration; the runtime links were preserved. Stage explicit owned paths and inspect the staged diff, including file modes.
+- The picker treated a prototype as an unrelated following function body, hiding DrawTextGlyphs. `85796cd6` fixes declaration/body detection with five regressions.
+- m2c used a shorter candidate's linked extent for baserom input. `7009fd24` restores immutable range/callee identity, handles multi-function peels and declines unknown sibling bounds, with five regressions.
+- Missing extracted gap files caused 1,101 data differences during an earlier integration. Extraction plus a clean rebuild fixed them. The warning/empty-initializer hazard has a standalone reproduction and workflow rule.
+- A root address audit used a concurrently changing ELF and briefly misidentified a callback. Direct baserom disassembly corrected it to Entity_DispatchBC before dependent edits. The frozen observation/reproduction and immutable-address workflow rule are checked in.
+- Broad staging once picked up dependency-symlink type changes. They were removed before integration; explicit owned-path staging is now required.
+- A failed whitespace assertion produced an unchanged oracle; that run is explicitly invalid, and later scripts stop on edit failure. A text rename briefly corrupted a character literal; the compiler caught it and the repaired immutable trial supersedes it. Formatting-hook rejections were fixed normally.
 
-`large-5.json` records actual bounded per-session counters, including root orchestration and failed experiments. Active runs are measured only through the stated cutoff. Account-wide quota deltas are not attributed to workers. These outcomes support continued bounded attempts on distinct semantic clusters, not replaying failed variable spelling or treating a near-match as accepted progress.
+[Scene inline/compiler evidence](../experiments/scene18-inline-addresses/README.md) includes both formatted candidates, fresh 75-byte/4-byte reproductions and the local-allocation explanation. Some early trials saved fingerprints without full source snapshots; their reproducibility is limited and they are not acceptance evidence. Final accepted sources are immutable commits, with final hashes/oracles/object ownership in `nonmatchings/large-five/final-acceptance/`.
 
-A root callback audit briefly used a concurrently built nonmatching ELF with four-byte layout drift. Direct baserom disassembly disproved the apparent interior-code entry; the callback is Entity_DispatchBC. Both workers received the correction before dependent edits. The frozen observation and reproduction are in `docs/experiments/mutable-elf-addresses`; workflow now requires immutable ROM identity for address audits.
+## Measured usage and routing
 
-The picker incorrectly treated a DrawTextGlyphs prototype as the following unrelated function body. Commit 85796cd6 now rejects declarations terminated by semicolons before a body, while ignoring delimiters in comments/literals. Five regressions preserve real-definition and empty-scaffold guards; all 62 infrastructure tests pass. DrawTextGlyphs (508 bytes) and ScaleAnim_BlitFrameToVram (852 bytes) are now active bounded targets.
+[large-5.json](large-5.json) records **28 of 28 campaign sessions** with actual local cumulative-counter deltas, including root review, orchestration, tool fixes and failed experiments. Cutoff: **2026-09-08T08:20:30.602930+00:00**. Work after that cutoff is not included; account-wide quota deltas are never attributed to workers.
 
-Scene18's fresh initialization diagnosis still has four differing bytes. Combine folds the stack-offset pseudo before local allocation, leaving the shorter-lived zero to receive r0; canonical for syntax does not alter that graph. Both candidate sources and the allocator explanation are checked in under `docs/experiments/scene18-inline-addresses`. Entity_Update's 756-byte candidate remains 88 bytes too short because of missing selector reloads; its packet is preserved and baseline restored. A separate HUD_DrawStatus correction tests the audited signed-halfword/signed-halfword/unsigned-halfword API with explicit byte rendering inside the definition; it does not count as a new function.
+| Counter | Measured tokens |
+|---|---:|
+| Uncached input | 4,988,792 |
+| Cached input | 162,206,976 |
+| Output | 666,935 |
+
+Across the five accepted functions, that is 997,758 uncached input and 133,387 output tokens per accepted function, including the unsuccessful work and orchestration measured through the cutoff. These are token measures, not monetary cost estimates or a controlled model ranking.
+
+Sol began substantial implementation; Terra handled bounded audits/transformations; fresh Astra reviews handled compiler/source-structure diagnosis. The camera succeeded in one focused worker, and a fresh Astra CFG review converted the text plateau into a match. Root review corrected interfaces and readability before acceptance. Thread-limit failures required compact resets of the movement worker for Scene19 and the short HUD worker for PadGrid; each reused session's counters cover both tasks and are not presented as separate fresh sessions.
