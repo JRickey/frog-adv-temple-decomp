@@ -10,8 +10,8 @@ extern void EnemyWave_Update(void);
 extern void EnemyWave_TickGateTimer(void);
 extern void EntityPool_UpdateOwner5B(void);
 extern u32 *PadGrid_StepPackedCoord(u32 *out, s8 delta);
-extern void GenRandomTileMask(void);
-extern u32 FilterValidBits(void);
+extern u32 GenRandomTileMask(void);
+extern u32 FilterValidBits(u32 mask);
 
 void SpawnControl_Dispatch(void)
 {
@@ -134,24 +134,9 @@ test:
 
 u32 PadGrid_RandomizeAndSyncEntityCoords(void)
 {
-    register struct Entity *dst asm("r2");
-    register struct IwramAt35E0 *src asm("r4");
-    register u32 offset asm("r5");
-    register u32 offset2 asm("r3");
-    register u32 addrOrValue asm("r1");
+    u32 mask = GenRandomTileMask();
 
-    GenRandomTileMask();
-    dst = gEntities;
-    src = &gIwram_35E0;
-    offset2 = (u16)src->_field_8;
-    offset = 0x692;
-    asm("" : "+r"(offset));
-    addrOrValue = (u32)dst + offset;
-    *(u16 *)addrOrValue = offset2;
-    addrOrValue = (u16)src->_field_A;
-    offset2 = 0x694;
-    asm("" : "+r"(offset2));
-    dst = (struct Entity *)((u8 *)dst + offset2);
-    *(u16 *)dst = addrOrValue;
-    return FilterValidBits();
+    gEntities[30].x = gIwram_35E0._field_8;
+    gEntities[30].y = gIwram_35E0._field_A;
+    return FilterValidBits(mask);
 }
