@@ -54,6 +54,8 @@ typedef struct LevelLayout3 {
     LevelLayoutEntry entries[3];
 } LevelLayout3;
 
+typedef char LevelLayout3SizeCheck[sizeof(LevelLayout3) == 32 ? 1 : -1];
+
 typedef struct LevelLayout4 {
     LevelLayoutHeader header;
     LevelLayoutEntry entries[4];
@@ -78,6 +80,14 @@ typedef struct LevelLayout31 {
     LevelLayoutHeader header;
     LevelLayoutEntry entries[31];
 } LevelLayout31;
+
+/* Two adjacent physical layout blocks, each with an eight-byte header
+ * and three eight-byte entries. */
+typedef struct LevelLayoutPathPair {
+    LevelLayout3 paths[2];
+} LevelLayoutPathPair;
+
+typedef char LevelLayoutPathPairSizeCheck[sizeof(LevelLayoutPathPair) == 64 ? 1 : -1];
 
 extern const LevelLayout1 sLevelLayout_312EDC;
 extern const LevelLayout30 sLevelLayout_312EEC;
@@ -109,5 +119,9 @@ extern const LevelLayout5 sLevelLayout_3140B8;
 extern const LevelLayout31 sLevelLayout_3140E8;
 extern const LevelLayout3 sLevelLayout_3141E8;
 extern const LevelLayout4 sLevelLayout_314208;
+extern const LevelLayoutPathPair sLevelLayoutPaths_314B80;
+extern const LevelLayoutPathPair sLevelLayoutPaths_314BC0;
+extern const LevelLayout3 sLevelLayoutData_315280[25];
+extern const LevelLayout3 *const sLevelLayoutDispatch_315AE0[25];
 
 #endif /* GUARD_LEVEL_LAYOUT_DATA_H */
