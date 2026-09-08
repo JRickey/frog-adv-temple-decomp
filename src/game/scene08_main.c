@@ -1,6 +1,8 @@
+#include "entity.h"
 #include "game.h"
 #include "gfx.h"
 #include "iwram.h"
+#include "macros.h"
 #include "types.h"
 
 extern void Sound_ServiceQueue(void);
@@ -174,4 +176,141 @@ tail:
     if (gGameStuff.mode == GAME_MODE_SCENE_08 || gGameStuff.mode == GAME_MODE_ATTRACT)
         goto loop;
 epilogue:;
+}
+
+extern u32 Tilemap_GetTileClass(u8 col, u8 row, s32 tileX, s32 tileY);
+extern u32 SpriteAsset_GetCellFlag(u8 col, u8 row, s32 tileX, s32 tileY);
+
+void Scene08_UpdatePlayerEntity(void *ent, u32 arg1)
+{
+    u8 *gp3720;
+    u8 tile;
+
+    Entity_UpdateHitboxWithTile((CollisionSlot *)ent, (u64 *)arg1, 18);
+
+    gp3720 = (u8 *)gEntities;
+    if ((*(u16 *)(gp3720 + 0x34) & 4) != 0)
+        return;
+
+    tile = (u8)Tilemap_GetTileClass(gIwram_35E0._field_18, gIwram_35E0._field_19, gIwram_35E0._field_8,
+                                    gIwram_35E0._field_A);
+
+    if ((gIwram_35E0._field_10 & 0x10) != 0)
+        Entity_ActivateHitSlot(ent, (void *)arg1, 18, tile);
+
+    if ((gIwram_35E0._field_10 & 0x40) != 0) {
+        if ((u8)SpriteAsset_GetCellFlag(gIwram_35E0._field_18, gIwram_35E0._field_19, gIwram_35E0._field_8,
+                                        gIwram_35E0._field_A) != 0) {
+            if (gIwram_35E0._field_18 == 0) {
+                gIwram_35E0._field_18 = 1;
+                gIwram_35E0._field_19 = 1;
+                gp3720[6] = 2;
+                gp3720[0x17] = 2;
+            } else {
+                gIwram_35E0._field_18 = 0;
+                gIwram_35E0._field_19 = 0;
+                gp3720[6] = 3;
+                gp3720[0x17] = 3;
+            }
+        }
+    }
+
+    if ((gGameStuff._unk10 & 1) != 0)
+        return;
+
+    {
+        u8 *entityBase;
+        entityBase = (u8 *)gEntities;
+        if (*(u16 *)(entityBase + 2) > 408)
+            PlayerFlags_Set(&gIwram_35E0, 0x800);
+
+        if (tile != 7)
+            return;
+
+        if (*(s16 *)(entityBase + 4) > 1000) {
+            if ((u16)(*(u16 *)(entityBase + 2) - 0xaa) <= 24) {
+                IwramFlags_Clear(&gIwram_35E0, 2);
+                *(u16 *)(entityBase + 2) = *(u16 *)(entityBase + 2) - 1;
+            }
+        }
+    }
+
+    {
+        u8 *entityBase;
+        s32 delta;
+        entityBase = (u8 *)gEntities;
+        delta = -0x104;
+        if ((u16)(*(u16 *)(entityBase + 2) + delta) > 24)
+            return;
+        IwramFlags_Clear(&gIwram_35E0, 2);
+        *(u16 *)(entityBase + 2) = *(u16 *)(entityBase + 2) + 1;
+    }
+}
+
+extern void EntityDispatch_RunFrame(void);
+
+void Scene08_StartIntro(u32 a, u32 b)
+{
+    gGameStuff.sceneType = 1;
+    Entity_UpdateHitboxSlots((void *)a, (void *)b, 18);
+}
+
+void Scene08_InitModeControl(void)
+{
+    ModeControl_Init(&gIwram_6110, 0x64, 0, (const void *)0x082f998c, 1, 3);
+    SpriteAsset_LoadSheet(0, 0);
+    SpriteAsset_LoadSheet(1, 1);
+    EntityDispatch_RunFrame();
+}
+
+extern void Game_RunEntityFrame(void);
+extern void Game_ForceRender(void);
+extern void UpdateColumnClipSpans(u32 src, u32 count);
+extern void Entity_CheckAllCollisions(void);
+extern void Player_CheckTileEvents(void);
+
+void Scene08_PlayFrameTick(u32 a, u32 b)
+{
+    Game_RunEntityFrame();
+    WaitVblank();
+    Game_ForceRender();
+    UpdateColumnClipSpans(0x08306944, 5);
+    Entity_CheckAllCollisions();
+    Player_CheckTileEvents();
+    Scene08_UpdatePlayerEntity((void *)a, b);
+    gGameStuff._unk14++;
+}
+
+void Mode8_StateStep(u8 *state, u32 a, u32 b)
+{
+    if (Scene_EntityTick(state) == 0)
+        *state = 8;
+    Entity_UpdateHitboxSlots((void *)a, (void *)b, 18);
+}
+
+extern void Game_FrameEnd(void);
+extern void BgMap_WriteTileAttr(u8 col, u8 row, u32 a, u32 b, u32 c);
+
+void Mode8_Teardown(void)
+{
+    Game_FrameEnd();
+}
+
+void Mode8_Setup(void)
+{
+    struct IwramAt35E0 *p35E0;
+
+    ModeControl_Init(&gIwram_6110, 0x64, 2, (const void *)0x082f99e8, 1, 5);
+    SpriteAsset_LoadSheet(3, 0);
+    EntityDispatch_RunFrame();
+
+    p35E0 = &gIwram_35E0;
+    BgMap_WriteTileAttr(p35E0->_field_18, p35E0->_field_19, 13, 36, 14);
+    BgMap_WriteTileAttr(p35E0->_field_18, p35E0->_field_19, 14, 36, 13);
+    BgMap_WriteTileAttr(p35E0->_field_18, p35E0->_field_19, 14, 35, 13);
+    BgMap_WriteTileAttr(p35E0->_field_18, p35E0->_field_19, 14, 34, 13);
+    BgMap_WriteTileAttr(p35E0->_field_18, p35E0->_field_19, 14, 33, 13);
+    BgMap_WriteTileAttr(p35E0->_field_18, p35E0->_field_19, 14, 32, 13);
+    BgMap_WriteTileAttr(p35E0->_field_18, p35E0->_field_19, 14, 31, 13);
+    BgMap_WriteTileAttr(p35E0->_field_18, p35E0->_field_19, 14, 30, 13);
 }
