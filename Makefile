@@ -152,7 +152,7 @@ else
 endif
 
 # Rules that do not require scanning for dependencies
-RULES_NO_SCAN += dump diff extract clean tidy
+RULES_NO_SCAN += dump diff extract clean tidy decomp-report
 
 # Generate tools before building anything
 SETUP_PREREQS ?= 1
@@ -173,6 +173,10 @@ endif
 check: all
 	$(MSG) SHA1SUM $(SHA1FILE)
 	$Q$(SHA1SUM) -c $(SHA1FILE)
+
+.PHONY: decomp-report
+decomp-report:
+	$(PYTHON) tools/agent/objdiff_report.py
 
 .PHONY: dump
 dump: $(DUMPS)

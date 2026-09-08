@@ -10,6 +10,7 @@ instead of loading them all. `CLAUDE.md` is preserved unchanged.
 | File | Scope | What to add |
 |---|---|---|
 | `matching-workflow.md` | Active campaign workflow | Evidence, interface review, model routing |
+| `decompdev.md` | Hosted progress dashboard | Report generation, inventory refresh, registration |
 | `evidence/*.json` | Reviewable knowledge graph | Claims, provenance, relations, prerequisites |
 | `recovery-packets.md` | Scroll/blit restart briefs | Historical findings, scratch locations, next tests |
 | `campaigns/` | Accepted campaign reports | Actual outcomes, checks, routing observations |
