@@ -266,8 +266,7 @@ SECTIONS {
         src/game/sub_08001d54.o(.text);  /* 0x08001d54 - 0x08001d94, Scene06_Tick */
         src/game/sub_08001d94.o(.text);  /* 0x08001d94 - 0x08001e18, Scene_UpdateAnimState */
         src/game/sub_08001e18.o(.text);  /* 0x08001e18 - 0x08001e24, Scene06_Exit */
-        src/game/sub_08001e24.o(.text);
-        asm/disasm_0x08001e24.o(.text);  /* 0x08001e24 - 0x08002184, Entity_CollisionProbe (auto-peeled) */
+        src/game/sub_08001e24.o(.text);  /* 0x08001e24 - 0x08002184, Entity_CollisionProbe */
         src/game/sub_08002184.o(.text);  /* 0x08002184 - 0x08002444, Scene13_Update (mode-13 handler) */
         src/game/game_mode.o(.text);     /* 0x08002444 - 0x08002450, SetGameMode_06 */
         src/game/sub_08002450.o(.text);

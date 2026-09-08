@@ -4,7 +4,6 @@
 #include "macros.h"
 #include "types.h"
 
-extern void Entity_UpdateHitboxWithTile(void *ent, u32 arg1, u32 kind);
 extern void Gate_HandleGateTile(u8 tile);
 extern u32 Tilemap_GetTileClass(u8 col, u8 row, s16 tileX, s16 tileY);
 
@@ -42,7 +41,7 @@ void Player_HandleTileTransitions(void *arg0, void *arg1)
     u16 uf;
     u32 coord;
 
-    Entity_UpdateHitboxWithTile(arg0, (u32)arg1, 17);
+    Entity_UpdateHitboxWithTile((CollisionSlot *)arg0, (u64 *)arg1, 17);
 
     p35E0 = &gIwram_35E0;
     tile = (u8)Tilemap_GetTileClass(p35E0->_field_18, p35E0->_field_19, p35E0->_field_8, p35E0->_field_A);

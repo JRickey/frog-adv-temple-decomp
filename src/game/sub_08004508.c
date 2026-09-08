@@ -18,7 +18,6 @@
  *     `ldrh r4, [r4, #16]` reuses the same base register instead of
  *     reloading the pool literal. */
 
-extern void Entity_UpdateHitboxWithTile(void *ent, u32 arg1, u32 kind);
 extern u32 Tilemap_GetTileClass(u8 col, u8 row, s32 tileX, s32 tileY);
 extern void TileCacheProbe_HandleTile20(u8 tile);
 
@@ -30,8 +29,8 @@ void Scene20_UpdateParts(u32 arg0, u32 arg1, u32 arg2, u32 arg3)
     struct Entity *p3720;
     u8 tile;
 
-    Entity_UpdateHitboxWithTile((void *)arg0, arg1, 11);
-    Entity_UpdateHitboxWithTile((void *)arg2, arg3, 16);
+    Entity_UpdateHitboxWithTile((CollisionSlot *)arg0, (u64 *)arg1, 11);
+    Entity_UpdateHitboxWithTile((CollisionSlot *)arg2, (u64 *)arg3, 16);
 
     p3720 = gEntities;
     mask = 4;

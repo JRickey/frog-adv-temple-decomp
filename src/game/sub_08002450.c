@@ -25,8 +25,6 @@ extern void WaitVblank(void);
 extern void Game_ForceRender(void);
 extern void Entity_CheckAllCollisions(void);
 extern void Player_CheckTileEvents(void);
-extern void Entity_CollisionProbe(void *obj, void *r4_obj);
-
 void Scene_FrameUpdate(void *arg0, void *arg1)
 {
     GameStuff *g;

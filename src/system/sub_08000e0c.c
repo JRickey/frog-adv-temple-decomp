@@ -3,7 +3,6 @@
 #include "iwram.h"
 #include "types.h"
 
-extern void Entity_UpdateHitboxWithTile(void *ent, u32 arg1, u32 kind);
 extern u32 Tilemap_GetTileClass(u8 col, u8 row, s32 tileX, s32 tileY);
 extern void Frog_ProcessTileContact(u8 tile);
 
@@ -14,7 +13,7 @@ void Scene09_UpdatePlayerTile(void *ent, u32 arg1)
     u32 coordAlias;
     u32 firstCoord;
 
-    Entity_UpdateHitboxWithTile(ent, arg1, 3);
+    Entity_UpdateHitboxWithTile((CollisionSlot *)ent, (u64 *)arg1, 3);
 
     if ((gEntities[0].status & 4) != 0)
         return;

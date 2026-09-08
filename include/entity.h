@@ -114,6 +114,9 @@ struct MotionDesc {
 };
 
 void Entity_UpdateHitboxSlots(void *slotsArg, void *outArg, s8 type);
+void Entity_UpdateHitboxWithTile(CollisionSlot *slots, u64 *mask, s8 type);
+
+void Entity_CollisionProbe(CollisionSlot *slots, u64 *mask);
 
 void Entity_UpdateMovers(s32 start, s32 end);
 

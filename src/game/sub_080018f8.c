@@ -29,7 +29,6 @@
  *     and keeps the pool literal at 0x03006480 instead of folding to
  *     0x030064b6. ldrsh has no immediate form in Thumb-1. */
 
-extern void Entity_UpdateHitboxWithTile(void *ent, u32 arg1, u32 kind);
 extern u32 Tilemap_GetTileClass(u8 col, u8 row, s32 tileX, s32 tileY);
 
 void Scene12_UpdateTileInteraction(void *arg0, void *arg1)
@@ -39,7 +38,7 @@ void Scene12_UpdateTileInteraction(void *arg0, void *arg1)
     struct Entity *p3720;
     u8 tile;
 
-    Entity_UpdateHitboxWithTile(arg0, (u32)arg1, 5);
+    Entity_UpdateHitboxWithTile((CollisionSlot *)arg0, (u64 *)arg1, 5);
 
     {
         struct IwramAt35E0 *p = &gIwram_35E0;

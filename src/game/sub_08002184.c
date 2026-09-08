@@ -18,7 +18,6 @@ extern void WaitVblank(void);
 extern void Game_ForceRender(void);
 extern void Entity_CheckAllCollisions(void);
 extern void Player_CheckTileEvents(void);
-extern void Entity_CollisionProbe(void *obj, void *r4_obj);
 extern void EntitySlot17_Init(void);
 extern u8 Scene_FadeUpdate(void);
 extern u8 Blend_StepFade(void);
@@ -149,7 +148,7 @@ loop:
         Game_ForceRender();
         Entity_CheckAllCollisions();
         Player_CheckTileEvents();
-        Entity_CollisionProbe(frame.obj, obj);
+        Entity_CollisionProbe((CollisionSlot *)frame.obj, (u64 *)obj);
         gGameStuff._unk14++;
         break;
     }

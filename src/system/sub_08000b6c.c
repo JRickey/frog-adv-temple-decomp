@@ -3,7 +3,6 @@
 #include "iwram.h"
 #include "types.h"
 
-extern void Entity_UpdateHitboxWithTile(void *ent, u32 arg1, u32 kind);
 extern u32 Tilemap_GetTileClass(u8 col, u8 row, s32 tileX, s32 tileY);
 extern u32 SpriteAsset_GetCellFlag(u8 col, u8 row, s32 tileX, s32 tileY);
 
@@ -12,7 +11,7 @@ void Scene08_UpdatePlayerEntity(void *ent, u32 arg1)
     u8 *gp3720;
     u8 tile;
 
-    Entity_UpdateHitboxWithTile(ent, arg1, 18);
+    Entity_UpdateHitboxWithTile((CollisionSlot *)ent, (u64 *)arg1, 18);
 
     gp3720 = (u8 *)gEntities;
     if ((*(u16 *)(gp3720 + 0x34) & 4) != 0)

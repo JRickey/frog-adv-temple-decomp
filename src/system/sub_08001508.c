@@ -15,7 +15,6 @@ extern void WaitVblank(void);
 extern void Game_ForceRender(void);
 extern void Entity_CheckAllCollisions(void);
 extern void Player_CheckTileEvents(void);
-extern void Entity_UpdateHitboxWithTile(void *ent, void *arg1, u32 kind);
 extern u32 Tilemap_GetTileClass(u8 col, u8 row, s32 tileX, s32 tileY);
 extern u8 Scene_FadeUpdate(void);
 extern u8 Blend_StepFade(void);
@@ -94,7 +93,7 @@ void Scene11_AttractModeMain(void)
             Game_ForceRender();
             Entity_CheckAllCollisions();
             Player_CheckTileEvents();
-            Entity_UpdateHitboxWithTile(frame.sp_buf, obj, 4);
+            Entity_UpdateHitboxWithTile((CollisionSlot *)frame.sp_buf, (u64 *)obj, 4);
             if ((p3720->status & 4) == 0) {
                 u8 tile = (u8)Tilemap_GetTileClass(gIwram_35E0._field_18, gIwram_35E0._field_19, gIwram_35E0._field_8,
                                                    gIwram_35E0._field_A);

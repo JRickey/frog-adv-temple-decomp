@@ -28,7 +28,6 @@
  * pool load before that copy. The trailing block re-reads through `q asm("r4")`
  * each compare. */
 
-extern void Entity_UpdateHitboxWithTile(void *ent, u32 arg1, u32 kind);
 extern void Entity_ScanHitboxAndBlit(void *ent, void *arg1, u8 kind);
 extern void EntityHitbox_RegisterHit(void *ent, void *arg1, u8 kind, u8 tile);
 extern void Scene_OnPlayerStepTile20(u8 tile);
@@ -46,8 +45,8 @@ void Scene_UpdateCollisionAndTile(u32 arg0, u32 arg1, u32 arg2, u32 arg3, void *
     register u32 c asm("r1");
     u32 k0;
 
-    Entity_UpdateHitboxWithTile((void *)arg0, arg1, 6);
-    Entity_UpdateHitboxWithTile((void *)arg2, arg3, 7);
+    Entity_UpdateHitboxWithTile((CollisionSlot *)arg0, (u64 *)arg1, 6);
+    Entity_UpdateHitboxWithTile((CollisionSlot *)arg2, (u64 *)arg3, 7);
     Entity_ScanHitboxAndBlit(arg4, arg5, 22);
 
     p3720 = gEntities;

@@ -13,7 +13,6 @@ extern void WaitVblank(void);
 extern void Game_ForceRender(void);
 extern void Entity_CheckAllCollisions(void);
 extern void Player_CheckTileEvents(void);
-extern void Entity_UpdateHitboxWithTile(void *ent, u32 arg1, u32 kind);
 extern u32 Tilemap_GetTileClass(u8 col, u8 row, s32 tileX, s32 tileY);
 
 /* Mode-setup entry, sibling of Scene06_Init: installs config table
@@ -46,7 +45,7 @@ void Scene05_Tick(u32 arg0, u32 arg1)
     Entity_CheckAllCollisions();
     Player_CheckTileEvents();
 
-    Entity_UpdateHitboxWithTile((void *)arg0, arg1, 4);
+    Entity_UpdateHitboxWithTile((CollisionSlot *)arg0, (u64 *)arg1, 4);
 
     p3720 = gEntities;
     mask = 4;
@@ -100,7 +99,7 @@ void Scene05_EntityDispatch(u32 arg0, u32 arg1)
     struct Entity *p3720;
     u8 tile;
 
-    Entity_UpdateHitboxWithTile((void *)arg0, arg1, 4);
+    Entity_UpdateHitboxWithTile((CollisionSlot *)arg0, (u64 *)arg1, 4);
 
     p3720 = gEntities;
     mask = 4;
