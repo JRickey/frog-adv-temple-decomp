@@ -2,12 +2,12 @@
 
 Active goal from `ee4fcb9a`: five new substantial game functions, roughly 500 bytes or larger. Baseline: 754 pure C functions, 63 assembly-backed C functions, and approximately 297 functions outside C. There was no user-supplied campaign queue.
 
-Accepted **2/5**, totaling **1220 bytes**, with no added pins or assembly fallbacks:
+Accepted **3/5**, totaling **1968 bytes**, with no added pins or assembly fallbacks:
 
 - `sub_08028270`, 688 bytes, integrated at `07069ac8`: ten primary entities and five paired peers. Ordinary array pointers match. Signed motion inputs are centralized, with unsigned byte storage retained inside the existing 400-byte helper.
 - `sub_08024DBC`, 532 bytes, integrated at `f3dc4a66`: path updates and proximity sound control. Unsigned distance staging preserves the signed-threshold conversion. Fifteen literal 64-byte path structs and a typed pointer array have real ROM symbols. Entity_FollowPath's word argument is explicitly narrowed to a byte inside its existing 268-byte definition.
 
-Both accepted ranges have fresh zero-diff oracles, authored-body review, compiled-object ownership checks, and clean whole-ROM validation. Main now has 756 pure C functions and approximately 295 outside C; the 63 existing assembly-backed C functions remain separate. Interface corrections and typed data do not count as additional functions.
+All three accepted ranges have fresh zero-diff oracles, authored-body review, compiled-object ownership checks, and clean whole-ROM validation. Main now has 757 pure C functions and approximately 294 outside C; the 63 existing assembly-backed C functions remain separate. Interface corrections and typed data do not count as additional functions.
 
 ## Bounded investigations
 
@@ -21,7 +21,7 @@ Both accepted ranges have fresh zero-diff oracles, authored-body review, compile
 - `CollisionTable_CheckAndTriggerScript`, 756 bytes: best 724 bytes / 644 differing bytes / 254 instructions. Frame size matches after per-state indexing; loop index and script address lifetimes remain different. Assembly restored.
 - `GameMode_Scene18`, 732 bytes: fresh Astra diagnosis reduced 75 differing bytes to four using actual inline copies of three adjacent helper bodies. RTL shows integrate-time stack-address substitution explains recovered call scheduling. Four initialization variants failed to resolve the initial zero-store register swap. A fresh compiler allocation investigation is active; no match is counted.
 
-`Scroll_UpdateCameraAlt`, 748 bytes, is reviewed and committed as cca193ec in its isolated checkout. Its fresh oracle, compiled-object ownership and clean ROM check pass; main integration is pending its build owner's release. Scene19 and Entity_Update have bounded implementation attempts active. A new Scene19 worker could not start because of the thread limit, so the released movement worker received a compact target reset; its session usage covers both tasks.
+`Scroll_UpdateCameraAlt`, 748 bytes, is accepted and integrated as da794b0d. Its fresh oracle, compiled-object ownership and integrated clean ROM check pass. Scene19 has an exact-size 972-byte candidate with 10 differing bytes confined to initialization; every instruction after +0x18 matches. Typed entity fields, local input results and signed phase reloads resolved the later residuals. Its HUD interface remains under audit. Entity_Update has a bounded implementation attempt active. A new Scene19 worker could not start because of the thread limit, so the released movement worker received a compact target reset; its session usage covers both tasks.
 
 ## Reproduction and corrections
 

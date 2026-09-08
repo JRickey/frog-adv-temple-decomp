@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "camera.scripted-transition",
+  "kind": "behavior",
+  "title": "Scripted camera transition moves paired entities and eases background layers",
+  "status": "verified",
+  "claim": "Scroll_UpdateCameraAlt is a new 748-byte matching C function. It uses the caller's signed halfword vertical offset, moves entity zero with entity two when platformId is two (otherwise entity three), and restores player-centered background scrolling. The count argument retains its entry byte conversion and signed byte loop bound. Entity and scroll accesses use existing typed structures, and the prototype is shared in gfx.h. No pins or assembly fallbacks were added.",
+  "subjects": [
+    "fn:08002ee8"
+  ],
+  "provenance": [
+    {
+      "path": "src/game/sub_08002ee8.c",
+      "location": "Scroll_UpdateCameraAlt",
+      "commit": "cca193eca2fb90d93eb90fdccb3836b36245d9b5"
+    },
+    {
+      "path": "include/gfx.h",
+      "location": "Scroll_UpdateCameraAlt prototype",
+      "commit": "cca193eca2fb90d93eb90fdccb3836b36245d9b5"
+    },
+    {
+      "path": "src/game/sub_08003254.c",
+      "location": "SceneLoop_17 caller uses shared prototype",
+      "commit": "cca193eca2fb90d93eb90fdccb3836b36245d9b5"
+    }
+  ],
+  "tags": [
+    "camera",
+    "entity",
+    "interface",
+    "matching"
+  ],
+  "current_validation": {
+    "state": "confirmed",
+    "whole_rom": "Integrated clean make tidy && make -j8 && make check passes; expected SHA1.",
+    "functions": "Fresh oracle748 bytes, byte_diff0, diff_count0; map confirms C object owns08002ee8..080031d4.",
+    "commit": "da794b0d7865f6796d8b2958f8141fbe8ec9af98"
+  }
+}

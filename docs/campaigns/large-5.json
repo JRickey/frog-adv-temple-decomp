@@ -3,12 +3,12 @@
   "id": "large-5",
   "base_commit": "ee4fcb9a17cb5af9c30c51919fde3f442ec8c239",
   "rom_sha1": "7b4c27009198df18555e63fb5dcad223eaf09815",
-  "summary": "Active five-large-function goal: two accepted functions totaling1220 bytes; data and interface corrections verified separately; bounded failed investigations preserved; camera match verified in isolation; Scene18 allocation diagnosis, Scene19 and Entity_Update active.",
+  "summary": "Active five-large-function goal: three accepted functions totaling1968 bytes; data and interface corrections verified separately; bounded failed investigations preserved; camera integrated with clean ROM; Scene18 allocation diagnosis and Entity_Update active; Scene19 near-match preserved.",
   "metrics": {
-    "new_c_functions": 2,
-    "new_c_bytes": 1220,
+    "new_c_functions": 3,
+    "new_c_bytes": 1968,
     "true_c_before": 754,
-    "true_c_after": 756,
+    "true_c_after": 757,
     "pins_added": 0,
     "naked_fallbacks_added": 0,
     "regression_tests_passed": 57,
@@ -21,7 +21,7 @@
       "id": "large5-large-camera-alt",
       "review_corrections": [],
       "task": "Reconstruct 748-byte scripted camera transition",
-      "outcome": "worker-verified-pending-integration",
+      "outcome": "accepted-after-integration",
       "model": "gpt-5.6-sol",
       "reasoning_effort": "high",
       "usage": {
@@ -75,11 +75,11 @@
       "model": "gpt-5.6-sol",
       "reasoning_effort": "high",
       "usage": {
-        "input_tokens": 272447,
-        "cached_input_tokens": 238336,
-        "output_tokens": 1813,
-        "total_tokens": 274260,
-        "uncached_input_tokens": 34111
+        "input_tokens": 2509325,
+        "cached_input_tokens": 2399872,
+        "output_tokens": 14202,
+        "total_tokens": 2523527,
+        "uncached_input_tokens": 109453
       },
       "session_id": "01a07fde-43eb-7a93-8862-527d9ec5cf27"
     },
@@ -121,15 +121,15 @@
       "id": "large5-large-movement-dispatch",
       "review_corrections": [],
       "task": "Reconstruct 808-byte movement dispatcher, then Scene19 with a compact reset",
-      "outcome": "movement-deferred-scene19-active",
+      "outcome": "movement-deferred-scene19-near-match",
       "model": "gpt-5.6-sol",
       "reasoning_effort": "high",
       "usage": {
-        "input_tokens": 8199000,
-        "cached_input_tokens": 8040960,
-        "output_tokens": 31848,
-        "total_tokens": 8230848,
-        "uncached_input_tokens": 158040
+        "input_tokens": 9805407,
+        "cached_input_tokens": 9594496,
+        "output_tokens": 38422,
+        "total_tokens": 9843829,
+        "uncached_input_tokens": 210911
       },
       "session_id": "01a07fc4-afb1-7943-ad43-1e7275a91a36"
     },
@@ -257,7 +257,7 @@
       "model": "gpt-6-astra",
       "reasoning_effort": "medium",
       "task": "Strategy, data/interface review, integration and acceptance",
-      "outcome": "two-large-functions-accepted",
+      "outcome": "three-large-functions-accepted",
       "review_corrections": [
         "Rejected pointer-to-integer arithmetic where ordinary typed pointers match.",
         "Corrected MotionDesc_Set signed input and unsigned storage interface across callers.",
@@ -267,11 +267,11 @@
         "Removed unintended dependency-symlink type changes from a local data commit before integration; stage explicit owned paths in dependency-linked worktrees."
       ],
       "usage": {
-        "input_tokens": 32960178,
-        "cached_input_tokens": 32150656,
-        "output_tokens": 88720,
-        "total_tokens": 33048898,
-        "uncached_input_tokens": 809522
+        "input_tokens": 35563213,
+        "cached_input_tokens": 34724224,
+        "output_tokens": 95341,
+        "total_tokens": 35658554,
+        "uncached_input_tokens": 838989
       },
       "session_id": "01a07f43-1610-7883-b405-10cc57956867"
     },
@@ -336,13 +336,29 @@
       "model": "gpt-6-astra",
       "reasoning_effort": "high",
       "usage": {
-        "input_tokens": 93552,
-        "cached_input_tokens": 86016,
-        "output_tokens": 480,
-        "total_tokens": 94032,
-        "uncached_input_tokens": 7536
+        "input_tokens": 1632873,
+        "cached_input_tokens": 1576832,
+        "output_tokens": 9830,
+        "total_tokens": 1642703,
+        "uncached_input_tokens": 56041
       },
       "session_id": "01a07fdf-0361-74f3-aeb3-cf74a65010f5"
+    },
+    {
+      "id": "large5-scene19-hud-interface",
+      "review_corrections": [],
+      "task": "Audit Scene19 HUD canonical interface",
+      "outcome": "in-progress",
+      "model": "gpt-5.6-terra",
+      "reasoning_effort": "high",
+      "usage": {
+        "input_tokens": 78705,
+        "cached_input_tokens": 65024,
+        "output_tokens": 1188,
+        "total_tokens": 79893,
+        "uncached_input_tokens": 13681
+      },
+      "session_id": "01a07fe6-d1aa-7cc3-baee-d36114583836"
     },
     {
       "id": "large5-transfer-mask-diagnosis",
@@ -364,11 +380,12 @@
   "usage_provenance": {
     "source": "tools/agent/session_usage.py explicit campaign root and worker sessions",
     "start": "2026-09-08T05:22:15+00:00",
-    "end": "2026-09-08T07:16:00.014538+00:00",
+    "end": "2026-09-08T07:24:44.962627+00:00",
     "scope": "Campaign-only cumulative-counter deltas including orchestration and failed experiments; active workers measured only through cutoff. No account quota attribution."
   },
   "accepted_source_commits": [
     "07069ac88ac7",
-    "f3dc4a66"
+    "f3dc4a66",
+    "da794b0d"
   ]
 }
