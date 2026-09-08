@@ -3,7 +3,7 @@
   "id": "large-5",
   "base_commit": "ee4fcb9a17cb5af9c30c51919fde3f442ec8c239",
   "rom_sha1": "7b4c27009198df18555e63fb5dcad223eaf09815",
-  "summary": "Active five-large-function goal: two accepted functions totaling1220 bytes; data and interface corrections verified separately; bounded failed investigations preserved; three independent implementations active.",
+  "summary": "Active five-large-function goal: two accepted functions totaling1220 bytes; data and interface corrections verified separately; bounded failed investigations preserved; camera match verified in isolation; Scene18 allocation diagnosis, Scene19 and Entity_Update active.",
   "metrics": {
     "new_c_functions": 2,
     "new_c_bytes": 1220,
@@ -18,18 +18,34 @@
   },
   "runs": [
     {
-      "id": "large5-large-collision-script",
+      "id": "large5-large-camera-alt",
       "review_corrections": [],
-      "task": "Reconstruct 756-byte collision/script routine",
-      "outcome": "in-progress",
+      "task": "Reconstruct 748-byte scripted camera transition",
+      "outcome": "worker-verified-pending-integration",
       "model": "gpt-5.6-sol",
       "reasoning_effort": "high",
       "usage": {
-        "input_tokens": 141472,
-        "cached_input_tokens": 111872,
-        "output_tokens": 1468,
-        "total_tokens": 142940,
-        "uncached_input_tokens": 29600
+        "input_tokens": 3242767,
+        "cached_input_tokens": 3125888,
+        "output_tokens": 11452,
+        "total_tokens": 3254219,
+        "uncached_input_tokens": 116879
+      },
+      "session_id": "01a07fd2-9676-7433-b5e1-4f53662dc255"
+    },
+    {
+      "id": "large5-large-collision-script",
+      "review_corrections": [],
+      "task": "Reconstruct 756-byte collision/script routine",
+      "outcome": "deferred-at-644-byte-residual",
+      "model": "gpt-5.6-sol",
+      "reasoning_effort": "high",
+      "usage": {
+        "input_tokens": 2131264,
+        "cached_input_tokens": 2045312,
+        "output_tokens": 12471,
+        "total_tokens": 2143735,
+        "uncached_input_tokens": 85952
       },
       "session_id": "01a07fc8-221e-7691-a875-0c627ac277d0"
     },
@@ -50,6 +66,22 @@
         "uncached_input_tokens": 192566
       },
       "session_id": "01a07f7b-8c26-7c41-9a51-76c8b41c1912"
+    },
+    {
+      "id": "large5-large-entity-update",
+      "review_corrections": [],
+      "task": "Reconstruct 844-byte Entity_Update",
+      "outcome": "in-progress",
+      "model": "gpt-5.6-sol",
+      "reasoning_effort": "high",
+      "usage": {
+        "input_tokens": 272447,
+        "cached_input_tokens": 238336,
+        "output_tokens": 1813,
+        "total_tokens": 274260,
+        "uncached_input_tokens": 34111
+      },
+      "session_id": "01a07fde-43eb-7a93-8862-527d9ec5cf27"
     },
     {
       "id": "large5-large-four-slot-transfer",
@@ -88,16 +120,16 @@
     {
       "id": "large5-large-movement-dispatch",
       "review_corrections": [],
-      "task": "Reconstruct 808-byte movement dispatcher",
-      "outcome": "in-progress",
+      "task": "Reconstruct 808-byte movement dispatcher, then Scene19 with a compact reset",
+      "outcome": "movement-deferred-scene19-active",
       "model": "gpt-5.6-sol",
       "reasoning_effort": "high",
       "usage": {
-        "input_tokens": 904189,
-        "cached_input_tokens": 845056,
-        "output_tokens": 6257,
-        "total_tokens": 910446,
-        "uncached_input_tokens": 59133
+        "input_tokens": 8199000,
+        "cached_input_tokens": 8040960,
+        "output_tokens": 31848,
+        "total_tokens": 8230848,
+        "uncached_input_tokens": 158040
       },
       "session_id": "01a07fc4-afb1-7943-ad43-1e7275a91a36"
     },
@@ -176,15 +208,15 @@
       "id": "large5-large-scene18",
       "review_corrections": [],
       "task": "Reconstruct 732-byte Scene18 handler",
-      "outcome": "in-progress",
+      "outcome": "deferred-at-75-byte-residual",
       "model": "gpt-5.6-sol",
       "reasoning_effort": "high",
       "usage": {
-        "input_tokens": 4062354,
-        "cached_input_tokens": 3924352,
-        "output_tokens": 16779,
-        "total_tokens": 4079133,
-        "uncached_input_tokens": 138002
+        "input_tokens": 8596752,
+        "cached_input_tokens": 8418944,
+        "output_tokens": 25037,
+        "total_tokens": 8621789,
+        "uncached_input_tokens": 177808
       },
       "session_id": "01a07fbe-2710-7270-8431-d62f7e88b4f3"
     },
@@ -235,11 +267,11 @@
         "Removed unintended dependency-symlink type changes from a local data commit before integration; stage explicit owned paths in dependency-linked worktrees."
       ],
       "usage": {
-        "input_tokens": 27620833,
-        "cached_input_tokens": 27209856,
-        "output_tokens": 70541,
-        "total_tokens": 27691374,
-        "uncached_input_tokens": 410977
+        "input_tokens": 32960178,
+        "cached_input_tokens": 32150656,
+        "output_tokens": 88720,
+        "total_tokens": 33048898,
+        "uncached_input_tokens": 809522
       },
       "session_id": "01a07f43-1610-7883-b405-10cc57956867"
     },
@@ -279,6 +311,40 @@
       "session_id": "01a07fa8-29e3-7681-968f-bdad5718716c"
     },
     {
+      "id": "large5-scene18-codegen-review",
+      "review_corrections": [
+        "Actual adjacent helper bodies supplied independent evidence for inline reconstruction; four initialization variants did not resolve the final swap."
+      ],
+      "task": "Diagnose Scene18 source helper boundaries",
+      "outcome": "deferred-at-4-byte-residual",
+      "model": "gpt-6-astra",
+      "reasoning_effort": "high",
+      "usage": {
+        "input_tokens": 1881060,
+        "cached_input_tokens": 1782144,
+        "output_tokens": 8851,
+        "total_tokens": 1889911,
+        "uncached_input_tokens": 98916
+      },
+      "session_id": "01a07fcf-b31c-7431-8a7c-5066a104a5e8"
+    },
+    {
+      "id": "large5-scene18-initialization",
+      "review_corrections": [],
+      "task": "Fresh compiler investigation of Scene18 initial store allocation",
+      "outcome": "in-progress",
+      "model": "gpt-6-astra",
+      "reasoning_effort": "high",
+      "usage": {
+        "input_tokens": 93552,
+        "cached_input_tokens": 86016,
+        "output_tokens": 480,
+        "total_tokens": 94032,
+        "uncached_input_tokens": 7536
+      },
+      "session_id": "01a07fdf-0361-74f3-aeb3-cf74a65010f5"
+    },
+    {
       "id": "large5-transfer-mask-diagnosis",
       "model": "gpt-6-astra",
       "reasoning_effort": "high",
@@ -298,11 +364,11 @@
   "usage_provenance": {
     "source": "tools/agent/session_usage.py explicit campaign root and worker sessions",
     "start": "2026-09-08T05:22:15+00:00",
-    "end": "2026-09-08T06:51:23.917900+00:00",
+    "end": "2026-09-08T07:16:00.014538+00:00",
     "scope": "Campaign-only cumulative-counter deltas including orchestration and failed experiments; active workers measured only through cutoff. No account quota attribution."
   },
   "accepted_source_commits": [
-    "07069ac88ac73ae163b61b0a1bca08e7cc547088",
-    "f3dc4a66afbe74650c76dc659592e89381f0e483"
+    "07069ac88ac7",
+    "f3dc4a66"
   ]
 }

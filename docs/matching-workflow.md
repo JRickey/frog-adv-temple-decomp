@@ -73,6 +73,11 @@ for an old claim. Historical verified results cite the exact commit; they do
 not automatically validate later checkouts. `current_validation` is a
 recorded report, not an action performed by reading the record.
 
+Never infer baserom symbol identity from a mutable or nonmatching ELF/map.
+Use direct baserom disassembly or an address snapshot tied to a successful
+whole-ROM check. A worker's layout drift can make an ordinary function pointer
+look like an interior code entry; see [the reproduced failure](experiments/mutable-elf-addresses/README.md).
+
 Use stable address subjects (`fn:0800a83c`, `data:030060a0`) across renames;
 use descriptive tags and titles for discovery. Provenance paths are
 repository-relative, with a symbol/section/range in `location` and a full
