@@ -169,19 +169,19 @@ end = 0x08000d2c
 mode = "thumb"
 
 [[functions]]
-name = "Mode8_StateStep"
+name = "Scene08_StepEntityState"
 address = 0x08000d2c
 end = 0x08000d50
 mode = "thumb"
 
 [[functions]]
-name = "Mode8_Teardown"
+name = "Scene08_FinishFrame"
 address = 0x08000d50
 end = 0x08000d5a
 mode = "thumb"
 
 [[functions]]
-name = "Mode8_Setup"
+name = "Scene08_Setup"
 address = 0x08000d5c
 end = 0x08000e0c
 mode = "thumb"

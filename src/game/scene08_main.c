@@ -16,12 +16,12 @@ extern u8 Player_CheckSpecialTileMatch(void);
 extern void Scene08_MapScreenInit(u8 arg);
 extern void Scene08_PlayFrameTick(u32 a, u32 b);
 extern void Scene_DisableBg2(void);
-extern void Mode8_StateStep(u8 *state, u32 a, u32 b);
+extern void Scene08_StepEntityState(u8 *state, u32 a, u32 b);
 extern u8 Scene_FadeUpdate(void);
 extern u8 Blend_StepFade(void);
 extern void EntityParam_Reset(void);
 extern void WaitVblank(void);
-extern void Mode8_Teardown(void);
+extern void Scene08_FinishFrame(void);
 
 extern u16 gIwram_5398;
 extern u8 gIwram_5328;
@@ -114,7 +114,7 @@ loop:
         goto tail;
     case 4:
         Scene_DisableBg2();
-        Mode8_StateStep(statep, (u32)frame.buf, (u32)frame.obj);
+        Scene08_StepEntityState(statep, (u32)frame.buf, (u32)frame.obj);
         /* volatile so this store is exempt from cross-jumping: case 0 ends with
          * the identical "spByte = 0; goto tail" tail, and -O2 would otherwise
          * tail-merge the two. The baserom keeps both inline. */
@@ -168,7 +168,7 @@ loop:
         WaitVblank();
         break;
     case 13:
-        Mode8_Teardown();
+        Scene08_FinishFrame();
         break;
     }
 
@@ -281,7 +281,7 @@ void Scene08_PlayFrameTick(u32 a, u32 b)
     gGameStuff._unk14++;
 }
 
-void Mode8_StateStep(u8 *state, u32 a, u32 b)
+void Scene08_StepEntityState(u8 *state, u32 a, u32 b)
 {
     if (Scene_EntityTick(state) == 0)
         *state = 8;
@@ -291,12 +291,12 @@ void Mode8_StateStep(u8 *state, u32 a, u32 b)
 extern void Game_FrameEnd(void);
 extern void BgMap_WriteTileAttr(u8 col, u8 row, u32 a, u32 b, u32 c);
 
-void Mode8_Teardown(void)
+void Scene08_FinishFrame(void)
 {
     Game_FrameEnd();
 }
 
-void Mode8_Setup(void)
+void Scene08_Setup(void)
 {
     struct IwramAt35E0 *p35E0;
 

@@ -273,13 +273,11 @@ SECTIONS {
         src/game/sub_08003254.o(.text);
         src/game/sub_0800336c.o(.text);  /* 0x0800336c - 0x08003668, SceneLoop_17 + Scene17_LoadPart + Scene17_ModeControlInit + Scene17_PauseCheck + Scene17_Exit + Scene17_TileCheck */
         src/game/sub_08003668.o(.text);  /* 0x08003668 - 0x08003864, Scene_UpdateCollisionAndTile */
-        src/game/sub_08003864.o(.text);
         asm/disasm_0x08003864.o(.text);  /* 0x08003864 - 0x08003b40, GameMode_Scene18 (auto-peeled) */
         src/game/sub_08003b40.o(.text);
         src/game/sub_08003b8c.o(.text);  /* 0x08003b8c - 0x08003bfc, Mode12_Init */
         src/game/sub_08003bfc.o(.text);  /* 0x08003bfc - 0x08003c38, Scene_InitHitboxes */
         src/game/sub_08003c38.o(.text);  /* 0x08003c38 - 0x08003ca8, Mode12_SetupAndUpdate + sub_08003C9C */
-        src/game/sub_08003ca8.o(.text);
         asm/disasm_0x08003ca8.o(.text);  /* 0x08003ca8 - 0x08004074, GameMode_Scene19 (auto-peeled) */
         src/game/set_game_mode_12.o(.text);  /* 0x08004074 - 0x08004080, SetGameMode_12 */
         src/game/sub_08004080.o(.text);
@@ -296,15 +294,12 @@ SECTIONS {
         src/game/sub_080052cc.o(.text);
         src/game/sub_08005308.o(.text);
         src/game/sub_0800534c.o(.text);
-        src/game/sub_080054a8.o(.text);
         asm/disasm_0x080054a8.o(.text);  /* 0x080054a8 - 0x0800586c, GameMode_Scene23 (auto-peeled) */
         src/game/sub_0800586c.o(.text);
         src/game/sub_080059b0.o(.text);
-        src/game/sub_080059c4.o(.text);
         asm/disasm_0x080059c4.o(.text);  /* 0x080059c4 - 0x08005d10, Entity_Update (auto-peeled) */
         src/game/sub_08005d10.o(.text);
         src/game/sub_08005ed8.o(.text);
-        src/game/sub_08005fc8.o(.text);
         asm/disasm_0x08005fc8.o(.text);  /* 0x08005fc8 - 0x080063ec, Game_CommitRender (auto-peeled) */
         src/game/sub_080063ec.o(.text);
         src/game/mode_control.o(.text);  /* 0x0800658c - 0x08006600, ModeControl_Init */
@@ -325,15 +320,12 @@ SECTIONS {
         src/game/sub_080076a4.o(.text);
         src/game/sub_080077ac.o(.text);  /* 0x080077ac - 0x08007874, Entity_SpawnFromConfig */
         src/game/sub_08007874.o(.text);
-        src/game/sub_0800793c.o(.text);
         asm/disasm_0x0800793c.o(.text);  /* 0x0800793c - 0x08007dd0, Player_ProbeSpawnDir (auto-peeled) */
         src/game/sub_08007dd0.o(.text);
-        src/game/sub_08008174.o(.text);
         asm/disasm_0x08008174.o(.text);  /* 0x08008174 - 0x08008570, Player_UpdatePhysics (auto-peeled) */
         src/game/sub_08008570.o(.text);
         src/game/sub_080087b4.o(.text);
         asm/disasm_0x080089a4.o(.text);  /* 0x080089a4 - 0x08008a5c, Entity_GetDirHitbox (auto-peeled) */
-        src/game/sub_08008a5c.o(.text);
         asm/disasm_0x08008a5c.o(.text);  /* 0x08008a5c - 0x08008e84, sub_08008A5C (auto-peeled) */
         src/game/sub_08008e84.o(.text);  /* 0x08008e84 - 0x08008f98, Entity_ProbeDir */
         src/game/sub_08008f98.o(.text);
@@ -858,7 +850,6 @@ SECTIONS {
         src/game/sub_0802bdbc.o(.text);
         src/game/sub_0802bf58.o(.text);
         src/game/sub_0802c200.o(.text);
-        src/game/sub_0802c3e4.o(.text);
         asm/disasm_0x0802c3e4.o(.text);  /* 0x0802c3e4 - 0x0802c75c, EntityPool_SpawnEntry (auto-peeled) */
         src/game/sub_0802c75c.o(.text);
         src/game/sub_0802c7ec.o(.text);

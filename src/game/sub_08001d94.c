@@ -4,7 +4,7 @@
 #include "macros.h"
 #include "types.h"
 
-/* Sibling of Mode8_StateStep: when Scene_EntityTick fails the predicate, force
+/* Sibling of Scene08_StepEntityState: when Scene_EntityTick fails the predicate, force
  * state=7 onto the caller's byte pointer, then forward to Entity_UpdateHitboxSlots
  * (mode=5). Afterwards, branch on the signed sub-state byte at
  * gGameStuff_35E0[5]:
