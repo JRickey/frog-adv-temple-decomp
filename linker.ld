@@ -558,7 +558,6 @@ SECTIONS {
         src/engine/sub_0801d048.o(.text);
         src/engine/sub_0801d094.o(.text);
         src/game/credits_init.o(.text);
-        src/game/credits_bg.o(.text);  /* 0x0801d268 - 0x0801d33c, Credits_LoadBgGfx */
         src/game/credits_page2.o(.text);
         src/game/credits_page1.o(.text);  /* 0x0801d4cc - 0x0801d570, Credits_InitScrollPage1 */
         src/game/credits_scroll.o(.text);
