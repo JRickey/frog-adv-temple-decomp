@@ -19,63 +19,17 @@ extern struct TileBlitRecord gTileBlitTable_08306840[];
 
 void TileBlit_DrawEntry(u8 index)
 {
-    struct TileBlitRecord *tableBase;
-    u32 stride;
-    register struct TileBlitRecord *entry asm("r2");
-    u16 *vramDst;
+    u16 *dst;
     const u16 *src;
-    u32 row;
+    u8 row;
+    u8 col;
 
-    tableBase = gTileBlitTable_08306840;
-    stride = ((u32)index * 2 + (u32)index) << 3;
-    entry = (struct TileBlitRecord *)(stride + (u32)tableBase);
-    vramDst = (u16 *)((u32)entry->colStart * 2);
-    {
-        u32 rowOffset;
-
-        rowOffset = (u32)entry->tileRow << 6;
-        rowOffset += 0x0600f800;
-        vramDst = (u16 *)((u32)vramDst + rowOffset);
-    }
-    {
-        u32 srcAddr;
-
-        srcAddr = (u32)tableBase;
-        srcAddr += 16;
-        srcAddr = stride + srcAddr;
-        src = **(const u16 ***)srcAddr;
-    }
-
-    row = 0;
-    if (row >= entry->rowCount)
-        return;
-
-    {
-        register struct TileBlitRecord *loopBase asm("ip");
-        struct TileBlitRecord *loopEntry;
-        u32 loopStride;
-
-        loopBase = tableBase;
-        loopEntry = entry;
-        loopStride = stride;
-
-        do {
-            register struct TileBlitRecord *p asm("r3");
-            u8 col;
-            u32 nextRow;
-
-            col = 0;
-            nextRow = row + 1;
-            if (col < loopEntry->colCount) {
-                p = (struct TileBlitRecord *)(loopStride + (u32)loopBase);
-                do {
-                    *vramDst++ = *src++;
-                    col = (u8)(col + 1);
-                } while (col < p->colCount);
-            }
-            vramDst += (32 - loopEntry->colCount);
-            row = (u8)nextRow;
-        } while ((u8)row < loopEntry->rowCount);
+    dst = (u16 *)0x0600f800 + gTileBlitTable_08306840[index].colStart + gTileBlitTable_08306840[index].tileRow * 32;
+    src = *gTileBlitTable_08306840[index].srcTable;
+    for (row = 0; row < gTileBlitTable_08306840[index].rowCount; row++) {
+        for (col = 0; col < gTileBlitTable_08306840[index].colCount; col++)
+            *dst++ = *src++;
+        dst += 32 - gTileBlitTable_08306840[index].colCount;
     }
 }
 
