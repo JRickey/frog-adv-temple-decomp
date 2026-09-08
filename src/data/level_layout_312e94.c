@@ -1,70 +1,173 @@
 #include "macros.h"
-#include "types.h"
+#include "level_layout_data.h"
 
-/* Three (backing-store + pointer-array) clusters at
- * [0x08312e94..0x08314a68).
- *
- * Continues the multi-tier level-layout dispatch pattern documented in
- * src/data/level_layout.c. Each cluster comprises a backing store of
- * sub-tables sharing the {u8 count, _x3, u32 _} 8-byte header + count
- * 8-byte records convention, followed by a pointer array that
- * dispatches them. Boundaries are marked by runs of 0xffffffff
- * sentinels at the tail of each pointer array.
- *
- * --- Cluster A: [0x08312e94..0x08313360) ---
- *
- *   sLevelLayoutData_312E94 (294 u32s = 1176 B)
- *     Backing store starting with a 9-entry `{u32 count, u32 0}` index
- *     manifest at 0x08312e94 (counts: 0x11, 0x12, 0x10, 0x21, 0x14,
- *     0x3d, 0x61, 0x60, 0x36). Followed by mixed-count sub-tables.
- *     Interior anchors (pool-loaded by consumers in
- *     [0x080247xx..0x08024axx]):
- *       0x08312edc, 0x08312eec, 0x08312fe4, 0x08313014, 0x0831326c
- *
- *   sLevelLayoutPtrs_31332C (13 u32s = 52 B, 11 ptrs + 2 sentinels)
- *     Dispatches 11 sub-tables in sLevelLayoutData_312E94. Consumers
- *     in [0x0802489x..0x080249xx] load interior windows --
- *     0x0831332c (entry 0), 0x08313338 (entry 3), 0x08313344 (entry 6),
- *     0x08313348 (entry 7).
- *
- * --- Cluster B: [0x08313360..0x08314068) ---
- *
- *   sLevelLayoutData_313360 (774 u32s = 3096 B)
- *     Backing store opening with another 9-entry index manifest
- *     (counts: 0x64, 0x11, 0x12, 0x10, 0x21, 0x61, 0x60, 0x28, 0x01).
- *     The "0x64" leading count distinguishes this cluster from A’s
- *     0x11 leader -- likely a per-mode selector. Interior anchors at
- *     0x083133a0, 0x083133b0, 0x083133d0, 0x083134d0, 0x08313508,
- *     0x08313528 (pool-loaded by consumers in
- *     [0x08025xxx..0x080254xx]).
- *
- *   sLevelLayoutPtrs_313F78 (60 u32s = 240 B, 56 ptrs + 4 sentinels)
- *     Dispatches the 56 sub-tables in sLevelLayoutData_313360.
- *     Consumers in [0x08025xxx] index via multiple interior anchor
- *     windows -- 0x08313f88 (entry 4), 0x08313fc4 (entry 19),
- *     0x08313fec (entry 29), 0x08314004 (entry 35), 0x08314014
- *     (entry 39), 0x08314034 (entry 47), 0x08314044 (entry 51),
- *     0x08314048 (entry 52).
- *
- * --- Cluster C: [0x08314068..0x08314a68) ---
- *
- *   sLevelLayoutData_314068 (640 u32s = 2560 B)
- *     Pure backing store -- the dispatching pointer array lives
- *     downstream at 0x08314a68 (sLevelLayoutPtrs_314A68, in
- *     src/data/level_layout_ptrs_314a68.c). Opens with a 3-entry
- *     manifest {0x39, 0x45, 0x2e} followed by sub-tables. Interior
- *     anchors at 0x083140a8, 0x083140b8, 0x083140e8, 0x083141e8,
- *     0x08314208, 0x08314828 (pool-loaded by consumers in
- *     [0x08025xxx..0x08026xxx]).
- *
- * TODO: confirm field semantics + sub-table boundaries once
- * [0x08024xxx..0x08026xxx] consumers land in C. Until then the
- * backing stores ship as a single typed u32[] each and consumers
- * index via the pointer arrays. Same access pattern as
- * sLevelLayoutPtrs in src/data/level_layout.c. */
+/* Count-prefixed entity layouts at 0x08312EDC..0x08314230.
+ * Names retain ROM identity until the level-to-layout mapping is established.
+ * Unreconstructed intervals and dispatch tables retain their original bytes. */
 
-const u32 sLevelLayoutData_312E94[294] = INCBIN_U32("data/level/layout_312e94.bin");
+const u32 sLevelLayoutRaw_312E94[18] = INCBIN_U32("data/level/layout_raw_312e94.bin");
+
+const LevelLayout1 sLevelLayout_312EDC = {
+    {1, 0, 0, 0, 0},
+    {
+        {251, 2027, 3, 3, 0, 0},
+    },
+};
+
+const LevelLayout30 sLevelLayout_312EEC = {
+    {30, 0, 0, 0, 0},
+    {
+        {179, 275, 3, 3, 0, 0},   {251, 275, 3, 19, 0, 0},  {275, 275, 3, 3, 0, 0},   {251, 467, 3, 19, 0, 0},
+        {275, 467, 3, 3, 0, 0},   {299, 467, 3, 19, 0, 0},  {323, 467, 3, 3, 0, 0},   {251, 563, 3, 19, 0, 0},
+        {275, 563, 3, 3, 0, 0},   {179, 635, 3, 19, 0, 0},  {203, 635, 3, 3, 0, 0},   {299, 659, 3, 19, 0, 0},
+        {179, 779, 3, 3, 0, 0},   {203, 779, 3, 3, 0, 0},   {299, 779, 3, 19, 0, 0},  {131, 899, 3, 3, 0, 0},
+        {155, 899, 3, 19, 0, 0},  {35, 1163, 3, 3, 0, 0},   {107, 1163, 3, 19, 0, 0}, {275, 1259, 3, 3, 0, 0},
+        {299, 1259, 3, 19, 0, 0}, {179, 1307, 3, 3, 0, 0},  {203, 1307, 3, 19, 0, 0}, {227, 1307, 3, 3, 0, 0},
+        {179, 1331, 3, 3, 0, 0},  {203, 1331, 3, 19, 0, 0}, {227, 1331, 3, 19, 0, 0}, {323, 1331, 3, 3, 0, 0},
+        {251, 1475, 3, 19, 0, 0}, {251, 1499, 3, 3, 0, 0},
+    },
+};
+
+const LevelLayout5 sLevelLayout_312FE4 = {
+    {5, 0, 0, 0, 0},
+    {
+        {179, 227, 3, 19, 0, 0},
+        {251, 1355, 3, 19, 0, 0},
+        {491, 659, 3, 19, 0, 0},
+        {35, 779, 3, 19, 0, 0},
+        {251, 1835, 3, 19, 0, 0},
+    },
+};
+
+const LevelLayout30 sLevelLayout_313014 = {
+    {30, 0, 0, 0, 0},
+    {
+        {227, 587, 3, 3, 0, 0},  {323, 827, 3, 3, 0, 0},  {275, 1379, 3, 3, 0, 0}, {227, 1547, 3, 3, 0, 0},
+        {323, 1763, 3, 3, 0, 0}, {299, 323, 3, 3, 0, 0},  {323, 323, 3, 3, 0, 0},  {299, 299, 3, 3, 0, 0},
+        {323, 299, 3, 3, 0, 0},  {179, 419, 3, 3, 0, 0},  {203, 419, 3, 3, 0, 0},  {179, 467, 3, 3, 0, 0},
+        {203, 467, 3, 3, 0, 0},  {179, 587, 3, 3, 0, 0},  {203, 587, 3, 3, 0, 0},  {299, 683, 3, 3, 0, 0},
+        {323, 683, 3, 3, 0, 0},  {299, 803, 3, 3, 0, 0},  {299, 827, 3, 3, 0, 0},  {323, 803, 3, 3, 0, 0},
+        {299, 1379, 3, 3, 0, 0}, {323, 1379, 3, 3, 0, 0}, {323, 1403, 3, 3, 0, 0}, {299, 1403, 3, 3, 0, 0},
+        {275, 1403, 3, 3, 0, 0}, {251, 1547, 3, 3, 0, 0}, {275, 1547, 3, 3, 0, 0}, {227, 1619, 3, 3, 0, 0},
+        {251, 1643, 3, 3, 0, 0}, {275, 1619, 3, 3, 0, 0},
+    },
+};
+
+const u32 sLevelLayoutRaw_31310C[88] = INCBIN_U32("data/level/layout_raw_31310c.bin");
+
+const LevelLayout1 sLevelLayout_31326C = {
+    {1, 0, 0, 0, 0},
+    {
+        {35, 851, 3, 3, 0, 0},
+    },
+};
+
+const LevelLayout2 sLevelLayout_31327C = {
+    {2, 0, 0, 0, 0},
+    {
+        {35, 1139, 3, 19, 0, 0},
+        {35, 1091, 3, 19, 0, 0},
+    },
+};
+
+const u32 sLevelLayoutRaw_313294[38] = INCBIN_U32("data/level/layout_raw_313294.bin");
+
 const u32 sLevelLayoutPtrs_31332C[13] = INCBIN_U32("data/level/layout_ptrs_31332c.bin");
-const u32 sLevelLayoutData_313360[774] = INCBIN_U32("data/level/layout_313360.bin");
+
+const u32 sLevelLayoutRaw_313360[28] = INCBIN_U32("data/level/layout_raw_313360.bin");
+
+const LevelLayout31 sLevelLayout_3133D0 = {
+    {31, 0, 0, 0, 0},
+    {
+        {563, 683, 2, 3, 0, 0},  {611, 683, 2, 3, 0, 0},  {659, 683, 2, 3, 0, 0},  {707, 683, 2, 3, 0, 0},
+        {251, 107, 2, 3, 0, 0},  {227, 491, 2, 3, 0, 0},  {803, 1259, 3, 3, 0, 0}, {827, 1235, 3, 3, 0, 0},
+        {803, 1067, 3, 3, 0, 0}, {827, 1091, 3, 3, 0, 0}, {731, 1715, 3, 3, 0, 0}, {755, 1715, 3, 3, 0, 0},
+        {803, 1883, 2, 3, 0, 0}, {803, 1931, 2, 3, 0, 0}, {611, 995, 3, 3, 0, 0},  {491, 923, 3, 3, 0, 0},
+        {443, 923, 3, 3, 0, 0},  {395, 923, 3, 3, 0, 0},  {467, 563, 3, 3, 0, 0},  {683, 587, 3, 3, 0, 0},
+        {347, 635, 3, 3, 0, 0},  {683, 371, 3, 3, 0, 0},  {707, 371, 3, 3, 0, 0},  {539, 107, 3, 3, 0, 0},
+        {539, 83, 3, 3, 0, 0},   {515, 155, 3, 3, 0, 0},  {515, 131, 3, 3, 0, 0},  {515, 107, 3, 3, 0, 0},
+        {515, 83, 3, 3, 0, 0},   {587, 1235, 3, 3, 0, 0}, {707, 1211, 3, 3, 0, 0},
+    },
+};
+
+const LevelLayout6 sLevelLayout_3134D0 = {
+    {6, 0, 0, 0, 0},
+    {
+        {203, 491, 2, 3, 0, 0},
+        {755, 1907, 2, 3, 0, 0},
+        {755, 1931, 2, 3, 0, 0},
+        {587, 1259, 3, 3, 0, 0},
+        {563, 467, 3, 3, 0, 0},
+        {419, 83, 3, 3, 0, 0},
+    },
+};
+
+const LevelLayout3 sLevelLayout_313508 = {
+    {3, 0, 0, 0, 0},
+    {
+        {419, 919, 3, 35, 0, 0},
+        {467, 919, 3, 35, 0, 0},
+        {515, 919, 3, 35, 0, 0},
+    },
+};
+
+const LevelLayout3 sLevelLayout_313528 = {
+    {3, 0, 0, 0, 0},
+    {
+        {155, 179, 2, 35, 0, 0},
+        {611, 539, 3, 35, 0, 0},
+        {827, 1067, 3, 35, 0, 0},
+    },
+};
+
+const u32 sLevelLayoutRaw_313548[652] = INCBIN_U32("data/level/layout_raw_313548.bin");
+
 const u32 sLevelLayoutPtrs_313F78[60] = INCBIN_U32("data/level/layout_ptrs_313f78.bin");
-const u32 sLevelLayoutData_314068[640] = INCBIN_U32("data/level/layout_314068.bin");
+
+const u32 sLevelLayoutRaw_314068[20] = INCBIN_U32("data/level/layout_raw_314068.bin");
+
+const LevelLayout5 sLevelLayout_3140B8 = {
+    {5, 0, 0, 0, 0},
+    {
+        {515, 947, 3, 35, 0, 0},
+        {179, 371, 3, 35, 0, 0},
+        {467, 11, 3, 35, 0, 0},
+        {587, 299, 2, 35, 0, 0},
+        {1091, 203, 3, 35, 0, 0},
+    },
+};
+
+const LevelLayout31 sLevelLayout_3140E8 = {
+    {31, 0, 0, 0, 0},
+    {
+        {155, 11, 3, 3, 0, 0},   {203, 59, 3, 3, 0, 0},   {203, 107, 3, 3, 0, 0},  {203, 155, 3, 3, 0, 0},
+        {515, 923, 3, 3, 0, 0},  {155, 731, 3, 3, 0, 0},  {179, 299, 3, 3, 0, 0},  {515, 179, 3, 3, 0, 0},
+        {683, 155, 3, 3, 0, 0},  {683, 107, 3, 3, 0, 0},  {1067, 251, 3, 3, 0, 0}, {1091, 155, 3, 3, 0, 0},
+        {1451, 155, 3, 3, 0, 0}, {59, 803, 3, 3, 0, 0},   {59, 827, 3, 3, 0, 0},   {131, 803, 3, 3, 0, 0},
+        {131, 827, 3, 3, 0, 0},  {227, 803, 3, 3, 0, 0},  {227, 827, 3, 3, 0, 0},  {299, 803, 3, 3, 0, 0},
+        {299, 827, 3, 3, 0, 0},  {83, 11, 3, 3, 0, 0},    {83, 35, 3, 3, 0, 0},    {1043, 155, 3, 3, 0, 0},
+        {1067, 179, 3, 3, 0, 0}, {1115, 179, 3, 3, 0, 0}, {1115, 251, 3, 3, 0, 0}, {179, 467, 3, 3, 0, 0},
+        {179, 491, 3, 3, 0, 0},  {203, 467, 3, 3, 0, 0},  {203, 491, 3, 3, 0, 0},
+    },
+};
+
+const LevelLayout3 sLevelLayout_3141E8 = {
+    {3, 0, 0, 0, 0},
+    {
+        {59, 731, 3, 3, 0, 0},
+        {227, 11, 3, 3, 0, 0},
+        {755, 155, 3, 3, 0, 0},
+    },
+};
+
+const LevelLayout4 sLevelLayout_314208 = {
+    {4, 0, 0, 0, 0},
+    {
+        {111, 391, 3, 51, 0, 0},
+        {179, 391, 3, 67, 0, 0},
+        {111, 343, 3, 51, 0, 0},
+        {179, 343, 3, 67, 0, 0},
+    },
+};
+
+const u32 sLevelLayoutRaw_314230[526] = INCBIN_U32("data/level/layout_raw_314230.bin");

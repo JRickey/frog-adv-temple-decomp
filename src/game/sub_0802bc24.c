@@ -1,9 +1,9 @@
 #include "game.h"
+#include "level_layout.h"
 #include "sound.h"
 #include "iwram.h"
 #include "types.h"
 
-extern void LevelLayout_WalkRecords(s32 a0, const void *a1, s32 a2, s32 a3, s32 a4, s32 a5, s32 a6);
 extern void sub_0802B3B0(void);
 extern void sub_0802B4B8(void);
 extern void GateRoom_ResetState(void);

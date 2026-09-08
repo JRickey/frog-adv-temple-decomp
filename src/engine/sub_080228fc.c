@@ -1,4 +1,5 @@
 #include "iwram.h"
+#include "level_layout.h"
 #include "entity.h"
 #include "sound.h"
 #include "types.h"
@@ -35,7 +36,6 @@ void UpdateZone_Slots4Cto53(void)
     Entity_AdvanceAnimFrames(0x4c, 0x53);
 }
 
-extern void LevelLayout_WalkRecords(s32 a0, const void *a1, s32 a2, s32 a3, s32 a4, s32 a5, s32 a6);
 extern const u32 sLevelLayout_311418[10];
 extern const u32 sLevelLayout_311440[4];
 

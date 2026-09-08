@@ -694,23 +694,14 @@ SECTIONS {
         asm/text/text_0x08024494.o(.text);  /* 0x08024494 - 0x080244f8, raw bytes */
         asm/disasm_0x080244f8.o(.text);  /* 0x080244f8 - 0x08024534, sub_080244F8 (auto-peeled) */
         asm/disasm_0x08024534.o(.text);  /* 0x08024534 - 0x080247ac, sub_08024534 (peeled) */
-        asm/disasm_0x080247ac.o(.text);  /* 0x080247ac - 0x080247d4, sub_080247AC (peeled) */
-        asm/disasm_0x080247d4.o(.text);  /* 0x080247d4 - 0x080247f8, sub_080247D4 (peeled) */
-        asm/disasm_0x080247f8.o(.text);  /* 0x080247f8 - 0x08024820, sub_080247F8 (peeled) */
-        asm/disasm_0x08024820.o(.text);  /* 0x08024820 - 0x08024844, sub_08024820 (peeled) */
-        asm/disasm_0x08024844.o(.text);  /* 0x08024844 - 0x0802486c, sub_08024844 (peeled) */
-        asm/text/text_0x0802486c.o(.text);  /* 0x0802486c - 0x08024890, raw bytes */
+        src/engine/sub_080247ac.o(.text);
         asm/disasm_0x08024890.o(.text);  /* 0x08024890 - 0x080248e4, sub_08024890 (peeled) */
         asm/disasm_0x080248e4.o(.text);  /* 0x080248e4 - 0x0802491c, sub_080248E4 (peeled) */
         asm/disasm_0x0802491c.o(.text);  /* 0x0802491c - 0x08024970, sub_0802491C (peeled) */
         asm/disasm_0x08024970.o(.text);  /* 0x08024970 - 0x080249a8, sub_08024970 (peeled) */
         asm/disasm_0x080249a8.o(.text);  /* 0x080249a8 - 0x080249e8, sub_080249A8 (peeled) */
         asm/disasm_0x080249e8.o(.text);  /* 0x080249e8 - 0x08024a20, sub_080249E8 (peeled) */
-        asm/disasm_0x08024a20.o(.text);  /* 0x08024a20 - 0x08024a48, sub_08024A20 (peeled) */
-        asm/disasm_0x08024a48.o(.text);  /* 0x08024a48 - 0x08024a6c, sub_08024A48 (peeled) */
-        asm/disasm_0x08024a6c.o(.text);  /* 0x08024a6c - 0x08024a98, sub_08024A6C (peeled) */
-        asm/disasm_0x08024a98.o(.text);  /* 0x08024a98 - 0x08024ac4, sub_08024A98 (peeled) */
-        asm/disasm_0x08024ac4.o(.text);  /* 0x08024ac4 - 0x08024ae8, sub_08024AC4 (peeled) */
+        src/engine/sub_08024a20.o(.text);
         asm/disasm_0x08024ae8.o(.text);  /* 0x08024ae8 - 0x08024b3c, sub_08024AE8 (peeled) */
         asm/disasm_0x08024b3c.o(.text);  /* 0x08024b3c - 0x08024b68, sub_08024B3C (auto-peeled) */
         asm/disasm_0x08024b68.o(.text);  /* 0x08024b68 - 0x08024cd0, sub_08024B68 */
@@ -718,17 +709,12 @@ SECTIONS {
         asm/text/text_0x08024dbc.o(.text);  /* 0x08024dbc - 0x08024fd0, raw bytes (shrunk for sub_08024FD0 peel) */
         asm/disasm_0x08024fd0.o(.text);  /* 0x08024fd0 - 0x0802508c, sub_08024FD0 (peeled) */
         asm/disasm_0x0802508c.o(.text);  /* 0x0802508c - 0x08025180, sub_0802508C (peeled) */
-        asm/disasm_0x08025180.o(.text);  /* 0x08025180 - 0x080251a8, sub_08025180 (peeled) */
-        asm/disasm_0x080251a8.o(.text);  /* 0x080251a8 - 0x080251cc, sub_080251A8 (peeled) */
-        asm/disasm_0x080251cc.o(.text);  /* 0x080251cc - 0x080251f4, sub_080251CC (peeled) */
-        asm/disasm_0x080251f4.o(.text);  /* 0x080251f4 - 0x08025218, sub_080251F4 (peeled) */
-        asm/disasm_0x08025218.o(.text);  /* 0x08025218 - 0x08025240, sub_08025218 (peeled) */
-        asm/disasm_0x08025240.o(.text);  /* 0x08025240 - 0x08025264, sub_08025240 (peeled) */
+        src/engine/sub_08025180.o(.text);
         asm/disasm_0x08025264.o(.text);  /* 0x08025264 - 0x080252b0, sub_08025264 (peeled) */
         asm/disasm_0x080252b0.o(.text);  /* 0x080252b0 - 0x080252e8, sub_080252B0 (peeled) */
         asm/disasm_0x080252e8.o(.text);  /* 0x080252e8 - 0x0802532c, sub_080252E8 (peeled) */
         asm/disasm_0x0802532c.o(.text);  /* 0x0802532c - 0x08025364, sub_0802532C (peeled) */
-        asm/disasm_0x08025364.o(.text);  /* 0x08025364 - 0x08025390, sub_08025364 (peeled) */
+        src/engine/sub_08025364.o(.text);
         asm/disasm_0x08025390.o(.text);  /* 0x08025390 - 0x080253f0, sub_08025390 (peeled) */
         asm/disasm_0x080253f0.o(.text);  /* 0x080253f0 - 0x0802543c, sub_080253F0 (peeled) */
         asm/disasm_0x0802543c.o(.text);  /* 0x0802543c - 0x08025484, sub_0802543C (peeled) */
@@ -744,13 +730,7 @@ SECTIONS {
         asm/disasm_0x0802572c.o(.text);  /* 0x0802572c - 0x08025904, sub_0802572C (peeled) */
         asm/text/text_0x08025904.o(.text);  /* 0x08025904 - 0x080259c4, raw bytes (sub_08025904) */
         asm/disasm_0x080259c4.o(.text);  /* 0x080259c4 - 0x08025cec, sub_080259C4 (peeled) */
-        asm/disasm_0x08025cec.o(.text);  /* 0x08025cec - 0x08025d14, sub_08025CEC (peeled) */
-        asm/disasm_0x08025d14.o(.text);  /* 0x08025d14 - 0x08025d38, sub_08025D14 (peeled) */
-        asm/disasm_0x08025d38.o(.text);  /* 0x08025d38 - 0x08025d60, sub_08025D38 (peeled) */
-        asm/disasm_0x08025d60.o(.text);  /* 0x08025d60 - 0x08025d84, sub_08025D60 (peeled) */
-        asm/disasm_0x08025d84.o(.text);  /* 0x08025d84 - 0x08025dac, sub_08025D84 (peeled) */
-        asm/disasm_0x08025dac.o(.text);  /* 0x08025dac - 0x08025dd0, sub_08025DAC (peeled) */
-        asm/disasm_0x08025dd0.o(.text);  /* 0x08025dd0 - 0x08025dfc, sub_08025DD0 (peeled) */
+        src/engine/sub_08025cec.o(.text);
         asm/disasm_0x08025dfc.o(.text);  /* 0x08025dfc - 0x08025e60, sub_08025DFC (peeled) */
         asm/disasm_0x08025e60.o(.text);  /* 0x08025e60 - 0x08025eb4, sub_08025E60 (peeled) */
         asm/disasm_0x08025eb4.o(.text);  /* 0x08025eb4 - 0x08025eec, sub_08025EB4 (peeled) */
@@ -1200,7 +1180,7 @@ SECTIONS {
         sLevelLayout_312270 = sLevelLayoutData_311F80 + 0x2f0;
         src/data/level_layout_312c20.o(.rodata);  /* 0x08312c20 - 0x08312d60, sLevelLayout_312C20 + sLevelLayoutPtrs_312C98 + sLevelLayout_312CAC + sLevelLayoutPtrs_312D4C */
         src/data/level_layout_ptrs_312d60.o(.rodata);  /* 0x08312d60 - 0x08312e94, sLevelLayoutPtrs_312D60 + _312D80 + _312DA8 + _312DD4 + _312E6C + sLevelLayoutSentinel_312E84 */
-        src/data/level_layout_312e94.o(.rodata);  /* 0x08312e94 - 0x08314a68, sLevelLayoutData_312E94 + sLevelLayoutPtrs_31332C + sLevelLayoutData_313360 + sLevelLayoutPtrs_313F78 + sLevelLayoutData_314068 */
+        src/data/level_layout_312e94.o(.rodata);  /* 0x08312e94 - 0x08314a68, typed entity layouts and preserved dispatch data */
         src/data/level_layout_ptrs_314a68.o(.rodata);  /* 0x08314a68 - 0x08314b30, sLevelLayoutPtrs_314A68 (46 ptrs + 4 sentinels) */
         src/data/level_layout_314b30.o(.rodata);  /* 0x08314b30 - 0x08315a48, sLevelLayoutManifest_314B30 + sLevelLayoutData_314B78 + sLevelLayoutPtrs_315268 + sLevelLayoutData_315280 */
         src/data/level_layout_dispatch_315a48.o(.rodata);  /* 0x08315a48 - 0x08315bb0, sLevelLayoutDispatch_315A48 */

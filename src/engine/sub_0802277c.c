@@ -1,10 +1,10 @@
 #include "iwram.h"
+#include "level_layout.h"
 #include "entity.h"
 #include "types.h"
 
 extern void Entity_FollowPath(const void *a0, s32 slot);
 extern void Entity_AdvanceAnimFrames(s32 a0, s32 a1);
-extern void LevelLayout_WalkRecords(s32 a0, const void *a1, s32 a2, s32 a3, s32 a4, s32 a5, s32 a6);
 extern void Entity_InitSlotFromRecord(u16 a0, const void *a1, u16 a2, u8 a3, u16 a4, u8 a5, u8 a6, u8 a7);
 extern void Entity_DmaLoadSprite(u8 idx);
 extern const u32 sLevelLayoutPtrs_310DD4[8];

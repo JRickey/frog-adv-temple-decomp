@@ -1,11 +1,11 @@
 #include "game.h"
+#include "level_layout.h"
 #include "sound.h"
 #include "entity.h"
 #include "iwram.h"
 #include "types.h"
 
 extern void Entity_InitSlotFromRecord(u16 a0, const void *a1, u16 a2, u8 a3, u16 a4, u8 a5, u8 a6, u8 a7);
-extern void LevelLayout_WalkRecords(u32 a0, const void *a1, u32 a2, u32 a3, u32 a4, u32 a5, u32 a6);
 
 extern void Entity10_UpdateStatus(void);
 extern void Entity12_TickStateMachine(void);

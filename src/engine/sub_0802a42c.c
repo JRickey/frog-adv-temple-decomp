@@ -1,8 +1,8 @@
 #include "iwram.h"
+#include "level_layout.h"
 #include "game.h"
 #include "types.h"
 
-extern void LevelLayout_WalkRecords(s32 a0, const void *a1, s32 a2, s32 a3, s32 a4, s32 a5, s32 a6);
 extern u32 GetFrameTick(void);
 
 extern u32 gEntities_03003720[];

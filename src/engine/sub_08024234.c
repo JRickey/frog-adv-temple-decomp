@@ -1,7 +1,6 @@
 #include "iwram.h"
+#include "level_layout.h"
 #include "types.h"
-
-extern void LevelLayout_WalkRecords(u32 a0, const void *a1, u32 a2, u32 a3, u32 a4, u32 a5, u32 a6);
 
 extern const u32 sLevelLayout_312210[];
 

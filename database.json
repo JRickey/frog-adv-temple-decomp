@@ -944,11 +944,27 @@
     "size": 4
   },
   {
-    "path": "level/layout_312e94.bin",
+    "path": "level/layout_raw_312e94.bin",
     "addr": {
       "us": "0x312E94"
     },
-    "count": "0x126",
+    "count": "0x12",
+    "size": 4
+  },
+  {
+    "path": "level/layout_raw_31310c.bin",
+    "addr": {
+      "us": "0x31310C"
+    },
+    "count": "0x58",
+    "size": 4
+  },
+  {
+    "path": "level/layout_raw_313294.bin",
+    "addr": {
+      "us": "0x313294"
+    },
+    "count": "0x26",
     "size": 4
   },
   {
@@ -960,11 +976,19 @@
     "size": 4
   },
   {
-    "path": "level/layout_313360.bin",
+    "path": "level/layout_raw_313360.bin",
     "addr": {
       "us": "0x313360"
     },
-    "count": "0x306",
+    "count": "0x1C",
+    "size": 4
+  },
+  {
+    "path": "level/layout_raw_313548.bin",
+    "addr": {
+      "us": "0x313548"
+    },
+    "count": "0x28C",
     "size": 4
   },
   {
@@ -976,11 +1000,19 @@
     "size": 4
   },
   {
-    "path": "level/layout_314068.bin",
+    "path": "level/layout_raw_314068.bin",
     "addr": {
       "us": "0x314068"
     },
-    "count": "0x280",
+    "count": "0x14",
+    "size": 4
+  },
+  {
+    "path": "level/layout_raw_314230.bin",
+    "addr": {
+      "us": "0x314230"
+    },
+    "count": "0x20E",
     "size": 4
   },
   {
