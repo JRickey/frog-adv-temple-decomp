@@ -320,3 +320,63 @@ struct overlay for the gEntities frame counter, and a no-op
 address pseudo live across the case-0 compare (reload spill pick r6 vs r4).
 Permuter hint (score 120 -> 100 at ~10k iters) supplied the last lever. See
 docs/codegen-notes.md "No-op self-store keeps an address pseudo live".
+
+## Session 2026-09-07 — src/game/sub_08006b88.c (de-pin agent)
+
+**Landed:** `aacba802` — `Entity_ApplyScrollStep`: was an auto-peeled asm slice
+with a 2-pin (`game` r8, `mask` r9) NON_MATCHING reference; now pure C, 0 pins,
+byte match. Structural levers (all source-shape, no flags):
+- `gIwram_5330` linker symbol instead of the `gGameStuff` cast: gcse PRE copies
+  the guard's base load into r8 for the in-loop stamp store (`mov r8, r2`).
+- `entries[i]` indexing (no bumped pointer): loop.c's giv init shares the
+  guard's `&entries[first]` via cse2 (`adds r3, r5, #0`).
+- The whole `active`/`mask` test is written INSIDE the loop; loop.c hoists the
+  35E0 load, the shared `u16 mask = 2` (-> r9) and the u16 and/extend (-> ip)
+  into the preheader. The prior note's "mask must be assigned after active"
+  rule was an artifact of computing `active` before the loop.
+- Hoist ORDER is loop-body insn order: `struct IwramAt35E0 *iw = &gIwram_35E0;`
+  declared before `u16 mask = 2;` puts the pool load ahead of `movs #2`, and
+  keeping the field read inline (`iw->_field_10 & mask`, one extra loop insn:
+  45 vs 44) keeps loop.c's `threshold*savings*lifetime >= insn_count` test
+  from hoisting the gEntities pool load on the FIRST loop pass, so it lands
+  after the entry-pointer copy (rerun-loop-opt hoists it on pass 2).
+- `(s8)dy` at both uses of an `s32 dy = entries[i].deltaY`: combine folds the
+  redundant re-extension of the ldrsb into the baserom's `adds r1, r0, #0`
+  copy (a plain `s8` local gives ldrb+lsls/asrs because Thumb PROMOTE_MODE is
+  unsigned; `s32` alone gives ldrsb with no copy).
+
+**Resistant (pins live only in dead NON_MATCHING bodies; NAKED kept as-is):**
+
+- `EntityScript_BuildSlotData` (11 pins in the reference). Fresh unpinned C
+  (for-loop over a `struct { struct SrcRec s; s32 i; }` frame, const-cast
+  table base): byte_diff 326/130 diffs; with a `table` pointer local 313/120
+  (partId -> ip correct); explicit guard + do-while 303/136; de-pinned prior
+  reference 322/169. The frame layout, `mov r5, sp` scratch pointer, ldmia/stmia
+  record copy, layout arms and the switch all match. The residual is one
+  pseudo: the baserom keeps `partId << 24` in r1 with TWO sets (pre-loop guard
+  and mid-loop, before the entry computation) and reuses it at the loop top and
+  loop end; agbcc instead PREs the mid/end occurrences (`PRE: redundant insn 32
+  (expression 2) in bb 24, reaching reg 173; PRE/HOIST: end of bb 4, copying
+  expression 2`) and emits a `adds r2, r1, #0` copy at the loop end, and loop.c
+  reports the table constant loads "not desirable" (lifetime 1, insn_count 161)
+  where the baserom has them hoisted into r8/r9/sl. Tried: symbol vs const
+  base, `s8 id`/`s32 idx` locals, a separate records-column constant, table
+  pointer local, for vs guard+do-while. Not tried: permuter (structural score
+  dominated by the high-reg pseudo split; not a coloring plateau).
+- `Entity_TickCells` (4 pins in the reference). De-pinned reference measured
+  LIVE (the `--non-matching` oracle is unusable here: activating NON_MATCHING
+  swaps BuildSlotData's NAKED body too and shifts the address): byte_diff
+  240/83 — all four pins are REDUNDANT (sl=base, r9=i, r8=recOff, r6=cellReg
+  colour correctly unpinned). Residual classes: (a) `cell->counter`
+  read/++/re-read idiom — baserom shares one ldrb between `frame.counter =`
+  and the increment yet RE-READS after the strb for `& 3` / `-= 4`; our cse
+  either re-reads for the increment (volatile frame or two source reads) or
+  forwards the stored value (`subs r0, r2, #3`) — every ordering of
+  `counter = cell->counter; frame.counter = counter; cell->counter = counter+1`
+  tested (C1/C2/C4/C5); only a frame store placed AFTER the strb blocks
+  forwarding, and the baserom has it before. (b) `sub = (u8)(frame.counter+8)`
+  wants a promoted `u8 sub` (`lsls #24; movs #128; lsls #20; adds; lsrs #24`).
+  (c) the gIwram_35E0 field reads precede the rec/cell computation and
+  `frame.rowByte` is re-read from the stack for arg1 (volatile-frame shape).
+  (b)/(c) are untested source fixes; (a) looks like the cse store-forwarding
+  delta of the "third SDK snapshot" note.

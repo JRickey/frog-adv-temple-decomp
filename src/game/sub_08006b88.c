@@ -823,57 +823,55 @@ u8 Entity_CheckEngage(struct EngageEntry *entries, s8 count)
     return hit;
 }
 
-/* --- Entity_ApplyScrollStep: non-matching reference (asm slice provides the matching bytes) --- */
-#ifdef NON_MATCHING
+/* Matching notes (pure C, no register pins):
+ * - The frame tick is read through the linker symbol gIwram_5330, not the
+ *   gGameStuff constant macro, so gcse copies the guard's address load into a
+ *   callee-saved register for the in-loop stamp store.
+ * - The `active` test is computed inside the loop; loop.c hoists it and the
+ *   shared `mask` into the preheader. `iw` is declared before `mask` so the
+ *   0x030035E0 pool load precedes the `movs #2` among the hoisted insns, and
+ *   the field read stays inline (one extra loop insn) so the gEntities address
+ *   load is only hoisted on the second loop pass, after the entry pointer copy.
+ * - `(s8)dy` at both uses: combine folds the redundant re-extension of the
+ *   ldrsb result into the baserom's `adds r1, r0, #0` copy. */
+extern u32 gIwram_5330;
+
 struct ScrollStepEntry {
-    u16 subX; /* +0x00 */
-    u16 subY; /* +0x02 */
+    u16 subX;
+    u16 subY;
     u8 _pad04[8];
-    u32 stamp; /* +0x0C */
-    s8 deltaX; /* +0x10 */
-    s8 deltaY; /* +0x11 */
-    u8 ageMax; /* +0x12 */
+    u32 stamp;
+    s8 deltaX;
+    s8 deltaY;
+    u8 ageMax;
     u8 _pad13[7];
-    u8 flags; /* +0x1A */
+    u8 flags;
     u8 _pad1B[9];
 };
 
 void Entity_ApplyScrollStep(struct ScrollStepEntry *entries, s32 first, s32 last)
 {
-    register GameStuff *game asm("r8");
-    struct ScrollStepEntry *entry;
-    u16 active;
     s32 i;
-    register s32 mask asm("r9");
 
-    if (gGameStuff._unk00 - entries[first].stamp < entries[first].ageMax)
+    if (gIwram_5330 - entries[first].stamp < entries[first].ageMax)
         return;
 
-    game = &gGameStuff;
+    for (i = first; i <= last; i++) {
+        s32 dy = entries[i].deltaY;
+        s32 dx = entries[i].deltaX;
+        struct IwramAt35E0 *iw = &gIwram_35E0;
+        u16 mask = 2;
+        u16 active;
 
-    i = first;
-    if (i > last)
-        return;
+        entries[i].subX += dx;
+        entries[i].subY += (s8)dy;
 
-    active = (u16)(gIwram_35E0._field_10 & 2); /* literal &2 keeps base in r2 */
-    mask = 2;                                  /* assigned AFTER active, pinned r9 */
-
-    entry = &entries[first];
-    do {
-        s8 dy = entry->deltaY; /* TAIL A: this lowers to ldrb+sext, not indexed ldrsb */
-        s8 dx = entry->deltaX;
-
-        entry->subX += dx;
-        entry->subY += dy;
-
-        if (active != 0 && (entry->flags & mask) != 0) {
+        active = iw->_field_10 & mask;
+        if (active != 0 && (entries[i].flags & mask) != 0) {
             gEntities[0].x += dx;
-            gEntities[0].y += dy;
+            gEntities[0].y += (s8)dy;
         }
 
-        entry->stamp = game->_unk00;
-        entry++;
-        i++;
-    } while (i <= last);
+        entries[i].stamp = gIwram_5330;
+    }
 }
-#endif /* NON_MATCHING */

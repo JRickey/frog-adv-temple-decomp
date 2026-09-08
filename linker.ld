@@ -331,8 +331,7 @@ SECTIONS {
         src/game/sub_08006a74.o(.text);  /* 0x08006a74 - 0x08006adc, PlayerState_Init + PlayerState_SetByte + PlayerState_IncrByteMax10 */
         src/game/sub_08006adc.o(.text);  /* 0x08006adc - 0x08006b64, Timer_DecrByte + Timer_IncrS16Max99 + Timer_IncrS16Wrap + Timer_IncrByteMax12 */
         src/game/sub_08006b64.o(.text);  /* 0x08006b64 - 0x08006b88, Timer_IncrementCheckNeg */
-        src/game/sub_08006b88.o(.text);  /* 0x08006b88 - 0x08006fec, PlayerFlags_Set + IwramFlags_Clear + IsFlagMaskSet + EntityScript_BuildSlotData + Entity_TickCells + Entity_ApplyGridMovement */
-        asm/disasm_0x080070a0.o(.text);  /* 0x080070a0 - 0x08007138, Entity_ApplyScrollStep (auto-peeled) */
+        src/game/sub_08006b88.o(.text);  /* 0x08006b88 - 0x08007138, PlayerFlags_Set + IwramFlags_Clear + IsFlagMaskSet + EntityScript_BuildSlotData + Entity_TickCells + Entity_ApplyGridMovement + Entity_CheckEngage + Entity_ApplyScrollStep */
         src/game/sub_08007138.o(.text);
         src/game/sub_08007228.o(.text);  /* 0x08007228 - 0x0800736c, LoadPartEntry + EntityScript_Advance */
         asm/disasm_0x0800736c.o(.text);  /* 0x0800736c - 0x08007660, CollisionTable_CheckAndTriggerScript (auto-peeled) */
