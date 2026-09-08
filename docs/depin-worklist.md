@@ -454,3 +454,27 @@ loop.c hoist, loop stays at 53 insns >= the 52 hoist score of the gIwram pair);
 `table` pointer local for the descriptor base; `frames` declared before `dst`
 (reload spill-retry order -> frames=ip, dst=r9). Per-TU `CC = $(AGBCC_BIN)`
 override dropped. See docs/codegen-notes.md "loop.c hoist threshold arithmetic".
+
+## Session 2026-09-07 — src/game/sub_08007138.c (de-pin agent): 8 pins -> 0
+
+- `CollisionTable_ScanForPlayer` (8 pins -> 0, first unpinned attempt
+  byte_diff 1, second 0; no permuter, no flags). The June row (#15,
+  "PERMUTER-TRACTABLE, sl is a scalar") mis-read the shape: the pinned body
+  hand-expanded the r4/r5 halfword-masked struct packing, the `ip = 0` stack
+  arg and the sl/r9 mask constants as if they were coloring. They are the
+  RTL inline expansion of the sibling `Rect_PointInCenterRectEx` (the 4-arg
+  form in src/game/sub_080076a4.c, called with `(player, &entry->rect, 0, 0)`).
+  Written as a `static inline` in the TU, integrate.c copies the `0` args
+  into pseudos before the inlined null checks (the `mov ip, r1` / `str
+  [sp]`), the `struct PackedRect` local lives in r4/r5 as two halfword-masked
+  registers, and loop.c hoists the 0xFFFF0000 / 0x0000FFFF constants to
+  sl/r9 for free because the packing sits inside the entry loop. The entry's
+  first 8 bytes are a `struct CenterRect` (y, x, height, width), not the
+  width/x/y/height the pinned struct named. The one residual (`adds r6, r0,
+  r1` vs `adds r6, r1, r0`) is the documented index-first cast:
+  `(T *)(i * sizeof(T) + (u32)table)` instead of `&table[i]`.
+
+Lesson: when a pinned body reproduces a struct-by-value call site whose
+NULL checks precede the packing, it is an inlined helper — find the
+out-of-line sibling in the ROM and `static inline` it instead of pinning the
+packing registers.

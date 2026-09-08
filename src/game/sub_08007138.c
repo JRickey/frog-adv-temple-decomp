@@ -3,149 +3,73 @@
 #include "macros.h"
 #include "types.h"
 
-struct CollisionEntity07138 {
-    u16 width;
-    u16 x;
+struct CenterRect {
     u16 y;
+    u16 x;
     u16 height;
+    u16 width;
+};
+
+struct PackedRect {
+    s16 x;
+    s16 y;
+    s16 height;
+    s16 width;
+};
+
+struct CollisionEntry {
+    struct CenterRect rect;
     u8 matchKey;
     u8 _pad09[0x11];
     u8 state;
     u8 _pad1B[9];
 };
 
-struct PackedPoint07138 {
-    s16 x;
-    s16 y;
-};
-
-union PackedPointUnion07138 {
-    struct PackedPoint07138 p;
-    u32 w;
-};
-
 extern struct Entity gEntities_03003720[];
-extern s32 Rect_PointInRect(void *ctx, u32 point, u32 size, s32 arg3);
+extern s32 Rect_PointInRect(void *ctx, struct PackedRect rect, s16 c, s16 d);
 
-s32 CollisionTable_ScanForPlayer(unsigned int baseIn, s8 count)
+/* Inlined copy of the sub_080076a4.c helper: the inline expansion is what
+ * produces the null checks, the halfword-masked struct packing in r4/r5 and the
+ * loop-hoisted 0xFFFF0000 / 0x0000FFFF mask constants in sl/r9. */
+static inline s32 Rect_PointInCenterRectEx(void *ctx, struct CenterRect *rect, s16 c, s16 d)
 {
-    register u32 maskHi asm("sl");
-    u32 maskLo;
-    u8 raw;
-    u8 countByte;
-    volatile s32 stackArg;
-    volatile unsigned int base;
+    struct PackedRect packed;
+    struct CenterRect *r;
+    u32 widthShift;
+
+    if (ctx == NULL || rect == NULL)
+        return 0;
+
+    widthShift = rect->width << 16;
+    packed.x = rect->x - (widthShift >> 17);
+    r = rect;
+    packed.y = r->y - (r->height >> 1) - 1;
+    packed.height = r->height;
+    packed.width = widthShift >> 16;
+
+    return Rect_PointInRect(ctx, packed, c, d);
+}
+
+s32 CollisionTable_ScanForPlayer(struct CollisionEntry *table, s8 count)
+{
     s32 hit;
-    u32 bound;
-    s32 boundTemp;
-    s32 signedBound;
-    s32 shifted;
-    s32 shiftedTmp;
-    int new_var;
-    s32 idx;
-    s32 next;
-    register s32 tailBound asm("r6");
-    register u8 stateByte asm("r1");
-    u32 stateMask;
-    s32 arg4;
-    u8 playerKey;
+    s8 i;
+    struct CollisionEntry *entry;
     struct Entity *player;
-    struct CollisionEntity07138 *entry;
-    register union PackedPointUnion07138 point asm("r4");
-    register union PackedPointUnion07138 size asm("r5");
 
-    base = baseIn;
-    {
-        s8 ctmp;
-
-        ctmp = count;
-        countByte = ctmp;
-    }
     hit = 0;
     if ((gEntities_03003720[0].status & 4) != 0)
         return 0;
 
-    raw = 0;
-    boundTemp = countByte << 24;
-    signedBound = boundTemp >> 24;
-    bound = boundTemp;
-    tailBound = *(volatile s32 *)&hit;
-    if (tailBound < signedBound) {
-        maskHi = 0xFFFF0000;
-        maskLo = 0x0000FFFF;
-        for (;;) {
-            shiftedTmp = raw << 24;
-            do {
-                idx = shiftedTmp >> 24;
-                entry = (struct CollisionEntity07138 *)(idx * sizeof(struct CollisionEntity07138) + base);
-
-                stateMask = 5;
-                stateByte = *(volatile u8 *)&entry->state;
-                stateMask &= stateByte;
-                shifted = shiftedTmp;
-                if (stateMask == 4) {
-                    player = gEntities_03003720;
-                    playerKey = player->actorId;
-                    arg4 = playerKey;
-                    if (arg4 == entry->matchKey) {
-                        arg4 = 0;
-                        if (player != NULL && entry != NULL) {
-                            {
-                                u32 r0v;
-                                register u32 r1v asm("r1");
-                                register u32 r2v asm("r2");
-                                register u32 r3v asm("r3");
-
-                                r2v = entry->height;
-                                r3v = r2v << 16;
-                                r0v = r3v >> 17;
-                                r1v = entry->x;
-                                r0v = r1v - r0v;
-                                r0v <<= 16;
-                                r0v >>= 16;
-                                r1v = maskHi;
-                                r1v &= point.w;
-                                r1v |= r0v;
-                                r2v = entry->y;
-                                r0v = r2v << 16;
-                                r2v = r0v >> 16;
-                                r0v >>= 17;
-                                tailBound = entry->width;
-                                r0v = tailBound - r0v;
-                                r0v -= 1;
-                                r0v <<= 16;
-                                tailBound = maskLo;
-                                r1v &= tailBound;
-                                point.w = r1v | r0v;
-                                r0v = maskHi;
-                                r0v &= size.w;
-                                r0v |= r2v;
-                                r0v &= tailBound;
-                                size.w = r0v | r3v;
-                            }
-
-                            stackArg = arg4;
-                            {
-                                register struct Entity *callPlayer asm("r0");
-                                u32 callSize;
-
-                                callPlayer = player;
-                                callSize = size.w;
-                                if (Rect_PointInRect(callPlayer, point.w, callSize, 0) != 0) {
-                                    stateByte = 1;
-                                    hit = stateByte;
-                                }
-                            }
-                        }
-                    }
-                }
-                next = shifted + 0x01000000;
-            } while (0);
-
-            raw = (u32)next >> 24;
-            tailBound = *(volatile s32 *)&bound;
-            if ((s32)next >= tailBound)
-                break;
+    for (i = 0; i < count; i++) {
+        /* index-first integer sum: adds r6, <off>, <base> (codegen-notes "Operand order of a single adds") */
+        entry = (struct CollisionEntry *)(i * sizeof(struct CollisionEntry) + (u32)table);
+        if ((entry->state & 5) == 4) {
+            player = gEntities_03003720;
+            if (player->actorId == entry->matchKey) {
+                if (Rect_PointInCenterRectEx(player, &entry->rect, 0, 0) != 0)
+                    hit = 1;
+            }
         }
     }
 
