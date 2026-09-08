@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "id": "fresh-01",
+  "base_commit": "2582f699d829cd375f15ffb8941471eaa4d611d7",
+  "rom_sha1": "7b4c27009198df18555e63fb5dcad223eaf09815",
+  "summary": "Three previously assembly-only functions tested: entity initializer and menu routing match; timer setup remains assembly with a precise residual. Destination-hint bug fixed.",
+  "metrics": {
+    "targets_attempted": 3,
+    "new_c_functions": 2,
+    "new_c_bytes": 160,
+    "asm_functions_before": 245,
+    "asm_functions_after": 243,
+    "pins_added": 0,
+    "naked_fallbacks_added": 0,
+    "rom_bytes_diff": 0,
+    "regression_tests_passed": 47
+  },
+  "runs": [
+    {
+      "id": "fresh01-astra",
+      "model": "gpt-6-astra",
+      "reasoning_effort": null,
+      "task": "Select untouched targets, integrate candidates, diagnose timer and implement menu routine",
+      "outcome": "two-matches-one-deferred",
+      "review_corrections": [
+        "Fixed brief destination lookup that skipped unannotated linker entries.",
+        "Seeded known renamed-target baseline addresses; future work should retain old names until matching.",
+        "Rejected volatile-pointer inference and a causal claim based on changing generated assembly."
+      ],
+      "usage": null
+    },
+    {
+      "id": "fresh01-sol",
+      "model": "gpt-5.6-sol",
+      "reasoning_effort": null,
+      "task": "Prepare and review entity initializer candidate",
+      "outcome": "accepted-after-integration",
+      "review_corrections": [
+        "Root used the natural modulo operator and shared typed SpawnRecord interface instead of local const-void declaration and explicit libcall."
+      ],
+      "usage": null
+    },
+    {
+      "id": "fresh01-terra",
+      "model": "gpt-5.6-terra",
+      "reasoning_effort": null,
+      "task": "Prepare timer candidate and investigate remaining source shape",
+      "outcome": "deferred-with-handoff",
+      "review_corrections": [
+        "Initial typed struct field access changed target parameter traversal.",
+        "Pointer-object volatility was not justified; ordinary post-increment assignments reproduced the tail.",
+        "A generated assembly read was attributed to the wrong trial; immutable oracle logs corrected the conclusion."
+      ],
+      "usage": null
+    }
+  ]
+}

@@ -1,0 +1,123 @@
+[
+  {
+    "schema_version": 1,
+    "id": "entity.group317a4c-initialization",
+    "kind": "behavior",
+    "title": "Five layout records initialize slots 50 through 54",
+    "status": "verified",
+    "claim": "LevelLayout_SpawnGroup317A4C initializes five consecutive entity slots from sLevelLayoutPtrs[0..4], with kind 0x47, flags 16, field14 = 0x111 + 4*(i%5), and final byte arguments 5,3,3. The u8 loop and existing narrow initializer signature reproduce all 88 target bytes without pins. The group identity beyond its data anchor is not established.",
+    "subjects": [
+      "fn:080296b8",
+      "fn:080210a0",
+      "data:08317a4c"
+    ],
+    "provenance": [
+      {
+        "path": "src/engine/sub_080295ac.c",
+        "location": "LevelLayout_SpawnGroup317A4C",
+        "commit": "679a8ed9adec766c20246dc265e370365e325745"
+      },
+      {
+        "path": "include/entity_spawn.h",
+        "location": "SpawnRecord and Entity_InitSlotFromRecord",
+        "commit": "679a8ed9adec766c20246dc265e370365e325745"
+      }
+    ],
+    "tags": [
+      "LevelLayout_SpawnGroup317A4C",
+      "entity",
+      "prototype",
+      "fresh-campaign"
+    ]
+  },
+  {
+    "schema_version": 1,
+    "id": "menu.cursor-routing",
+    "kind": "behavior",
+    "title": "Three cursor entries select the main-loop route",
+    "status": "verified",
+    "claim": "Menu_ApplyCursorRoute maps cursor 0/1/2 to routerSelection1/2/3 and clears the two dispatch bytes. Other cursor values leave state unchanged. AgbMain interprets these routes as FILE_SELECT, OPTIONS, and MENU_07 respectively. A direct three-case switch matches all 72 bytes without pins.",
+    "subjects": [
+      "fn:08018188",
+      "data:03003480",
+      "data:030034a0"
+    ],
+    "provenance": [
+      {
+        "path": "src/engine/sub_08017bfc.c",
+        "location": "Menu_ApplyCursorRoute",
+        "commit": "679a8ed9adec766c20246dc265e370365e325745"
+      },
+      {
+        "path": "src/system/agb_main.c",
+        "location": "GAME_MODE_ROUTER case",
+        "commit": "679a8ed9adec766c20246dc265e370365e325745"
+      },
+      {
+        "path": "include/menu.h",
+        "location": "MenuCursorOption and MenuRoute",
+        "commit": "679a8ed9adec766c20246dc265e370365e325745"
+      }
+    ],
+    "tags": [
+      "Menu_ApplyCursorRoute",
+      "menu",
+      "fresh-campaign"
+    ]
+  },
+  {
+    "schema_version": 1,
+    "id": "eeprom.timer-start-shape",
+    "kind": "compiler",
+    "title": "Timer setup retains pointer updates through post-increment assignments",
+    "status": "observed",
+    "claim": "Historical campaign candidate uses an ordinary pointer to volatile timer halfwords with *timerRegisters++ = *config++; *timerRegisters-- = *config;. This reproduces the target register-write tail; separate pointer-update statements did not. No volatile pointer object is required. The full candidate still differs by seven bytes/five IRQ-mask instructions, so the live function remains assembly.",
+    "subjects": [
+      "fn:08033948"
+    ],
+    "provenance": [
+      {
+        "path": "asm/disasm_0x08033948.s",
+        "location": "timer setup and register-write sequence",
+        "commit": "679a8ed9adec766c20246dc265e370365e325745"
+      },
+      {
+        "path": "docs/campaigns/fresh-01.md",
+        "location": "Timer handoff"
+      }
+    ],
+    "tags": [
+      "Eeprom_StartTimer",
+      "sub_08033948",
+      "timer",
+      "fresh-campaign"
+    ]
+  },
+  {
+    "schema_version": 1,
+    "id": "eeprom.timer-mask-expansion",
+    "kind": "dependency",
+    "title": "Explain timer-index load and mask-register ordering",
+    "status": "hypothesized",
+    "claim": "Inspect the ordinary u8 index load through old compiler shift expansion and local allocation. Compare the seven-byte nonvolatile residual to target load-count-before-constant 8 order. Do not promote the four-byte volatile-index trial to source truth, or replay already failed helper/type variants without a new prediction.",
+    "subjects": [
+      "fn:08033948"
+    ],
+    "provenance": [
+      {
+        "path": "asm/disasm_0x08033948.s",
+        "location": "instructions at +0x10 through +0x18",
+        "commit": "679a8ed9adec766c20246dc265e370365e325745"
+      }
+    ],
+    "tags": [
+      "Eeprom_StartTimer",
+      "sub_08033948",
+      "timer",
+      "fresh-campaign"
+    ],
+    "prerequisites": [
+      "eeprom.timer-start-shape"
+    ]
+  }
+]

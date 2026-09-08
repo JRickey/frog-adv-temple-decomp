@@ -86,7 +86,10 @@ address-named field. Name hardware constants and established states/flags.
    source hypothesis, and run the oracle:
    `python3 tools/agent/compile_and_view_assembly.py <function> --human`.
    For a NAKED function's reference C use `--non-matching`.
-5. Use the oracle's freshness/provenance output. Do not substitute hand-rolled
+5. Keep the original symbol name during nonmatching trials so the cached
+   baserom address remains valid. Rename after matching, then refresh the
+   address snapshot from the verified ROM.
+   Use the oracle's freshness/provenance output. Do not substitute hand-rolled
    objdump diffs. Fine-grained objdiff is only a fallback for a specific
    unresolved alignment/pool issue.
 6. If shape diverges, inspect the relevant agbcc pass and corpus examples.
