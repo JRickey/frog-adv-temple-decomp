@@ -3279,3 +3279,45 @@ Rule of thumb: when a de-pinned body reads stack arguments at their use
 sites with `ldrh`/`ldrb` through `mov rN, sp` while the baserom hoists them
 into callee-saved/high regs with a full `ldr [sp, #N]` at entry, check the
 parameter types against the callers' prototype before touching allocation.
+
+## regmove folds a dying source into a 2-address result — share the constant across blocks to steer global alloc (ModeControl_GetFlag, 2026-09-07)
+
+5 pins (`r`/`p` r0, `lo` r2, `hi` r3, `signExt` r1) + an `asm volatile` barrier
+-> 0, pure C, no flags. The whole tangle was one register: the switch's shared
+result `r` landed in r1 with the tail's `movs #1` constant in r0 (baserom: r0 /
+r1). Mechanism, from the `.regmove` + `.lreg` dumps:
+
+- `if (((s32)r >> bit) & 1)` expands as `t1 = r >> bit; t2 = t1 & c; cmp t2`.
+  `regmove.c:fixup_match_1` ("Fixed operand 1 of insn N matching operand 0")
+  rewrites every Thumb 2-address insn whose input pseudo DIES there so the
+  output IS the input: both the shift and the and become `(set r ...)`. `r`
+  is therefore still live when the constant is born, the constant is the only
+  block-local qty (local-alloc runs first, takes r0), and global alloc gives
+  `r` the next free reg, r1. No source spelling of the tail changes this — the
+  merge happens after cse/combine.
+- Fix: make the constant a GLOBAL pseudo with lower priority than `r`. Write
+  selector 3 as `mask = 1; mask <<= bit; r = load; r &= mask; goto check;`
+  and the tail as `r = (s32)r >> bit; mask = 1; r &= mask;` — `mask` is
+  set/used in two blocks, so `local_alloc` skips it; `allocno_compare`
+  (`log2(refs)*refs*size/live_length`) ranks `r` (12 refs / 18) at or above
+  `mask` (6 / 6) and the tie-break is pseudo number = declaration order, so
+  declare `r` before `mask`. `r` -> r0, `mask` -> r1, and jump2 cross-jumps
+  selector 3's `ands r0, r1; cmp; beq` into the tail (the baserom's
+  `b 0x6822`). Spell the shift as two statements: `mask = 1 << bit` gives a
+  block-local `movs` temp that regmove ties to `mask` and the pseudo goes
+  local again.
+- The 64-bit test `(u64 & (1 << bit))` in a plain `if` already expands to the
+  baserom's `movs/lsls/asrs #31/ldr/ldr/ands/ands/adds/orrs` (the sign-extended
+  int mask + DImode `!= 0` = `orrs` of the halves); the barrier + three pins
+  the June body used were reproducing what the expander does by itself. Write
+  it as `if ((x64 & (1 << bit)) == 0) goto ret_zero; return 1;` so its
+  `cmp r0, #0; beq ret_zero; movs r0, #1` is byte-identical to the tail and
+  cross-jumps into `b check`; `if (...) return 1; return 0;` emits `bne ONE; b
+  ZERO` and stays a separate compare.
+- Field loads at byte offsets > 31 (`control->byteFlags7` at +0x2c) come out
+  as `adds r0, r3, #0; adds r0, #44; ldrb r0, [r0]` from a plain struct
+  read — the `p = base; p += 0x2c; goto load_byte` pointer pin was
+  re-implementing cross-jumping.
+- Parameter order at entry (`adds r3, r0, #0` before the two `lsls/lsrs`
+  truncations) needs `u32` params with explicit `(u8)` casts as the first
+  statements; `u8` params truncate r1/r2 before the base copy.

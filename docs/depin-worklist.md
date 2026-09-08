@@ -206,7 +206,7 @@ most-tractable first.
 | 30 | `sub_0800BE18` | src/engine/sub_0800be18.c | r9, r6, r0, r1 | r9:u32 shiftedType, r6:s32 typeIndex, r0:s32 typeIndex, r1:u32 pointsBase |  | 104 | 14/0 | 0 | PERMUTER-TRACTABLE | r9 is a scalar |
 | 31 | `SpawnControl_Dispatch` | src/engine/sub_0800d8a0.c | r4, r5, r6, r3 | r4:u8 *base, r5:u8 *saved6110, r6:u8 *entry, r3:u32 mask |  | 109 | 23/0 | 4 | PERMUTER-TRACTABLE | shared file w/ sub_0800D9C8 |
 | 32 | `Blit_ApplyFlaggedRecords` | src/engine/sub_080113e8.c | sl, r9 | sl:u8 idx, r9:struct BlitRecord *romTable | YES | 114 | 15/0 | 0 | PERMUTER-TRACTABLE | **priority class** |
-| 33 | `ModeControl_GetFlag` | src/game/sub_0800679c.c | r0, r0, r2, r3, r1 | r0:u32 r, r0:u8 *p, r2:u32 lo, r3:u32 hi, r1:s32 signExt |  | 122 | 10/0 | 6 | LIKELY-RESISTANT (size) |  |
+| 33 | `ModeControl_GetFlag` | src/game/sub_0800679c.c | r0, r0, r2, r3, r1 | r0:u32 r, r0:u8 *p, r2:u32 lo, r3:u32 hi, r1:s32 signExt |  | 122 | 10/0 | 6 | **REAPED 2026-09-07** (was: LIKELY-RESISTANT) | regmove 2-address fold; see the 2026-09-07 sub_0800679c.c entry |
 | 34 | `Entity_LerpPosition` | src/game/sub_080087b4.c | r2, r1, r0, r1 | r2:u8 *gB2, r1:u8 *e, r0:s32 num, r1:s32 ref |  | 122 | 17/0 | 6 | LIKELY-RESISTANT (size) |  |
 | 35 | `PollInputAndAttract` | src/system/init1.c | r3, r1, r0 | r3:u16 prevKeys, r1:u16 keyB, r0:GameStuff *gs |  | 134 | 14/0 | -4 | LIKELY-RESISTANT (size) |  |
 | 36 | `sub_080210A0` | src/engine/sub_080210a0.c | sl, r6, r8, r9, r5, r2, r0, r1, r2 | sl:const volatile SpawnRecord *recVol, r6:u32 field14Reg, r8:u32 field16Reg, r9:u32 matchKeyReg, r5:u32 field17Reg, r2:const SpawnRecord *rec2, r0:u32 byteScratch0, r1:u32 byteScratch1, r2:const u8 *paramRec | YES | 136 | 2/0 | -20 | LIKELY-RESISTANT (documented) | **priority class; KNOWN RESISTANT** — 17-pin wholesale removal failed (register-pin-cleanup-handoff.md); high-reg lifetime + stack-arg colouring |
@@ -500,3 +500,19 @@ packing registers.
 Lesson: a de-pinned body that loads stack args at their use with
 `ldrb`/`ldrh` via `mov rN, sp` where the ROM does `ldr rX, [sp, #N]` at entry
 is a parameter-type mismatch, not an allocator limit.
+
+## Session 2026-09-07 — src/game/sub_0800679c.c (de-pin agent): 5 pins -> 0
+
+- `ModeControl_GetFlag` (5 pins r0/r0/r2/r3/r1 + one `asm volatile` barrier
+  -> 0, pure C, no permuter, no flags; the June row #33 "LIKELY-RESISTANT
+  (size)" was wrong). Re-derived from the asm: plain `switch` with
+  `struct IwramAt6110` field reads, `if ((flags64 & (1 << bit)) == 0) goto
+  ret_zero; return 1;` for the 64-bit lane (the expander already emits the
+  baserom's sign-extended-mask / two-`ands` / `orrs` shape), and a `u32 mask`
+  that is set both in selector 3 (`mask = 1; mask <<= bit;`) and in the common
+  tail (`mask = 1; r &= mask;`). The only real divergence was regmove folding
+  the tail's shift/and back into `r` (so `r` stayed live while the block-local
+  `movs #1` took r0); making the constant a two-block global pseudo with
+  lower priority than `r` gives r0/r1 with no pin. See docs/codegen-notes.md
+  "regmove folds a dying source into a 2-address result".
+- `CtrlFlags_ReadBitRange` had no pins. TU is pin-free.

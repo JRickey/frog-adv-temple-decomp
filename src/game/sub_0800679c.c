@@ -1,96 +1,61 @@
 #include "types.h"
 #include "iwram.h"
 
-/* Generic bit-test accessor on a struct at `base`. The (selector, bit)
- * pair indexes a packed flag stored in one of nine struct fields; the
- * return value is the selected bit, normalised to 0 or 1.
+/* Selector picks one of the control block's packed flag fields; the selected
+ * bit comes back normalised to 0/1.
  *
- * Selector 1 reads a 64-bit halfword pair (offsets 4 / 8) and routes the
- * sign-extended (1<<bit) mask through both lanes so bit indices 32-63
- * naturally extract from the high half — that branch joins the final
- * `r != 0 ? 1 : 0` normaliser directly, skipping the trailing
- * `asrs r0, bit; ands r0, 1` step the other selectors share.
- *
- * Selector 6 is the explicit "no such flag" slot — its jump-table entry
- * targets the same `r0 = 0; bx lr` epilogue the `default:` (selector
- * >= 10) and the false-check both fall through to, so the function
- * ships with a single shared "false" exit.
- *
- * Matching notes (old_agbcc):
- *   - The shared result/pointer locals (`r asm("r0")`, `p asm("r0")`) keep
- *     the function free of callee-saved push/pop and let `mov pc, r0`
- *     dispatch directly out of the jump-table load.
- *   - Selectors 7/8/9 build `base + off` in `p` (also r0) — the pin
- *     stops agbcc from clobbering r3, and the shared `goto load_byte`
- *     keeps the trailing `ldrb r0, [r0, #0]` block reused by all
- *     three.
- *   - Selector 1 pins `lo asm("r2")`, `hi asm("r3")`, `signExt asm("r1")`
- *     to force agbcc to destructively reuse the input arg registers
- *     for the two `ldr`s. The empty `hi` barrier
- *     between `hi &= signExt;` and `r = hi;` prevents agbcc from
- *     folding the two into a single `r = hi & signExt`, restoring the
- *     baserom's `ands r3, r1; adds r0, r3, #0; orrs r0, r2` ordering. */
-
-u32 ModeControl_GetFlag(u8 *baseIn, u32 selectorIn, u32 bitIn)
+ * Matching notes: `mask` is shared between selector 3 and the common tail so
+ * it is a global (not block-local) pseudo -- global alloc then hands `r` r0
+ * and `mask` r1, and the two `r &= mask` tails cross-jump into one `ands`.
+ * Selector 1 branches straight to `ret_zero` so its 64-bit test shares the
+ * tail's `cmp; beq` instead of growing a second compare. */
+u32 ModeControl_GetFlag(void *baseIn, u32 selectorIn, u32 bitIn)
 {
-    u8 *base = baseIn;
+    struct IwramAt6110 *control = baseIn;
     u32 selector = (u8)selectorIn;
     u32 bit = (u8)bitIn;
-    register u32 r asm("r0");
-    register u8 *p asm("r0");
-    s32 mask;
+    u32 r;
+    u32 mask;
 
     switch (selector) {
     case 0:
-        r = *(u16 *)(base + 0);
+        r = control->flags0;
         break;
-    case 1: {
-        register u32 lo asm("r2");
-        register u32 hi asm("r3");
-        register s32 signExt asm("r1");
-        mask = 1 << bit;
-        signExt = mask >> 31;
-        lo = *(u32 *)(base + 4);
-        hi = *(u32 *)(base + 8);
-        lo &= mask;
-        hi &= signExt;
-        asm volatile("" : "+r"(hi));
-        r = hi;
-        r |= lo;
-        goto check;
-    }
+    case 1:
+        if ((control->flags64 & (1 << bit)) == 0)
+            goto ret_zero;
+        return 1;
     case 2:
-        r = *(u16 *)(base + 12);
+        r = control->flags2;
         break;
     case 3:
-        mask = 1 << bit;
-        r = *(u32 *)(base + 16) & mask;
+        mask = 1;
+        mask <<= bit;
+        r = control->scenePhase;
+        r &= mask;
         goto check;
     case 4:
-        r = *(u16 *)(base + 0x24);
+        r = control->activeFlags;
         break;
     case 5:
-        r = *(u16 *)(base + 0x26);
+        r = control->selector5Flags;
         break;
     case 7:
-        p = base;
-        p += 0x2c;
-        goto load_byte;
+        r = control->byteFlags7;
+        break;
     case 8:
-        p = base;
-        p += 0x2a;
-        goto load_byte;
+        r = control->byteFlags8;
+        break;
     case 9:
-        p = base;
-        p += 0x2b;
-    load_byte:
-        r = *p;
+        r = control->gateByte;
         break;
     default:
         goto ret_zero;
     }
 
-    r = (u32)((s32)r >> bit) & 1;
+    r = (s32)r >> bit;
+    mask = 1;
+    r &= mask;
 
 check:
     if (r != 0)
