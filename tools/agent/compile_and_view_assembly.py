@@ -201,11 +201,18 @@ def _prepare_reliable_build(inputs: dict[str, dict[str, str]]) -> list[str]:
     return changed
 
 
+def _make_environment_overrides(flags: str) -> bool:
+    # GNU make exports short options as a leading cluster without a dash.
+    # Long options such as --no-print-directory must not be parsed as clusters.
+    tokens = flags.split()
+    return any(token == "--environment-overrides" or
+               re.fullmatch(r"-[A-Za-z]*e[A-Za-z]*", token) or
+               (index == 0 and re.fullmatch(r"[A-Za-z]*e[A-Za-z]*", token))
+               for index, token in enumerate(tokens))
+
+
 def build_incremental() -> tuple[bool, str, dict]:
-    makeflags = os.environ.get("MAKEFLAGS", "")
-    environment_override = ("--environment-overrides" in makeflags or
-                            re.search(r"(^|\s)-[^\s]*e", makeflags))
-    if environment_override:
+    if _make_environment_overrides(os.environ.get("MAKEFLAGS", "")):
         return False, ("unsupported MAKEFLAGS environment override mode; run the "
                        "oracle without make -e so provenance is deterministic"), {
                            "baseline": _baseline_provenance()

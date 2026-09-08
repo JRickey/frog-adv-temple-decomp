@@ -1,0 +1,234 @@
+[
+  {
+    "schema_version": 1,
+    "id": "blit.frame1-recovery",
+    "kind": "workflow",
+    "title": "Frame1 recovery restored the eleven-pin baseline",
+    "status": "observed",
+    "claim": "No acceptable depin landed. The interrupted draft had 219 differing bytes. Use the current matching source as baseline and inspect preserved clean candidates; archived scores do not certify a fresh run.",
+    "subjects": [
+      "fn:0801288c"
+    ],
+    "provenance": [
+      {
+        "path": "docs/recovery-packets.md",
+        "location": "BlitEntityTileFrame1"
+      },
+      {
+        "path": "src/engine/sub_0801288c.c",
+        "location": "BlitEntityTileFrame1"
+      }
+    ],
+    "tags": [
+      "recovery",
+      "BlitEntityTileFrame1"
+    ]
+  },
+  {
+    "schema_version": 1,
+    "id": "blit.frame1-hold-lifetimes",
+    "kind": "compiler",
+    "title": "Removing canceled holds changes the r7 lifetime",
+    "status": "observed",
+    "claim": "Historical removal of uninitialized hold5/hold6 and canceled arithmetic changed nine bytes, including r7 save/restore and signed-load zero-index selection. This suggests missing genuine source lifetimes, not a reason to preserve uninitialized arithmetic indefinitely.",
+    "subjects": [
+      "fn:0801288c"
+    ],
+    "provenance": [
+      {
+        "path": "docs/recovery-packets.md",
+        "location": "BlitEntityTileFrame1"
+      },
+      {
+        "path": "src/engine/sub_0801288c.c",
+        "location": "hold5/hold6 and signed coordinate loads"
+      }
+    ],
+    "tags": [
+      "recovery",
+      "BlitEntityTileFrame1"
+    ]
+  },
+  {
+    "schema_version": 1,
+    "id": "blit.frame1-row-stride",
+    "kind": "compiler",
+    "title": "The stride pin has a three-byte residual",
+    "status": "observed",
+    "claim": "Removing only the stride2/r3 pin historically changed +0x84/+0x86/+0x88 to use r0. A matching column-counter/pointer/stride reuse was rejected as misleading. Recover semantic row-advance lifetimes rather than disguising the constraint.",
+    "subjects": [
+      "fn:0801288c"
+    ],
+    "provenance": [
+      {
+        "path": "docs/recovery-packets.md",
+        "location": "BlitEntityTileFrame1"
+      },
+      {
+        "path": "src/engine/sub_0801288c.c",
+        "location": "stride2 row advance"
+      }
+    ],
+    "tags": [
+      "recovery",
+      "BlitEntityTileFrame1"
+    ]
+  },
+  {
+    "schema_version": 1,
+    "id": "blit.frame1-reconstruct-interface",
+    "kind": "dependency",
+    "title": "Audit sibling blitters before new allocation trials",
+    "status": "hypothesized",
+    "claim": "Compare descriptor fields, signed coordinate loads, row counters and the Scroll_FlushTilemapWindow signature across sibling translation units. Predict the genuine lifetime behind r7 and the row-stride register before testing a new source shape.",
+    "subjects": [
+      "fn:0801288c",
+      "fn:08012664",
+      "fn:0801297c"
+    ],
+    "provenance": [
+      {
+        "path": "docs/recovery-packets.md",
+        "location": "BlitEntityTileFrame1"
+      },
+      {
+        "path": "src/engine/sub_08012664.c",
+        "location": "sibling blitters"
+      },
+      {
+        "path": "src/engine/sub_0801297c.c",
+        "location": "typed flush declaration and row copy"
+      }
+    ],
+    "tags": [
+      "recovery",
+      "BlitEntityTileFrame1"
+    ],
+    "prerequisites": [
+      "blit.frame1-recovery",
+      "blit.frame1-hold-lifetimes",
+      "blit.frame1-row-stride"
+    ],
+    "relations": [
+      {
+        "type": "informed-by",
+        "target": "compiler.inline-selector-return-width"
+      }
+    ]
+  },
+  {
+    "schema_version": 1,
+    "id": "scroll.pass0-control-and-types",
+    "kind": "behavior",
+    "title": "Pass0 has a bottom-tested entry and narrow scroll counters",
+    "status": "observed",
+    "claim": "Recovery interprets Pass0 as one-pixel vertical scrolling with row refills at eight-pixel boundaries. An initial jump to 0x0800FC94 reproduces the entry branch. Truncations support unsigned 16-bit counters; clip bounds are signed halfwords. Recheck these historical observations before writing shared headers.",
+    "subjects": [
+      "fn:0800f814",
+      "data:030063c0"
+    ],
+    "provenance": [
+      {
+        "path": "docs/recovery-packets.md",
+        "location": "ScrollUpdate_Pass0"
+      },
+      {
+        "path": "asm/disasm_0x0800f814.s",
+        "location": "disassembly preview and ScrollUpdate_Pass0"
+      },
+      {
+        "path": "src/engine/sub_0800fcc8.c",
+        "location": "pass calls"
+      }
+    ],
+    "tags": [
+      "recovery",
+      "ScrollUpdate_Pass0"
+    ]
+  },
+  {
+    "schema_version": 1,
+    "id": "scroll.pass0-symbol-and-spill",
+    "kind": "compiler",
+    "title": "Clip symbols and destination spills constrain the source shape",
+    "status": "observed",
+    "claim": "A linker-assigned clip-span symbol historically produced the desired signed-load form. The spilled destination base is reused in r7 within the upward copy loop; spilling alone does not imply volatility. These improvements did not produce a matching function.",
+    "subjects": [
+      "fn:0800f814",
+      "data:030063c0"
+    ],
+    "provenance": [
+      {
+        "path": "docs/recovery-packets.md",
+        "location": "ScrollUpdate_Pass0"
+      },
+      {
+        "path": "asm/disasm_0x0800f814.s",
+        "location": "upward copy loop at 0x0800FC52/0x0800FC60"
+      }
+    ],
+    "tags": [
+      "recovery",
+      "ScrollUpdate_Pass0"
+    ]
+  },
+  {
+    "schema_version": 1,
+    "id": "scroll.pass0-residual",
+    "kind": "compiler",
+    "title": "Recovered Pass0 still has structural differences",
+    "status": "observed",
+    "claim": "Historical best diagnostic output was 1172 bytes with 983 byte differences and 315 instruction differences. Target source/column/pixel placement in r8/r9/sl differs from candidate source/destination placement in ip/sl. The wrapper experiment is not proof of an original macro or an impossibility class.",
+    "subjects": [
+      "fn:0800f814"
+    ],
+    "provenance": [
+      {
+        "path": "docs/recovery-packets.md",
+        "location": "ScrollUpdate_Pass0"
+      },
+      {
+        "path": "asm/disasm_0x0800f814.s",
+        "location": "1204-byte target"
+      }
+    ],
+    "tags": [
+      "recovery",
+      "ScrollUpdate_Pass0"
+    ]
+  },
+  {
+    "schema_version": 1,
+    "id": "scroll.pass0-reconstruct-lifetimes",
+    "kind": "dependency",
+    "title": "Reconstruct directional control flow before tuning allocation",
+    "status": "hypothesized",
+    "claim": "Compare Pass1 and both Pass0 direction paths, validate entry parameter and counter widths, then predict how destination spill and working-source lifetimes arise. Use current oracle tooling in an isolated checkout; do not start a coloring-only permuter run from the recorded structural residual.",
+    "subjects": [
+      "fn:0800f814"
+    ],
+    "provenance": [
+      {
+        "path": "docs/recovery-packets.md",
+        "location": "ScrollUpdate_Pass0"
+      },
+      {
+        "path": "src/engine/sub_0800f814.c",
+        "location": "destination scaffold"
+      },
+      {
+        "path": "asm/disasm_0x0800f814.s",
+        "location": "target direction branches"
+      }
+    ],
+    "tags": [
+      "recovery",
+      "ScrollUpdate_Pass0"
+    ],
+    "prerequisites": [
+      "scroll.pass0-control-and-types",
+      "scroll.pass0-symbol-and-spill",
+      "scroll.pass0-residual"
+    ]
+  }
+]

@@ -5,6 +5,11 @@ Its acceptance gate is a readable change plus a byte-identical ROM. The
 active policy is `AGENTS.md`; `CLAUDE.md` and `.claude/workflows/*.js` are
 preserved historical entry points and are not the Codex campaign runner.
 
+Run `make check-infra` after tooling, workflow, evidence or campaign-ledger
+changes. Its sequential steps stop on failure: regression tests, evidence
+validation with source checks, and campaign-ledger validation. It does not
+build or certify the ROM; use `make check` for that gate.
+
 ## Start a campaign
 
 1. Inspect the working tree and establish `make check` baseline.

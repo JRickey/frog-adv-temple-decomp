@@ -60,6 +60,16 @@ class BuildReliabilityTests(unittest.TestCase):
         outputs = oracle.manifest(oracle._output_paths(), self.root)
         oracle.save_state(oracle.BUILD_STATE, {"inputs": inputs, "outputs": outputs})
 
+    def test_makeflags_distinguishes_long_options_and_short_override_clusters(self):
+        for flags in ("", "w --no-print-directory", "--jobserver-fds=3,4 -j",
+                      "--warn-undefined-variables", "r --no-builtin-rules"):
+            with self.subTest(flags=flags):
+                self.assertFalse(oracle._make_environment_overrides(flags))
+        for flags in ("e", "er --no-print-directory", "-e", "-ke",
+                      "--environment-overrides"):
+            with self.subTest(flags=flags):
+                self.assertTrue(oracle._make_environment_overrides(flags))
+
     def test_same_timestamp_source_edit_invalidates_full_chain(self):
         self._record_state()
         stamp = self.source.stat().st_mtime_ns

@@ -11,6 +11,7 @@ instead of loading them all. `CLAUDE.md` is preserved unchanged.
 |---|---|---|
 | `matching-workflow.md` | Active campaign workflow | Evidence, interface review, model routing |
 | `evidence/*.json` | Reviewable knowledge graph | Claims, provenance, relations, prerequisites |
+| `recovery-packets.md` | Scroll/blit restart briefs | Historical findings, scratch locations, next tests |
 | `campaigns/` | Accepted campaign reports | Actual outcomes, checks, routing observations |
 | `codegen-notes.md` | agbcc / Thumb / ARM codegen behavior | New compiler quirks, fold-prevention patterns, encoding gotchas, flag findings |
 | `memory-map.md` | EWRAM / IWRAM / MMIO / ROM-data addresses | Newly-named addresses, struct layouts, gIntrTable entries, register usage |
@@ -44,10 +45,15 @@ commit message (where it belongs).
   sub-topic file and update the table above.
 - No dates in entries — `git log` is authoritative for chronology.
 
+## Infrastructure gate
+
+Run `make check-infra` for the tooling tests and evidence/campaign validators.
+The ROM acceptance gate remains `make check`.
+
 ## Retrieval
 
 ```sh
-python3 tools/agent/evidence.py validate
+python3 tools/agent/evidence.py validate --sources
 python3 tools/agent/evidence.py brief EntityHitbox_RegisterGridPoints --limit 8
 python3 tools/agent/evidence.py plan hitbox --json
 ```

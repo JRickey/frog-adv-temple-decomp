@@ -28,6 +28,10 @@ this guide and `docs/matching-workflow.md` for new work.
 - Do not disable warnings, skip hooks, push, or open a PR to bypass a failure.
   Publishing requires a user request.
 
+After changing agent tooling or evidence, run `make check-infra`. This runs
+the tooling regression suite, evidence source/DAG validation, and campaign
+ledger validation. It does not replace the ROM gate `make check`.
+
 ## Start with a focused brief
 
 Read `docs/README.md` once. Do not routinely load the complete codegen notes

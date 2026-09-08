@@ -217,11 +217,19 @@ endif
 	$(MSG) RM linker.ld.pp
 	$Q$(RM) linker.ld.pp
 
+# Tooling and evidence checks are independent of the ROM acceptance gate.
+.PHONY: check-infra
+check-infra:
+	$(PYTHON) -m unittest discover -s tools/agent/tests
+	$(PYTHON) tools/agent/evidence.py validate --sources
+	$(PYTHON) tools/agent/campaign_report.py
+
 .PHONY: help
 help:
 	@echo 'Targets:'
 	@echo '  all: build the ROM'
 	@echo '  check: checksum the ROM'
+	@echo '  check-infra: test agent tools and validate evidence/campaign records'
 	@echo '  dump: dump the ROMs'
 	@echo '  diff: compare the ROM with the original'
 	@echo '  clean: remove the ROM and intermediate files'
