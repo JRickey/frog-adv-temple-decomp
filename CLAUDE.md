@@ -360,9 +360,15 @@ For each decomp target:
      local variable assignment is needed to match
    - `goto` and labels are used heavily; don't rewrite into structured forms
    - Hex-asm output: `-fhex-asm` is on, so literal `0xNN` matters
-   - When stuck on register order: `register T x asm("r5");` — incl. HIGH regs
-     (`asm("r8")`/`asm("r9")`/`asm("sl")`). High-reg pins are matchable in pure C
-     (sub_080210A0 matches with all three) — see below.
+   - Register pins (`register T x asm("r5");`, incl. HIGH regs r8/r9/sl) are a
+     LAST resort and almost always a symptom: every pin set reaped in the
+     2026-09-07 pass (91 pins, 19 functions, 0 permuter runs) had a structural
+     cause — narrow (u8/u16) parameter types get register-hoisted while u32 ones
+     are re-read from [sp]; an inlined `static` helper; a dropped call result;
+     symbol-vs-CONST_INT base for combine's load-into-shift fold; loop.c
+     hoist-score arithmetic; reload spill-retry order by declaration order;
+     local-alloc's ≤3-qty birth-order sort. See `docs/codegen-notes.md`
+     (sections dated 2026-09-07) and `docs/depin-worklist.md` before pinning.
    - Per-TU `CFLAGS +=` flag surface beyond `OLD_AGBCC`: `-ffixed-rN` (free a
      register), `-fno-strength-reduce` (defeat loop-reversal → signed `ble.n`
      count-up), `-fno-gcse`/`-fno-schedule-insns`. The whole gcc-2.x `-fXXX` set
@@ -373,7 +379,8 @@ For each decomp target:
    - `NON_MATCHING` ifdef pattern: when you can't match, wrap the readable C
      in `#ifdef NON_MATCHING` and keep the matching but uglier C in `#else`.
    - High-register pins (`mov sl, …`, `mov r9/r8, …`) are NOT a blanket NAKED
-     trigger (codex matched sub_080210A0 with r8/r9/sl; sub_0800A1C8 was a
+     trigger (sub_080210A0 / Entity_InitSlotFromRecord now matches with ZERO
+     pins — its high regs were u8/u16 stack parms; sub_0800A1C8 was a
      premature NAKED). The genuinely-hard case is narrow: a high reg holding
      *loop state across an inner function-pointer BL* (the two-stage / opcode-
      dispatch classes below). A straight-line init/handler with high-reg pins
