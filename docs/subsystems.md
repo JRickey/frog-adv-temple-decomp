@@ -5,7 +5,8 @@ section; cross-link to source files / addresses.
 
 ## Boot / IRQ (ARM, stays in `.s`)
 
-`asm/disasm_0x080000{c0,fc,114,12c,240}.s`. Standard agbcc-style GBA
+`asm/disasm_0x080000c0.s`, `asm/disasm_0x080000fc.s`, and `asm/system/`.
+Standard agbcc-style GBA
 bootstrap: stack setup → IRQ vector install → tail-call into `AgbMain`.
 
 - `_start` — entry, supervisor + IRQ stack init, jumps to `AgbMain`
@@ -19,8 +20,8 @@ bootstrap: stack setup → IRQ vector install → tail-call into `AgbMain`.
 ## `sub_08000430` — pre-loop boot init (a.k.a. "Init1")
 
 Thumb, 148 bytes. Called once from `AgbMain`'s prologue at 0x2AE before
-the forever-loop. Refined to mnemonics in commit 95128a1; not yet
-decompiled to C. Body in `asm/disasm_0x08000430.s`.
+the forever-loop. Matching C lives in `src/system/init1.c`. The address-level
+walkthrough below is historical; current names and fields are in that source.
 
 What it does, in order:
 
@@ -54,15 +55,13 @@ bases. REG_DISPCNT (`0x04000000`) is constructed inline via
 `movs #0x80; lsls #19`; the value 0x1F40 likewise via `movs #0xFA;
 lsls #5`.
 
-C decomp is blocked on cross-region Thumb BL relocations (see
-`codegen-notes.md`, "Cross-region Thumb BL targets") — the 4 callees
-all live inside the still-raw `text_0x*.o` blobs and currently can't
-be referenced by name without breaking the matching build.
+The historical cross-region Thumb BL blocker was resolved before the current
+C implementation was accepted.
 
 ## Game-state machine
 
-`AgbMain` (`0x080002A4`, decomp landed in `src/system/agb_main.c` as
-NAKED+NON_MATCHING, 396 bytes) is a 26-entry switch dispatched by the
+`AgbMain` (`0x080002A4`, matching C in `src/system/agb_main.c`,
+396 bytes) is a 26-entry switch dispatched by the
 byte at `gGameStuff.mode` (`0x03005339`, offset 9). Flow:
 
 ```

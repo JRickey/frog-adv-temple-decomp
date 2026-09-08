@@ -11,6 +11,7 @@ instead of loading them all. `CLAUDE.md` is preserved unchanged.
 |---|---|---|
 | `matching-workflow.md` | Active campaign workflow | Evidence, interface review, model routing |
 | `decompdev.md` | Hosted progress dashboard | Report generation, inventory refresh, registration |
+| `repository-structure.md` | Source ownership and TU cleanup | Accepted clusters, interface prerequisites, directory plan |
 | `evidence/*.json` | Reviewable knowledge graph | Claims, provenance, relations, prerequisites |
 | `recovery-packets.md` | Scroll/blit restart briefs | Historical findings, scratch locations, next tests |
 | `campaigns/` | Accepted campaign reports | Actual outcomes, checks, routing observations |

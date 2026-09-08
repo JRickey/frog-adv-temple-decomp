@@ -49,7 +49,7 @@ ESTIMATED_TOTAL_FUNCS = 1114
 
 @dataclass
 class FunctionCounts:
-    decomped_c: int            # function defs compiled from src/**/*.c (true-C + NAKED)
+    decomped_c: int            # source definitions from src/**/*.c (ordinary C + NAKED)
     naked_c: int               # of decomped_c, how many are NAKED+NON_MATCHING (asm fallback)
     peeled_asm: int            # asm/disasm_*.s slices not yet in C
     strong_signal_total: int   # lower bound: 4B-aligned `push {…,lr}` preceded by clean fn-end
@@ -59,7 +59,7 @@ class FunctionCounts:
 
     @property
     def true_c(self) -> int:
-        """Pure-C byte matches — the real quality metric (excludes NAKED fallbacks)."""
+        """Ordinary source definitions; not a verified linked-function count."""
         return self.decomped_c - self.naked_c
 
     @property
@@ -260,15 +260,14 @@ def render_human(fns: FunctionCounts, data: DataStats) -> str:
     out.append("=" * 60)
     out.append("")
     out.append("Functions (code region [0x08000000, 0x{:08x})):".format(CODE_END_GUESS))
-    out.append(f"  decomped (in ROM)   : {fns.decomped_c}")
-    out.append(f"    - true pure-C     : {fns.true_c}")
+    out.append(f"  C-file definitions  : {fns.decomped_c} (source scan, not linked census)")
+    out.append(f"    - ordinary C      : {fns.true_c} (includes inline helpers)")
     out.append(f"    - NAKED+NON_MATCH : {fns.naked_c}  (asm fallback — byte-matches, not pure C)")
     out.append(f"  peeled to asm slice : {fns.peeled_asm}")
     out.append(f"  not yet in C (rem.) : {fns.remaining}  (non-matching tail: asm slices + raw INCBIN)")
     out.append(f"  estimated TOTAL     : {fns.estimate_total} "
                f"(prologue-scan bracket {fns.strong_signal_total} … {fns.aligned_total + fns.arm_total})")
-    out.append(f"  → decomp progress   : {fmt_pct(fns.decomped_c, fns.estimate_total)} "
-               f"(of estimated total)")
+    out.append("  Public completion: use objdiff_report.py's verified linked snapshot.")
     out.append("")
     out.append("Data / bytes (whole ROM = 4 MiB):")
     out.append(f"  raw INCBIN blobs    : {fmt_bytes(data.raw_blob_bytes)} "
@@ -276,8 +275,8 @@ def render_human(fns: FunctionCounts, data: DataStats) -> str:
     out.append(f"  asm slices          : {fmt_bytes(data.asm_slice_bytes)}")
     out.append(f"  src C .text         : {fmt_bytes(data.src_text_bytes)}")
     out.append(f"  database.json entries: {data.database_entries}")
-    out.append(f"  → data deblob       : {fmt_pct(data.rom_size - data.raw_blob_bytes, data.rom_size)} "
-               f"(non-blob ROM coverage)")
+    out.append(f"  outside raw blobs   : {fmt_pct(data.rom_size - data.raw_blob_bytes, data.rom_size)} "
+               f"(extraction coverage, not reconstructed-data completion)")
     return "\n".join(out)
 
 
@@ -288,7 +287,6 @@ README_END = "<!-- END PROGRESS -->"
 
 def render_readme_section(fns: FunctionCounts, data: DataStats) -> str:
     """Markdown block that replaces the BEGIN/END region in README.md."""
-    decomp_pct = fns.decomped_c / fns.estimate_total * 100 if fns.estimate_total else 0
     blob_pct = data.raw_blob_bytes / data.rom_size * 100
     deblob_pct = 100 - blob_pct
     lines = [
@@ -299,19 +297,19 @@ def render_readme_section(fns: FunctionCounts, data: DataStats) -> str:
         "scan, not a ground-truth disassembly. Treat ±20% as honest.",
         "Regenerate with `python3 tools/agent/progress_stats.py --update-readme`.",
         "",
-        f"- **Functions decompiled to C**: {fns.decomped_c} / ~{fns.estimate_total} "
-        f"estimated total (**{decomp_pct:.1f}%**)",
-        f"  - true pure-C matches: {fns.true_c}",
+        f"- **Source-scan definitions in C files**: {fns.decomped_c}",
+        f"  - ordinary C definitions: {fns.true_c} (includes inline helpers; not a linked-function census)",
         f"  - NAKED+NON_MATCHING (asm fallback, byte-matches but not pure C): {fns.naked_c}",
         f"  - peeled-but-still-asm: {fns.peeled_asm}",
         f"  - not yet in C (non-matching tail — asm slices + raw INCBIN): ~{fns.remaining}",
         f"  - prologue-scan bracket (lower / upper): {fns.strong_signal_total} / "
         f"{fns.aligned_total + fns.arm_total}",
-        f"- **Data deblobbed**: {fmt_bytes(data.rom_size - data.raw_blob_bytes)} "
+        f"- **ROM outside tracked raw-blob ranges**: {fmt_bytes(data.rom_size - data.raw_blob_bytes)} "
         f"of {fmt_bytes(data.rom_size)} (**{deblob_pct:.2f}%**)",
         f"  - raw INCBIN bytes: {fmt_bytes(data.raw_blob_bytes)} "
         f"({blob_pct:.1f}% of ROM)",
         f"  - `database.json` entries: {data.database_entries}",
+        "  - includes code and binary assets; this is not reconstructed-data completion",
         "",
         "Code occupies roughly [0x08000000, 0x{:08x}) (~{}). Past that the".format(
             CODE_END_GUESS, fmt_bytes(CODE_END_GUESS - ROM_BASE)),

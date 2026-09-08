@@ -30,12 +30,12 @@ which will be cleaned up. I am trying my best to minimize the number of register
 
 More importantly, a large majority of the symbols are not named. A lot of locals are not properly named either.
 
-The generated estimate block below is the broader progress snapshot. The
-denominator is pinned at ~1114 functions — our working estimate of the total
-in the code region, which sits inside the Thumb prologue scan's 335…1140
-bracket. It's still an estimate, not a ground-truth disassembly. Note the
-`peeled-but-still-asm` count is file/slice-based, so it can differ from the
-function count reported by `progress.py`.
+The [decomp.dev dashboard](https://decomp.dev/JRickey/frog-adv-temple-decomp)
+uses the verified linked inventory for code and reconstructed data; see
+[reporting policy](docs/decompdev.md). The legacy source scan below is a
+maintenance diagnostic: it can include inline helpers and assembly fallbacks
+in C files. Its old ~1114 denominator is a heuristic, not a function census.
+The raw-blob coverage metric also includes code and extracted binary assets.
 
 <!-- BEGIN PROGRESS (managed by tools/agent/progress_stats.py) -->
 
@@ -43,15 +43,16 @@ function count reported by `progress.py`.
 scan, not a ground-truth disassembly. Treat ±20% as honest.
 Regenerate with `python3 tools/agent/progress_stats.py --update-readme`.
 
-- **Functions decompiled to C**: 822 / ~1114 estimated total (**73.8%**)
-  - true pure-C matches: 759
+- **Source-scan definitions in C files**: 822
+  - ordinary C definitions: 759 (includes inline helpers; not a linked-function census)
   - NAKED+NON_MATCHING (asm fallback, byte-matches but not pure C): 63
-  - peeled-but-still-asm: 254
+  - peeled-but-still-asm: 250
   - not yet in C (non-matching tail — asm slices + raw INCBIN): ~292
   - prologue-scan bracket (lower / upper): 335 / 1140
-- **Data deblobbed**: 628.8 KiB of 4.00 MiB (**15.35%**)
+- **ROM outside tracked raw-blob ranges**: 628.8 KiB of 4.00 MiB (**15.35%**)
   - raw INCBIN bytes: 3.39 MiB (84.6% of ROM)
   - `database.json` entries: 288
+  - includes code and binary assets; this is not reconstructed-data completion
 
 Code occupies roughly [0x08000000, 0x08036000) (~216.0 KiB). Past that the
 ROM is graphics, audio, level/script data, and lookup tables.

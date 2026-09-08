@@ -1,0 +1,31 @@
+[
+  {
+    "schema_version": 1,
+    "id": "reporting.retained-binary-not-reconstruction",
+    "kind": "workflow",
+    "title": "Retained binary and extracted data do not establish reconstruction",
+    "status": "observed",
+    "claim": "The initial decomp.dev generator credited GAX and runtime by category and guessed ownership from filenames. A verified link-map snapshot replaces these assumptions. GAX, BIOS assembly wrappers and libgcc receive no reconstructed-C credit; explicit linked C data initializers receive data credit while INCBIN extraction does not. Source-hash validation prevents publishing stale snapshots. Register pins are not inline instruction replacements.",
+    "subjects": ["reporting:decompdev"],
+    "provenance": [
+      {"path": "tools/agent/objdiff_report.py", "location": "_is_matched, update_layout, load_layout"},
+      {"path": "tools/agent/tests/test_objdiff_report.py", "location": "reporting regression tests"},
+      {"path": "docs/decompdev.md", "location": "Progress and data policy"}
+    ],
+    "tags": ["reporting", "matching", "data"]
+  },
+  {
+    "schema_version": 1,
+    "id": "structure.adjacent-tu-consolidation",
+    "kind": "workflow",
+    "title": "Three adjacent function clusters preserve ROM identity as combined TUs",
+    "status": "observed",
+    "claim": "Nine small source files were combined into tile_grid_read, fixed_math and menu_dispatch with ROM order and compiler flags preserved. Three router resets were named for observed stores. A clean rebuild and whole-ROM make check passed. This is organization and naming work, not additional C reconstruction or an interface-conflict resolution.",
+    "subjects": ["fn:0800cd88", "fn:0800dffc", "fn:080201a8"],
+    "provenance": [
+      {"path": "docs/repository-structure.md", "location": "Accepted first consolidation"},
+      {"path": "src/game/menu_dispatch.c", "location": "MenuRouter_ResetCursor2, MenuRouter_ResetCursor1, MenuRouter_BeginReload"}
+    ],
+    "tags": ["structure", "matching", "naming"]
+  }
+]

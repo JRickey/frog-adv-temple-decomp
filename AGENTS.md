@@ -198,6 +198,21 @@ interface conflicts, verified semantics, and named/typed data. A depin or
 interface correction need not reduce the assembly-function count. A notes-only
 checkpoint is useful but must not be reported as a completed decomp.
 
+Public progress reports must derive ownership from a verified linked build,
+not filename addresses or linker comments. Retaining an INCBIN library, SDK
+wrapper, or NAKED body does not earn reconstructed-source credit. Distinguish
+matching compiler-library members, authored assembly, reference-only C, and
+remaining binary blobs. Extracted data files alone do not prove reconstructed
+data; count linked definitions under the documented report policy. Refresh the
+decomp.dev inventory after accepted source/layout changes and validate freshness
+before publishing. See `docs/decompdev.md`.
+
+Consolidate adjacent, semantically related TUs only after checking compiler
+flags, literal pools, static-name collisions and interfaces. Preserve address
+identity across semantic renames. Directory placement should describe verified
+ownership (`system` for hardware/runtime, `game` for scenes/menus, `engine` for
+shared services); do not infer original source filenames from ROM adjacency.
+
 Keep infrastructure and game-source changes in separate commits. Commit
 messages are imperative and concise. Refresh the evidence and campaign report
 with actual checks and limitations. Do not claim full completion from a

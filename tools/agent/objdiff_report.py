@@ -9,8 +9,8 @@ the ELF plus the committed baserom label map.
 Progress means reconstructed source, not ROM equality:
   * ordinary C functions are 100%;
   * NAKED/NON_MATCHING fallbacks and remaining game assembly are 0%;
-  * intentionally retained third-party GAX, SDK, and runtime assembly are kept
-    in separate categories and treated as complete.
+  * retained third-party binaries and assembly receive no C reconstruction credit;
+  * data credit requires linked, explicit C initializers (not binary extraction).
 """
 
 from __future__ import annotations
@@ -32,13 +32,16 @@ LINKER = ROOT / "linker.ld"
 BASEROM = ROOT / "frog_us_baserom.gba"
 BUILT_ROM = ROOT / "frog_us.gba"
 ELF = ROOT / "frog_us.elf"
+LAYOUT = ROOT / "config" / "decompdev_layout.us.json"
+MAP = ROOT / "frog_us.map"
+EXPECTED_SHA1 = "7b4c27009198df18555e63fb5dcad223eaf09815"
+DATA_START = 0x08035D9C
+ROM_END = 0x08400000
 
 ROM_BASE = 0x08000000
 CODE_END = 0x08036000
 REPORT_VERSION = 2
 
-OBJECT_RE = re.compile(r"^\s*(\S+?\.o)\(\.text\);(?:\s*/\*\s*(0x[0-9a-fA-F]+)\s*-)?")
-ADDRESS_IN_NAME_RE = re.compile(r"(?:sub_|disasm_0x|text_0x)(080[0-9a-fA-F]+)", re.I)
 ASM_FUNCTION_RE = re.compile(r"^\s*(?:thumb_func_start|arm_func_start)\s+(\w+)", re.M)
 IDENT_CALL_RE = re.compile(r"\b([A-Za-z_]\w*)\s*\(")
 NAKED_FUNCTION_RE = re.compile(
@@ -75,22 +78,23 @@ def _percent(part: int, total: int) -> float:
 
 
 def _measures(total_code: int, matched_code: int, total_functions: int,
-              matched_functions: int, total_units: int = 1) -> dict:
+              matched_functions: int, total_units: int = 1,
+              total_data: int = 0, matched_data: int = 0) -> dict:
     return {
-        "fuzzy_match_percent": _percent(matched_code, total_code),
+        "fuzzy_match_percent": _percent(matched_code + matched_data, total_code + total_data),
         "total_code": str(total_code),
         "matched_code": str(matched_code),
         "matched_code_percent": _percent(matched_code, total_code),
-        "total_data": "0",
-        "matched_data": "0",
-        "matched_data_percent": 100.0,
+        "total_data": str(total_data),
+        "matched_data": str(matched_data),
+        "matched_data_percent": _percent(matched_data, total_data),
         "total_functions": total_functions,
         "matched_functions": matched_functions,
         "matched_functions_percent": _percent(matched_functions, total_functions),
-        "complete_code": "0",
-        "complete_code_percent": 0.0 if total_code else 100.0,
-        "complete_data": "0",
-        "complete_data_percent": 100.0,
+        "complete_code": str(matched_code),
+        "complete_code_percent": _percent(matched_code, total_code),
+        "complete_data": str(matched_data),
+        "complete_data_percent": _percent(matched_data, total_data),
         "total_units": total_units,
         "complete_units": 0,
     }
@@ -116,34 +120,37 @@ def load_inventory(path: Path = INVENTORY) -> list[Function]:
     return functions
 
 
-def _inventory_names(functions: list[Function]) -> dict[str, int]:
-    return {function.name.lower(): function.address for function in functions}
+def load_layout() -> dict:
+    layout = json.loads(LAYOUT.read_text())
+    for name, digest in layout["source_sha256"].items():
+        path = ROOT / name
+        if not path.exists() or hashlib.sha256(path.read_bytes()).hexdigest() != digest:
+            raise ValueError(f"stale decomp.dev snapshot: {name}; rebuild, make check, "
+                             "then --update-inventory")
+    return layout
 
 
-def load_link_units(functions: list[Function]) -> list[LinkUnit]:
-    names = _inventory_names(functions)
-    units: list[LinkUnit] = []
-    for order, line in enumerate(LINKER.read_text().splitlines()):
-        match = OBJECT_RE.match(line)
-        if not match:
-            continue
-        object_path, comment_address = match.groups()
-        address = int(comment_address, 0) if comment_address else None
-        if address is None:
-            embedded = ADDRESS_IN_NAME_RE.search(object_path)
-            if embedded:
-                address = int(embedded.group(1), 16)
-        if address is None:
-            stem = Path(object_path.split(":")[-1]).stem.lower()
-            address = names.get(stem)
-        if address is not None and ROM_BASE <= address < CODE_END:
-            units.append(LinkUnit(address, order, object_path))
-    units.sort(key=lambda unit: (unit.address, unit.order))
-    return units
+def parse_map_sections(text: str) -> list[dict]:
+    """Read actual input extents, including split lines and archive members."""
+    pattern = re.compile(r"^ (\.[\w.]+)\s+\n?\s*(0x[\da-f]+)\s+"
+                         r"(0x[\da-f]+)\s+(\S+\.o(?:\))?)$", re.M)
+    sections = []
+    for match in pattern.finditer(text):
+        name, address, size, obj = match.groups()
+        address, size = int(address, 16), int(size, 16)
+        if size and ROM_BASE <= address < ROM_END:
+            sections.append(dict(name=name, address=address, size=size, object=obj))
+    sections.sort(key=lambda section: section["address"])
+    for left, right in zip(sections, sections[1:]):
+        if left["address"] + left["size"] > right["address"]:
+            raise ValueError("overlapping linked input sections")
+    if not sections:
+        raise ValueError("no linked ROM input sections found")
+    return sections
 
 
 def _source_path(object_path: str) -> str | None:
-    if object_path.startswith("*") or ".a:" in object_path:
+    if object_path.startswith("*") or ".a:" in object_path or ".a(" in object_path:
         return None
     base = object_path[:-2]
     for suffix in (".c", ".s"):
@@ -169,44 +176,68 @@ def naked_function_names() -> set[str]:
 def _category(object_path: str) -> tuple[str, str]:
     if object_path.startswith("lib/gax/"):
         return "gax", "GAX sound library"
-    if (
-        "libgcc.a:" in object_path
-        or object_path.startswith("asm/system/")
-        or object_path == "asm/libagbsyscall.o"
-        or object_path in {
+    if "libgcc.a" in object_path:
+        return "libgcc", "Compiler support (libgcc)"
+    if object_path == "asm/libagbsyscall.o":
+        return "sdk", "GBA BIOS call wrappers"
+    # Directory placement still reflects historical peeling, not semantics.
+    # In particular src/system contains scenes, attract input and game audio.
+    if object_path in {
             "asm/disasm_0x08000000.o",
             "asm/disasm_0x080000c0.o",
             "asm/disasm_0x080000fc.o",
-        }
-    ):
-        return "runtime", "Runtime and SDK"
+            "asm/system/intr_disable.o",
+            "asm/system/intr_main.o",
+            "asm/system/sub_08000240.o",
+            "src/system/vblank.o",
+        }:
+        return "runtime", "Startup, interrupts and VBlank support"
     return "game", "Game code"
 
 
 def _is_matched(object_path: str, function_name: str, naked: set[str]) -> bool:
-    category, _ = _category(object_path)
-    if category in {"gax", "runtime"}:
-        return True
-    return object_path.startswith("src/") and function_name not in naked
+    source = _source_path(object_path)
+    if not source or not source.endswith(".c") or function_name in naked:
+        return False
+    text = _strip_comments((ROOT / source).read_text())
+    # Fail closed for conditional fallback implementations and inline assembly.
+    if re.search(r"\bNON_MATCHING\b", text):
+        return False
+    definition = re.search(r"\b" + re.escape(function_name) + r"\s*\([^;{}]*\)\s*\{", text)
+    if not definition:
+        return False
+    depth, end = 1, definition.end()
+    while depth and end < len(text):
+        depth += (text[end] == "{") - (text[end] == "}")
+        end += 1
+    body = text[definition.end():end]
+    # Register allocation constraints are existing matching C, not instruction
+    # replacement. Keep the separate pin census responsible for their quality.
+    body = re.sub(r'\bregister\b[^;{}]*?\b(?:asm|__asm__)\s*\("(?:r\d+|sl|fp|ip)"\)',
+                  "", body)
+    return not re.search(r"\b(?:INCBIN|asm|__asm__)\b", body)
 
 
 def build_report(inventory_path: Path = INVENTORY) -> dict:
     functions = load_inventory(inventory_path)
-    link_units = load_link_units(functions)
+    layout = load_layout()
     naked = naked_function_names()
     report_units: list[dict] = []
     category_names: dict[str, str] = {}
     assigned: set[int] = set()
 
-    for index, unit in enumerate(link_units):
-        end = link_units[index + 1].address if index + 1 < len(link_units) else CODE_END
-        if end <= unit.address:
-            continue
+    for section in layout["sections"]:
+        unit = LinkUnit(section["address"], 0, section["object"])
+        end = unit.address + section["size"]
         unit_functions = [
             function for function in functions
             if unit.address <= function.address < end
         ]
-        if not unit_functions:
+        for function in unit_functions:
+            if function.address + function.size > end:
+                raise ValueError(f"{function.name} extends past linked owner {unit.object_path}")
+        data_size = max(0, end - max(unit.address, DATA_START))
+        if not unit_functions and not data_size:
             continue
         category_id, category_name = _category(unit.object_path)
         category_names[category_id] = category_name
@@ -217,13 +248,20 @@ def build_report(inventory_path: Path = INVENTORY) -> dict:
         total_code = sum(function.size for function in unit_functions)
         matched_code = sum(function.size for function in matched)
         matched_addresses = {function.address for function in matched}
+        matched_data = section.get("matched_data", 0)
+        if matched_data > data_size:
+            raise ValueError(f"data credit exceeds section size: {unit.object_path}")
         assigned.update(function.address for function in unit_functions)
         report_units.append({
             "name": unit.object_path,
             "measures": _measures(
-                total_code, matched_code, len(unit_functions), len(matched)
+                total_code, matched_code, len(unit_functions), len(matched),
+                total_data=data_size, matched_data=matched_data,
             ),
-            "sections": [],
+            "sections": [{"name": section["name"], "size": str(data_size),
+                          "fuzzy_match_percent": _percent(matched_data, data_size),
+                          "address": "0", "metadata": {
+                              "virtual_address": str(unit.address)}}] if data_size else [],
             "functions": [
                 {
                     "name": function.name,
@@ -255,7 +293,9 @@ def build_report(inventory_path: Path = INVENTORY) -> dict:
         total_functions = sum(unit["measures"]["total_functions"] for unit in units)
         matched_functions = sum(unit["measures"]["matched_functions"] for unit in units)
         return _measures(
-            total_code, matched_code, total_functions, matched_functions, len(units)
+            total_code, matched_code, total_functions, matched_functions, len(units),
+            sum(int(unit["measures"]["total_data"]) for unit in units),
+            sum(int(unit["measures"]["matched_data"]) for unit in units),
         )
 
     categories = []
@@ -306,10 +346,10 @@ def _nm_functions(names: set[str]) -> dict[int, Function]:
 
 
 def update_inventory(path: Path = INVENTORY) -> None:
-    for required in (BASEROM, BUILT_ROM, ELF):
+    for required in (BASEROM, BUILT_ROM, ELF, MAP):
         if not required.exists():
             raise ValueError(f"missing {required.name}; run `make` first")
-    if _sha1(BASEROM) != _sha1(BUILT_ROM):
+    if _sha1(BASEROM) != EXPECTED_SHA1 or _sha1(BUILT_ROM) != EXPECTED_SHA1:
         raise ValueError("built ROM does not match baserom; refusing to refresh inventory")
 
     label_data = tomllib.loads(LABELS.read_text())["functions"]
@@ -328,6 +368,21 @@ def update_inventory(path: Path = INVENTORY) -> None:
         end = record.get("end", next_address)
         records[address] = Function(address, end - address, record["name"])
     records.update(nm_functions)
+    # Historical label ends can span functions peeled since the label export.
+    # Clip only these fallback extents against current function/section starts.
+    sections = parse_map_sections(MAP.read_text())
+    ordered = sorted(records)
+    for index, address in enumerate(ordered):
+        if address in nm_functions:
+            continue
+        function = records[address]
+        owner = next((section for section in sections
+                      if section["address"] <= address < section["address"] + section["size"]), None)
+        if owner is None:
+            raise ValueError(f"no linked owner for {function.name}")
+        end = min(address + function.size, owner["address"] + owner["size"],
+                  ordered[index + 1] if index + 1 < len(ordered) else DATA_START)
+        records[address] = Function(address, end - address, function.name)
 
     output = [
         "# Generated by tools/agent/objdiff_report.py --update-inventory.",
@@ -337,7 +392,55 @@ def update_inventory(path: Path = INVENTORY) -> None:
         output.append(f"{function.address:#010x}\t{function.size:#x}\t{function.name}")
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(output) + "\n")
+    update_layout(path)
     print(f"wrote {len(records)} functions to {path.relative_to(ROOT)}")
+
+
+def explicit_data_names(text: str) -> set[str]:
+    """Only credit C initializer definitions; INCBIN arrays are extraction."""
+    text = _strip_comments(text)
+    return set(re.findall(r"\b(\w+)\s*(?:\[[^;{}]*?\]\s*)*=\s*\{", text))
+
+
+def update_layout(inventory_path: Path) -> None:
+    sections = parse_map_sections(MAP.read_text())
+    result = subprocess.run(["arm-none-eabi-objdump", "-t", str(ELF)],
+                            check=True, capture_output=True, text=True)
+    symbols = []
+    for line in result.stdout.splitlines():
+        match = re.match(r"^([\da-f]{8})\s+\w*\s+O\s+\S+\s+([\da-f]+)\s+(\w+)$", line)
+        if match:
+            address, size, name = match.groups()
+            symbols.append((int(address, 16), int(size, 16), name))
+    inputs = {LINKER, ROOT / "Makefile", inventory_path}
+    inputs.update((ROOT / "include").rglob("*.h"))
+    for section in sections:
+        source = _source_path(section["object"])
+        if source:
+            inputs.add(ROOT / source)
+        names = explicit_data_names((ROOT / source).read_text()) if source and source.endswith(".c") else set()
+        start, end = max(DATA_START, section["address"]), section["address"] + section["size"]
+        credited = []
+        for address, size, name in symbols:
+            if name in names and start <= address < end and address + size <= end:
+                credited.append((address, address + size))
+        # Union symbol ranges: aliases must never receive duplicate credit.
+        cursor, total = start, 0
+        for left, right in sorted(credited):
+            total += max(0, right - max(left, cursor))
+            cursor = max(cursor, right)
+        section["matched_data"] = total
+    stale = [str(p.relative_to(ROOT)) for p in inputs
+             if p != inventory_path and p.stat().st_mtime > ELF.stat().st_mtime]
+    if stale:
+        raise ValueError(f"build is older than source inputs: {', '.join(stale[:8])}; rebuild first")
+    snapshot = {"version": 1, "rom_sha1": EXPECTED_SHA1,
+                "elf_sha256": hashlib.sha256(ELF.read_bytes()).hexdigest(),
+                "map_sha256": hashlib.sha256(MAP.read_bytes()).hexdigest(),
+                "source_sha256": {str(p.relative_to(ROOT)): hashlib.sha256(p.read_bytes()).hexdigest()
+                                  for p in sorted(inputs)},
+                "sections": sections}
+    LAYOUT.write_text(json.dumps(snapshot, indent=2) + "\n")
 
 
 def main() -> int:
@@ -359,7 +462,9 @@ def main() -> int:
     print(
         f"decomp.dev report: {measures['matched_functions']}/{measures['total_functions']} "
         f"functions, {measures['matched_code']}/{measures['total_code']} code bytes "
-        f"({measures['matched_code_percent']:.2f}%)"
+        f"({measures['matched_code_percent']:.2f}%), "
+        f"{measures['matched_data']}/{measures['total_data']} data bytes "
+        f"({measures['matched_data_percent']:.3f}%)"
     )
     if not args.check:
         args.out.parent.mkdir(parents=True, exist_ok=True)
