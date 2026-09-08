@@ -98,8 +98,8 @@ u32 Scene_EntityTick(u8 *flag)
 }
 
 extern const u32 sEntityParamTable[17];
-extern const u32 sEntityProcB[17];
-extern const u32 sEntityProcC[17];
+extern const GameProc sEntityProcB[17];
+extern const GameProc sEntityProcC[17];
 extern const u8 sEntitySubtypeLut[20];
 
 extern void Sound_DrainIfActive(void);
@@ -113,81 +113,50 @@ extern void Game_ForceRender(void);
 
 void EntityDispatch_RunFrame(void)
 {
-    struct IwramAt6110 *s;
-    GameStuff *p;
     u32 value;
 
-    p = &gGameStuff;
+    /* Two block-scoped gGameStuff pointers (linker symbol form, see
+     * Scene_EntityTick): the first one dies into the sEntityParamTable index
+     * (`ldrb r4, [r4, #10]`) and the second half reloads the base after
+     * Entity_SpawnFromConfig, as in the baserom. */
+    {
+        GameStuff *game = (GameStuff *)&gIwram_5330;
 
-    /* The `!= 16` read is volatile-qualified so agbcc re-loads sceneType after the
-     * __umodsi3 call instead of caching it in a callee-saved reg across the BL; that
-     * keeps the base in r4 (re-read each time), matching the baserom. */
-    if ((u8)(p->sceneType % 3) != 0 && ((volatile GameStuff *)p)->sceneType != 16) {
-        value = 0;
-        Sound_DrainIfActive();
-        if (gIwram_6110.state == 1) {
-            const u32 *table = sEntityParamTable;
-            /* Reuse the now-dead base pointer so agbcc overwrites r4 with the index. */
-            p = (GameStuff *)(u32)p->sceneType;
-            value = table[(u32)p];
+        /* __umodsi3 is a const libcall, so cse would keep sceneType in a
+         * callee-saved reg across it; the volatile read forces the baserom's
+         * second ldrb. */
+        if ((u8)(game->sceneType % 3) != 0 && ((volatile GameStuff *)game)->sceneType != 16) {
+            value = 0;
+            Sound_DrainIfActive();
+            if (gIwram_6110.state == 1)
+                value = sEntityParamTable[game->sceneType];
+            Sound_PlayIfEnabled(value);
         }
-        Sound_PlayIfEnabled(value);
     }
 
     EntityPool_Reset();
     Entity_SpawnFromConfig((s8)gIwram_35E0.lives, *(s16 *)&gIwram_35E0.coins, 0);
 
     {
-        const u32 *procC;
-        GameStuff *base;
-        register u8 idx1 asm("r1");
-        register u8 idx2 asm("r2");
-        register u32 offset asm("r0");
+        const GameProc *procsC = sEntityProcC;
+        GameStuff *game = (GameStuff *)&gIwram_5330;
 
-        procC = sEntityProcC;
-        base = &gGameStuff;
-        idx1 = base->sceneType;
-        offset = ((u32)idx1 << 2) + (u32)procC;
-        ((GameProc)(*(const u32 *)offset))();
+        procsC[game->sceneType]();
+        Scroll_UpdateCamera(sEntitySubtypeLut[game->sceneType]);
+        sEntityProcA[game->sceneType]();
+        procsC[game->sceneType]();
 
-        {
-            register const u8 *lut asm("r0");
-            lut = sEntitySubtypeLut;
-            idx2 = base->sceneType;
-            Scroll_UpdateCamera(*(const u8 *)(idx2 + (u32)lut));
-        }
-
-        {
-            register const u32 *procA asm("r1");
-            procA = (const u32 *)sEntityProcA;
-            idx2 = base->sceneType;
-            offset = ((u32)idx2 << 2) + (u32)procA;
-            ((GameProc)(*(const u32 *)offset))();
-        }
-
-        idx1 = base->sceneType;
-        offset = ((u32)idx1 << 2) + (u32)procC;
-        ((GameProc)(*(const u32 *)offset))();
-
-        s = &gIwram_6110;
-        s->flagBank0 = -1;
-        s->flagBank1 = -1;
+        gIwram_6110.flagBank0 = -1;
+        gIwram_6110.flagBank1 = -1;
 
         Game_UpdateSubsystems();
-
-        {
-            register const u32 *procB asm("r1");
-            procB = sEntityProcB;
-            idx2 = base->sceneType;
-            offset = ((u32)idx2 << 2) + (u32)procB;
-            ((GameProc)(*(const u32 *)offset))();
-        }
+        sEntityProcB[game->sceneType]();
 
         Entity_UpdateVisibility();
         Entity_Advance();
         WaitVblank();
         Game_ForceRender();
 
-        base->_unk14 = 0;
+        game->_unk14 = 0;
     }
 }
