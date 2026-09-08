@@ -1,130 +1,85 @@
 #include "game.h"
 #include "types.h"
+#include "iwram.h"
 
-struct ScaleAnimDescriptor {
-    u16 field_00;
-    u16 field_02;
-    u8 field_04;
-    u8 pad_05;
-    u8 field_06;
-    u8 pad_07;
-    u8 field_08;
-    u8 pad_09[7];
-    const u32 *frames;
-    u32 pad_14;
+#define SCALEANIM_TICK_INTERVAL 8
+#define SCALEANIM_BANK_MASK     0xf0
+#define SCALEANIM_VRAM_DST0     0x0600e000
+#define SCALEANIM_VRAM_DST1     0x0600e800
+
+struct ScaleAnimState {
+    u8 _pad00[0xd4];
+    u8 activeFlags;
 };
 
-extern u8 gIwram_3610;
-extern u8 gEntities[]; /* entity pool as a raw u8 byte-base (this TU uses byte offsets, not slots) */
-extern const struct ScaleAnimDescriptor sScaleAnimDescriptors2[];
+struct ScaleAnimDesc {
+    u16 x;
+    u16 y;
+    u8 cols;
+    u8 _pad05;
+    u8 rows;
+    u8 _pad07;
+    u8 bank;
+    u8 _pad09[7];
+    const u32 *frames;
+    u32 _pad14;
+};
 
-extern void ScaleAnim_BlitFrameToVram(u8 arg0, u8 arg1, u16 arg2, u16 arg3, u32 arg4, u32 arg5, u32 dst);
+/* Frame counter and tick stamp of the scale animation, inside the gEntities
+ * pool region. The overlay keeps +0x1a5b as its own pool word. */
+struct ScaleAnimPool {
+    u8 _pad00[0x1a5b];
+    u8 frameCounter;
+    u8 _pad1c[4];
+    u32 lastTick;
+};
+
+extern struct ScaleAnimState gIwram_3610;
+#define gScaleAnimPool (*(struct ScaleAnimPool *)gEntities)
+extern const struct ScaleAnimDesc sScaleAnimDescriptors2[];
+
+extern void ScaleAnim_BlitFrameToVram(u8 rows, u8 cols, u16 x, u16 y, u32 bank, u32 frame, u32 dst);
 
 void ScaleAnim_TickFrames(void)
 {
-    GameStuff *gs = &gGameStuff;
-    u8 *base = gEntities;
-    u32 *lastTick = (u32 *)(base + 0x1a60);
-    u8 *counter;
-    register u8 *counterRef asm("r8");
-    u32 dummyR7;
     u8 i;
+    u8 *counter;
 
-    if (gs->_unk00 - *lastTick <= 7)
+    if (gGameStuff._unk00 - gScaleAnimPool.lastTick < SCALEANIM_TICK_INTERVAL)
         return;
 
-    {
-        register u32 counterOffset asm("r5");
-
-        counterOffset = 0x1a5b;
-        {
-            register u8 *counterReg asm("r1");
-
-            counterReg = base;
-            counterReg += counterOffset;
-            counter = counterReg;
-        }
-        asm volatile("" : "+r"(counterOffset));
-    }
-    {
-        register u32 counterValue asm("r7") = *counter;
-
-        if (counterValue > 1)
-            *counter = 0;
-    }
-
-    *lastTick = gs->_unk00;
+    if (gScaleAnimPool.frameCounter > 1)
+        gScaleAnimPool.frameCounter = 0;
+    gScaleAnimPool.lastTick = gGameStuff._unk00;
 
     i = 0;
-    counterRef = counter;
+    /* Re-derives the address the check above computed; cse turns it into the
+     * `mov r8, r1` copy before the loop, so loop.c has nothing left to hoist
+     * (its 53-insn body is just above the hoist threshold). */
+    counter = &gScaleAnimPool.frameCounter;
     do {
-        u8 *flagBase;
-        u32 shiftedFlags;
-        u32 bit;
+        if ((gIwram_3610.activeFlags >> i) & 1) {
+            const struct ScaleAnimDesc *table = sScaleAnimDescriptors2;
+            const struct ScaleAnimDesc *d = &table[i];
+            /* Masking before the shift loads the byte into an SI pseudo (no
+             * QI subreg spill), and the two extra insns keep the loop body
+             * above the invariant-hoist threshold. */
+            u32 bank = (d->bank & SCALEANIM_BANK_MASK) >> 4;
+            /* u8: keeps this `& 1` constant in QImode so cse does not share
+             * (and loop.c does not hoist) the loop-head `& 1` constant. */
+            u8 useAlt = bank & 1;
+            /* frames is declared before dst: reload retries the two spilled
+             * pseudos in pseudo order, giving frames ip and dst r9. */
+            const u32 *frames;
+            u32 dst = SCALEANIM_VRAM_DST0;
 
-        flagBase = &gIwram_3610;
-        flagBase += 0xd4;
-        shiftedFlags = *flagBase >> i;
-        bit = 1;
-        if (shiftedFlags & bit) {
-            const struct ScaleAnimDescriptor *descBase;
-            register u32 offsetBase asm("r0");
-            register u32 offset asm("r2");
-            const struct ScaleAnimDescriptor *desc;
-            u32 nibble;
-            register u32 dst asm("r9");
-            register u32 dstScratch asm("r7");
-            register const u32 *frames asm("ip");
-            u32 useAlt;
-            register const u8 *framesBase asm("r0");
-
-            descBase = sScaleAnimDescriptors2;
-            offsetBase = (u32)i * 3;
-            offset = offsetBase << 3;
-            desc = (const struct ScaleAnimDescriptor *)(offset + (u32)descBase);
-            {
-                u32 rawNibble;
-
-                rawNibble = desc->field_08;
-                nibble = rawNibble >> 4;
-            }
-            useAlt = nibble & bit;
-            bit = useAlt;
-            dst = 0x0600e000;
-            if (useAlt) {
-                dstScratch = 0x0600e800;
-                dst = dstScratch;
-            }
-
-            framesBase = (const u8 *)descBase;
-            framesBase += 16;
-            frames = *(const u32 **)(offset + (u32)framesBase);
-            ScaleAnim_BlitFrameToVram(desc->field_06, desc->field_04, desc->field_00, desc->field_02, nibble, ({
-                                          register u32 frameIndex asm("r5");
-                                          register u32 frameOffset asm("r4");
-
-                                          frameIndex = (u32)counterRef;
-                                          frameIndex = *(const u8 *)frameIndex;
-                                          frameOffset = frameIndex << 2;
-                                          *(const u32 *)((u32)frames + frameOffset);
-                                      }),
-                                      (dstScratch = dst, dstScratch));
+            if (useAlt)
+                dst = SCALEANIM_VRAM_DST1;
+            frames = sScaleAnimDescriptors2[i].frames;
+            ScaleAnim_BlitFrameToVram(d->rows, d->cols, d->x, d->y, bank, frames[*counter], dst);
         }
-        i = (u8)(i + 1);
+        i++;
     } while (i <= 7);
 
-    {
-        register u8 *endCounter asm("r0");
-        u32 endOffset;
-        u32 endValue;
-
-        endCounter = gEntities;
-        endOffset = 0x1a5b;
-        asm volatile("" : "+r"(endOffset));
-        endCounter += endOffset;
-        endValue = *endCounter;
-        endValue++;
-        *endCounter = endValue;
-    }
-    asm volatile("@ %0" : "=l"(dummyR7) : : "r0", "r1", "r2", "r3", "r4", "r5", "r6");
+    gScaleAnimPool.frameCounter++;
 }

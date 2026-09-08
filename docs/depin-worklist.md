@@ -442,3 +442,15 @@ r0, r0" is not coloring — check whether combine folded the load into the
 shift (`.combine` dump: `ashift (subreg (mem ...))` vs a separate
 `zero_extendqisi2_insn`). See docs/codegen-notes.md "CONST_INT base blocks
 combine's load-into-shift fold".
+
+## 2026-09-07 — ScaleAnim_TickFrames (src/engine/sub_08013040.c): 12 pins -> 0, old_agbcc
+
+Re-derived from the asm (the pinned form, byte-matched on the newer agbcc, was
+not a useful base). Levers, in the order they were found: `u8 useAlt = bank & 1`
+(QImode const-1 pseudo: no cse merge, no loop.c hoist, reload reuses r1);
+`(d->bank & 0xf0) >> 4` (SImode load pseudo, no r0 spill; +2 loop insns);
+`counter = &pool.frameCounter` after `i = 0` (cse copy `mov r8, r1` instead of a
+loop.c hoist, loop stays at 53 insns >= the 52 hoist score of the gIwram pair);
+`table` pointer local for the descriptor base; `frames` declared before `dst`
+(reload spill-retry order -> frames=ip, dst=r9). Per-TU `CC = $(AGBCC_BIN)`
+override dropped. See docs/codegen-notes.md "loop.c hoist threshold arithmetic".

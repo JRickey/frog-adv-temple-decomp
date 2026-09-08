@@ -116,7 +116,6 @@ LIBS := $(AGBCC_LIB)/libgcc.a $(AGBCC_LIB)/libc.a
 src/game/sub_08002ae8.s: CC = $(AGBCC_BIN)
 src/engine/sub_0800f24c.s: CC = $(AGBCC_BIN)
 src/engine/sub_08012d40.s: CC = $(AGBCC_BIN)
-src/engine/sub_08013040.s: CC = $(AGBCC_BIN)
 src/engine/sub_0800d808.s: CC = $(OLD_AGBCC_BIN)
 # Proven-needed codegen exceptions. Keep these grouped so new decomp work
 # does not cargo-cult stale target-specific flags.

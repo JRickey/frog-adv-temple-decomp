@@ -3187,3 +3187,61 @@ Rules that came with it:
   `game` -> `ldr r5, =procsC ; ldr r4, =gGameStuff`).
 - Cheap diagnosis: `agbcc_oracle.py <fn> --src <tu> --pass combine` and
   look for `ashift (subreg (mem` at the index site.
+
+## loop.c hoist threshold arithmetic, QImode `& 1`, and reload's spill-retry order (ScaleAnim_TickFrames, 2026-09-07)
+
+12 pins -> 0, pure C on old_agbcc (the pinned form needed the newer agbcc only
+because its pins fought reload). Baserom shape: an 8-iteration `do {} while`
+whose head reloads `ldr =gIwram_3610; adds #0xd4` and `movs r1, #1` EVERY
+iteration, yet the loop-invariant `gEntities + 0x1a5b` address IS hoisted
+(`movs r6, #0; mov r8, r1`), one `movs r1, #1` serves two `ands`, and the two
+high regs are frames=ip / dst=r9.
+
+- loop.c's move test is `threshold * savings * lifetime >= insn_count` with
+  `threshold = (loop_has_call ? 1 : 2) * (1 + n_non_fixed_regs)` = 13 on Thumb
+  with a call (12 non-fixed regs), and `threshold -= 3` after every move. A
+  `ldr =sym` whose only use is an `adds #imm` gets `forces`-merged with it:
+  savings 2, life 2 -> 52. So a loop body of **>= 53 real RTL insns at loop
+  time** (before combine; u8 truncations count) keeps the pair in the loop.
+  `-frerun-loop-opt` recounts after pass 1, so anything pass 1 hoists lowers
+  the count for pass 2 (54 -> 51 was enough to hoist the pair on the rerun).
+  `insn_count` levers that also match: `(d->bank & 0xf0) >> 4` instead of
+  `d->bank >> 4` (+2, see below); `u8 useAlt = bank & 1` (+2 truncation insns).
+- Two `& 1` sites sharing one in-loop `movs r1, #1`: cse hashes CONST_INT
+  with the operand MODE, so `u8 useAlt = nibble & 1` (nibble u32; the store is
+  narrowed to `(and:QI ...)`) gives a second, QImode const-1 pseudo that cse
+  does NOT merge with the loop head's SImode one. loop.c then sees two
+  single-use constants (life 1-2, not desirable) instead of one life-15
+  pseudo, and reload's `find_equiv_reg` reuses r1 for the second `ands`
+  (no second `movs`). `u8 nibble & 1` (int-promoted) merges again.
+- `ldr =X ; adds #0xd4` in-loop + a hoisted `mov r8, r1`: do not let loop.c
+  hoist anything. Write `counter = &pool.frameCounter;` right after `i = 0;`
+  -- cse folds the fresh gEntities/0x1a5b/plus pseudos into the prologue's r1
+  and leaves `(set counter (reg r1))`, which lands as the copy exactly where
+  loop.c's preheader insertion would have. The in-loop `frames[*counter]` then
+  has no invariants, so both loop passes see the same 53 insns.
+- `ldrb r7, [r1]; cmp r7, #1` (prologue) vs `ldrb r0, [r3, #8]; lsrs r4, r0`
+  (body): a u8 load feeding a compare/shift is a `(reg:QI)` pseudo used through
+  a paradoxical `(subreg:SI)`; reload cannot satisfy that in r0 (`Spilling for
+  insn N. Spilling reg 0.`) and the retry parks it in r7. Keep it for the
+  prologue (`frameCounter > 1`), defeat it in the body with `(x & 0xf0) >> 4`
+  (the `and` gives an SImode pseudo). The newer agbcc never spills either.
+- **Spill-retry order picks the high regs.** reload spilled r5/r7 for the
+  `str dst, [sp, #8]` / counter-ldrb scratch, evicting `frames` (local-alloc r5)
+  and `dst` (r7). `retry_global_alloc` re-runs `find_reg` in ASCENDING pseudo
+  number, and pass 0 only takes regs in `regs_used_so_far` = call-used regs
+  (ip!) + regs_ever_live + local-alloc'd. The first retried pseudo gets ip,
+  the second falls to pass 1 and takes the first free callee-saved (r9, r8
+  being counter). Pseudo numbers are declaration order: `const u32 *frames;`
+  declared BEFORE `u32 dst` -> frames=ip, dst=r9 (baserom); after -> swapped.
+- Pool load before the index math (`ldr r5, =table; lsls; adds; lsls; adds
+  r3, r2, r5`): `const T *table = sym; d = &table[i];`. But keep the second
+  access as `sym[i].frames`, not `table[i].frames`: the symbol form expands to
+  `(const (plus sym 16))`, cse rewrites it through the live table pseudo as
+  `adds r0, r5, #0; adds r0, #16; adds r0, r2, r0; ldr r0, [r0]`; the pointer
+  form folds to `ldr r7, [r3, #16]`.
+- Diagnose all of this from the dumps without rebuilding: `.loop` prints per
+  movable `(life L) savings S moved|not desirable` and `N real insns`; `.greg`
+  prints `Spilling for insn N / Spilling reg R` and `Register P now in R` for
+  the retries. /tmp/agbcc-oracle is shared by every agent on the box -- run
+  the same preproc|cpp|`old_agbcc -da` pipeline into a private dir instead.
