@@ -1,6 +1,6 @@
 #include "types.h"
 
-/* Three signed-16-bit fixed-point helpers.
+/* Signed-16-bit fixed-point helpers.
  *
  * For the two multiply helpers the baserom keeps the unbiased product in r0
  * (for the sign test) and the round-toward-zero divide works on a *copy* in
@@ -38,4 +38,14 @@ s16 Fixed16Mul(s16 a, s16 b)
 s16 Fixed8Div(s16 a, s16 b)
 {
     return ((s32)a << 8) / b;
+}
+
+/* Fixed-point reciprocal: 0x10000 / x as a signed 16-bit result.
+ * Materialize the dividend before sign-extending the divisor to preserve
+ * the baserom operand-evaluation order. */
+s16 Fixed16Recip(s16 x)
+{
+    int n = 0x10000;
+
+    return n / x;
 }

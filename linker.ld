@@ -1,16 +1,9 @@
 /* Linker script for Frogger's Adventures: Temple of the Frog (USA).
  *
- * Phase 0 (current): one big asm/rom.o(.text) entry that INCBINs the whole
- * baserom. This gives us a matching-build baseline before any disassembly
- * has happened.
- *
- * Phase 1 (next): as functions are peeled off the front of rom.s into
- * asm/disasm_0xADDR.s slices, add their `.o(.text)` entries here in
- * baserom address order. The agent loop (pick_target.py / progress.py)
- * relies on this address-ordered placement to detect layout drift.
- *
- * Phase 2 (later): once C decomp begins, src/...o(.text) entries
- * interleave with the remaining asm slices.
+ * Matching C, authored assembly and remaining binary slices interleave in
+ * baserom address order. Adjacent functions may share a semantic C unit once
+ * the combined output passes the whole-ROM gate. Comments describe intended
+ * placement; the verified link map supplies actual section ownership and size.
  */
 
 MEMORY {
@@ -384,10 +377,7 @@ SECTIONS {
         src/engine/sub_0800c4e8.o(.text);
         src/engine/sub_0800c978.o(.text);
         src/engine/sub_0800cb80.o(.text);  /* 0x0800cb80 - 0x0800cd88, SpriteGrid_SetCellFlags/BgMap_WriteTileAttr and sibling grid writers */
-        src/engine/sub_0800cd88.o(.text);
-        src/engine/sub_0800cdcc.o(.text);
-        src/engine/sub_0800ce10.o(.text);
-        src/engine/sub_0800ce54.o(.text);
+        src/engine/tile_grid_read.o(.text);  /* 0x0800cd88 - 0x0800ce98, packed tile-grid field readers */
         src/engine/sub_0800ce98.o(.text);
         src/engine/sub_0800ced0.o(.text);  /* 0x0800ced0 - 0x0800cfdc, Rect_PointInRect (NAKED+NON_MATCHING) */
         src/engine/sub_0800cfdc.o(.text);
@@ -407,8 +397,7 @@ SECTIONS {
         src/engine/sub_0800dd80.o(.text);  /* 0x0800dd80 - 0x0800de0c, WorldMap_Init */
         src/engine/sub_0800de80.o(.text);  /* 0x0800de80 - 0x0800df7c, Game_FrameEnd */
         src/engine/sub_0800df7c.o(.text);  /* 0x0800df7c - 0x0800dffc, EntityProcE_Dispatch, EntityProcE_Init, EntityProcE_Run */
-        src/engine/sub_0800dffc.o(.text);  /* 0x0800dffc - 0x0800e048, Fixed8Mul, Fixed16Mul, Fixed8Div */
-        src/engine/sub_0800e048.o(.text);
+        src/engine/fixed_math.o(.text);  /* 0x0800dffc - 0x0800e060, Fixed8Mul, Fixed16Mul, Fixed8Div, Fixed16Recip */
         src/engine/sub_0800e060.o(.text);  /* 0x0800e060 - 0x0800e174, Scene_LoadBg */
         src/engine/sub_0800e174.o(.text);  /* 0x0800e174 - 0x0800e4bc, UpdateBgTilemapFrames (NAKED+NON_MATCHING) */
         src/engine/sub_0800e4bc.o(.text);  /* 0x0800e4bc - 0x0800e600, AnimCtrl_RunPhase */
@@ -602,9 +591,7 @@ SECTIONS {
         src/engine/sub_0801fd0c.o(.text);  /* 0x0801fd0c - 0x080200b4, WinPoseScreen_Init + WinPoseScreen_Update */
         src/engine/sub_080200b4.o(.text);  /* 0x080200b4 - 0x080201a8, WinPoseScreen_DrawBg */
 
-        src/engine/sub_080201a8.o(.text);  /* 0x080201a8 - 0x080201c8, GameMode_Options */
-        src/engine/sub_080201c8.o(.text);
-        src/engine/sub_080201e8.o(.text);  /* 0x080201e8 - 0x080202a8, GameMode_Menu27 + Dispatcher_ResetModeA + Dispatcher_ResetModeB + Dispatcher_ResetModeC */
+        src/game/menu_dispatch.o(.text);  /* 0x080201a8 - 0x080202a8, menu dispatch and router reset */
         src/engine/sub_080202a8.o(.text);  /* 0x080202a8 - 0x080202f8, GameMode_FileSelect + SaveMenu_ResetDispatcher */
         src/engine/sub_080204a4.o(.text);
         src/engine/sub_080205d8.o(.text);  /* 0x080205d8 - 0x0802090c, Entity_DispatchSound */

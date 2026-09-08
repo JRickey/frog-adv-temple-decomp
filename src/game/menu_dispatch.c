@@ -3,6 +3,21 @@
 #include "iwram.h"
 #include "types.h"
 
+/* Adjacent menu dispatchers at 0x080201a8-0x080202a8. Keep handler
+ * tables opaque: their relocation expressions preserve pool-load order. */
+extern void (*const gDispatchTable_08308AC8[])(void);
+extern void (*const gHandlerTable_08308AD4[])(void);
+
+void GameMode_Options(void)
+{
+    gDispatchTable_08308AC8[gIwram_34A0.dispatchIdx]();
+}
+
+void GameMode_Menu07(void)
+{
+    gHandlerTable_08308AD4[gIwram_3480.menuStep]();
+}
+
 /* Linker-assigned (docs/codegen-notes.md "Adjacent IWRAM bases"): keeping
  * the table opaque to agbcc holds its pool load ahead of the gIwram_3480
  * index read, matching the baserom. */
@@ -23,8 +38,8 @@ void GameMode_Menu27(void)
 /* Mode-reset helper at 0x08020208 — shares this compilation slice with
  * GameMode_Menu27 (not reached by any ROM BL; kept as a separate symbol so the
  * surrounding layout stays byte-identical). Snaps the game back to mode 4,
- * clears dispatcher state bytes, and sets _data[20] = 2. */
-void Dispatcher_ResetModeA(void)
+ * clears dispatcher state bytes, and sets cursorIndex = 2. */
+void MenuRouter_ResetCursor2(void)
 {
     gGameStuff.mode = GAME_MODE_ROUTER;
     gIwram_3480.subState = 8;
@@ -38,9 +53,9 @@ void Dispatcher_ResetModeA(void)
 /* Mode-reset helper at 0x0802023c — shares this compilation slice with
  * GameMode_Menu27 (not reached by any ROM BL; kept as a separate symbol so the
  * surrounding layout stays byte-identical). Snaps the game back to mode 4,
- * clears dispatcher state bytes, sets _data[20] = 1, and clears
+ * clears dispatcher state bytes, sets cursorIndex = 1, and clears
  * gIwram_34A0.dispatchIdx. */
-void Dispatcher_ResetModeB(void)
+void MenuRouter_ResetCursor1(void)
 {
     gGameStuff.mode = GAME_MODE_ROUTER;
     gIwram_3480.subState = 8;
@@ -51,7 +66,7 @@ void Dispatcher_ResetModeB(void)
     gIwram_34A0.dispatchIdx = 0;
 }
 
-void Dispatcher_ResetModeC(void)
+void MenuRouter_BeginReload(void)
 {
     gGameStuff.mode = GAME_MODE_ROUTER;
 
