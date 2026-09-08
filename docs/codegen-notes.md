@@ -2464,6 +2464,9 @@ cp -RL tools/agbcc-src "$PRIV"                 # -L derefs the symlink → a REA
 
 # 2. Build the instrumented compiler + install to a PRIVATE prefix (NOT tools/agbcc).
 #    build.sh needs arm-none-eabi binutils (already on PATH); it builds agbcc + old_agbcc.
+#    NOTE (2026-09-07): old_agbcc — the Thumb DEFAULT for this project — is built from
+#    gcc/ (`make -C gcc old`), NOT gcc_arm/ (that is the new agbcc). Patch the pass in
+#    gcc/ when the TU uses old_agbcc. Build with -j1: -j4 races the generated genrtl.h.
 ( cd "$PRIV" && ./build.sh && mkdir -p inst && ./install.sh "$PRIV/inst" )
 #    → instrumented binaries at  "$PRIV/inst/tools/agbcc/bin/{agbcc,old_agbcc}"
 
