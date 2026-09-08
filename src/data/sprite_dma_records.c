@@ -1,4 +1,5 @@
 #include "macros.h"
+#include "sprite_dma.h"
 #include "types.h"
 
 /* OAM / DMA load-record cluster at 0x08308100..0x0830ad7c.
@@ -7,7 +8,8 @@
  * This region is structured as several named anchor tables plus a
  * large bulk-load record table at the end:
  *
- *   0x08308100  sOamDmaCfg_08100        (16 B -- OAM-DMA cfg: {(8,8) dims,
+ *   0x08308100  sOamDmaCfg_08100        (16 B -- OAM-DMA cfg: {8 frames,
+ *                                        8-frame delay,
  *                                        src=0x0830809c, vram=0x06007b80,
  *                                        bytes=0x480}; 12 callsites)
  *   0x08308110  sSpriteFramePtrs_08110  (3552 B -- mixed pointer arrays
@@ -33,10 +35,6 @@
  *                                        Indexed by the 12-byte dispatch
  *                                        table starting at 0x0830ad7c
  *                                        (out of scope this pass).)
- *
- * The 0x08308100 OAM-DMA cfg shape mirrors sSpriteOamDmaCfg_06F08 from
- * sprite_anim_block.c -- same {dim, frame-ptr-table, vram-dst, byte-count}
- * layout. Promote both to a typedef once a consumer lands in C.
  *
  * The DMA-record magics 0x1214000a / 0x14180010 likely encode the DMA
  * channel + cnt-register bits used by the loader (`14 18 00 10` reads
@@ -108,7 +106,13 @@ typedef struct DmaLoadDispatch {
     u32 packedCount; /* +0x08 — 0x0003NNNN */
 } DmaLoadDispatch;
 
-const u32 sOamDmaCfg_08100[4] = INCBIN_U32("data/sprite/oam_dma_cfg_08100.bin");
+extern const u32 sSpriteAnimBlock_07104[];
+
+enum { OAM_DMA_FRAME_TABLE_OFFSET = (0x0830809C - 0x08307104) / sizeof(u32) };
+
+const struct DmaCycleConfig sOamDmaCfg_08100 = {
+    8, 8, 0, (const void *const *)&sSpriteAnimBlock_07104[OAM_DMA_FRAME_TABLE_OFFSET], (void *)0x06007B80, 0x480, 0,
+};
 const u32 sSpriteFramePtrs_08110[888] = INCBIN_U32("data/sprite/sprite_frame_ptrs_08110.bin");
 const u32 sVramTilePtrTable[51] = INCBIN_U32("data/sprite/vram_tile_ptr_table.bin");
 const DmaLoadRecord sDmaLoadRecords[476] = INCBIN_U32("data/sprite/palette_load_records.bin");

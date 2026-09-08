@@ -7,6 +7,7 @@
 #include "save.h"
 #include "constants/input.h"
 #include "types.h"
+#include "sprite_dma.h"
 
 extern void text_0800e76c(void);
 extern void Sound_DrainActiveSlots(void);
@@ -20,7 +21,6 @@ extern u16 Input_Poll(void);
 extern void Screen_ClearBlocks(s32 mode);
 extern void Screen_Install(s32 flag, s32 a, s32 b, struct ScreenInstallArgs args, s32 last);
 extern void Screen_InstallOamA(s32 a, s32 b, s32 c, s32 d);
-extern void Sprite_CycleDmaFrame(u32 a, u32 b, u32 c, u32 d);
 extern void sub_0801EA08(void);
 extern void SoundSlot_EnableAndLoad(u32 arg);
 extern void Music_Resume(void);
@@ -28,7 +28,6 @@ extern void Music_Stop(void);
 extern void Sound_ClearActiveFlag(void);
 
 extern u16 gIwram_5398;
-extern const u32 sOamDmaCfg_08100[4];
 extern const u16 sScreenAuxTilesC578[];
 extern const u16 text_08219378[];
 extern const u16 sScreenTilemap_E9C18[1024];
@@ -403,7 +402,7 @@ void OptionsMenu_Update(void)
     } else if (gIwram_5398 != 0 && gIwram_5398 != INPUT_A && gIwram_5398 != INPUT_START) {
         sub_0801EA08();
     } else {
-        Sprite_CycleDmaFrame(sOamDmaCfg_08100[0], sOamDmaCfg_08100[1], sOamDmaCfg_08100[2], sOamDmaCfg_08100[3]);
+        Sprite_CycleDmaFrame(sOamDmaCfg_08100);
     }
 
     gIwram_5398 = 0;

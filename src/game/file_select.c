@@ -4,14 +4,12 @@
 #include "gba/io.h"
 #include "iwram.h"
 #include "save.h"
+#include "sprite_dma.h"
 #include "types.h"
 
 extern void Bg_InitMode0(void);
-/* ABI-shaped legacy declarations retained for matching. Sprite_CycleDmaFrame's
- * definition takes DmaCycleCfg; Screen_InstallOamA's canonical widths remain
- * unaudited. Calls below pass four table words or small constants respectively. */
+/* Screen_InstallOamA's canonical widths remain unaudited. */
 extern void Screen_InstallOamA(s32 a, s32 b, s32 c, s32 d);
-extern void Sprite_CycleDmaFrame(s32 a, s32 b, s32 c, s32 d);
 extern void Screen_Install(s32 flag, s32 a, s32 b, struct ScreenInstallArgs args, s32 last);
 extern void Screen_ClearBlocks(s32 mode);
 extern u8 Scene_DrawWindow(s32 a, s32 b, const void *c, s32 d, s32 e, s32 f);
@@ -20,7 +18,6 @@ extern s32 SaveSlot_DrawSelectionCursor(u8 idx);
 extern u16 Input_Poll(void);
 
 extern u16 gIwram_5398;
-extern const u32 sOamDmaCfg_08100[4];
 
 /* ROM tables anchored inside the sprite-frame-pointer block, indexed by the
  * scene id in gIwram_34B0._data (see linker.ld). sScreenTilemapTable[id] is
@@ -149,7 +146,7 @@ void FileSelect_Update(void)
         gIwram_5398 = 0;
         SaveSlot_DrawAllSlots();
     } else {
-        Sprite_CycleDmaFrame(sOamDmaCfg_08100[0], sOamDmaCfg_08100[1], sOamDmaCfg_08100[2], sOamDmaCfg_08100[3]);
+        Sprite_CycleDmaFrame(sOamDmaCfg_08100);
     }
 }
 
@@ -320,7 +317,6 @@ extern u16 Input_Poll(void);
 extern void SaveMenu_DrawWorldInfoRow(u8 pane, const u8 *str);
 extern void Sprite_AnimateFlipWithShadow(u32 *self, u16 u1, u16 u2, u8 u3, u8 count);
 extern void SaveCommit(u8 slot, void *name);
-extern const u32 sOamDmaCfg_08100[4];
 
 extern u16 gIwram_5398;
 #define gIwram_3540 (*(u8 *)0x03003540)
@@ -429,7 +425,7 @@ int SaveSlot_UpdateScreen(u8 slot)
         if (gGameStuff._unk00 - lastPollTick > 3) {
             gIwram_5398 = Input_Poll();
             lastPollTick = gGameStuff._unk00;
-            Sprite_CycleDmaFrame(sOamDmaCfg_08100[0], sOamDmaCfg_08100[1], sOamDmaCfg_08100[2], sOamDmaCfg_08100[3]);
+            Sprite_CycleDmaFrame(sOamDmaCfg_08100);
         } else {
             gIwram_5398 = 0;
         }

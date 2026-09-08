@@ -1,87 +1,66 @@
 #include "macros.h"
-#include "types.h"
-#include "gba/dma.h"
-#include "iwram.h"
-
-/* --- Sprite_CycleDmaFrame: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
-#ifdef NON_MATCHING
-#include "macros.h"
+#include "sprite_dma.h"
 #include "types.h"
 #include "gba/dma.h"
 #include "iwram.h"
 
 extern u32 GetFrameTick(void);
+extern struct ScrollBlitLayer gIwram_6480;
 
-typedef struct {
-    u16 limit;
-    u8 delay;
-    u8 _pad3;
-    const u32 *srcTable;
-    void *dst;
-    u16 dmaHalfwords;
-    u16 _pad14;
-} DmaCycleCfg;
-
-/* Time-gated cyclic DMA + alpha-blend setup. The 16-byte config record
- * (sOamDmaCfg_08100) is passed by value. */
-void Sprite_CycleDmaFrame(DmaCycleCfg cfg)
+/* Time-gated cyclic DMA + alpha-blend setup. */
+void Sprite_CycleDmaFrame(struct DmaCycleConfig config)
 {
     vu32 *dma;
-    const u32 *src;
-    u8 *state;
+    const void *const *src;
+    struct ScrollBlitLayer *state;
     u32 now = GetFrameTick();
 
-    state = (u8 *)0x03006480;
+    state = &gIwram_6480;
 
-    if (now - *(u32 *)(state + 4) >= cfg.delay) {
-        if (state[0xa] >= cfg.limit)
-            state[0xa] = 0;
+    if (now - state->lastTick >= config.frameDelay) {
+        if (state->animFrame >= config.frameCount)
+            state->animFrame = 0;
 
         dma = (vu32 *)0x040000D4;
-        src = cfg.srcTable;
-        dma[0] = src[state[0xa]];
-        dma[1] = (u32)cfg.dst;
-        dma[2] = DMA_ENABLE | (cfg.dmaHalfwords >> 1);
+        src = config.frameSources;
+        dma[0] = (u32)src[state->animFrame];
+        dma[1] = (u32)config.destination;
+        dma[2] = DMA_ENABLE | (config.transferByteCount >> 1);
         dma[2];
 
-        state[0xa]++;
-        *(u32 *)(state + 4) = GetFrameTick();
+        state->animFrame++;
+        state->lastTick = GetFrameTick();
     }
 
     *(vu16 *)0x04000050 = 0x1142;
     *(vu16 *)0x04000052 = 0x0909;
 }
-#else
-NAKED void Sprite_CycleDmaFrame(void)
-{
-    asm(".incbin \"frog_us_baserom.gba\", 0x185c0, 0x88\n");
-}
+
 NAKED void Screen_InstallOamA(void)
 {
-    asm(".incbin \"frog_us_baserom.gba\", 0x18648, 0x250\n");
+    asm(".incbin \"frog_us_baserom.gba\", 0x18648, 0x250\n.syntax divided\n");
 }
 NAKED void Screen_Install(void)
 {
-    asm(".incbin \"frog_us_baserom.gba\", 0x18898, 0x374\n");
+    asm(".incbin \"frog_us_baserom.gba\", 0x18898, 0x374\n.syntax divided\n");
 }
 NAKED void Screen_ClearBlocks(void)
 {
-    asm(".incbin \"frog_us_baserom.gba\", 0x18c0c, 0x9c\n");
+    asm(".incbin \"frog_us_baserom.gba\", 0x18c0c, 0x9c\n.syntax divided\n");
 }
 NAKED void WinPoseScreen_LoadSprites(void)
 {
-    asm(".incbin \"frog_us_baserom.gba\", 0x18ca8, 0x248\n");
+    asm(".incbin \"frog_us_baserom.gba\", 0x18ca8, 0x248\n.syntax divided\n");
 }
 NAKED void WinPoseScreen_UpdateAnim(void)
 {
-    asm(".incbin \"frog_us_baserom.gba\", 0x18ef0, 0x124\n");
+    asm(".incbin \"frog_us_baserom.gba\", 0x18ef0, 0x124\n.syntax divided\n");
 }
 NAKED void WinPoseScreen_ScrollStep(void)
 {
-    asm(".incbin \"frog_us_baserom.gba\", 0x19014, 0x214\n");
+    asm(".incbin \"frog_us_baserom.gba\", 0x19014, 0x214\n.syntax divided\n");
 }
 NAKED void WinPoseScreen_AnimAndScroll(void)
 {
-    asm(".incbin \"frog_us_baserom.gba\", 0x19228, 0x104\n");
+    asm(".incbin \"frog_us_baserom.gba\", 0x19228, 0x104\n.syntax divided\n");
 }
-#endif /* NON_MATCHING */

@@ -202,7 +202,7 @@ struct ScrollBlitLayer {
     u32 lastTick;  /* +0x04: frame timestamp (vs 0x03005330) */
     u8 pendingDma; /* +0x08: 2 = transfer pending */
     u8 phase;      /* +0x09: state/phase byte */
-    u8 animFrame;  /* +0x0A: anim frame index (wraps at 24) */
+    u8 animFrame;  /* +0x0A: anim frame index (consumer-defined wrap; DMA config uses 8) */
     u8 frameCtr;   /* +0x0B: frame counter */
     u8 _pad0c[4];  /* +0x0C: 6540 palette-rotate cursor view */
     u32 srcPtr;    /* +0x10: blit source ptr */

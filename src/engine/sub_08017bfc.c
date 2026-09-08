@@ -2,6 +2,7 @@
 #include "gfx.h"
 #include "macros.h"
 #include "types.h"
+#include "sprite_dma.h"
 #include "game.h"
 #include "gba/dma.h"
 #include "gba/io.h"
@@ -308,8 +309,6 @@ extern void Sprite_AnimateFlip(void *self, u16 a, u16 b, u8 c, u8 count);
 extern void WinPoseScreen_ScrollStep(u32 dir);
 extern void WinPoseScreen_AnimAndScroll(void);
 extern void WinPoseScreen_UpdateAnim(void);
-extern void Sprite_CycleDmaFrame(u32 a, u32 b, u32 c, u32 d);
-extern const u32 sOamDmaCfg_08100[4];
 
 /* Win-pose screen step machine, keyed off gIwram_5398. First switch handles
  * cursor nav (1/2) and entry (0x10/0x40, building the win-pose OAM descriptor);
@@ -387,7 +386,7 @@ void sub_08017FC4(void)
         FrogSelect_LoadCharTilemap();
         WinPoseScreen_AnimAndScroll();
     } else {
-        Sprite_CycleDmaFrame(sOamDmaCfg_08100[0], sOamDmaCfg_08100[1], sOamDmaCfg_08100[2], sOamDmaCfg_08100[3]);
+        Sprite_CycleDmaFrame(sOamDmaCfg_08100);
         WinPoseScreen_UpdateAnim();
     }
     gIwram_5398 = 0;

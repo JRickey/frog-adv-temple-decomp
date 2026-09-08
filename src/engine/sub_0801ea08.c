@@ -7,6 +7,7 @@
 #include "iwram.h"
 #include "save.h"
 #include "types.h"
+#include "sprite_dma.h"
 
 extern void Bg_WriteTilePair(u32 hflip, u8 col, u8 row, u16 tile, u32 palBank, u8 screen, u32 value);
 extern void DrawNumber(u16 value, u8 x, u8 y, u16 a, u16 b, u8 c, u32 forceZeros);
@@ -14,7 +15,6 @@ extern void Bg_InitMode0(void);
 extern void Screen_ClearBlocks(s32 mode);
 extern void Screen_Install(s32 flag, s32 a, s32 b, struct ScreenInstallArgs args, s32 last);
 extern void Screen_InstallOamA(s32 a, s32 b, s32 c, s32 d);
-extern void Sprite_CycleDmaFrame(u32 a, u32 b, u32 c, u32 d);
 extern void Sprite_AnimateFlip(void *self, u16 a, u16 b, u8 c, u8 count);
 extern u8 Scene_DrawWindow(s32 a, s32 b, const void *c, s32 d, s32 e, s32 f);
 extern void FileSelect_DrawSlots(void);
@@ -22,7 +22,6 @@ extern void sub_08017710(u8 slot);
 extern u16 Input_Poll(void);
 
 extern u16 gIwram_5398;
-extern const u32 sOamDmaCfg_08100[4];
 extern const u32 sUiOnOffLabelPtrs[10];
 extern const u8 sCreditsMisc[24];
 extern const u16 sScreenTilemapD8B98[1024];
@@ -277,7 +276,7 @@ void sub_0801F020(void)
     } else if (gIwram_5398 != 0 && gIwram_5398 != 16 && gIwram_5398 != 64) {
         FileSelect_DrawSlots();
     } else {
-        Sprite_CycleDmaFrame(sOamDmaCfg_08100[0], sOamDmaCfg_08100[1], sOamDmaCfg_08100[2], sOamDmaCfg_08100[3]);
+        Sprite_CycleDmaFrame(sOamDmaCfg_08100);
     }
 
     gIwram_5398 = 0;

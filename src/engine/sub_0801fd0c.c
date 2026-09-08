@@ -5,6 +5,7 @@
 #include "gba/io.h"
 #include "iwram.h"
 #include "types.h"
+#include "sprite_dma.h"
 
 extern const u16 sWinPoseSpriteCoords[];
 
@@ -13,7 +14,6 @@ extern void Screen_Install(s32 flag, s32 a, s32 b, struct ScreenInstallArgs args
 extern void Bg_InitMode0(void);
 extern void WinPoseScreen_LoadSprites(void);
 extern void WinPoseScreen_DrawBg(void);
-extern void Sprite_CycleDmaFrame(u32 a, u32 b, u32 c, u32 d);
 
 extern u16 gIwram_5398;
 
@@ -94,7 +94,6 @@ extern void Sprite_AnimateFlip(void *self, u16 u1, u16 u2, u8 u3, u8 count);
 extern void Screen_InstallOamA(u32 a, u16 b, u16 c, u8 d);
 extern void WinPoseScreen_UpdateAnim(void);
 extern void WinPoseScreen_AnimAndScroll(void);
-extern const u32 sOamDmaCfg_08100[4];
 extern const u16 sWinPoseHeader[4];
 
 /* The OAM shadow buffer at IWRAM 0x030054A0 (sibling routines memset it to a
@@ -201,7 +200,7 @@ tail:
         WinPoseScreen_DrawBg();
         WinPoseScreen_AnimAndScroll();
     } else {
-        Sprite_CycleDmaFrame(sOamDmaCfg_08100[0], sOamDmaCfg_08100[1], sOamDmaCfg_08100[2], sOamDmaCfg_08100[3]);
+        Sprite_CycleDmaFrame(sOamDmaCfg_08100);
         WinPoseScreen_UpdateAnim();
     }
 
