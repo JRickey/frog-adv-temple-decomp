@@ -137,6 +137,8 @@ src/game/sub_08003b8c.s: CFLAGS += -fno-strength-reduce
 src/engine/sub_0801b9e4.s: CFLAGS += -O1
 src/engine/sub_0801a6d4.s: CC = $(AGBCC_BIN)
 src/engine/sub_0801a894.s: CFLAGS += -fno-rerun-cse-after-loop
+# Entity_UpdateHitboxWithTile: the loop-opt rerun hoists the per-arm type*12 chain.
+src/engine/sub_0800b918.s: CFLAGS += -fno-rerun-loop-opt
 # Enable verbose output
 ifeq ($(V),1)
 	Q =

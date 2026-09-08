@@ -3368,3 +3368,46 @@ as its own statement to land the DMA3 pool load between the two derefs;
 the `ldr r0 ; mov ip, r0` PRE copy and the tail's `mov r1, ip ; ldr r0, [r1]`
 reload; `const T *table = sym; entry = &table[idx];` for the pool load
 before the index shift.
+
+## Loop-invariant hoisting is a budget: `threshold -= 3` per moved insn, and the rerun pass gets a fresh budget (Entity_UpdateHitboxWithTile, 2026-09-07)
+
+loop.c moves an invariant only if `threshold * savings * lifetime >= insn_count`
+with `threshold = 1 + n_non_fixed_regs` (13 on Thumb: r0-r10 + ip) when the loop
+has calls — and **`threshold -= 3` after every move**, in insn order. Identical
+invariant expressions across inlined instances are merged by `combine_movables`
+(savings and lifetime SUMMED), and `force_movables` folds a consumer's savings
+into its producer. So whether a symbol load, a sign-extension or a `type*12`
+chain is hoisted depends on how many hoistable groups precede it in the loop
+body, not on its own merit. `-frerun-loop-opt` (on at -O2) runs loop.c a second
+time with the budget reset and a smaller `insn_count`, which is how a 4-site
+`*12` chain (savings 8, life 8) that lost in pass 1 gets hoisted in pass 2;
+`-fno-rerun-loop-opt` was the only lever left for that TU. Read the `.loop`
+dump (`Insn N: regno R (life L), savings S moved/not desirable`) before
+touching source: each line is one term of the budget.
+
+Levers that changed the budget in pure C (all landed in sub_0800b918.c):
+- A constant pointer local (`const struct X *player = &gIwram_35E0;`) removes
+  the per-site symbol-load movable from the loop (the pseudo is REG_EQUIV and
+  rematerialised per site, same bytes as the baserom's pool loads) — that one
+  fewer move kept the threshold positive for the group that had to move.
+- Same trick for the ROM table (`const T *table = sEntityHitboxTable;` for the
+  prologue/loop-test accesses) also defuses `cse_around_loop`: cse otherwise
+  inserts `loop_test_reg = prologue_reg` after the prologue's identical load,
+  the loop-exit test's pseudo becomes 2-set, the preheader `(mem LC8)` gets
+  rewritten by `use_related_value` to `(plus that_reg 4)`, and the table pseudo
+  is then live across the top and eats r4.
+- Helper param types decide which extension groups exist: a caller-side
+  conversion (`s32 type` param) joins the PRE'd `(ashiftrt Q 24)` group (the
+  spilled sp+16 copy); an `s8 type` param re-extends an already-extended value
+  inside each instance and that double extension hoists as the `mov r8, r2`
+  copy. Passing `u8 col, u8 row` by value puts their loads before the
+  extension. A `u8` local passed to an `s32` param and then to a `u8` callee
+  param yields the two-shift truncation that hoists as the preheader
+  `mov r9, r4`.
+- `s32 i` instead of `s8 i` on an inline helper: the re-extension of a QI
+  param costs two RTL insns at flow time (combine folds them later), which
+  shortens REG_LIVE_LENGTH of the value computed after them and flips the
+  global-alloc order between `i*4` and the points pointer (r4/r5 swap).
+- One function-scope scalar assigned at two disjoint sites is ONE pseudo
+  (`ldrb r2,[r2,#10]` at both), where a block-scoped copy at the second site
+  gets a fresh local-alloc pick (r0).

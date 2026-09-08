@@ -33,14 +33,22 @@ struct EntryB8A8 {
     u8 _pad6[2];
 };
 
-/* Active collision slot in the hitbox-slot table (8 bytes per slot). */
+/* Active collision slot in the hitbox-slot table (8 bytes per slot).
+ * `flags` holds the gGameStuff._unk00 tick of the last phase change and
+ * `state` the reveal-animation frame (see Entity_UpdateHitboxWithTile). */
 typedef struct CollisionSlot {
     u32 flags;
-    u8 active;
+    u8 active; /* HITSLOT_* phase */
     u8 touched;
     u8 state;
     u8 _pad7;
 } CollisionSlot;
+
+enum {
+    HITSLOT_IDLE = 0,
+    HITSLOT_REVEALING = 1,
+    HITSLOT_REVEALED = 2,
+};
 
 /* Signed 2-D point (x, y) extracted from a hitbox descriptor's points array. */
 typedef struct EntityHitboxPoint {
@@ -58,6 +66,18 @@ typedef struct EntityHitboxFlagBytes {
     u8 alternateFlags;
     u8 _padA[2];
 } EntityHitboxFlagBytes;
+
+/* Cast-overlay on the ROM hitbox table with the byte-wide fields the hit-slot
+ * updaters read: the signed point count and the three flag bytes at +8..+10. */
+typedef struct EntityHitboxBytes {
+    s8 count; /* +0 */
+    u8 _pad01[3];
+    const EntityHitboxPoint *points; /* +4 */
+    u8 primaryFlags;                 /* +8 */
+    u8 alternateFlags;               /* +9 */
+    u8 blitBank;                     /* +10: bank argument for BlitFrameCell */
+    u8 _padB;
+} EntityHitboxBytes;
 
 /* ROM hitbox/collision-point descriptor. One per entity shape; the dispatch
  * tables in entity_dispatch.c hand these to the collision-probe routines in

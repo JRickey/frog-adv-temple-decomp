@@ -376,7 +376,6 @@ SECTIONS {
         src/engine/sub_0800b7b0.o(.text);
         src/engine/sub_0800b8a8.o(.text);  /* 0x0800b8a8 - 0x0800b918, Entity_ActivateHitSlot */
         src/engine/sub_0800b918.o(.text);
-        asm/disasm_0x0800b918.o(.text);  /* 0x0800b918 - 0x0800be18, Entity_UpdateHitboxWithTile (auto-peeled) */
         src/engine/sub_0800be18.o(.text);  /* 0x0800be18 - 0x0800bf24, Entity_SetupHitboxSlots / EntityHitbox_RegisterHit */
         src/engine/sub_0800bf24.o(.text);
         asm/disasm_0x0800bf24.o(.text);  /* 0x0800bf24 - 0x0800c2a8, Entity_ScanHitboxAndBlit (auto-peeled) */
