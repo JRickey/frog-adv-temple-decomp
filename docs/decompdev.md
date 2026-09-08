@@ -45,12 +45,14 @@ Data covers linked ROM bytes from `0x08035d9c` (the IRQ handler table after the
 last code function) to `0x08400000`. This includes unresolved assets and padding;
 it does not assert that every byte has semantic data content. Function-local
 literal pools remain in function extents, and RAM/BSS is excluded. Data credit
-requires a sized ELF object within its actual input section and an explicit C
-array initializer in that section's linked source. Symbol aliases are counted
+requires a sized ELF object within its actual input section and an explicit
+brace-enclosed C initializer in that section's linked source (including arrays
+and structs). Symbol aliases are counted
 once. `INCBIN_U8/U16/U32` arrays, raw `.incbin` files, assembly data and binary
 extraction receive zero credit, even when named or typed. Discarded sections
-receive no credit. This conservative metric can undercount macro-generated or
-scalar C data; such cases need a reviewed extension, not a blanket exemption.
+receive no credit. This conservative metric can undercount macro-generated data
+or scalars without brace-enclosed initializers; such cases need a reviewed
+extension, not a blanket exemption.
 
 This distinction follows the source/extraction separation used by other GBA
 projects (see [FE8J's scorecard](https://github.com/laqieer/fireemblem8j)). The

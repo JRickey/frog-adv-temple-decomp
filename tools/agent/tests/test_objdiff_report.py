@@ -82,6 +82,14 @@ class ObjdiffReportTests(unittest.TestCase):
             'const u16 values[] = { 1, 2 };\n')
         self.assertEqual(names, {"table", "values"})
 
+    def test_brace_initialized_struct_is_a_data_candidate(self) -> None:
+        names = objdiff_report.explicit_data_names(
+            'const DmaCycleConfig config = { 8, 8, 0, sources, destination, 0x480, 0 };\n'
+            'extern const DmaCycleConfig declared;\n'
+            'const u32 extracted[4] = INCBIN_U32("config.bin");\n'
+            'const u32 scalar = 8;\n')
+        self.assertEqual(names, {"config"})
+
     def test_changed_source_invalidates_snapshot(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
