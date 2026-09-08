@@ -119,6 +119,8 @@ void Entity_UpdateMovers(s32 start, s32 end);
 
 void EntityMover_Tick(u8 arg);
 
+void Entity_FollowPath(const void *path, s32 slot);
+
 void EntityParam_Apply(u32 arg);
 
 u32 Entity_IsInProximity(s32 idx);

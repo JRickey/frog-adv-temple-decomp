@@ -2,7 +2,6 @@
 #include "entity.h"
 #include "types.h"
 
-extern void Entity_FollowPath(void *obj, u8 idx);
 extern void Entity_Update(void *p);
 
 void Entity_InitFromLayout(void *obj, u8 idx)

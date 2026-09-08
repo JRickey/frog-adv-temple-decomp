@@ -1,3 +1,4 @@
+#include "entity.h"
 #include "iwram.h"
 #include "types.h"
 
@@ -10,8 +11,9 @@ typedef struct {
 
 extern void Entity_AdvanceWaypoint(u8 *src, int dstIdxArg, int selectorArg, int idxArg, int cmpValArg);
 
-void Entity_FollowPath(const void *base, u8 idx)
+void Entity_FollowPath(const void *base, s32 idxArg)
 {
+    u8 idx;
     u8 *src;
     struct Entity *e;
     u8 recIdx;
@@ -22,6 +24,7 @@ void Entity_FollowPath(const void *base, u8 idx)
     struct Entity *ents;
     struct Entity *tailEnts;
 
+    idx = idxArg;
     src = (u8 *)base;
     selector = src[4];
     count = src[0];

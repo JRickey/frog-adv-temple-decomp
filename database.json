@@ -984,19 +984,155 @@
     "size": 4
   },
   {
-    "path": "level/layout_raw_313548.bin",
+    "path": "level/layout_raw_313548_prefix.bin",
     "addr": {
       "us": "0x313548"
     },
-    "count": "0x28C",
+    "count": "0x154",
     "size": 4
   },
   {
-    "path": "level/layout_ptrs_313f78.bin",
+    "path": "level/entity_path_313a98.bin",
+    "addr": {
+      "us": "0x313A98"
+    },
+    "count": "0x10",
+    "size": 4
+  },
+  {
+    "path": "level/entity_path_313ad8.bin",
+    "addr": {
+      "us": "0x313AD8"
+    },
+    "count": "0x10",
+    "size": 4
+  },
+  {
+    "path": "level/entity_path_313b18.bin",
+    "addr": {
+      "us": "0x313B18"
+    },
+    "count": "0x10",
+    "size": 4
+  },
+  {
+    "path": "level/entity_path_313b58.bin",
+    "addr": {
+      "us": "0x313B58"
+    },
+    "count": "0x10",
+    "size": 4
+  },
+  {
+    "path": "level/entity_path_313b98.bin",
+    "addr": {
+      "us": "0x313B98"
+    },
+    "count": "0x10",
+    "size": 4
+  },
+  {
+    "path": "level/entity_path_313bd8.bin",
+    "addr": {
+      "us": "0x313BD8"
+    },
+    "count": "0x10",
+    "size": 4
+  },
+  {
+    "path": "level/entity_path_313c18.bin",
+    "addr": {
+      "us": "0x313C18"
+    },
+    "count": "0x10",
+    "size": 4
+  },
+  {
+    "path": "level/entity_path_313c58.bin",
+    "addr": {
+      "us": "0x313C58"
+    },
+    "count": "0x10",
+    "size": 4
+  },
+  {
+    "path": "level/entity_path_313c98.bin",
+    "addr": {
+      "us": "0x313C98"
+    },
+    "count": "0x10",
+    "size": 4
+  },
+  {
+    "path": "level/entity_path_313cd8.bin",
+    "addr": {
+      "us": "0x313CD8"
+    },
+    "count": "0x10",
+    "size": 4
+  },
+  {
+    "path": "level/entity_path_313d18.bin",
+    "addr": {
+      "us": "0x313D18"
+    },
+    "count": "0x10",
+    "size": 4
+  },
+  {
+    "path": "level/entity_path_313d58.bin",
+    "addr": {
+      "us": "0x313D58"
+    },
+    "count": "0x10",
+    "size": 4
+  },
+  {
+    "path": "level/entity_path_313d98.bin",
+    "addr": {
+      "us": "0x313D98"
+    },
+    "count": "0x10",
+    "size": 4
+  },
+  {
+    "path": "level/entity_path_313dd8.bin",
+    "addr": {
+      "us": "0x313DD8"
+    },
+    "count": "0x10",
+    "size": 4
+  },
+  {
+    "path": "level/entity_path_313e18.bin",
+    "addr": {
+      "us": "0x313E18"
+    },
+    "count": "0x10",
+    "size": 4
+  },
+  {
+    "path": "level/layout_raw_313e58.bin",
+    "addr": {
+      "us": "0x313E58"
+    },
+    "count": "0x48",
+    "size": 4
+  },
+  {
+    "path": "level/layout_ptrs_313f78_prefix.bin",
     "addr": {
       "us": "0x313F78"
     },
-    "count": "0x3C",
+    "count": "0x4",
+    "size": 4
+  },
+  {
+    "path": "level/layout_ptrs_313fc4.bin",
+    "addr": {
+      "us": "0x313FC4"
+    },
+    "count": "0x29",
     "size": 4
   },
   {

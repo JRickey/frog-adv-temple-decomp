@@ -3,7 +3,6 @@
 #include "entity.h"
 #include "types.h"
 
-extern void Entity_FollowPath(const void *a0, s32 slot);
 extern void Entity_AdvanceAnimFrames(s32 a0, s32 a1);
 
 extern const u32 sLevelLayout_317DC4[6];

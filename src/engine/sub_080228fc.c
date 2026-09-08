@@ -11,7 +11,6 @@ void SpawnZone_Slot47(void)
     Entity_WalkCompactRecords(0x47, sLevelLayout_310C44, 16, &gIwram_6110, 0);
 }
 
-extern void Entity_FollowPath(const void *a0, s32 slot);
 extern void Entity_AdvanceAnimFrames(s32 a0, s32 a1);
 extern const u32 sLevelLayoutPtrs_3113C8[8];
 extern const u32 sLevelLayoutPtrs_31118C[7];
