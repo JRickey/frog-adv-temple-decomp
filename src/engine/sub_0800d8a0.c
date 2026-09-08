@@ -41,75 +41,42 @@ void SpawnControl_Dispatch(void)
     EnemySpawn_Tick();
 }
 
-u32 *PadGrid_ScanMaskToCoord(u32 *out, u32 mask, u32 limit)
+/* Packed tile coordinate: x in the low halfword, y in the high one. Kept as a
+ * struct so the (-3, -3) miss value is built with halfword field stores in a
+ * register (and/or pairs) instead of a pooled constant. */
+struct PackedCoord {
+    s16 x;
+    s16 y;
+};
+
+/* Scans `mask` for its (limit + 1)-th set bit among bits 0..24 and steps the
+ * pad-grid coordinate by that bit index; (-3, -3) when there is no such bit.
+ * The loop condition is a bitwise `&` of the two tests (no short-circuit),
+ * which is what the baserom's flag-and-compare sequence encodes. */
+u32 *PadGrid_ScanMaskToCoord(u32 *out, u32 mask, s8 limit)
 {
-    u32 *outp = out;
-    u32 bits = mask;
-    register u32 found asm("sl");
-    register u8 ulimit asm("r8");
-    u32 scratch;
-    s32 slimit;
-    s32 sf;
-    s32 i;
-    u32 loopValue;
-    register u32 inRange asm("r3");
-    register u32 belowLimit asm("r2");
-    u32 limitShifted;
-    u32 local;
-    u32 result;
+    s8 found = -1;
+    s8 i = 0;
+    struct PackedCoord coord;
+    struct PackedCoord result;
 
-    limitShifted = limit << 24;
-    found = 0xff;
-    loopValue = 0;
-    ulimit = limitShifted >> 24;
-    slimit = (s32)limitShifted >> 24;
-    goto test;
-
-body:
-    if ((bits & 1) != 0) {
-        loopValue = sf + 1;
-        loopValue <<= 24;
-        loopValue >>= 24;
-        found = loopValue;
-    }
-    bits >>= 1;
-    loopValue = (u8)(i + 1);
-
-test:
-    inRange = 0;
-    loopValue <<= 24;
-    i = (s32)loopValue >> 24;
-    if (i <= 24) {
-        inRange = 1;
+    while ((i <= 24) & (found < limit)) {
+        if (mask & 1) {
+            found++;
+        }
+        mask >>= 1;
+        i++;
     }
 
-    belowLimit = 0;
-    scratch = found;
-    loopValue = scratch << 24;
-    sf = (s32)loopValue >> 24;
-    scratch = ulimit;
-    loopValue = scratch << 24;
-    if (sf < slimit) {
-        belowLimit = 1;
-    }
-
-    inRange &= belowLimit;
-    if (inRange != 0) {
-        goto body;
-    }
-
-    if (sf == (s32)loopValue >> 24) {
-        PadGrid_StepPackedCoord(&local, (s8)(i - 1));
-        result = local;
+    if (found == limit) {
+        PadGrid_StepPackedCoord((u32 *)&coord, i - 1);
+        result = coord;
     } else {
-        result &= 0xffff0000;
-        result |= (u16)-3;
-        result &= (u16)-1;
-        result |= (u32)((u16)-3) << 16;
+        result.x = -3;
+        result.y = -3;
     }
-
-    *outp = result;
-    return outp;
+    *(struct PackedCoord *)out = result;
+    return out;
 }
 
 u32 PadGrid_RandomizeAndSyncEntityCoords(void)
