@@ -18,7 +18,9 @@ alone (Blit went 1635→70 score once the records-spill was added by hand).
 
 **Confirmed RESISTANT this session (attempted, reverted, pins kept):**
 - `Scene_EntityTick` (#4): all 4 pins interdependent; sceneType→r2 is pure
-  low-reg coloring the permuter can't flip.
+  low-reg coloring the permuter can't flip. **STALE — reaped 2026-09-07**
+  (`f495c5a8`): it was a combine fold blocked by the CONST_INT base, not
+  coloring. See the 2026-09-07 sub_08009ba0.c entry at the end.
 - `Blit_ApplyFlaggedRecords` (#32, priority): the romTable(r9) reap needs a
   hand-added `volatile recordsStack` spill to match the baserom's stack spill
   (got byte_diff 114→27), but the residual rec→r5/r4 coloring + spill-position
@@ -407,3 +409,36 @@ no permuter, no flags:
 Lesson: when a de-pinned body colours every pseudo exactly one register
 low, look for a value the pinned reference silently dropped (a call result
 consumed by a later call is the classic).
+
+## Session 2026-09-07 — src/game/sub_08009ba0.c (de-pin agent): 10 pins -> 0
+
+Both pinned functions re-derived from the asm, no permuter, no flags,
+no Makefile change. The TU is now pin-free.
+
+- `Scene_EntityTick` (`f495c5a8`, 4 pins -> 0). The June "resistant /
+  pure low-reg coloring" verdict was wrong: plain unpinned C was already
+  byte_diff 2 (`ldrb r0` + `lsls r0, r0` where the ROM has `ldrb r2` +
+  `lsls r0, r2`), and the ldrb/lsls tie is a COMBINE decision, not an
+  allocator one. With the `gGameStuff` address macro (CONST_INT base) combine
+  leaves `zero_extend(mem)` and `ashift` as two insns, local-alloc ties them
+  (source dies at the shift), one pseudo -> r0. With the base read through
+  the linker symbol `gIwram_5330` combine folds the load into the shift
+  (`ashift (subreg (mem))`), and the ldrb becomes reload's spill pick (r2).
+  Dispatch is the plain `sEntityProcA[game->sceneType]()`. The pointer is
+  block-scoped after the lives test so its pool load is not hoisted above the
+  branch (function-scoped: byte_diff 30+, one base for both arms).
+- `EntityDispatch_RunFrame` (`41430b9f`, 6 pins -> 0). Same lever; two
+  block-scoped `game` pointers (first half / second half) — the calls between
+  them keep gcse from merging the two symbol loads, so the ROM's two `ldr r4,
+  =gGameStuff` come out with one pool word. `procsC` declared before `game`
+  orders the r5/r4 loads. The old `p = (GameStuff *)(u32)p->sceneType` reuse
+  hack is gone; the `volatile` cast on the `!= 16` read stays (it defeats cse
+  across the const `__umodsi3` libcall, unrelated to the pins; a macro read
+  there adds a second pool word instead).
+- `Player_CheckSpecialTileMatch` had no pins.
+
+Lesson: an "ldrb rX / lsls rY, rX" pair where agbcc gives "ldrb r0 / lsls
+r0, r0" is not coloring — check whether combine folded the load into the
+shift (`.combine` dump: `ashift (subreg (mem ...))` vs a separate
+`zero_extendqisi2_insn`). See docs/codegen-notes.md "CONST_INT base blocks
+combine's load-into-shift fold".

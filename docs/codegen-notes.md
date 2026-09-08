@@ -3146,3 +3146,44 @@ Same TU, two more shapes that match first try:
   0xfffd / ands 0xffff / orrs 0xfffd0000` quartet, and `result = coord` from
   an address-taken struct twin is a bare `ldr r4, [sp]`. Casting through
   `*(u32 *)&result` memory-homes it (str/ldr [sp,#4] + strh).
+
+## CONST_INT base blocks combine's load-into-shift fold — use the linker symbol (Scene_EntityTick / EntityDispatch_RunFrame, 2026-09-07)
+
+Symptom: a table index `tbl[base->byteField]` (or `(idx << 2) + tbl`)
+comes out as `ldrb r0, [r4, #10]; lsls r0, r0, #2` where the baserom has
+`ldrb r2, [r4, #10]; lsls r0, r2, #2` (byte_diff 2 per site, pure
+ARGUMENT_MISMATCH; the June pass pinned `idx` to r2/r1 at ten such sites).
+
+Cause is in combine, not the allocator. Dumps for the two spellings are
+identical through `.cse`; at `.combine`:
+
+- base = `gGameStuff` address macro `(*(GameStuff *)0x03005330)` — the
+  pseudo carries a CONST_INT REG_EQUIV. combine leaves
+  `(set 76 (zero_extend:SI (mem:QI (plus (reg 62) 10))))` and
+  `(set 78 (ashift (reg 76) 2))` as two insns; 76 dies at the shift, so
+  local-alloc `combine_regs` ties them and the chain lands in r0.
+- base = `(GameStuff *)&gIwram_5330` (linker-assigned SYMBOL_REF) — combine
+  folds to `(set 78 (ashift:SI (subreg:SI (mem:QI (plus (reg 62) 10)) 0) 2))`
+  `{ashlsi3}`; the byte load is then a RELOAD of the subreg(mem) operand and
+  its register is `order_regs_for_reload`'s pick (r2/r1 — whichever
+  call-used reg holds no live pseudo), never tied to the shift result.
+
+The same fold gives `ldrb r2 ; adds r0, r2, r0 ; ldrb r0, [r0]` for a byte
+LUT (`sEntitySubtypeLut[game->sceneType]`) and `ldrb r4, [r4, #10]` when
+the base dies at the index. The corpus idiom `procs[game->sceneType]()`
+matches as-is once the base is a symbol — no explicit-offset spelling and
+no pins needed.
+
+Rules that came with it:
+- Block-scope the pointer. A function-scoped `GameStuff *game` has its
+  pool load at entry (one base for every arm); the baserom loads the base
+  per block (`ldr r1, =X` in the game-over arm, `ldr r4, =X` in the main
+  arm, and a fresh `ldr r4` after a call sequence). Calls between two
+  block-scoped symbol loads keep gcse PRE from merging them, and both
+  `ldr`s share one pool word (unlike a macro + symbol mix, which emits two
+  pool words for the same address — "Two distinct symbols for one
+  address").
+- Declaration order in the block orders the pool loads (`procsC` before
+  `game` -> `ldr r5, =procsC ; ldr r4, =gGameStuff`).
+- Cheap diagnosis: `agbcc_oracle.py <fn> --src <tu> --pass combine` and
+  look for `ashift (subreg (mem` at the index site.
