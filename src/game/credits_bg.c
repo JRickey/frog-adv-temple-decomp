@@ -1,4 +1,5 @@
 #include "gba/dma.h"
+#include "credits.h"
 #include "iwram.h"
 #include "types.h"
 
@@ -15,7 +16,7 @@
  * Matching: an input barrier on tableBase makes 0x080C1254 load first as an
  * opaque value, so the +4 stays a runtime `adds` on the base register instead
  * of folding into the load offset (mirrors the sibling Credits_InitScrollPage1). */
-void Credits_LoadBgGfx(void)
+void Credits_LoadBgGfx(u8 arg)
 {
     u32 tableBase;
     const u32 *const *entry;

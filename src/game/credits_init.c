@@ -1,8 +1,8 @@
+#include "credits.h"
 #include "gba/dma.h"
 #include "sound.h"
 #include "types.h"
 
-extern void Credits_LoadBgGfx(u8 arg);
 extern void Sound_DrainIfActive(void);
 
 void Credits_Init(u8 arg)
