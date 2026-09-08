@@ -47,3 +47,17 @@ void LevelLayout_SpawnGroup313FC4(void)
         i++;
     } while (i <= 9);
 }
+
+void LevelLayout_UpdateGroup313FC4(void)
+{
+    u8 i;
+
+    i = 0;
+    do {
+        Entity_FollowPath((const void *)sLevelLayoutPtrs_313FC4[i], i + 42);
+        i++;
+    } while (i <= 9);
+
+    Entity_UpdateMovers(42, 51);
+    Entity_AdvanceAnimFrames(42, 51);
+}

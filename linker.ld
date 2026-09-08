@@ -25,6 +25,8 @@ gScriptPtrTable_083081A0 = 0x083081A0;
 sLevelLayoutPtrs_308698 = 0x08308698;
 /* Interior window used directly by the 14-entry group updater. */
 sLevelLayoutPtrs_317A60 = sLevelLayoutPtrs + 0x14;
+/* Interior window used directly by the six-entry group updater. */
+sLevelLayoutPtrs_317A98 = sLevelLayoutPtrs + 0x4c;
 sRoomDmaTable_080C1254 = 0x080C1254;
 
 /* State-handler dispatch table, currently inside the sSpriteAnimBlock_07104
@@ -679,8 +681,7 @@ SECTIONS {
         src/engine/sub_08024dbc.o(.text);  /* 0x08024dbc - 0x08024fd0, sub_08024DBC */
         asm/disasm_0x08024fd0.o(.text);  /* 0x08024fd0 - 0x0802508c, sub_08024FD0 (peeled) */
         asm/disasm_0x0802508c.o(.text);  /* 0x0802508c - 0x08025180, sub_0802508C (peeled) */
-        src/engine/sub_08025180.o(.text);  /* 0x08025180 - 0x080252b0, through LevelLayout_SpawnGroup313FC4 */
-        asm/disasm_0x080252b0.o(.text);  /* 0x080252b0 - 0x080252e8, sub_080252B0 (peeled) */
+        src/engine/sub_08025180.o(.text);  /* 0x08025180 - 0x080252e8, through LevelLayout_UpdateGroup313FC4 */
         asm/disasm_0x080252e8.o(.text);  /* 0x080252e8 - 0x0802532c, sub_080252E8 (peeled) */
         asm/disasm_0x0802532c.o(.text);  /* 0x0802532c - 0x08025364, sub_0802532C (peeled) */
         src/engine/sub_08025364.o(.text);
@@ -815,8 +816,7 @@ SECTIONS {
         asm/disasm_0x08028b94.o(.text);  /* 0x08028b94 - 0x080292e0, sub_08028B94 (peeled) */
         asm/disasm_0x080292e0.o(.text);  /* 0x080292e0 - 0x08029448, sub_080292E0 (peeled) */
         asm/disasm_0x08029448.o(.text);  /* 0x08029448 - 0x080295ac, sub_08029448 (peeled) */
-        src/engine/sub_080295ac.o(.text);  /* 0x080295ac - 0x08029748, through LevelLayout_UpdateGroup317A60 */
-        asm/disasm_0x08029748.o(.text);  /* 0x08029748 - 0x08029780, sub_08029748 (peeled) */
+        src/engine/sub_080295ac.o(.text);  /* 0x080295ac - 0x08029780, through LevelLayout_UpdateGroup317A98 */
         asm/disasm_0x08029780.o(.text);  /* 0x08029780 - 0x080297ac, sub_08029780 (peeled) */
         asm/disasm_0x080297ac.o(.text);  /* 0x080297ac - 0x080297f0, sub_080297AC (peeled) */
         asm/disasm_0x080297f0.o(.text);  /* 0x080297f0 - 0x08029828, sub_080297F0 (peeled) */

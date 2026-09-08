@@ -48,6 +48,7 @@ void sub_08029690(void)
 
 extern const u32 sLevelLayoutPtrs[66];
 extern const u32 sLevelLayoutPtrs_317A60[14];
+extern const u32 sLevelLayoutPtrs_317A98[6];
 
 enum { GROUP317A4C_COUNT = 5, GROUP317A4C_FIRST_SLOT = 50, GROUP317A4C_KIND = 0x47, GROUP317A4C_SPAWN_FLAGS = 16 };
 
@@ -76,4 +77,18 @@ void LevelLayout_UpdateGroup317A60(void)
 
     Entity_UpdateMovers(56, 69);
     Entity_AdvanceAnimFrames(56, 69);
+}
+
+void LevelLayout_UpdateGroup317A98(void)
+{
+    u8 i;
+
+    i = 0;
+    do {
+        Entity_FollowPath((const void *)sLevelLayoutPtrs_317A98[i], i + 70);
+        i++;
+    } while (i <= 5);
+
+    Entity_UpdateMovers(70, 75);
+    Entity_AdvanceAnimFrames(70, 75);
 }
