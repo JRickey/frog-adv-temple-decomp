@@ -44,6 +44,13 @@ oracle on an unchanged assembly function or an empty scaffold is only a baseline
 not decompilation progress. Inspect the authored body separately for pins and
 assembly fallbacks; object ownership alone does not establish readable C.
 
+When accepting a C replacement, delete its obsolete assembly source and remove
+its assembly object from the linker script. Keep exactly one linker entry for
+the replacement C object. For a shared assembly range, preserve any remaining
+functions instead of deleting the entire range. Preserve reference provenance
+in Git history or reproducible baserom extraction commands, then run the clean
+build and whole-ROM check with the obsolete assembly absent.
+
 ## Evidence records
 
 The reviewable source is JSON in `docs/evidence/*.json` (one object or an
