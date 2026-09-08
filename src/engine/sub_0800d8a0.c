@@ -3,7 +3,7 @@
 #include "macros.h"
 #include "types.h"
 
-extern u32 ModeControl_GetFlag(u8 *base, u32 selector, u32 bit);
+extern u32 ModeControl_GetFlag(void *base, u32 selector, u32 bit);
 extern void EnemySpawn_Tick(void);
 extern void EntityPool_UpdateOwner58(void);
 extern void EnemyWave_Update(void);
@@ -15,34 +15,14 @@ extern u32 FilterValidBits(u32 mask);
 
 void SpawnControl_Dispatch(void)
 {
-    register u8 *base asm("r4");
-    register u8 *saved6110 asm("r5");
-    u8 *new_var;
-    register u8 *entry asm("r6");
-    register u32 mask asm("r3");
-    u32 c;
     s8 i;
-    u8 *new_var2;
-    u8 *ep;
 
-    base = (u8 *)&gIwram_6110;
-    c = ModeControl_GetFlag(base, 3, 0) << 24;
-    saved6110 = base;
-    if (c != 0) {
-        new_var2 = saved6110;
-        i = 0;
-        base = (u8 *)gEntities;
-        asm("" ::"r"(base));
-        mask = 8;
-        new_var = base;
-        do {
-            ep = (u8 *)((u32)((s8)i + 3) * 56 + (u32)new_var);
-            *(u16 *)(ep + 0x34) = *(u16 *)(ep + 0x34) | mask;
-            i++;
-        } while (i <= 4);
+    if ((u8)ModeControl_GetFlag(&gIwram_6110, 3, 0)) {
+        for (i = 0; i <= 4; i++) {
+            gEntities[i + 3].status |= 8;
+        }
 
-        entry = new_var2;
-        switch (*(u8 *)(entry + 0x33)) {
+        switch (gIwram_6110.spawnMask) {
         case 0:
             EntityPool_UpdateOwner58();
             break;
