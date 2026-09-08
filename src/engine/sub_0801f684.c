@@ -67,16 +67,19 @@ void SaveSlot_DrawAllSlots(void)
             }
 
             {
+                /* `count` is assigned twice and compared directly so it stays a
+                 * global-alloc pseudo (r1): a block-local count inherits r0 from
+                 * the call return and the multiply ties to it instead of to the
+                 * constant. `pct` only exists to pass the value as u8 without an
+                 * early conversion copy. */
+                int count;
                 u8 pct;
-                /* signed and pinned to r1: the truncated count becomes the
-                   multiply's second operand (100 in r0 = accumulator), and the
-                   signed type makes the >>4 an arithmetic shift */
-                register int count asm("r1");
 
-                count = (u8)CountHighestBit(gSaveData.slots[i]._field0);
-                pct = (u8)((count * 100) >> 4);
+                count = CountHighestBit(gSaveData.slots[i]._field0);
+                count = (u8)((count * 100) >> 4);
+                pct = count;
 
-                if (pct != 100) {
+                if (count != 100) {
                     DrawByteDecimal(pct, 23, y, 0x140, 5, 2);
                 } else {
                     DrawNumber(100, 22, y, 0x140, 5, 2, 0);
