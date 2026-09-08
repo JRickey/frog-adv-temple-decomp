@@ -3090,3 +3090,33 @@ outcome). Rule of thumb: when a block's base pointer sits in r0 in the
 baserom while agbcc puts a temp there, count the block's local pseudos —
 if the baserom shape needs <=3, find a variable to make global (assign it
 twice, or use it in another block) instead of pinning.
+
+## Call-return value tied into a 2-address multiply: make the scalar global, not pinned (SaveSlot_DrawAllSlots)
+
+Shape: `pct = (u8)((CountHighestBit(x) * 100) >> 4)`. Baserom:
+
+    bl CountHighestBit ; lsls r0,r0,#24 ; lsrs r1,r0,#24 ; movs r0,#100 ; muls r0,r1
+    asrs r0,r0,#4 ; lsls r0,r0,#24 ; lsrs r1,r0,#24 ; cmp r1,#100
+
+With a block-local `count`, local-alloc ties the QI return copy, both
+zero-extend shifts, `count` and the product into ONE qty (each input dies at
+its use), and that qty carries a copy-suggestion for r0 from `(set tmp:QI r0)`
+— the suggested pass runs before the priority pass, so the chain gets r0 and
+`muls` ties to `count` (byte_diff 2, `lsrs r0` / `movs r1,#100`). The
+previous fix pinned `count` to r1. Pure-C: give `count` a second assignment
+so `REG_N_DEATHS == 2` and `local_alloc()` skips it (`reg_qty = -1`):
+`combine_regs` then refuses to tie either the shift chain or the product to
+it, the chain {r0 copy, lsls} keeps r0, the product ties to the constant
+(`muls r0, r1`), and global-alloc gives `count` r1.
+
+Two traps on the way:
+- The second value must be USED through `count` in SI mode (`if (count !=
+  100)`), otherwise cse re-derives every later use from the shift temps and
+  deletes the second set (count is local again). `pct = count; if (pct !=
+  100)` fails for this reason; `if (count != 100)` matches.
+- Passing an `int` to a `u8` parameter makes `expand_call` precompute the
+  conversion into a temp BEFORE the stack-argument stores; that temp is a
+  block-local qty with an r0 copy-suggestion and steals r0 from the `movs
+  r0,#5 ; str` constants (byte_diff 10). Pass a `u8` variable instead
+  (`u8 pct = count;` — cse folds the copy, the argument tree keeps type u8,
+  so the r0 move stays last: `adds r0, r1, #0`).
