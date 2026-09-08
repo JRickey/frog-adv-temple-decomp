@@ -22,7 +22,7 @@ Usage:
     agbcc_oracle.py <fn> [--src src/<rel>/<fn>.c]   # dispositions + priority
     agbcc_oracle.py <fn> --pass greg                # dump one pass for the fn
     agbcc_oracle.py <fn> --trace 27                 # follow pseudo 27 across passes
-    agbcc_oracle.py <fn> --keep                     # leave dumps in /tmp/agbcc-oracle
+    agbcc_oracle.py <fn> --keep                     # leave dumps in /tmp/agbcc-oracle/<checkout>/
 """
 from __future__ import annotations
 import argparse, re, subprocess, sys
@@ -32,7 +32,9 @@ ROOT = Path(__file__).resolve().parent.parent.parent
 AGBCC = ROOT / "tools/agbcc/bin/old_agbcc"
 PREPROC = ROOT / "tools/preproc/preproc"
 CHARMAP = ROOT / "charmap.txt"
-DUMPDIR = Path("/tmp/agbcc-oracle")
+# Per-checkout dump dir: parallel worktree agents on one box must not share it
+# (one agent's run overwrote another's dumps mid-analysis, 2026-09-07).
+DUMPDIR = Path("/tmp/agbcc-oracle") / ROOT.resolve().as_posix().replace("/", "_").strip("_")
 PASSES = ["rtl", "jump", "cse", "loop", "gcse", "cse2", "flow", "combine",
           "regmove", "lreg", "greg", "mach", "jump2"]
 
@@ -57,7 +59,7 @@ def find_src(fn: str, override: str | None) -> Path:
 
 
 def compile_with_dumps(src: Path) -> Path:
-    DUMPDIR.mkdir(exist_ok=True)
+    DUMPDIR.mkdir(parents=True, exist_ok=True)
     for f in DUMPDIR.glob("pp.i*"):
         f.unlink()
     pp = DUMPDIR / "pp.i"
