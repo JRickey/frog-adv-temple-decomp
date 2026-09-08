@@ -199,7 +199,7 @@ most-tractable first.
 | 23 | `ScriptStep_Advance` | src/engine/sub_0801a614.c | r4, r0, r1, r0, r0 | r4:int op, r0:u8 cursor, r1:u8 c1, r0:u32 idx, r0:int z |  | 75 | 23/0 | 0 | PERMUTER-TRACTABLE |  |
 | 24 | `Array_ThrottledRotate` | src/engine/sub_08013908.c | r2, r6, r1 | r2:u16 prev, r6:u16 cur, r1:GameStuff *gsEp |  | 75 | 11/0 | 2 | PERMUTER-TRACTABLE |  |
 | 25 | `HUD_DrawStampIcons` | src/engine/sub_0801c464.c | ip, r6, r0 | ip:u32 ipBase, r6:volatile struct BgScreenblock *screenblock, r0:u32 row2 |  | 81 | 15/0 | 4 | PERMUTER-TRACTABLE |  |
-| 26 | `EntityHitbox_RegisterGridPoints` | src/engine/sub_0800a83c.c | r9, r8, r0, r1, r5, r3, r7, r3 | r9:u32 gridIdReg, r8:u32 gridPlaneReg, r0:u32 r0v, r1:u32 r1v, r5:s32 savedTypeIndex, r3:s32 y, r7:u32 useAlternateFlagsTest, r3:const s8 *countBase |  | 85 | 21/0 | -4 | PERMUTER-TRACTABLE | high-regs are scalars, not struct ptrs |
+| 26 | `EntityHitbox_RegisterGridPoints` | src/engine/sub_0800a83c.c | r9, r8, r1, r5, r3, r7, r3 | r9:u32 gridIdReg, r8:u32 gridPlaneReg, r1:u32 r1v, r5:s32 savedTypeIndex, r3:s32 y, r7:u32 useAlternateFlagsTest, r3:const s8 *countBase |  | 85 | 21/0 | -4 | PERMUTER-TRACTABLE | 7 pins remain; r0v binding removed with reversed equality operands (c9f57c15, integrated first evidence campaign) |
 | 27 | `ScriptTick` | src/engine/sub_080179b8.c | r4, r2, r0, r1, r0, r1 | r4:int op, r2:GameStuff *gs, r0:u8 cursor, r1:u8 c1, r0:int idx, r1:const u16 *const *tbl |  | 85 | 28/0 | -6 | PERMUTER-TRACTABLE |  |
 | 28 | `BgScrollDmaUpdate` | src/engine/sub_08013aac.c | r4, r0, r6 | r4:struct Queue_64C0 *queue, r0:u8 cursor, r6:u8 wrapCursor |  | 92 | 14/0 | -4 | PERMUTER-TRACTABLE |  |
 | 29 | `Icon_DmaUpdateSprite` | src/engine/sub_08016824.c | ip, r1, r0, r1 | ip:u32 gs, r1:u32 r1val, r0:u32 r0r, r1:u32 r1r |  | 102 | 16/0 | 0 | **REAPED 2026-09-07** (was: PERMUTER-TRACTABLE) | inlined u8 selector + symbol-form gGameStuff PRE copy; see the 2026-09-07 sub_08016824.c entry |
@@ -614,3 +614,13 @@ Lesson: three PRE copies at a loop preheader (base/entry/stride into new
 registers) mean the loop body re-derives `&sym[i]` from the symbol — write
 the accesses through the symbol, do not introduce the pointer the pins were
 copying.
+
+## First evidence campaign: hitbox interface checkpoint
+
+The recovered `c9f57c15` comparison-order depin is integrated: RegisterGridPoints
+has seven pins, down from eight. Its current wide-argument implementation and
+callers now share an explicit header declaration, with low-byte consumption
+documented. This does not settle the original parameter types. Simple all-u8
+parameter and narrow SpriteGrid callee trials did not match; their outcomes
+and the next structural question are recorded in `docs/campaigns/hitbox-01.md`.
+The historical tractability labels above are clues, not allocation verdicts.

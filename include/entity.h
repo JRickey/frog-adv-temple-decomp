@@ -135,4 +135,9 @@ void Entity_SpawnFromRecord(s8 id);
 
 void EntityScript_Advance(s8 a, s8 b, s32 c);
 
+s8 EntityHitbox_FindPoint(s8 type, s16 x, s16 y);
+
+/* Grid selectors and the alternate-flags selector consume only their low byte. */
+void EntityHitbox_RegisterGridPoints(u8 type, u32 gridId, u32 gridPlane, u32 useAlternateFlags);
+
 #endif /* GUARD_ENTITY_H */

@@ -2,6 +2,7 @@
 #include "gfx.h"
 #include "iwram.h"
 #include "macros.h"
+#include "sprite_grid.h"
 #include "types.h"
 
 /* Field-store helper on the per-room packed-halfword grid at EWRAM
@@ -25,10 +26,11 @@
 
 extern struct SpriteAssetIndexEntry sSpriteAssetIndexTable[];
 
-void SpriteGrid_SetCellFlags(u8 a, u8 b, s16 c, s16 d, u8 e)
+void SpriteGrid_SetCellFlags(u8 gridId, u8 plane, s16 x, s16 y, u8 flags)
 {
-    *(u16 *)(2 * (d * sSpriteAssetIndexTable[(u8)a].stride) + 5 * b * 4096 + 2 * c + 0x02030000) &= 0xFC0F;
-    *(u16 *)(2 * (d * sSpriteAssetIndexTable[(u8)a].stride) + 5 * b * 4096 + 2 * c + 0x02030000) |= (u8)e << 4;
+    *(u16 *)(2 * (y * sSpriteAssetIndexTable[(u8)gridId].stride) + 5 * plane * 4096 + 2 * x + 0x02030000) &= 0xFC0F;
+    *(u16 *)(2 * (y * sSpriteAssetIndexTable[(u8)gridId].stride) + 5 * plane * 4096 + 2 * x + 0x02030000) |= (u8)flags
+                                                                                                             << 4;
 }
 
 void BgMap_WriteTileAttr(u8 a, u8 b, s16 c, s16 d, u8 e)

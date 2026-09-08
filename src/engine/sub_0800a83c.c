@@ -11,7 +11,7 @@ void EntityHitbox_RegisterGridPoints(u8 type, u32 gridId, u32 gridPlane, u32 use
     volatile u32 typeStack;
     register u32 gridIdReg asm("r9");
     register u32 gridPlaneReg asm("r8");
-    register u32 r0v asm("r0");
+    u32 r0v;
     register u32 r1v asm("r1");
     const u32 *pointsFieldBase;
     s32 pointIndex;
@@ -49,7 +49,7 @@ void EntityHitbox_RegisterGridPoints(u8 type, u32 gridId, u32 gridPlane, u32 use
 
             useAlternateFlagsTest = useAlternateFlagsStack;
             r0v = 0;
-            if (useAlternateFlagsTest == r0v) {
+            if (r0v == useAlternateFlagsTest) {
                 branchTypeIndex = (s32)shiftedType >> 24;
                 r1v = branchTypeIndex * sizeof(EntityHitbox);
                 point = (const EntityHitboxPoint *)(pointOffset + *(const u32 *)((u32)r1v + (u32)pointsFieldBase));

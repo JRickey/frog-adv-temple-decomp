@@ -17,8 +17,6 @@
  *     first, base second). The natural `&arr[idx]` form folds to
  *     `adds r1, r5, r0` — byte_diff 2 from baserom. */
 
-extern s8 EntityHitbox_FindPoint(s8 a, s16 x, s16 y);
-
 void Entity_ActivateHitSlot(void *arr, void *mask, u8 a, u8 b)
 {
     s8 idx;

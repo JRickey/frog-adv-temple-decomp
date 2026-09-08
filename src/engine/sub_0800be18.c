@@ -109,8 +109,6 @@ done:
  * it (clear +5, set +4, copy gGameStuff._unk00 to +0) and OR's (1 << idx)
  * into the caller-supplied 64-bit mask. */
 
-extern s8 EntityHitbox_FindPoint(s8 a, s16 x, s16 y);
-
 void EntityHitbox_RegisterHit(struct EntryB8A8 *arr, unsigned long long *mask, u8 a, u8 b)
 {
     s8 slotIndex;

@@ -3,6 +3,7 @@
 #include "iwram.h"
 #include "macros.h"
 #include "sound.h"
+#include "sprite_grid.h"
 #include "types.h"
 
 /* Per-frame update of an entity's hit-slot array (one CollisionSlot per
@@ -39,7 +40,6 @@
 extern const EntityHitboxBytes sEntityHitboxTable[];
 extern u32 Tilemap_GetTileClass(u8 col, u8 row, s16 tileX, s16 tileY);
 extern void BlitFrameCell(u8 frame, u8 rows, u8 cols, u16 dstX, u16 dstY, u8 bank, u8 cell);
-extern void SpriteGrid_SetCellFlags(u8 gridId, u8 plane, s16 x, s16 y, u8 flags);
 
 #define HITSLOT_REVEAL_DELAY       50
 #define HITSLOT_FRAME_DELAY        5
