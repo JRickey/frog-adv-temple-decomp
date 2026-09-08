@@ -1,0 +1,75 @@
+rtl
+(insn 28 26 30 (set (reg:SI 30)
+        (mem/u:SI (symbol_ref/u:SI ("*.LC1")) 0)) -1 (nil)
+    (expr_list:REG_EQUAL (symbol_ref:SI ("gEepromTimerIndex"))
+        (nil)))
+
+(insn 30 28 32 (set (reg:SI 31)
+        (zero_extend:SI (mem/f:QI (reg:SI 30) 0))) -1 (nil)
+    (nil))
+
+(insn 32 30 33 (set (reg:SI 33)
+        (const_int 8)) -1 (nil)
+    (nil))
+
+(insn 33 32 35 (set (reg:SI 32)
+        (ashift:SI (reg:SI 33)
+            (reg:SI 31))) -1 (nil)
+
+cse
+(insn 28 24 30 (set (reg:SI 30)
+        (mem/u:SI (symbol_ref/u:SI ("*.LC1")) 0)) 1 {*movsi_insn} (nil)
+    (expr_list:REG_EQUAL (symbol_ref:SI ("gEepromTimerIndex"))
+        (nil)))
+
+(insn 30 28 32 (set (reg:SI 31)
+        (zero_extend:SI (mem/f:QI (reg:SI 30) 0))) 17 {*zero_extendqisi2_insn} (nil)
+    (nil))
+
+(insn 32 30 33 (set (reg:SI 33)
+        (const_int 8)) 1 {*movsi_insn} (nil)
+    (expr_list:REG_EQUAL (const_int 8)
+        (nil)))
+
+(insn 33 32 35 (set (reg:SI 32)
+        (ashift:SI (reg:SI 33)
+            (reg:SI 31))) 39 {ashlsi3} (nil)
+
+combine
+(insn 28 24 30 (set (reg:SI 30)
+        (mem/u:SI (symbol_ref/u:SI ("*.LC1")) 0)) 1 {*movsi_insn} (nil)
+    (expr_list:REG_EQUAL (symbol_ref:SI ("gEepromTimerIndex"))
+        (nil)))
+
+(note 30 28 32 "" NOTE_INSN_DELETED)
+
+(insn 32 30 33 (set (reg:SI 33)
+        (const_int 8)) 1 {*movsi_insn} (nil)
+    (expr_list:REG_EQUAL (const_int 8)
+        (nil)))
+
+(insn 33 32 35 (set (reg:SI 32)
+        (ashift:SI (reg:SI 33)
+            (subreg:SI (mem/f:QI (reg:SI 30) 0) 0))) 39 {ashlsi3} (insn_list 28 (insn_list 32 (nil)))
+    (expr_list:REG_DEAD (reg:SI 30)
+        (expr_list:REG_DEAD (reg:SI 33)
+
+greg
+(insn 28 24 30 (set (reg:SI 2 r2)
+        (mem/u:SI (symbol_ref/u:SI ("*.LC1")) 0)) 1 {*movsi_insn} (nil)
+    (expr_list:REG_EQUIV (symbol_ref:SI ("gEepromTimerIndex"))
+        (nil)))
+
+(note 30 28 32 "" NOTE_INSN_DELETED)
+
+(insn 32 30 93 (set (reg:SI 1 r1)
+        (const_int 8)) 1 {*movsi_insn} (nil)
+    (nil))
+
+(insn 93 32 33 (set (reg:QI 2 r2)
+        (mem/f:QI (reg:SI 2 r2) 0)) 7 {*movqi_insn} (insn_list 28 (nil))
+    (nil))
+
+(insn 33 93 35 (set (reg:SI 1 r1)
+        (ashift:SI (reg:SI 1 r1)
+            (reg:SI 2 r2))) 39 {ashlsi3} (insn_list 32 (insn_list 93 (insn_list 28 (insn_list 32 (nil)))))

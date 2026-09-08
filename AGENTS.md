@@ -157,6 +157,33 @@ Escalate when an explanation stalls with a compact packet: best candidate,
 provenance, exact residual, tested hypotheses, and a discriminating next test.
 Reopen affected deferred work when a prerequisite claim changes.
 
+## Adaptive investigation contract
+
+Optimize verified progress per measured usage, including orchestration and
+failed experiments. Do not treat activity, a lower isolated score, or model
+reputation as evidence of progress. After an experiment, record what changed
+in the explanation and which next test would distinguish the remaining causes.
+
+- Three consecutive trials with the same instruction residual end that source
+  variation loop. Continue only with new evidence: compiler traces, an audited
+  interface, a corpus idiom, or an independently derived source structure.
+- Before a detour, name its blocker, reusable benefit, bounded deliverable and
+  stop condition. Prefer detours that unlock several functions. Resume the
+  original task after the deliverable; do not expand a tool into a framework.
+- Use a fresh, focused worker for prolonged diagnosis. The orchestrator reviews
+  compact evidence and owns acceptance; it should not replay a large history
+  for each compile attempt. Separate compiler instrumentation from mechanism
+  review, with explicit file/build ownership.
+- Each trial needs immutable source/configuration/compiler identity, prediction,
+  outputs and outcome. Never attribute a changing shared .s to a past source.
+  Probe compiler flags on a tiny input before a full ROM build.
+- Recover per-worker usage from local session counters when available. Include
+  cached input, uncached input and output separately. Quota snapshots are
+  account-wide; do not attribute their entire delta to one task without evidence.
+- Commit a reusable correction when a mistake reveals a general failure mode.
+  Persist learning in evidence, tests and workflow rules; summaries alone do
+  not change the next run. Re-evaluate routing using reviewed outcomes.
+
 ## Readability and reporting
 
 Use project integer types, `/* */` comments, named constants, and human

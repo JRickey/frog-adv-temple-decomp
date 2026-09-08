@@ -548,6 +548,13 @@ def _diff_after_build(name: str) -> dict:
     # would be measuring the wrong slice. Surface this explicitly so the
     # agent doesn't try to "fix" the codegen.
     original_addr = baserom_addr(name)
+    if original_addr is None:
+        return {"function": name, "build_ok": True, "build_errors": "",
+                "provenance": provenance, "addr": addr, "size": size,
+                "error": "Unknown baserom address: retain the original target "
+                         "name until matching, or establish its address from "
+                         "verified baseline evidence. The current link address "
+                         "is not a safe substitute."}
     layout_drift = (original_addr is not None and original_addr != addr)
     if layout_drift:
         # Diff at the BASEROM address — that's what the function *should* match.

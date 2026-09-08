@@ -101,6 +101,26 @@ infrastructure gate passes 47 tests plus evidence/campaign validation.
 
 Sol prepared and reviewed the entity candidate; Terra prepared/analyzed the
 timer candidate; Astra integrated, owned builds, diagnosed the timer and wrote
-the menu routine. The accompanying ledger records review corrections. Token
-usage and selected reasoning effort remain unavailable (null); this small,
-unequal workload is not a controlled model ranking.
+the menu routine. The accompanying ledger records review corrections. Local session counters were subsequently recovered with session_usage.py.
+The ledger now records Astra medium, Sol low and Terra medium. Across the
+bounded campaign window, input was 15,818,367 tokens (15,525,888 cached;
+292,479 uncached), output 48,322, and total 15,866,689. Reasoning tokens are
+already included in output. Account-wide weekly usage moved from 8% to 14%;
+this is not a precise campaign charge or a dollar price. This small, unequal
+workload is not a controlled model ranking.
+
+## Follow-up safeguards
+
+The oracle now refuses a target whose original address is unknown instead of
+scoring the current link address. A regression test covers the renamed-timer
+failure. AGENTS.md requires immutable trial evidence, a change of approach
+after three identical residuals, and bounded detours with explicit stop
+conditions. The session_usage.py command accepts explicit local JSONL paths
+and optional --start/--end UTC timestamps; it emits counters without transcript
+content and marks missing baselines as unknown.
+
+The follow-up standalone RTL trace locates the first ordering change in combine,
+not frontend expansion: the byte load becomes a memory shift operand, and
+reload emits it after constant 8. See ../experiments/eeprom-timer-combine/ for
+the reproduction and next causal test. This explains the residual; it does not
+resolve the timer decompilation.

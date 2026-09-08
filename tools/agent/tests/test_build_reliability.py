@@ -230,5 +230,17 @@ class BuildReliabilityTests(unittest.TestCase):
         self.assertIn("source was restored", result["build_errors"])
 
 
+class TargetIdentityTests(unittest.TestCase):
+    def test_unknown_baseline_refuses_current_link_address(self):
+        with mock.patch.object(oracle, "build_incremental", return_value=(True, "", {})), \
+             mock.patch.object(oracle, "find_in_map", return_value=(0x0803394c, 100)), \
+             mock.patch.object(oracle, "baserom_addr", return_value=None), \
+             mock.patch.object(oracle, "disasm_slice") as disasm:
+            result = oracle._diff_after_build("RenamedTimer")
+        self.assertIn("Unknown baserom address", result["error"])
+        self.assertNotIn("byte_diff", result)
+        disasm.assert_not_called()
+
+
 if __name__ == "__main__":
     unittest.main()

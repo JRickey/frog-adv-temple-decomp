@@ -96,10 +96,10 @@
   {
     "schema_version": 1,
     "id": "eeprom.timer-mask-expansion",
-    "kind": "dependency",
-    "title": "Explain timer-index load and mask-register ordering",
-    "status": "hypothesized",
-    "claim": "Inspect the ordinary u8 index load through old compiler shift expansion and local allocation. Compare the seven-byte nonvolatile residual to target load-count-before-constant 8 order. Do not promote the four-byte volatile-index trial to source truth, or replay already failed helper/type variants without a new prediction.",
+    "kind": "compiler",
+    "title": "Combine folds timer index load into the shift count",
+    "status": "observed",
+    "claim": "Standalone reproduction with installed old_agbcc preserves index-load-before-constant order through RTL expansion and CSE. Combine deletes the byte load and folds its MEM into the shift count; reload materializes the load after constant 8 and assigns the observed swapped registers. This explains the current candidate residual, not a matching source solution. Next discriminating test is a private diagnostic veto of that substitution, followed by stock-compiler source investigation.",
     "subjects": [
       "fn:08033948"
     ],
@@ -108,6 +108,10 @@
         "path": "asm/disasm_0x08033948.s",
         "location": "instructions at +0x10 through +0x18",
         "commit": "679a8ed9adec766c20246dc265e370365e325745"
+      },
+      {
+        "path": "docs/experiments/eeprom-timer-combine/README.md",
+        "location": "Reproduction and RTL excerpts"
       }
     ],
     "tags": [

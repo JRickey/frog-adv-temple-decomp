@@ -19,7 +19,7 @@
     {
       "id": "fresh01-astra",
       "model": "gpt-6-astra",
-      "reasoning_effort": null,
+      "reasoning_effort": "medium",
       "task": "Select untouched targets, integrate candidates, diagnose timer and implement menu routine",
       "outcome": "two-matches-one-deferred",
       "review_corrections": [
@@ -27,23 +27,31 @@
         "Seeded known renamed-target baseline addresses; future work should retain old names until matching.",
         "Rejected volatile-pointer inference and a causal claim based on changing generated assembly."
       ],
-      "usage": null
+      "usage": {
+        "input_tokens": 12347993,
+        "cached_input_tokens": 12245120,
+        "output_tokens": 27607
+      }
     },
     {
       "id": "fresh01-sol",
       "model": "gpt-5.6-sol",
-      "reasoning_effort": null,
+      "reasoning_effort": "low",
       "task": "Prepare and review entity initializer candidate",
       "outcome": "accepted-after-integration",
       "review_corrections": [
         "Root used the natural modulo operator and shared typed SpawnRecord interface instead of local const-void declaration and explicit libcall."
       ],
-      "usage": null
+      "usage": {
+        "input_tokens": 806871,
+        "cached_input_tokens": 767616,
+        "output_tokens": 4651
+      }
     },
     {
       "id": "fresh01-terra",
       "model": "gpt-5.6-terra",
-      "reasoning_effort": null,
+      "reasoning_effort": "medium",
       "task": "Prepare timer candidate and investigate remaining source shape",
       "outcome": "deferred-with-handoff",
       "review_corrections": [
@@ -51,7 +59,19 @@
         "Pointer-object volatility was not justified; ordinary post-increment assignments reproduced the tail.",
         "A generated assembly read was attributed to the wrong trial; immutable oracle logs corrected the conclusion."
       ],
-      "usage": null
+      "usage": {
+        "input_tokens": 2663503,
+        "cached_input_tokens": 2513152,
+        "output_tokens": 16064
+      }
     }
-  ]
+  ],
+  "usage_provenance": {
+    "source": "Local Codex cumulative session counters, extracted with tools/agent/session_usage.py",
+    "start": "2026-09-08T03:31:40.948Z",
+    "end": "2026-09-08T03:57:20.236Z",
+    "account_weekly_used_percent_before": 8,
+    "account_weekly_used_percent_after": 14,
+    "quota_scope": "account-wide, not attributable campaign billing"
+  }
 }
