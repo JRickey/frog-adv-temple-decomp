@@ -15,8 +15,24 @@ struct TileBlitRecord {
     u32 _pad20;
 };
 
-extern struct TileBlitRecord gTileBlitTable_08306840[];
+enum IconSet {
+    ICON_SET_3_ELEMENTS = 0,
+    ICON_SET_5_ELEMENTS = 1,
+    ICON_SET_NONE = 15,
+};
 
+#define TILEBLIT_SCREEN ((u16 *)0x0600f800)
+#define ICON_PAL_RAM    ((void *)0x05000180)
+
+extern struct TileBlitRecord gTileBlitTable_08306840[];
+extern struct DmaDesc2Entry gDmaDescTable_08306888[];
+extern const u16 sIconPalette_173038[];
+extern u8 gIwram_5330;
+
+/* Every record access goes through the symbol (no entry pointer local): the
+ * loops re-derive &table[index], which gcse PRE turns into the ip/r5/r7
+ * preheader copies. Grouping the screen constant with colStart keeps fold
+ * from re-associating the destination sum. */
 void TileBlit_DrawEntry(u8 index)
 {
     u16 *dst;
@@ -24,7 +40,7 @@ void TileBlit_DrawEntry(u8 index)
     u8 row;
     u8 col;
 
-    dst = (u16 *)0x0600f800 + gTileBlitTable_08306840[index].colStart + gTileBlitTable_08306840[index].tileRow * 32;
+    dst = TILEBLIT_SCREEN + gTileBlitTable_08306840[index].colStart + gTileBlitTable_08306840[index].tileRow * 32;
     src = *gTileBlitTable_08306840[index].srcTable;
     for (row = 0; row < gTileBlitTable_08306840[index].rowCount; row++) {
         for (col = 0; col < gTileBlitTable_08306840[index].colCount; col++)
@@ -33,79 +49,45 @@ void TileBlit_DrawEntry(u8 index)
     }
 }
 
-/* Re-declare without prototype so Icon_DmaLoadSprite passes idx (u32 in r4) as-is via
- * `add r0, r4, #0` — no zero-extension of the u8 parameter — matching the baserom. */
-void TileBlit_DrawEntry();
+/* Returns u8 so the inlined result is copied into the caller's u32 idx
+ * (adds r4, r1, #0) instead of being expanded straight into it. */
+static inline u8 Icon_SelectSet(void)
+{
+    u8 set;
 
-/* DMA descriptor table: 16-byte entries at 0x08306888. Each entry holds
- * (at byte offset 4) a pointer to a source pointer, (at +8) the destination
- * address, and (at +12) a byte count as a u16. */
-extern u32 gDmaDescTable_08306888[];
+    set = ICON_SET_NONE;
+    switch (gIwram_6110.threshold) {
+    case 3:
+        set = ICON_SET_3_ELEMENTS;
+        break;
+    case 5:
+        set = ICON_SET_5_ELEMENTS;
+        break;
+    }
+    return set;
+}
 
 void Icon_DmaLoadSprite(void)
 {
     u32 idx;
-    u8 mode;
-    register u32 r1val asm("r1");
-    volatile u32 *dma;
+    const u32 *srcTable;
 
-    r1val = 15;
-    mode = gIwram_6110.threshold;
-    if (mode == 3)
-        goto case3;
-    if (mode == 5)
-        goto case5;
-    goto cont;
-case3:
-    r1val = 0;
-    goto cont;
-case5:
-    r1val = 1;
-cont:
-    idx = r1val;
-
-    if (idx == 15)
+    idx = Icon_SelectSet();
+    if (idx == ICON_SET_NONE)
         return;
 
     gIwram_5320.byte0 = 0;
 
-    {
-        u32 tableBase = (u32)gDmaDescTable_08306888;
-        register u32 r0r asm("r0");
+    srcTable = gDmaDescTable_08306888[idx].srcPtrTable;
+    REG_DMA3.src = (const void *)*srcTable;
+    REG_DMA3.dst = (void *)gDmaDescTable_08306888[idx].destAddr;
+    REG_DMA3.cnt = DMA_ENABLE | (gDmaDescTable_08306888[idx].count >> 1);
+    (void)REG_DMA3.cnt;
 
-        r1val = idx << 4;
-        /* DMA source: double-deref the pointer stored at table[idx]+4.
-         * REG_DMA3 base is loaded between the two derefs (agbcc scheduling). */
-        r0r = tableBase + 4;
-        r0r = r1val + r0r;
-        r0r = *(u32 *)r0r;
-        dma = (volatile u32 *)0x040000D4;
-        r0r = *(u32 *)r0r;
-        dma[0] = r0r;
-
-        /* DMA destination: single-deref the u32 at table[idx]+8. */
-        r0r = tableBase;
-        r0r += 8;
-        r0r = r1val + r0r;
-        r0r = *(u32 *)r0r;
-        dma[1] = r0r;
-
-        /* DMA count: ldrh at table[idx]+12, shift right to get halfword count. */
-        r1val += tableBase;
-        r1val = *(u16 *)(r1val + 12);
-        r0r = r1val >> 1;
-        r1val = 0x80;
-        r1val <<= 24; /* stride = 0x80000000 = DMA_ENABLE */
-        r0r |= r1val;
-        dma[2] = r0r;
-        (void)dma[2];
-    }
-
-    /* Palette DMA: 16 colors (0x10 halfwords) from ROM to OBJ palette slot. */
-    dma[0] = 0x08173038;
-    dma[1] = 0x05000180;
-    dma[2] = 0x80000010;
-    (void)dma[2];
+    REG_DMA3.src = sIconPalette_173038;
+    REG_DMA3.dst = ICON_PAL_RAM;
+    REG_DMA3.cnt = DMA_ENABLE | 0x10;
+    (void)REG_DMA3.cnt;
 
     TileBlit_DrawEntry(idx);
 }
