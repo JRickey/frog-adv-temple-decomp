@@ -478,3 +478,25 @@ Lesson: when a pinned body reproduces a struct-by-value call site whose
 NULL checks precede the packing, it is an inlined helper — find the
 out-of-line sibling in the ROM and `static inline` it instead of pinning the
 packing registers.
+
+## Session 2026-09-07 — src/engine/sub_080210a0.c (de-pin agent): 8 pins -> 0
+
+- `Entity_InitSlotFromRecord` (8 pins: sl/r6/r8/r9/r5/r2/r0/r1 -> 0, pure C,
+  no permuter, no flags). The "documented resistant" verdict (June: 17-pin
+  wholesale removal failed; "agbcc emits tighter 132 B code") was a parameter
+  TYPE problem: the pinned TU declared the four stack-passed args `u32`, so
+  each pseudo kept a `REG_EQUIV [sp]` note and reload re-read it at its use
+  (`mov r0, sp; ldrh r0, [r0, #24]`). With the callers' prototype types
+  (`u16 flags, u8 kind, u16 field14, u8 field16, u8 matchKey, u8 field17`)
+  the SI->QI/HI parm conversion drops the REG_EQUIV note and global alloc
+  hoists all four into r6/r8/r9/r5 at entry, exactly the baserom prologue.
+  Remaining shape: `u8 state = rec->state;` first, `struct Entity *pool =
+  gEntities; entity = &pool[idx];` (pool load before the index math takes r4
+  and pushes `rec` to sl), two-variable `initDir = 2; if (dir) initDir = dir`.
+  Naive clean C with the right types was byte_diff 135; with the three shape
+  levers byte_diff 0 first try. See docs/codegen-notes.md "Narrow (u8/u16)
+  stack parameters are register-hoisted".
+
+Lesson: a de-pinned body that loads stack args at their use with
+`ldrb`/`ldrh` via `mov rN, sp` where the ROM does `ldr rX, [sp, #N]` at entry
+is a parameter-type mismatch, not an allocator limit.

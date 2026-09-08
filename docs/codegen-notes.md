@@ -3245,3 +3245,37 @@ high regs are frames=ip / dst=r9.
   prints `Spilling for insn N / Spilling reg R` and `Register P now in R` for
   the retries. /tmp/agbcc-oracle is shared by every agent on the box -- run
   the same preproc|cpp|`old_agbcc -da` pipeline into a private dir instead.
+
+## Narrow (u8/u16) stack parameters are register-hoisted; u32 ones are re-read from [sp] (Entity_InitSlotFromRecord, 2026-09-07)
+
+8 pins -> 0. The June note "agbcc emits tighter code than the baserom; the
+pins force high-reg arg hoisting" was a TYPE problem. `function.c:
+assign_parms` copies every stack parm into a pseudo at entry, and attaches a
+`REG_EQUIV <stack slot>` note to that copy only when `nominal_mode ==
+passed_mode && !did_conversion`. arm.h defines `PROMOTE_PROTOTYPES`, so a
+`u8`/`u16` parameter is passed as SImode but its nominal mode is QI/HI:
+the copy goes through `convert_to_mode`, `did_conversion` is set, and the
+pseudo has NO memory equivalence. It therefore must be register-allocated
+(r6/r8/r9/r5 at entry, full-word `ldr` from the incoming slot, high-reg
+save/restore in the prologue). A `u32` parameter keeps the REG_EQUIV note,
+global alloc leaves it unallocated, and reload substitutes the stack slot
+at each use (`mov r0, sp; ldrh r0, [r0, #24]` -- the "tighter" 132-byte
+body). The callers' prototype already carried the narrow types; the pinned
+TU had widened them to u32 and then pinned the registers back by hand.
+
+Companion levers in the same function, all pure C:
+- `struct Entity *pool = gEntities; entity = &pool[idx];` emits the
+  `ldr r4, =gEntities` BEFORE the `idx * 56` shift/sub/shift (then r4 is
+  free for `&deltaY` later). `&gEntities[idx]` forces the symbol into a
+  register after the multiply (`ldr r0`), and the missing r4 occupant
+  cascades the whole allocation (byte_diff 129 vs 0).
+- `u8 state = rec->state;` as the first statement puts the `ldrb ... mov
+  ip, r1` before the pool load (declaration/initializer order).
+- `initDir = 2; if (dir != 0) initDir = dir;` (two variables) is `movs r1,
+  #2; cmp r0, #0; beq; adds r1, r0, #0`; `if (dir == 0) dir = 2;` is `cmp;
+  bne; movs r0, #2` with the strb/adds registers swapped.
+
+Rule of thumb: when a de-pinned body reads stack arguments at their use
+sites with `ldrh`/`ldrb` through `mov rN, sp` while the baserom hoists them
+into callee-saved/high regs with a full `ldr [sp, #N]` at entry, check the
+parameter types against the callers' prototype before touching allocation.
