@@ -1,16 +1,6 @@
+#include "entity_spawn.h"
 #include "iwram.h"
 #include "types.h"
-
-/* The entity-pool slot written here is the canonical struct Entity (iwram.h).
- * SpawnRecord below is the distinct ROM spawn-record input format (NOT SpawnRec). */
-typedef struct SpawnRecord {
-    u16 head;
-    u8 state;
-    u8 _pad03[5];
-    u16 x;
-    u16 y;
-    s8 param;
-} SpawnRecord;
 
 extern void DirToMotion(u8 dir, s8 *outX, s8 *outY);
 extern void MotionDesc_Set(struct Entity *e, s8 param, s8 deltaX, s8 deltaY);

@@ -535,8 +535,7 @@ SECTIONS {
         src/engine/sub_08017a88.o(.text);  /* 0x08017a88 - 0x08017aa8, Attract_StepFinish */
         src/engine/sub_08017aa8.o(.text);  /* 0x08017aa8 - 0x08017abc, Attract_Cleanup */
         src/engine/sub_08017abc.o(.text);  /* 0x08017abc - 0x08017b68, UiScreen_Init */
-        src/engine/sub_08017bfc.o(.text);  /* ... - 0x08018188, + sub_08017FC4 */
-        asm/disasm_0x08018188.o(.text);  /* 0x08018188 - 0x080181d0, sub_08018188 (auto-peeled) */
+        src/engine/sub_08017bfc.o(.text);  /* ... - 0x080181d0, through Menu_ApplyCursorRoute */
         src/engine/sub_080181d0.o(.text);
         src/engine/sub_080182cc.o(.text);  /* 0x080182cc - 0x080184dc, CreditsMenu_HandleInputA, CreditsScreen_Init, CreditsMenu_HandleInputB, Bg_InitMode0 */
         src/engine/sub_080184dc.o(.text);  /* 0x080184dc - 0x080185c0, Tilemap_SwapPalette */
@@ -867,8 +866,7 @@ SECTIONS {
         asm/disasm_0x08028b94.o(.text);  /* 0x08028b94 - 0x080292e0, sub_08028B94 (peeled) */
         asm/disasm_0x080292e0.o(.text);  /* 0x080292e0 - 0x08029448, sub_080292E0 (peeled) */
         asm/disasm_0x08029448.o(.text);  /* 0x08029448 - 0x080295ac, sub_08029448 (peeled) */
-        src/engine/sub_080295ac.o(.text);
-        asm/disasm_0x080296b8.o(.text);  /* 0x080296b8 - 0x08029710, sub_080296B8 (peeled) */
+        src/engine/sub_080295ac.o(.text);  /* 0x080295ac - 0x08029710, through LevelLayout_SpawnGroup317A4C */
         asm/disasm_0x08029710.o(.text);  /* 0x08029710 - 0x08029748, sub_08029710 (peeled) */
         asm/disasm_0x08029748.o(.text);  /* 0x08029748 - 0x08029780, sub_08029748 (peeled) */
         asm/disasm_0x08029780.o(.text);  /* 0x08029780 - 0x080297ac, sub_08029780 (peeled) */

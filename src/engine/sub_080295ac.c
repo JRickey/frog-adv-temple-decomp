@@ -1,3 +1,4 @@
+#include "entity_spawn.h"
 #include "entity.h"
 #include "game.h"
 #include "iwram.h"
@@ -42,4 +43,21 @@ void sub_0802966C(void)
 void sub_08029690(void)
 {
     LevelLayout_WalkRecords(40, sLevelLayout_31707C, 16, 0x41, 0x71, 4, 0);
+}
+
+extern const u32 sLevelLayoutPtrs[66];
+
+enum { GROUP317A4C_COUNT = 5, GROUP317A4C_FIRST_SLOT = 50, GROUP317A4C_KIND = 0x47, GROUP317A4C_SPAWN_FLAGS = 16 };
+
+/* Initialize five consecutive slots from the first layout-pointer window. */
+void LevelLayout_SpawnGroup317A4C(void)
+{
+    u8 i = 0;
+
+    do {
+        Entity_InitSlotFromRecord(i + GROUP317A4C_FIRST_SLOT, (const SpawnRecord *)sLevelLayoutPtrs[i],
+                                  GROUP317A4C_SPAWN_FLAGS, GROUP317A4C_KIND, ((i % GROUP317A4C_COUNT) << 2) + 0x111, 5,
+                                  3, 3);
+        i++;
+    } while (i < GROUP317A4C_COUNT);
 }

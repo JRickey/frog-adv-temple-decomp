@@ -1,3 +1,4 @@
+#include "menu.h"
 #include "gfx.h"
 #include "macros.h"
 #include "types.h"
@@ -390,4 +391,26 @@ void sub_08017FC4(void)
         WinPoseScreen_UpdateAnim();
     }
     gIwram_5398 = 0;
+}
+
+/* Convert the three-option cursor into the main-loop route and reset dispatch. */
+void Menu_ApplyCursorRoute(void)
+{
+    switch (gIwram_3480.cursorIndex) {
+    case MENU_CURSOR_FILE_SELECT:
+        gIwram_3480.routerSelection = MENU_ROUTE_FILE_SELECT;
+        gIwram_34A0._field_00 = 0;
+        gIwram_34A0.dispatchIdx = 0;
+        break;
+    case MENU_CURSOR_OPTIONS:
+        gIwram_3480.routerSelection = MENU_ROUTE_OPTIONS;
+        gIwram_34A0._field_00 = 0;
+        gIwram_34A0.dispatchIdx = 0;
+        break;
+    case MENU_CURSOR_MENU07:
+        gIwram_3480.routerSelection = MENU_ROUTE_MENU07;
+        gIwram_34A0._field_00 = 0;
+        gIwram_34A0.dispatchIdx = 0;
+        break;
+    }
 }
