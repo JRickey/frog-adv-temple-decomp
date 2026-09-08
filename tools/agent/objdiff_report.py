@@ -35,6 +35,9 @@ ELF = ROOT / "frog_us.elf"
 LAYOUT = ROOT / "config" / "decompdev_layout.us.json"
 MAP = ROOT / "frog_us.map"
 EXPECTED_SHA1 = "7b4c27009198df18555e63fb5dcad223eaf09815"
+# Rebuilt pret/agbcc da598c1d918402c42c0c0d7128ba14567f3175e9 archive.
+# See docs/decompdev.md for provenance; this is not a binary-blob exemption.
+EXPECTED_LIBGCC_SHA256 = "5086cf015e316b4dcef8952305e2e6364d835bd9a11e7328db13027359635ef9"
 DATA_START = 0x08035D9C
 ROM_END = 0x08400000
 
@@ -79,7 +82,10 @@ def _percent(part: int, total: int) -> float:
 
 def _measures(total_code: int, matched_code: int, total_functions: int,
               matched_functions: int, total_units: int = 1,
-              total_data: int = 0, matched_data: int = 0) -> dict:
+              total_data: int = 0, matched_data: int = 0,
+              complete_code: int | None = None, complete_units: int = 0) -> dict:
+    if complete_code is None:
+        complete_code = matched_code
     return {
         "fuzzy_match_percent": _percent(matched_code + matched_data, total_code + total_data),
         "total_code": str(total_code),
@@ -91,12 +97,12 @@ def _measures(total_code: int, matched_code: int, total_functions: int,
         "total_functions": total_functions,
         "matched_functions": matched_functions,
         "matched_functions_percent": _percent(matched_functions, total_functions),
-        "complete_code": str(matched_code),
-        "complete_code_percent": _percent(matched_code, total_code),
+        "complete_code": str(complete_code),
+        "complete_code_percent": _percent(complete_code, total_code),
         "complete_data": str(matched_data),
         "complete_data_percent": _percent(matched_data, total_data),
         "total_units": total_units,
-        "complete_units": 0,
+        "complete_units": complete_units,
     }
 
 
@@ -177,7 +183,7 @@ def _category(object_path: str) -> tuple[str, str]:
     if object_path.startswith("lib/gax/"):
         return "gax", "GAX sound library"
     if "libgcc.a" in object_path:
-        return "libgcc", "Compiler support (libgcc)"
+        return "libgcc", "Compiler support (libgcc; reproduced dependency)"
     if object_path == "asm/libagbsyscall.o":
         return "sdk", "GBA BIOS call wrappers"
     # Directory placement still reflects historical peeling, not semantics.
@@ -248,6 +254,10 @@ def build_report(inventory_path: Path = INVENTORY) -> dict:
         total_code = sum(function.size for function in unit_functions)
         matched_code = sum(function.size for function in matched)
         matched_addresses = {function.address for function in matched}
+        dependency_complete = (
+            category_id == "libgcc"
+            and layout.get("libgcc_sha256") == EXPECTED_LIBGCC_SHA256
+        )
         matched_data = section.get("matched_data", 0)
         if matched_data > data_size:
             raise ValueError(f"data credit exceeds section size: {unit.object_path}")
@@ -257,6 +267,8 @@ def build_report(inventory_path: Path = INVENTORY) -> dict:
             "measures": _measures(
                 total_code, matched_code, len(unit_functions), len(matched),
                 total_data=data_size, matched_data=matched_data,
+                complete_code=total_code if dependency_complete else matched_code,
+                complete_units=int(dependency_complete),
             ),
             "sections": [{"name": section["name"], "size": str(data_size),
                           "fuzzy_match_percent": _percent(matched_data, data_size),
@@ -277,6 +289,7 @@ def build_report(inventory_path: Path = INVENTORY) -> dict:
                 for function in unit_functions
             ],
             "metadata": {
+                "complete": dependency_complete,
                 "source_path": _source_path(unit.object_path),
                 "progress_categories": [category_id],
             },
@@ -296,6 +309,8 @@ def build_report(inventory_path: Path = INVENTORY) -> dict:
             total_code, matched_code, total_functions, matched_functions, len(units),
             sum(int(unit["measures"]["total_data"]) for unit in units),
             sum(int(unit["measures"]["matched_data"]) for unit in units),
+            complete_code=sum(int(unit["measures"]["complete_code"]) for unit in units),
+            complete_units=sum(unit["measures"]["complete_units"] for unit in units),
         )
 
     categories = []
@@ -404,6 +419,12 @@ def explicit_data_names(text: str) -> set[str]:
 
 def update_layout(inventory_path: Path) -> None:
     sections = parse_map_sections(MAP.read_text())
+    archive_paths = {section["object"].split("(")[0] for section in sections
+                     if "libgcc.a(" in section["object"]}
+    library_verified = bool(archive_paths) and all(
+        hashlib.sha256((ROOT / path).read_bytes()).hexdigest() == EXPECTED_LIBGCC_SHA256
+        for path in archive_paths
+    )
     result = subprocess.run(["arm-none-eabi-objdump", "-t", str(ELF)],
                             check=True, capture_output=True, text=True)
     symbols = []
@@ -435,6 +456,7 @@ def update_layout(inventory_path: Path) -> None:
     if stale:
         raise ValueError(f"build is older than source inputs: {', '.join(stale[:8])}; rebuild first")
     snapshot = {"version": 1, "rom_sha1": EXPECTED_SHA1,
+                "libgcc_sha256": EXPECTED_LIBGCC_SHA256 if library_verified else None,
                 "elf_sha256": hashlib.sha256(ELF.read_bytes()).hexdigest(),
                 "map_sha256": hashlib.sha256(MAP.read_bytes()).hexdigest(),
                 "source_sha256": {str(p.relative_to(ROOT)): hashlib.sha256(p.read_bytes()).hexdigest()

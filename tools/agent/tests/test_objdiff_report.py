@@ -43,6 +43,24 @@ class ObjdiffReportTests(unittest.TestCase):
         self.assertEqual([section["size"] for section in sections], [16, 4, 8])
         self.assertEqual(sections[0]["object"], "src/semantic_name.o")
 
+    def test_verified_libgcc_is_complete_not_reconstructed(self) -> None:
+        report = objdiff_report.build_report()
+        library = next(c["measures"] for c in report["categories"] if c["id"] == "libgcc")
+        self.assertEqual(library["matched_code"], "0")
+        self.assertEqual(library["complete_code"], library["total_code"])
+        self.assertEqual(library["complete_units"], 13)
+        self.assertEqual(int(report["measures"]["complete_code"]), sum(
+            int(c["measures"]["complete_code"]) for c in report["categories"]))
+
+    def test_unverified_library_does_not_receive_completion_credit(self) -> None:
+        layout = objdiff_report.load_layout()
+        layout["libgcc_sha256"] = "unknown-archive"
+        with patch.object(objdiff_report, "load_layout", return_value=layout):
+            report = objdiff_report.build_report()
+        library = next(c["measures"] for c in report["categories"] if c["id"] == "libgcc")
+        self.assertEqual(library["complete_code"], "0")
+        self.assertEqual(library["complete_units"], 0)
+
     def test_system_directory_does_not_imply_runtime(self) -> None:
         for obj in ("sub_08000918", "sub_08000eb8", "sub_08001508",
                     "sub_08020b60", "sub_08020e98", "agb_main", "init1", "init"):

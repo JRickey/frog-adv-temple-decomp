@@ -206,6 +206,10 @@ remaining binary blobs. Extracted data files alone do not prove reconstructed
 data; count linked definitions under the documented report policy. Refresh the
 decomp.dev inventory after accepted source/layout changes and validate freshness
 before publishing. See `docs/decompdev.md`.
+Audited, source-rebuilt compiler libraries are resolved dependencies: report
+their verified linked completion separately from authored C reconstruction.
+Do not present them as an unfinished reverse-engineering target or grant the
+same exemption to opaque binary libraries.
 
 Consolidate adjacent, semantically related TUs only after checking compiler
 flags, literal pools, static-name collisions and interfaces. Preserve address

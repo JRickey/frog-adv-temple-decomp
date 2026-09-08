@@ -50,9 +50,34 @@ scalar C data; such cases need a reviewed extension, not a blanket exemption.
 This distinction follows the source/extraction separation used by other GBA
 projects (see [FE8J's scorecard](https://github.com/laqieer/fireemblem8j)). The
 report fields follow the [ObjDiff schema](https://github.com/encounter/objdiff/blob/main/objdiff-core/protos/report.proto).
-Matched and complete byte measures both represent verified reconstructed
-source here; `complete_units` remains zero because original TU boundaries and
-unit completion have not been audited.
+Matched bytes represent reconstructed C/data here. Complete ("fully linked")
+bytes additionally include the audited, reproduced libgcc dependency. Its 13
+archive members are complete units; other unit completion has not been audited.
+
+## Compiler runtime is a resolved dependency
+
+`tools/agbcc/lib/libgcc.a` supplies code linked into the ROM, not merely a
+host-side build tool. Linking compiler archive members directly is also used
+by [pokeemerald](https://github.com/pret/pokeemerald/blob/master/ld_script.ld).
+[FE8J](https://github.com/laqieer/fireemblem8j#status--honest-four-axis-scorecard)
+also includes installed compiler-library functions in its function totals.
+These projects do not establish one universal progress-counter convention.
+
+Our archive was built from public `pret/agbcc` revision
+`da598c1d918402c42c0c0d7128ba14567f3175e9`: `build.sh` builds libgcc and
+`install.sh` copies the result. Source-built and installed archives compare
+identically with SHA-256
+`5086cf015e316b4dcef8952305e2e6364d835bd9a11e7328db13027359635ef9`.
+The verified ROM links 13 archive members. Their 65 inventoried functions
+cover 6,846 bytes; the 6,888-byte linker band also has 42 non-function bytes.
+
+Thus libgcc is **100% complete as a reproduced compiler dependency**, not
+unfinished reverse engineering. It earns no *authored reconstructed C* credit.
+Snapshot refresh checks the actual linked archive hash before granting this
+completion status. An unknown archive fails closed to zero completion credit.
+GAX's retained INCBIN implementation does not have this source-build provenance
+and receives neither kind of credit. See `docs/decisions.md` for the original
+archive-placement decision.
 
 The tracked function inventory includes functions still inside raw INCBIN
 ranges. Refresh it only from a byte-identical local build:
@@ -78,8 +103,13 @@ an independent CI rebuild or a measure of naming/semantic understanding.
    `report.json` inside it.
 3. Sign in at <https://decomp.dev/manage/new> and register
    `https://github.com/JRickey/frog-adv-temple-decomp`.
-4. Install the decomp.dev GitHub App if automatic refreshes and pull-request
-   progress comments are desired.
+4. Install the decomp.dev GitHub App for immediate workflow-completion refreshes
+   and pull-request progress comments. Without the app, the service polls every
+   30 minutes; manual Force refresh is also available.
+
+The app is installed for `JRickey/frog-adv-temple-decomp` only. It has read
+access to Actions, code and metadata, plus read/write access to issues and pull
+requests for progress comments. No broader repository selection is required.
 
 decomp.dev discovers only completed default-branch push runs during initial
 registration, so a pull-request-only artifact is not sufficient.

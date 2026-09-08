@@ -1,6 +1,21 @@
 [
   {
     "schema_version": 1,
+    "id": "reporting.libgcc-reproduced-dependency",
+    "kind": "workflow",
+    "title": "Linked compiler runtime is resolved, not authored game reconstruction",
+    "status": "observed",
+    "claim": "The installed libgcc archive equals the public agbcc source build at da598c1d918402c42c0c0d7128ba14567f3175e9, SHA256 5086cf015e316b4dcef8952305e2e6364d835bd9a11e7328db13027359635ef9. Thirteen members are byte-identically linked into the ROM. ObjDiff complete_code expresses this resolved linked dependency separately from matched_code, which this project reserves for reconstructed C. Grant completion only after archive-hash verification; GAX does not share this provenance.",
+    "subjects": ["reporting:decompdev", "dependency:libgcc"],
+    "provenance": [
+      {"path": "docs/decompdev.md", "location": "Compiler runtime is a resolved dependency"},
+      {"path": "docs/decisions.md", "location": "In-ROM libgcc cluster"},
+      {"path": "tools/agent/objdiff_report.py", "location": "EXPECTED_LIBGCC_SHA256, dependency_complete, update_layout"}
+    ],
+    "tags": ["reporting", "libgcc", "provenance"]
+  },
+  {
+    "schema_version": 1,
     "id": "reporting.retained-binary-not-reconstruction",
     "kind": "workflow",
     "title": "Retained binary and extracted data do not establish reconstruction",

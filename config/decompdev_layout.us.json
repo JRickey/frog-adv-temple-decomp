@@ -1,6 +1,7 @@
 {
   "version": 1,
   "rom_sha1": "7b4c27009198df18555e63fb5dcad223eaf09815",
+  "libgcc_sha256": "5086cf015e316b4dcef8952305e2e6364d835bd9a11e7328db13027359635ef9",
   "elf_sha256": "eb4d7db40cb53f7f527436574f9d132ed37f89ac2b9c99ef4770a997475acb29",
   "map_sha256": "95eb48c34bd26ddd2fc19a0f0e932537c4b8ef42a13fbf3d7e1bd6a234250f5a",
   "source_sha256": {
