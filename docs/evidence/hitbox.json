@@ -1,0 +1,272 @@
+[
+  {
+    "schema_version": 1,
+    "id": "compiler.narrow-stack-parameters",
+    "kind": "compiler",
+    "title": "Narrow stack parameters change memory equivalence",
+    "status": "verified",
+    "claim": "Entity_InitSlotFromRecord lost eight pins after restoring narrow parameter types already present at callers. assign_parms converts promoted QI/HI parameters and omits the stack REG_EQUIV note, allowing entry register hoists. This mechanism concerns stack parameters; RegisterGridPoints has four register arguments and needs separate evidence.",
+    "subjects": [
+      "fn:080210a0",
+      "fn:0800a83c"
+    ],
+    "provenance": [
+      {
+        "path": "docs/codegen-notes.md",
+        "location": "Narrow (u8/u16) stack parameters are register-hoisted",
+        "commit": "b390d97bf21c6fe5f10b3ac0bff3ae7b11b8f0ec"
+      }
+    ],
+    "tags": [
+      "hitbox",
+      "prototype",
+      "REG_EQUIV",
+      "Entity_InitSlotFromRecord"
+    ]
+  },
+  {
+    "schema_version": 1,
+    "id": "compiler.hitbox-inline-hoist-budget",
+    "kind": "compiler",
+    "title": "Hitbox inline types influence loop hoisting",
+    "status": "verified",
+    "claim": "Entity_UpdateHitboxWithTile matches using TU-local Hitbox_SetPointFlags instances, carefully typed parameters, pointer locals and -fno-rerun-loop-opt. loop.c deducts from the hoist threshold per moved group; helper type conversions alter those groups. The successful helper is evidence to study, not a shared-header rewrite to apply blindly.",
+    "subjects": [
+      "fn:0800b918",
+      "fn:0800a83c"
+    ],
+    "provenance": [
+      {
+        "path": "docs/codegen-notes.md",
+        "location": "Loop-invariant hoisting is a budget",
+        "commit": "ebbae4970f4c14235a30c161e47ec91400ac74c5"
+      }
+    ],
+    "tags": [
+      "hitbox",
+      "inline",
+      "loop.c",
+      "Hitbox_SetPointFlags",
+      "Entity_UpdateHitboxWithTile"
+    ]
+  },
+  {
+    "schema_version": 1,
+    "id": "compiler.inline-selector-return-width",
+    "kind": "compiler",
+    "title": "Inline return width can preserve a copied result",
+    "status": "verified",
+    "claim": "The icon/tile-blit cluster removed nine pins with symbol-based repeated table access, address-expression grouping and a static inline u8 selector return. The inline return into a u32 local creates an intermediate conversion/copy; its narrowed value range allows combine to simplify it. Match evidence is tied to this source shape, not any arbitrary u8 helper. The standalone counterpart is not assumed to have the same declared return type as the reconstructed inline helper.",
+    "subjects": [
+      "fn:08016824",
+      "fn:08017270"
+    ],
+    "provenance": [
+      {
+        "path": "docs/codegen-notes.md",
+        "location": "Inlined u8 helper result, PRE preheader copies",
+        "commit": "74491849230761da0ce9f134498620244113ceef"
+      }
+    ],
+    "tags": [
+      "hitbox",
+      "inline",
+      "PRE",
+      "return-type"
+    ]
+  },
+  {
+    "schema_version": 1,
+    "id": "hitbox.gridpoints-operand-order",
+    "kind": "compiler",
+    "title": "RegisterGridPoints comparison order removes one pin",
+    "status": "verified",
+    "claim": "Removing r0v's r0 binding and writing r0v == useAlternateFlagsTest preserved all ROM bytes in c9f57c15. Seven pins remain in that commit. All-u8 parameter trials did not match that explored source shape; this is not a proof against the narrow interface.",
+    "subjects": [
+      "fn:0800a83c"
+    ],
+    "provenance": [
+      {
+        "path": "src/engine/sub_0800a83c.c",
+        "location": "EntityHitbox_RegisterGridPoints flag test",
+        "commit": "c9f57c15fa220a2833e2eed8a4b4ed9056d4b5ad"
+      }
+    ],
+    "tags": [
+      "hitbox",
+      "EntityHitbox_RegisterGridPoints",
+      "depin",
+      "comparison"
+    ],
+    "relations": [
+      {
+        "type": "related",
+        "target": "compiler.hitbox-inline-hoist-budget"
+      }
+    ]
+  },
+  {
+    "schema_version": 1,
+    "id": "hitbox.gridpoints-interface",
+    "kind": "behavior",
+    "title": "RegisterGridPoints callers use four narrow arguments",
+    "status": "observed",
+    "claim": "At baseline ebbae497, external caller declarations use void(u8,u8,u8,u8), while the matching definition uses u8,u32,u32,u32 and explicit low-byte casts. ROM entry zero-extends all four arguments. Four u8 parameters are a supported canonical-interface hypothesis; source conversion timing and whole-cluster matching still require validation.",
+    "subjects": [
+      "fn:0800a83c",
+      "fn:0800a9d4",
+      "fn:0800aa70"
+    ],
+    "provenance": [
+      {
+        "path": "src/engine/sub_0800a83c.c",
+        "location": "EntityHitbox_RegisterGridPoints definition",
+        "commit": "ebbae4970f4c14235a30c161e47ec91400ac74c5"
+      },
+      {
+        "path": "src/engine/sub_0800a9d4.c",
+        "location": "EntityHitbox_RegisterGridPoints extern and calls",
+        "commit": "ebbae4970f4c14235a30c161e47ec91400ac74c5"
+      },
+      {
+        "path": "src/engine/sub_0800aa70.c",
+        "location": "EntityHitbox_RegisterGridPoints extern and calls",
+        "commit": "ebbae4970f4c14235a30c161e47ec91400ac74c5"
+      },
+      {
+        "path": "frog_us.sha1",
+        "location": "0x0800A848-0x0800A85E in identified baserom",
+        "note": "Read-only objdump of this ROM range confirms four lsls/lsrs #24 pairs for r0-r3; baserom itself is never committed.",
+        "commit": "ebbae4970f4c14235a30c161e47ec91400ac74c5"
+      }
+    ],
+    "tags": [
+      "hitbox",
+      "prototype",
+      "EntityHitbox_RegisterGridPoints"
+    ],
+    "relations": [
+      {
+        "type": "informed-by",
+        "target": "compiler.narrow-stack-parameters"
+      }
+    ]
+  },
+  {
+    "schema_version": 1,
+    "id": "hitbox.grid-flags-interface",
+    "kind": "behavior",
+    "title": "SpriteGrid_SetCellFlags has a narrow void interface",
+    "status": "observed",
+    "claim": "The definition and the newly matched hitbox updater use void(u8,u8,s16,s16,u8). Several older hitbox callers declare int(int,int,int,int,int). The unused result does not make the signature correct; investigate caller conversion timing while consolidating the interface.",
+    "subjects": [
+      "fn:0800cb80",
+      "fn:0800a83c",
+      "fn:0800b918",
+      "fn:0800c2a8"
+    ],
+    "provenance": [
+      {
+        "path": "src/engine/sub_0800cb80.c",
+        "location": "SpriteGrid_SetCellFlags definition"
+      },
+      {
+        "path": "src/engine/sub_0800b918.c",
+        "location": "SpriteGrid_SetCellFlags declaration and Hitbox_SetPointFlags",
+        "commit": "ebbae4970f4c14235a30c161e47ec91400ac74c5"
+      }
+    ],
+    "tags": [
+      "hitbox",
+      "prototype",
+      "SpriteGrid_SetCellFlags"
+    ]
+  },
+  {
+    "schema_version": 1,
+    "id": "hitbox.table-byte-view",
+    "kind": "layout",
+    "title": "Hitbox descriptors have signed counts and flag bytes",
+    "status": "observed",
+    "claim": "The descriptor stride is 12 bytes. Byte consumers read signed count at +0, points pointer at +4, primary flags at +8, alternate flags at +9 and blit bank at +10. Existing wide-word and byte views serve different access patterns; consolidating them may change codegen and is not prerequisite to the first interface campaign.",
+    "subjects": [
+      "data:080c0b00",
+      "fn:0800a83c",
+      "fn:0800b918"
+    ],
+    "provenance": [
+      {
+        "path": "include/entity.h",
+        "location": "EntityHitboxBytes and EntityHitbox"
+      },
+      {
+        "path": "src/engine/sub_0800a83c.c",
+        "location": "signed pointCount and primary/alternate flags reads"
+      },
+      {
+        "path": "src/engine/sub_0800b918.c",
+        "location": "Entity_UpdateHitboxWithTile count, bank and Hitbox_SetPointFlags"
+      }
+    ],
+    "tags": [
+      "hitbox",
+      "layout",
+      "EntityHitboxBytes",
+      "sEntityHitboxTable"
+    ]
+  },
+  {
+    "schema_version": 1,
+    "id": "hitbox.resolve-gridpoints-interface",
+    "kind": "dependency",
+    "title": "Resolve and validate the grid-points interface",
+    "status": "hypothesized",
+    "claim": "Find a readable all-u8 interface/source shape that preserves RegisterGridPoints and caller ROM bytes. Record counterexamples with source/configuration fingerprints. Do not mark this complete solely because the header compiles.",
+    "subjects": [
+      "fn:0800a83c"
+    ],
+    "provenance": [
+      {
+        "path": "docs/matching-workflow.md",
+        "location": "Interfaces and source review"
+      }
+    ],
+    "tags": [
+      "hitbox",
+      "campaign",
+      "prototype"
+    ],
+    "prerequisites": [
+      "hitbox.gridpoints-interface",
+      "hitbox.grid-flags-interface",
+      "hitbox.table-byte-view"
+    ]
+  },
+  {
+    "schema_version": 1,
+    "id": "hitbox.rederive-gridpoints-lifetimes",
+    "kind": "dependency",
+    "title": "Rederive the grid-points loop after interface resolution",
+    "status": "hypothesized",
+    "claim": "Test typed argument copies and alternate-branch signed index lifetimes against the target. Preserve the comparison-order success as a lower bound. Study the TU-local hitbox helper before constructing a new inline variant.",
+    "subjects": [
+      "fn:0800a83c"
+    ],
+    "provenance": [
+      {
+        "path": "docs/matching-workflow.md",
+        "location": "Start a campaign"
+      }
+    ],
+    "tags": [
+      "hitbox",
+      "campaign",
+      "depin"
+    ],
+    "prerequisites": [
+      "hitbox.resolve-gridpoints-interface",
+      "compiler.hitbox-inline-hoist-budget",
+      "hitbox.gridpoints-operand-order"
+    ]
+  }
+]

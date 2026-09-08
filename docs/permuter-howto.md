@@ -29,15 +29,17 @@ like. Use it only when a real match is plausible.
 ## When to use it (and when NOT)
 
 USE the permuter when ALL of these hold:
-- The classifier returned **ATTEMPT_MATCH** (no `mov pc, rN` / structural impossibility),
-  i.e. the function is **NOT corpus-validated as unmatchable**.
+- The semantic and compiler evidence supports the candidate structure. The
+  classifier is advisory only; a computed jump can be a normal dense switch.
 - You have written real C and reached a **small** `byte_diff` (roughly ≤ ~40, ideally
   single digits) — a near-match. `compile_and_view_assembly.py <fn> --human` shows it.
-- You already tried the cheap levers (local base-ptr anchor, `register asm("rN")` pins,
-  void-return epilogue, `OLD_AGBCC_BIN` per-TU override) and they didn't close it.
+- You investigated interfaces, inline siblings, data views and the responsible
+  compiler pass, and have a specific residual hypothesis. Pins are not a
+  prerequisite for a permuter run.
 
 Do NOT use the permuter for:
-- A `STRONG_UNMATCHABLE` function — that goes straight to corpus-confirm → NAKED.
+- A classifier result or historical failure by itself. Neither proves
+  impossibility or authorizes a NAKED conversion; see `matching-workflow.md`.
 - A function that isn't close yet (huge `byte_diff`, wrong structure). Permuting a wrong
   base is a waste — fix the C first.
 - A function with no readable C base at all.

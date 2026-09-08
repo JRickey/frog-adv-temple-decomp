@@ -88,6 +88,9 @@ PREPROCFLAGS = charmap.txt
 
 # Objects
 CSRC = $(wildcard src/**.c) $(wildcard src/**/**.c) $(wildcard src/**/**/**.c) $(wildcard src/**/**/**/**.c)
+HEADERS = $(wildcard include/*.h) $(wildcard include/**/*.h) $(wildcard include/**/**/*.h) $(wildcard include/**/**/**/*.h)
+LOCAL_HEADERS = $(wildcard src/*.h) $(wildcard src/**/*.h) $(wildcard src/**/**/*.h) $(wildcard src/**/**/**/*.h) $(wildcard src/*.inc) $(wildcard src/**/*.inc) $(wildcard src/**/**/*.inc) $(wildcard src/**/**/**/*.inc)
+ASM_INPUTS = $(wildcard asm/*.inc) $(wildcard asm/**/*.inc) $(wildcard sound/*.inc) $(wildcard sound/**/*.inc) $(wildcard lib/*.inc) $(wildcard lib/**/*.inc) $(wildcard data/*) $(wildcard data/**/*) $(wildcard data/**/**/*) $(wildcard data/**/**/**/*) $(wildcard sound/direct_sound_samples/*) $(wildcard sound/direct_sound_samples/**/*)
 .PRECIOUS: $(CSRC:.c=.s)
 # lib/ holds isolated third-party libraries (e.g. lib/gax — the GAX Sound
 # System). Their .text comes from labeled .incbin of the original ROM bytes, so
@@ -248,11 +251,11 @@ $(LD_SCRIPT): linker.ld
 	$(MSG) OBJDUMP $@
 	$Q$(OBJDUMP) -D -bbinary -marm7tdmi -Mforce-thumb  $< | $(TAIL) -n+3 >$@
 
-%.o: %.s
+%.o: %.s $(ASM_INPUTS) Makefile make_tools.mk
 	$(MSG) AS $@
 	$Q$(AS) $(ASFLAGS) $< -o $@
 
-%.s: %.c
+%.s: %.c $(HEADERS) $(LOCAL_HEADERS) charmap.txt Makefile make_tools.mk
 	$(MSG) CC $@
 	$Q$(PREPROC) $< $(PREPROCFLAGS) | $(CPP) $(CPPFLAGS) | $(CC) -o $@ $(CFLAGS) && printf '\t.align 2, 0 @ dont insert nops\n' >> $@
 

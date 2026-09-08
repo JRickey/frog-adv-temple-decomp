@@ -36,6 +36,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import evidence
+
 ROOT = Path(__file__).resolve().parent.parent.parent
 BASEROM = ROOT / "frog_us_baserom.gba"
 ROM_BASE = 0x08000000
@@ -272,6 +274,8 @@ def main() -> int:
     p.add_argument("--json", action="store_true")
     p.add_argument("--seed-only", action="store_true",
                    help="print only the m2c seed C (no other sections)")
+    p.add_argument("--evidence-limit", type=int, default=8,
+                   help="maximum relevant evidence records to include")
     args = p.parse_args()
 
     start, end, asm_path = resolve_range(args.target)
@@ -284,6 +288,14 @@ def main() -> int:
 
     if args.json:
         bases = pool_iwram_bases(args.target)
+        try:
+            evidence_records = evidence.brief_data(
+                evidence.load_records(ROOT / "docs/evidence"), args.target,
+                ROOT, args.evidence_limit, ROOT / "tools/agent/callgraph.db")
+            evidence_error = None
+        except evidence.EvidenceError as exc:
+            evidence_records = []
+            evidence_error = str(exc)
         json.dump({
             "function": args.target,
             "range": [start, end],
@@ -294,6 +306,8 @@ def main() -> int:
             "iwram_bases": bases,
             "destination_hint": suggest_destination(start),
             "m2c_seed": m2c_seed(asm_path, args.target),
+            "evidence": evidence_records,
+            "evidence_error": evidence_error,
         }, sys.stdout, indent=2)
         sys.stdout.write("\n")
         return 0
@@ -318,6 +332,16 @@ def main() -> int:
             print(f"    python3 tools/agent/auto_peel.py "
                   f"--callees-of {args.target} --apply")
             print(f"    (or per-address: tools/agent/auto_peel.py {cmd} --apply)")
+    print()
+
+    print("== Evidence ==")
+    try:
+        evidence_records = evidence.brief_data(
+            evidence.load_records(ROOT / "docs/evidence"), args.target,
+            ROOT, args.evidence_limit, ROOT / "tools/agent/callgraph.db")
+        sys.stdout.write(evidence.format_records(evidence_records, ROOT, compact=True))
+    except evidence.EvidenceError as exc:
+        print(f"  (evidence unavailable: {exc})")
     print()
 
     print(f"== Pool ==")

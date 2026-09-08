@@ -1,40 +1,32 @@
 #!/usr/bin/env python3
-"""classify_unmatchable.py — deterministic up-front triage for the decomp loop.
+"""classify_unmatchable.py — evidence-first triage for the decomp loop.
 
 Given a function (by name or address), disassemble its bytes straight from the
 baserom (ground truth — independent of whether it's been decompiled yet) and look
-for STRONG, near-zero-false-positive signatures that agbcc 2.x provably cannot
-reproduce from pure C. The point is to let the decomp agent skip the match grind
-on the clearly-unmatchable functions WITHOUT ever falsely condemning a function
-that was matchable.
+for concrete code-generation signals. The signals tell the decomp agent which
+source-level investigation to start with; they never prove that a function
+cannot match from C.
 
 Design contract (matters — read before tuning):
-  * Two-sided error costs are ASYMMETRIC. A false "STRONG_UNMATCHABLE" leads to a
-    NAKED ship that is a permanent regression. A false "ATTEMPT_MATCH" only costs a
-    wasted match attempt. So this tool is deliberately CONSERVATIVE: it stays SILENT
-    (verdict ATTEMPT_MATCH) on anything fuzzy and only flags signatures with a
-    validated near-zero false-positive rate.
-  * It does NOT replace the corpus check. The agent still corpus-confirms a STRONG
-    verdict before shipping NAKED. This tool removes LLM variance from the cheap
-    structural part of the decision; the corpus confirms the empirical part.
+  * The verdict is always ATTEMPT_MATCH. A static pattern cannot establish an
+    impossibility claim, and this tool must never authorize pins or an assembly
+    fallback.
+  * Signals are evidence to inspect prototypes, local lifetimes, inline helpers,
+    compiler flags, and archive/link opportunities before concluding that a
+    particular source shape is a poor fit.
 
-Signatures flagged STRONG_UNMATCHABLE:
+Detected signals (all advisory):
   class3-libgcc : a WIDE prologue (`push {…, r4, r5, r6, r7, lr}`) whose every `bl`
-                  target is a libgcc helper. agbcc emits a narrower prologue because
-                  it knows libgcc helpers preserve r4-r7. (Narrow prologues do NOT
-                  qualify — that is the sub_0800A214 false-alarm guard.) NOTE: this is
-                  the ONLY remaining STRONG trigger and it is low-confidence — no
-                  confirmed instance on this ROM; corpus-confirm before NAKED.
-
-ADVISORY (NOT auto-NAKED — matchable, just flagged for which lever to reach for):
+                  target resolves to a libgcc helper. Investigate the archive member,
+                  exact prototypes, and call-live values; continue the C match.
   mov pc, rN    : computed jump. RETRACTED as "structural" 2026-05-29 — a dense C
                   `switch` emits exactly this + an absolute-address table (probe-
                   verified, both agbcc and old_agbcc). Write it as a switch.
   class1-hireg  : >=1 value held in a HIGH register (r8/r9/sl/fp) across a `bl`. agbcc
-                  allocates these from plain C when values are call-live; do NOT pin,
-                  write plain C. (Earlier "unmatchable" claim retracted.)
+                  can allocate these from plain C when values are call-live. Inspect
+                  narrow parameter types, local lifetime, and inline-helper shape.
 
-Everything else → ATTEMPT_MATCH.
+Everything → ATTEMPT_MATCH.
 
 Usage:
   python3 tools/agent/classify_unmatchable.py sub_0800B7B0
@@ -55,9 +47,8 @@ ADDR_JSON = REPO / "tools" / "agent" / ".function_addresses.json"
 ROM_BASE = 0x08000000
 OBJDUMP = os.environ.get("OBJDUMP", "arm-none-eabi-objdump")
 
-# High callee-saved registers agbcc 2.x will not promote a value into across a call.
-# (ip/r12 is caller-saved scratch and agbcc DOES use it transiently → excluded to
-#  avoid false positives.)
+# High registers worth reporting when they survive a call. This is an observation,
+# not a recommendation to bind a C variable to the reported register.
 HIGH_REGS = {"r8", "r9", "sl", "fp"}
 # Thumb return / terminator mnemonics — we stop scanning for signals after the LAST
 # of these, so a trailing literal pool misdecoded by objdump can't create a false hit.
@@ -145,27 +136,25 @@ def classify(target: str) -> dict:
     texts = [t for _, t in insns]
     evidence = []
     advisories = []
-    classes = []  # ONLY structural-impossibility signatures go here → STRONG verdict
+    classes = []  # Legacy JSON field: detected named signals, never a verdict gate.
 
     # --- mov pc, rN computed jump (ADVISORY ONLY — matchable via a C switch) ---
     # RETRACTED 2026-05-29: `mov pc, rN` is NOT a structural wall. A dense C `switch`
     # compiles under BOTH agbcc and old_agbcc to exactly this `mov pc,rN` + absolute-
     # address `.word` table (probe-verified). The old "agbcc can't emit mov pc" claim
-    # was false. So we DON'T auto-NAKED — we hint to write a switch and match the
-    # case-BODY order. NAKED only after an honest attempt (for the rare non-switch
-    # computed-goto / opcode-dispatch iterator that genuinely resists).
+    # was false. Report the switch-shaped evidence and keep the case-body order
+    # visible to the source investigation.
     for a, t in insns:
         if re.match(r"mov\s+pc,\s*(r\d+|sl|fp|ip)\b", t):
             advisories.append(
-                f"`{t}` @ 0x{a:08x} — computed jump. NOT auto-NAKED: a dense C `switch` "
+                f"`{t}` @ 0x{a:08x} — computed jump. Start with a dense C `switch` "
                 f"emits exactly this `mov pc,rN` + absolute-address table (agbcc AND old_agbcc). "
-                f"Write it as a switch; match the case-BODY order (baserom physical order, see "
-                f"codegen-notes 'Case-number != source-block-order trap'). NAKED only if it's a "
-                f"non-switch computed-goto / opcode-iterator that resists after attempting."
+                f"and match the case-body order (baserom physical order; see codegen-notes "
+                f"'Case-number != source-block-order trap')."
             )
             break
 
-    # --- class3-libgcc: WIDE r4-r7 prologue + every bl is a libgcc helper ---
+    # --- class3-libgcc signal: WIDE r4-r7 prologue + libgcc-only calls ---
     if texts:
         prologue = texts[0]
         pm = re.match(r"push\s*\{([^}]*)\}", prologue)
@@ -189,16 +178,15 @@ def classify(target: str) -> dict:
                 classes.append("class3-libgcc")
                 evidence.append(
                     f"wide prologue `{prologue}` + all {len(bl_targets)} bl target(s) are libgcc "
-                    f"helpers ({', '.join(bl_targets)}) — agbcc emits a narrower prologue"
+                    f"helpers ({', '.join(bl_targets)})"
+                )
+                advisories.append(
+                    "libgcc-shaped call cluster: inspect whether the ROM helper is an exact "
+                    "archive member, then audit call prototypes and values live across the calls. "
+                    "This remains a C-match investigation, not an assembly-fallback recommendation."
                 )
 
-    # --- class1-hireg: values pinned in HIGH regs ACROSS a bl (ADVISORY ONLY) -
-    # NOT a STRONG verdict. High-reg pins are FUZZY: the `register T x asm("rN")`
-    # lever matches many of them — validated counterexample sub_08004508 holds BOTH
-    # r8 and r9 across a bl and still byte-matches via register pins. So we never
-    # auto-NAKED on a high-reg pin; we only HINT the agent to reach for the lever
-    # first and NAKED (corpus-gated) only if it fails. This is the asymmetric-cost
-    # boundary: structural impossibility → STRONG; register-allocation drift → ATTEMPT.
+    # --- class1-hireg: values observed in HIGH regs across a bl (ADVISORY ONLY) ---
     pinned = {}  # hr -> (write_addr, bl_addr, read_addr)
     for hr in HIGH_REGS:
         write_idx = None
@@ -219,12 +207,12 @@ def classify(target: str) -> dict:
     if pinned:
         regs = ", ".join(sorted(pinned))
         advisories.append(
-            f"{len(pinned)} high reg(s) ({regs}) pinned across a `bl` — POSSIBLE Class-1. "
-            f"Not auto-NAKED (the register-asm lever matches some of these, e.g. sub_08004508). "
-            f"ATTEMPT with `register T x asm(\"rN\")` pins; NAKED only if levers + corpus fail."
+            f"{len(pinned)} high reg(s) ({regs}) live across a `bl`: investigate narrow parameter "
+            f"types, declaration order, local lifetime, and static-inline helper shape before "
+            f"considering compiler-flag experiments. Do not infer a required register pin."
         )
 
-    verdict = "STRONG_UNMATCHABLE" if classes else "ATTEMPT_MATCH"
+    verdict = "ATTEMPT_MATCH"
     return {
         "name": name,
         "addr": f"0x{start:08x}",
@@ -239,16 +227,12 @@ def classify(target: str) -> dict:
 
 
 # --- validation set: (name, expected_verdict) -------------------------------
-# As of 2026-05-29 the classifier returns NO confirmed STRONG cases on this ROM:
-# class1 (high-reg), class4 (mov pc), and class5 (register-coloring) were all
-# DISPROVEN by the reclamation pass + the mov-pc probe. The only remaining STRONG
-# trigger is class3-libgcc (wide r4-r7 prologue + libgcc-only calls), which has no
-# confirmed instance here and is low-confidence — corpus-confirm before trusting it.
-# The selftest therefore validates the ATTEMPT path (the critical no-false-positive
-# property); every fn below is genuinely matchable or matchable-after-effort.
+# The classifier always returns ATTEMPT_MATCH. These target-based checks preserve the
+# CLI's historical smoke coverage; unit tests below its callers exercise synthetic
+# signal fixtures without requiring a ROM.
 SELFTEST = [
     # mov pc, rN dispatchers — ADVISORY now (matchable as a C switch; probe-verified),
-    # NOT auto-NAKED. Expected ATTEMPT_MATCH with a computed-jump advisory.
+    # Expected ATTEMPT_MATCH with a computed-jump advisory.
     ("sub_0802090C", "ATTEMPT_MATCH"),        # mov pc,r0 jump table → write as switch
     ("sub_0800A580", "ATTEMPT_MATCH"),        # mov pc + dispatch → write as switch
     ("sub_08000918", "ATTEMPT_MATCH"),        # mov pc,r0 mode-8 dispatcher
@@ -259,10 +243,8 @@ SELFTEST = [
     ("sub_0800E048", "ATTEMPT_MATCH"),        # calls __divsi3 but narrow prologue → matched
     ("sub_08004508", "ATTEMPT_MATCH"),        # holds r8+r9 across bl yet matched via register asm
     ("sub_0800D028", "ATTEMPT_MATCH"),        # AABB proximity leaf, matched
-    # ATTEMPT (with advisory) = high-reg-pin NAKEDs. Deliberately NOT auto-NAKED — the
-    # classifier hints "try register-asm; NAKED if it fails" but defers the verdict, since
-    # high-reg pins are fuzzy (some match). The corpus-gated agent path NAKEDs them.
-    ("sub_0800B7B0", "ATTEMPT_MATCH"),        # class1 r8/r9/sl pins → advisory, agent NAKEDs
+    # High-register observations remain advisory and never prescribe pins.
+    ("sub_0800B7B0", "ATTEMPT_MATCH"),        # class1 r8/r9/sl → advisory
     ("sub_08007874", "ATTEMPT_MATCH"),        # class1 sl/r8/r9 pins → advisory
     ("sub_08006D24", "ATTEMPT_MATCH"),        # class1 r8/r9/sl pins → advisory
     ("sub_08008F98", "ATTEMPT_MATCH"),        # class1 r8/r9/sl/ip pins → advisory
@@ -297,7 +279,7 @@ def selftest() -> int:
 
 
 def main():
-    ap = argparse.ArgumentParser(description="Deterministic up-front unmatchable triage.")
+    ap = argparse.ArgumentParser(description="Evidence-first decomp triage (always advisory).")
     ap.add_argument("target", nargs="?", help="function name (sub_XXXX) or 0x address")
     ap.add_argument("--json", action="store_true", help="machine-readable output")
     ap.add_argument("--selftest", action="store_true", help="validate against known cases")
@@ -317,10 +299,7 @@ def main():
         print(f"    - {e}")
     for adv in r["advisories"]:
         print(f"    ⚐ advisory: {adv}")
-    if r["verdict"] == "STRONG_UNMATCHABLE":
-        print("  → corpus-confirm the idiom has no pure-C precedent, then ship NAKED+NON_MATCHING.")
-    else:
-        print("  → no structural-impossibility signature; ATTEMPT the C match (heed advisories if present).")
+    print("  → ATTEMPT the C match; use the advisory evidence to choose the next source-level investigation.")
 
 
 if __name__ == "__main__":

@@ -45,11 +45,17 @@ from __future__ import annotations
 
 import argparse
 import difflib
+import hashlib
 import json
+import os
 import re
+import shutil
+import stat
 import subprocess
 import sys
 from pathlib import Path
+
+from build_fingerprint import changed_keys, load_state, manifest, manifest_digest, save_state
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 BASEROM = ROOT / "frog_us_baserom.gba"
@@ -61,6 +67,7 @@ ROM_BASE = 0x08000000
 
 OBJDUMP = "arm-none-eabi-objdump"
 MAKE = "make"
+BUILD_STATE = ROOT / ".scratch" / "oracle_build_state.json"
 
 # .map symbol line: `   0x0804c8b4   ZebesianAquaIdleInit`
 MAP_SYM_RE = re.compile(r"^\s+0x([0-9a-fA-F]{8,})\s+([A-Za-z_]\w*)\s*$")
@@ -78,12 +85,167 @@ def run(cmd: list[str], **kw) -> subprocess.CompletedProcess:
     return subprocess.run(cmd, capture_output=True, text=True, cwd=ROOT, **kw)
 
 
-def build_incremental() -> tuple[bool, str]:
+def _glob_files(patterns: tuple[str, ...]) -> list[Path]:
+    return [p for pattern in patterns for p in ROOT.glob(pattern) if p.is_file()]
+
+
+def _input_groups() -> dict[str, list[Path]]:
+    sources = _glob_files(("src/**/*.c", "asm/**/*.s", "sound/**/*.s",
+                           "lib/**/*.s"))
+    headers = _glob_files(("include/**/*.h", "include/**/*.inc", "src/**/*.h",
+                           "src/**/*.inc", "asm/**/*.h", "asm/**/*.inc",
+                           "sound/**/*.h", "sound/**/*.inc", "lib/**/*.h",
+                           "lib/**/*.inc"))
+    linked_data = _glob_files(("data/**/*", "sound/direct_sound_samples/**/*"))
+    config = [p for p in (ROOT / "Makefile", ROOT / "make_tools.mk",
+                           ROOT / "linker.ld", ROOT / "charmap.txt") if p.exists()]
+    candidates = [ROOT / "tools/agbcc/bin/agbcc",
+                  ROOT / "tools/agbcc/bin/old_agbcc",
+                  ROOT / "tools/preproc/preproc", ROOT / "tools/gbafix/gbafix",
+                  ROOT / "tools/agbcc/lib/libgcc.a", ROOT / "tools/agbcc/lib/libc.a"]
+    tool_prefix = os.environ.get("TOOLCHAIN", "arm-none-eabi-")
+    for command in (f"{tool_prefix}as", f"{tool_prefix}ld",
+                    f"{tool_prefix}objcopy", f"{tool_prefix}objdump", "cc"):
+        resolved = shutil.which(command)
+        if resolved:
+            candidates.append(Path(resolved).resolve())
+    # Match the Makefile's Darwin CPP selection without crawling compiler trees.
+    if sys.platform == "darwin":
+        cpp_candidates = list(Path("/opt/homebrew/bin").glob("cpp-[0-9]*"))
+        cpp_candidates += list(Path("/usr/local/bin").glob("cpp-[0-9]*"))
+        if cpp_candidates:
+            candidates.append(max(cpp_candidates, key=lambda p: int(p.name.split("-")[-1])))
+    elif shutil.which("cpp"):
+        candidates.append(Path(shutil.which("cpp")).resolve())
+    tools = [p for p in candidates if p.is_file()]
+    return {"sources": sources, "headers": headers, "linked_data": linked_data,
+            "config": config, "toolchain": tools,
+            "baseline": [BASEROM] if BASEROM.is_file() else []}
+
+
+BUILD_ENV_KEYS = ("REGION", "DEBUG", "TOOLCHAIN", "CPPFLAGS", "ASFLAGS",
+                  "LDFLAGS", "MAKEFLAGS")
+
+
+def _output_paths() -> list[Path]:
+    generated = _glob_files(("src/**/*.s", "src/**/*.o", "asm/**/*.o",
+                             "sound/**/*.o", "lib/**/*.o"))
+    return generated + [p for p in (BUILTROM, MAP_FILE, BUILTROM.with_suffix(".elf"),
+                                     ROOT / "linker.ld.pp") if p.exists()]
+
+
+def _fingerprints() -> dict[str, dict[str, str]]:
+    result = {name: manifest(paths, ROOT) for name, paths in _input_groups().items()}
+    result["environment"] = {key: os.environ[key] for key in BUILD_ENV_KEYS
+                             if key in os.environ}
+    return result
+
+
+def _baseline_provenance() -> dict:
+    if not BASEROM.is_file():
+        return {"missing": True}
+    sha1 = hashlib.sha1()
+    with BASEROM.open("rb") as f:
+        for block in iter(lambda: f.read(1024 * 1024), b""):
+            sha1.update(block)
+    mode = stat.S_IMODE(BASEROM.stat().st_mode)
+    return {"sha1": sha1.hexdigest(), "mode": oct(mode),
+            "read_only": not bool(mode & 0o222)}
+
+
+def _unlink(path: Path) -> None:
+    try:
+        path.unlink()
+    except FileNotFoundError:
+        pass
+
+
+def _prepare_reliable_build(inputs: dict[str, dict[str, str]]) -> list[str]:
+    """Invalidate artifacts based on content, independent of filesystem mtimes."""
+    state = load_state(BUILD_STATE)
+    old_inputs = state.get("inputs", {})
+    changed: list[str] = []
+    for group, current in inputs.items():
+        keys = changed_keys(old_inputs.get(group, {}), current)
+        changed.extend(f"{group}:{key}" for key in sorted(keys))
+
+    recorded_outputs = state.get("outputs", {})
+    current_outputs = manifest(_output_paths(), ROOT)
+    output_changes = changed_keys(recorded_outputs, current_outputs)
+    outputs_changed = bool(output_changes)
+    if not state or changed or outputs_changed:
+        for rel in output_changes:
+            path = ROOT / rel
+            if path.suffix in (".s", ".o"):
+                _unlink(path)
+        # A source-only change can be rebuilt narrowly. Header, configuration,
+        # or compiler changes may affect every translation unit.
+        source_changes = changed_keys(old_inputs.get("sources", {}), inputs["sources"])
+        broad = (not state or any(item.split(":", 1)[0] != "sources" for item in changed))
+        if broad:
+            for path in _glob_files(("src/**/*.s", "src/**/*.o", "asm/**/*.o",
+                                     "sound/**/*.o", "lib/**/*.o")):
+                _unlink(path)
+            _unlink(ROOT / "linker.ld.pp")
+        else:
+            for rel in source_changes:
+                path = ROOT / rel
+                if path.suffix == ".c":
+                    _unlink(path.with_suffix(".s"))
+                    _unlink(path.with_suffix(".o"))
+                elif path.suffix == ".s":
+                    _unlink(path.with_suffix(".o"))
+        for path in (BUILTROM, MAP_FILE, BUILTROM.with_suffix(".elf")):
+            _unlink(path)
+    changed.extend(f"output:{key}" for key in sorted(output_changes))
+    return changed
+
+
+def build_incremental() -> tuple[bool, str, dict]:
+    makeflags = os.environ.get("MAKEFLAGS", "")
+    environment_override = ("--environment-overrides" in makeflags or
+                            re.search(r"(^|\s)-[^\s]*e", makeflags))
+    if environment_override:
+        return False, ("unsupported MAKEFLAGS environment override mode; run the "
+                       "oracle without make -e so provenance is deterministic"), {
+                           "baseline": _baseline_provenance()
+                       }
+    inputs = _fingerprints()
+    changed = _prepare_reliable_build(inputs)
+    changed_groups: dict[str, int] = {}
+    for item in changed:
+        group = item.split(":", 1)[0]
+        changed_groups[group] = changed_groups.get(group, 0) + 1
     proc = run([MAKE, "-j8"])
     ok = proc.returncode == 0 and BUILTROM.exists()
     # agbcc + ld errors land on stderr; warnings on stdout
     errors = (proc.stderr + proc.stdout).strip() if not ok else ""
-    return ok, errors
+    provenance = {
+        "input_fingerprints": {name: manifest_digest(value)
+                               for name, value in inputs.items()},
+        "changed_inputs": {"count": len(changed), "groups": changed_groups,
+                           "sample": changed[:20]},
+        "baseline": _baseline_provenance(),
+    }
+    after_build_inputs = _fingerprints()
+    if ok and after_build_inputs != inputs:
+        ok = False
+        errors = "build inputs changed while make was running; refusing stale result"
+        for path in (BUILTROM, MAP_FILE, BUILTROM.with_suffix(".elf")):
+            _unlink(path)
+    if ok:
+        outputs = manifest(_output_paths(), ROOT)
+        # Close the race between post-build input hashing and output hashing.
+        final_inputs = _fingerprints()
+        if final_inputs != inputs:
+            ok = False
+            errors = "build inputs changed while recording outputs; refusing stale result"
+            for path in (BUILTROM, MAP_FILE, BUILTROM.with_suffix(".elf")):
+                _unlink(path)
+        else:
+            provenance["output_fingerprint"] = manifest_digest(outputs)
+            save_state(BUILD_STATE, {"inputs": inputs, "outputs": outputs})
+    return ok, errors, provenance
 
 
 def find_in_map(name: str) -> tuple[int, int] | None:
@@ -309,7 +471,8 @@ def measure(name: str, non_matching: bool = False) -> dict:
     if srcfile is None:
         return {"function": name, "build_ok": False,
                 "build_errors": f"--non-matching: no src/**/*.c defines {name!r}"}
-    text = srcfile.read_text(errors="replace")
+    original_bytes = srcfile.read_bytes()
+    text = original_bytes.decode(errors="replace")
     if "NON_MATCHING" not in text:
         return {"function": name, "build_ok": False,
                 "build_errors": f"--non-matching: {srcfile.relative_to(ROOT)} "
@@ -333,35 +496,41 @@ def measure(name: str, non_matching: bool = False) -> dict:
             if f.exists():
                 f.unlink()
 
-    srcfile.write_text("#define NON_MATCHING\n" + text)
+    srcfile.write_bytes(b"#define NON_MATCHING\n" + original_bytes)
     try:
         force_rebuild()
         r = _diff_after_build(name)
     finally:
         # Restore byte-for-byte, then force a clean recompile + relink so the
         # tree is left MATCHING.
-        srcfile.write_text(text)
+        srcfile.write_bytes(original_bytes)
         force_rebuild()
-        build_incremental()
+        restored_ok, restored_errors, restored_provenance = build_incremental()
+    if not restored_ok:
+        r = {"function": name, "build_ok": False,
+             "build_errors": "NON_MATCHING source was restored, but the normal "
+                             f"build failed:\n{restored_errors}",
+             "restoration_provenance": restored_provenance}
     r["non_matching"] = True
     r["non_matching_file"] = str(srcfile.relative_to(ROOT))
     return r
 
 
 def _diff_after_build(name: str) -> dict:
-    ok, errors = build_incremental()
+    ok, errors, provenance = build_incremental()
     if not ok:
-        return {"function": name, "build_ok": False, "build_errors": errors}
+        return {"function": name, "build_ok": False, "build_errors": errors,
+                "provenance": provenance}
 
     loc = find_in_map(name)
     if loc is None:
-        return {"function": name, "build_ok": True, "build_errors": "",
+        return {"function": name, "build_ok": True, "build_errors": "", "provenance": provenance,
                 "error": f"symbol {name!r} not found in {MAP_FILE.name}; "
                          "did the C define it with external linkage?"}
 
     addr, size = loc
     if size == 0 or size > 1 << 14:
-        return {"function": name, "build_ok": True, "build_errors": "",
+        return {"function": name, "build_ok": True, "build_errors": "", "provenance": provenance,
                 "addr": addr, "size": size,
                 "error": f"could not determine reasonable size for {name!r} "
                          f"(got {size}); next-symbol lookup likely missed"}
@@ -383,6 +552,7 @@ def _diff_after_build(name: str) -> dict:
             "function": name,
             "build_ok": True,
             "build_errors": "",
+            "provenance": provenance,
             "addr": addr,
             "original_addr": original_addr,
             "size": size,
@@ -412,6 +582,7 @@ def _diff_after_build(name: str) -> dict:
         "function": name,
         "build_ok": True,
         "build_errors": "",
+        "provenance": provenance,
         "addr": addr,
         "size": size,
         "layout_drift": False,
@@ -425,6 +596,13 @@ def print_human(r: dict) -> None:
     print(f"function:  {r['function']}")
     if r.get("non_matching"):
         print(f"mode:      NON_MATCHING reference body ({r['non_matching_file']})")
+    provenance = r.get("provenance", {})
+    if provenance:
+        fingerprints = ", ".join(f"{k}={v[:12]}"
+                                 for k, v in provenance["input_fingerprints"].items())
+        print(f"provenance: sha256 ({fingerprints}; "
+              f"outputs={provenance.get('output_fingerprint', '')[:12]}; "
+              f"changed={provenance['changed_inputs']['count']})")
     if not r.get("build_ok"):
         print(f"BUILD FAILED")
         if r.get("build_errors"):

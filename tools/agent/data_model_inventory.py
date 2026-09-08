@@ -40,7 +40,10 @@ _LINE = re.compile(r"//[^\n]*")
 
 
 def strip_comments(text):
-    return _LINE.sub("", _BLOCK.sub("", text))
+    """Blank comments without changing offsets or line numbers."""
+    def blank(match):
+        return "".join("\n" if char == "\n" else " " for char in match.group(0))
+    return _LINE.sub(blank, _BLOCK.sub(blank, text))
 
 
 # --- NON_MATCHING dead-branch mask ------------------------------------------
@@ -169,9 +172,9 @@ def extract_structs(path):
     return out
 
 
-# --- extern extraction -------------------------------------------------------
+# --- function declaration/definition extraction -----------------------------
 _EXTERN_RE = re.compile(r"\bextern\s+([^;{]*?\b([A-Za-z_]\w*)\s*\(([^;{]*)\))\s*;")
-_SCALAR = re.compile(r"\b(void|u8|s8|u16|s16|u32|s32|u64|s64|int|char|short|long|bool\w*)\b")
+_SCALAR = re.compile(r"\b(void|u8|s8|u16|s16|u32|s32|u64|s64|char|short|int|long|bool\w*)\b")
 
 
 def _norm_type(t):
@@ -180,11 +183,19 @@ def _norm_type(t):
     t = " ".join(t.split())
     if "*" in t:
         return "ptr"
+    signed = bool(re.search(r"\bsigned\b", t))
+    unsigned = bool(re.search(r"\bunsigned\b", t))
     scalars = _SCALAR.findall(t)
     if not scalars:
         return t or "void"
-    # keep the last scalar keyword (e.g. "unsigned int"->int, "const u8"->u8)
-    return scalars[-1]
+    base = scalars[-1]
+    if base.startswith(("u", "s")) and base[1:].isdigit():
+        return base
+    if unsigned:
+        return "unsigned " + base
+    if signed:
+        return "signed " + base
+    return base
 
 
 def normalize_sig(ret_and_name, args):
@@ -201,15 +212,77 @@ def normalize_sig(ret_and_name, args):
 
 
 def extract_externs(path):
-    text = strip_comments(path.read_text(errors="ignore"))
+    raw = path.read_text(errors="ignore")
+    text = strip_comments(raw)
+    dead = deadness_mask(raw.splitlines())
     out = []
     for m in _EXTERN_RE.finditer(text):
         sig = " ".join(m.group(1).split())
         name = m.group(2)
         ret_and_name = sig[: sig.index("(")]
         norm = normalize_sig(ret_and_name, m.group(3))
-        out.append({"name": name, "file": str(path.relative_to(REPO)), "sig": sig, "norm": norm})
+        line = text.count("\n", 0, m.start()) + 1
+        out.append({"name": name, "file": str(path.relative_to(REPO)), "sig": sig, "norm": norm,
+                    "role": "extern", "line": line, "dead": dead[min(line - 1, len(dead) - 1)]})
     return out
+
+
+_FUNC_RE = re.compile(
+    r"(?m)^[ \t]*(?!if\b|for\b|while\b|switch\b|return\b|typedef\b)"
+    r"(?P<prefix>(?:(?:static|inline|extern|NAKED)\s+)*[A-Za-z_][\w \t*]*?)"
+    r"\b(?P<name>[A-Za-z_]\w*)\s*\((?P<args>[^;{}()]*)\)\s*(?P<end>[;{])")
+
+
+def extract_functions(path, names=None):
+    """Conservatively find simple prototypes/definitions; this is not a C ABI checker."""
+    raw = path.read_text(errors="ignore")
+    text = strip_comments(raw)
+    lines = raw.splitlines()
+    dead = deadness_mask(lines)
+    wanted = set(names or [])
+    out = []
+    for m in _FUNC_RE.finditer(text):
+        name = m.group("name")
+        if wanted and name not in wanted:
+            continue
+        prefix = " ".join(m.group("prefix").split())
+        if "=" in prefix or prefix.startswith("#"):
+            continue
+        sig = f"{prefix} {name}({m.group('args').strip()})"
+        normalized_prefix = re.sub(r"\b(?:static|inline|extern|NAKED)\b", "", prefix)
+        norm = normalize_sig(normalized_prefix + " " + name, m.group("args"))
+        line = text.count("\n", 0, m.start()) + 1
+        role = "definition" if m.group("end") == "{" else ("extern" if re.search(r"\bextern\b", prefix) else "declaration")
+        if path.suffix == ".h" and role != "definition":
+            role = "header"
+        out.append({"name": name, "file": str(path.relative_to(REPO)), "line": line,
+                    "dead": dead[min(line - 1, len(dead) - 1)] if dead else False,
+                    "role": role, "sig": sig, "norm": norm,
+                    "return": norm[0], "args": list(norm[1]), "argcount": len(norm[1])})
+    return out
+
+
+def _source_type(text):
+    """Normalize a simple declared type while retaining pointed-to type."""
+    text = " ".join(text.split())
+    tail = re.match(r"^(.*?)([A-Za-z_]\w*)$", text)
+    type_words = {"void", "char", "short", "int", "long", "signed", "unsigned",
+                  "const", "volatile", "restrict"}
+    if tail and tail.group(1) and tail.group(2) not in type_words \
+            and not tail.group(1).rstrip().endswith(("struct", "union", "enum")):
+        text = tail.group(1).rstrip()
+    return text
+
+
+def source_signature(sig, name):
+    """Simple source-level shape for targeted conflict reporting."""
+    match = re.match(r"(.*?)\b" + re.escape(name) + r"\s*\((.*)\)$", sig)
+    if not match:
+        return sig
+    ret = re.sub(r"\b(?:extern|static|inline|NAKED)\b", "", match.group(1))
+    args = match.group(2).strip()
+    arg_types = () if args in ("", "void") else tuple(_source_type(x) for x in args.split(","))
+    return (" ".join(ret.split()), arg_types)
 
 
 def main():
@@ -217,9 +290,13 @@ def main():
     ap.add_argument("--structs", action="store_true")
     ap.add_argument("--externs", action="store_true")
     ap.add_argument("--json", action="store_true")
+    ap.add_argument("--function", action="append", default=[], metavar="NAME",
+                    help="show occurrences for one function (repeatable)")
     args = ap.parse_args()
-    do_structs = args.structs or not args.externs
-    do_externs = args.externs or not args.structs
+    # A targeted query stays small unless the caller explicitly asks for a
+    # whole-repository struct or extern inventory alongside it.
+    do_structs = args.structs or (not args.function and not args.externs)
+    do_externs = args.externs or (not args.function and not args.structs)
 
     files = sorted(SRC.rglob("*.c"))
     struct_defs = {}
@@ -231,6 +308,19 @@ def main():
         if do_externs:
             for e in extract_externs(f):
                 extern_defs.setdefault(e["name"], []).append(e)
+
+    function_defs = {}
+    if args.function:
+        for f in sorted([*SRC.rglob("*.c"), *(REPO / "include").rglob("*.h")]):
+            for item in extract_functions(f, args.function):
+                function_defs.setdefault(item["name"], []).append(item)
+    function_conflicts = {}
+    function_signatures = {}
+    for name in args.function:
+        compiled = [x for x in function_defs.get(name, []) if not x["dead"]]
+        shapes = {source_signature(x["sig"], name) for x in compiled}
+        function_conflicts[name] = len(shapes) > 1
+        function_signatures[name] = sorted({str(shape) for shape in shapes})
 
     # classify struct dups
     dups = {}
@@ -275,8 +365,23 @@ def main():
         }
 
     if args.json:
-        print(json.dumps({"struct_dups": dups, "extern_drift": drift}, indent=2))
+        print(json.dumps({"struct_dups": dups, "extern_drift": drift,
+                          "functions": {name: sorted(function_defs.get(name, []), key=lambda x: (x["file"], x["line"], x["role"]))
+                                        for name in args.function},
+                          "function_conflicts": function_conflicts,
+                          "function_signatures": function_signatures}, indent=2))
         return
+
+
+    if args.function:
+        print("\n=== Function occurrences (conservative syntax scan; not a full C ABI checker) ===")
+        for name in args.function:
+            rows = sorted(function_defs.get(name, []), key=lambda x: (x["file"], x["line"], x["role"]))
+            conflict = "SIGNATURE_CONFLICT" if function_conflicts[name] else "consistent"
+            print(f"  {name}: {len(rows)} [{conflict} across compiled occurrences]")
+            for row in rows:
+                branch = "NON_MATCHING/dead" if row["dead"] else "compiled"
+                print(f"    {row['role']:10} {row['file']}:{row['line']} [{branch}] {row['sig']}")
 
     if do_structs:
         order = {"IDENTICAL": 0, "NAME_CONFLICT": 1, "LAYOUT_CONFLICT": 2}
@@ -299,7 +404,7 @@ def main():
                      key=lambda kv: -len(kv[1]["files"]))
         print(f"\n=== Functions with >=2 distinct signatures: {len(drift)} "
               f"(COSMETIC={len(cos)} safe-centralize, ABI={len(abi)} matching-relevant) ===")
-        print(f"--- COSMETIC (param-name/pointer-type drift only; byte-neutral to centralize) ---")
+        print(f"--- COSMETIC (param-name/pointer-type textual drift; review before centralizing) ---")
         for name, v in cos:
             print(f"  {name:30} {v['nsigs']} sigs / {len(v['files'])} files")
         print(f"--- ABI (scalar return/arg type or arg count differs; needs per-caller care) ---")

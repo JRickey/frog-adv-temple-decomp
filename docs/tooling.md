@@ -1,3 +1,20 @@
+# Active campaign tooling
+
+New work follows `AGENTS.md` and [matching-workflow.md](matching-workflow.md).
+The historical inventory below remains useful for command details; old pin,
+NAKED and model-routing recommendations are superseded by that workflow.
+
+- `evidence.py validate/search/brief/plan`: reviewable claims and prerequisite
+  DAG, bounded retrieval, recorded verification distinguished from current state.
+- `compile_and_view_assembly.py`: content-based build invalidation and provenance,
+  including normal and NON_MATCHING candidate measurements.
+- `data_model_inventory.py`: interface audit leads; declarations and definitions
+  require semantic review before choosing the canonical signature.
+- `unify_prototype.py`: consolidation after interface review, not ABI inference.
+- `classify_unmatchable.py`: compatibility name for advisory instruction triage;
+  no signature proves authored C impossible or triggers automatic fallback.
+- `tools/agent/prompts/decomp.md`: focused worker assignment/return contract.
+
 # Decomp tooling
 
 Where each tool lives, what it's for, and which class of mistake it
