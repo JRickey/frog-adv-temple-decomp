@@ -149,3 +149,9 @@ void FileSelect_Update(void)
         Sprite_CycleDmaFrame(sOamDmaCfg_08100[0], sOamDmaCfg_08100[1], sOamDmaCfg_08100[2], sOamDmaCfg_08100[3]);
     }
 }
+
+/* These adjacent save-slot slices share file-select ownership and default
+ * compiler flags. Keep their source boundaries visible while compiling them
+ * as one translation unit. */
+#include "src/game/save_slot_list_impl.h"
+#include "src/game/save_slot_edit_impl.h"

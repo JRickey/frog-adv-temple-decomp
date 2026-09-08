@@ -5,7 +5,6 @@
 #include "types.h"
 
 extern void TileBlit(u32 *attr, const void *src, u8 mode);
-extern void Tilemap_SwapPalette(u32 *attr, u16 a, u16 b, u8 c);
 extern void DrawByteDecimal(u8 value, u8 x, u8 y, u16 a, u16 b, u8 c);
 extern void DrawNumber(u16 value, u8 x, u8 y, u16 a, u16 b, u8 c, u32 forceZeros);
 extern u8 CountHighestBit(u32 bits);
@@ -87,8 +86,8 @@ void SaveSlot_DrawAllSlots(void)
             }
 
             if (gIwram_3480.cursorIndex == i) {
-                Tilemap_SwapPalette(attrp, 5, 4, 2);
-                Tilemap_SwapPalette(attrp, 7, 6, 2);
+                Tilemap_SwapPalette((const TilemapRect *)attrp, 5, 4, 2);
+                Tilemap_SwapPalette((const TilemapRect *)attrp, 7, 6, 2);
             }
         } else {
             const u32 *table = (const u32 *)0x08308ef4;
@@ -106,7 +105,7 @@ void SaveSlot_DrawAllSlots(void)
             TileBlit((u32 *)ap, (const void *)table[gIwram_34B0._data], 2);
 
             if (gIwram_3480.cursorIndex == i) {
-                Tilemap_SwapPalette((u32 *)ap, 5, 4, 2);
+                Tilemap_SwapPalette((const TilemapRect *)ap, 5, 4, 2);
             }
         }
     }

@@ -557,24 +557,22 @@ SECTIONS {
         src/engine/sub_0801cfa0.o(.text);  /* 0x0801cfa0 - 0x0801d048, Bg_WriteTilePair */
         src/engine/sub_0801d048.o(.text);
         src/engine/sub_0801d094.o(.text);
-        src/engine/sub_0801d150.o(.text);
-        src/engine/sub_0801d268.o(.text);  /* 0x0801d268 - 0x0801d33c, Credits_LoadBgGfx */
-        src/engine/sub_0801d33c.o(.text);
-        src/engine/sub_0801d4cc.o(.text);  /* 0x0801d4cc - 0x0801d570, Credits_InitScrollPage1 */
-        src/engine/sub_0801d570.o(.text);
-        src/engine/sub_0801d880.o(.text);
-        src/engine/sub_0801da1c.o(.text);
-        src/engine/sub_0801dbb4.o(.text);
-        src/engine/sub_0801dea0.o(.text);
-        src/engine/sub_0801e078.o(.text);  /* 0x0801e078 - 0x0801e118, Credits_FadeTransition */
-        src/engine/sub_0801e118.o(.text);  /* 0x0801e118 - 0x0801e270, Screen_FadeSequence + Credits_Tick + Credits_FillPage */
+        src/game/credits_init.o(.text);
+        src/game/credits_bg.o(.text);  /* 0x0801d268 - 0x0801d33c, Credits_LoadBgGfx */
+        src/game/credits_page2.o(.text);
+        src/game/credits_page1.o(.text);  /* 0x0801d4cc - 0x0801d570, Credits_InitScrollPage1 */
+        src/game/credits_scroll.o(.text);
+        src/game/credits_graphics.o(.text);
+        src/game/credits_transition.o(.text);
+        src/game/credits_line.o(.text);
+        src/game/credits_line_alt.o(.text);
+        src/game/credits_fade.o(.text);  /* 0x0801e078 - 0x0801e118, Credits_FadeTransition */
+        src/game/credits_sequence.o(.text);  /* 0x0801e118 - 0x0801e270, Screen_FadeSequence + Credits_Tick + Credits_FillPage */
         src/engine/sub_0801e270.o(.text);  /* 0x0801e270 - 0x0801e28c, WaitFrames */
         src/engine/sub_0801e28c.o(.text);
         src/engine/sub_0801ea08.o(.text);
         src/engine/sub_0801f1e0.o(.text);
-        src/engine/sub_0801f418.o(.text);
-        src/engine/sub_0801f684.o(.text);
-        src/engine/sub_0801f8bc.o(.text);
+        src/game/file_select.o(.text);
         src/engine/sub_0801fd0c.o(.text);  /* 0x0801fd0c - 0x080200b4, WinPoseScreen_Init + WinPoseScreen_Update */
         src/engine/sub_080200b4.o(.text);  /* 0x080200b4 - 0x080201a8, WinPoseScreen_DrawBg */
 

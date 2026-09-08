@@ -7,7 +7,6 @@
 
 extern void *Memcpy(void *dst, const void *src, u32 n);
 extern void TileBlit(u32 *attr, const void *src, u8 arg2);
-extern void Tilemap_SwapPalette(u32 *attr, u16 arg1, u16 arg2, u8 arg3);
 extern int SaveSlot_UpdateScreen(u8 arg0);
 
 int SaveSlot_DrawSelectionCursor(u8 arg0)
@@ -44,15 +43,13 @@ int SaveSlot_DrawSelectionCursor(u8 arg0)
     }
 
     TileBlit(&s.attr, (const void *)0x081D8398, 2);
-    Tilemap_SwapPalette(&s.attr, 5, 4, 2);
+    Tilemap_SwapPalette((const TilemapRect *)&s.attr, 5, 4, 2);
     return SaveSlot_UpdateScreen(arg0);
 }
 
 extern u16 Input_Poll(void);
 extern void SaveMenu_DrawWorldInfoRow(u8 pane, const u8 *str);
-extern void Sprite_CycleDmaFrame(u32 a, u32 b, u32 c, u32 d);
 extern void Sprite_AnimateFlipWithShadow(u32 *self, u16 u1, u16 u2, u8 u3, u8 count);
-extern void Screen_InstallOamA(u32 a, u16 b, u16 c, u8 d);
 extern void SaveCommit(u8 slot, void *name);
 extern const u32 sOamDmaCfg_08100[4];
 
