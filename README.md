@@ -43,11 +43,11 @@ The raw-blob coverage metric also includes code and extracted binary assets.
 scan, not a ground-truth disassembly. Treat ±20% as honest.
 Regenerate with `python3 tools/agent/progress_stats.py --update-readme`.
 
-- **Source-scan definitions in C files**: 822
-  - ordinary C definitions: 759 (includes inline helpers; not a linked-function census)
-  - NAKED+NON_MATCHING (asm fallback, byte-matches but not pure C): 63
-  - peeled-but-still-asm: 250
-  - not yet in C (non-matching tail — asm slices + raw INCBIN): ~292
+- **Source-scan definitions in C files**: 826
+  - ordinary C definitions: 764 (includes inline helpers; not a linked-function census)
+  - NAKED+NON_MATCHING (asm fallback, byte-matches but not pure C): 62
+  - peeled-but-still-asm: 246
+  - not yet in C (non-matching tail — asm slices + raw INCBIN): ~288
   - prologue-scan bracket (lower / upper): 335 / 1140
 - **ROM outside tracked raw-blob ranges**: 628.8 KiB of 4.00 MiB (**15.35%**)
   - raw INCBIN bytes: 3.39 MiB (84.6% of ROM)

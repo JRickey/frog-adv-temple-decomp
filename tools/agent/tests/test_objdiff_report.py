@@ -123,6 +123,17 @@ class ObjdiffReportTests(unittest.TestCase):
                 self.assertFalse(objdiff_report._is_matched("mixed.o", "fallback", {"fallback"}))
                 self.assertFalse(objdiff_report._is_matched("mixed.o", "fallback", set()))
 
+    def test_file_scope_assembly_fallback_is_not_reconstructed_c(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "mixed.c").write_text(
+                '#ifdef NON_MATCHING\nvoid fallback(void) {}\n#else\n'
+                'asm(".global fallback\\n" "fallback:\\n" ".incbin \\\"rom\\\"\\n");\n'
+                '#endif\nint ordinary(void) { return 1; }\n')
+            with patch.object(objdiff_report, "ROOT", root):
+                self.assertFalse(objdiff_report._is_matched("mixed.o", "fallback", set()))
+                self.assertTrue(objdiff_report._is_matched("mixed.o", "ordinary", set()))
+
     def test_inventory_rejects_duplicate_addresses(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "inventory.tsv"

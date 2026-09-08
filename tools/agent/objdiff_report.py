@@ -206,6 +206,16 @@ def _is_matched(object_path: str, function_name: str, naked: set[str]) -> bool:
     if not source or not source.endswith(".c") or function_name in naked:
         return False
     text = _strip_comments((ROOT / source).read_text())
+    # A file-scope assembly fallback can define the symbol while a disabled
+    # NON_MATCHING branch supplies its only apparent C definition. Do not grant
+    # source credit merely because the fallback no longer uses a NAKED wrapper.
+    for assembly in re.finditer(
+            r'\b(?:asm|__asm__)\s*(?:volatile\s*)?\(\s*'
+            r'((?:"(?:\\.|[^"\\])*"\s*)+)\)', text):
+        chunks = re.findall(r'"((?:\\.|[^"\\])*)"', assembly.group(1))
+        assembly_text = "".join(chunks).replace(r"\n", "\n")
+        if re.search(r'(?:^|\s)' + re.escape(function_name) + r'\s*:', assembly_text):
+            return False
     # Fallbacks belong to functions, not entire TUs. A neighboring conditional
     # fallback must not disqualify ordinary C when related slices are combined.
     # Without preprocessing, multiple definitions remain ambiguous: fail closed.

@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "id": "foundation-01",
+  "base_commit": "ac1a6676603274f7e0ed0a1b99ed18e31d5053dd",
+  "rom_sha1": "7b4c27009198df18555e63fb5dcad223eaf09815",
+  "summary": "Four small level-layout helpers, typed DMA frame cycling, a shared credits interface and a two-to-one credits TU consolidation.",
+  "metrics": {
+    "new_c_functions": 5,
+    "new_c_bytes": 380,
+    "new_data_bytes": 16,
+    "pins_added": 0,
+    "naked_fallbacks_removed": 1,
+    "functions_renamed": 4,
+    "interface_clusters_corrected": 2,
+    "credits_units_before": 11,
+    "credits_units_after": 10,
+    "obsolete_assembly_files_removed": 5,
+    "rom_bytes_diff": 0,
+    "regression_tests_passed": 83
+  },
+  "runs": [
+    {
+      "id": "foundation01-small",
+      "model": "gpt-5.6-sol (requested)",
+      "reasoning_effort": "high",
+      "task": "Match two small level-layout functions, then reuse the verified loop shape for two adjacent updates in an isolated worktree",
+      "outcome": "four-functions-244-bytes",
+      "review_corrections": [
+        "Use a parent-relative interior table alias, not an unexplained absolute address.",
+        "Add the missing explicit Entity_AdvanceAnimFrames declaration to the second caller TU; repeat the clean gate."
+      ],
+      "usage": null
+    },
+    {
+      "id": "foundation01-credits",
+      "model": "gpt-5.6-terra (requested)",
+      "reasoning_effort": "high",
+      "task": "Audit Credits_LoadBgGfx caller and callee ABI, unify its declaration and test an adjacent TU merge",
+      "outcome": "interface-corrected-two-units-to-one",
+      "review_corrections": [
+        "Document that the byte argument is unused by the loader but retained for audited callers.",
+        "An unresolved scroll interface prevents a blanket merge, not a bounded init-plus-background merge; the smaller merge passed."
+      ],
+      "usage": null
+    },
+    {
+      "id": "foundation01-dma",
+      "model": "gpt-5.6-sol (requested)",
+      "reasoning_effort": "high",
+      "task": "Reconstruct the DMA aggregate interface and data, then match frame cycling using typed shared state",
+      "outcome": "one-function-136-bytes-and-16-data-bytes",
+      "review_corrections": [
+        "The transfer count is bytes, not halfwords; keep the shift to DMA halfwords explicit.",
+        "Do not repeat the historical allocation sweep; use the audited shared state type.",
+        "A top-level assembly fallback must not gain C credit from a disabled reference definition. The final accepted function is ordinary C, with no fallback.",
+        "Qualify the shared animation-index wrap comment by consumer and explain the source table offset."
+      ],
+      "usage": null
+    },
+    {
+      "id": "foundation01-root",
+      "model": "gpt-6-astra",
+      "reasoning_effort": null,
+      "task": "Review, integrate, validate the whole ROM, guard reporting classification and record the campaign",
+      "outcome": "integrated-after-review",
+      "review_corrections": [
+        "Clarify that the existing data policy recognizes brace-initialized structs as well as arrays.",
+        "Add a regression guard for a file-scope assembly definition paired with reference-only C."
+      ],
+      "usage": null
+    }
+  ],
+  "usage_provenance": {
+    "source": "Model and effort requests are recorded; per-worker runtime counters were not exposed. No model ranking or cost estimate is inferred.",
+    "input_tokens": null,
+    "cached_input_tokens": null,
+    "uncached_input_tokens": null,
+    "output_tokens": null
+  }
+}

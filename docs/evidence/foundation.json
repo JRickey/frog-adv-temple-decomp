@@ -1,0 +1,62 @@
+[
+  {
+    "schema_version": 1,
+    "id": "foundation.credits-background-interface",
+    "kind": "behavior",
+    "title": "Credits background loader retains an unused byte argument",
+    "status": "verified",
+    "claim": "Credits_Init preserves its byte argument for the call to Credits_LoadBgGfx, and Screen_FadeSequence explicitly passes zero. The loader does not read the incoming argument. The shared void(u8) interface preserves caller and callee code; choosing void(void) from the old definition would discard caller evidence.",
+    "subjects": ["fn:0801d150", "fn:0801d268", "fn:0801e118"],
+    "provenance": [
+      {"path": "include/credits.h", "location": "Credits_LoadBgGfx", "commit": "9aa85bee366d4fcbccc3bd15c7475efcf20d0ea1"},
+      {"path": "src/game/credits_init.c", "location": "Credits_Init passes arg", "commit": "9aa85bee366d4fcbccc3bd15c7475efcf20d0ea1"},
+      {"path": "src/game/credits_sequence.c", "location": "Screen_FadeSequence passes zero", "commit": "9aa85bee366d4fcbccc3bd15c7475efcf20d0ea1"}
+    ],
+    "tags": ["credits", "interface", "unused-argument"]
+  },
+  {
+    "schema_version": 1,
+    "id": "foundation.layout-pointer-windows",
+    "kind": "compiler",
+    "title": "Interior table anchors preserve group-update loop shape",
+    "status": "verified",
+    "claim": "The updater at 08029710 loads the 08317a60 pointer-table window directly. Indexing the parent table as base[i+5] produced an extra addition and a four-byte larger function; a linker-relative alias at parent+0x14 preserves the direct anchor and matches. The adjacent 08029748 updater uses parent+0x4c. These aliases clarify existing data ownership and do not reconstruct the underlying INCBIN table.",
+    "subjects": ["fn:08029710", "fn:08029748", "data:08317a4c", "data:08317a60", "data:08317a98"],
+    "provenance": [
+      {"path": "linker.ld", "location": "sLevelLayoutPtrs_317A60 and sLevelLayoutPtrs_317A98"},
+      {"path": "src/engine/sub_080295ac.c", "location": "LevelLayout_UpdateGroup317A60", "commit": "a02ea34f9605d05db6c9e50d1e3658f55891c0cf"}
+    ],
+    "tags": ["level-layout", "table-anchor", "matching"]
+  },
+  {
+    "schema_version": 1,
+    "id": "foundation.dma-aggregate-interface",
+    "kind": "layout",
+    "title": "DMA frame cycling uses a typed sixteen-byte aggregate",
+    "status": "verified",
+    "claim": "The callee homes r0-r3 and reads a u16 frame count at +0, u8 delay at +2, source-table pointer at +4, destination pointer at +8 and u16 byte count at +12. Twelve immutable-ROM callsites load the four words; all eight compiled callsites now use the shared by-value type. The 08308100 configuration is an explicit 16-byte C initializer. Its 0x480 byte count is divided by two for DMA halfword transfers.",
+    "subjects": ["fn:080185c0", "data:08308100", "data:0830809c"],
+    "provenance": [
+      {"path": "include/sprite_dma.h", "location": "DmaCycleConfig", "commit": "b5ee46b5b1842cdc86e19686ecec09640043af73"},
+      {"path": "src/data/sprite_dma_records.c", "location": "sOamDmaCfg_08100", "commit": "b5ee46b5b1842cdc86e19686ecec09640043af73"},
+      {"path": "src/game/file_select.c", "location": "Sprite_CycleDmaFrame callsites", "commit": "b5ee46b5b1842cdc86e19686ecec09640043af73"}
+    ],
+    "tags": ["dma", "interface", "typed-data"]
+  },
+  {
+    "schema_version": 1,
+    "id": "foundation.dma-typed-state-match",
+    "kind": "compiler",
+    "title": "Typed DMA state closes the historical eight-byte residual",
+    "status": "verified",
+    "claim": "The audited aggregate with the old raw byte-pointer state still differed by eight bytes over six instructions. Using the existing ScrollBlitLayer global and its lastTick/animFrame members, together with the pointer-typed source table, produces the exact 136-byte function without pins or assembly barriers. A clean integrated ROM check passes. The exact internal allocation-pass explanation remains uninstrumented; the historical residual is not an impossibility result.",
+    "subjects": ["fn:080185c0", "data:03006480"],
+    "provenance": [
+      {"path": "src/engine/sub_080185c0.c", "location": "Sprite_CycleDmaFrame", "commit": "b5ee46b5b1842cdc86e19686ecec09640043af73"},
+      {"path": "include/iwram.h", "location": "ScrollBlitLayer.lastTick and animFrame", "commit": "b5ee46b5b1842cdc86e19686ecec09640043af73"},
+      {"path": "docs/campaigns/foundation-01.md", "location": "DMA reconstruction"}
+    ],
+    "prerequisites": ["foundation.dma-aggregate-interface"],
+    "tags": ["dma", "typed-state", "matching", "historical-plateau"]
+  }
+]

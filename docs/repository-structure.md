@@ -68,20 +68,32 @@ Directory moves and naming are not proof of canonical interfaces.
 
 ## Credits and file select
 
-Eleven credits slices at `0801d150–0801e270` now have semantic `src/game/credits_*`
-names. They remain separate compiler units because `Credits_LoadBgGfx` has
-conflicting `void(void)` and `void(u8)` declarations; moving code is not a
-reason to silently choose one. The credits-scroll fallback remains visible.
+The eleven credits slices at `0801d150–0801e270` received semantic
+`src/game/credits_*` names. The foundation campaign then audited
+`Credits_LoadBgGfx`: callers pass a byte that the loader ignores. Its shared
+`void(u8)` declaration is now in `credits.h`, and the adjacent initializer and
+background loader form one `credits_init.c` unit (`0801d150–0801d33c`).
+Ten credits units remain. The credits-scroll fallback still has a reference
+`u16(void)` signature versus its live caller's `u8(u8)` declaration; audit that
+boundary before combining the scroll and sequence units.
 
 The three adjacent file-select/save-slot files at `0801f418–0801fd0c` are now
 one ordinary `src/game/file_select.c` compilation unit containing five
 functions. It uses the existing `gfx.h` TilemapRect palette interface.
-The four-word Sprite_CycleDmaFrame call declaration still differs from its
-struct-valued definition and needs an ABI/compiler audit; Screen_InstallOamA
-widths are likewise not certified by this consolidation.
+`Sprite_CycleDmaFrame` now uses the audited 16-byte `DmaCycleConfig` aggregate
+from `sprite_dma.h` in its definition, configuration data and all compiled
+callers. Its ordinary C implementation uses the existing `ScrollBlitLayer`
+timestamp and animation-index fields; the old binary fallback is removed.
+`Screen_InstallOamA` widths remain unaudited.
 
 Together these scene/menu passes organize 38 functions across 24 former
 compiled units into 17 semantic units. No new C reconstruction is claimed.
+
+The subsequent foundation campaign reconstructs four level-layout group
+helpers in their adjacent C units, with address-backed names for the spawn
+and update operations. Together with DMA frame cycling, these add five C
+functions (380 bytes). The DMA configuration adds 16 bytes of explicit typed
+C data; pointer-table aliases alone receive no data-reconstruction credit.
 
 Use one cluster per experiment, audit static-name collisions and per-file
 flags, then run a clean build and `make check`. Refresh progress snapshots
