@@ -3321,3 +3321,50 @@ r1). Mechanism, from the `.regmove` + `.lreg` dumps:
 - Parameter order at entry (`adds r3, r0, #0` before the two `lsls/lsrs`
   truncations) needs `u32` params with explicit `(u8)` casts as the first
   statements; `u8` params truncate r1/r2 before the base copy.
+
+## Inlined u8 helper result, PRE preheader copies of a re-derived `&sym[i]`, and fold's constant grouping (sub_08016824.c, 2026-09-07)
+
+9 pins -> 0 across TileBlit_DrawEntry / Icon_DmaLoadSprite /
+Icon_DmaUpdateSprite, pure C, no flags, no permuter. Three mechanisms:
+
+- **Preheader copies = PRE of a recomputed table address.** Baserom shape
+  before a nested loop: `mov ip, r5 ; adds r5, r2, #0 ; adds r7, r3, #0`
+  (base, entry, stride each copied into a fresh reg), then `[r5, #4]` in the
+  outer loop and `mov r0, ip ; adds r3, r7, r0 ; [r3, #4]` in the inner. That
+  is gcse PRE: the loop bodies recompute `sym + i*24` (the source reads
+  `gTileBlitTable[index].colCount` through the SYMBOL inside the loops), PRE
+  deletes the recomputations and copies the block-1 pseudos at the end of
+  bb 0 (`PRE/HOIST ... copying expression E to reg R`), loop.c then hoists
+  the surviving `plus` out of the inner loop only. With an `entry` pointer
+  local used in the outer loop the original pseudo stays live across the
+  loop and only the guard goes through a copy (byte_diff 125, extra r8).
+  Rule: when the ROM copies base/entry/stride into new registers at a loop
+  entry, the source addressed the record through the symbol everywhere —
+  do not add the pointer local the pins were hand-copying.
+- **fold groups a constant with its PLUS sibling.** `A*2 + (B*64 + C)`
+  (colStart first, `adds r0, r0, r6` for B*64+C, then `adds r1, r1, r0`)
+  comes from `(u16 *)0x0600f800 + colStart + tileRow * 32`: fold-const's
+  `split_tree` sees `(C + A*2) + B*64`, splits arg0 into var=A*2 / con=C and
+  returns `VAR + (ARG1 + CON)`. `(u16 *)(C + B*64) + A` and
+  `A*2 + (B*64 + C)` both re-associate to `B*64 + (A*2 + C)` (the ldrh of
+  tileRow first). Put the constant next to the operand the ROM evaluates
+  first.
+- **`static inline` helper returning u8 => a copied result.** `movs r1, #15 ;
+  switch ; adds r4, r1, #0` in two functions (and the same body out-of-line
+  as sub_08017270) is an inlined selector. integrate.c expands a call whose
+  target pseudo has the SAME mode straight into the target (no copy); a u8
+  return into a u32 variable goes through the inline's own result pseudo
+  plus a zero-extend that combine's nonzero_bits (values 0/1/15) reduces to
+  the plain `adds`. Declaring the helper `u32` loses the copy (byte_diff 4).
+  The same nonzero_bits elision removes the u8 argument extension at the
+  `TileBlit_DrawEntry(idx)` call, so the prototype-less re-declaration crutch
+  is unnecessary.
+
+Companion levers (all already documented, confirmed here): symbol-form
+`gDmaDescTable[idx].srcPtrTable` for the `adds r0, r3, #4 ; adds r0, r1, r0 ;
+ldr` reads vs a pointer for `[r5, #12]`; `srcTable = tbl[idx].srcPtrTable;`
+as its own statement to land the DMA3 pool load between the two derefs;
+`(GameStuff *)&gIwram_5330` (linker symbol) read directly in two blocks for
+the `ldr r0 ; mov ip, r0` PRE copy and the tail's `mov r1, ip ; ldr r0, [r1]`
+reload; `const T *table = sym; entry = &table[idx];` for the pool load
+before the index shift.

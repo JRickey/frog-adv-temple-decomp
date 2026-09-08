@@ -182,7 +182,7 @@ most-tractable first.
 | 6 | `Blend_StepFade` | src/engine/sub_080106b8.c | r2, r0, r1 | r2:vu8 *countdown, r0:vu16 *bldcnt, r1:int n |  | 11 | 7/0 | 0 | PERMUTER-TRACTABLE (easy) |  |
 | 7 | `sub_0800D9C8` | src/engine/sub_0800d8a0.c | r2, r4, r5, r3, r1 | r2:struct Entity *dst, r4:struct IwramAt35E0 *src, r5:u32 offset, r3:u32 offset2, r1:u32 addrOrValue |  | 16 | 10/0 | 0 | PERMUTER-TRACTABLE (easy) | shared file w/ SpawnControl_Dispatch |
 | 8 | `Mode4_BlitRect` | src/engine/sub_0801621c.c | r2, r0, r7 | r2:u8 *dst, r0:u32 rowOff, r7:u32 x |  | 22 | 20/0 | 0 | PERMUTER-TRACTABLE (easy) |  |
-| 9 | `TileBlit_DrawEntry` | src/engine/sub_08016824.c | r2, ip, r3 | r2:struct TileBlitRecord *entry, ip:struct TileBlitRecord *loopBase, r3:struct TileBlitRecord *p |  | 22 | 22/0 | 0 | PERMUTER-TRACTABLE (easy) | shared file w/ Icon_DmaUpdateSprite |
+| 9 | `TileBlit_DrawEntry` | src/engine/sub_08016824.c | r2, ip, r3 | r2:struct TileBlitRecord *entry, ip:struct TileBlitRecord *loopBase, r3:struct TileBlitRecord *p |  | 22 | 22/0 | 0 | **REAPED 2026-09-07** (was: PERMUTER-TRACTABLE (easy)) | symbol-form record accesses + fold association; see the 2026-09-07 sub_08016824.c entry |
 | 10 | `Credits_InitStateB` | src/engine/sub_0801ac84.c | r4, r5, r1, r1 | r4:u8 arg, r5:u8 b1, r1:u32 sum, r1:const u8 *p |  | 24 | 10/0 | 0 | PERMUTER-TRACTABLE (easy) | shared file w/ Credits_InitStateA |
 | 11 | `Credits_InitStateA` | src/engine/sub_0801ac84.c | r5, r2, r2 | r5:u8 b1, r2:u32 sum, r2:const u8 *p |  | 24 | 10/0 | 0 | PERMUTER-TRACTABLE (easy) | shared file w/ Credits_InitStateB |
 | 12 | `FrogSelect_ClearInputState` | src/engine/sub_080199e4.c | r2, r4, r1, r3, r1, r0 | r2:u32 i, r4:u8 *base, r1:u8 *dst, r3:u8 zero, r1:u8 *ptr, r0:u32 next |  | 36 | 3/0 | -12 | PERMUTER-TRACTABLE | size_delta -12: clear-loop unrolling may shift |
@@ -202,7 +202,7 @@ most-tractable first.
 | 26 | `EntityHitbox_RegisterGridPoints` | src/engine/sub_0800a83c.c | r9, r8, r0, r1, r5, r3, r7, r3 | r9:u32 gridIdReg, r8:u32 gridPlaneReg, r0:u32 r0v, r1:u32 r1v, r5:s32 savedTypeIndex, r3:s32 y, r7:u32 useAlternateFlagsTest, r3:const s8 *countBase |  | 85 | 21/0 | -4 | PERMUTER-TRACTABLE | high-regs are scalars, not struct ptrs |
 | 27 | `ScriptTick` | src/engine/sub_080179b8.c | r4, r2, r0, r1, r0, r1 | r4:int op, r2:GameStuff *gs, r0:u8 cursor, r1:u8 c1, r0:int idx, r1:const u16 *const *tbl |  | 85 | 28/0 | -6 | PERMUTER-TRACTABLE |  |
 | 28 | `BgScrollDmaUpdate` | src/engine/sub_08013aac.c | r4, r0, r6 | r4:struct Queue_64C0 *queue, r0:u8 cursor, r6:u8 wrapCursor |  | 92 | 14/0 | -4 | PERMUTER-TRACTABLE |  |
-| 29 | `Icon_DmaUpdateSprite` | src/engine/sub_08016824.c | ip, r1, r0, r1 | ip:u32 gs, r1:u32 r1val, r0:u32 r0r, r1:u32 r1r |  | 102 | 16/0 | 0 | PERMUTER-TRACTABLE | shared file w/ TileBlit_DrawEntry; Icon-animator pattern (codegen-notes) — may resist |
+| 29 | `Icon_DmaUpdateSprite` | src/engine/sub_08016824.c | ip, r1, r0, r1 | ip:u32 gs, r1:u32 r1val, r0:u32 r0r, r1:u32 r1r |  | 102 | 16/0 | 0 | **REAPED 2026-09-07** (was: PERMUTER-TRACTABLE) | inlined u8 selector + symbol-form gGameStuff PRE copy; see the 2026-09-07 sub_08016824.c entry |
 | 30 | `sub_0800BE18` | src/engine/sub_0800be18.c | r9, r6, r0, r1 | r9:u32 shiftedType, r6:s32 typeIndex, r0:s32 typeIndex, r1:u32 pointsBase |  | 104 | 14/0 | 0 | PERMUTER-TRACTABLE | r9 is a scalar |
 | 31 | `SpawnControl_Dispatch` | src/engine/sub_0800d8a0.c | r4, r5, r6, r3 | r4:u8 *base, r5:u8 *saved6110, r6:u8 *entry, r3:u32 mask |  | 109 | 23/0 | 4 | PERMUTER-TRACTABLE | shared file w/ sub_0800D9C8 |
 | 32 | `Blit_ApplyFlaggedRecords` | src/engine/sub_080113e8.c | sl, r9 | sl:u8 idx, r9:struct BlitRecord *romTable | YES | 114 | 15/0 | 0 | PERMUTER-TRACTABLE | **priority class** |
@@ -578,3 +578,39 @@ Harness note: `compile_and_view_assembly.py` run back-to-back on rewritten
 sources can report a STALE byte_diff (identical values for consecutive
 variants); `rm -f src/<tu>.s src/<tu>.o` before each run, and clean-rebuild
 before believing a 0.
+
+## Session 2026-09-07 — src/engine/sub_08016824.c (de-pin agent): 9 pins -> 0
+
+- `TileBlit_DrawEntry` (3 pins r2/ip/r3 -> 0, pure C, no permuter, no
+  flags). The pinned body carried an `entry` pointer plus hand-written
+  `loopBase`/`loopEntry`/`loopStride` copies. The baserom's three preheader
+  copies (`mov ip, r5; adds r5, r2; adds r7, r3`) are gcse PRE replacing the
+  loops' recomputed `&gTileBlitTable[index]`: spell EVERY record access
+  through the symbol (`gTileBlitTable_08306840[index].field`) with no entry
+  local and the copies appear by themselves; keeping `entry->x` in the outer
+  loop leaves the original pseudo live (byte_diff 125, extra push {r7}/r8).
+  The destination sum is `(u16 *)0x0600f800 + colStart + tileRow * 32`:
+  fold's split_tree groups the constant with colStart and re-associates to
+  `A*2 + (B*64 + C)`; `(u16 *)(C + tileRow*64) + colStart` and
+  `colStart*2 + (tileRow*64 + C)` both come out as `B*64 + (A*2 + C)`
+  (byte_diff 26).
+- `Icon_DmaLoadSprite` (2 pins r1/r0 -> 0) and `Icon_DmaUpdateSprite`
+  (4 pins ip/r1/r0/r1 -> 0), pure C. The shared `movs r1, #15; switch;
+  adds rN, r1, #0` prologue is a `static inline u8` selector (the same body
+  ships out-of-line as sub_08017270): a u8 return makes integrate.c give the
+  inlined result its own pseudo and copy it into the u32 `idx`, where a u32
+  return expands straight into `idx` (no copy, byte_diff 4/site). Field
+  reads are symbol-form `gDmaDescTable[idx].srcPtrTable/.destAddr` (cse
+  rewrites them through the live base: `adds r0, r3, #4`, `adds r0, #8`),
+  the count read goes through an `entry`/table pointer, `srcTable =
+  ...srcPtrTable;` as its own statement puts that load before the DMA3
+  pool load, gGameStuff is read as the linker symbol (`gIwram_5330`) so
+  PRE emits the `ldr r0; mov ip, r0` copy, and a `table` pointer local
+  puts `ldr r7, =table` before `lsls r4, r2, #4` (the last byte_diff 4).
+- TU is pin-free; the prototype-less `void TileBlit_DrawEntry();` crutch
+  is gone too (combine's nonzero_bits elides the u8 argument extension).
+
+Lesson: three PRE copies at a loop preheader (base/entry/stride into new
+registers) mean the loop body re-derives `&sym[i]` from the symbol — write
+the accesses through the symbol, do not introduce the pointer the pins were
+copying.
