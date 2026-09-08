@@ -237,35 +237,18 @@ def m2c_seed(asm_path: Path, fn: str) -> str:
 
 
 def suggest_destination(start: int) -> str:
-    """Read linker.ld and report which neighbour C file the new src/ should
-    land next to. Mirrors pick_target.py's rules without re-importing."""
+    """Use actual section order; address comments are optional documentation."""
     text = (ROOT / "linker.ld").read_text()
-    obj_re = re.compile(
-        r"^\s*(\S+\.o)\(\.text\);\s*/\*\s*0x([0-9a-fA-F]+)\s*-\s*0x([0-9a-fA-F]+)")
+    text = re.sub(r"/\*.*?\*/", "", text, flags=re.S)
+    objects = re.findall(r"([^\s;{}]+\.o)\(\.text\);", text)
     target_obj = f"asm/disasm_0x{start:08x}.o"
-    prev_src: str | None = None
-    next_src: str | None = None
-    found = False
-    for line in text.splitlines():
-        m = obj_re.match(line)
-        if not m:
-            continue
-        obj = m.group(1)
-        if obj == target_obj:
-            found = True
-            continue
-        if not found and obj.startswith("src/"):
-            prev_src = obj
-        elif found and obj.startswith("src/"):
-            next_src = obj
-            break
-    if not found:
+    if target_obj not in objects:
         return f"(target asm at 0x{start:08x} not currently in linker.ld)"
-    if prev_src:
-        return f"adjacent src C file (prev neighbour): {prev_src.replace('.o', '.c')}"
-    if next_src:
-        return f"adjacent src C file (next neighbour): {next_src.replace('.o', '.c')}"
-    return "no adjacent src/*.c — scaffold a new file (e.g., src/system/<name>.c)"
+    index = objects.index(target_obj)
+    previous = objects[index - 1] if index else None
+    if previous and previous.startswith("src/"):
+        return f"adjacent src C file (prev neighbour): {previous[:-2]}.c"
+    return "no preceding src/*.c neighbour — scaffold a new file before the target"
 
 
 def main() -> int:
