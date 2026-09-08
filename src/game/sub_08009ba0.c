@@ -50,7 +50,10 @@ extern void EntityPool_Reset(void);
 extern u32 Level_Load(void);
 extern void Sound_Reset(void);
 extern void Timer_DecrByte(struct IwramAt35E0 *p);
-extern const u32 sEntityProcA[17];
+
+typedef void (*GameProc)(void);
+extern u8 gIwram_5330;
+extern const GameProc sEntityProcA[17];
 
 u32 Scene_EntityTick(u8 *flag)
 {
@@ -72,20 +75,17 @@ u32 Scene_EntityTick(u8 *flag)
     }
 
     {
-        register GameStuff *game asm("r4");
-        game = &gGameStuff;
+        /* Linker symbol, not the gGameStuff address macro: with a symbol base
+         * combine folds the sceneType load into the index shift, so the ldrb
+         * and the lsls take separate registers as in the baserom. Block-scoped
+         * so the pool load stays in this block instead of being gcse-hoisted
+         * above the lives test. */
+        GameStuff *game = (GameStuff *)&gIwram_5330;
+
         if ((game->_unk10 & 1) == 0)
             Timer_DecrByte(&gIwram_35E0);
         Entity_SpawnFromRecord(gIwram_35E0._field_5);
-        {
-            register const u32 *procA asm("r1");
-            register u8 sceneType asm("r2");
-            register u32 offset asm("r0");
-            procA = sEntityProcA;
-            sceneType = game->sceneType;
-            offset = ((u32)sceneType << 2) + (u32)procA;
-            ((void (*)(void))(*(const u32 *)offset))();
-        }
+        sEntityProcA[game->sceneType]();
         if (game->mode == GAME_MODE_ATTRACT) {
             game->mode = GAME_MODE_ROUTER;
             game->sceneType = 0;
@@ -96,7 +96,6 @@ u32 Scene_EntityTick(u8 *flag)
     Sound_Reset();
     return 0;
 }
-typedef void (*GameProc)(void);
 
 extern const u32 sEntityParamTable[17];
 extern const u32 sEntityProcB[17];
@@ -160,7 +159,7 @@ void EntityDispatch_RunFrame(void)
 
         {
             register const u32 *procA asm("r1");
-            procA = sEntityProcA;
+            procA = (const u32 *)sEntityProcA;
             idx2 = base->sceneType;
             offset = ((u32)idx2 << 2) + (u32)procA;
             ((GameProc)(*(const u32 *)offset))();
