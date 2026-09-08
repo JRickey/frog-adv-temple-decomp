@@ -29,6 +29,7 @@ Outputs land in tools/agent/m2c_out/<Fn>.s and <Fn>.c (printed to stdout too).
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import subprocess
 import sys
@@ -39,6 +40,7 @@ BASEROM = ROOT / "frog_us_baserom.gba"
 MAP = ROOT / "frog_us.map"
 SRC = ROOT / "src"
 OUTDIR = ROOT / "tools/agent/m2c_out"
+ADDRESS_CACHE = ROOT / "tools/agent/.function_addresses.json"
 CTX = OUTDIR / "ctx.c"
 M2C_PY = ROOT / "vendor/m2c/.venv/bin/python"
 M2C = ROOT / "vendor/m2c/m2c.py"
@@ -56,30 +58,129 @@ BRANCH_BASES = {
 RE_INSN = re.compile(r"^\s*([0-9a-fA-F]+):\s+((?:[0-9a-fA-F]{4} ?)+)\s+(\S.*)$")
 # A map symbol line: `                0x08017364                SaveLoad`
 RE_MAPSYM = re.compile(r"^\s+0x0([0-9a-fA-F]{7,8})\s+([A-Za-z_]\w*)\s*$")
+RE_PEELED_RANGE = re.compile(
+    r"Range:\s*\[0x([0-9a-fA-F]+),\s*0x([0-9a-fA-F]+)\)"
+)
+RE_FUNCTION_START = re.compile(
+    r"^\s*(?:thumb_func_start|arm_func_start)\s+([A-Za-z_]\w*)\b",
+    re.MULTILINE,
+)
+RE_FUNCTION_LABEL = re.compile(
+    r"^\s*([A-Za-z_]\w*):\s*@\s*0x([0-9a-fA-F]+)\b",
+    re.MULTILINE,
+)
+C_FUNCTION_NAME = re.compile(
+    r"(?m)^(?![ \t]*(?:#|if|for|while|switch|return|typedef)\b)"
+    r"[ \t]*(?:[A-Za-z_]\w*[ \t*]+)+([A-Za-z_]\w*)\s*\("
+)
 
 
 def load_symbols() -> dict[int, str]:
-    """addr -> name from the linker map (last definition wins)."""
+    """addr -> name, with immutable cached function entries over live map data."""
     syms: dict[int, str] = {}
-    if not MAP.exists():
-        return syms
-    for line in MAP.read_text(errors="replace").splitlines():
-        m = RE_MAPSYM.match(line)
-        if m:
-            addr = int(m.group(1), 16)
-            name = m.group(2)
-            # Skip linker-internal and obvious non-code/data filler.
-            if name in ("ABSOLUTE",):
-                continue
-            syms[addr] = name
+    if MAP.exists():
+        for line in MAP.read_text(errors="replace").splitlines():
+            m = RE_MAPSYM.match(line)
+            if m:
+                addr = int(m.group(1), 16)
+                name = m.group(2)
+                # Skip linker-internal and obvious non-code/data filler.
+                if name in ("ABSOLUTE",):
+                    continue
+                syms[addr] = name
+
+    cached_addrs = load_cached_addresses()
+    function_names = known_function_names()
+    cached_functions = {
+        name: addr for name, addr in cached_addrs.items()
+        if name in function_names
+    }
+    # A candidate build can move a function while its data symbols remain
+    # correct. Remove only those stale function mappings, retain map-only data,
+    # then restore each known function's matching-build baserom address.
+    cached_names = set(cached_functions)
+    syms = {addr: name for addr, name in syms.items() if name not in cached_names}
+    syms.update({addr: name for name, addr in cached_functions.items()})
     return syms
+
+
+def load_cached_addresses() -> dict[str, int]:
+    """Read the matching-build baserom address snapshot, if available."""
+    try:
+        payload = json.loads(ADDRESS_CACHE.read_text())
+        return {name: int(addr) for name, addr in payload["addresses"].items()}
+    except (OSError, ValueError, KeyError, TypeError):
+        return {}
+
+
+def known_function_names() -> set[str]:
+    """Names that are presently defined as code, rather than map-only data."""
+    names: set[str] = set()
+    for asm_path in (ROOT / "asm").glob("disasm_0x*.s"):
+        names.update(RE_FUNCTION_START.findall(asm_path.read_text(errors="replace")))
+    for cfile in SRC.rglob("*.c"):
+        names.update(C_FUNCTION_NAME.findall(cfile.read_text(errors="replace")))
+    return names
+
+
+def peeled_range(fn: str, cached_addrs: dict[str, int]) -> tuple[int, int] | None:
+    """Return `fn`'s exact extent from an auto-peel range header.
+
+    A header can cover several functions. Their label comments (or the
+    matching-build cache when a comment is unavailable) bound each member, so
+    a first function never consumes the rest of a multi-function slice.
+    """
+    for asm_path in sorted((ROOT / "asm").glob("disasm_0x*.s")):
+        text = asm_path.read_text(errors="replace")
+        starts = set(RE_FUNCTION_START.findall(text))
+        if fn not in starts:
+            continue
+        match = RE_PEELED_RANGE.search(text)
+        if not match:
+            continue
+        start, end = (int(match.group(i), 16) for i in (1, 2))
+        labels = {
+            name: int(addr, 16)
+            for name, addr in RE_FUNCTION_LABEL.findall(text)
+            if name in starts
+        }
+        addresses = {
+            name: labels.get(name, cached_addrs.get(name)) for name in starts
+        }
+        if any(addr is None for addr in addresses.values()):
+            # An unlocated sibling could be the next boundary. Do not claim
+            # the whole slice as an exact range or compare None to an address.
+            continue
+        fn_start = addresses.get(fn)
+        if fn_start is None or not start <= fn_start < end:
+            continue
+        next_starts = [addr for name, addr in addresses.items()
+                       if name != fn and fn_start < addr < end]
+        fn_end = min(next_starts, default=end)
+        return fn_start - ROM_BASE, fn_end - fn_start
+    return None
+
+
+def cached_range(fn: str, cached_addrs: dict[str, int]) -> tuple[int, int] | None:
+    """Infer a reference extent from the matching-build address snapshot."""
+    addr = cached_addrs.get(fn)
+    if addr is None:
+        return None
+    higher = [other for other in cached_addrs.values() if other > addr]
+    if not higher:
+        return None
+    end = min(higher)
+    return addr - ROM_BASE, end - addr
 
 
 def resolve_range(fn: str, syms: dict[int, str]) -> tuple[int, int]:
     """Return (rom_offset, size) for `fn`.
 
-    Prefers a NAKED `.incbin "...", off, size` in src/ (exact). Falls back to
-    the map symbol address with size = next-symbol delta.
+    Prefers immutable baserom records: a NAKED `.incbin "...", off, size`, an
+    auto-peel range header, or the matching-build address snapshot. Falls back
+    to the live map only when no reference record remains. The live map may
+    contain a shorter nonmatching C candidate, so its next-symbol delta is not
+    a valid m2c reference extent for frontier work.
     """
     # 1. NAKED incbin in src/ — exact offset+size.
     pat = re.compile(
@@ -94,6 +195,11 @@ def resolve_range(fn: str, syms: dict[int, str]) -> tuple[int, int]:
         m = pat.search(txt, idx)
         if m:
             return int(m.group(1), 16), int(m.group(2), 16)
+    cached_addrs = load_cached_addresses()
+    if result := peeled_range(fn, cached_addrs):
+        return result
+    if result := cached_range(fn, cached_addrs):
+        return result
     # 2. Map: find addr, size from next symbol.
     addr = next((a for a, n in syms.items() if n == fn), None)
     if addr is None:
