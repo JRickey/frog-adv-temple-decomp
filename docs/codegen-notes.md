@@ -3123,3 +3123,26 @@ Two traps on the way:
   r0,#5 ; str` constants (byte_diff 10). Pass a `u8` variable instead
   (`u8 pct = count;` — cse folds the copy, the argument tree keeps type u8,
   so the r0 move stays last: `adds r0, r1, #0`).
+
+## Whole-block +1 register shift = a dropped live value (PadGrid_RandomizeAndSyncEntityCoords, 2026-09-07)
+
+When an unpinned body reproduces every instruction but each pseudo lands ONE
+register below the baserom (r1/r3/r2/r0 where the ROM has r2/r4/r3/r1, r0
+untouched, `push {r4,r5}` vs `push {r4}`), something the reference dropped is
+occupying r0 across the block. Here it was the first call's return value
+being the second call's argument: `u32 mask = GenRandomTileMask(); <stores>;
+return FilterValidBits(mask);`. The pseudo gets r0 via the return/argument
+copy suggestions (both copies elide), stays live across the block, and pushes
+the base pointers into r2/r4 and the pool-constant reloads into r5/r3 — no
+pins. Check callee prototypes for a parameter the reference never passed
+before touching allocation.
+
+Same TU, two more shapes that match first try:
+- A loop condition written as a bitwise `&` of two comparisons,
+  `while ((i <= 24) & (found < limit))`, is the `movs r3,#0 / cmp / bgt /
+  movs r3,#1 ... ands r3, r2 / bne` sequence (no short-circuit branch).
+- A 4-byte two-halfword struct local that is never address-taken stays in a
+  register: `result.x = -3; result.y = -3;` is the `ands 0xffff0000 / orrs
+  0xfffd / ands 0xffff / orrs 0xfffd0000` quartet, and `result = coord` from
+  an address-taken struct twin is a bare `ldr r4, [sp]`. Casting through
+  `*(u32 *)&result` memory-homes it (str/ldr [sp,#4] + strh).

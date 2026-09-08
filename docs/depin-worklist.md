@@ -380,3 +380,30 @@ byte match. Structural levers (all source-shape, no flags):
   `frame.rowByte` is re-read from the stack for arg1 (volatile-frame shape).
   (b)/(c) are untested source fixes; (a) looks like the cse store-forwarding
   delta of the "third SDK snapshot" note.
+
+## Session 2026-09-07 — src/engine/sub_0800d8a0.c (de-pin agent): 14 pins -> 0
+
+All three functions re-derived from the asm, first-try byte match each,
+no permuter, no flags:
+
+- `PadGrid_RandomizeAndSyncEntityCoords` (`79e1067a`, 5 pins -> 0). Every
+  pseudo in the baserom sits one register above agbcc's choice and r0 is
+  never touched: GenRandomTileMask's return value IS FilterValidBits' `u32`
+  argument (the pinned body dropped it and relied on r0 surviving).
+  `u32 mask = GenRandomTileMask(); ... return FilterValidBits(mask);` with
+  plain `gEntities[30].x = gIwram_35E0._field_8;` stores. Array indexing a
+  typed extern already gives the `ldr =gEntities; ldr =0x692; adds` shape.
+- `SpawnControl_Dispatch` (`2a93ba46`, 4 pins -> 0). Plain `s8` for-loop
+  over `gEntities[i + 3].status |= 8` + `switch (gIwram_6110.spawnMask)`;
+  the `adds r5, r4, #0` base copy is gcse PRE sharing the call argument's
+  symbol load with the switch block's field read.
+- `PadGrid_ScanMaskToCoord` (`b529c302`, 5 pins -> 0). `while ((i <= 24) &
+  (found < limit))` — a bitwise `&` of two comparisons (each expands to
+  `movs #0 / cmp / b / movs #1`), `s8` counters, and a
+  `struct { s16 x, y; } result` in a register so `result.x = -3; result.y
+  = -3` emits the and/or halfword-field stores; `result = coord` from the
+  stack struct is the `ldr r4, [sp]`.
+
+Lesson: when a de-pinned body colours every pseudo exactly one register
+low, look for a value the pinned reference silently dropped (a call result
+consumed by a later call is the classic).
