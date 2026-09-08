@@ -1,6 +1,34 @@
 [
   {
     "schema_version": 1,
+    "id": "reporting.function-not-file-fallback",
+    "kind": "workflow",
+    "title": "Fallback classification must survive semantic TU consolidation",
+    "status": "observed",
+    "claim": "A file-level NON_MATCHING token veto undercounted unrelated ordinary C in mixed units. Classify each function using NAKED identity, unambiguous definition and inline-instruction checks instead. Multiple conditional definitions remain uncredited without selected-branch evidence. Organization-only merges must not turn neighboring C into nonmatching code.",
+    "subjects": ["reporting:decompdev"],
+    "provenance": [
+      {"path": "tools/agent/objdiff_report.py", "location": "_is_matched"},
+      {"path": "tools/agent/tests/test_objdiff_report.py", "location": "test_neighboring_conditional_fallback_does_not_disqualify_c"}
+    ],
+    "tags": ["reporting", "structure", "matching"]
+  },
+  {
+    "schema_version": 1,
+    "id": "scene08.finish-frame-not-destruction",
+    "kind": "workflow",
+    "title": "Scene08 finalizer name reflects its actual frame-end forwarding",
+    "status": "observed",
+    "claim": "Function 08000d50 only forwards to Game_FrameEnd. Scene08_FinishFrame replaces the old Mode8_Teardown name without asserting destruction. Scene08_StepEntityState and Scene08_Setup use the same scene identity; existing pointer/integer argument discrepancies remain explicit rather than silently normalized.",
+    "subjects": ["fn:08000d50", "fn:08000d2c", "fn:08000d5c"],
+    "provenance": [
+      {"path": "src/game/scene08_main.c", "location": "Scene08_FinishFrame, Scene08_StepEntityState, Scene08_Setup", "commit": "d34c6e48cd083b89c3edeba7136ad69b2a371188"},
+      {"path": "docs/repository-structure.md", "location": "Scene consolidation and naming"}
+    ],
+    "tags": ["naming", "scene08"]
+  },
+  {
+    "schema_version": 1,
     "id": "reporting.libgcc-reproduced-dependency",
     "kind": "workflow",
     "title": "Linked compiler runtime is resolved, not authored game reconstruction",

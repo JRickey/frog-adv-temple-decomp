@@ -103,6 +103,18 @@ class ObjdiffReportTests(unittest.TestCase):
                 self.assertTrue(objdiff_report._is_matched("mixed.o", "ordinary", set()))
                 self.assertFalse(objdiff_report._is_matched("mixed.o", "fallback", set()))
 
+    def test_neighboring_conditional_fallback_does_not_disqualify_c(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "mixed.c").write_text(
+                '#ifdef NON_MATCHING\nvoid fallback(void) {}\n#else\n'
+                'NAKED void fallback(void) { asm("nop"); }\n#endif\n'
+                'int ordinary(void) { return 1; }\n')
+            with patch.object(objdiff_report, "ROOT", root):
+                self.assertTrue(objdiff_report._is_matched("mixed.o", "ordinary", {"fallback"}))
+                self.assertFalse(objdiff_report._is_matched("mixed.o", "fallback", {"fallback"}))
+                self.assertFalse(objdiff_report._is_matched("mixed.o", "fallback", set()))
+
     def test_inventory_rejects_duplicate_addresses(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "inventory.tsv"

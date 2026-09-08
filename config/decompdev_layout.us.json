@@ -2,8 +2,8 @@
   "version": 1,
   "rom_sha1": "7b4c27009198df18555e63fb5dcad223eaf09815",
   "libgcc_sha256": "5086cf015e316b4dcef8952305e2e6364d835bd9a11e7328db13027359635ef9",
-  "elf_sha256": "eb4d7db40cb53f7f527436574f9d132ed37f89ac2b9c99ef4770a997475acb29",
-  "map_sha256": "95eb48c34bd26ddd2fc19a0f0e932537c4b8ef42a13fbf3d7e1bd6a234250f5a",
+  "elf_sha256": "9c6e2e4e14bfbfdeeeead7344f41a38457420ddee2edbdaac8c1b60d8984b080",
+  "map_sha256": "a707c5c35adfe117397393059e4d0fbc4029aff391c091ad3ce62126df28345a",
   "source_sha256": {
     "Makefile": "3c78d23b9d27b00f84e462c5adcf5b994f2314bd998951dd6a800e0564f285d3",
     "asm/data/bg_tilemap_19c312.s": "e07ece008118e6873cfc650181a8b809e2fb62160076ae2e55f684af99adcbff",
@@ -313,7 +313,7 @@
     "asm/text/text_0x083dddb4.s": "130f02f9c410480f3f4ae1d59d4a38e05d010e4dbe17c2a3f7ed1514baf351af",
     "asm/text/text_0x083e0000.s": "abffb6b4b9bc68e5bb7c7f0cbe97366fe5944ce7a0b18491421a196fbfd3c9dc",
     "asm/text/text_0x083f0000.s": "774327824adc584ddfbf7fc2721992310a0e60b74d9b2658779aee5f030d06df",
-    "config/decompdev_functions.us.tsv": "6a9d3b774289da7d6825dad96362a747e0058810f074885beea75d527e1b74e7",
+    "config/decompdev_functions.us.tsv": "cc7dec8c1467df772c0fa2333f908c74ba0b97b3339ae60f6717f26ed0fe2107",
     "include/constants/game_mode.h": "7fb742d033ce586f968f0f838358314beae76b48c8f97c4ba0d606a63d44cc07",
     "include/constants/input.h": "3e7883a152c57d9aae92770a5c4c2977cf1086685788f18e8b3538fa24858f5f",
     "include/entity.h": "7358c03881d7ab2f4d87ea52f7af16046df99d42a06890d5ccd745680bb77aa2",
@@ -420,7 +420,7 @@
     "lib/gax/text_0x0803175c.s": "ec05f64d3049e86f66fb10b5ce00f9cdebaf9bca76b502dd5a28f66998174eeb",
     "lib/gax/text_0x08032c18.s": "af9d8dd634d77e3d9b95b4025609c913d10ae21664497fc274df62f8fb60f760",
     "lib/gax/text_0x08032e1c.s": "027661b56cd26367c0dfd6fb9639847a29f0495da6633ebe037564383c0a2dc9",
-    "linker.ld": "8bbb5f780f26b15a2a423962bc69d5ee6578b9de7502c891211cbeb4c9e22302",
+    "linker.ld": "633a3486fd0d67ab4469e9b703f920c1c9aedbe13ce672da687064b03bb01b4b",
     "src/data/character_sprite_frames.c": "3dfdd480f22bbf3f043e4f00354a86159c7c6384536ed8682c8e194c36bb906e",
     "src/data/credits_text.c": "f81793ede237cee0d5f1de534751467aa32d3e3fb85a5f28602fd3e5c450c562",
     "src/data/credits_tilemap.c": "a07924fab5caf788daa1c795f51e2ba34baa267c7ebd2c47592b9926850164f2",
@@ -665,24 +665,10 @@
     "src/engine/sub_0801cfa0.c": "7abbc6fdc2466c410cd84d4d4303903013e5b07a22c5c3c52afe74d10ff55618",
     "src/engine/sub_0801d048.c": "c2dd08cac1912001019ca2d5749e9767cdf432857b57482837a814aceec75464",
     "src/engine/sub_0801d094.c": "52ec1e4c3ccd76fd0dfbd98e0f972416c621ac9af9824e47889df41920fa3975",
-    "src/engine/sub_0801d150.c": "0dff1fd84bf85f2ce5441466d572aa316b2bd52862f416f6821b1a06daed9d0c",
-    "src/engine/sub_0801d268.c": "6c2aa2a8ec762bdac8389838c84030499e4ddebce9bf7fb818df8fbde8712773",
-    "src/engine/sub_0801d33c.c": "795b9deecb3311771ec811941d82bb8d478196c064d006818a24631678ab3bae",
-    "src/engine/sub_0801d4cc.c": "6916dbac904ddf84e290680a08643f15ab16c5e941c33574ab41c1e84e486b83",
-    "src/engine/sub_0801d570.c": "2c746cb6fccaabd3b9f2d05f4fe1e9299b979aa22ebddf8c575602eb4cde52e6",
-    "src/engine/sub_0801d880.c": "844307d713070b683d4c041992ce9a44bcc2aaf34f035425b4a14a46fce0c6e5",
-    "src/engine/sub_0801da1c.c": "77fbb4c802dd42fd1379f2ef0c3b5001926fb30200b46e522c5b150d4fe6819d",
-    "src/engine/sub_0801dbb4.c": "da000aecb3560cde5359d16594327f3515dd405ba59e10e5b679851d1b0c337a",
-    "src/engine/sub_0801dea0.c": "52d24ffe00d89a295adea866a715ee608e8da2408ec5cbe3e7142b0f843b59ab",
-    "src/engine/sub_0801e078.c": "8eeb6a0741bd38f2b4f4180b1c6cdc6a210c7dbc513a56e6ab823470fbe80a54",
-    "src/engine/sub_0801e118.c": "3f3a3383fe72b4d5a7537ef811792462a03b3a7d840488d5e45892c4f1f974ef",
     "src/engine/sub_0801e270.c": "676502ddf0be6fac1fa7d2aaf9a198aeb6b47e4d0c0e706426ce3debd0eefd15",
     "src/engine/sub_0801e28c.c": "9ec71b07b6060403bcd521fb447f09a509e341fa0c50afd4ed50d2ab854f48a1",
     "src/engine/sub_0801ea08.c": "7a12c784b78b8d444a8cdbc311af74e06a2427275a5506398b3a1ff555ab5ef4",
     "src/engine/sub_0801f1e0.c": "911f9f736da4e43e4537bdec8bacbfb5883b681ac03d7285ced6d79390800cac",
-    "src/engine/sub_0801f418.c": "ce4b0e7e96b1b502cda14fb76214a6b7f151dcd94980f3e72541b52556958711",
-    "src/engine/sub_0801f684.c": "296d54e39da81cf584457b4928b0283f98442b1f963d64d538507237b505538f",
-    "src/engine/sub_0801f8bc.c": "e0d96969d5e33d5772ef5773c2a372591296a08c1eab6aaecab0f1c767118a3b",
     "src/engine/sub_0801fd0c.c": "5cff1e12464aff99b380ead17f36a27e475b681ff72967c9eea088de4c5461b6",
     "src/engine/sub_080200b4.c": "926b3ff25e348918e6bc2c406663170978d727c16021c0d8800fe54b0c48143f",
     "src/engine/sub_080202a8.c": "14d03eb17a1fad0ba97f3659264eeedcea8dd6b10b5c32aa02515880fac3edf1",
@@ -777,11 +763,28 @@
     "src/engine/sub_0802a9fc.c": "44f0bc2c367a9682cbddaa4a9bc891926a39ba1e46e3c6e79280d5ecb47c2938",
     "src/engine/sub_0802aae8.c": "cad378f8dc57527cbdfd73acf7abaa51d8f95037beadc27405d58b31f33054a2",
     "src/engine/tile_grid_read.c": "69e555ea8c293a6395895f2f0602547e3a2033b22cce44f50c6aff6be4441fa3",
+    "src/game/credits_bg.c": "6c2aa2a8ec762bdac8389838c84030499e4ddebce9bf7fb818df8fbde8712773",
+    "src/game/credits_fade.c": "8eeb6a0741bd38f2b4f4180b1c6cdc6a210c7dbc513a56e6ab823470fbe80a54",
+    "src/game/credits_graphics.c": "844307d713070b683d4c041992ce9a44bcc2aaf34f035425b4a14a46fce0c6e5",
+    "src/game/credits_init.c": "0dff1fd84bf85f2ce5441466d572aa316b2bd52862f416f6821b1a06daed9d0c",
+    "src/game/credits_line.c": "da000aecb3560cde5359d16594327f3515dd405ba59e10e5b679851d1b0c337a",
+    "src/game/credits_line_alt.c": "52d24ffe00d89a295adea866a715ee608e8da2408ec5cbe3e7142b0f843b59ab",
+    "src/game/credits_page1.c": "6916dbac904ddf84e290680a08643f15ab16c5e941c33574ab41c1e84e486b83",
+    "src/game/credits_page2.c": "795b9deecb3311771ec811941d82bb8d478196c064d006818a24631678ab3bae",
+    "src/game/credits_scroll.c": "2c746cb6fccaabd3b9f2d05f4fe1e9299b979aa22ebddf8c575602eb4cde52e6",
+    "src/game/credits_sequence.c": "3f3a3383fe72b4d5a7537ef811792462a03b3a7d840488d5e45892c4f1f974ef",
+    "src/game/credits_transition.c": "77fbb4c802dd42fd1379f2ef0c3b5001926fb30200b46e522c5b150d4fe6819d",
     "src/game/dispatch_helpers.c": "6d681270a13e2a34b8851fb59b1157eaf20f17fb825b50b0a13a45f4a21c9704",
+    "src/game/file_select.c": "01ec9fea8d5d826a04e1d2e751dffc369ef28ddf65dc9f63a0c44d6bd00fce3b",
     "src/game/game_mode.c": "5180e456f0e6aff615e66ae221608ff95aae58cd11c0d67aebba0bd6eee8f6e7",
     "src/game/menu_dispatch.c": "3ae62cab0af0f0ca2c1bb915a21b0a21da43bbb6de9a1c54269c7cbc28692c10",
     "src/game/mode_15.c": "1693e3f38fff1b61db43bf727714608deeb8b98f17f4cd5c914bfe1862243607",
     "src/game/mode_control.c": "b96283e651a16287aa5b7eb23e020a9bf82e2c3f54e737ad805e2d89f7a49cdf",
+    "src/game/scene08_handlers.c": "44d3bdcf1cc24305da492c7b89d249aee0dca11ce1def5a9b2917fd7867f77c4",
+    "src/game/scene08_main.c": "6fb0cf017a02d28e183a9abb03fb5953acb2b9406f75addb78341709f179a969",
+    "src/game/scene09_main.c": "2052f3fa704b2d3abfc89962073ce3e6858faf5d35db5176a93297b658165f82",
+    "src/game/scene09_player_tile.c": "593b74c501afd6b152d74069b6bd46d6eb5377ede20245797f8bf5bed8843631",
+    "src/game/scene_probe_helpers.c": "8f7b01a43d9f1d5cd754145854d86ddaf6268872e50758b4117149496f2440a6",
     "src/game/set_game_mode_03.c": "454a18b2915bc13ab439bb2d904bb6064b5d3b9edc68d23c7393e478095ac2e4",
     "src/game/set_game_mode_07.c": "48a2f36b770022787153c977f8b6fe0cca5556deef4275d7b9223bc50d8f6860",
     "src/game/set_game_mode_08.c": "fed29482003ed31830941f5ee50cc998594ef33bcfc453ba2c3722068fd412f6",
@@ -799,13 +802,12 @@
     "src/game/sub_080019b4.c": "3db802873fa4bbdbb7bd9fecb29c62ec29b72d8796b5d6e4bdd277c743445f3a",
     "src/game/sub_08001d18.c": "b30f41030f26289b75642000b0c3bc60f44c73075bb0d67e5aeacec6395a714e",
     "src/game/sub_08001d54.c": "2fb8adc1a4447dc41655af404049f4bbc09a51eafc73e325699454df7fc5e201",
-    "src/game/sub_08001d94.c": "129cc46d60ac78676345361065f63f57019c4f5051831a829ae06dfca7962a77",
-    "src/game/sub_08001e18.c": "8404b8fb8ace2c6d5fb61f79ca60052b22e8629f3c9992221d6629837c525b9a",
+    "src/game/sub_08001d94.c": "8568d377f664a2c0051bc55f8b70a1a3bbd05a5a2842247a93b1908345203d5d",
+    "src/game/sub_08001e18.c": "acae85c8b070966058cf57863a7d58c327006e423c74475d3b5e5092e3286213",
     "src/game/sub_08001e24.c": "897816544a0fa36c5ddf62d2ebb482117dafe2703bdcb98308a913d71639db8e",
     "src/game/sub_08002184.c": "b55ed285b9b12b4a19c671b0293cc0c7b768bf3f28306c09fe5ad15690dd0216",
     "src/game/sub_08002450.c": "08bace5929c6c13bc5d4f8848041ca44fdbca8da376f78cc2e3d4626630661dd",
     "src/game/sub_08002524.c": "feb27e4d8118e61ba9dd09683f45bf4371320e9e8189f0730e3f20fd9f791468",
-    "src/game/sub_0800276c.c": "44d3bdcf1cc24305da492c7b89d249aee0dca11ce1def5a9b2917fd7867f77c4",
     "src/game/sub_08002a68.c": "32abe31c91866a87cf80959bec4f8abc549ce4be9c55b04a8c60136ae870ed39",
     "src/game/sub_08002ae8.c": "af6440a709f9ad7b4a1169892220f5267140fcf5656f43d50520a6be93e3c903",
     "src/game/sub_08002b58.c": "fc02e5d20e5c427b374b59d1925191bfe736bc4fd72869b0f04b0b7883d508f4",
@@ -898,15 +900,6 @@
     "src/system/agb_main.c": "3800b7a5d024e09347ba5f921ea8e180eef0324d3cbb5e9c0f367dbbf4c680fd",
     "src/system/init.c": "e3ec75457a67709cbab8c85930c6d49e830dfa4f53d6946d162af7bcb7ffc4d9",
     "src/system/init1.c": "e210e6193c1c9ea5dc27633eb16620e4f84d82d81df01e0c3dfb9381307bfcfe",
-    "src/system/sub_08000918.c": "27a9d1fa9cdec632ebb1dd34730281c4bcee1d7c43b179859882592cd7a2abea",
-    "src/system/sub_08000b6c.c": "f71e45d415682f3e628a478ddba039af6e80ab7c7fb59ec3f4fdd69a9498dafd",
-    "src/system/sub_08000c98.c": "41e0afe16f1e69e97e580479c81b650269fa7721662a255ed6c19dd9987933dc",
-    "src/system/sub_08000cec.c": "3c8ff119380d9a1bd77ebfab0e93f4a9a703a3164fc71ae449a6a9b6a4aec158",
-    "src/system/sub_08000d2c.c": "d6e71830df17664025c86df8d3817559dea3642c73ff1ffce94863b72e3fa9a3",
-    "src/system/sub_08000d50.c": "406bf75f381ef7bb7f013f7b7b5da018b289327b58b5ac04a52ce7ab30f2ac57",
-    "src/system/sub_08000e0c.c": "593b74c501afd6b152d74069b6bd46d6eb5377ede20245797f8bf5bed8843631",
-    "src/system/sub_08000eb8.c": "2052f3fa704b2d3abfc89962073ce3e6858faf5d35db5176a93297b658165f82",
-    "src/system/sub_08001128.c": "8f7b01a43d9f1d5cd754145854d86ddaf6268872e50758b4117149496f2440a6",
     "src/system/sub_08001508.c": "dce92a44365abbe89562199f1ed10a55266912108e751f57c8dc3fa84dc3e3ca",
     "src/system/sub_08020b60.c": "7394b70f60a48aef663f0bdc420a94d7d33986f00f59e318779bf3f4c8084013",
     "src/system/sub_08020e98.c": "9245e81d993e629a0af65bd2e447e17d3b0771cf8db040eb6e9551ec76281480",
@@ -1014,64 +1007,29 @@
     {
       "name": ".text",
       "address": 134220056,
-      "size": 596,
-      "object": "src/system/sub_08000918.o",
-      "matched_data": 0
-    },
-    {
-      "name": ".text",
-      "address": 134220652,
-      "size": 300,
-      "object": "src/system/sub_08000b6c.o",
-      "matched_data": 0
-    },
-    {
-      "name": ".text",
-      "address": 134220952,
-      "size": 84,
-      "object": "src/system/sub_08000c98.o",
-      "matched_data": 0
-    },
-    {
-      "name": ".text",
-      "address": 134221036,
-      "size": 64,
-      "object": "src/system/sub_08000cec.o",
-      "matched_data": 0
-    },
-    {
-      "name": ".text",
-      "address": 134221100,
-      "size": 36,
-      "object": "src/system/sub_08000d2c.o",
-      "matched_data": 0
-    },
-    {
-      "name": ".text",
-      "address": 134221136,
-      "size": 188,
-      "object": "src/system/sub_08000d50.o",
+      "size": 1268,
+      "object": "src/game/scene08_main.o",
       "matched_data": 0
     },
     {
       "name": ".text",
       "address": 134221324,
       "size": 172,
-      "object": "src/system/sub_08000e0c.o",
+      "object": "src/game/scene09_player_tile.o",
       "matched_data": 0
     },
     {
       "name": ".text",
       "address": 134221496,
       "size": 624,
-      "object": "src/system/sub_08000eb8.o",
+      "object": "src/game/scene09_main.o",
       "matched_data": 0
     },
     {
       "name": ".text",
       "address": 134222120,
       "size": 124,
-      "object": "src/system/sub_08001128.o",
+      "object": "src/game/scene_probe_helpers.o",
       "matched_data": 0
     },
     {
@@ -1211,7 +1169,7 @@
       "name": ".text",
       "address": 134227820,
       "size": 216,
-      "object": "src/game/sub_0800276c.o",
+      "object": "src/game/scene08_handlers.o",
       "matched_data": 0
     },
     {
@@ -3199,77 +3157,77 @@
       "name": ".text",
       "address": 134336848,
       "size": 280,
-      "object": "src/engine/sub_0801d150.o",
+      "object": "src/game/credits_init.o",
       "matched_data": 0
     },
     {
       "name": ".text",
       "address": 134337128,
       "size": 212,
-      "object": "src/engine/sub_0801d268.o",
+      "object": "src/game/credits_bg.o",
       "matched_data": 0
     },
     {
       "name": ".text",
       "address": 134337340,
       "size": 400,
-      "object": "src/engine/sub_0801d33c.o",
+      "object": "src/game/credits_page2.o",
       "matched_data": 0
     },
     {
       "name": ".text",
       "address": 134337740,
       "size": 164,
-      "object": "src/engine/sub_0801d4cc.o",
+      "object": "src/game/credits_page1.o",
       "matched_data": 0
     },
     {
       "name": ".text",
       "address": 134337904,
       "size": 784,
-      "object": "src/engine/sub_0801d570.o",
+      "object": "src/game/credits_scroll.o",
       "matched_data": 0
     },
     {
       "name": ".text",
       "address": 134338688,
       "size": 412,
-      "object": "src/engine/sub_0801d880.o",
+      "object": "src/game/credits_graphics.o",
       "matched_data": 0
     },
     {
       "name": ".text",
       "address": 134339100,
       "size": 408,
-      "object": "src/engine/sub_0801da1c.o",
+      "object": "src/game/credits_transition.o",
       "matched_data": 0
     },
     {
       "name": ".text",
       "address": 134339508,
       "size": 748,
-      "object": "src/engine/sub_0801dbb4.o",
+      "object": "src/game/credits_line.o",
       "matched_data": 0
     },
     {
       "name": ".text",
       "address": 134340256,
       "size": 472,
-      "object": "src/engine/sub_0801dea0.o",
+      "object": "src/game/credits_line_alt.o",
       "matched_data": 0
     },
     {
       "name": ".text",
       "address": 134340728,
       "size": 160,
-      "object": "src/engine/sub_0801e078.o",
+      "object": "src/game/credits_fade.o",
       "matched_data": 0
     },
     {
       "name": ".text",
       "address": 134340888,
       "size": 344,
-      "object": "src/engine/sub_0801e118.o",
+      "object": "src/game/credits_sequence.o",
       "matched_data": 0
     },
     {
@@ -3303,22 +3261,8 @@
     {
       "name": ".text",
       "address": 134345752,
-      "size": 620,
-      "object": "src/engine/sub_0801f418.o",
-      "matched_data": 0
-    },
-    {
-      "name": ".text",
-      "address": 134346372,
-      "size": 568,
-      "object": "src/engine/sub_0801f684.o",
-      "matched_data": 0
-    },
-    {
-      "name": ".text",
-      "address": 134346940,
-      "size": 1104,
-      "object": "src/engine/sub_0801f8bc.o",
+      "size": 2292,
+      "object": "src/game/file_select.o",
       "matched_data": 0
     },
     {

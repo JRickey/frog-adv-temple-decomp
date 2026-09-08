@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "id": "readability-02",
+  "base_commit": "7e2c3ea47b0c597b39dfd2764547db2bd8a3c54a",
+  "rom_sha1": "7b4c27009198df18555e63fb5dcad223eaf09815",
+  "summary": "Scene and menu ownership cleanup, function naming, empty-scaffold removal, and accurate completed compiler-runtime reporting. No new game C or data reconstructed.",
+  "metrics": {
+    "new_c_functions": 0,
+    "new_c_bytes": 0,
+    "new_data_bytes": 0,
+    "rom_bytes_diff": 0,
+    "regression_tests_passed": 81,
+    "functions_renamed": 3,
+    "functions_reorganized": 38,
+    "units_before": 24,
+    "units_after": 17,
+    "empty_scaffolds_removed": 9,
+    "pins_added": 0,
+    "naked_fallbacks_added": 0
+  },
+  "runs": [
+    {
+      "id": "readability02-root",
+      "model": "gpt-6-astra",
+      "reasoning_effort": null,
+      "task": "Review isolated source changes, integrate, name Scene08 helpers, remove verified empty scaffolds and correct reporting",
+      "outcome": "integrated-cleanup",
+      "review_corrections": [
+        "Compiler libgcc is a reproduced dependency, not unfinished reverse engineering; use complete separately from reconstructed matched bytes.",
+        "Classify ordinary C per function so neighboring NON_MATCHING fallbacks do not penalize TU consolidation.",
+        "Requested flattening implementation-only headers into the actual file-select C module.",
+        "Retained four-word DMA helper declarations are unresolved ABI-shaped interfaces, not canonical signatures."
+      ],
+      "usage": null
+    },
+    {
+      "id": "readability02-scene",
+      "model": "gpt-5.6-sol (requested)",
+      "reasoning_effort": null,
+      "task": "Scene cleanup in codex/scene-cleanup isolated worktree",
+      "outcome": "ten-files-to-five-units",
+      "review_corrections": [],
+      "usage": null
+    },
+    {
+      "id": "readability02-menu",
+      "model": "gpt-5.6-sol (requested; worker self-report differed)",
+      "reasoning_effort": null,
+      "task": "Credits and file-select cleanup in codex/menu-cleanup isolated worktree",
+      "outcome": "semantic-moves-and-file-select-consolidation",
+      "review_corrections": ["Flatten implementation headers; distinguish compatible legacy declarations from audited canonical interfaces."],
+      "usage": null
+    },
+    {
+      "id": "readability02-library-audit",
+      "model": "gpt-5.6-terra (requested)",
+      "reasoning_effort": null,
+      "task": "Read-only GBA progress convention, schema and compiler archive provenance comparison",
+      "outcome": "verified-reproduced-dependency",
+      "review_corrections": [],
+      "usage": null
+    },
+    {
+      "id": "readability02-scaffolds",
+      "model": "gpt-5.6-luna (requested)",
+      "reasoning_effort": null,
+      "task": "Read-only empty scaffold and linked ownership inventory",
+      "outcome": "nine-empty-scaffolds-identified",
+      "review_corrections": [],
+      "usage": null
+    }
+  ],
+  "usage_provenance": {
+    "source": "Model routing requests are known; actual per-worker session counters and effort were not exposed in this checkpoint. Worker self-reports are not treated as authoritative runtime identity.",
+    "input_tokens": null,
+    "cached_input_tokens": null,
+    "uncached_input_tokens": null,
+    "output_tokens": null
+  }
+}

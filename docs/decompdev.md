@@ -31,6 +31,11 @@ game-specific VBlank handler) stays in Game until its ownership can be split
 without inventing TU boundaries. Category labels describe this report's scope,
 not a claim to have recovered the original source organization.
 
+Function classification is per function, not per source file: a neighboring
+NON_MATCHING fallback does not invalidate otherwise ordinary C when TUs are
+consolidated. Multiple conditional definitions remain conservatively uncredited
+until their selected implementation can be established.
+
 The headline includes all categories. Category totals partition it, so neither
 dependencies nor their unresolved work disappear from the denominator. The
 Game category can be selected for game-only progress. Pins do not disqualify

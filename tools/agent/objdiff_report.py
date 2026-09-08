@@ -206,12 +206,14 @@ def _is_matched(object_path: str, function_name: str, naked: set[str]) -> bool:
     if not source or not source.endswith(".c") or function_name in naked:
         return False
     text = _strip_comments((ROOT / source).read_text())
-    # Fail closed for conditional fallback implementations and inline assembly.
-    if re.search(r"\bNON_MATCHING\b", text):
+    # Fallbacks belong to functions, not entire TUs. A neighboring conditional
+    # fallback must not disqualify ordinary C when related slices are combined.
+    # Without preprocessing, multiple definitions remain ambiguous: fail closed.
+    definitions = list(re.finditer(
+        r"\b" + re.escape(function_name) + r"\s*\([^;{}]*\)\s*\{", text))
+    if len(definitions) != 1:
         return False
-    definition = re.search(r"\b" + re.escape(function_name) + r"\s*\([^;{}]*\)\s*\{", text)
-    if not definition:
-        return False
+    definition = definitions[0]
     depth, end = 1, definition.end()
     while depth and end < len(text):
         depth += (text[end] == "{") - (text[end] == "}")
