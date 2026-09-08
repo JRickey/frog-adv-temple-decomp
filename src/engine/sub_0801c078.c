@@ -1,3 +1,4 @@
+#include "text.h"
 #include "macros.h"
 #include "types.h"
 
@@ -11,8 +12,6 @@ enum TextGlyph {
     GLYPH_QUESTION = 0xE0D6,
     GLYPH_TILDE = 0xE0EA,
 };
-
-extern s32 ParseDecimalStr(const char *str, u8 len);
 
 extern const u8 sCreditsTilemapEng[];
 

@@ -1,3 +1,4 @@
+#include "text.h"
 #include "macros.h"
 #include "types.h"
 
@@ -8,7 +9,6 @@
 #include "types.h"
 
 extern void text_0800e76c(void);
-extern void DrawTextGlyphs(const u8 *str, int len, int x, int y, int a, int b, int c);
 extern u16 Input_Poll(void);
 extern void FrogStatusBar_Update(void);
 extern u32 SoundSystem_IsActive(void);

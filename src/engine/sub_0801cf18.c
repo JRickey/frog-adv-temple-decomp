@@ -1,7 +1,6 @@
+#include "text.h"
 #include "macros.h"
 #include "types.h"
-
-extern void DrawTextGlyphs(const u8 *str, int len, int x, int y, int a, int b, int c);
 
 void DrawByteDecimal(u8 value, u8 x, u8 y, u16 a, u16 b, u8 c)
 {

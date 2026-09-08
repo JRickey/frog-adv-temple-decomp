@@ -1,3 +1,4 @@
+#include "text.h"
 #include "gba/dma.h"
 #include "gba/io.h"
 #include "gfx.h"
@@ -67,8 +68,6 @@ void HUD_DrawStampIcons(void)
         row = (u8)nextRow;
     } while (row <= 2);
 }
-
-extern void DrawTextGlyphs(const u8 *str, int len, int x, int y, int a, int b, int c);
 
 /* UI string addresses (raw casts, matching the sibling style in
  * DrawNumber / sub_0801C0xx). Both live in sWinLoseLabels at 0x081be008. */

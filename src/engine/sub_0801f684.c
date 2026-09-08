@@ -1,3 +1,4 @@
+#include "text.h"
 #include "gba/dma.h"
 #include "iwram.h"
 #include "save.h"
@@ -5,7 +6,6 @@
 
 extern void TileBlit(u32 *attr, const void *src, u8 mode);
 extern void Tilemap_SwapPalette(u32 *attr, u16 a, u16 b, u8 c);
-extern void DrawTextGlyphs(const u8 *str, int len, int x, int y, int a, int b, int c);
 extern void DrawByteDecimal(u8 value, u8 x, u8 y, u16 a, u16 b, u8 c);
 extern void DrawNumber(u16 value, u8 x, u8 y, u16 a, u16 b, u8 c, u32 forceZeros);
 extern u8 CountHighestBit(u32 bits);

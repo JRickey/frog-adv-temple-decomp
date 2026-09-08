@@ -1,9 +1,8 @@
+#include "text.h"
 #include "types.h"
 #include "gba/dma.h"
 
 extern const u8 sLevelClearedLabels[124];
-
-extern void DrawTextGlyphs(const u8 *str, int x, int y, int a, int b, int c, int d);
 
 void LevelCleared_ShowExtLabel(void)
 {

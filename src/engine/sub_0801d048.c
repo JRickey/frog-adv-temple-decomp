@@ -1,8 +1,8 @@
+#include "text.h"
 #include "types.h"
 
 extern const u8 sLevelClearedLabels[124];
 
-extern void DrawTextGlyphs(const u8 *str, int x, int y, int a, int b, int c, int d);
 extern void DrawByteDecimal(u8 value, int x, int y, int a, int b, int c);
 
 void LevelCleared_ShowKindLabel(u8 value)

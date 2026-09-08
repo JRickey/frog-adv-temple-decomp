@@ -1,3 +1,4 @@
+#include "text.h"
 #include "macros.h"
 #include "types.h"
 
@@ -11,7 +12,6 @@ enum TextGlyph {
 };
 
 extern void Credits_DrawLineAlt(const u8 *str, u8 count, u8 colBase, u8 rowBase, u16 tileBase, s32 palBank, u8 screen);
-extern s32 ParseDecimalStr(const char *str, u8 len);
 
 extern const u8 sCreditsTilemapEng[];
 

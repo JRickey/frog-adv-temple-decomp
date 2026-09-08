@@ -1,3 +1,4 @@
+#include "text.h"
 #include "game.h"
 #include "gfx.h"
 #include "sound.h"
@@ -8,7 +9,6 @@
 #include "types.h"
 
 extern void Bg_WriteTilePair(u32 hflip, u8 col, u8 row, u16 tile, u32 palBank, u8 screen, u32 value);
-extern void DrawTextGlyphs(const u8 *str, int len, int x, int y, int a, int b, int c);
 extern void DrawNumber(u16 value, u8 x, u8 y, u16 a, u16 b, u8 c, u32 forceZeros);
 extern void Bg_InitMode0(void);
 extern void Screen_ClearBlocks(s32 mode);

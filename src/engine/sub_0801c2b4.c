@@ -1,3 +1,4 @@
+#include "text.h"
 #include "macros.h"
 #include "types.h"
 
@@ -8,7 +9,6 @@
 
 extern u32 __udivsi3(u32 num, u32 den);
 extern u32 __umodsi3(u32 num, u32 den);
-extern void DrawTextGlyphs(const u8 *str, int len, int x, int y, int a, int b, int c);
 
 void DrawNumber(u16 value, u8 x, u8 y, u16 a, u16 b, u8 c, u32 forceZeros)
 {

@@ -1,3 +1,4 @@
+#include "text.h"
 #include "game.h"
 #include "iwram.h"
 #include "types.h"
@@ -24,7 +25,6 @@ struct IwramAt0000ForSoundInit {
 extern struct IwramAt0000ForSoundInit gIwram_0000;
 extern s32 gIwram_3574[];
 
-void DrawTextGlyphs(const u8 *str, int len, int x, int y, int a, int b, int c);
 void DrawByteDecimal(u8 value, int x, int y, int a, int b, int c);
 void LevelLayout_SetupManager(void);
 u32 sub_08032C18(void *a, void *b);
