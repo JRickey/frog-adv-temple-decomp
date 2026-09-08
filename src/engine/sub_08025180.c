@@ -4,6 +4,8 @@
 #include "level_layout_data.h"
 #include "iwram.h"
 
+extern void Entity_AdvanceAnimFrames(s32 start, s32 end);
+
 void sub_08025180(void)
 {
     LevelLayout_WalkRecords(2, &sLevelLayout_3133D0.header, 0x10, 2, 0x41, 1, 0);
