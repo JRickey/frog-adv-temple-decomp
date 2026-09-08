@@ -3049,3 +3049,44 @@ Companion levers landed in the same function:
 - `selectorAccum = 0` right after `switch (state) case 0:` emits `strb r2`
   (the state value known-zero via cse's jump-equivalence) — write the literal
   `0`, not the variable.
+
+## local-alloc's <=3-qty hand sort is not a sort — the base pointer wins r0 when a block has at most three local pseudos
+
+`local-alloc.c:block_alloc` only calls `qsort(qty_order, …, qty_compare_1)`
+when `next_qty > 3`. For 2 or 3 quantities it hand-sorts with
+`qty_compare(0, 1)` / `qty_compare(1, 2)` — and those compare QTY NUMBERS,
+not `qty_order[]` entries, so the "sort" degenerates. For three qtys
+(P0 = priority of the first-born qty, etc.) the resulting order is
+`[2,1,0]` only when `P1 > P0 && P2 > P1`; in every other case qty 0 (the
+first pseudo born in the block, usually the pool-loaded base pointer) is
+allocated FIRST and takes r0, regardless of its priority. With four or more
+local qtys the real priority sort runs and a short-lived temp (2 refs over
+2 insns = 10000) beats a base pointer (5 refs over 12 = 8333) every time.
+
+Concrete case (the menu cluster: FileSelect_Update / sub_0801F020 /
+OptionsMenu_Update, `cursorIndex++; cursorIndex &= 3` written as two
+read-modify-writes). Baserom:
+
+    ldr r0, =gIwram_3480 ; ldrb r1,[r0,#20] ; adds r1,#1 ; strb r1,[r0,#20]
+    movs r1, #3 ; ldrb r2,[r0,#20] ; ands r1, r2 ; strb r1,[r0,#20]
+
+Plain C gives 4 local qtys (base, value, const/result, reload) → qsort →
+const/result r0, value r0, reload r1, base r2 (byte_diff 8, pure
+ARGUMENT_MISMATCH; the previous agents pinned `three` to r1 and the reload
+to r2 to force it). The pure-C fix is to push ONE pseudo out of local-alloc
+so the block has exactly three: a `u32 next` that is assigned twice
+(`next = x + 1; x = next; … next = three & reload; x = next;`) has
+`REG_N_DEATHS == 2`, so `local_alloc()` leaves it to global-alloc (which
+hands it r1, the first free register). The remaining locals are
+{base (q0, 8333), three/result (q1, 13333), reload (q2, 10000)}: P1 > P0
+but P2 <= P1, so the hand sort yields `[0,1,2]` → r0, r1, r2. The
+constant must be a separate `three = 3;` statement so its `movs` precedes
+the reload; the temporaries must be `u32` — a `u8` local gets bypassed
+through its zero-extension and the compiler substitutes a fresh temp.
+
+Diagnose with an instrumented `local-alloc.c` (print `qty_order` and
+`find_free_reg` results after the hand sort; the `.lreg` dump only shows the
+outcome). Rule of thumb: when a block's base pointer sits in r0 in the
+baserom while agbcc puts a temp there, count the block's local pseudos —
+if the baserom shape needs <=3, find a variable to make global (assign it
+twice, or use it in another block) instead of pinning.

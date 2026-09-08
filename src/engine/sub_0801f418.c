@@ -118,19 +118,20 @@ void FileSelect_Update(void)
         gIwram_3480.cursorIndex--;
         break;
     case 2: {
-        /* pin the constant to r1 and the reload to r2 so the 0x3480 base lands
-         * in r0 (case 1 uses r1) -- the two differing strb encodings stop the
-         * cross-jumper from merging the per-case pose stores. The volatile
-         * reload forces the inc store to commit before the &3 mask (baserom
-         * does two read-modify-writes on the pose byte). */
-        register u8 three asm("r1");
-        register u8 reloaded asm("r2");
+        /* Two read-modify-writes on the cursor byte. `next` is assigned twice, so
+         * global-alloc colours it (r1) and the block keeps exactly three local
+         * pseudos: agbcc's 3-qty hand sort in local-alloc is a broken compare on
+         * qty numbers, which lets the base pointer (born first) take r0. See
+         * docs/codegen-notes.md "local-alloc's <=3-qty hand sort". */
+        u32 three;
+        u32 next;
 
         Sound_Play(2);
-        gIwram_3480.cursorIndex++;
+        next = gIwram_3480.cursorIndex + 1;
+        gIwram_3480.cursorIndex = next;
         three = 3;
-        reloaded = *(volatile u8 *)&gIwram_3480.cursorIndex;
-        gIwram_3480.cursorIndex = three & reloaded;
+        next = three & *(volatile u8 *)&gIwram_3480.cursorIndex;
+        gIwram_3480.cursorIndex = next;
         break;
     }
     }
