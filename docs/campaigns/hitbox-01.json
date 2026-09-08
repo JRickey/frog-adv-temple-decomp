@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "id": "hitbox-01",
+  "base_commit": "ebbae4970f4c14235a30c161e47ec91400ac74c5",
+  "rom_sha1": "7b4c27009198df18555e63fb5dcad223eaf09815",
+  "summary": "First evidence campaign: fresh oracle, dependency records, audited interfaces and integration of one previously verified depin. Remaining seven pins and grid-writer caller conflicts are open.",
+  "metrics": {
+    "rom_bytes_diff": 0,
+    "asm_functions_before": 245,
+    "asm_functions_after": 245,
+    "new_c_functions": 0,
+    "gridpoints_pins_before": 8,
+    "gridpoints_pins_after": 7,
+    "newly_discovered_pin_removals": 0,
+    "recovered_pin_removals": 1,
+    "ad_hoc_externs_removed": 8,
+    "target_interface_conflicts_before": 2,
+    "target_interface_conflicts_after": 1,
+    "regression_tests_passed": 42
+  },
+  "runs": [
+    {
+      "id": "hitbox01-astra",
+      "model": "gpt-6-astra",
+      "reasoning_effort": null,
+      "task": "Recover context, review evidence, run semantic trials and integrate matching source",
+      "outcome": "accepted-with-open-questions",
+      "review_corrections": [
+        "Rejected an incorrect audit claim by checking the four ROM entry conversions.",
+        "Kept narrow original-parameter reconstruction separate from the verified current shared interface."
+      ],
+      "usage": null
+    },
+    {
+      "id": "hitbox01-oracle-sol",
+      "model": "gpt-5.6-sol",
+      "reasoning_effort": null,
+      "task": "Implement fresh build oracle and transactional prototype consolidation",
+      "outcome": "accepted-after-review",
+      "review_corrections": [
+        "Expanded fingerprints to local headers, include fragments and linked data.",
+        "Required content-based invalidation and concurrent-input checks.",
+        "Added write-failure, interruption and no-op rollback fixtures."
+      ],
+      "usage": null
+    },
+    {
+      "id": "hitbox01-evidence-sol",
+      "model": "gpt-5.6-sol",
+      "reasoning_effort": null,
+      "task": "Implement evidence retrieval and targeted interface inventory",
+      "outcome": "accepted-after-review",
+      "review_corrections": [
+        "Preserved source positions when stripping comments.",
+        "Fixed symbolic-name reverse lookup and empty plans returning unrelated work.",
+        "Added human-readable provenance citations."
+      ],
+      "usage": null
+    },
+    {
+      "id": "hitbox01-hitbox-terra",
+      "model": "gpt-5.6-terra",
+      "reasoning_effort": null,
+      "task": "Audit hitbox interfaces; implement advisory classifier and campaign ledger",
+      "outcome": "accepted-after-review",
+      "review_corrections": [
+        "Scoped stack-parameter findings separately from four register arguments."
+      ],
+      "usage": null
+    },
+    {
+      "id": "hitbox01-audit-luna",
+      "model": "gpt-5.6-luna",
+      "reasoning_effort": null,
+      "task": "Check evidence claims against cited repository sources",
+      "outcome": "partially-accepted",
+      "review_corrections": [
+        "Accepted the standalone-versus-inline return-type qualification.",
+        "Rejected claim that RegisterGridPoints normalizes only its first register argument: ROM confirms r0-r3 pairs."
+      ],
+      "usage": null
+    }
+  ]
+}

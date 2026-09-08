@@ -109,7 +109,7 @@
     "schema_version": 1,
     "id": "hitbox.gridpoints-interface",
     "kind": "behavior",
-    "title": "RegisterGridPoints callers use four narrow arguments",
+    "title": "Baseline grid-points declarations used four narrow arguments",
     "status": "observed",
     "claim": "At baseline ebbae497, external caller declarations use void(u8,u8,u8,u8), while the matching definition uses u8,u32,u32,u32 and explicit low-byte casts. ROM entry zero-extends all four arguments. Four u8 parameters are a supported canonical-interface hypothesis; source conversion timing and whole-cluster matching still require validation.",
     "subjects": [
@@ -149,6 +149,10 @@
       {
         "type": "informed-by",
         "target": "compiler.narrow-stack-parameters"
+      },
+      {
+        "type": "updated-by",
+        "target": "hitbox.shared-interfaces"
       }
     ]
   },
@@ -219,9 +223,9 @@
     "schema_version": 1,
     "id": "hitbox.resolve-gridpoints-interface",
     "kind": "dependency",
-    "title": "Resolve and validate the grid-points interface",
+    "title": "Reconstruct original grid-points parameter timing",
     "status": "hypothesized",
-    "claim": "Find a readable all-u8 interface/source shape that preserves RegisterGridPoints and caller ROM bytes. Record counterexamples with source/configuration fingerprints. Do not mark this complete solely because the header compiles.",
+    "claim": "The current wide implementation now has a consistent shared interface and matching callers. Determine whether an all-u8 entry with recovered helper/lifetime structure reproduces the ROM. Simple narrowing changed entry scheduling; this remains an original-source hypothesis, not an unresolved public-header consolidation.",
     "subjects": [
       "fn:0800a83c"
     ],
@@ -237,7 +241,7 @@
       "prototype"
     ],
     "prerequisites": [
-      "hitbox.gridpoints-interface",
+      "hitbox.shared-interfaces",
       "hitbox.grid-flags-interface",
       "hitbox.table-byte-view"
     ]
@@ -246,9 +250,9 @@
     "schema_version": 1,
     "id": "hitbox.rederive-gridpoints-lifetimes",
     "kind": "dependency",
-    "title": "Rederive the grid-points loop after interface resolution",
+    "title": "Rederive grid-point lifetimes at the narrow writer boundary",
     "status": "hypothesized",
-    "claim": "Test typed argument copies and alternate-branch signed index lifetimes against the target. Preserve the comparison-order success as a lower bound. Study the TU-local hitbox helper before constructing a new inline variant.",
+    "claim": "Test alternate-branch signed index lifetimes and TU-local helper structure using the real narrow SpriteGrid writer interface. Preserve the seven-pin comparison-order success as a lower bound. Revisit original entry parameter types when the recovered structure predicts conversion scheduling.",
     "subjects": [
       "fn:0800a83c"
     ],
@@ -264,9 +268,91 @@
       "depin"
     ],
     "prerequisites": [
-      "hitbox.resolve-gridpoints-interface",
+      "hitbox.shared-interfaces",
+      "hitbox.narrow-interface-trials",
       "compiler.hitbox-inline-hoist-budget",
       "hitbox.gridpoints-operand-order"
+    ]
+  },
+  {
+    "schema_version": 1,
+    "id": "hitbox.shared-interfaces",
+    "kind": "behavior",
+    "title": "Hitbox shared interfaces preserve the complete ROM",
+    "status": "verified",
+    "claim": "FindPoint and RegisterGridPoints now share header declarations across definitions and callers. RegisterGridPoints retains u8,u32,u32,u32 with explicit low-byte truncations, which is a consistent reconstructed API, not proof of original source types. The SpriteGrid writer and hitbox updater share its narrow void header; five older writer callers remain unresolved. Clean build and make check passed at the cited source commit.",
+    "subjects": [
+      "fn:0800a710",
+      "fn:0800a83c",
+      "fn:0800cb80",
+      "fn:0800b918"
+    ],
+    "provenance": [
+      {
+        "path": "include/entity.h",
+        "location": "EntityHitbox_FindPoint and EntityHitbox_RegisterGridPoints",
+        "commit": "a0cf53ce0485390de648d1ee2a7ee13a5f4527a7"
+      },
+      {
+        "path": "include/sprite_grid.h",
+        "location": "SpriteGrid_SetCellFlags",
+        "commit": "a0cf53ce0485390de648d1ee2a7ee13a5f4527a7"
+      },
+      {
+        "path": "docs/campaigns/hitbox-01.md",
+        "location": "Accepted changes and verification"
+      }
+    ],
+    "tags": [
+      "hitbox",
+      "prototype",
+      "campaign",
+      "EntityHitbox_RegisterGridPoints",
+      "EntityHitbox_FindPoint",
+      "SpriteGrid_SetCellFlags"
+    ],
+    "relations": [
+      {
+        "type": "qualifies",
+        "target": "hitbox.gridpoints-interface"
+      }
+    ]
+  },
+  {
+    "schema_version": 1,
+    "id": "hitbox.narrow-interface-trials",
+    "kind": "compiler",
+    "title": "Narrow interface trials change entry and loop allocation",
+    "status": "observed",
+    "claim": "Against the recovered seven-pin base, all-u8 entry arguments produced 15 byte differences over 8 instructions. Correcting the SpriteGrid writer prototype alone produced 192 byte differences; natural unpinned narrow locals still did not match. These are counterexamples to specific source shapes, not impossibility proofs. The next discriminating test concerns alternate-branch signed index lifetimes and inline helper conversions.",
+    "subjects": [
+      "fn:0800a83c",
+      "fn:0800cb80"
+    ],
+    "provenance": [
+      {
+        "path": "docs/campaigns/hitbox-01.md",
+        "location": "Bounded experiments"
+      },
+      {
+        "path": "src/engine/sub_0800a83c.c",
+        "location": "Accepted seven-pin baseline",
+        "commit": "a0cf53ce0485390de648d1ee2a7ee13a5f4527a7"
+      }
+    ],
+    "tags": [
+      "hitbox",
+      "prototype",
+      "depin",
+      "failed-shape",
+      "EntityHitbox_RegisterGridPoints",
+      "SpriteGrid_SetCellFlags"
+    ],
+    "relations": [
+      {
+        "type": "informed-by",
+        "target": "compiler.hitbox-inline-hoist-budget"
+      }
     ]
   }
 ]
