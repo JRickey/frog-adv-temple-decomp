@@ -1,4 +1,5 @@
 #include "entity.h"
+#include "entity_spawn.h"
 #include "level_layout.h"
 #include "level_layout_data.h"
 #include "iwram.h"
@@ -31,4 +32,18 @@ void sub_08025218(void)
 void sub_08025240(void)
 {
     Entity_WalkCompactRecords(0x27, &sLevelLayout_313528.header, 4, &gIwram_6110, 0);
+}
+
+extern const u32 sLevelLayoutPtrs_313FC4[41];
+
+void LevelLayout_SpawnGroup313FC4(void)
+{
+    u8 i;
+
+    i = 0;
+    do {
+        Entity_InitSlotFromRecord(i + 42, (const SpawnRecord *)sLevelLayoutPtrs_313FC4[i], 16, 32,
+                                  ((i & 7) << 4) + 0x71, 4, 3, 3);
+        i++;
+    } while (i <= 9);
 }
