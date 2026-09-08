@@ -516,3 +516,65 @@ is a parameter-type mismatch, not an allocator limit.
   lower priority than `r` gives r0/r1 with no pin. See docs/codegen-notes.md
   "regmove folds a dying source into a 2-address result".
 - `CtrlFlags_ReadBitRange` had no pins. TU is pin-free.
+
+## 2026-09-07 — BlitEntityTileFrame0 (src/engine/sub_08012664.c): 16 pins -> 15, RESISTANT (structure solved, colouring + one cse artefact remain)
+
+Partial reap only: the `srcBase asm("r6")` pin is redundant (clean rebuild
+byte_diff 0 without it); every other single pin removal from the pinned body
+costs 80–237 bytes. The readable 0-pin re-derivation is kept under
+`#ifdef NON_MATCHING` in the TU (byte_diff 147, 64 diffs, structurally
+identical). PickEntitySpawnPos in the same TU has no pins (the task brief's
+"15 pins across both" was the 16 in this one function).
+
+**Structural findings (pure C, verified by oracle):**
+- `x` must be born AFTER `y`: the baserom has `x*3<<16` early and the `>>16`
+  late. Only `u32 xw = e->x*3; xw <<= 16; y = (u16)(e->y*3); u32 x = xw >> 16;`
+  reproduces it; with `u16 x` combine folds `(ashift (lshiftrt (ashift t 16)
+  16) 16)` into a late single lsl (v4: 163 -> v5: 150). `s16` temps collapse
+  too (the `(lshiftrt (ashift ..))` pair is placed at the LAST insn).
+- Flush tail = if/else setting `flushSrc/flushDst` locals + ONE shared call
+  after the join (`bank &= 1; Scroll_FlushTilemapWindow(bank, ...)`); calls in
+  both arms let cse fold the arm's `bank & 1` into the test's `bit` (`mov r0,#0`
+  in the else arm).
+- The two `& 1` tests are `movs r1,#1; adds r0,rB,#0; ands r0,r1` in the
+  baserom = a mask pseudo NOT tied to the result. Any block-local `one = 1`
+  gets tied by local-alloc (`mov r0,#1; and r0,r0,rB`); the `static inline`
+  generic-body form (`u8 flags` param, `if ((flags >> 4) & 1)`) gives the
+  baserom's untied shape for the head test (v9) but derails x/y.
+- TAIL CONSTANT (the one non-colouring residual): `bank &= 1` puts `(set one2
+  1)` in the join block; cse's wider-mode constant lookup (cse.c "See if we have
+  a CONST_INT that is already in a register in a wider mode") rewrites the
+  later `gIwram_3610 = 1` store as `(subreg:QI one2)`, so `one2` crosses the
+  call and lands in r4 (`strb r4`). The baserom re-materialises `movs r0,#1`.
+  Tested and REJECTED: volatile store, `u8`/`s32` bank, `% 2`, `(u8)1`, store
+  via pointer/inline helper, `asm volatile("" ::: "memory")` (cse ignores it),
+  `do{}while(0)` around call/stores/tail (cse2 re-shares), a `frame` variable
+  guarding the store (cc0 compare survives: gcse cprop cannot fold cc0 jumps),
+  per-TU `-fno-gcse/-fno-rerun-cse-after-loop/-fno-expensive-optimizations/
+  -fno-caller-saves/-fno-strength-reduce/-O1/-fno-cse-follow-jumps` (none
+  help; several break PickEntitySpawnPos). Only a CODE_LABEL between the call
+  and the store (cse ebb boundary) or a hard-reg mask (`asm("r0")`) defeats it.
+  Tilemap_BlitTileRows (sub_08012bc4.c) carries the identical `one asm("r0")`
+  pin for the same reason — treat as a shared open question, possibly a
+  toolchain-snapshot cse difference.
+- Reload spill picks explained (reload1.c `order_regs_for_reload` is
+  PER-INSN in this gcc, then `finish_spills` makes every reg not holding a
+  live pseudo at the insn available, and `allocate_reload_reg` round-robins
+  over the function-wide `spill_regs` set in regno order): the baserom's
+  ldrsh zero-index `r7` twice, `ldr r0,=0x694`, `mov r8,r2` follow from a
+  global spill set {r0,r2,r3,r7}; ours adds r6 (from the `y*stride` mul with y
+  in r8) and r1, which shifts every pick.
+- Global alloc order (priority = floor_log2(refs)*refs/live_length): ours
+  col 1.63 > row 1.33 > src 1.07 > dst 0.85 so col takes r1, src r2, dst r3
+  (baserom: src r1, dst r2, col r3 => src, dst allocated BEFORE col). Splitting
+  `mirror`/`dst` pseudos (v13) moves dst to r2 but src then takes r3. No
+  natural shape found that lowers col below src/dst (refs are fixed by the
+  u8 counter shape; loop-depth weighting via do-while macros bumps src/dst
+  too little). This is the cascade that also keeps x in r2 instead of r8.
+- Permuter from the clean base: 1870 -> 1460 in 51k iters (`s32` temp for
+  `x = xw >> 16`, i.e. pseudo-number shuffles), then plateau.
+
+Harness note: `compile_and_view_assembly.py` run back-to-back on rewritten
+sources can report a STALE byte_diff (identical values for consecutive
+variants); `rm -f src/<tu>.s src/<tu>.o` before each run, and clean-rebuild
+before believing a 0.

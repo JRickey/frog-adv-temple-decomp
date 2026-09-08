@@ -123,6 +123,72 @@ struct TileBlit_12798 {
 
 #define sTileBlit_12798 (*(const struct TileBlit_12798 *)0x08306e64)
 
+#ifdef NON_MATCHING
+/* Readable form. Structurally identical to the baserom (byte_diff 147, all
+ * residuals are register colouring + the tail constant: agbcc cse shares the
+ * `& 1` mask pseudo with the final `= 1` store across the call, the baserom
+ * re-materialises it). See docs/depin-worklist.md, 2026-09-07 entry. */
+extern struct BgScrollState gIwram_60A0[3];
+extern u8 gIwram_64C0[];
+extern u8 gIwram_3610;
+
+void BlitEntityTileFrame0(void)
+{
+    const struct TileBlit_12798 *desc;
+    u32 xw;
+    u32 x;
+    u16 y;
+    u32 width;
+    u32 rows;
+    u32 flags;
+    u32 bank;
+    u32 bit;
+    const u16 *const *srcBase;
+    const u16 *src;
+    u16 *mirror;
+    u16 *dst;
+    u8 row;
+    u8 col;
+    void *flushSrc;
+    void *flushDst;
+
+    desc = &sTileBlit_12798;
+    xw = gEntities[30].x * 3;
+    xw <<= 16;
+    y = gEntities[30].y * 3;
+    x = xw >> 16;
+    width = desc->width;
+    rows = desc->rows;
+    srcBase = desc->src;
+    flags = desc->flags >> 4;
+    bit = flags & 1;
+    mirror = (u16 *)0x02000000;
+    if (bit)
+        mirror = (u16 *)0x02010000;
+    dst = mirror + (y * gIwram_60A0[0].tileCols + x);
+    src = srcBase[0];
+    bank = flags;
+
+    for (row = 0; row < rows; row++) {
+        for (col = 0; col < width; col++)
+            *dst++ = *src++;
+        dst += gIwram_60A0[0].tileCols - width;
+    }
+
+    bit = bank & 1;
+    if (bit) {
+        flushSrc = (void *)0x02010000;
+        flushDst = (void *)0x0600E800;
+    } else {
+        flushSrc = (void *)0x02000000;
+        flushDst = (void *)0x0600E000;
+    }
+    bank &= 1;
+    Scroll_FlushTilemapWindow(bank, flushSrc, flushDst);
+    gIwram_64C0[10] = 0;
+    gIwram_3610 = 1;
+}
+#else
 /* Specialized blit of descriptor row 0 to the EWRAM mirror selected by the
  * descriptor flags, then DMA-flushed to VRAM via Scroll_FlushTilemapWindow. Destination tile
  * is gEntities[30].(x,y)*3; the entity-slot reads are signed halfwords. */
@@ -139,7 +205,7 @@ void BlitEntityTileFrame0(void)
     register u32 flags asm("r3");
     register u32 width asm("r4");
     register u32 rows asm("r9");
-    register const u16 *const *srcBase asm("r6");
+    const u16 *const *srcBase;
     register const u16 *r1Work asm("r1");
     u32 bank;
     void *flushSrc;
@@ -248,3 +314,4 @@ void BlitEntityTileFrame0(void)
     }
     *(u8 *)0x03003610 = 1;
 }
+#endif
