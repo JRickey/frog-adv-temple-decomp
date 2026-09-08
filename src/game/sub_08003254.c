@@ -65,7 +65,6 @@ extern void Player_UpdateHorizontalInput(u32 arg);
 extern void Player_UpdatePhysics(void);
 extern void Player_UpdateTileCache(void);
 extern void Entity_UpdateSlot1Status(void);
-extern void Scroll_UpdateCameraAlt(s32 a, void *b);
 extern void Entity_UpdateVisibility(void);
 extern void Entity_Advance(void);
 extern void WaitVblank(void);

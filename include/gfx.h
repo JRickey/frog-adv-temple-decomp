@@ -135,6 +135,7 @@ s32 Screen_TickFlash(void);
 void ScrollBlit_ResetLayers(void);
 
 void Scroll_UpdateCamera(u8 countArg);
+void Scroll_UpdateCameraAlt(s32 countArg, s16 *verticalOffset);
 
 void BgLayer_Disable(u8 layer);
 

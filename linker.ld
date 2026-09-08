@@ -282,7 +282,6 @@ SECTIONS {
         src/game/set_game_mode_09.o(.text);  /* 0x08002e04 - 0x08002e10, SetGameMode_09 */
         src/game/sub_08002e10.o(.text);  /* 0x08002e10 - 0x08002ee8, GameMode10_Init, GameMode10_Tick, GameMode10_StateCallback, GameMode10_Cleanup, GameMode10_TileCheckTick */
         src/game/sub_08002ee8.o(.text);
-        asm/disasm_0x08002ee8.o(.text);  /* 0x08002ee8 - 0x080031d4, Scroll_UpdateCameraAlt (auto-peeled) */
         src/game/sub_080031d4.o(.text);  /* 0x080031d4 - 0x08003254, Player_UpdateHorizontalInput */
         src/game/sub_08003254.o(.text);
         src/game/sub_0800336c.o(.text);  /* 0x0800336c - 0x08003668, SceneLoop_17 + Scene17_LoadPart + Scene17_ModeControlInit + Scene17_PauseCheck + Scene17_Exit + Scene17_TileCheck */
