@@ -270,6 +270,7 @@ def _filename_affinity(target_name: str, c_file: Path) -> int:
 # ---------- legality classification ----------
 
 _FUNC_DEF_RE = re.compile(r"^[A-Za-z_]\w*[\s\*]+([A-Za-z_]\w+)\s*\(", re.MULTILINE)
+_C_NON_CODE_RE = re.compile(r'/\*.*?\*/|//[^\n]*|"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'', re.DOTALL)
 
 
 def _existing_c_definition(target_name: str) -> tuple[Path, bool] | None:
@@ -294,11 +295,20 @@ def _existing_c_definition(target_name: str) -> tuple[Path, bool] | None:
             text = path.read_text(errors="replace")
         except Exception:
             continue
+        # Ignore braces/semicolons in comments and literals, retaining line
+        # boundaries for the declaration matcher.
+        text = _C_NON_CODE_RE.sub(lambda m: re.sub(r"[^\n]", " ", m.group()), text)
         for m in _FUNC_DEF_RE.finditer(text):
             if m.group(1) != target_name:
                 continue
             brace = text.find("{", m.end())
             if brace == -1:
+                continue
+            # A prototype ends before the next function's opening brace.
+            # In particular, DrawTextGlyphs has a declaration in the same
+            # file as unrelated menu functions; none is its definition.
+            semicolon = text.find(";", m.end(), brace)
+            if semicolon != -1:
                 continue
             depth = 1
             i = brace + 1
