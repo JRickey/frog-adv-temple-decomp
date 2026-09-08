@@ -1,5 +1,6 @@
 #include "gba/dma.h"
 #include "gba/io.h"
+#include "gfx.h"
 #include "iwram.h"
 #include "macros.h"
 #include "types.h"
@@ -84,13 +85,17 @@ extern void DrawTextGlyphs(const u8 *str, int len, int x, int y, int a, int b, i
 /* Paints the dual score panel on BG screenblock 31: two "*NN" readouts on
  * row 17 (values b and a, each framed by a 2x2 stamp) plus a "TIME NN"
  * readout (value c) on row 1. NN is rendered as two ASCII digits via the
- * div/mod-10 helpers. a/b/c are byte values.
+ * div/mod-10 helpers. The scene supplies signed halfword scores and an
+ * unsigned halfword counter; the renderer displays their low bytes.
  *
  * rowBase (= row 17's byte offset, 17*64) is anchored in a register by the
  * asm barrier so each stamp store keeps its full screenblock address as an
  * independent pool literal instead of being CSE-folded into +2 increments. */
-void HUD_DrawStatus(u8 a, u8 b, u8 c)
+void HUD_DrawStatus(s16 rightValue, s16 leftValue, u16 counter)
 {
+    u8 a = (u8)rightValue;
+    u8 b = (u8)leftValue;
+    u8 c = (u8)counter;
     u8 buf[4];
     u8 tens;
     u8 units;

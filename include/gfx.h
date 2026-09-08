@@ -120,6 +120,10 @@ extern struct Unk03006420 gUnk03006420;
 
 u8 TileMap_GetCell(u32 x, u32 y);
 
+/* Draws the score and timer readouts from the scene's signed score fields and
+ * unsigned frame counter. The renderer displays their low bytes. */
+void HUD_DrawStatus(s16 rightValue, s16 leftValue, u16 counter);
+
 void ScrollCamera_Update(u8 countArg);
 
 void Scroll_RunSubtypeTicks(u8 arg);
