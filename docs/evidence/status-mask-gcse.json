@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "id": "entity.status-mask.gcse-constant-availability",
+  "kind": "compiler",
+  "title": "GCSE folds the status-mask decrement before allocation",
+  "status": "observed",
+  "claim": "The sub_08028858 candidate loses its retained 0x8000 mask when GCSE propagates its constant into a mask-minus-one operation and folds it to 0x7fff. A narrow constant-return inline provides a diagnostic control through a SUBREG destination; a generic shifted bit constructor does not. This mechanism does not justify adding the constant-return helper to game source or prove that readable matching C is impossible. Further local-variable spelling trials do not address the observed pass transition.",
+  "subjects": [
+    "fn:08028858"
+  ],
+  "provenance": [
+    {
+      "path": "docs/experiments/status-mask-gcse/probe.c",
+      "location": "bitmask and exact diagnostic controls",
+      "commit": "a250d452a30553e71a4f40290064c81efbe7b923"
+    },
+    {
+      "path": "docs/experiments/status-mask-gcse/verify.py",
+      "location": "compiler identity and distinct emitted operation assertions",
+      "commit": "a250d452a30553e71a4f40290064c81efbe7b923"
+    },
+    {
+      "path": "docs/experiments/status-mask-gcse/README.md",
+      "location": "CSE to GCSE transition and next discriminator",
+      "commit": "a250d452a30553e71a4f40290064c81efbe7b923"
+    }
+  ],
+  "tags": [
+    "gcse",
+    "status",
+    "compiler",
+    "inline",
+    "deferred"
+  ]
+}

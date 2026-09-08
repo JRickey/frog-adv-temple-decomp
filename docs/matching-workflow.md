@@ -26,6 +26,18 @@ build or certify the ROM; use `make check` for that gate.
 6. Publish the essential source change and the evidence that explains it.
    Revisit dependent questions when the explanation changes.
 
+After changing or integrating `database.json`, run `make extract` before the
+clean build. The custom INCBIN preprocessor runs before conditional preprocessing
+and deliberately warns, rather than aborting, for absent files; fixed-extent C
+arrays can therefore become zero-filled. A successful compile does not validate
+new extraction gaps. The whole-ROM check catches this, but regenerating the
+extracted data first avoids a misleading integration failure.
+
+In worktrees with dependency symlinks, stage explicit owned paths and inspect
+`git diff --cached --summary` before committing. Submodule status settings can
+hide runtime symlink substitutions from the ordinary status display; broad
+staging can accidentally record them as repository changes.
+
 Before counting a new C function, verify that its symbol is defined in the
 intended compiled C object and that the linker selects that object. A zero-diff
 oracle on an unchanged assembly function or an empty scaffold is only a baseline,

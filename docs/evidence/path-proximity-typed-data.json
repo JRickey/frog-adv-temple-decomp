@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "id": "entity.path-proximity.typed-paths",
+  "kind": "behavior",
+  "title": "Path proximity updates retain unsigned distance staging and signed thresholds",
+  "status": "verified",
+  "claim": "sub_08024DBC is a new 532-byte matching C range. It follows paths in slots 78 through 92, supports an early animation/sound-stop exit, and compares player distances with entities 80,85,90. Unsigned 16-bit distance staging followed by signed 16-bit threshold comparisons preserves the reference conversions. Fifteen separately defined 64-byte EntityPath structs and their typed pointer array replace raw integer pointer loads. Header fields without verified meaning remain unknown. Entity_FollowPath accepts a signed word slot and narrows it explicitly to a byte in its definition; the existing 268-byte function and consolidated callers remain identical. No pins or assembly fallbacks were added.",
+  "subjects": [
+    "fn:08024dbc",
+    "fn:080219bc",
+    "data:8313f88"
+  ],
+  "provenance": [
+    {
+      "path": "src/engine/sub_08024dbc.c",
+      "location": "sub_08024DBC distance staging and control flow",
+      "commit": "f3dc4a66afbe74650c76dc659592e89381f0e483"
+    },
+    {
+      "path": "src/engine/sub_080219bc.c",
+      "location": "Entity_FollowPath explicit byte narrowing",
+      "commit": "f3dc4a66afbe74650c76dc659592e89381f0e483"
+    },
+    {
+      "path": "include/entity.h",
+      "location": "Entity_FollowPath owning declaration",
+      "commit": "f3dc4a66afbe74650c76dc659592e89381f0e483"
+    },
+    {
+      "path": "include/level_layout_data.h",
+      "location": "EntityPath structure and global declarations",
+      "commit": "f3dc4a66afbe74650c76dc659592e89381f0e483"
+    },
+    {
+      "path": "src/data/level_layout_312e94.c",
+      "location": "sEntityPath_313A98 through sEntityPath_313E18 and sEntityPathTable_313F88",
+      "commit": "f3dc4a66afbe74650c76dc659592e89381f0e483"
+    }
+  ],
+  "tags": [
+    "entity",
+    "path",
+    "interface",
+    "typed-data",
+    "matching"
+  ],
+  "current_validation": {
+    "commit": "f3dc4a66afbe74650c76dc659592e89381f0e483",
+    "state": "confirmed",
+    "whole_rom": "After extraction, integrated clean make tidy && make -j8 && make check passes; expected ROM SHA1.",
+    "functions": "532-byte range oracle byte_diff0/diff_count0; C object symbol0x212 plus alignment; Entity_FollowPath268-byte oracle exact.",
+    "data": "15 struct globals each64 bytes and pointertable60 bytes at exact ROM addresses; ordinary literal initializers."
+  }
+}
