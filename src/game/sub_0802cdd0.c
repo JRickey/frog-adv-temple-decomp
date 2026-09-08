@@ -1,4 +1,5 @@
 #include "entity.h"
+#include "entity_motion.h"
 #include "sound.h"
 #include "game.h"
 #include "iwram.h"
@@ -7,8 +8,6 @@
 extern u8 Enemy_PickNextStep(Entry *e, s16 *out);
 extern u8 TileEntry_CalcDirection(Entry *a, Entry *b);
 extern void DirToMotion(u8 dir, s8 *outX, s8 *outY);
-
-extern void MotionDesc_Set(struct MotionDesc *m, s8 sel, s8 a, s8 b);
 
 void Entity_MoveToEntry(struct Entity *ent, u8 dir, Entry *e)
 {

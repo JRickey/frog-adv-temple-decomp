@@ -1,4 +1,5 @@
 #include "macros.h"
+#include "entity_motion.h"
 #include "types.h"
 
 /* --- Entity22_Update: non-matching reference (NAKED .incbin below provides the matching bytes) --- */
@@ -8,7 +9,6 @@
 #include "iwram.h"
 #include "types.h"
 
-extern void MotionDesc_Set(struct MotionDesc *m, s8 sel, s8 a, s8 b);
 extern void DirToMotion(u8 dir, s8 *outX, s8 *outY);
 extern void Entity_Update(void *p);
 

@@ -1,8 +1,8 @@
 #include "iwram.h"
+#include "entity_motion.h"
 #include "types.h"
 
 /* Slots written here are the canonical struct Entity (iwram.h). */
-extern void MotionDesc_Set(struct Entity *e, s8 param, s8 deltaX, s8 deltaY);
 
 void InitSpecialEntitySlots(void)
 {

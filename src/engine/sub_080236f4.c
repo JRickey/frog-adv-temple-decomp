@@ -1,4 +1,5 @@
 #include "macros.h"
+#include "entity_motion.h"
 #include "sound.h"
 #include "entity.h"
 #include "iwram.h"
@@ -7,7 +8,6 @@
 extern void Entity_InitSlotFromRecord(u16 a0, const void *a1, u16 a2, u8 a3, u16 a4, u8 a5, u8 a6, u8 a7);
 extern void Entity_AdvanceAnimFrames(s32 a0, s32 a1);
 extern void Entity_InitFromLayout(void *obj, u8 idx);
-extern void MotionDesc_Set(void *m, u8 sel, u8 a, u8 b);
 
 extern const u32 sLevelLayoutPtrs_312C98[5];
 extern const u32 sLevelLayoutPtrs_312D4C[5];

@@ -1,4 +1,5 @@
 #include "entity.h"
+#include "entity_motion.h"
 #include "game.h"
 #include "macros.h"
 #include "types.h"
@@ -57,8 +58,14 @@ void Entity_InitShadow(void)
  * r2/r3 and never spills into a callee-saved register: the function then needs no
  * push/pop frame and caches the record pointer in ip the whole way. Cases run
  * high-to-low to match the baserom's descending case-body layout. */
-void MotionDesc_Set(struct MotionDesc *m, u8 sel, u8 a, u8 b)
+void MotionDesc_Set(void *record, s8 selection, s8 deltaX, s8 deltaY)
 {
+    /* Preserve the signed caller interface while storing byte-encoded motion. */
+    struct MotionDesc *m = record;
+    u8 sel = selection;
+    u8 a = deltaX;
+    u8 b = deltaY;
+
     m->sel = sel;
 
     switch ((s8)sel) {

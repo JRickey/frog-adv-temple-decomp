@@ -1,4 +1,5 @@
 #include "entity.h"
+#include "entity_motion.h"
 #include "iwram.h"
 #include "types.h"
 
@@ -6,7 +7,6 @@
  * (mov r2,r9) instead of re-masking it at every call site — idxReg is already
  * a clean byte from each (u8)(...) assignment. */
 extern u8 Entity_WaypointDirectionCompare(Entry *base, u8 idxA, u32 idxB);
-extern void MotionDesc_Set(struct Entity *e, s8 param, s8 deltaX, s8 deltaY);
 
 /* Seeds entity[dstIdx] from src record `idx`. `selector` chooses how the
  * comparison index (result, via Entity_WaypointDirectionCompare) is derived; `result` then picks a

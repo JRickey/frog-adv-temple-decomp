@@ -1,9 +1,9 @@
 #include "entity_spawn.h"
+#include "entity_motion.h"
 #include "iwram.h"
 #include "types.h"
 
 extern void DirToMotion(u8 dir, s8 *outX, s8 *outY);
-extern void MotionDesc_Set(struct Entity *e, s8 param, s8 deltaX, s8 deltaY);
 
 /* The u8/u16 stack parameters are what hoist field14/field16/matchKey/field17
  * into r6/r8/r9/r5 at entry: their SImode->QImode/HImode parm conversion drops

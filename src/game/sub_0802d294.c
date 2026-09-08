@@ -1,4 +1,5 @@
 #include "entity.h"
+#include "entity_motion.h"
 #include "game.h"
 #include "game_constants.h"
 #include "iwram.h"
@@ -7,7 +8,6 @@
 extern s32 RandRange(u8 range);
 extern void Entity_Init(struct Entity *p, u8 kind, s16 x, s16 y, u8 actorId, u16 e, u8 f, u8 g, u8 state,
                         u16 initFlags);
-extern void MotionDesc_Set(struct MotionDesc *m, s8 sel, s8 a, s8 b);
 extern u32 sub_0802D448(void);
 extern void Entity_Update(void *entity);
 
