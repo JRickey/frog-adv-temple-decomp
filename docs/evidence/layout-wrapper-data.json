@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "id": "layout.wrappers.interior-data-pointers",
+  "kind": "data",
+  "title": "Small layout wrappers address interiors of extracted arrays",
+  "status": "superseded",
+  "claim": "The initial matching trial used interior offsets into three extracted u32 arrays. This was a byte-correct intermediate representation, not the final readable data reconstruction. It was replaced by named global structs after the user requested removal of offsets.",
+  "subjects": [
+    "data:08312e94",
+    "data:08313360",
+    "data:08314068",
+    "fn:080247ac"
+  ],
+  "provenance": [
+    {
+      "path": "docs/campaigns/wrappers-25.md",
+      "location": "Typed data correction"
+    }
+  ],
+  "tags": [
+    "level-layout",
+    "wrappers",
+    "data-pointers",
+    "audit-correction"
+  ],
+  "superseded_by": "layout.wrappers.typed-global-records"
+}

@@ -1,0 +1,136 @@
+{
+  "schema_version": 1,
+  "id": "wrappers-25",
+  "base_commit": "6658e3827bf407f8fb5737da0eef3b9d3e0b3920",
+  "rom_sha1": "7b4c27009198df18555e63fb5dcad223eaf09815",
+  "summary": "25 new matching layout wrappers, 14 named typed data objects, and 26 consolidated legacy declarations; final clean ROM and infrastructure gates pass.",
+  "metrics": {
+    "targets_attempted": 25,
+    "new_c_functions": 25,
+    "new_c_bytes": 972,
+    "true_c_before": 729,
+    "true_c_after": 754,
+    "pins_added": 0,
+    "naked_fallbacks_added": 0,
+    "rom_bytes_diff": 0,
+    "legacy_declarations_removed": 26,
+    "failed_interface_integration_trials": 1,
+    "named_typed_data_objects": 14,
+    "typed_data_bytes": 1352,
+    "typed_data_records": 155,
+    "regression_tests_passed": 57
+  },
+  "runs": [
+    {
+      "id": "wrappers25-astra",
+      "model": "gpt-6-astra",
+      "reasoning_effort": "medium",
+      "task": "Select clusters, audit interfaces, integrate and accept",
+      "outcome": "25-functions-accepted",
+      "review_corrections": [
+        "Moved the record-walker declaration into a dedicated header after the first consolidation exposed an unrelated initializer conflict.",
+        "Re-ran and archived final oracles because first-batch successful trial logs had not been retained.",
+        "User rejected numeric offsets as final readable data; root reconstructed 14 named global structs with 155 records and preserved unrelated extraction intervals."
+      ],
+      "usage": {
+        "cached_input_tokens": 6360320,
+        "input_tokens": 6535212,
+        "output_tokens": 21428,
+        "total_tokens": 6556640,
+        "uncached_input_tokens": 174892
+      }
+    },
+    {
+      "id": "wrappers25-sol",
+      "model": "gpt-5.6-sol",
+      "reasoning_effort": "high",
+      "task": "Implement first 11 layout wrappers",
+      "outcome": "11-functions-428-bytes",
+      "review_corrections": [
+        "Removed duplicate scaffold includes.",
+        "Root completed legacy caller declaration consolidation.",
+        "Final acceptance re-captured successful trial provenance."
+      ],
+      "usage": {
+        "cached_input_tokens": 5068928,
+        "input_tokens": 5185171,
+        "output_tokens": 10969,
+        "total_tokens": 5196140,
+        "uncached_input_tokens": 116243
+      }
+    },
+    {
+      "id": "wrappers25-terra-audit",
+      "model": "gpt-5.6-terra",
+      "reasoning_effort": "high",
+      "task": "Audit record-walker ABI and next targets",
+      "outcome": "15-candidates-audited",
+      "review_corrections": [
+        "Exact-address symbol searches missed containing data arrays; root/implementation used existing array offsets."
+      ],
+      "usage": {
+        "cached_input_tokens": 2089472,
+        "input_tokens": 2253482,
+        "output_tokens": 9778,
+        "total_tokens": 2263260,
+        "uncached_input_tokens": 164010
+      }
+    },
+    {
+      "id": "wrappers25-luna",
+      "model": "gpt-5.6-luna",
+      "reasoning_effort": "medium",
+      "task": "Locate bounded session usage counters",
+      "outcome": "five-session-measurement-enabled",
+      "review_corrections": [],
+      "usage": {
+        "cached_input_tokens": 281856,
+        "input_tokens": 320532,
+        "output_tokens": 2608,
+        "total_tokens": 323140,
+        "uncached_input_tokens": 38676
+      }
+    },
+    {
+      "id": "wrappers25-terra-implementation",
+      "model": "gpt-5.6-terra",
+      "reasoning_effort": "medium",
+      "task": "Implement next 14 wrappers using audited pattern",
+      "outcome": "14-functions-544-bytes",
+      "review_corrections": [
+        "Consolidated 14 initial per-function files into three contiguous translation units."
+      ],
+      "usage": {
+        "cached_input_tokens": 1497600,
+        "input_tokens": 1580253,
+        "output_tokens": 13172,
+        "total_tokens": 1593425,
+        "uncached_input_tokens": 82653
+      }
+    },
+    {
+      "id": "wrappers25-terra-record-audit",
+      "model": "gpt-5.6-terra",
+      "reasoning_effort": "medium",
+      "task": "Audit header and entry layout before typed-global reconstruction",
+      "outcome": "8-byte-header-and-entry-layout-confirmed",
+      "review_corrections": [
+        "Used fixed-extent object types rather than flexible-array initializers for the project compiler."
+      ],
+      "usage": {
+        "cached_input_tokens": 389376,
+        "input_tokens": 462324,
+        "output_tokens": 3422,
+        "total_tokens": 465746,
+        "uncached_input_tokens": 72948
+      }
+    }
+  ],
+  "usage_provenance": {
+    "source": "tools/agent/session_usage.py; explicit root and four child JSONL sessions; cumulative content-free counters",
+    "start": "2026-09-08T04:24:58Z",
+    "scope": "Explicit campaign session counters, including root orchestration, pauses and clarifications; excludes only reporting/commit overhead after cutoff; no account-wide quota attribution",
+    "end": "2026-09-08T04:55:30.205084+00:00"
+  },
+  "accepted_source_commit": "aea6b3417ac401d99dd309a18fcee4ccc98f0c62"
+}

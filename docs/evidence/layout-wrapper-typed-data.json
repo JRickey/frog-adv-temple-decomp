@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "id": "layout.wrappers.typed-global-records",
+  "kind": "data",
+  "title": "Fourteen fixed-extent entity layouts replace numeric array offsets",
+  "status": "verified",
+  "claim": "The 25 matched wrapper functions reference 14 separately defined global layout objects. Each has an 8-byte header and count entries of 8 bytes, totaling 155 entries and 1352 bytes. The walker reads header bytes 0 and 2, entry halfwords 0 and 2 into entity coordinates, and packed fields at entry bytes 4 and 5. Unread fields remain unknown; record coordinates use unsigned storage without claiming signed semantics. Global names retain ROM identity because level identities are unverified. Seven remaining data intervals are extracted unchanged. No linker aliases or pointer-offset macros are used.",
+  "subjects": [
+    "fn:08021140",
+    "data:8312edc",
+    "data:8312eec",
+    "data:8312fe4",
+    "data:8313014",
+    "data:831326c",
+    "data:831327c",
+    "data:83133d0",
+    "data:83134d0",
+    "data:8313508",
+    "data:8313528",
+    "data:83140b8",
+    "data:83140e8",
+    "data:83141e8",
+    "data:8314208"
+  ],
+  "provenance": [
+    {
+      "path": "include/level_layout_data.h",
+      "location": "LevelLayoutHeader, LevelLayoutEntry, fixed-extent layout types and global declarations",
+      "commit": "aea6b3417ac401d99dd309a18fcee4ccc98f0c62"
+    },
+    {
+      "path": "src/data/level_layout_312e94.c",
+      "location": "sLevelLayout_312EDC through sLevelLayout_314208",
+      "commit": "aea6b3417ac401d99dd309a18fcee4ccc98f0c62"
+    },
+    {
+      "path": "asm/disasm_0x08021140.s",
+      "location": "0x08021176-0x080211d6",
+      "commit": "aea6b3417ac401d99dd309a18fcee4ccc98f0c62"
+    },
+    {
+      "path": "database.json",
+      "location": "level/layout_raw_* extraction entries",
+      "commit": "aea6b3417ac401d99dd309a18fcee4ccc98f0c62"
+    }
+  ],
+  "tags": [
+    "level-layout",
+    "structs",
+    "wrappers",
+    "data-reconstruction"
+  ],
+  "current_validation": {
+    "commit": "aea6b3417ac401d99dd309a18fcee4ccc98f0c62",
+    "whole_rom": "Clean make tidy && make -j8 && make check passes; SHA1 7b4c27009198df18555e63fb5dcad223eaf09815",
+    "functions": "25 final oracle byte_diff=0/diff_count=0",
+    "data": "14 linked global addresses and sizes checked; 7 extracted gaps byte-checked against baserom",
+    "state": "confirmed"
+  }
+}
