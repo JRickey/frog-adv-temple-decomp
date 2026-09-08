@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "id": "entity.paired-movement.signed-motion-inputs",
+  "kind": "behavior",
+  "title": "Paired movement exposes signed motion inputs with byte-encoded storage",
+  "status": "verified",
+  "claim": "sub_08028270 is 688 bytes of new matching C implementing ten primary entities and five paired peers through eight directional states. Ordinary entity array pointers preserve the exact code. MotionDesc_Set accepts signed byte inputs, then converts to unsigned local bytes for its existing storage logic; this preserves its 400-byte body and all consolidated callers. Phase zero in state one is independent of the following phase chain; the other directional states use a single chain. No new pins or assembly fallbacks were introduced.",
+  "subjects": [
+    "fn:08028270",
+    "fn:0800a580"
+  ],
+  "provenance": [
+    {
+      "path": "src/engine/sub_08028270.c",
+      "location": "sub_08028270",
+      "commit": "07069ac88ac73ae163b61b0a1bca08e7cc547088"
+    },
+    {
+      "path": "include/entity_motion.h",
+      "location": "MotionDesc_Set declaration",
+      "commit": "07069ac88ac73ae163b61b0a1bca08e7cc547088"
+    },
+    {
+      "path": "src/game/sub_0800a520.c",
+      "location": "MotionDesc_Set signed inputs and unsigned locals",
+      "commit": "07069ac88ac73ae163b61b0a1bca08e7cc547088"
+    }
+  ],
+  "tags": [
+    "entity",
+    "interface",
+    "signedness",
+    "matching"
+  ],
+  "current_validation": {
+    "commit": "07069ac88ac73ae163b61b0a1bca08e7cc547088",
+    "state": "confirmed",
+    "whole_rom": "Clean make tidy && make -j8 && make check passes after integration; frog_us.gba OK.",
+    "functions": "sub_08028270 oracle size688 byte_diff0 diff_count0; MotionDesc_Set size400 byte_diff0 diff_count0. Compiled C object owns sub_08028270 with size0x2b0; linker selects it.",
+    "artifacts": "Ignored nonmatchings/large-five/sub_08028270/review contains immutable source snapshots and oracle logs."
+  }
+}

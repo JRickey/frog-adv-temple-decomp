@@ -1,0 +1,181 @@
+{
+  "schema_version": 1,
+  "id": "large-5",
+  "base_commit": "ee4fcb9a17cb5af9c30c51919fde3f442ec8c239",
+  "rom_sha1": "7b4c27009198df18555e63fb5dcad223eaf09815",
+  "summary": "Active five-large-function goal: one accepted 688-byte C function; two bounded investigations deferred; additional large routines in progress.",
+  "metrics": {
+    "new_c_functions": 1,
+    "new_c_bytes": 688,
+    "true_c_before": 754,
+    "true_c_after": 755,
+    "pins_added": 0,
+    "naked_fallbacks_added": 0,
+    "regression_tests_passed": 57
+  },
+  "runs": [
+    {
+      "id": "large5-large-entity-transfer",
+      "model": "gpt-5.6-sol",
+      "reasoning_effort": "high",
+      "task": "Reconstruct 576-byte entity transfer",
+      "outcome": "deferred-with-handoff",
+      "review_corrections": [
+        "Intermediate data aliases cannot be accepted as proper global definitions."
+      ],
+      "usage": {
+        "input_tokens": 9319350,
+        "cached_input_tokens": 9126784,
+        "output_tokens": 33144,
+        "total_tokens": 9352494,
+        "uncached_input_tokens": 192566
+      },
+      "session_id": "01a07f7b-8c26-7c41-9a51-76c8b41c1912"
+    },
+    {
+      "id": "large5-large-four-slot-transfer",
+      "model": "gpt-5.6-sol",
+      "reasoning_effort": "high",
+      "task": "Reconstruct 632-byte four-slot transfer",
+      "outcome": "in-progress",
+      "review_corrections": [],
+      "usage": {
+        "input_tokens": 212746,
+        "cached_input_tokens": 180608,
+        "output_tokens": 2467,
+        "total_tokens": 215213,
+        "uncached_input_tokens": 32138
+      },
+      "session_id": "01a07f9b-9cdd-76c0-823f-9adfe0a5551c"
+    },
+    {
+      "id": "large5-large-layout-walker",
+      "model": "gpt-5.6-sol",
+      "reasoning_effort": "high",
+      "task": "Reconstruct 976-byte layout walker",
+      "outcome": "deferred-with-handoff",
+      "review_corrections": [
+        "Some early trial sources lack immutable snapshots; fingerprints alone do not reproduce those trials."
+      ],
+      "usage": {
+        "input_tokens": 7646959,
+        "cached_input_tokens": 7487104,
+        "output_tokens": 28652,
+        "total_tokens": 7675611,
+        "uncached_input_tokens": 159855
+      },
+      "session_id": "01a07f78-7d76-7c22-8ad1-9131d9b40295"
+    },
+    {
+      "id": "large5-large-paired-motion",
+      "model": "gpt-5.6-sol",
+      "reasoning_effort": "high",
+      "task": "Reconstruct 688-byte paired movement",
+      "outcome": "accepted-after-review",
+      "review_corrections": [
+        "Root replaced pointer integer casts with matching ordinary array pointers.",
+        "Root centralized signed motion interface.",
+        "Baseline-only oracle zeroes were not new C."
+      ],
+      "usage": {
+        "input_tokens": 4493196,
+        "cached_input_tokens": 4368640,
+        "output_tokens": 19869,
+        "total_tokens": 4513065,
+        "uncached_input_tokens": 124556
+      },
+      "session_id": "01a07f80-53fd-7a01-adc9-2f79d388a144"
+    },
+    {
+      "id": "large5-large-scene-phases",
+      "model": "gpt-5.6-sol",
+      "reasoning_effort": "high",
+      "task": "Reconstruct 756-byte scene phase handler",
+      "outcome": "in-progress",
+      "review_corrections": [],
+      "usage": {
+        "input_tokens": 204168,
+        "cached_input_tokens": 174464,
+        "output_tokens": 2049,
+        "total_tokens": 206217,
+        "uncached_input_tokens": 29704
+      },
+      "session_id": "01a07f9a-ba56-7440-9394-75c219e41726"
+    },
+    {
+      "id": "large5-large-target-audit",
+      "model": "gpt-5.6-terra",
+      "reasoning_effort": "medium",
+      "task": "Audit substantial assembly targets",
+      "outcome": "six-targets-audited",
+      "review_corrections": [],
+      "usage": {
+        "input_tokens": 757526,
+        "cached_input_tokens": 639744,
+        "output_tokens": 6333,
+        "total_tokens": 763859,
+        "uncached_input_tokens": 117782
+      },
+      "session_id": "01a07f78-ae02-7053-93a8-07fb93575019"
+    },
+    {
+      "id": "large5-layout-pool-diagnosis",
+      "model": "gpt-6-astra",
+      "reasoning_effort": "high",
+      "task": "Diagnose walker pool placement with RTL",
+      "outcome": "deferred-with-compiler-evidence",
+      "review_corrections": [],
+      "usage": {
+        "input_tokens": 2105112,
+        "cached_input_tokens": 2041984,
+        "output_tokens": 9540,
+        "total_tokens": 2114652,
+        "uncached_input_tokens": 63128
+      },
+      "session_id": "01a07f8c-6b6b-7130-8d0e-62122b4fc051"
+    },
+    {
+      "id": "large5-root",
+      "model": "gpt-6-astra",
+      "reasoning_effort": "medium",
+      "task": "Orchestration, interface review and acceptance",
+      "outcome": "one-large-function-accepted",
+      "review_corrections": [
+        "Rejected pointer-to-integer arithmetic where ordinary typed pointers match.",
+        "Corrected MotionDesc_Set signed input and unsigned storage interface across callers.",
+        "Added explicit source-body and compiled-object ownership gate after mistaking scaffold oracle zeroes for progress."
+      ],
+      "usage": {
+        "input_tokens": 13178914,
+        "cached_input_tokens": 13028352,
+        "output_tokens": 29573,
+        "total_tokens": 13208487,
+        "uncached_input_tokens": 150562
+      },
+      "session_id": "01a07f43-1610-7883-b405-10cc57956867"
+    },
+    {
+      "id": "large5-transfer-mask-diagnosis",
+      "model": "gpt-6-astra",
+      "reasoning_effort": "high",
+      "task": "Diagnose retained status-mask lifetime",
+      "outcome": "in-progress",
+      "review_corrections": [],
+      "usage": {
+        "input_tokens": 1306308,
+        "cached_input_tokens": 1236736,
+        "output_tokens": 7224,
+        "total_tokens": 1313532,
+        "uncached_input_tokens": 69572
+      },
+      "session_id": "01a07f96-55e5-7360-8594-8213eb7c4440"
+    }
+  ],
+  "usage_provenance": {
+    "source": "tools/agent/session_usage.py explicit campaign root and worker sessions",
+    "start": "2026-09-08T05:22:15+00:00",
+    "end": "2026-09-08T06:03:24.898972+00:00",
+    "scope": "Campaign-only cumulative-counter deltas including orchestration and failed experiments; active workers measured only through cutoff. No account quota attribution."
+  },
+  "accepted_source_commit": "07069ac88ac73ae163b61b0a1bca08e7cc547088"
+}

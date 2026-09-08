@@ -26,6 +26,12 @@ build or certify the ROM; use `make check` for that gate.
 6. Publish the essential source change and the evidence that explains it.
    Revisit dependent questions when the explanation changes.
 
+Before counting a new C function, verify that its symbol is defined in the
+intended compiled C object and that the linker selects that object. A zero-diff
+oracle on an unchanged assembly function or an empty scaffold is only a baseline,
+not decompilation progress. Inspect the authored body separately for pins and
+assembly fallbacks; object ownership alone does not establish readable C.
+
 ## Evidence records
 
 The reviewable source is JSON in `docs/evidence/*.json` (one object or an
