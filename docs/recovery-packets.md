@@ -7,10 +7,9 @@ experiments. No candidates were applied while preparing these packets.
 ## Shared restart procedure
 
 Run `make check-infra`, retrieve the target evidence brief, inspect the cited
-source and establish a fresh ROM baseline. Preserve the original worktrees
-and ignored scratch. Before running experiments there, integrate the current
-workflow/oracle tooling in a reviewed change or use an isolated checkout of
-the current campaign branch and copy only the chosen candidate. The old
+source and establish a fresh ROM baseline. The original worktrees were archived during cleanup; see
+[campaigns/worktree-cleanup.md](campaigns/worktree-cleanup.md). Restore only
+the chosen scratch candidate into an isolated checkout of current main. The old
 worktree oracle still needs manual artifact invalidation; the current oracle
 handles content changes itself. Do not replay old mutation scripts blindly.
 
@@ -42,7 +41,7 @@ brief does not require that worktree or transcript to be loaded.
 - The interrupted draft had 219 differing bytes. It is not the best starting
   point simply because it was the last agent edit.
 
-Local recovery worktree: `.claude/worktrees/agent-ad20b591104eadfa1`.
+Archived recovery worktree: `.claude/worktrees/agent-ad20b591104eadfa1`.
 Scratch: `nonmatchings/BlitEntityTileFrame1/`, notably `RESUME.md`,
 `pinned_orig.c`, `blend_noholds.c`, `stride_direct.c`, and
 `resume_results.json`. Scratch and the private instrumented compiler are
@@ -87,7 +86,7 @@ the assembly before adopting shared layouts or names.
   instruction differences and 1172 output bytes. Its do/while(0) wrapper is
   not evidence of an original macro. These are historical scores.
 
-Local recovery worktree: `.claude/worktrees/agent-a66c6fbfddd1ec20f`.
+Archived recovery worktree: `.claude/worktrees/agent-a66c6fbfddd1ec20f`.
 Scratch: `nonmatchings/ScrollUpdate_Pass0/resume/`, including
 `original-draft.c`, `structural-reference.c`, `best.c`, `best.patch`,
 `best-oracle.txt` and RTL dumps. The patch was made against the recovery
