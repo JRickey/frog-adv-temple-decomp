@@ -92,104 +92,35 @@ void Icon_DmaLoadSprite(void)
     TileBlit_DrawEntry(idx);
 }
 
-/* DMA descriptor table at 0x08306888 with richer entry layout:
- * +0: u16 maxCount, +2: u8 threshold, +4: ptr to ptr array,
- * +8: u32 destAddr, +12: u16 count */
+/* `table` puts the pool load before the index shift; the srcPtrTable/destAddr
+ * reads stay symbol-form so cse rewrites them through the live base
+ * (adds r0, r7, #4) instead of folding into [r5, #n]. */
 void Icon_DmaUpdateSprite(void)
 {
-    /* ip holds the gGameStuff base across the whole function; used to
-     * produce 'mov r1, ip; ldr r0, [r1, #0]' at the end. */
     u32 idx;
-    register u32 gs asm("ip");
-    volatile u32 *dma;
+    u32 elapsed;
+    const struct DmaDesc2Entry *table;
+    const struct DmaDesc2Entry *entry;
+    const u32 *srcTable;
 
-    {
-        register u32 r1val asm("r1");
-        u8 mode;
-
-        r1val = 15;
-        mode = gIwram_6110.threshold;
-        if (mode == 3)
-            goto case3;
-        if (mode == 5)
-            goto case5;
-        goto cont;
-    case3:
-        r1val = 0;
-        goto cont;
-    case5:
-        r1val = 1;
-    cont:
-        idx = r1val;
-    }
-
-    if (idx == 15)
+    idx = Icon_SelectSet();
+    if (idx == ICON_SET_NONE)
         return;
 
-    gs = (u32)&gGameStuff;
+    elapsed = ((GameStuff *)&gIwram_5330)->_unk00 - gIwram_5320.field4;
+    table = gDmaDescTable_08306888;
+    entry = &table[idx];
+    if (elapsed < entry->threshold)
+        return;
 
-    {
-        /* tableBase left unpinned so agbcc allocates it to r7 and includes
-         * r7 in the push/pop (explicit asm(r7) pins bypass callee-save). */
-        struct IwramAt5320 *s;
-        struct DmaDesc2Entry *tableBase;
-        struct DmaDesc2Entry *entry;
-        u32 stride;
-        u32 diff;
+    if (gIwram_5320.byte0 >= entry->maxCount)
+        gIwram_5320.byte0 = 0;
 
-        s = &gIwram_5320;
-        diff = *(u32 *)gs - s->field4;
-        tableBase = (struct DmaDesc2Entry *)gDmaDescTable_08306888;
-        stride = idx << 4;
-        entry = (struct DmaDesc2Entry *)((u32)tableBase + stride);
+    srcTable = gDmaDescTable_08306888[idx].srcPtrTable;
+    REG_DMA3.src = (const void *)srcTable[gIwram_5320.byte0++];
+    REG_DMA3.dst = (void *)gDmaDescTable_08306888[idx].destAddr;
+    REG_DMA3.cnt = DMA_ENABLE | (entry->count >> 1);
+    (void)REG_DMA3.cnt;
 
-        if (diff < entry->threshold)
-            return;
-
-        if (s->byte0 >= entry->maxCount)
-            s->byte0 = 0;
-
-        {
-            /* r0 is the address register; r3 receives the loaded pointer.
-             * Two-step "(r0 << 24) >> 22" prevents agbcc folding to "<< 2". */
-            register u32 r0r asm("r0");
-            u32 r3r;
-
-            r0r = (u32)tableBase + 4;
-            r0r = stride + r0r;
-            r3r = *(u32 *)r0r;
-            dma = (volatile u32 *)0x040000D4;
-            r0r = s->byte0;
-            s->byte0 = (u8)(r0r + 1);
-            r0r <<= 24;
-            r0r >>= 22;
-            r0r = r0r + r3r;
-            r0r = *(u32 *)r0r;
-            dma[0] = r0r;
-
-            r0r = (u32)tableBase;
-            r0r += 8;
-            r0r = stride + r0r;
-            r0r = *(u32 *)r0r;
-            dma[1] = r0r;
-
-            {
-                u32 r5r;
-                r5r = entry->count;
-                r0r = r5r >> 1;
-            }
-            r0r |= 0x80000000U;
-            dma[2] = r0r;
-            (void)dma[2];
-        }
-
-        {
-            /* Must go through r1 to match "mov r1, ip; ldr r0, [r1, #0]". */
-            register u32 r1r asm("r1");
-            u32 r0r;
-            r1r = gs;
-            r0r = *(u32 *)r1r;
-            s->field4 = r0r;
-        }
-    }
+    gIwram_5320.field4 = ((GameStuff *)&gIwram_5330)->_unk00;
 }
