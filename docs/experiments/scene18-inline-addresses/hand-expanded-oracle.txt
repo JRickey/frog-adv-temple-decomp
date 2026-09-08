@@ -1,0 +1,24 @@
+function:  GameMode_Scene18
+provenance: sha256 (sources=5e8aee7623a7, headers=c048da365873, linked_data=8701a7b89fdd, config=d6b278cfa023, toolchain=8d8fd8d2f89c, baseline=7469a84c4b44, environment=44136fa355b3; outputs=0c851e225d9e; changed=1)
+addr:      0x08003864  size: 732 bytes
+byte_diff: 75
+diff_count: 18  (Thumb instruction-level)
+mismatches:
+  +0x000a  ARGUMENT_MISMATCH   target: ldr r0, [pc, #12]	@ (0x387c)              built: ldr r1, [pc, #12]	@ (0x387c)
+  +0x000c  ARGUMENT_MISMATCH   target: add r0, sp                                built: add r1, sp
+  +0x000e  ARGUMENT_MISMATCH   target: movs r1, #0                               built: movs r0, #0
+  +0x0010  ARGUMENT_MISMATCH   target: strb r1, [r0, #0]                         built: strb r0, [r1, #0]
+  +0x0074  INSERTION           target:                                           built: add r1, sp, #672	@ 0x2a0
+  +0x0076  DELETION            target: add r1, sp, #672	@ 0x2a0                  built: 
+  +0x017e  INSERTION           target:                                           built: add r1, sp, #672	@ 0x2a0
+  +0x0180  DELETION            target: add r1, sp, #672	@ 0x2a0                  built: 
+  +0x019a  INSERTION           target:                                           built: add r2, sp, #344	@ 0x158
+  +0x01a2  DELETION            target: add r2, sp, #344	@ 0x158                  built: 
+  +0x01c2  REPLACEMENT         target: ldr r0, [pc, #52]	@ (0x3a5c)              built: adds r0, r4, #0
+  +0x01c4  REPLACEMENT         target: add r0, sp                                built: f8f4 bl	0x9c14
+  +0x01c6  DELETION            target: f8f3 bl	0x9c14                            built: 
+  +0x01cc  ARGUMENT_MISMATCH   target: bne.n 0x3a36                              built: bne.n 0x3a34
+  +0x01d8  OPCODE_MISMATCH     target: feb8 bl	0xb7b0                            built: feb9 bl	0xb7b0
+  +0x01e2  OPCODE_MISMATCH     target: feb3 bl	0xb7b0                            built: feb4 bl	0xb7b0
+  +0x01ec  OPCODE_MISMATCH     target: f9e2 bl	0xbe18                            built: f9e3 bl	0xbe18
+  +0x01f8  INSERTION           target:                                           built: movs r0, r0

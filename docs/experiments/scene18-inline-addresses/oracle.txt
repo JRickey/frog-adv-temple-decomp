@@ -1,0 +1,10 @@
+function:  GameMode_Scene18
+provenance: sha256 (sources=b3ee2e4d32b4, headers=d5fd8bb07a06, linked_data=8701a7b89fdd, config=d6b278cfa023, toolchain=8d8fd8d2f89c, baseline=7469a84c4b44, environment=44136fa355b3; outputs=d66d7c759222; changed=1)
+addr:      0x08003864  size: 732 bytes
+byte_diff: 4
+diff_count: 4  (Thumb instruction-level)
+mismatches:
+  +0x000a  ARGUMENT_MISMATCH   target: ldr r0, [pc, #12]	@ (0x387c)              built: ldr r1, [pc, #12]	@ (0x387c)
+  +0x000c  ARGUMENT_MISMATCH   target: add r0, sp                                built: add r1, sp
+  +0x000e  ARGUMENT_MISMATCH   target: movs r1, #0                               built: movs r0, #0
+  +0x0010  ARGUMENT_MISMATCH   target: strb r1, [r0, #0]                         built: strb r0, [r1, #0]

@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "id": "scene18.inline-stack-address-substitution",
+  "kind": "compiler",
+  "title": "Actual scene helper inlining preserves stack argument expansion",
+  "status": "observed",
+  "claim": "Actual inline copies of three adjacent helper bodies reduce Scene18 from75 to4 differing bytes at unchanged732-byte size. Integrate-time stack-address substitution explains call scheduling and case4 pointer recomputation. The remaining initial zero store is assigned r0 before its longer-lived address at local allocation; combine has folded the separate offset pseudo. Canonical for syntax gives the same residual, and whole-frame/control-byte aggregate variants regress. Printed doubled constant REG_LIVE_LENGTH does not determine local-allocation quantity priority. No ordinary source initializer has resolved the last swap; this is not an accepted function or a pin-necessity proof.",
+  "subjects": [
+    "fn:08003864",
+    "fn:08003ca8"
+  ],
+  "provenance": [
+    {
+      "path": "docs/experiments/scene18-inline-addresses/README.md",
+      "location": "reproduction and helper evidence"
+    },
+    {
+      "path": "docs/experiments/scene18-inline-addresses/inline-candidate.c",
+      "location": "Scene18_Setup, Scene18_Update, Scene18_InitHitboxes"
+    },
+    {
+      "path": "docs/experiments/scene18-inline-addresses/allocation-findings.md",
+      "location": "combine/local allocation and rejected discriminators"
+    }
+  ],
+  "tags": [
+    "scene",
+    "inline",
+    "stack",
+    "local-allocation",
+    "nonmatching"
+  ]
+}

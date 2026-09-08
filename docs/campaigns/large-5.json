@@ -3,7 +3,7 @@
   "id": "large-5",
   "base_commit": "ee4fcb9a17cb5af9c30c51919fde3f442ec8c239",
   "rom_sha1": "7b4c27009198df18555e63fb5dcad223eaf09815",
-  "summary": "Active five-large-function goal: three accepted functions totaling1968 bytes; data and interface corrections verified separately; bounded failed investigations preserved; camera integrated with clean ROM; Scene18 allocation diagnosis and Entity_Update active; Scene19 near-match preserved.",
+  "summary": "Active five-large-function goal: three accepted functions totaling1968 bytes; data and interface corrections verified separately; bounded failed investigations preserved; camera integrated with clean ROM; scene near-matches preserved with allocation evidence; text and scale rendering active; bounded HUD interface correction active.",
   "metrics": {
     "new_c_functions": 3,
     "new_c_bytes": 1968,
@@ -11,12 +11,28 @@
     "true_c_after": 757,
     "pins_added": 0,
     "naked_fallbacks_added": 0,
-    "regression_tests_passed": 57,
+    "regression_tests_passed": 62,
     "failed_extraction_integration_trials": 1,
     "accepted_path_data_objects": 15,
     "accepted_path_pointer_tables": 1
   },
   "runs": [
+    {
+      "id": "large5-hud-interface-correction",
+      "review_corrections": [],
+      "task": "Correct HUD_DrawStatus ABI with explicit byte rendering",
+      "outcome": "in-progress",
+      "model": "gpt-5.6-terra",
+      "reasoning_effort": "high",
+      "usage": {
+        "input_tokens": 474021,
+        "cached_input_tokens": 429568,
+        "output_tokens": 2896,
+        "total_tokens": 476917,
+        "uncached_input_tokens": 44453
+      },
+      "session_id": "01a07fed-47d1-7151-b3e9-2546d5407f71"
+    },
     {
       "id": "large5-large-camera-alt",
       "review_corrections": [],
@@ -50,6 +66,22 @@
       "session_id": "01a07fc8-221e-7691-a875-0c627ac277d0"
     },
     {
+      "id": "large5-large-draw-text",
+      "review_corrections": [],
+      "task": "Reconstruct 508-byte DrawTextGlyphs",
+      "outcome": "in-progress",
+      "model": "gpt-5.6-sol",
+      "reasoning_effort": "high",
+      "usage": {
+        "input_tokens": 622290,
+        "cached_input_tokens": 563072,
+        "output_tokens": 6733,
+        "total_tokens": 629023,
+        "uncached_input_tokens": 59218
+      },
+      "session_id": "01a07fea-85e1-7f41-921b-d770400d79ce"
+    },
+    {
       "id": "large5-large-entity-transfer",
       "model": "gpt-5.6-sol",
       "reasoning_effort": "high",
@@ -71,15 +103,15 @@
       "id": "large5-large-entity-update",
       "review_corrections": [],
       "task": "Reconstruct 844-byte Entity_Update",
-      "outcome": "in-progress",
+      "outcome": "deferred-for-selector-reload-diagnosis",
       "model": "gpt-5.6-sol",
       "reasoning_effort": "high",
       "usage": {
-        "input_tokens": 2509325,
-        "cached_input_tokens": 2399872,
-        "output_tokens": 14202,
-        "total_tokens": 2523527,
-        "uncached_input_tokens": 109453
+        "input_tokens": 3414226,
+        "cached_input_tokens": 3277056,
+        "output_tokens": 17533,
+        "total_tokens": 3431759,
+        "uncached_input_tokens": 137170
       },
       "session_id": "01a07fde-43eb-7a93-8862-527d9ec5cf27"
     },
@@ -189,6 +221,22 @@
       "session_id": "01a07faa-0a25-7f52-bf12-64555dc62811"
     },
     {
+      "id": "large5-large-scale-blit",
+      "review_corrections": [],
+      "task": "Reconstruct 852-byte ScaleAnim_BlitFrameToVram",
+      "outcome": "in-progress",
+      "model": "gpt-5.6-sol",
+      "reasoning_effort": "high",
+      "usage": {
+        "input_tokens": 400561,
+        "cached_input_tokens": 333952,
+        "output_tokens": 5262,
+        "total_tokens": 405823,
+        "uncached_input_tokens": 66609
+      },
+      "session_id": "01a07fea-f6b1-78f3-8a7b-8a9b5369dfe1"
+    },
+    {
       "id": "large5-large-scene-phases",
       "model": "gpt-5.6-sol",
       "reasoning_effort": "high",
@@ -267,11 +315,11 @@
         "Removed unintended dependency-symlink type changes from a local data commit before integration; stage explicit owned paths in dependency-linked worktrees."
       ],
       "usage": {
-        "input_tokens": 35563213,
-        "cached_input_tokens": 34724224,
-        "output_tokens": 95341,
-        "total_tokens": 35658554,
-        "uncached_input_tokens": 838989
+        "input_tokens": 37658756,
+        "cached_input_tokens": 36763136,
+        "output_tokens": 102709,
+        "total_tokens": 37761465,
+        "uncached_input_tokens": 895620
       },
       "session_id": "01a07f43-1610-7883-b405-10cc57956867"
     },
@@ -330,17 +378,19 @@
     },
     {
       "id": "large5-scene18-initialization",
-      "review_corrections": [],
+      "review_corrections": [
+        "Root corrected a callback identity inferred from a mutable ELF; immutable baserom identifies Entity_DispatchBC."
+      ],
       "task": "Fresh compiler investigation of Scene18 initial store allocation",
-      "outcome": "in-progress",
+      "outcome": "deferred-with-local-allocation-evidence",
       "model": "gpt-6-astra",
       "reasoning_effort": "high",
       "usage": {
-        "input_tokens": 1632873,
-        "cached_input_tokens": 1576832,
-        "output_tokens": 9830,
-        "total_tokens": 1642703,
-        "uncached_input_tokens": 56041
+        "input_tokens": 2598334,
+        "cached_input_tokens": 2527104,
+        "output_tokens": 14943,
+        "total_tokens": 2613277,
+        "uncached_input_tokens": 71230
       },
       "session_id": "01a07fdf-0361-74f3-aeb3-cf74a65010f5"
     },
@@ -348,15 +398,15 @@
       "id": "large5-scene19-hud-interface",
       "review_corrections": [],
       "task": "Audit Scene19 HUD canonical interface",
-      "outcome": "in-progress",
+      "outcome": "audit-complete-correction-pending",
       "model": "gpt-5.6-terra",
       "reasoning_effort": "high",
       "usage": {
-        "input_tokens": 78705,
-        "cached_input_tokens": 65024,
-        "output_tokens": 1188,
-        "total_tokens": 79893,
-        "uncached_input_tokens": 13681
+        "input_tokens": 721011,
+        "cached_input_tokens": 631552,
+        "output_tokens": 9928,
+        "total_tokens": 730939,
+        "uncached_input_tokens": 89459
       },
       "session_id": "01a07fe6-d1aa-7cc3-baee-d36114583836"
     },
@@ -380,7 +430,7 @@
   "usage_provenance": {
     "source": "tools/agent/session_usage.py explicit campaign root and worker sessions",
     "start": "2026-09-08T05:22:15+00:00",
-    "end": "2026-09-08T07:24:44.962627+00:00",
+    "end": "2026-09-08T07:32:45.234390+00:00",
     "scope": "Campaign-only cumulative-counter deltas including orchestration and failed experiments; active workers measured only through cutoff. No account quota attribution."
   },
   "accepted_source_commits": [

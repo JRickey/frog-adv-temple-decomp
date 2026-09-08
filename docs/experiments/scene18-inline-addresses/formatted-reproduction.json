@@ -1,0 +1,21 @@
+{
+  "base_commit": "a780e55b",
+  "compiler_sha256": "5041c5dd57875aad111b8e239bac9dedfda95729430b65aa271fd54400c08dcf",
+  "sources": {
+    "inline-candidate.c": "dd82ef7db99f349f4e20a2338d30ee194adfc9dd4a04f14320104bfbaa72a9ea",
+    "hand-expanded.c": "246c2cd322669e83b4350f4481431ebcf997d99ecd2283d0ba24e359d13911f7"
+  },
+  "results": {
+    "inline-candidate.c": {
+      "size": 732,
+      "byte_diff": 4,
+      "diff_count": 4
+    },
+    "hand-expanded.c": {
+      "size": 732,
+      "byte_diff": 75,
+      "diff_count": 18
+    }
+  },
+  "note": "Repository clang-format applied to diagnostic candidates before fresh oracle reproduction; original unformatted hashes remain in configuration.json. Restore source and linker then clean rebuild after either trial."
+}

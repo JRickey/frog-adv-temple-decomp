@@ -1,0 +1,15 @@
+{
+  "prediction": "Reproduce preserved best without changing accepted camera or other functions.",
+  "source_sha256": "e1e6b160b7248e1675e18b005e991a91bbc150ec1c1e8acc894e3e972da842f8",
+  "compiler_sha256": "5041c5dd57875aad111b8e239bac9dedfda95729430b65aa271fd54400c08dcf",
+  "flags": [
+    "-Werror",
+    "-O2",
+    "-mthumb-interwork",
+    "-fhex-asm"
+  ],
+  "base": "cca193eca2fb90d93eb90fdccb3836b36245d9b5",
+  "model": "gpt-6-astra",
+  "effort": "inherited",
+  "usage": null
+}
